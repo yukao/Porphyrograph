@@ -202,9 +202,11 @@ extern int paths_BrushID[PG_NB_PATHS + 1];
 extern float paths_RadiusX[PG_NB_PATHS + 1];
 extern float paths_RadiusY[PG_NB_PATHS + 1];
 
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 extern GLuint pg_CATable_ID;
 extern GLubyte *pg_CATable;
+#endif
+#ifdef GN
 extern GLuint pg_LYMlogo_texID;
 extern cv::Mat pg_LYMlogo_image;
 #endif

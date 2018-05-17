@@ -64,8 +64,10 @@ enum pg_FBO_Update_samplers
 	pg_TVWPixelsSwap5,
 #endif
 	pg_Trk0_FBO_Update_sampler,
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 	pg_CATable_Update_sampler,
+#endif
+#ifdef GN
 	pg_Camera_BGIni_FBO_Update_sampler,
 #endif
 };

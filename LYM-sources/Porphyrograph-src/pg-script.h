@@ -63,7 +63,7 @@ extern float LastGUIShippedValuesInterpVar[_MaxInterpVarIDs];
 // initial values in the configuration file
 extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 #define CA_GOL                    0
 #define CA_TOTALISTIC             1
 #define CA_GENERATION             2
@@ -71,8 +71,11 @@ extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 #define CA_GENERAL_BINARY_NEUMANN 4
 #define CA_NEUMANN_BINARY         5
 #define CA_TUMOR_CELL             6
-#define CA_WORM                   7
+#define CA_WORM					  7
+#define CA_TIME_TUNNEL            8
+#endif
 
+#ifdef GN
 //////////////////////////////////////////////
 /// image number of first plane
 extern int      firstPlaneFrameNo;

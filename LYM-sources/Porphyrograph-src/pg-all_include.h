@@ -226,7 +226,7 @@ using std::ifstream;
 #define PG_NB_PARTCOLOR_MODES 3
 
 // NB CA TYPES
-#if defined(GN)
+#if defined(GN) || defined(MALAUSSENA)
 #define PG_NB_CA_TYPES 8
 //#define CA_GOL                    0
 //#define CA_TOTALISTIC             1
@@ -236,6 +236,7 @@ using std::ifstream;
 //#define CA_NEUMANN_BINARY         5
 //#define CA_TUMOR_CELL             6
 //#define CA_WORM                   7
+//#define CA_TIME_TUNNEL            8
 #endif
 #if defined(TVW) || defined (CRITON)
 #define PG_NB_CA_TYPES 5
@@ -246,7 +247,7 @@ using std::ifstream;
 //#define CA_PATHS                   4
 //#define CA_LETSGO                  5
 #endif
-#if !defined(GN) && !defined(TVW) && !defined(CRITON)
+#if !defined(GN) && !defined(MALAUSSENA) && !defined(TVW) && !defined(CRITON)
 #define PG_NB_CA_TYPES 4
 //const uint CA_CYCLIC = 0;
 //const uint CA_CYCLIC_1 = 1;
@@ -255,7 +256,7 @@ using std::ifstream;
 #endif
 
 // NB CA SUB-TYPES
-#define PG_NB_CA_SUBTYPES 10
+#define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
 // #define BLURRED_SPLAT_PARTICLES

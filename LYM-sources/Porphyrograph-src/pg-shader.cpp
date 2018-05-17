@@ -146,9 +146,11 @@ GLint uniform_Update_fs_4fv_photo01_wh;
 GLint uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
 GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
+#if defined (GN) || defined (MALAUSSENA)
+GLint uniform_Update_texture_fs_CATable;
+#endif
 #ifdef GN
 GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
-GLint uniform_Update_texture_fs_CATable;
 GLint uniform_Update_texture_fs_Camera_BGIni;  // initial camera BG capture
 #endif
 
@@ -722,11 +724,13 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_xy_transl_tracks_0_1");
 	uniform_Update_fs_4fv_CAType_SubType_blurRadius
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAType_SubType_blurRadius");
+#if defined (GN) || defined (MALAUSSENA)
+	uniform_Update_texture_fs_CATable
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_CATable");
+#endif
 #ifdef GN
 	uniform_Update_fs_2fv_initCA_1stPlaneFrameNo
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_2fv_initCA_1stPlaneFrameNo");
-	uniform_Update_texture_fs_CATable
-		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_CATable");
 	uniform_Update_texture_fs_Camera_BGIni
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_Camera_BGIni");  // initial background frame
 #endif
@@ -866,9 +870,11 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_texture_fs_CA == -1)
 		|| (uniform_Update_fs_4fv_xy_transl_tracks_0_1 == -1)
 		|| (uniform_Update_fs_4fv_CAType_SubType_blurRadius == -1)
+#if defined (GN) || defined (MALAUSSENA)
+		|| (uniform_Update_texture_fs_CATable == -1)
+#endif
 #ifdef GN
 		|| (uniform_Update_fs_2fv_initCA_1stPlaneFrameNo == -1)
-		|| (uniform_Update_texture_fs_CATable == -1)
 		|| (uniform_Update_texture_fs_Camera_BGIni == -1)
 #endif
 		|| (uniform_Update_texture_fs_Pixels == -1)
@@ -899,8 +905,11 @@ void pg_loadAllShaders(void) {
 #ifdef PG_WITH_CAMERA_CAPTURE
 		fprintf(stderr, "Could not bind uniforms Update uniform_Update_texture_fs_Camera_frame : %d, uniform_Update_texture_fs_Camera_BG : %d\n", uniform_Update_texture_fs_Camera_frame, uniform_Update_texture_fs_Camera_BG);
 #endif
+#if defined (GN) || defined (MALAUSSENA)
+		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_CATable : %d\n",  uniform_Update_texture_fs_CATable );
+#endif
 #ifdef GN
-		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_2fv_initCA_1stPlaneFrameNo : %d, uniform_Update_texture_fs_CATable : %d, uniform_Update_texture_fs_Camera_BGIni : %d\n", uniform_Update_fs_2fv_initCA_1stPlaneFrameNo, uniform_Update_texture_fs_CATable, uniform_Update_texture_fs_Camera_BGIni);
+		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_2fv_initCA_1stPlaneFrameNo : %d, uniform_Update_texture_fs_Camera_BGIni : %d\n", uniform_Update_fs_2fv_initCA_1stPlaneFrameNo, uniform_Update_texture_fs_Camera_BGIni);
 #endif
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths03_x : %d, uniform_Update_fs_4fv_paths03_y : %d, uniform_Update_fs_4fv_paths03_x_prev : %d, uniform_Update_fs_4fv_paths03_y_prev : %d, uniform_Update_fs_4fv_paths03_r : %d, uniform_Update_fs_4fv_paths03_g : %d, uniform_Update_fs_4fv_paths03_b : %d, uniform_Update_fs_4fv_paths03_a : %d, uniform_Update_fs_4fv_paths03_BrushID : %d, uniform_Update_fs_4fv_paths03_RadiusX : %d, uniform_Update_fs_4fv_paths03_RadiusY : %d\n", uniform_Update_fs_4fv_paths03_x, uniform_Update_fs_4fv_paths03_y, uniform_Update_fs_4fv_paths03_x_prev, uniform_Update_fs_4fv_paths03_y_prev, uniform_Update_fs_4fv_paths03_r, uniform_Update_fs_4fv_paths03_g, uniform_Update_fs_4fv_paths03_b, uniform_Update_fs_4fv_paths03_a, uniform_Update_fs_4fv_paths03_BrushID, uniform_Update_fs_4fv_paths03_RadiusX, uniform_Update_fs_4fv_paths03_RadiusY);

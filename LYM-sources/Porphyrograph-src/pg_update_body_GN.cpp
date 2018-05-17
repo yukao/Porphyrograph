@@ -90,7 +90,7 @@
  glUniform1f( uniform_Mixing_fs_1fv_trackMixingWeight_0 ,
 	      (GLfloat)trackMixingWeight_0 );
 
- glUseProgram(shader_programme[pg_shader_ParticleSplat]);
+ glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
  glUseProgram(shader_programme[pg_shader_Master]);
  glUniform4f( uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight ,
@@ -98,7 +98,8 @@
 	      (GLfloat)invertAllLayers,
 	      (GLfloat)cursorSize,
 	      (GLfloat)CAMasterWeight );
- glUniform3f( uniform_Master_fs_3fv_PartMasterWeight_trackMasterWeight_0_hide ,
+ glUniform4f( uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen ,
 	      (GLfloat)PartMasterWeight,
 	      (GLfloat)trackMasterWeight_0,
-	      (GLfloat)hide );
+	      (GLfloat)hide,
+	      (GLfloat)mute_screen );

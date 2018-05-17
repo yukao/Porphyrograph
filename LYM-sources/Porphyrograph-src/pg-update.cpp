@@ -144,9 +144,12 @@ GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
 GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
 GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
 
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
+#endif
+
+#ifdef GN
 GLuint pg_LYMlogo_texID = NULL_ID;
 cv::Mat pg_LYMlogo_image;
 #endif
@@ -644,6 +647,8 @@ void one_frame_variables_reset(void) {
 	isClearCA = 0;
 	// clear layer reset
 	isClearLayer = 0;
+	// clear all layers reset
+	isClearAllLayers = 0;
 	// layer copy reset
 	// copy to layer above (+1) or to layer below (-1)
 	copyToNextTrack = 0;
@@ -1236,6 +1241,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius,
 		GLfloat(CAInterpolatedType),GLfloat(CAInterpolatedSubType),
 		(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
+	// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 	// printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 
 #ifdef GN
@@ -1586,8 +1592,10 @@ void pg_UpdatePass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Update_texture_fs_Trk3, pg_Trk3_FBO_Update_sampler);
 #endif
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 	glUniform1i(uniform_Update_texture_fs_CATable, pg_CATable_Update_sampler);
+#endif
+#ifdef GN
 	glUniform1i(uniform_Update_texture_fs_Camera_BGIni, pg_Camera_BGIni_FBO_Update_sampler);
 #endif
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -1737,11 +1745,13 @@ void pg_UpdatePass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
 
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 	// CA Data table (FBO attachment 11)
 	glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
+#endif 
 
+#ifdef GN
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BGIni_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BGIni_texture_texID);

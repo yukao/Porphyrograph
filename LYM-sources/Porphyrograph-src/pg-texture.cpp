@@ -196,14 +196,14 @@ bool pg_initTextures(void) {
 			pg_particle_initial_images_texID[ind]); // 2 texture IDs one for pos/speed, the other one for color/radius
 	}
 
-#ifdef GN
+#if defined (GN) || defined (MALAUSSENA)
 #define width_data_table 600
 #define height_data_table 200
 	pg_CATable =
 		(GLubyte *)pg_generateTexture(&pg_CATable_ID, pg_byte_tex_format,
 			width_data_table, height_data_table);
 	pg_CATable_values(pg_CATable_ID, pg_CATable,
-		width_data_table, height_data_table);
+			width_data_table, height_data_table);
 	if (!pg_CATable_ID) {
 		sprintf(ErrorStr, "Error: data tables for the CA bitmap not allocated (%s)!", ScreenMessage); ReportError(ErrorStr); throw 336;
 	}

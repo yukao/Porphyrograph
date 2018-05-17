@@ -1440,7 +1440,8 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 	}
 	else if (ScenarioVarTypes[indParam] == _pg_int) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-			if (indParam == _CA1Type || indParam == _CA2Type ||indParam == _CA1SubType || indParam == _CA2SubType) {
+			if (indParam == _CA1Type || indParam == _CA2Type ||
+				indParam == _CA1SubType || indParam == _CA2SubType) {
 				// for CAType we choose to alternate randomly between both types, according
 				// to the proximity of floor or ceiling
 				float randVal = (float)rand() / (float)RAND_MAX;
@@ -2935,7 +2936,7 @@ void pg_aliasScript(char *command_symbol,
 	else if (strcmp(newCommand, "CA1SubType_plus") == 0) {
 		CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
 		BrokenInterpolationVar[_CA1SubType] = true;
-		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1Type;
+		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
 	}
 	else if (strcmp(newCommand, "CAonOff") == 0) {
 		if (CA1SubType != 0) {
@@ -2946,7 +2947,7 @@ void pg_aliasScript(char *command_symbol,
 			CA1SubType = CASubTypeMem;
 		}
 		BrokenInterpolationVar[_CA1SubType] = true;
-		// printf("CA1SubType %d\n", CA1SubType);
+		printf("CA1SubType ON/OFF %d\n", CA1SubType);
 		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 

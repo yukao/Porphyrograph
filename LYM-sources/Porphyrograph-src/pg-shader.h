@@ -186,9 +186,11 @@ extern GLint uniform_Update_fs_4fv_photo01_wh;
 extern GLint uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
 extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
+#if defined (GN) || defined (MALAUSSENA)
+extern GLint uniform_Update_texture_fs_CATable;
+#endif
 #ifdef GN
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
-extern GLint uniform_Update_texture_fs_CATable;
 extern GLint uniform_Update_texture_fs_Camera_BGIni;
 #endif
 
