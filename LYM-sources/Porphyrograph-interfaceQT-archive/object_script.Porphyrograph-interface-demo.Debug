@@ -1,0 +1,16 @@
+INPUT(
+./debug\pg-interface-core-main.o
+./debug\pg-interface-core-window.o
+./debug\pg-interface-core-comm.o
+./debug\pg-interface-core-display.o
+./debug\pg-interface-core-udp.o
+./debug\pg-interface-core-control.o
+./debug\pg-interface-core-data.o
+./debug\RtMidi.o
+./debug\rtmidi_c.o
+./debug\moc_pg-interface-core-comm.o
+./debug\moc_pg-interface-core-display.o
+./debug\moc_pg-interface-core-udp.o
+./debug\moc_pg-interface-core-window.o
+./debug\moc_pg-interface-core-control.o
+);

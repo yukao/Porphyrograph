@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-composition.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-conf.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-draw.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-geom-objects.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-interpolator.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-IOfile.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-lib.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-main.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-material.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-non-geom-objects.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-scene.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-script.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-shader.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-strings.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-stroke.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-texture.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-udp.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-variables.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\DM\src-1.42\dm-video.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-all_include.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-composition.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-conf.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-draw.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-geom-objects.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-interpolator.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-IOfile.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-lib.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-main.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-material.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-non-geom-objects.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-scene.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-script.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-shader.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-strings.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-stroke.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-texture.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-udp.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-variables.h" />
+    <ClInclude Include="..\SourcesBerfore18\DM\src-1.42\dm-video.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C047E8E4-3C40-4E5A-8066-D75E1123A0E1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Porphyrograph</RootNamespace>
+    <ProjectName>Porphyrograph_DM_dcONT</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>Porphyrograph_alKemi</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>Porphyrograph_DM_dcONT</TargetName>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <IntDir>$(Configuration)\DM_dcONT\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\DM_dcONT\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;VC_HAVE_CG;VC_HAVE_FFMPEG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../include;C:\Users\jacquemi\opencv\include;C:\Users\jacquemi\opencv\build\include;C:\Users\jacquemi\glew-1.11.0\include;C:\Users\jacquemi\freeglut\include</AdditionalIncludeDirectories>
+      <FloatingPointModel>Precise</FloatingPointModel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core249d.lib;opencv_imgproc249d.lib;opencv_highgui249d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\jacquemi\opencv\build\x86\vc12\lib;C:\Users\jacquemi\glew-1.11.0\lib\Release\Win32;C:\Users\jacquemi\Porphyrograph\freeglut-2.8.1\lib\x86\Debug</AdditionalLibraryDirectories>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;dcONT;VC_EXTERN_LIVE_VIDEO;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\dirent-1.21\include</AdditionalIncludeDirectories>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core320.lib;opencv_imgproc320.lib;opencv_imgcodecs320.lib;opencv_highgui320.lib;opencv_video320.lib;opencv_videoio320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\share\freeglut-wacom\VC17\lib\Release;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Release;..\share\freeglut-3.0.0\VC15\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

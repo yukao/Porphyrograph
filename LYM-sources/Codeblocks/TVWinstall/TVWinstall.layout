@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<FileVersion major="1" minor="0" />
+	<ActiveTarget name="Release" />
+	<File name="../../Porphyrograph-TVWinstall-src/pg-shader.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2094" topLine="40" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-script.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3095" topLine="92" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-stroke.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="67578" topLine="1530" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-draw.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="986" topLine="15" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-udp.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1614" topLine="41" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-conf.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="847" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-udp.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="19191" topLine="575" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-main.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1977" topLine="47" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-main.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="22084" topLine="726" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-script.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="46071" topLine="1243" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-texture.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2859" topLine="92" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-shader.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="14865" topLine="345" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-conf.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="26310" topLine="757" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg_script_header.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6214" topLine="138" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-all_include.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5092" topLine="144" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-texture.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="36179" topLine="925" />
+		</Cursor>
+	</File>
+	<File name="../../Porphyrograph-TVWinstall-src/pg-draw.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="63994" topLine="1577" />
+		</Cursor>
+	</File>
+</CodeBlocks_layout_file>

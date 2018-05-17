@@ -1,0 +1,13 @@
+opencv-dev
+
+codeblocks
+
+https://doc.ubuntu-fr.org/ppa
+
+sudo add-apt-repository ppa:https://launchpad.net/~damien-moore/+archive/ubuntu/codeblocks-stable
+sudo apt-get update
+sudo apt-get install codeblocks
+
+freeglut
+
+

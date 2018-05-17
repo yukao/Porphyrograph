@@ -1,0 +1,135 @@
+ 
+pg-SVG-to-bitmap.cpp: In function ‘void pg_load_svg_track(char*, int, bool)’:
+pg-SVG-to-bitmap.cpp:41:13: error: ‘currentDrawingTrack’ was not declared in this scope
+     switch( currentDrawingTrack ) {
+             ^
+pg-SVG-to-bitmap.cpp:43:9: error: ‘track_replay_0’ was not declared in this scope
+         track_replay_0 = false;
+         ^
+pg-SVG-to-bitmap.cpp:44:9: error: ‘source_track_record_0’ was not declared in this scope
+         source_track_record_0 = false;
+         ^
+pg-SVG-to-bitmap.cpp:45:9: error: ‘target_track_record_0’ was not declared in this scope
+         target_track_record_0 = false;
+         ^
+pg-SVG-to-bitmap.cpp:49:9: error: ‘track_replay_1’ was not declared in this scope
+         track_replay_1 = false;
+         ^
+pg-SVG-to-bitmap.cpp:50:9: error: ‘source_track_record_1’ was not declared in this scope
+         source_track_record_1 = false;
+         ^
+pg-SVG-to-bitmap.cpp:51:9: error: ‘target_track_record_1’ was not declared in this scope
+         target_track_record_1 = false;
+         ^
+pg-SVG-to-bitmap.cpp:62:5: error: ‘tracks_x’ was not declared in this scope
+     tracks_x[ indTrack ] = -1.0F;
+     ^
+pg-SVG-to-bitmap.cpp:63:5: error: ‘tracks_y’ was not declared in this scope
+     tracks_y[ indTrack ] = -1.0F;
+     ^
+pg-SVG-to-bitmap.cpp:64:5: error: ‘tracks_x_prev’ was not declared in this scope
+     tracks_x_prev[ indTrack ] = -1.0F;
+     ^
+pg-SVG-to-bitmap.cpp:65:5: error: ‘tracks_y_prev’ was not declared in this scope
+     tracks_y_prev[ indTrack ] = -1.0F;
+     ^
+pg-SVG-to-bitmap.cpp:66:5: error: ‘tracks_Color_r’ was not declared in this scope
+     tracks_Color_r[ indTrack ] = 0.0F;
+     ^
+pg-SVG-to-bitmap.cpp:67:5: error: ‘tracks_Color_g’ was not declared in this scope
+     tracks_Color_g[ indTrack ] = 0.0F;
+     ^
+pg-SVG-to-bitmap.cpp:68:5: error: ‘tracks_Color_b’ was not declared in this scope
+     tracks_Color_b[ indTrack ] = 0.0F;
+     ^
+pg-SVG-to-bitmap.cpp:69:5: error: ‘tracks_Color_a’ was not declared in this scope
+     tracks_Color_a[ indTrack ] = 1.0F;
+     ^
+pg-SVG-to-bitmap.cpp:70:5: error: ‘tracks_RadiusX’ was not declared in this scope
+     tracks_RadiusX[ indTrack ] = 0.0F;
+     ^
+pg-SVG-to-bitmap.cpp:71:5: error: ‘tracks_RadiusY’ was not declared in this scope
+     tracks_RadiusY[ indTrack ] = 0.0F;
+     ^
+pg-SVG-to-bitmap.cpp:76:64: error: ‘readsvg’ was not declared in this scope
+     readsvg( &indDepth , indTrack , fileName , is_source_track );
+                                                                ^
+pg-SVG-to-bitmap.cpp: In function ‘void readsvg(char*)’:
+pg-SVG-to-bitmap.cpp:87:14: error: ‘ErrorStr’ was not declared in this scope
+     sprintf( ErrorStr , "Error: file [%s] not found!" , fileName ); ReportError( ErrorStr ); throw 11;
+              ^
+pg-SVG-to-bitmap.cpp:87:91: error: ‘ReportError’ was not declared in this scope
+     sprintf( ErrorStr , "Error: file [%s] not found!" , fileName ); ReportError( ErrorStr ); throw 11;
+                                                                                           ^
+pg-SVG-to-bitmap.cpp:104:40: error: variable ‘std::stringstream sstream’ has initializer but incomplete type
+         std::stringstream  sstream(line);
+                                        ^
+pg-SVG-to-bitmap.cpp:139:45: error: ‘indTrack’ was not declared in this scope
+    LoadTrackFromPath( (char *)val.c_str() , indTrack , translation , isSource );
+                                             ^
+pg-SVG-to-bitmap.cpp:139:70: error: ‘isSource’ was not declared in this scope
+    LoadTrackFromPath( (char *)val.c_str() , indTrack , translation , isSource );
+                                                                      ^
+pg-SVG-to-bitmap.cpp:139:79: error: ‘LoadTrackFromPath’ was not declared in this scope
+    LoadTrackFromPath( (char *)val.c_str() , indTrack , translation , isSource );
+                                                                               ^
+pg-SVG-to-bitmap.cpp: At global scope:
+pg-SVG-to-bitmap.cpp:159:33: error: ‘init’ has not been declared
+ void pg_writepng( char *fname , init w , int h , cv::Mat *img ) {
+                                 ^
+pg-SVG-to-bitmap.cpp:159:50: error: ‘cv’ has not been declared
+ void pg_writepng( char *fname , init w , int h , cv::Mat *img ) {
+                                                  ^
+pg-SVG-to-bitmap.cpp:159:58: error: expected ‘,’ or ‘...’ before ‘*’ token
+ void pg_writepng( char *fname , init w , int h , cv::Mat *img ) {
+                                                          ^
+pg-SVG-to-bitmap.cpp: In function ‘void pg_writepng(char*, int, int, int)’:
+pg-SVG-to-bitmap.cpp:161:3: error: ‘cv’ has not been declared
+   cv::Mat result;
+   ^
+pg-SVG-to-bitmap.cpp:161:11: error: expected ‘;’ before ‘result’
+   cv::Mat result;
+           ^
+pg-SVG-to-bitmap.cpp:162:3: error: ‘cv’ has not been declared
+   cv::flip(*(img), result , 0); // vertical flip
+   ^
+pg-SVG-to-bitmap.cpp:162:14: error: ‘img’ was not declared in this scope
+   cv::flip(*(img), result , 0); // vertical flip
+              ^
+pg-SVG-to-bitmap.cpp:162:20: error: ‘result’ was not declared in this scope
+   cv::flip(*(img), result , 0); // vertical flip
+                    ^
+pg-SVG-to-bitmap.cpp:164:3: error: ‘cv’ has not been declared
+   cv::cvtColor(result, result, CV_RGB2BGR);
+   ^
+pg-SVG-to-bitmap.cpp:164:32: error: ‘CV_RGB2BGR’ was not declared in this scope
+   cv::cvtColor(result, result, CV_RGB2BGR);
+                                ^
+pg-SVG-to-bitmap.cpp:167:20: error: ‘CV_IMWRITE_PNG_COMPRESSION’ was not declared in this scope
+   params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+                    ^
+pg-SVG-to-bitmap.cpp:176:3: error: ‘cv’ has not been declared
+   cv::imwrite( fname , result );
+   ^
+pg-SVG-to-bitmap.cpp:178:10: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
+   delete img;
+          ^
+pg-SVG-to-bitmap.cpp: In function ‘int main()’:
+pg-SVG-to-bitmap.cpp:189:3: error: ‘cv’ has not been declared
+   cv::Mat img = new cv::Mat( h, w, CV_8UC3 );
+   ^
+pg-SVG-to-bitmap.cpp:189:11: error: expected ‘;’ before ‘img’
+   cv::Mat img = new cv::Mat( h, w, CV_8UC3 );
+           ^
+pg-SVG-to-bitmap.cpp:193:33: error: expected primary-expression before ‘int’
+   pg_load_svg_track( SVGfname , int indTrack , bool is_source_track );
+                                 ^
+pg-SVG-to-bitmap.cpp:193:48: error: expected primary-expression before ‘bool’
+   pg_load_svg_track( SVGfname , int indTrack , bool is_source_track );
+                                                ^
+pg-SVG-to-bitmap.cpp:194:55: error: ‘pData’ was not declared in this scope
+   pg_svg2bitmap( SVGfname , PG_IMAGE_W , PG_IMAGE_H , pData->img->data );
+                                                       ^
+pg-SVG-to-bitmap.cpp:194:72: error: ‘pg_svg2bitmap’ was not declared in this scope
+   pg_svg2bitmap( SVGfname , PG_IMAGE_W , PG_IMAGE_H , pData->img->data );
+                                                                        ^

@@ -1,0 +1,14 @@
+INPUT(
+./release\pg-interface-song-main.o
+./release\pg-interface-song-window.o
+./release\pg-interface-song-comm.o
+./release\pg-interface-song-display.o
+./release\pg-interface-song-udp.o
+./release\pg-interface-song-control.o
+./release\pg-interface-song-data.o
+./release\moc_pg-interface-song-comm.o
+./release\moc_pg-interface-song-display.o
+./release\moc_pg-interface-song-udp.o
+./release\moc_pg-interface-song-window.o
+./release\moc_pg-interface-song-control.o
+);

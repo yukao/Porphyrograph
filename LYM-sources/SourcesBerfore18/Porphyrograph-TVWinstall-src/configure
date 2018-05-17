@@ -1,0 +1,321 @@
+#!/bin/sh
+
+####################################################################
+## 
+## 
+##     File configure - from ffmpeg configure 
+## 
+##
+##
+## This program is free software; you can redistribute it and#or
+## modify it under the terms of the GNU Lesser General Public License
+## as published by the Free Software Foundation; either version 2.1
+## of the License, or (at your option) any later version.
+## 
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## Lesser General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public
+## License along with this program; if not, write to the Free
+## Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+## 02111-1307, USA.
+####################################################################
+
+# set temporary file name
+if test ! -z "$TMPDIR" ; then
+    TMPDIR1="${TMPDIR}"
+elif test ! -z "$TEMPDIR" ; then
+    TMPDIR1="${TEMPDIR}"
+else
+    TMPDIR1="/tmp"
+fi
+
+TMPH="${TMPDIR1}/virchor-conf-${RANDOM}-$$-${RANDOM}.h"
+EXESUF=""
+
+# TARGET Kernel name
+TARGET_KERNEL=`( uname -s ) 2>&1`
+  case "$TARGET_KERNEL" in
+  Linux|FreeBSD|NetBSD|BSD/OS|OpenBSD|SunOS|QNX|GNU)
+    TARGET_KERNEL=UNIX
+    ;;
+  Darwin)
+    TARGET_KERNEL=UNIX
+    TARGET_OS=MacOS
+    ;;
+  WIN*)
+    TARGET_KERNEL=WIN32
+    EXESUF=".exe"
+    ;;
+  [cC][yY][gG][wW][iI][nN]*)
+    TARGET_KERNEL=CYGWIN
+    EXESUF=".exe"
+    ;;
+   MINGW*)
+    TARGET_KERNEL=MINGW32
+    ;;
+  *)
+    TARGET_KERNEL="$TARGET_KERNEL-UNKNOWN"
+    ;;
+  esac
+
+# find source path
+# absolute path is given when launching configure, 
+# except when launched with './configure'.
+source_path="`echo $0 | sed -e 's#/configure##'`"
+source_path_used="yes"
+if test -z "$source_path" -o "$source_path" = "." ; then
+    source_path=`pwd`
+    source_path_used="no"
+fi
+# echo $source_path
+
+# default parameters
+optimize="yes"
+prefix="/usr/local"
+mandir=""
+bindir=""
+cxx="g++ -std=c++11 "
+debug="yes"
+extralibs=""
+make="make"
+cpu=`uname -m`
+CXXFLAGS=" -I. -I./include -I/sw/include -I/usr/include -I/usr/include/glm -I/usr/X11R6/include  -I/usr/X11R6/include/X11  -I/usr/local/include"
+LDFLAGS="-Wall -L. -L./lib -L/usr/local/lib -L/sw/lib -L/usr/X11R6/lib -L./../lib"
+OpenCV="no"
+ffmpeg="no"
+
+case "$cpu" in
+  i386|i486|i586|i686|i86pc|BePC)
+    cpu="x86"
+    endian="little"
+  ;;
+  alpha)
+    cpu="alpha"
+    endian="little" # DEC Alpha processor is switchable endian
+  ;;
+  "Power Macintosh"|ppc)
+    cpu="powerpc"
+    endian="big"
+  ;;
+  *)
+    cpu="unknown"
+    endian="unknown"
+  ;;
+esac
+
+# custom parameters
+# configure command line options
+for opt do
+  case "$opt" in
+  --prefix=*) prefix=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --mandir=*) mandir=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --source-path=*) source_path=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --cxx=*) cxx=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --make=*) make=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --extra-cflags=*) CXXFLAGS="${opt#--extra-cflags=}"
+  ;;
+  --extra-ldflags=*) LDFLAGS=${opt#--extra-ldflags=}
+  ;;
+  --extra-libs=*) extralibs=${opt#--extra-libs=}
+  ;;
+  --cpu=*) cpu=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --enable-ffmpeg) ffmpeg="yes"
+  ;;
+  --disable-debug) debug="no"
+  ;;
+  --disable-opts) optimize="no"
+  ;;
+  esac
+done
+
+if test "$debug" = "yes"; then
+	CXXFLAGS="$CXXFLAGS -g"
+fi
+
+if test "$optimize" = "yes"; then
+	CXXFLAGS="$CXXFLAGS -O3"
+fi
+
+CXXFLAGS="$CXXFLAGS -DCPU_ENDIAN=$endian"
+
+if test x"$bindir" = x""; then
+bindir="${prefix}/bin"
+fi
+
+if test x"$mandir" = x""; then
+mandir="${prefix}/man"
+fi
+
+if test x"$1" = x"-h" -o x"$1" = x"--help" ; then
+cat << EOF
+
+Usage: configure [options]
+Options: [defaults in brackets after descriptions]
+
+EOF
+echo "Standard options:"
+echo "  --help                     print this message"
+echo "  --prefix=PREFIX            install in PREFIX [$prefix]"
+echo "  --mandir=DIR               man documentation in DIR [PREFIX/man]"
+echo "  --enable-double-screen     enables auxiliary monitor screen"
+echo "  --enable-OpenCV            enables OpenCV video library"
+echo "  --enable-ffmpeg            enables ffmpeg video"
+echo "Advanced options (experts only):"
+echo "  --source-path=PATH         path of source code [$source_path]"
+echo "  --cxx=CXX                  use C++ compiler CXX [$cxx]"
+echo "  --make=MAKE                use specified make [$make]"
+echo "  --extra-cflags=ECXXFLAGS   add ECXXFLAGS to CXXFLAGS [$CXXFLAGS]"
+echo "  --extra-ldflags=ELDFLAGS   add ELDFLAGS to LDFLAGS [$LDFLAGS]"
+echo "  --extra-libs=ELIBS         add ELIBS [$ELIBS]"
+echo "  --cpu=CPU                  force cpu to CPU  [$cpu]"
+echo "  --disable-debug            disable debugging symbols"
+echo "  --disable-opts             disable compiler optimizations"
+echo ""
+echo "NOTE: The object files are build at the place where configure is launched"
+exit 1
+fi
+
+echo "Install prefix         $prefix"
+echo "Source path            $source_path"
+echo "C++ compiler           $cxx"
+echo "make                   $make"
+echo "CPU                    $cpu ($tune)"
+echo "debug symbols          $debug"
+echo "optimize               $optimize"
+echo "target Kernel          $TARGET_KERNEL"
+echo "ffmpeg support         $ffmpeg"
+
+echo "Creating config.mak and config.h"
+
+echo "# Automatically generated by configure - do not modify" > config.mak
+echo "/* Automatically generated by configure - do not modify */" > $TMPH
+
+# configuration file for makefile
+
+echo "prefix=$prefix" >> config.mak
+echo "bindir=$bindir" >> config.mak
+echo "mandir=$mandir" >> config.mak
+echo "MAKE=$make" >> config.mak
+echo "CXX=$cxx" >> config.mak
+echo "TARGET_KERNEL=$TARGET_KERNEL" >> config.mak
+
+CXXFLAGS="$CXXFLAGS $ECXXFLAGS"
+LDFLAGS="$LDFLAGS $ELDFLAGS"
+LDLIBS="$LDLIBS $ELIBS"
+
+# custom header file and custom makefile options
+
+if test "$ffmpeg" = "yes" ; then
+  echo "BUILD_FFMPEG=yes" >> config.mak
+  echo "#define PG_HAVE_FFMPEG 1" >> $TMPH
+
+  if test "$TARGET_KERNEL" = "Unix" ; then
+    # contains libav headers
+    FFMPEG_INC_DIR="/usr/include/ffmpeg"
+    echo "FFMPEG_GREP=/usr/include/ffmpeg" >> config.mak
+    LDLIBS="$LDLIBS -lavcodec -lavutil -lavformat -lavdevice -lswscale"
+  fi
+  if test "$TARGET_KERNEL" = "UNIX" ; then
+    # contains libav headers
+    FFMPEG_INC_DIR="/usr/include/ffmpeg"
+    echo "FFMPEG_GREP=/usr/include/ffmpeg" >> config.mak
+    LDLIBS="$LDLIBS -lavcodec -lavutil -lavformat -lavdevice -lswscale"
+  fi
+  if test "$TARGET_KERNEL" = "MINGW32" ; then
+    # contains libav headers
+    FFMPEG_INC_DIR="/mingw/usr/include/ffmpeg"
+    echo "FFMPEG_GREP=/usr/include/ffmpeg" >> config.mak
+    LDLIBS="$LDLIBS /mingw/usr/include/ffmpeg/avcodec.dll /mingw/usr/include/ffmpeg/avutil.dll /mingw/usr/include/ffmpeg/avformat.dll /mingw/usr/include/ffmpeg/avdevice.dll"
+  fi
+  if test "$TARGET_KERNEL" = "CYGWIN" ; then
+    # contains libav headers
+    FFMPEG_INC_DIR="/usr/include/ffmpeg"
+    echo "FFMPEG_GREP=/usr/include/ffmpeg" >> config.mak
+    LDLIBS="$LDLIBS /usr/include/ffmpeg/cygavcodec.dll /usr/include/ffmpeg/cygavutil.dll /usr/include/ffmpeg/cygavformat.dll /usr/include/ffmpeg/cygavdevice.dll"
+  fi
+
+  CXXFLAGS="$CXXFLAGS -I/usr/include -I/usr/include/libavcodec -I/usr/include/libavformat -I/usr/include/libavdevice -I/usr/include/libavutil -I/usr/include/libswscale -I$FFMPEG_INC_DIR/libavcodec -I$FFMPEG_INC_DIR/libavformat -I$FFMPEG_INC_DIR/libavdevice -I$FFMPEG_INC_DIR/libavutil -I$FFMPEG_INC_DIR/libswscale"
+fi
+
+if test "$TARGET_KERNEL" = "Unix" ; then
+  echo "#define UNIX 1" >> $TMPH
+  if test "$TARGET_OS" = "MacOS" ; then
+    LDLIBS="$LDLIBS -dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib  -lGLU -framework GLUT -lobjc -lopencv_core -lopencv_imgproc -lopencv_highgui"
+    LDLIBS="$LDLIBS -lGLEW "
+  else
+    LDLIBS="$LDLIBS -lGL  -lGLU -lglut -lopencv_core -lopencv_imgproc -lopencv_highgui"
+    LDLIBS="$LDLIBS -lGLEW "
+  fi
+fi
+if test "$TARGET_KERNEL" = "UNIX" ; then
+  echo "#define UNIX 1" >> $TMPH
+  if test "$TARGET_OS" = "MacOS" ; then
+    LDLIBS="$LDLIBS -lGL  -lGLU -framework GLUT -lobjc -lopencv_core -lopencv_imgproc -lopencv_highgui"
+    LDLIBS="$LDLIBS -lGLEW "
+  else
+    LDLIBS="$LDLIBS -lGL  -lGLU -lglut -lm -lpthread -lstdc++ -lopencv_core -lopencv_imgproc -lopencv_highgui"
+    LDLIBS="$LDLIBS -lGLEW "
+  fi
+fi
+
+if test "$TARGET_KERNEL" = "MINGW32" ; then
+  echo "#define _WIN32 1" >> $TMPH
+  CXXFLAGS="$CXXFLAGS -I/mingw/usr/local/include -I/mingw/usr/local/share/ -I/mingw/usr/local/share/jpeg-6b/include -I/mingw/usr/local/share/libpng-1.2.8/include -I/mingw/usr/local/share/glew/include/GL -I/mingw/usr/local/share/glut-3.7.6-bin -I/mingw/usr/local/share/zlib -I/mingw/usr/local/share"
+  LDFLAGS="$LDFLAGS -L/mingw/usr/local/lib -L/mingw/usr/local/share/ -L/mingw/usr/local/share/zlib -L/mingw/usr/local/share/jpeg-6b/lib -L/mingw/usr/local/share/libpng-1.2.8/lib -L/mingw/usr/local/share/glew/lib -L/mingw/usr/local/share/glut-3.7.6-bin"
+  LDLIBS="$LDLIBS -lopengl32 -lGLU32 -lglut32 -lopencv_core -lopencv_imgproc -lopencv_highgui -lglew32 -lWs2_32 -lGdi32 "
+  if test "$ffmpeg" = "yes" ; then
+     LDFLAGS="$LDFLAGS -L/mingw/usr/include/ffmpeg -L/mingw/usr/include/ffmpeg -L/mingw/usr/include/ffmpeg -L/mingw/usr/include/ffmpeg "
+  fi
+fi
+
+if test "$TARGET_KERNEL" = "CYGWIN" ; then
+  echo "#define _WIN32 1" >> $TMPH
+  CXXFLAGS="$CXXFLAGS -I/usr/local/include -I/usr/local/share/ -I/usr/local/share/jpeg-6b/include -I/usr/local/share/libpng-1.2.8/include -I/usr/local/share/glut-3.7.6-bin -I/usr/local/share/zlib -I/usr/local/share"
+  LDFLAGS="$LDFLAGS -L/usr/local/lib -L/usr/local/share/ -L/mingw/usr/local/share/zlib -L/usr/local/share/jpeg-6b/lib -L/usr/local/share/libpng-1.2.8/lib -L/usr/local/share/glut-3.7.6-bin"
+  LDLIBS="$LDLIBS -lopengl32 -lGLU32 -lglut32 -lopencv_core -lopencv_imgproc -lopencv_highgui -lWs2_32 -lGdi32 "
+  if test "$ffmpeg" = "yes" ; then
+     LDFLAGS="$LDFLAGS -L/usr/include/ffmpeg -L/usr/include/ffmpeg -L/usr/include/ffmpeg -L/usr/include/ffmpeg "
+  fi
+fi
+
+# Mac OS X notification (for key modifiers restrictions)
+if test "$TARGET_OS" = "MacOS" ; then
+  echo "#define PG_MACOS 1" >> $TMPH
+  LDFLAGS="$LDFLAGS -L/Library/Frameworks -L/System/Library/Frameworks/GLUT.framework -L/Library/Frameworks/jpeg.framework -L/Library/Frameworks/libpng.framework -L/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/ -L/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ImageIO.framework/Resources"
+  CXXFLAGS="$CXXFLAGS -I/Library/Frameworks/Headers -I/System/Library/Frameworks/GLUT.framework/Headers -I/Library/Frameworks/jpeg.framework/Headers -I/Library/Frameworks/libpng.framework/Headers"
+fi
+
+echo "LDFLAGS=$LDFLAGS" >> config.mak
+echo "LDLIBS=$LDLIBS" >> config.mak
+echo "OPTFLAGS=$CXXFLAGS" >> config.mak
+
+# build tree in object directory if source path is different from current one
+if test "$source_path_used" = "yes" ; then
+    DIRS="src"
+    FILES="Makefile src/Makefile"
+    for dir in $DIRS ; do
+            mkdir -p $dir
+    done
+    for f in $FILES ; do
+        ln -sf $source_path/$f $f
+    done
+fi
+echo "SRC_PATH=$source_path" >> config.mak
+
+diff $TMPH config.h >/dev/null 2>&1
+if test $? -ne 0 ; then
+	mv -f $TMPH config.h
+else
+	echo "config.h is unchanged"
+fi
+
+rm -f $TMPH

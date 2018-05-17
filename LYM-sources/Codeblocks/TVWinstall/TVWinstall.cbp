@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="TVWinstall" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/TVWinstall" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="/home/christian/LYM" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="./TVWinstall/configuration/LYM_TVWinstall-head-single.csv ./TVWinstall/scenarios/LYM_TVWinstall-scenario.csv" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/TVWinstall" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="/home/christian/LYM" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="./TVWinstall/configuration/LYM_TVWinstall-head-single.csv ./TVWinstall/scenarios/LYM_TVWinstall-scenario.csv" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Linker>
+			<Add option="-lGL" />
+			<Add option="-lGLU" />
+			<Add option="-lglut" />
+			<Add option="-lm" />
+			<Add option="-lpthread" />
+			<Add option="-lstdc++" />
+			<Add option="-lopencv_core" />
+			<Add option="-lopencv_imgproc" />
+			<Add option="-lopencv_highgui" />
+			<Add option="-lopencv_video" />
+			<Add option="-lGLEW" />
+		</Linker>
+		<Unit filename="../../Porphyrograph-TVWinstall-src/config.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-all_include.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-conf.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-conf.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-draw.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-draw.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-main.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-main.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-script.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-script.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-shader.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-shader.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-stroke.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-stroke.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-texture.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-texture.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-udp.cpp" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg-udp.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg_script_header.h" />
+		<Unit filename="../../Porphyrograph-TVWinstall-src/pg_shader_header.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

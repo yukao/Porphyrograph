@@ -1,0 +1,2 @@
+cd D:\D-Desktop\ENSBA_2018\programmes-ENSBA\processing\programmes\drawing
+"D:\Program Files (x86)\pd\bin\pd.exe" -lib osc -lib oscx -noprefs -font-face "Lucida Console" -path "D:\Program Files (x86)\pd\extra\mrpeach" -open ./drawing_interface.pd 

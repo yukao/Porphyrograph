@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+while( $out = <STDIN> ) {
+    chomp($out);
+    while( $out =~ /(.*)dm_(.*)/ ) {
+	$out = "$1"."vcl_"."$2";
+    }
+    while( $out =~ /(.*)DM_(.*)/ ) {
+	$out = "$1"."VCL_"."$2";
+    }
+    while( $out =~ /(.*)dm-(.*)/ ) {
+	$out = "$1"."vcl-"."$2";
+    }
+    while( $out =~ /(.*)DM-(.*)/ ) {
+	$out = "$1"."VCL-"."$2";
+    }
+    print $out."\n";
+}
+

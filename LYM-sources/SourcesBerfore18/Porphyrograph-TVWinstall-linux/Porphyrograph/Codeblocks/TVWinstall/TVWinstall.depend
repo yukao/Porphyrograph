@@ -1,0 +1,152 @@
+# depslib dependency file v1.0
+1494745450 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-conf.cpp
+	"pg-all_include.h"
+
+1494913690 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-all_include.h
+	"config.h"
+	<dirent.h>
+	<X11/keysym.h>
+	<stdio.h>
+	<iostream>
+	<iomanip>
+	<math.h>
+	<stdlib.h>
+	<stdarg.h>
+	<string.h>
+	<cstdio>
+	<cstring>
+	<dirent.h>
+	<time.h>
+	<ctype.h>
+	<fcntl.h>
+	<errno.h>
+	<fstream>
+	<random>
+	<limits.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<sys/resource.h>
+	<netdb.h>
+	<stdint.h>
+	<sys/stat.h>
+	<unistd.h>
+	<winsock2.h>
+	<Ws2tcpip.h>
+	<io.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<Psapi.h>
+	<time.h>
+	<Winbase.h>
+	<Windows.h>
+	<sys/time.h>
+	<pthread.h>
+	<opencv/cv.h>
+	<opencv/highgui.h>
+	<opencv2/core/core.hpp>
+	<opencv2/imgproc.hpp>
+	<opencv2/highgui.hpp>
+	<opencv2/core/core.hpp>
+	<opencv2/imgproc/imgproc.hpp>
+	<opencv2/highgui/highgui.hpp>
+	<list>
+	<vector>
+	<map>
+	<fstream>
+	<GL/glew.h>
+	"../share/freeglut-wacom/include/GL/freeglut.h"
+	"../share/freeglut-3.0.0/include/GL/freeglut.h"
+	<glut.h>
+	<GL/glu.h>
+	<GL/glx.h>
+	<GLUT/glut.h>
+	<GL/freeglut.h>
+	<GL/freeglut_ext.h>
+	"pg_script_header.h"
+	"pg-udp.h"
+	"pg-script.h"
+	"pg-draw.h"
+	"pg-texture.h"
+	"pg-shader.h"
+	"pg-stroke.h"
+	"pg-main.h"
+	"pg-conf.h"
+
+1494369680 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/config.h
+
+1495015900 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg_script_header.h
+
+1494652260 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-udp.h
+
+1495001418 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-script.h
+
+1495014427 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-draw.h
+
+1494435714 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-texture.h
+
+1494666819 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-shader.h
+	"pg_shader_header.h"
+
+1495015900 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg_shader_header.h
+
+1494369680 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-stroke.h
+
+1494420218 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-main.h
+
+1495001563 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-conf.h
+
+1494880234 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-draw.cpp
+	"pg-all_include.h"
+	"pg_draw_body.cpp"
+
+1494880540 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg_draw_body.cpp
+
+1494880084 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-main.cpp
+	<stdlib.h>
+	<crtdbg.h>
+	"pg-all_include.h"
+
+1494883176 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-script.cpp
+	"pg-all_include.h"
+	"pg_script_body.cpp"
+
+1494883902 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg_script_body.cpp
+
+1494667192 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-shader.cpp
+	"pg-all_include.h"
+	"pg_shader_body_decl.cpp"
+	"pg_shader_body_bind.cpp"
+
+1495015900 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg_shader_body_decl.cpp
+
+1495015900 /home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg_shader_body_bind.cpp
+
+1494369680 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-stroke.cpp
+	"pg-all_include.h"
+
+1494843569 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-texture.cpp
+	"pg-all_include.h"
+
+1494827935 source:/home/prod-graphique/Bureau/Yukao/Porphyrograph/Porphyrograph-TVWinstall-src/pg-udp.cpp
+	"pg-all_include.h"
+
+1066736514 /home/prod-graphique/Bureau/Yukao/Porphyrograph/share/freeglut-3.0.0/include/GL/freeglut.h
+	"freeglut_std.h"
+	"freeglut_ext.h"
+
+1413563304 /home/prod-graphique/Bureau/Yukao/Porphyrograph/share/freeglut-3.0.0/include/GL/freeglut_std.h
+	<windows.h>
+	<EGL/egl.h>
+	<GLES/gl.h>
+	<GLES2/gl2.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<stdlib.h>
+
+1413563304 /home/prod-graphique/Bureau/Yukao/Porphyrograph/share/freeglut-3.0.0/include/GL/freeglut_ext.h
+	<stdarg.h>
+

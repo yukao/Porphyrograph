@@ -1,0 +1,14 @@
+INPUT(
+./release\pg-interface-atelPort-main.o
+./release\pg-interface-atelPort-window.o
+./release\pg-interface-atelPort-comm.o
+./release\pg-interface-atelPort-display.o
+./release\pg-interface-atelPort-udp.o
+./release\pg-interface-atelPort-control.o
+./release\pg-interface-atelPort-data.o
+./release\moc_pg-interface-atelPort-comm.o
+./release\moc_pg-interface-atelPort-display.o
+./release\moc_pg-interface-atelPort-udp.o
+./release\moc_pg-interface-atelPort-window.o
+./release\moc_pg-interface-atelPort-control.o
+);

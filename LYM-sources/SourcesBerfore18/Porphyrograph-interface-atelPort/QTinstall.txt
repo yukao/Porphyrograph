@@ -1,0 +1,9 @@
+You need a "platforms" directory that contains qwindows.dll inside the directory that contains your application is correct. Importantly, it must be directly inside your application directory, i.e. ./platforms/qwindows.dll, not inside another directory within your application directory, such as ./plugins/platforms/qwindows.dll
+D:\Qt\5.9.1\mingw53_32\plugins\platforms
+copied to
+D:\cloud\Porphyrograph\Porphyrograph-interface-song\release
+D:\cloud\Porphyrograph\Porphyrograph-interface-song\debug
+
+KIT:
+MinGW 32 bits for C
+MinGW 32 bits for C++
