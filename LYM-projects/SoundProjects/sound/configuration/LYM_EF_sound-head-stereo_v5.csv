@@ -1,0 +1,33 @@
+	0	1	2	3	4			
+VERBATIM	audio in device	audio out device	audio device verbose output	beat count	beats per minute			
+TYPE	int	int	int	int	float			
+ID	AudioInputDevice	AudioOutputDevice	VerboseDeviceOutput	BeatsPerSequence	BeatsPerMinute			
+initial_values								
+	-1	-1	0	4	62.5			
+/initial_values								
+udp_local_server	1							
+VERBATIM								
+TYPE	string	int	string	bool	int	bool	bool	
+ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal	
+server	udp_PD_receive	1978	Plain	0	300	1	1	
+/udp_local_server								
+udp_remote_client	2							
+VERBATIM								
+TYPE	string	string	int	string	bool	int	bool	
+ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal	
+client	udp_PD_send	127.0.0.1	1979	Plain	0	300	1	
+client	udp_Porphyrograph_send	192.168.0.2	1978	Plain	0	300	1	
+/udp_remote_client								
+short_samples	1							
+VERBATIM	index	file						
+	0	./SoundData/soundYN-EF-data/EFFE/GN_dumpdrum_EQ22.wav						
+/short_samples								
+long_samples	1							
+VERBATIM	index	file						
+	0	./SoundData/soundYN-EF-data/EFFE/CA_escalator93_16.wav						
+/long_samples								
+sequences	1							
+VERBATIM	index	size	ID	buffer #	dur (beats)	Amp (0 = silence)	loops	sync
+	0	4	dumpdrum	0, 0, 0, 0	1, 1, 1, 1	1, 0.8, 1, 0.8	-1	1
+/sequences								
+/head								

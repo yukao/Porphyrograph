@@ -1,0 +1,312 @@
+#!/usr/bin/perl
+
+# ods to conf
+
+# PG_confGeneratorWOShadersWOScenario.prl
+# July 2015
+# (c) Lola and Yukao Meet
+
+# input: format csv (export from libreoffice)
+# output: C++ (for additional program variables and constants) 
+#         and ASCII for configuration file
+
+# ONLY FOR SOUND PROJECT WITHOUT SCENARIO AND  IN WHICH SHADER VARIABLES ARE NOT GENERATED
+
+use strict;
+use warnings;
+use 5.010;
+
+# reading modes
+my $COMMENT = 1;
+my $HTML = 2;
+my $SPECIFICATION = 3;
+my $SCENE = 4;
+my $INITIALIZATION = 5;
+my $RENDERING_FILES = 6;
+my $UDP_LOCAL_SERVER = 7;
+my $UDP_REMOTE_CLIENT = 8;
+my $SHORT_SAMPLES = 9;
+
+my $pad_len = 12;
+
+# command to regenerate files
+# perl cmd\PG_confGeneratorWOShadersWOScenario.prl sound\configuration\LYM_sound-head-stereo.csv ..\Porphyrograph\Porphyrograph-sound-src\pg_conf_header.h ..\Porphyrograph\Porphyrograph-sound-src\pg_conf_body.cpp
+
+if( @ARGV != 3) {
+    print "Usage: perl cmd/PG_confGeneratorWOShaders.prl project/configuration/LYM-head.csv ../Porphyrograph/Porphyrograph-src/pg_conf_header.h ../Porphyrograph/Porphyrograph-src/pg_conf_body.cpp\n";
+    print "PG_confGeneratorWOShaders.prl: A program for generating ASCII configuration file & C++ code for Porphyrograph\n";
+    exit 0;
+}
+
+my $NAMEInputfileHEAD = $ARGV[0];
+open( INPUT_HEAD_CSV , "<$NAMEInputfileHEAD" ) 
+    || die "File $NAMEInputfileHEAD not found!";
+
+my $NAMEHeaderfile = $ARGV[1];
+open( OUTPUT_HEADER_FILE , ">$NAMEHeaderfile" ) 
+    || die "File $NAMEHeaderfile not opened!";
+printf "Generating header file $NAMEHeaderfile\n";
+
+my $NAMEBodyfile = $ARGV[2];
+open( OUTPUT_BODY_FILE , ">$NAMEBodyfile" ) 
+    || die "File $NAMEBodyfile not opened!";
+printf "Generating cpp file $NAMEBodyfile\n";
+
+my $line = <INPUT_HEAD_CSV>;
+my $mode = $COMMENT;
+my $value = 0;
+while (!eof(INPUT_HEAD_CSV)) {
+    chomp $line;
+    if( $line =~ m/^RANK/ ) {
+		$mode = $SPECIFICATION;
+    }
+    elsif( $line =~ m/^rendering_files/ ) {
+		$mode = $RENDERING_FILES;
+    }
+    elsif( $line =~ m/^initial_values/ ) {
+		$mode = $INITIALIZATION;
+    }
+    elsif( $line =~ m/^udp_local_server/ ) {
+		$mode = $UDP_LOCAL_SERVER;
+    }
+    elsif( $line =~ m/^udp_remote_client/ ) {
+		$mode = $UDP_REMOTE_CLIENT;
+    }
+    elsif( $line =~ m/^short_samples/ ) {
+		$mode = $SHORT_SAMPLES;
+    }
+    elsif( $line =~ m/^\/head/ ) {
+		last;
+    }
+    else {
+		die "Unknown head mode [$line] !\n";
+    }
+
+    if( $mode == $INITIALIZATION ) {
+		# initial values
+		$line = <INPUT_HEAD_CSV>;
+		
+		#closing tag
+		$line = <INPUT_HEAD_CSV>;
+
+		#next line
+		$line = <INPUT_HEAD_CSV>;
+	}
+    elsif( $mode == $RENDERING_FILES ) {
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable IDs
+		$line = <INPUT_HEAD_CSV>;
+
+	    while( 1 ) {
+			chomp $line;
+		    if( $line =~ m/^VIDEO/ || $line =~ m/^SVG/ 
+		    	|| $line =~ m/^PNG/ || $line =~ m/^JPG/ ) {
+				$line = <INPUT_HEAD_CSV>;
+		    }
+		    else {
+		    	last;
+		    }
+		}
+		# closing tag
+		$line = <INPUT_HEAD_CSV>;
+    }
+    elsif( $mode == $UDP_LOCAL_SERVER ) {
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		my $nb_servers = $values[1];
+		print $nb_servers." servers / ";
+		$line = <INPUT_HEAD_CSV>;
+
+		# verbatim
+		chomp $line;
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types
+		chomp $line;
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable IDs
+		chomp $line;
+		$line = <INPUT_HEAD_CSV>;
+
+	    for( my $ind = 0 ; $ind <  $nb_servers ; $ind++ ) {
+			chomp $line;
+		    if( $line =~ m/^server/ ) {
+				$line = <INPUT_HEAD_CSV>;
+		    }
+		    else {
+		    	die $line . "\nserver line expected!\n";
+		    }
+		}
+		# closing tag
+		$line = <INPUT_HEAD_CSV>;
+    }
+    elsif( $mode == $UDP_REMOTE_CLIENT ) {
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		my $nb_clients = $values[1];
+		print $nb_clients." clients\n";
+		$line = <INPUT_HEAD_CSV>;
+
+		# verbatim
+		chomp $line;
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types
+		chomp $line;
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable IDs
+		chomp $line;
+		$line = <INPUT_HEAD_CSV>;
+
+	    for( my $ind = 0 ; $ind <  $nb_clients ; $ind++ ) {
+			chomp $line;
+		    if( $line =~ m/^client/ ) {
+				$line = <INPUT_HEAD_CSV>;
+		    }
+		    else {
+		    	die $line . "\nclient line expected!\n";
+		    }
+		}
+		# closing tag
+		$line = <INPUT_HEAD_CSV>;
+    }
+    elsif( $mode == $SHORT_SAMPLES ) {
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		my $nb_short_samples = $values[1];
+		print $nb_short_samples." short samples\n";
+		$line = <INPUT_HEAD_CSV>;
+		chomp $line;
+
+	    for( my $ind = 0 ; $ind <  $nb_short_samples ; $ind++ ) {
+			$line = <INPUT_HEAD_CSV>;
+			chomp $line;
+		}
+		# closing tag
+	    if( $line =~ m/^\/short_samples/ ) {
+			$line = <INPUT_HEAD_CSV>;
+	    }
+	    else {
+	    	die $line . "\n/short_samples expected!\n";
+	    }
+
+		last;
+    }
+    elsif( $mode == $SPECIFICATION ) {
+		# variable rank -> comment
+		chomp $line;
+		$line =~ s/\t+$//;
+		printf OUTPUT_HEADER_FILE "// " . $line . "\n";
+
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable verbatim
+		chomp $line;
+		# -> nb of variables 
+		my @verbatims = split /\t/ , $line;
+		my $nb_variables = @verbatims - 1;
+		printf "%d configuration variables\n" , $nb_variables;
+		# -> comment in the header file
+		$line =~ s/\t+$//;
+		printf OUTPUT_HEADER_FILE "// " . $line . "\n";
+
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types (used for declarations)
+		# builds two times variable  array because the variable
+		# and constant declaration commands destruct the variable list
+		chomp $line;
+		my @types = split /\t/ , $line;
+		shift(@types);
+		my @typesCopy = split /\t/ , $line;
+		shift(@typesCopy);
+		my @typesCopyCopy = split /\t/ , $line;
+		shift(@typesCopyCopy);
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable strings (used for alias commands from PD 
+		# and for variable & initial values declarations)
+		chomp $line;
+		my @ids = split /\t/ , $line;
+		shift(@ids);
+		# builds three times variable strings array because the variable
+		# and constant declaration commands detruct the variable list
+		my @idsCopy = split /\t/ , $line;
+		shift(@idsCopy);
+		my @idsCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopy);
+		my @idsCopyCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopyCopy);
+		# var IDs -> comment in the config file
+		$line =~ s/\t+$//;
+		$line = <INPUT_HEAD_CSV>;
+		
+		############################### constant declarations
+		# number of scene variables
+		printf OUTPUT_HEADER_FILE "enum ConfigurationVarIDs{ \n";
+		# scene variable initialization
+			my $idsCopyCopy = shift(@idsCopyCopy);
+			printf OUTPUT_HEADER_FILE "  _%s = 0,\n", $idsCopyCopy;
+		while (@idsCopyCopy) {
+		 			$idsCopyCopy = shift(@idsCopyCopy);
+		 			printf OUTPUT_HEADER_FILE "  _%s,\n", $idsCopyCopy;
+		 			# printf "  _%s,\n", $idsCopyCopy;
+		}
+		printf OUTPUT_HEADER_FILE "  _MaxConfigurationVarIDs};\n";
+
+		############################### configuration variable declarations
+		# extern configuration variable declaration in the header file
+		while (@idsCopy) {
+   			my $id = shift(@idsCopy);
+   			my $type = shift(@typesCopy);
+   			if( $type eq "sign") {
+   					$type = "float";
+   			}
+   			elsif( $type eq "track") {
+   					$type = "bool";
+   			}
+   			printf OUTPUT_HEADER_FILE "extern %-5s %-20s;\n", $type , $id;
+		}
+		# configuration variable declaration
+		while (@ids) {
+   			my $id = shift(@ids);
+   			my $type = shift(@types);
+   			if( $type eq "sign") {
+   					$type = "float";
+   			}
+   			elsif( $type eq "track") {
+   					$type = "bool";
+   			}
+   			printf OUTPUT_BODY_FILE "%-5s %-20s;\n", $type , $id;
+		}
+
+		############################### configuration variable declarations
+		# extern configuration variable types & pointers declarations
+   		printf OUTPUT_HEADER_FILE "enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_track };\n";
+   		printf OUTPUT_HEADER_FILE "extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];\n";
+   		printf OUTPUT_HEADER_FILE "extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];\n";
+
+		# scenario variable types declarations
+		printf OUTPUT_BODY_FILE "VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs] = { \n";
+		while (@typesCopyCopy) {
+   			my $type = shift(@typesCopyCopy);
+   			printf OUTPUT_BODY_FILE "    _pg_%s,\n", $type;
+		}
+		printf OUTPUT_BODY_FILE "};\n";
+
+		# scenario variable pointers declarations
+		printf OUTPUT_BODY_FILE "void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = { \n";
+		while (@idsCopyCopyCopy) {
+   			my $id = shift(@idsCopyCopyCopy);
+   			printf OUTPUT_BODY_FILE "   (void *)&%s,\n", $id;
+		}
+		printf OUTPUT_BODY_FILE "};\n";
+    }
+}
+close( INPUT_HEAD_CSV );

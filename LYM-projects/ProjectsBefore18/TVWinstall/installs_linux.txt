@@ -1,0 +1,27 @@
+To install nvidia, start the system in low graphics mode and then run the following commands.
+
+First, fully update the system:
+
+sudo apt-get update
+sudo apt-get dist-upgrade
+
+Next, open "additional drivers" from your system settings menu.
+
+Wait a few moments for the system to properly detect the available drivers and then choose the "tested" proprietary driver from the list.
+
+Then, run the following commands to install bumblebee:
+
+sudo apt-get install bumblebee* primus
+
+Reboot
+
+
+-------
+
+codeblocks
+
+sudo add-apt-repository ppa:damien-moore/codeblocks-stable
+sudo apt-get update
+sudo apt-get install codeblocks codeblocks-contrib
+
+-----------

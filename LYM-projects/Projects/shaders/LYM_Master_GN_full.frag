@@ -17,7 +17,8 @@ uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMast
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 bool      hide;
-uniform vec3 uniform_Master_fs_3fv_PartMasterWeight_trackMasterWeight_0_hide;
+bool      mute_screen;
+uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen;
 
 // Main shader.
 
@@ -47,7 +48,7 @@ layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // 
 // uniform vec4 uniform_Master_fs_4fv_transparency_scale_leftwidth_rightVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin;
+uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
 
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
@@ -58,14 +59,15 @@ void main() {
   invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
   cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
   CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_3fv_PartMasterWeight_trackMasterWeight_0_hide[0];
-  trackMasterWeight_0 = uniform_Master_fs_3fv_PartMasterWeight_trackMasterWeight_0_hide[1];
-  hide = (uniform_Master_fs_3fv_PartMasterWeight_trackMasterWeight_0_hide[2] > 0 ? true : false);
+  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[0];
+  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[1];
+  hide = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[2] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[3] > 0 ? true : false);
 
   vec2 coords = decalCoords;
-  float leftWindowWidth = uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.x;
-  float rightWindowVMargin = uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.w;
-  float height = uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.y;
+  float leftWindowWidth = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
+  float rightWindowVMargin = uniform_Master_fs_3fv_width_height_rightWindowVMargin.z;
+  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
 
   if( coords.x > leftWindowWidth ) {
     if( coords.x < leftWindowWidth + rightWindowVMargin
@@ -87,7 +89,8 @@ void main() {
   //int nbPixels = int(scale); 
   // scaled_decalCoords = float(nbPixels) * vec2(ivec2(scaled_decalCoords) / nbPixels);
 
-  if(uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.z != 0 && decalCoords.x > leftWindowWidth) {
+  // mute screen
+  if(mute_screen && decalCoords.x > leftWindowWidth) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }

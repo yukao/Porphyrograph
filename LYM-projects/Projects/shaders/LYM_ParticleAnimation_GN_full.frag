@@ -186,7 +186,7 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 uniform float uniform_ParticleAnimation_fs_1fv_partDecay; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
-uniform vec3 uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH; //
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   // 
@@ -538,7 +538,7 @@ void particle_out( void ) {
                        texture( uniform_ParticleAnimation_texture_fs_Trk3 , out_position_speed_particle.xy ).rgb;
 #endif
   // CA flash on particles
-  flashToPartCumul += uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers.x
+  flashToPartCumul += uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius.x
                     * texture( uniform_ParticleAnimation_texture_fs_CA , out_position_speed_particle.xy ).rgb;
 
   //////////////////////////////////////////////////////////////////
@@ -877,7 +877,7 @@ void main() {
   // noise for CA: random value
   randomPart = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
 
-  nbParticles = int(uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers.y);
+  nbParticles = int(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius.y);
 
   // part acc and dâmp
   part_acc_factor = uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor.z;
@@ -890,7 +890,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers.z > 0) {
+  if(frameNo <= 10 || uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius.z > 0) {
     out_ParticleAnimation_FBO_fs_Part_pos_speed = vec4(-10000,-10000,0,0);  // particle position / speed
     out_ParticleAnimation_FBO_fs_Part_col_rad = vec4(1,1,1,1);  // particle color / radius
     out_ParticleAnimation_FBO_fs_Part_Target_pos_col_rad = vec4(-10000,-10000,16646655,1);  // particle target position / color / radius

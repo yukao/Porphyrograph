@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+if(  @ARGV >= 1 ) {
+    $NAMEInputfile = $ARGV[0];
+    open( INPUT , "<$NAMEInputfile" ) 
+	|| die "Configuration file $NAMEInputfile not found!";
+}
+else {
+    die "Configuration file not provided!";
+}
+
+$lineLength = -1;
+while( <INPUT> ) {
+    # line length tag
+    if( $_ =~ /lineLength/ 
+	&& $_ =~ /value=\"([0-9]+)\"/ ) {
+	 $lineLength = $1;
+    }
+}
+if( $lineLength == -1 ){
+    die "Line length not provided!";
+}
+
+print "              <vertexCoordinate point=\"";
+for( $i = 0 ; $i < $lineLength ; $i++ ) {
+    printf "%d 0 0 " , $i;
+    if( $i % 10 == 0 ) {
+	print "\n";
+    }
+}
+print "\" />
+";

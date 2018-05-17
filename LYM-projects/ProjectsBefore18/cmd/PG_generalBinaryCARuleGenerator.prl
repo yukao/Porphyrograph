@@ -1,0 +1,159 @@
+#!/usr/bin/perl
+
+# ods to conf
+
+# PG_generalBinaryRuleGenerator.prl
+# Sept 2014
+# (c) Lola and Yukao Meet
+
+# input: rule encoding format from psoup.math.wisc.edu/mcell/rullex_gebi.html
+# output: format c++ output state table Porphyrograph
+
+use strict;
+use warnings;
+use 5.010;
+
+# Fallski
+# C48,NM,Sb255a,Babb189ab63a
+# 48 states 0-47
+# Moore neihborhood Order N,NE,E,SE,S,SW,W,NW
+# states are encoded: N + 2 * NE + 4 * E + 8 * SE + 16 * S + 32 * SW + 64 * W + 128 * NW
+# 00000000 0 neighbor
+# 10000000 N neighbor
+# 01000000 NE neighbor
+# 192 = 00000011 W and NW neighbors
+# Survive b255a local_string on no alive neighbors: 
+#                             1 x one    255 x zeros
+# Birth   abb189ab63a birth on a single N or  NE neighbor, or on W and NW neighbors:
+#                             0 1 1   189 x zeros   1   63 x zeros
+# Encoding of Survival and Birth
+# 256 0/1 digits encode 
+
+# const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      # E W N S
+#                                  {1,1},{-1,-1},{1,-1},{-1,1},};  # NE SW SE NW
+my @formatNM = (
+	"Fallski,C48,NM,Sb255a,Babb189ab63a",
+	"JustFriends,C0,NM, Sa6ba3bab3a3bab3ab7a3bab3ab7ab15a3bab3ab7ab15ab31a3bab3ab7ab15ab31ab63a, B5ab3abb6abbab12abbab3ab24abbab3ab7ab49abab3ab7ab15ab95a",
+	"LogicRule,C0,NM,S256a, B3ababb5abaab4ab3ab23ab16ab14ab15ab32ab62ab63a",
+	"Meteorama,C24,NM, S3abaab3a3b6abb5ababbaab3abbabbab7a5babaa4baab5a3b3abb5abbabababb3ababaabb3abbababaab3a6bab3abab4abba5baab3aba3b6aba4b4a4b3ab3ab5abbab5ab5ab4a4b3abba3b3ab4abaabaabbababababaab4ab3a, B5aba5b3abababab6a3baab3ababa3b3abb4abbababaab3abaabaababbaa5ba3bababab6abaababbab6ababaabaa5baabaabbaab4ab3abab10ab4ab4ababab4abababbaa4baab3a3baabbab7abaabaab3a3ba3babbab6abbaab8abbabb",
+	"Slugfest,C20,NM, S4b3abaabbaa4bababbab6abbaab3abab3abb5abab5ab3ab4abb10abababbaa3baababbababb6abaabaabbabbaba3b4abaababaabbababaabbabbaabb3abb3aba3b3abab3abba3b3a3b5ab7a3babb7abbaab3ab4abbababba3b3abbaabbaa3baba, B6abb6abaa3babbab5ab5aba3bab7abb4a3baabab6a3babababab7ababababba3baabb6abb4abab8ababab3a4baabaabaabaab9ab5abaa4baaba3babaabbaa3babb4abba4bababb3ab5abb3abaab3a4baba4b7abbaabba",
+	"Snowflakes,C0,NM, Sabbab3ab7ab13abab13ab17ab63ab6ab59ab11ab23abb7ab15a, B5ababaab3abaabaabb5abbaabaabaaba4b8abaababb4abaabaabb3abb3aba3babbab3ababab3abaab4a3baababaabab4abbabaabb4ababaababaa3b4abaab3ababab3ababba3bab3ab4abbaabbab4abbabaab8a4babaababbaabb5abbaabbab3ababab3abab",
+	"Springski,C78,NM,S256a,B8ab23ab223a"
+		);
+
+my @formatNN = (
+	"Banks,C0,NN,S3babbabbabba3b,B7ab3aba3b",
+	"FractalBeads,C4,NN,S16a,Baabab11a",
+	"Sierpinski,C0,NN,S16b,B4ab3ab7a"
+		);
+
+if( @ARGV != 1) {
+    print "Usage: PG_generalBinaryRuleGenerator.prl pg_data.cpp \n";
+    exit 0;
+}
+
+my $NAMEOutputfile = $ARGV[0];
+open( OUTPUT_FILE , ">$NAMEOutputfile" ) 
+	    || die "File $NAMEOutputfile not opened!";
+printf "Generating data file $NAMEOutputfile\n";
+
+print OUTPUT_FILE "    // SubType 0: neutral
+    ptr[  0 ] = 2;
+    for( int ind = 1 ; ind < std::min( width , 256*2+1 ) ; ind++ ) {
+     ptr[  ind * 4 ] = 0;
+    }
+    ptr += 4 * width;
+
+";
+
+for( my $indAutom = 0 ; $indAutom <  @formatNM + 0 ;  $indAutom++ ) {
+	my ($automaton_name,$nb_states,$neighborhood,$survival,$birth) = split /,/ , $formatNM[ $indAutom ];
+	$nb_states =~ s/^C//;
+	$survival =~ s/^S//;
+	if( $nb_states eq "0" ) {
+		 $nb_states = 2;
+	}
+	print "\n$automaton_name -> nbStates $nb_states\n";
+	print "survival \"$survival\"\n";
+	print "birth \"$birth\"\n";
+
+	printf( OUTPUT_FILE "    // Subtype %d: %s
+    GLubyte transition_table%s[256*2] = {
+" ,  $indAutom+1 , $automaton_name , $automaton_name );
+
+	convertString( $survival , "survival");
+	convertString( $birth , "birth");
+	
+	printf( OUTPUT_FILE "    };
+    ptr[  0 ] = %d;
+    for( int ind = 1 ; ind < std::min( width , 256*2+1 ) ; ind++ ) {
+     ptr[  ind * 4 ] = transition_table%s[ind-1];
+    }
+    ptr += 4 * width;\n\n" ,  $nb_states , $automaton_name );
+}
+
+print OUTPUT_FILE "    // SubType 0: neutral
+    ptr[  0 ] = 2;
+    for( int ind = 1 ; ind < std::min( width , 16*2+1 ) ; ind++ ) {
+     ptr[  ind * 4 ] = 0;
+    }
+    ptr += 4 * width;
+
+";
+
+for( my $indAutom = 0 ; $indAutom <  @formatNN + 0 ;  $indAutom++ ) {
+	my ($automaton_name,$nb_states,$neighborhood,$survival,$birth) = split /,/ , $formatNN[ $indAutom ];
+	$nb_states =~ s/^C//;
+	$survival =~ s/^S//;
+	if( $nb_states eq "0" ) {
+		 $nb_states = 2;
+	}
+	print "\n$automaton_name -> nbStates $nb_states\n";
+	print "survival \"$survival\"\n";
+	print "birth \"$birth\"\n";
+
+	printf( OUTPUT_FILE "    // Subtype %d: %s
+    GLubyte transition_table%s[16*2] = {
+" ,  $indAutom+1 , $automaton_name , $automaton_name );
+
+	convertString( $survival , "survival");
+	convertString( $birth , "birth");
+	
+	printf( OUTPUT_FILE "    };
+    ptr[  0 ] = %d;
+    for( int ind = 1 ; ind < std::min( width , 16*2+1 ) ; ind++ ) {
+     ptr[  ind * 4 ] = transition_table%s[ind-1];
+    }
+    ptr += 4 * width;\n\n" ,  $nb_states , $automaton_name );
+}
+
+sub convertString {
+	my $local_string = $_[0];
+	my $local_symbol = $_[1];
+	my $totOccurrences = 0;
+	printf( OUTPUT_FILE "      " );
+	while( $local_string && ($local_string =~ m/([0-9]*)([ab])(.*)/) ) {
+		my $nbOcc = $1;
+		my $character = $2;
+		if( !$nbOcc ) {
+				$nbOcc = 1;
+		}
+		else {
+				$nbOcc = $nbOcc + 0;
+		}
+		if(  $character eq "a" ) {
+				$character = 0;
+		}
+		else {
+				$character = 1;
+		}
+	    # printf "%s %d occurrences of %d\n" , $local_symbol , $nbOcc , $character;
+	    for( my $ind = 0 ; $ind < $nbOcc ; $ind++ ) {
+	    	printf( OUTPUT_FILE "%d," , $character );
+	    }
+	    $totOccurrences += $nbOcc;
+	    $local_string =~ s/([0-9]*)([ab])//;
+	}
+	printf( OUTPUT_FILE "\n" );
+	printf "%s %d total occurrences\n" , $local_symbol , $totOccurrences;
+}

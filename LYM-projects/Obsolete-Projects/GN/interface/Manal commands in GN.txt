@@ -1,0 +1,19 @@
+Manual commands in alKemi
+S1
+- launch (t)
+- drawing on/off at 3'
+- R from 1 to 3 at 7'50
+S2
+- decay at 12 to remove remains from S2
+- R from 2 to 4 at 14'
+airstrike
+
+
+
+
+Useful keys
+autobeat on/off alt b
+frame rate alt f
+t launch
+w draw on/off
+shift S move forward setup

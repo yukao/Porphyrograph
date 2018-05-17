@@ -1,0 +1,1324 @@
+<!-- ***********************************************************************
+File: dcONT/XML/LYM_aliasScript_dcONT.xml
+
+LYM dcONT & Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+************************************************************************* -->
+
+  <!-- ================================================================= -->
+  <!-- Alias SCRIPT ============================================= -->
+  <!-- contains udp message triggers  -->
+  <!-- ================================================================= -->
+  <aliasScript>
+    <!-- ====================================== -->
+    <!-- test UDP connection                    -->
+    <!-- ====================================== -->
+    <command pattern="/testUDP">
+      <action>
+        <write_message value="testUDP (now)"/>
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can testUPD_(now)" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/return_message returnUPD_(now)" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <command pattern="/return_message s">
+      <action>
+        <write_message value="({$1})"/>
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ LAUNCH TIMER ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++   keystroke (t)  ++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/launch">
+      <action>
+	<send_message_udp pattern="f" value="/launch (now)" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+	<write_console value="************************************" />
+	<write_console value="******** SCHEDULE START ************" />
+	<write_console value="************************************" />
+      </action>
+      <action>
+        <set_node_scalar_value id="backtrack_begin_time" 
+			       value="(now)" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke c: clear-up                  -->
+    <!-- keystroke C: clear-up                  -->
+    <!-- ====================================== -->
+    <command pattern="/clear_CLEAR">
+      <action>
+        <send_message value="CLEAR"/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can clear" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke s: Snapshot                  -->
+    <!-- ====================================== -->
+    <command pattern="/snapshot">
+      <action>
+        <screenshot value="frame_LYM" type="jpg"/>
+      </action>
+      <action>
+        <send_message value="paramshot"/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DRAWING MODE ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: void/no output (v)      -->
+    <!-- 1: point drawing on (p)    -->
+    <!-- 2: line drawing on (l)     -->
+    <!-- 3: Bezier drawing on (b)   -->
+    <!-- ====================================== -->
+    <command pattern="/drawing_mode">
+      <action>
+        <set_node_scalar_value id="drawingMode" value="((1 + {$root:drawingMode})%{#nb_drawingModes})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_W_H_drawingStart_drawingMode
+	               ="(({$root:scale}*{$config:window_width}),
+			 ({$root:scale}*{$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"   
+	     glsl_fs_4fv_xy_frameno_freqDots
+	     ="(({$root:pointer_x}),({$root:pointer_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/drawing_can ({$root:drawingMode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <command pattern="/drawing_on_off">
+      <ifAction value1="({$root:drawingMode})" value2="0" 
+		  bool_operator="==">
+	<action>
+	  <set_node_scalar_value id="drawingMode" 
+			 value="({$root:drawingMode_saved})" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <set_node_scalar_value id="drawingMode_saved" 
+		value="({$root:drawingMode})" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" 
+		value="0" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_W_H_drawingStart_drawingMode
+	               ="(({$root:scale}*{$config:window_width}),
+			 ({$root:scale}*{$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"   
+	     glsl_fs_4fv_xy_frameno_freqDots
+	     ="(({$root:pointer_x}),({$root:pointer_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/drawing_can ({$root:drawingMode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <command pattern="/drawing_mode_plus">
+      <ifAction value1="({$root:drawingMode})" value2="3" 
+		  bool_operator="<">
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="1" operator="+=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_W_H_drawingStart_drawingMode
+	               ="(({$root:scale}*{$config:window_width}),
+			 ({$root:scale}*{$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"   
+	     glsl_fs_4fv_xy_frameno_freqDots
+	     ="(({$root:pointer_x}),({$root:pointer_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/drawing_can ({$root:drawingMode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <command pattern="/drawing_mode_minus">
+      <ifAction value1="({$root:drawingMode})" value2="0" 
+		  bool_operator=">">
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="1" operator="-=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_W_H_drawingStart_drawingMode
+	               ="(({$root:scale}*{$config:window_width}),
+			 ({$root:scale}*{$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"   
+	     glsl_fs_4fv_xy_frameno_freqDots
+	     ="(({$root:pointer_x}),({$root:pointer_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/drawing_can ({$root:drawingMode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ COPY PRECAPTURED IMAGE ++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increase Weight Image #1 (u)           -->
+    <!-- Decrease Weight Image #1 (U)           -->
+    <!-- ====================================== -->
+    <command pattern="/texture_weights f f">
+      <action>
+        <set_node_scalar_value id="imgCpy1" value="({$1})" operator="=" />
+        <set_node_scalar_value id="imgCpy2" value="({$2})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:imgCpy1})x({$root:imgCpy2})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_drawContmode_imgCpy1_imgCpy2_nbExtNeigh="(({$root:drawContmode}),({$root:imgCpy1}),({$root:imgCpy2}),({$root:dcONT_nbExtNeighbors}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ SCREEN DISPLAY +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increase screen display number ()     -->
+    <!-- ====================================== -->
+    <command pattern="/screen_display">
+      <action>
+        <set_node_scalar_value id="screen_display" value="((1 + {$root:screen_display})%3)" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ PARTICLE TEXTURE ++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increase particle texture number (2)    -->
+    <!-- ====================================== -->
+    <command pattern="/particle_texture">
+      <action>
+        <set_node_scalar_value id="particle_texture" value="((1 + {$root:particle_texture})%{#nb_particle_acceleration_textures})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_partMode_acc_flashContmode_partTexture="(({$root:particleMode}),({$root:particle_acceleration_factor}),({$root:flashContmode}),({$root:particle_texture}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/texture_can ({$root:particle_texture})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DRAW TO dcONT MODE ++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increase draw 2 dcONT mode (3)    -->
+    <!-- ====================================== -->
+    <command pattern="/drawContmode">
+      <action>
+        <set_node_scalar_value id="drawContmode" value="((1 + {$root:drawContmode})%{#nb_drawContmodes})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:drawContmode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_drawContmode_imgCpy1_imgCpy2_nbExtNeigh="(({$root:drawContmode}),({$root:imgCpy1}),({$root:imgCpy2}),({$root:dcONT_nbExtNeighbors}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ FLASH TO dcONT MODE +++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increase flash 2 dcONT mode (4)    -->
+    <!-- ====================================== -->
+    <command pattern="/flashContmode">
+      <action>
+        <set_node_scalar_value id="flashContmode" value="((1 + {$root:flashContmode})%{#nb_flashContmodes})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:flashContmode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_partMode_acc_flashContmode_partTexture="(({$root:particleMode}),({$root:particle_acceleration_factor}),({$root:flashContmode}),({$root:particle_texture}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BRUSH +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- brush ID      -->
+    <!-- brush + (1)   -->
+    <!-- brush - (0)   -->
+    <!-- ====================================== -->
+    <!-- command pattern="/brushID i">
+      <action>
+        <set_node_scalar_value id="brushID" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command -->
+
+    <command pattern="/brush">
+      <!-- increments brush ID -->
+      <action>
+        <set_node_scalar_value id="brushID" value="((1 + {$root:brushID})%{#nb_brush})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/brush_can ({$root:brushID})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- command pattern="/brush_plus">
+      <ifAction value1="({$root:brushID})" value2="({#nb_brush} - 1)" 
+		  bool_operator=">=">
+	<action>
+          <set_node_scalar_value id="brushID" value="({#nb_brush} - 2)" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="brushID" value="1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command -->
+
+    <!-- command pattern="/brush_minus">
+      <ifAction value1="({$root:brushID})" value2="0" 
+		  bool_operator="==">
+	<action>
+          <set_node_scalar_value id="brushID" value="1" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="brushID" value="1" operator="-=" />
+        <target type="single_node" value="#root" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command -->
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DECAY +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase decay (D)                     -->
+    <!-- Decrease decay (d)                     -->
+    <!-- ====================================== -->
+    <command pattern="/dcONT_drawing_decay f f">
+      <action>
+        <set_node_scalar_value id="GOLdecay" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawingdecay" value="({$2})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:GOLdecay}*{$root:GOLdecay_sign})x({$root:drawingdecay}*{$root:drawingdecay_sign})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+	  <shader_source glsl_fs_4fv_GOLdecay_drawingdecay_flash_backFlash="(({$root:GOLdecay}*{$root:GOLdecay_sign}),({$root:drawingdecay}*{$root:drawingdecay_sign}),({$root:flash}),({$root:backFlash}))"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+    
+    <command pattern="/GOLdecay_sign">
+      <action>
+        <set_node_scalar_value id="GOLdecay_sign" value="-1.0" operator="*=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+	  <shader_source glsl_fs_4fv_GOLdecay_drawingdecay_flash_backFlash="(({$root:GOLdecay}*{$root:GOLdecay_sign}),({$root:drawingdecay}*{$root:drawingdecay_sign}),({$root:flash}),({$root:backFlash}))"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <ifAction value1="({$root:GOLdecay_sign})" value2="1" 
+		bool_operator="==">
+	<ifAction value1="({$root:drawingdecay_sign})" value2="1" 
+		  bool_operator="==">
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="0" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	  <elseAction/>
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="1" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	</ifAction>
+      <elseAction/>
+	<ifAction value1="({$root:drawingdecay_sign})" value2="1" 
+		  bool_operator="==">
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="2" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	  <elseAction/>
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="3" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	</ifAction>
+      </ifAction>
+      <!-- informs PD of the current decay signs for display -->
+      <action>
+	<send_message_udp pattern="f" value="/GOLdecay_sign_can ({$root:GOLdecay_sign})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+     </command>
+    
+    <command pattern="/drawingdecay_sign">
+      <action>
+        <set_node_scalar_value id="drawingdecay_sign" value="-1.0" operator="*=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+	  <shader_source glsl_fs_4fv_GOLdecay_drawingdecay_flash_backFlash="(({$root:GOLdecay}*{$root:GOLdecay_sign}),({$root:drawingdecay}*{$root:drawingdecay_sign}),({$root:flash}),({$root:backFlash}))"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <ifAction value1="({$root:GOLdecay_sign})" value2="0" 
+		bool_operator=">">
+	<ifAction value1="({$root:drawingdecay_sign})" value2="0" 
+		  bool_operator=">">
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="0" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	  <elseAction/>
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="1" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	</ifAction>
+      <elseAction/>
+	<ifAction value1="({$root:drawingdecay_sign})" value2="0" 
+		  bool_operator=">">
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="2" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	  <elseAction/>
+	  <action>
+	    <set_node_scalar_value id="decaySigns" value="3" 
+				   operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	</ifAction>
+      </ifAction>
+      <!-- informs PD of the current decay signs for display -->
+      <action>
+	<send_message_udp pattern="f" value="/drawingdecay_sign_can ({$root:drawingdecay_sign})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ FLASH: RESENDS DRAWING TO dcONT +++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Flash (f)                              -->
+    <!-- BackFlash (L)                          -->
+    <!-- ====================================== -->
+    <command pattern="/flash">
+      <action>
+        <set_node_scalar_value id="flash" value="1" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/flashdino">
+      <action>
+        <set_node_scalar_value id="flash" value="1" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/flashmatch">
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color1" index="1"
+			      value="({$root:brushRadius})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color1" index="2"
+			      value="({$root:local_color[1]})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color1" index="3"
+			      value="({$root:local_color[2]})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color1" index="4"
+			      value="({$root:local_color[3]})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color2" index="1"
+			      value="(({$root:brushRadius}) * 10)" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color3" index="1"
+			      value="({$root:brushRadius})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color3" index="2"
+			      value="({$root:local_color[1]})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color3" index="3"
+			      value="({$root:local_color[2]})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_table_value id="ramp_brushRadius_color3" index="4"
+			      value="({$root:local_color[3]})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_schedule_attribute_value variable="ramp_brushRadius_color" 
+				      index="1" operator="=">
+          <schedule begin="now" dur="0.1"/>
+        </set_schedule_attribute_value>
+        <set_schedule_attribute_value variable="ramp_brushRadius_color" 
+				      index="2" operator="=">
+          <schedule begin="(now+0.1)"/>
+        </set_schedule_attribute_value>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <command pattern="/backFlash">
+      <action>
+        <set_node_scalar_value id="backFlash" value="1" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BRUSH RADIUS ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase radius (R)                    -->
+    <!-- Decrease radius (r)                    -->
+    <!-- ====================================== -->
+    <command pattern="/brushRadius f">
+      <action>
+        <set_node_scalar_value id="brushRadius" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:brushRadius})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/radius_can ({$root:brushRadius})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ POINT DRAWING FREQUENCY +++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase frequency   (I)               -->
+    <!-- Decrease frequency   (i)               -->
+    <!-- ====================================== -->
+    <command pattern="/dot_frequency f">
+      <action>
+        <set_node_scalar_value id="freqDots" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can (floor({$root:freqDots}))" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_xy_frameno_freqDots
+	     ="(({$root:pointer_x}),({$root:pointer_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ dcONT UPDATE FREQUENCY ++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase frequency   (M)               -->
+    <!-- Decrease frequency   (m)               -->
+    <!-- ====================================== -->
+    <command pattern="/dcONTFreq f">
+      <action>
+        <set_node_scalar_value id="dcONTFreq" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can (floor({$root:dcONTFreq}))" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++ PIXELLIZATION +++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase pixellization (J)             -->
+    <!-- Decrease pixellization (j)             -->
+    <!-- ====================================== -->
+    <command pattern="/pixellization f">
+      <action>
+	<set_node_scalar_value id="pixellization" 
+			       value="({$1})" 
+			       operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:pixellization})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_dcONTWeight_drawingWeight_blendTransp_pixellization
+			 ="(({$root:dcONTWeight}),({$root:drawingWeight}),({$root:blendTransp}),({$root:pixellization}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++ SCALE +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase scale (Q)                     -->
+    <!-- Decrease scale (q)                     -->
+    <!-- ====================================== -->
+    <command pattern="/scale f">
+      <ifAction value1="(round({$1}))" value2="{#nb_scale_steps}" 
+		  bool_operator="<">
+	<action>
+	  <set_node_scalar_value id="scale" 
+				 value="({$root:scale_steps[(round({$1}+1))]})" 
+				 operator="="/>
+          <target type="single_node" value="#root"/>
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:scale})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_width_height_trace_scale
+	               ="({#width},{#height},0,({$root:scale}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BLEND COLOR +++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/blend f">
+      <action>
+	<set_node_scalar_value id="blendTransp" 
+			       value="({$1})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_dcONTWeight_drawingWeight_blendTransp_pixellization
+			 ="(({$root:dcONTWeight}),({$root:drawingWeight}),({$root:blendTransp}),({$root:pixellization}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:blendTransp})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ dcONT VS DRAWING BLEND ++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/dcONT_drawing_weight f f">
+      <action>
+        <set_node_scalar_value id="dcONTWeight" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawingWeight" value="({$2})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:dcONTWeight})x({$root:drawingWeight})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_dcONTWeight_drawingWeight_blendTransp_pixellization
+			 ="(({$root:dcONTWeight}),({$root:drawingWeight}),({$root:blendTransp}),({$root:pixellization}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ LOCAL COLOR +++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/local_color f f f f">
+      <action>
+	<set_node_table_value id="local_color" 
+			      value="(({$1}),({$2}),({$3}),({$4}))" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <command pattern="/local_gray f">
+      <action>
+	<set_node_table_value id="local_color" 
+			      value="(({$1}),({$1}),({$1}),({$root:local_color[4]}))" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/xy_spectrum f f">
+      <action>
+        <set_node_table_value id="xy_spectrum" value="(({$1}),({$2}))" 
+			      operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+    
+    <command pattern="/color_spectrum f f f">
+      <action>
+        <set_node_table_value id="color_spectrum" 
+			      value="(({$1}),({$2}),({$3}),1)" 
+			      operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <!-- action>
+        <write_console value="cur ({@root:color_spectrum})"/>
+      </action -->
+   </command>
+    
+    <command pattern="/brush_radius_vol f">
+      <action>
+	<set_node_scalar_value id="brush_radius_vol" 
+			      value="({$1})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <command pattern="/particle_acc_attack f">
+      <action>
+	<set_node_scalar_value id="particle_acc_attack" 
+			      value="({$1})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ ATTACK ++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/particle_acc_attack f">
+      <action>
+        <set_node_scalar_value id="particle_acc_attack" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- High xy_spectrum_coef         (X)      -->
+    <!-- Low  xy_spectrum_coef         (x)      -->
+    <!-- High color_spectrum_coef      (O)      -->
+    <!-- Low  color_spectrum_coef      (o)      -->
+    <!-- High brush_radius_vol_coef    (K)      -->
+    <!-- Low  brush_radius_vol_coef    (k)      -->
+    <!-- High particle_acc_attack_coef (Z)      -->
+    <!-- Low  particle_acc_attack_coef (z)      -->
+    <!-- ====================================== -->
+    <command pattern="/xy_spectrum_coef f">
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$1})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_node_scalar_value id="xy_spectrum_coef" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/color_spectrum_coef f">
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$1})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_node_scalar_value id="color_spectrum_coef" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/brush_radius_vol_coef f">
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$1})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_node_scalar_value id="brush_radius_vol_coef" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/particle_acc_attack_coef f">
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$1})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_node_scalar_value id="particle_acc_attack_coef" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ ECHO +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase echo (E)                      -->
+    <!-- Decrease echo (e)                      -->
+    <!-- ====================================== -->
+    <command pattern="/echo f">
+      <action>
+        <set_node_scalar_value id="echo" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:echo})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_environment_attribute_value operator="=">
+          <display echo="({$1})" /> 
+        </set_environment_attribute_value> 
+        <target type="single_node" value="#config" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++ GAME OF LIFE ++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 1: dcONT plus  (g)                       -->
+    <!-- 2: dcONT minus (n)                       -->
+    <!-- ====================================== -->
+    <command pattern="/GOL_plus">
+      <action>
+        <set_node_scalar_value id="GOL_preset" value="((1 + {$root:GOL_preset})%9)" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+
+      <action>
+        <set_node_scalar_value id="dcONTparents_min" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[1]})" operator="=" />
+        <set_node_scalar_value id="dcONTparents_max" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[2]})" operator="=" />
+        <set_node_scalar_value id="dcONTneighbors_min" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[3]})" operator="=" />
+        <set_node_scalar_value id="dcONTneighbors_max" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[4]})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_minmax_dcONTparents_dcONTneighbors
+	       ="(({$root:dcONTparents_min}),({$root:dcONTparents_max}),({$root:dcONTneighbors_min}),({$root:dcONTneighbors_max}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/GOL_can ({$root:GOL_preset})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+
+    </command>
+
+    <command pattern="/dcONT_minus">
+      <ifAction value1="({$root:GOL_preset})" value2="0" 
+		  bool_operator=">">
+	<action>
+	  <set_node_scalar_value id="GOL_preset" value="1" operator="-=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+        <set_node_scalar_value id="dcONTparents_min" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[1]})" operator="=" />
+        <set_node_scalar_value id="dcONTparents_max" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[2]})" operator="=" />
+        <set_node_scalar_value id="dcONTneighbors_min" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[3]})" operator="=" />
+        <set_node_scalar_value id="dcONTneighbors_max" value="({$root:dcONTparents_neighbors_presets_({$root:GOL_preset})[4]})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_minmax_dcONTparents_dcONTneighbors
+	       ="(({$root:dcONTparents_min}),({$root:dcONTparents_max}),({$root:dcONTneighbors_min}),({$root:dcONTneighbors_max}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/GOL_can ({$root:GOL_preset})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ PARTICLE OFF/ON/FUR +++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increases particle mode (P)  -->
+    <!-- ====================================== -->
+    <command pattern="/particle">
+      <action>
+        <set_node_scalar_value id="particleMode" value="((1 + {$root:particleMode})%{#nb_particleMode})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_partMode_acc_flashContmode_partTexture="(({$root:particleMode}),({$root:particle_acceleration_factor}),({$root:flashContmode}),({$root:particle_texture}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/particles_can ({$root:particleMode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ PARTICLE ACCELERATION +++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase acceleration   (A)            -->
+    <!-- Decrease acceleration   (a)            -->
+    <!-- ====================================== -->
+    <command pattern="/particle_acceleration f">
+      <action>
+        <set_node_scalar_value id="particle_acceleration_factor" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_partMode_acc_flashContmode_partTexture="(({$root:particleMode}),({$root:particle_acceleration_factor}),({$root:flashContmode}),({$root:particle_texture}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:particle_acceleration_factor})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ++++++++++++++++++++++++++++ CURSOR SIZE +++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/cursor_size f">
+      <action>
+        <set_node_scalar_value id="cursorSize" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:cursorSize})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ FREEZE ON/OFF +++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Stops or restaures dcONT and particle modes (F)  -->
+    <!-- ====================================== -->
+    <command pattern="/freeze_on_off">
+      <ifAction value1="({$root:frozen})" value2="0" 
+		  bool_operator="==">
+	<action>
+	  <set_node_scalar_value id="frozen" value="1" operator="=" />
+	  <set_node_scalar_value id="particleMode_saved" 
+				 value="({$root:particleMode})"
+				 operator="=" />
+	  <set_node_scalar_value id="GOL_preset_saved" 
+				 value="({$root:GOL_preset})"
+				 operator="=" />
+          <set_node_scalar_value id="dcONTparents_min_saved" 
+				 value="({$root:dcONTparents_min})" 
+				 operator="=" />
+	  <set_node_scalar_value id="particleMode" value="0" operator="=" />
+	  <set_node_scalar_value id="GOL_preset" value="0" operator="=" />
+          <set_node_scalar_value id="dcONTparents_min" value="0" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <set_node_scalar_value id="frozen" value="0" operator="=" />
+	  <set_node_scalar_value id="particleMode" 
+				 value="({$root:particleMode_saved})"
+				 operator="=" />
+	  <set_node_scalar_value id="GOL_preset" 
+				 value="({$root:GOL_preset_saved})"
+				 operator="=" />
+	  <set_node_scalar_value id="dcONTparents_min" 
+				 value="({$root:dcONTparents_min_saved})"
+				 operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_partMode_acc_flashContmode_partTexture="(({$root:particleMode}),({$root:particle_acceleration_factor}),({$root:flashContmode}),({$root:particle_texture}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_minmax_dcONTparents_dcONTneighbors
+	       ="(({$root:dcONTparents_min}),({$root:dcONTparents_max}),({$root:dcONTneighbors_min}),({$root:dcONTneighbors_max}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+
+      <action>
+	<send_message_udp pattern="f" value="/particles_can ({$root:particleMode})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/GOL_can ({$root:GOL_preset})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ dcONT NB EXT NEIGHBORS ++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Increase nb extended neighbors (h)           -->
+    <!-- Decrease nb extended neighbors (H)           -->
+    <!-- ====================================== -->
+    <command pattern="/dcONT_nb_ext_neigh f">
+      <action>
+        <set_node_scalar_value id="dcONT_nbExtNeighbors" 
+			       value="(floor({$1}))" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$root:dcONT_nbExtNeighbors})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source glsl_fs_4fv_drawContmode_imgCpy1_imgCpy2_nbExtNeigh="(({$root:drawContmode}),({$root:imgCpy1}),({$root:imgCpy2}),({$root:dcONT_nbExtNeighbors}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ dcONT +++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <command pattern="/dcONT_radius f">
+      <action>
+        <set_node_scalar_value id="dcONT_radius" value="(floor({$1}))" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius
+	     ="(({$root:brushRadius}),({$root:dcONTFreq}),
+	       ({$root:brushID}),({$root:dcONT_radius}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can ({$QuadStoreMousePosition_Odd:glsl_fs_4fv_brushRadius_dcONTFreq_brushID_dcONTradius[4]})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <!-- action>
+	<write_console value="dcONT radius ({$root:dcONT_radius})" />
+      </action -->
+    </command>
+
+    <command pattern="/dcONTparents_neighbors f f f f">
+      <action>
+        <set_node_scalar_value id="dcONTparents_min" value="(floor({$1}))" operator="=" />
+        <set_node_scalar_value id="dcONTparents_max" value="(floor({$2}))" operator="=" />
+        <set_node_scalar_value id="dcONTneighbors_min" value="(floor({$3}))" operator="=" />
+        <set_node_scalar_value id="dcONTneighbors_max" value="(floor({$4}))" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     glsl_fs_4fv_minmax_dcONTparents_dcONTneighbors
+	       ="(({$root:dcONTparents_min}),({$root:dcONTparents_max}),({$root:dcONTneighbors_min}),({$root:dcONTneighbors_max}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="s" value="/message_can P3-3/({$root:dcONTparents_min})-({$root:dcONTparents_max})__N1-3/({$root:dcONTneighbors_min})-({$root:dcONTneighbors_max})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+      <!-- action>
+	<write_console value="dcONT neighbors ({$root:dcONTneighbors}) ({@QuadStoreMousePosition_Odd:glsl_fs_4fv_minmax_dcONTparents_dcONTneighbors})" />
+      </action -->
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <command pattern="/setup">
+      <action>
+        <set_node_scalar_value id="setup" value="((1 + {$root:setup})%({#nb_setups}+1))" operator="=" />
+        <set_node_table_value id="cur_setup" value="({@root:setup_({$root:setup})})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <send_message value="setup"/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/setup_can ({$root:setup})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+    <command pattern="/setupID f">
+      <action>
+        <set_node_scalar_value id="setup" value="({$1})" operator="=" />
+        <set_node_table_value id="cur_setup" value="({@root:setup_({$root:setup})})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <send_message value="setup"/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/setup_can ({$root:setup})" />
+	<target type="single_host" value="udp_PD" />
+      </action>
+    </command>
+  </aliasScript>

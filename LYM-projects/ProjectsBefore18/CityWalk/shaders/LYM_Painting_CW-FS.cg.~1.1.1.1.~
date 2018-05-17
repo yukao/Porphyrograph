@@ -1,0 +1,217 @@
+/***********************************************************************
+File: CityWalk/shaders/LYM_Painting_CW-FS.cg
+
+LYM Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+*************************************************************************/
+
+#define VOID_DRAWING   0
+#define LINE_DRAWING   1
+#define BEZIER_DRAWING 2
+#define DOT_DRAWING 3
+#define RADIAL_DRAWING 4
+#define TRANSITION_DRAWING 5
+#define NB_CHANNELS 3
+#define VOID_CHANNEL 0
+#define POSITION_CHANNEL 1
+#define COLOR_CHANNEL 2
+#define RADIUS_BRUSHID_DRAWINGMODE_CHANNEL 3
+
+// Main shader.
+
+void main(
+	    // obtained from Vertex Program
+	    float2 decalCoords  : TEXCOORD0,  // coord text
+	    
+	    // passed by the C program
+	    uniform float cg_fs_clearup,
+	    uniform float4 cg_fs_4fv_H_W_drawingFrame_lineLength,
+	    uniform float4x4 cg_fs_4x4fv_invTransformation,
+	    uniform float3 cg_fs_3fv_mouse_xy_noise_z,      // previous 2 frame
+	                                                    // mouse position
+	    uniform float4 cg_fs_4fv_local_displact_decay,         // V/H/radial
+	    uniform float4 cg_fs_4fv_local_color,
+	    uniform float4 cg_fs_4fv_radius_brushID_drawingMode_depth,
+	    uniform samplerRECT  decal         : TEXUNIT0,  // ping-pong FBO
+            // 3 channel position, color, radius, brush id and drawing mode
+	    
+	    /*
+	    uniform samplerRECT  lookupTable1  : TEXUNIT1,  // ping-pong color 
+	                                                    // FBO
+	    uniform samplerRECT  lookupTable2  : TEXUNIT2,  // ping-pong pen
+	                                                    // size and texture
+							    */
+	    /////////////////////////////////////
+	    // draws NB_CHANNELS vertex buffer objects (VBO) in sequance
+	    // each VBO has lineLength pixels
+ 	    // 1 VBO for POSITION OUTPUT
+	    // 1 VBO for COLOR OUTPUT
+	    // 1 VBO for RADIUS, BRUSH ID, and DRAWING MODE output
+	    out float4 out_Position_Color_RBdM           : COLOR0
+
+	    /*
+	    /////////////////////////////////////
+	    // COLOR OUTPUT
+	    out float4 out_Color                         : COLOR1,
+	    // the local color copied from the
+	    // ping pong color FBO
+
+	    /////////////////////////////////////
+	    // RADIUS and PEN OUTPUT
+	    out float4 out_Radius_Brush_drawingMode      : COLOR2
+	    */
+	  ) {
+  float4 out_Position; // temporary development variable
+
+  float decay = cg_fs_4fv_local_displact_decay.w/1000.0;
+
+  samplerRECT PositionColorRBDM_FBO = decal; // ping-pong FBO
+  // 3 channel position, color, radius, brush id and drawing mode
+  // ping-pong mouse & pos FBO
+
+  /*
+  samplerRECT ColorFBO = lookupTable1; // ping-pong color FBO
+  samplerRECT Radius_Brush_DrawingModeFBO = lookupTable2; // ping-pong radius & texture
+  */
+
+  int drawing_depth = (int)cg_fs_4fv_radius_brushID_drawingMode_depth.w;
+  int drawing_mode = (int)cg_fs_4fv_radius_brushID_drawingMode_depth.z;
+
+  int height = (int)cg_fs_4fv_H_W_drawingFrame_lineLength.x;
+  int width = (int)cg_fs_4fv_H_W_drawingFrame_lineLength.y;
+  int drawingFrame = (int)cg_fs_4fv_H_W_drawingFrame_lineLength.z;
+  int lineLength = (int)cg_fs_4fv_H_W_drawingFrame_lineLength.w;
+
+  // drawing occurs at every frame
+  // gets the current mouse position
+  int mouseCentered_x = (int)(cg_fs_3fv_mouse_xy_noise_z.x - width/2);
+  int mouseCentered_y = (int)(height/2 - cg_fs_3fv_mouse_xy_noise_z.y);
+
+  //////////////////////////////////////////////////
+  // draws NB_CHANNELS vertex buffer objects (VBO) in sequance
+  // each VBO has lineLength vertices (each pixel stores 1 vertex channel)
+  // 1 VBO for the positions
+  // 1 VBO for the color
+  // 1 VBO for the radius, brush ID and drawing mode
+
+  // the current pixel rank
+  int currentPixelRank 
+    = (int)(decalCoords.x) + (int)(decalCoords.y) * width;
+  int currentVertexRank = currentPixelRank;
+
+  // the current vertex rank and the drawn channel
+  int drawnChannel = VOID_CHANNEL;
+  if( currentPixelRank < lineLength ) {
+    drawnChannel = POSITION_CHANNEL;
+  }
+  else if( currentPixelRank < 2 * lineLength ) {
+    drawnChannel = COLOR_CHANNEL;
+    currentVertexRank -= lineLength;
+  }
+  else if( currentPixelRank < 3 * lineLength ) {
+    drawnChannel = RADIUS_BRUSHID_DRAWINGMODE_CHANNEL;
+    currentVertexRank -= 2 * lineLength;
+  }
+
+  // copies the previous channels
+  out_Position_Color_RBdM = texRECT(PositionColorRBDM_FBO , decalCoords);
+  // computes the color decay
+  if( drawnChannel == COLOR_CHANNEL ) {
+    out_Position_Color_RBdM.a 
+      = saturate( out_Position_Color_RBdM.a - decay );
+  }
+
+  /*
+  // copies the previous color
+  out_Color = texRECT(ColorFBO , decalCoords);
+  // computes the decay
+  // out_Color.rgb = saturate( out_Color.rgb - float3(decay,decay,decay) );
+  out_Color.a = saturate( out_Color.a - decay );
+ 
+  // copies the previous radius, brush ID and drawing mode
+  // last coordinate must be 1, otherwise other values get changed
+  out_Radius_Brush_drawingMode 
+    = texRECT(Radius_Brush_DrawingModeFBO , decalCoords);
+  */
+  
+  // writes the mouse position at the pixel corresponding at
+  // the current point
+  // writes negative coordinates indicating that it is not
+  // drawn
+  if( drawingFrame <= 10 ) {
+    out_Position_Color_RBdM = float4( 0 , 0 , 0 , 0 );
+
+    out_Position = float4( 0 , 0 , 0 , 0 );
+  }
+  else if( currentVertexRank == (drawingFrame % lineLength) ) {
+    // height manipulation to stack the lines
+    // float depth = drawingFrame * 0.01;
+
+    // POSITION CHANNEL
+    // coordinate adjustment as a function of depth
+    // so that the line stays well under the cursor
+    // the mouse coordinates in space are multiplied by the inverse
+    // transformation of the drawn scene
+    if( drawnChannel == POSITION_CHANNEL ) {
+      out_Position_Color_RBdM
+	= float4( drawing_depth + cg_fs_3fv_mouse_xy_noise_z.z , 
+		  // mouse position
+		  mouseCentered_y, 
+		  mouseCentered_x, 1 );
+      out_Position_Color_RBdM.xyz
+	+= cg_fs_4fv_local_displact_decay.xyz *float3(0,1,0);
+      
+      
+      out_Position_Color_RBdM
+	= mul( cg_fs_4x4fv_invTransformation , out_Position_Color_RBdM );
+      out_Position_Color_RBdM /= out_Position_Color_RBdM.w;
+    }
+
+    // COLOR CHANNEL
+    // outputs the local color
+    else if( drawnChannel == COLOR_CHANNEL ) {
+      out_Position_Color_RBdM = cg_fs_4fv_local_color;
+    }
+
+    // RADIUS, BRUSH ID, and DRAWING MODE CHANNEL
+    // outputs the local radius, brush ID, and drawing mode
+    // last coordinate must be 1, otherwise other values get changed
+    else {
+      if( drawing_mode == TRANSITION_DRAWING ) {
+	drawing_mode = VOID_DRAWING;
+      }
+      out_Position_Color_RBdM
+	= float4(cg_fs_4fv_radius_brushID_drawingMode_depth.xy , 
+		 drawing_mode , 1);
+    }
+
+    /* 
+    // coordinate adjustment as a function of depth
+    // so that the line stays well under the cursor
+    // the mouse coordinates in space are multiplied by the inverse
+    // transformation of the drawn scene
+    out_Position = float4( drawing_depth , // drawingFrame * 0.01 ,
+			   // mouse position
+			   mouseCentered_y, 
+			   mouseCentered_x, 1 );
+    out_Position.xyz
+      += cg_fs_4fv_local_displact_decay.xyz *float3(0,1,0);
+    
+    
+    out_Position = mul( cg_fs_4x4fv_invTransformation , out_Position );
+    out_Position /= out_Position.w;
+    
+    // outputs the local color
+    out_Color = cg_fs_4fv_local_color;
+    
+    // outputs the local radius and pen ID
+    // last coordinate must be 1, otherwise other values get changed
+    if( drawing_mode == TRANSITION_DRAWING ) {
+      drawing_mode = VOID_DRAWING;
+    }
+    out_Radius_Brush_drawingMode
+      = float4(cg_fs_4fv_radius_brushID_drawingMode_depth.xy , 
+	       drawing_mode , 1);
+     */
+ }
+}

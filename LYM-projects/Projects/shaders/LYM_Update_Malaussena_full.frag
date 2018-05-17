@@ -94,18 +94,19 @@ const uint pg_FBO_fs_Pixels_attacht = 1;
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-const uint CA_DISLOCATION = 0;
-const uint CA_CYCLIC_1 = 1;
-const uint CA_PROTOCELLS = 2;
-const uint GOL_1 = 3;
-const uint CA_CYCLIC = 4;
-// const uint CA_PATHS = 4;
-// const uint CA_COLOR = 5;
-// const uint CA_NOTYPE = 6;
+#define CA_GOL                    0
+#define CA_TOTALISTIC             1
+#define CA_GENERATION             2
+#define CA_GENERAL_BINARY_MOORE   3
+#define CA_GENERAL_BINARY_NEUMANN 4
+#define CA_NEUMANN_BINARY         5
+#define CA_TUMOR_CELL             6
+#define CA_WORM                   7
+#define CA_TIME_TUNNEL            8
 
 // CA OFFSETS
-const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},              // E NE N NW
-                                 {1,1},{-1,1},{-1,-1},{1,-1}};           // W SW S SE
+const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+                                 {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
 const vec2 neighborOffsetsDiamond[4] = {{1,0},{-1,0},{0,1},{0,-1}};  // W WW S SS
 const float neighborDistances[8]={1.0,0.707,1.0,0.707,1.0,0.707,1.0,0.707};
 
@@ -214,6 +215,7 @@ float sobelMatrixY[9] = {1,2,1,0,0,0,-1,-2,-1};
 // CA UPDATE
 vec4 out4_CA;
 float CAdecay = 0.0;
+vec4 noiseCA = vec4(0);
 bool CA_on_off;
 
 vec4 neighborValues[8]=vec4[8](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0));
@@ -302,6 +304,7 @@ layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-
 #if PG_NB_TRACKS >= 4
 layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
+layout (binding = 11) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -425,6 +428,10 @@ float Line( float x1 , float y1 ,
 void CA_out( vec4 currentCA ) {
   // the ALPHA canal of uniform_Update_texture_fs_CA contains > 0 if it is a live cell
 
+  noiseCA = texture( uniform_Update_texture_fs_Noise, 
+                          vec3( pixelTextureCoordinatesXY , 
+                                6.5 / 7.0 ) );
+
   // gets Moore neighbor values
   neighborValues[0] = texture(uniform_Update_texture_fs_CA, 
             decalCoords + neighborOffsets[0] );
@@ -444,237 +451,468 @@ void CA_out( vec4 currentCA ) {
             decalCoords + neighborOffsets[7] );
 
   //////////////////////////////////////////////////////
-  // CCA MOORE
-  if( CAType == CA_CYCLIC  || CAType == CA_CYCLIC_1 ) {
-    const int nbStates = 5;
-    uint nbNeighbors[nbStates];
-
-    nbNeighbors[0] =
-      (round(neighborValues[0].a) == 0? 1:0) +
-      (round(neighborValues[1].a) == 0? 1:0) +
-      (round(neighborValues[2].a) == 0? 1:0) +
-      (round(neighborValues[3].a) == 0? 1:0) +
-      (round(neighborValues[4].a) == 0? 1:0) +
-      (round(neighborValues[5].a) == 0? 1:0) +
-      (round(neighborValues[6].a) == 0? 1:0) +
-      (round(neighborValues[7].a) == 0? 1:0);
+  // GAME OF LIFE - TOTALISTIC OR GENERATION
+  if(/* CAType == CA_GOL || CAType == CA_TOTALISTIC || */ CAType == CA_GENERATION ) {
+    int nbSurroundingLives =
+      (neighborValues[0].a > 0? 1:0) +
+      (neighborValues[1].a > 0? 1:0) +
+      (neighborValues[2].a > 0? 1:0) +
+      (neighborValues[3].a > 0? 1:0) +
+      (neighborValues[4].a > 0? 1:0) +
+      (neighborValues[5].a > 0? 1:0) +
+      (neighborValues[6].a > 0? 1:0) +
+      (neighborValues[7].a > 0? 1:0);
     
-    nbNeighbors[1] =
-      (round(neighborValues[0].a) == 1? 1:0) +
-      (round(neighborValues[1].a) == 1? 1:0) +
-      (round(neighborValues[2].a) == 1? 1:0) +
-      (round(neighborValues[3].a) == 1? 1:0) +
-      (round(neighborValues[4].a) == 1? 1:0) +
-      (round(neighborValues[5].a) == 1? 1:0) +
-      (round(neighborValues[6].a) == 1? 1:0) +
-      (round(neighborValues[7].a) == 1? 1:0);
+    vec4 gatherSurroundingLives =
+      (neighborValues[0]) +
+      (neighborValues[1]) +
+      (neighborValues[2]) +
+      (neighborValues[3]) +
+      (neighborValues[4]) +
+      (neighborValues[5]) +
+      (neighborValues[6]) +
+      (neighborValues[7]);
     
-    nbNeighbors[2] =
-      (round(neighborValues[0].a) == 2? 1:0) +
-      (round(neighborValues[1].a) == 2? 1:0) +
-      (round(neighborValues[2].a) == 2? 1:0) +
-      (round(neighborValues[3].a) == 2? 1:0) +
-      (round(neighborValues[4].a) == 2? 1:0) +
-      (round(neighborValues[5].a) == 2? 1:0) +
-      (round(neighborValues[6].a) == 2? 1:0) +
-      (round(neighborValues[7].a) == 2? 1:0);
-    
-    nbNeighbors[3] =
-      (round(neighborValues[0].a) == 3? 1:0) +
-      (round(neighborValues[1].a) == 3? 1:0) +
-      (round(neighborValues[2].a) == 3? 1:0) +
-      (round(neighborValues[3].a) == 3? 1:0) +
-      (round(neighborValues[4].a) == 3? 1:0) +
-      (round(neighborValues[5].a) == 3? 1:0) +
-      (round(neighborValues[6].a) == 3? 1:0) +
-      (round(neighborValues[7].a) == 3? 1:0);
-    
-    nbNeighbors[4] =
-      (round(neighborValues[0].a) == 4? 1:0) +
-      (round(neighborValues[1].a) == 4? 1:0) +
-      (round(neighborValues[2].a) == 4? 1:0) +
-      (round(neighborValues[3].a) == 4? 1:0) +
-      (round(neighborValues[4].a) == 4? 1:0) +
-      (round(neighborValues[5].a) == 4? 1:0) +
-      (round(neighborValues[6].a) == 4? 1:0) +
-      (round(neighborValues[7].a) == 4? 1:0);
-    
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    uint newState = 0;
-    if( currentCA.a < 0 ) {
-      out4_CA.a = floor(randomCA.x * (nbStates+1)); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = shadeCyclic[newState];
+    vec4 averageSurrounding;
+    if( nbSurroundingLives > 0 ) {
+      averageSurrounding = gatherSurroundingLives / nbSurroundingLives;
     }
     else {
-      // CCA with atuotmatic cycling from one step to the next
-      if(CAType == CA_CYCLIC) {
-        uint state = int(clamp(currentCA.a,0,nbStates));
-        if( state < nbStates ) {
-          uint nextState = (state + 1) % nbStates;
-          vec3 nextColor = currentCA.rgb;
-          newState = state;
-          if(nbNeighbors[nextState] > 0) {
-            newState = nextState;
-            nextColor = 
-              ((round(neighborValues[0].a)) == nextState? neighborValues[0].rgb:vec3(0)) +
-              ((round(neighborValues[1].a)) == nextState? neighborValues[1].rgb:vec3(0)) +
-              ((round(neighborValues[2].a)) == nextState? neighborValues[2].rgb:vec3(0)) +
-              ((round(neighborValues[3].a)) == nextState? neighborValues[3].rgb:vec3(0)) +
-              ((round(neighborValues[4].a)) == nextState? neighborValues[4].rgb:vec3(0)) +
-              ((round(neighborValues[5].a)) == nextState? neighborValues[5].rgb:vec3(0)) +
-              ((round(neighborValues[6].a)) == nextState? neighborValues[6].rgb:vec3(0)) +
-              ((round(neighborValues[7].a)) == nextState? neighborValues[7].rgb:vec3(0));
-            nextColor /= nbNeighbors[nextState];
-          }
+      averageSurrounding = vec4(0.0);
+    }
+    
+    #define nbStatesGeneration 25
+    #define CArankGeneration 18
 
-          nextColor -= vec3(CAdecay);
-          if(nextColor.r > 0 &&  nextColor.g > 0 &&  nextColor.b > 0) {
-            out4_CA.a = float(newState);
-            out4_CA.rgb = nextColor;
-          }
-          else {
-            out4_CA.a = float(nbStates);
-            out4_CA.rgb = vec3(0);
-          }
+    /*
+    uint nbStates = 16;
+    uint CArank = 9;
 
-        }
-        else {
-            out4_CA.rgb = vec3(0);
-        }
+    if( CAType == CA_TOTALISTIC && CASubType == 4 ) { // Wire number of states
+      nbStates = 4;
+    }
+    if( CAType == CA_TOTALISTIC && (CASubType == 5 || CASubType == 8) ) { // Busy Brain and Brian's Brain number of states
+      nbStates = 3;
+    }
+
+    if( CAType == CA_GOL ) { // GOL number of states + rank (height in data texture)
+      nbStates = 2;
+      CArank = 0;
+    }
+
+    if( CAType == CA_GENERATION ) { // CA generation number of states + rank (height in data texture)
+      CArank = 18;
+      nbStates = texelFetch(uniform_Update_texture_fs_CATable, 
+                            ivec2( 0 , CArank + CASubType ) ).r;
+    }
+    */
+
+    // The first CA alpha value is negative so that it is not 
+    // displayed, here we change alpha value to positive
+    // because it is the second time it is displayed 
+    // then alpha represents the state of the automaton
+    if( currentCA.a < 0 ) {
+      /* out4_CA.a = noiseCA.r * (nbStates+1); // nbStates states randomly
+      // out4_CA.rgb = averageSurrounding.rgb;
+      
+      // special treatment for generation, otherwise
+      // it does not start from flashCA
+      if( CAType == CA_GENERATION ) { */
+        out4_CA.a = 1;
+        out4_CA.rgb = vec3(1);//averageSurrounding.rgb;
+      // }
+    }
+    else {
+      float state = clamp(currentCA.a,0,nbStatesGeneration);
+      float newState = 0;
+      newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
+                              CArankGeneration + CASubType ) ).r;
+      out4_CA.a = float(newState);
+      if( newState > 0 ) {
+        out4_CA.rgb = averageSurrounding.rgb;
+        // out4_CA.rgb = vec3(1);
       }
-      // b color used to count steps in a state
-      else if(CAType == CA_CYCLIC_1) {
-        uint state = int(clamp(currentCA.a,0,nbStates));
-        const uint durations[nbStates] = {1,2,3,4,5};
-        if( state < nbStates ) {
-          uint nextState = (state + 1) % nbStates;
-          vec3 nextColor = currentCA.rgb;
-          newState = state;
-          if(nbNeighbors[nextState] > 0 && nextColor.g <= 0) {
-            newState = nextState;
-            nextColor = 
-              ((round(neighborValues[0].a)) == nextState? neighborValues[0].rgb:vec3(0)) +
-              ((round(neighborValues[1].a)) == nextState? neighborValues[1].rgb:vec3(0)) +
-              ((round(neighborValues[2].a)) == nextState? neighborValues[2].rgb:vec3(0)) +
-              ((round(neighborValues[3].a)) == nextState? neighborValues[3].rgb:vec3(0)) +
-              ((round(neighborValues[4].a)) == nextState? neighborValues[4].rgb:vec3(0)) +
-              ((round(neighborValues[5].a)) == nextState? neighborValues[5].rgb:vec3(0)) +
-              ((round(neighborValues[6].a)) == nextState? neighborValues[6].rgb:vec3(0)) +
-              ((round(neighborValues[7].a)) == nextState? neighborValues[7].rgb:vec3(0));
-            nextColor /= nbNeighbors[nextState];
-            nextColor.g = durations[nextState];
-          }
-
-          nextColor.rb -= vec2(CAdecay);
-          nextColor.g -= 1;
-          if(nextColor.r > 0 &&  nextColor.b > 0) {
-            out4_CA.a = float(newState);
-            out4_CA.rb = nextColor.rb;
-          }
-          else {
-            out4_CA.a = float(nbStates);
-            out4_CA.rgb = vec3(0);
-          }
-
-        }
-        else {
-            out4_CA.rgb = vec3(0);
-        }
+      else {
+        out4_CA.rgb = vec3(0,0,0);
       }
     }
   }
+
+  ////////////////////////////////////////////////////// 
+  // GENERAL BINARY MOORE NEIGHBORHOOD
+  else if( CAType == CA_GENERAL_BINARY_MOORE ) {
+    // Fallski
+    // C48,NM,Sb255a,Babb189ab63a
+    // 48 states 0-47
+    // Moore neihborhood Order N,NE,E,SE,S,SW,W,NW
+    // states are encoded: N + 2 * NE + 4 * E + 8 * SE + 16 * S + 32 * SW + 64 * W + 128 * NW
+    // 00000000 0 neighbor
+    // 10000000 N neighbor
+    // 01000000 NE neighbor
+    // 192 = 00000011 W and NW neighbors
+    // Survive b255a survival on no alive neighbors: 
+    //                             1 x one    255 x zeros
+    // Birth   abb189ab63a birth on a single N or  NE neighbor, or on W and NW neighbors:
+    //                             0 1 1   189 x zeros   1   63 x zeros
+    // Encoding of Survival and Birth
+    // 256 0/1 digits encode 
+
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+
+    uint nbSurroundingLives =
+      (neighborValues[0].a > 0?   4:0) +  // E
+      (neighborValues[1].a > 0?  64:0) +  // W
+      (neighborValues[2].a > 0?   1:0) +  // N
+      (neighborValues[3].a > 0?  16:0) +  // S
+      (neighborValues[4].a > 0?   2:0) +  // NE
+      (neighborValues[5].a > 0?  32:0) +  // SW
+      (neighborValues[6].a > 0?   8:0) +  // SE
+      (neighborValues[7].a > 0? 128:0);   // NW
+
+    // uint CArank = 38;
+    #define nbStatesGeneralBinary 21
+    /*
+    uint nbStates = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( 0 , 38 + CASubType ) ).r;
+    */
+
+    // The first CA value is negative so that it is not 
+    // displayed, here we change alpha value to positive
+    // because it is the second time it is displayed if 
+    float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
+    float newState = 0;
+    if( currentCA.a < 0 ) {
+      // newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
+      out4_CA.a = nbStatesGeneralBinary;
+    }
+    else {
+      // survival
+      if( state != 0 ) {
+         newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( nbSurroundingLives + 1 , 38 + CASubType ) ).r;
+         // survival
+         if( newState != 0 && out4_CA.a >= 0.0 ) {
+            // out4_CA.a -= 1.0;
+         }
+         else {
+            out4_CA.a = 0;
+         }
+      }
+      // birth
+      else {
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( 256 + nbSurroundingLives + 1 , 38 + CASubType ) ).r;
+        // birth
+        if( newState != 0 ) {
+          out4_CA.a = nbStatesGeneralBinary;
+        }
+      }
+    }
+    if( out4_CA.a != 0 ) {
+      out4_CA.rgb = vec3(1.0,1.0,1.0);
+    }
+    else {
+      out4_CA.rgb = vec3(0,0,0);
+    }
+  }
+
+  ////////////////////////////////////////////////////// 
+  // NEUMANN BINARY VON NEUMANN NEIGHBORHOOD + CENTER
+  else if( CAType == CA_NEUMANN_BINARY ) {
+    // Fredkin2 rule has the following definition: 2,01101001100101101001011001101001
+    // The first digit, '2', tells the rule has 2 states (it's a 1 bit rule).
+    // The second digit, '0', tells a cell in a configuration ME=0,N=0,E=0,S=0,W=0 will get the state 0.
+    // The third digit, '1', tells a cell in a configuration ME=0,N=0,E=0,S=0,W=1 will get the state 1.
+    // The fourth digit, '1', tells a cell in a configuration ME=0,N=0,E=0,S=1,W=0 will get the state 1.
+    // The fifth digit, '0', tells a cell in a configuration ME=0,N=0,E=0,S=1,W=1 will get the state 0.
+    // . . .
+
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+
+    int nbSurroundingLives =
+      (int(currentCA.a)) +  // CENTER
+      (int(neighborValues[0].a) * 9) +  // E
+      (int(neighborValues[1].a) * 81) +  // W
+      (int(neighborValues[2].a) * 3) +  // N
+      (int(neighborValues[3].a) * 27) ;  // S
+
+    // The first CA value is negative so that it is not 
+    // displayed, here we change alpha value to positive
+    // because it is the second time it is displayed if 
+    float state = clamp(currentCA.a,0,3);
+    float newState = 0;
+    if( currentCA.a < 0 ) {
+      newState = clamp(noiseCA.r * (3+1),0,3); // nbStates states randomly
+      // newState = 2;
+      out4_CA.a = float(newState);
+    }
+    else {
+      newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                    ivec2( nbSurroundingLives + 1 , 50 + CASubType ) ).r * 255.0;
+      // newState = texelFetch(uniform_Update_texture_fs_CATable, 
+      //                       ivec2( nbSurroundingLives + 1 , 58 ) ).r;
+      out4_CA.a = float(newState);
+    }
+
+    if( out4_CA.a > 0 ) {
+      vec3 averageSurrounding = vec3(out4_CA.a/float(3-1)); //gatherSurroundingLives* 3 / nbSurroundingLives;
+      out4_CA.rgb = vec3(1);
+    }
+    else {
+      out4_CA.rgb = vec3(0);
+    }
+    // out4_CA = vec4(1.0,0.0,0.0,1.0);
+  }
+
   //////////////////////////////////////////////////////
-  // GOL MOORE
-  else if( CAType == GOL_1 ) {
-    const int nbStates = 2;
-    uint nbNeighbors[nbStates];
+  // TUMOR CELL
+  else if( CAType == CA_TUMOR_CELL ) { // CAType == 6
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
 
-    nbNeighbors[0] =
-      (round(neighborValues[0].a) == 0? 1:0) +
-      (round(neighborValues[1].a) == 0? 1:0) +
-      (round(neighborValues[2].a) == 0? 1:0) +
-      (round(neighborValues[3].a) == 0? 1:0) +
-      (round(neighborValues[4].a) == 0? 1:0) +
-      (round(neighborValues[5].a) == 0? 1:0) +
-      (round(neighborValues[6].a) == 0? 1:0) +
-      (round(neighborValues[7].a) == 0? 1:0);
+    // vec4 neighborValues[8]=vec4[8](vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),
+    //                                vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0));
 
-    nbNeighbors[1] =
-      (round(neighborValues[0].a) == 1? 1:0) +
-      (round(neighborValues[1].a) == 1? 1:0) +
-      (round(neighborValues[2].a) == 1? 1:0) +
-      (round(neighborValues[3].a) == 1? 1:0) +
-      (round(neighborValues[4].a) == 1? 1:0) +
-      (round(neighborValues[5].a) == 1? 1:0) +
-      (round(neighborValues[6].a) == 1? 1:0) +
-      (round(neighborValues[7].a) == 1? 1:0);
-    
-    
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    uint newState = 0;
-    vec3 nextColor = currentCA.rgb;
+    // STATES:
+    // 0: free
+    // 1: normal cell, 2-9: normal cell candidate for subdivision 
+    //                      in one of the 8 Moore neighborhoods
+    // 11: cancer cell, 12-19: cancer cell candidate for subdivision 
+    //                         in one of the 8 Moore neighborhoods
+    // states 10 and 20 had been made for quiescent cell but they
+    // are not necessary to deal with such cells (surrounded by living cells)
+
+    #define nbStatesTumorCell 21
+    uint state = int(clamp(currentCA.a,0,nbStatesTumorCell));
+    out4_CA = currentCA;
     if( currentCA.a < 0 ) {
-      out4_CA.a = floor(randomCA.x * (nbStates+1)); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.rgb;
+      // free cell generated by pen
+      if( noiseCA.r < 0.6 ) {
+        out4_CA = vec4(0.0,0.0,0.0,0.0);
+      }
+      // normal cell generated by pen
+      else if( noiseCA.r < 0.6 + CAParams3 * 0.4 ) {
+        out4_CA = vec4(1.0,1.0,1.0,1.0);
+      }
+      // cancer cell generated by pen
+      else {
+        out4_CA = vec4(1.0,1.0,1.0,11.0);
+      }
     }
     else {
-      // CCA with atuotmatic cycling from one step to the next
-      if(CAType == GOL_1) {
-        uint state = int(clamp(currentCA.a,0,nbStates));
-        if( state < nbStates) {
-          newState = 0;
-          // if( (state == 0 && (nbNeighbors[1] == 3 || nbNeighbors[1] == 5 || nbNeighbors[1] == 7 || nbNeighbors[1] == 8) )
-          //    || (state == 1 && (nbNeighbors[1] == 4 || nbNeighbors[1] == 6 || nbNeighbors[1] == 7 || nbNeighbors[1] == 8) ) ){
-          //   newState = 1;
-          // }
-          if( (state == 1) 
-             || (state == 0 && (nbNeighbors[1] == 3) ) ){
-            newState = 1;
-          }
-
-          if(newState == 1 && nbNeighbors[newState] > 0) {
-            nextColor = 
-              ((round(neighborValues[0].a)) == newState? neighborValues[0].rgb:vec3(0)) +
-              ((round(neighborValues[1].a)) == newState? neighborValues[1].rgb:vec3(0)) +
-              ((round(neighborValues[2].a)) == newState? neighborValues[2].rgb:vec3(0)) +
-              ((round(neighborValues[3].a)) == newState? neighborValues[3].rgb:vec3(0)) +
-              ((round(neighborValues[4].a)) == newState? neighborValues[4].rgb:vec3(0)) +
-              ((round(neighborValues[5].a)) == newState? neighborValues[5].rgb:vec3(0)) +
-              ((round(neighborValues[6].a)) == newState? neighborValues[6].rgb:vec3(0)) +
-              ((round(neighborValues[7].a)) == newState? neighborValues[7].rgb:vec3(0));
-            nextColor /= nbNeighbors[newState];
-          }
-
-          nextColor = clamp(nextColor-vec3(CAdecay),0,1);
-          if(newState == 0){
-            nextColor = vec3(0);
-          }
-          if(nextColor.r > 0 ||  nextColor.g > 0 || nextColor.b > 0) {
-            out4_CA.a = float(newState);
-            out4_CA.rgb = nextColor;
-          }
-          else {
-            out4_CA.a = float(0);
-            out4_CA.rgb = vec3(0);
-          }
+      // stores and count free neighbor cells
+      int nbFreeNeighborCells = 0;
+      int indFreeNeighborCells[8];
+      int nbUsedNeighborCells = 0;
+      int indUsedNeighborCells[8];
+      for(int ind = 0 ; ind < 8 ; ind++ ) {
+        if( neighborValues[ind].a == 0 ) {
+          indFreeNeighborCells[nbFreeNeighborCells] = ind;
+          nbFreeNeighborCells++;
         }
         else {
-            out4_CA.rgb = vec3(0);
+          indUsedNeighborCells[nbUsedNeighborCells] = ind;
+          nbUsedNeighborCells++;
+        }
+      }
+
+      // quiescent state does not have to be dealt with separately
+      // (a state with 8 alive neighbors)
+
+      // free slot: checks for neighboring cell subdivision
+      if( state == 0 ) {
+        // offsets and states are ranked accordingly
+        // so as to guess easily the expected state from the
+        // position of the offset 
+        for(int ind = 0 ; ind < nbUsedNeighborCells ; ind++ ) {
+          int indUsedNeighborCell = indUsedNeighborCells[ind];
+          // if the used neighbor cell is in the state of subdivision
+          // and if the subdivision location corresponds to the
+          // current free cell (diametrically opposite)
+          // normal cell candidate for subdivision at preceding step produces an offspring
+          // at the current location
+          if( neighborValues[indUsedNeighborCell].a == 2 + (7 - indUsedNeighborCell) ) {
+            out4_CA = vec4(1.0,1.0,1.0,1.0);
+          }
+          // cancer cell candidate for subdivision at preceding step produces an offspring
+          // at the current location
+          if( neighborValues[indUsedNeighborCell].a == 12 + (7 - indUsedNeighborCell) ) {
+            out4_CA = vec4(1.0,1.0,1.0,11.0);
+          }
+        }
+      }
+      // subdivision of a normal or cancer cell
+      else if( nbFreeNeighborCells > 0 ) {
+        // normal cell subdivision
+        if( state == 1 ) {
+           // subdivision
+           if( noiseCA.r < CAParams1 ) { // 0.85 
+              int indMigration = int(clamp(floor(noiseCA.b * nbFreeNeighborCells),
+                                                  0.0,float(nbFreeNeighborCells)));
+              out4_CA = vec4(1.0,1.0,1.0,2 + indFreeNeighborCells[indMigration]);
+           }
+           // ageing is made after update in main function
+           // out4_CA.rgb = clamp( out4_CA.rgb - 10 * vec3(CAdecay) , 0.0 , 1.0 );
+        }
+        // cancer cell subdivision
+        else if( state == 11 ) {
+           // subdivision
+           if( noiseCA.r < CAParams2 ) { // 0.9 
+              int indMigration = int(clamp(floor(noiseCA.b * nbFreeNeighborCells),
+                                                  0.0,float(nbFreeNeighborCells)));
+              out4_CA = vec4(1.0,1.0,1.0,12 + indFreeNeighborCells[indMigration]);
+           }
+        }
+        // the normal cell candidate for subdivision
+        // returns to normal state
+        else if( state >= 2 && state <= 9 ) {
+          out4_CA.a = 1.0;
+          // out4_CA.rgb = clamp( out4_CA.rgb - 10 * vec3(CAdecay) , 0.0 , 1.0 );
+        }
+        // the cancer cell candidate for subdivision
+        // returns to normal state
+        else if( state >= 12 && state <= 19 ) {
+          out4_CA.a = 11.0;
         }
       }
     }
+
+    if( out4_CA.a <= 0 ) {
+      out4_CA.rgb = vec3(0.0,0.0,0.0);
+    }
+    // if( out4_CA.a > 0 ) {
+    //   out4_CA = vec4(1.0,0.0,0.0,11.0);
+    // }
   }
 
-  else if( CAType == CA_PROTOCELLS ) {
-    int nbNeighbors =
+
+  ////////////////////////////////////////////////////// 
+  // GENERAL BINARY VON NEUMANN NEIGHBORHOOD
+  else if( CAType == CA_GENERAL_BINARY_NEUMANN ) {
+    // Banks,
+    // C0,NN,S3babbabbabba3b,B7ab3aba3b
+    // 2 states 0-1
+    // von Neumann neihborhood Order N,E,S,W
+    // states are encoded: N + 2 * E + 4 * S + 8 * W
+    // 0000 0 neighbor
+    // 1000 N neighbor
+    // 0100 E neighbor
+    // 3 = 1100 N and E neighbors
+    // Survive 3babbabbabba3b survival on 
+    //         1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,
+    // Birth   7ab3aba3b birth on 
+    //         0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,
+    // Encoding of Survival and Birth
+    // 16 0/1 digits encode 
+
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+
+    int nbSurroundingLives =
+      (neighborValues[0].a > 0?   2:0) +  // E
+      (neighborValues[1].a > 0?   8:0) +  // W
+      (neighborValues[2].a > 0?   1:0) +  // N
+      (neighborValues[3].a > 0?   4:0) ;  // S
+
+    // uint CArank = 38;
+    uint nbStates = uint(texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( 0 , 46 + CASubType ) ).r * 255);
+
+    // The first CA value is negative so that it is not 
+    // displayed, here we change alpha value to positive
+    // because it is the second time it is displayed if 
+    uint state = int(clamp(currentCA.a,0,nbStates));
+    float newState = 0;
+    if( currentCA.a < 0 ) {
+      newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
+      out4_CA.a = float(nbStates);
+    }
+    else {
+      // survival
+      if( state > 0 ) {
+         newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( nbSurroundingLives + 1 , 46 + CASubType ) ).r;
+         // survival
+         if( newState > 0 && out4_CA.a >= 0.0 ) {
+            out4_CA.a -= 1.0;
+         }
+      }
+      // birth
+      else {
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( 16 + nbSurroundingLives + 1 , 46 + CASubType ) ).r;
+        // birth
+        if( newState > 0 ) {
+          out4_CA.a = float(nbStates);
+        }
+      }
+    }
+
+    if( out4_CA.a > 0 ) {
+      out4_CA.rgb = vec3(out4_CA.a/float(nbStates-1));
+    }
+    else {
+      out4_CA.rgb = vec3(0,0,0);
+    }
+  }
+
+  //////////////////////////////////////////////////////
+  // TIME TUNNEL
+  else if( CAType == CA_TIME_TUNNEL ) { // CAType == 6
+    float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
+
+    int nbSurroundingFiring =
+      (currentCA.a > 0? 1:0) +
+      (neighborValues[0].a > 0? 1:0) +
+      (neighborValues[1].a > 0? 1:0) +
+      (neighborValues[2].a > 0? 1:0) +
+      (neighborValues[3].a > 0? 1:0);
+    bool fired = false;
+    if( CASubType == 1 ) {
+      fired = (nbSurroundingFiring > 0 && nbSurroundingFiring < 5);
+    }
+    else if( CASubType == 2 ) {
+      fired = (nbSurroundingFiring > (0 + int(noiseCA.x * 2.0))
+         && nbSurroundingFiring < (5 - int(noiseCA.y * 2.0)) );
+    }
+    else if( CASubType == 3 ) {
+      fired = (nbSurroundingFiring > (0 + int(noiseCA.x * 2.0))
+         && nbSurroundingFiring < (4 - int(noiseCA.y * 2.0)) );
+    }
+    if( fired ) {
+      if( previousGray == 0.0 ) {
+        vec4 gatherSurroundingLives =
+          currentCA +
+         (neighborValues[0]) +
+         (neighborValues[1]) +
+         (neighborValues[2]) +
+         (neighborValues[3]);
+        out4_CA = gatherSurroundingLives/nbSurroundingFiring; // ready
+      }
+      else {
+        out4_CA = vec4(0.0); // ready
+      }
+    }
+    else {
+      out4_CA = vec4(0.0); // ready
+    }
+    return;
+  }
+
+  //////////////////////////////////////////////////////
+  // WORM
+/*
+  else if( CAType == CA_WORM ) {
+    // > 0.5 firing
+    // > 0 && <= 0.5 refractory
+    // 0 ready
+    // ready -> firing  (w 2 neighbors firing)
+    // firing -> rafractory
+    // refractory -> ready
+    float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
+    int nbSurroundingFiring =
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
       (neighborValues[2].a > 0? 1:0) +
@@ -684,319 +922,58 @@ void CA_out( vec4 currentCA ) {
       (neighborValues[6].a > 0? 1:0) +
       (neighborValues[7].a > 0? 1:0);
 
-    vec3 maxSurrounding = (neighborValues[0].rgb);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb;
-      if( graylevel(newColorFactor) > graylevel(maxSurrounding) ) {
-        maxSurrounding = newColorFactor;
-      }
-    }
-    if( graylevel(currentCA.rgb) > graylevel(maxSurrounding) ) {
-      maxSurrounding = currentCA.rgb;
-    }
-
-    vec3 gatherColorFactors =
-      (neighborValues[0].rgb) +
-      (neighborValues[1].rgb) +
-      (neighborValues[2].rgb) +
-      (neighborValues[3].rgb) +
-      (neighborValues[4].rgb) +
-      (neighborValues[5].rgb) +
-      (neighborValues[6].rgb) +
-      (neighborValues[7].rgb);
-
-    vec3 averageSurrounding;
-    if( nbNeighbors > 0 ) {
-      averageSurrounding = (gatherColorFactors + currentCA.rgb)/8;
-    }
-    else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
-    }
-
-    // 0 empty
-    // 1 X
-    // 2 Y
-    // 3 Z
-    uint nbStates = 4;
-    uint newState = 0;
-
-    // CAParams optimal values from Composites/soundinitiative²
-/*     float CAParams1 = 0.480315;
-    float CAParams2 = 0.511811;
-    float CAParams3 = 0.637795;
-    float CAParams4 = 0.472441;
-    float CAParams5 = 0.244094;
- */
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    if( currentCA.a < 0 ) {
-      out4_CA.a = randomCA.x * (nbStates+1); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      newState = 3;
-      out4_CA.rgb = shadeProtocell[newState].r * currentCA.rgb;
-    }
-    else {
-      uint state = int(clamp(currentCA.a,0,nbStates));
-      newState = state;
-      // parameters CA thresholds
-      // CAParams1: px - X duplication from X+Y (randomCA.x)
-      // CAParams2: py - Y duplication from Y+Z (randomCA.y)
-      // CAParams3: pz - Z duplication from Z+X (randomCA.z)
-
-      // empty cell: replication or migration from neighboring cells
-      if( state ==  0 ) { // empty
-        newState = 0; // stays empty
-        int firstindex = clamp(int(randomCA.x * 8),0,8);
-        // has a neighboring X and a neighboring Y slot
-        for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-          if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 2 
-              && randomCA.y < CAParams1) {
-            newState = 1; // new X
-          }
-        }
-
-        // did not replicate at the preceding loop
-        if( newState == 0 ) {
-          // has a neighboring Y and a neighboring Z slot
-          int firstindex = clamp(int(randomCA.z * 8),0,8);
-          for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-            if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 6 
-                && randomCA.w < CAParams2) {
-              newState = 2; // new Y
-            }
-          }
-        }
-
-        // did not replicate at the preceding loop
-        if( newState == 0 ) {
-          // has a neighboring Z and a neighboring X slot
-          int firstindex = clamp(int(randomCA2.x * 8),0,8);
-          for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-            if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 3 
-                && randomCA2.y < CAParams3) {
-              newState = 3; // new Z
-            }
-          }
-        }
-
-        // migration
-        if( newState == 0 && nbNeighbors < 4 ) {
-          // random selection of a neighbor
-          int firstindex = clamp(int(randomCA2.z * 8),0,8);
-          newState = 0;
-          // looks for an old border around
-          for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-            if( neighborValues[ind % 8].a != 0 ) {
-              newState = int(neighborValues[ind % 8].a);
-            }
-          }
-        }
-      }
-      // CAParams5: px - X/Y/Z degradation (randomCA.w)
-      // randomCA2.x choice of a first neighbor
-      // degradation or migration of X
-      else if( randomCA.x < CAParams4 
-        || nbNeighbors < 8 * CAParams5 ) { 
-        newState = 0; 
-      }
-
-      out4_CA.a = float(newState);
-      // state change: takes the color of the current stage
-      if( currentCA.a != out4_CA.a ) {
-        out4_CA.rgb = shadeProtocell[newState].r * currentCA.rgb;
+    /////////////
+    // COLOR WORM
+    if( CASubType == 1 ) {
+      // alarm is off && many neighbors
+      if( (nbSurroundingFiring == 2 + int( noiseCA.x * 2) 
+           || nbSurroundingFiring == 3 + int( noiseCA.y * 2) 
+           || nbSurroundingFiring == 5 + int( noiseCA.z * 2) )
+             && currentCA.a <= 0 ) {
+        vec4 gatherSurroundingLives =
+          (neighborValues[0]) +
+          (neighborValues[1]) +
+          (neighborValues[2]) +
+          (neighborValues[3]) +
+          (neighborValues[4]) +
+          (neighborValues[5]) +
+          (neighborValues[6]) +
+          (neighborValues[7]);
+        out4_CA = clamp(gatherSurroundingLives/nbSurroundingFiring,0.0,1.0); // resets alarm
       }
       else {
-        //averageSurrounding  maxSurrounding
-        maxSurrounding = clamp( maxSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-        out4_CA.rgb = shadeProtocell[newState] * maxSurrounding;
-        // out4_CA.rgb = vec3(shadeProtocell[newState]);
+        out4_CA = currentCA - 100.0 * vec4(CAdecay);
+        if( out4_CA.a < 0.0 ) {
+          out4_CA = vec4(0.0);
+        }
+      }
+    }
+
+    /////////////
+    // B/W WORM
+    else if( CASubType == 2 ) {
+      // alarm is off && many neighbors
+      if( (nbSurroundingFiring == 2 + int( noise.x * 2) 
+       || nbSurroundingFiring == 3 + int( noise.y * 2) 
+       || nbSurroundingFiring == 5 + int( noise.z * 2) )
+       && currentCA.a <= 0 ) {
+         out4_CA = vec4(1.0); // resets alarm
+      }
+      else {
+        out4_CA = currentCA - 100.0 * vec4(CAdecay);
+        if( out4_CA.a < 0.0 ) {
+          out4_CA = vec4(0.0);
+        }
       }
     }
   }
-
-  //////////////////////////////////////////////////////
-  // DISLOCATION
-  // parameter values: 0.314  0.606 0.354 0.409
-  else if( CAType == CA_DISLOCATION ) {
-    // CAParams optimal values from effe
-/*     float CAParams1 = 0.393673;
-    float CAParams2 = 0.102449;
-    float CAParams3 = 0.53551;
-    float CAParams4 = 0.165306;
-    float CAParams5 = 0.196939;
-    float CAParams6 = 0.322857;
- */
-    int nbSurroundingNewBorders =
-      (neighborValues[0].a == 1? 1:0) +
-      (neighborValues[1].a == 1? 1:0) +
-      (neighborValues[2].a == 1? 1:0) +
-      (neighborValues[3].a == 1? 1:0) +
-      (neighborValues[4].a == 1? 1:0) +
-      (neighborValues[5].a == 1? 1:0) +
-      (neighborValues[6].a == 1? 1:0) +
-      (neighborValues[7].a == 1? 1:0);
-    
-    int nbSurroundingOldBorders =
-      (neighborValues[0].a == 2? 1:0) +
-      (neighborValues[1].a == 2? 1:0) +
-      (neighborValues[2].a == 2? 1:0) +
-      (neighborValues[3].a == 2? 1:0) +
-      (neighborValues[4].a == 2? 1:0) +
-      (neighborValues[5].a == 2? 1:0) +
-      (neighborValues[6].a == 2? 1:0) +
-      (neighborValues[7].a == 2? 1:0);
-
-    vec3 gatherColorFactors =
-      (neighborValues[0].rgb * inverseShadeDisloc[int(max(0,neighborValues[0].a))]) +
-      (neighborValues[1].rgb * inverseShadeDisloc[int(max(0,neighborValues[1].a))]) +
-      (neighborValues[2].rgb * inverseShadeDisloc[int(max(0,neighborValues[2].a))]) +
-      (neighborValues[3].rgb * inverseShadeDisloc[int(max(0,neighborValues[3].a))]) +
-      (neighborValues[4].rgb * inverseShadeDisloc[int(max(0,neighborValues[4].a))]) +
-      (neighborValues[5].rgb * inverseShadeDisloc[int(max(0,neighborValues[5].a))]) +
-      (neighborValues[6].rgb * inverseShadeDisloc[int(max(0,neighborValues[6].a))]) +
-      (neighborValues[7].rgb * inverseShadeDisloc[int(max(0,neighborValues[7].a))]) ;
-
-    vec3 maxColorFactors =
-      //(currentCA.rgb * inverseShadeDisloc[int(max(0,currentCA.a))]) +
-      (neighborValues[0].rgb * inverseShadeDisloc[int(max(0,neighborValues[0].a))]);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb 
-                          * inverseShadeDisloc[int(max(0,neighborValues[ind].a))];
-      if( graylevel(newColorFactor) > graylevel(maxColorFactors) ) {
-        maxColorFactors = newColorFactor;
-      }
-    }
-
-    vec3 averageSurrounding;
-    int nbNeighbors = nbSurroundingNewBorders + nbSurroundingOldBorders;
-    if( nbNeighbors > 0 ) {
-      if( CAcolorSpread ) {
-        averageSurrounding = maxColorFactors;
-      }
-      else {
-        averageSurrounding = gatherColorFactors / nbNeighbors;
-      }
-      // averageSurrounding = gatherSurroundingLives;
-      // averageSurrounding = vec3(0.4);
-    }
-    else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
-    }
-
-    // 0 empty
-    // 1 new border
-    // 2 old border: border at preceding state
-    // 3 new nucleus
-    // 4 new nucleus at preceding step
-    uint nbStates = 5;
-    uint newState = 0;
-
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    if( currentCA.a < 0 ) {
-      out4_CA.a = randomCA.x * (nbStates+1); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      // newState = 3;
-      out4_CA.rgb = shadeDisloc[newState].r * currentCA.rgb;
-    }
-    else {
-      int indexOld = -1;
-      int firstindex = int(randomCA.x * 8);
-      // looks for an old border around
-      for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-        if( neighborValues[ind % 8].a == 2 ) {
-          indexOld = ind;
-        }
-      }
-      int indexNew = -1;
-      firstindex = int(randomCA.y * 8);
-      // looks for a new border around
-      for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-        if( neighborValues[ind % 8].a == 1 ) {
-          indexNew = ind;
-        }
-      }
-
-      uint state = int(clamp(currentCA.a,0,nbStates));
-      // parameters
-      // w: fluidity (penetration of old borders between cells)
-      // z : celle density
-      // y : permeability
-      // x : freezing/dissolve
-
-      // empty cell transformation
-      if( state ==  0 ) {
-        newState = 0; // stays empty
-        // found a new border at indexNew
-        if( nbSurroundingNewBorders == 1  ) {
-          // prolongs the border
-          newState = 1; // new border
-        }
-        else if( nbSurroundingOldBorders == 1 
-                && randomCA.y < CAParams2 ) {
-          // prolongs the border
-          newState = 2; // old border
-        }
-        else if( nbSurroundingNewBorders >= CAParams1 * 8.0  ) {
-          // creates a nucleus
-          newState = 3; // nucleus
-        }
-      }
-      // new border growth: new border pushed by old border
-      else if( state ==  1 ) {
-        newState = 1; // stays a border
-        if( nbSurroundingNewBorders >= CAParams5 * 10.0 ) {
-          newState = 3; //makes a nucleus
-        }
-        // found an old border at indexOld
-        else if( indexOld >= 0 && neighborValues[(indexOld + 4) % 8].a == 0 ) {
-          // a new border can be established in diametrically opposed cell
-          newState = 2; // becomes an old border
-        }
-      }
-      // border growth: old border pulled by new border
-      else if( state ==  2 ) {
-        newState = 2; // stays old border
-        if( nbSurroundingOldBorders >= CAParams6 * 10.0 ) {
-          newState = 0; //makes a hole
-        }
-        else if( indexNew >= 0 ) {
-          newState = 0; // becomes an empty cell
-        }
-      }
-       // nucleus
-      else if( state ==  3 ) {
-        newState = 3; // stays a nucleus
-        if( nbSurroundingOldBorders + nbSurroundingNewBorders 
-             >= CAParams4 * 16.0 ) {
-          newState = 0; //makes a hole
-        }
-        else 
-          if( randomCA.y < CAParams3 ) {
-          newState = 1; // becomes a border
-        }
-      }
-      // newState = state;
-      out4_CA.a = float(newState);
-      averageSurrounding = clamp( averageSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-      out4_CA.rgb = shadeDisloc[newState] * averageSurrounding;
-      // out4_CA.rgb = colorDisloc[newState];
-    }
-    // const vec3 colorDisloc[5] = {{0.3,0.3,0.3},     // emptry
-    //                              {0,1,0},{0,0,1},   // new/old border
-    //                              {1,0,0},{1,1,0}};  // new/old nucleus
-  }
+*/
 
   //////////////////////////////////////////////////////
   // NO CA
   else {
-    out4_CA = clamp(vec4(currentCA.rgb-vec3(CAdecay),currentCA.a),0,1); // ready
+    out4_CA = currentCA; // ready
   }
-
 }
 
 
@@ -1724,6 +1701,64 @@ void main() {
   }
 
   //////////////////////////////////////////////
+  // CA LAYER DECAY
+  // the first frame for CA is negative so that it is not drawn
+  // in this case its value is preserved as it is
+  // and incay or decay does not make sense on a black color
+  if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a > 0 ) {
+    vec3 newCA_w_decay = out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb;
+    // decay for generation 
+    if( CAType == CA_GENERATION ) {
+      newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
+    }
+    // normal or normal quiescent cell ageing
+    else if( CAType == CA_TUMOR_CELL ) {
+      // fast decay for normal cells
+      if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a >= 1 && out_attachment_FBO[pg_FBO_fs_CA_attacht].a <= 10 ) { 
+        newCA_w_decay = clamp( newCA_w_decay - 10.0 * vec3(CAdecay) , 0.0 , 1.0 );
+        newCA_w_decay = clamp( newCA_w_decay - 10.0 * vec3(CAdecay) , 0.0 , 1.0 );
+      }
+      // slow decay for tumor cells
+      if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a >= 11 && out_attachment_FBO[pg_FBO_fs_CA_attacht].a <= 20 ) { 
+        newCA_w_decay = clamp( newCA_w_decay - 2.0 * vec3(CAdecay) , 0.0 , 1.0 );
+        newCA_w_decay = clamp( newCA_w_decay - 2.0 * vec3(CAdecay) , 0.0 , 1.0 );
+      }
+    }
+    /*
+    // normal or normal quiescent cell ageing
+    else if( CAType == CA_GENERAL_BINARY_MOORE ) {
+      // random decay for 
+      if( noiseCA.g < CAdecay ) { 
+        newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
+      }
+    }
+    */
+
+    //////////////////////////////////////////////
+    // rebuilds output for the gray/drawing buffer after decay
+    // has been taken into consideration
+    if( graylevel(newCA_w_decay) > 0 ) {
+      out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb = newCA_w_decay;
+    }
+    else {
+      // in case color has faded out the cell is considered as dead
+      out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
+    }
+  }
+
+  // init CA beginning of GN for CA_GENERAL_BINARY_MOORE / 3
+  if(frameNo % 1000 == 0) {
+     if( length(vec2(decalCoords.x - width/2 , decalCoords.y - height/2)) < 1.2 ) {
+        out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);
+        out_track_FBO[0] = vec4(0,0,0,1);
+      }
+      else {
+        out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
+        out_track_FBO[0] = vec4(0,0,0,1);
+      }
+  }
+
+  //////////////////////////////////////////////
   // CA LAYER CLEAR
   if( uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.y > 0 ) {
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
@@ -1737,6 +1772,49 @@ void main() {
   out_Update_FBO_fs_CA = out_attachment_FBO[pg_FBO_fs_CA_attacht];
   out_Update_FBO_fs_Pixels = out_attachment_FBO[pg_FBO_fs_Pixels_attacht];
   out_Update_FBO_fs_Trk0 = out_track_FBO[0];
+  /*
+  if(decalCoords.y > 700 ) {
+    int ind = int(decalCoords.x)/8;
+    if(int(decalCoords.x)%8 == 0) {
+            out_Update_FBO_fs_Trk0.rgb += vec3(1);
+    }
+    else {
+      if(texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( 256 + ind + 1 , 38 + 3 ) ).r != 0 ){
+        out_Update_FBO_fs_Trk0.rgb += vec3(1,0,0);
+      }
+      else {
+        out_Update_FBO_fs_Trk0.rgb += vec3(0,1,0);
+      }
+    }
+  }
+  */
+
+  /*
+
+  if(decalCoords.x < 700 ) {
+    int ind = int(decalCoords.y - (height/2) + 300);
+    if(ind >= 0 && ind < 700) {
+      float x = (int(decalCoords.x) / 100 - 3)+ width / 2;
+      float y = (ind / 100 - 3) + height / 2;
+      vec4 CA_val = texture( uniform_Update_texture_fs_CA , vec2(x,y) );
+      if(ind%100 == 0 || int(decalCoords.x) %100 == 0) {
+              out_Update_FBO_fs_Trk0.rgb = vec3(1);
+      }
+      else {
+        if(CA_val.a > 0 ) {
+                out_Update_FBO_fs_Trk0.rgb = vec3(1,0,0);
+        }
+        else if(CA_val.a == 0 ) {
+                out_Update_FBO_fs_Trk0.rgb = vec3(0.2);
+        }
+        else {
+            out_Update_FBO_fs_Trk0.rgb = vec3(0,1,0);
+        }
+      }
+    }
+  }
+  */
 
 #if PG_NB_TRACKS >= 2
   out_Update_FBO_fs_Trk1 = out_track_FBO[1];
