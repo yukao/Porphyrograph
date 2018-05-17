@@ -1,0 +1,48 @@
+Mem 6.8
+after 30' Mem 20.8
+
+CHECKUP LIST
+- audio on in PD + microphone on in the alsa sound control panel
+- talc on hands
+- Frame rate (high) - press on top right button on PC
+- pen tablet config: the whole tablet surface should cover the whole screen
+  otherwise edit ~/.xsessionrc:
+  xsetwacom set "Wacom Volito" TopX 0
+  xsetwacom set "Wacom Volito" TopX 0
+  xsetwacom set "Wacom Volito" BottomX 9570
+  xsetwacom set "Wacom Volito" BottomY 5220
+  xsetwacom set "Wacom Volito" KeepShape on
+- lowest two left buttons: 0/127 (instead of 64)
+  otherwise
+  type the following button sequences
+  - SELECT / button to modify / *2 times* DATA MSB / 000 / *2 times* DATA LSB / 127
+  
+
+NINE START
+
+- full schedule: 0 in loadbang for entry of pd myclock
+  in the base patch
+- launch the version with background LYM_DrawingMachine-v1.prl
+- start with CLEAR
+
+LOST TWIN
+- points at the beginning
+- transparency
+- decay
+- brush
+- music controlled radius
+- points in the end
+
+GREAT FLOOD
+- decay
+- music controlled color 
+- music controlled spread
+- music controlled radius
+- pints in the end
+- then oblique and back to lines
+- darker lines through music controlled color
+- decrease music controlled spread and radius
+
+RESTART
+- select schedule in PD if scene beginning
+- restart with LYM_DrawingMachine_noBG-v1.prl

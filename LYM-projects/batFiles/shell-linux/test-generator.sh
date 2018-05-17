@@ -1,0 +1,1 @@
+perl cmd/PG_configAndHeaderGenerator.prl alKemi/LYM_alKemi-head.conf alKemi/LYM_alKemi.csv Porphyrograph/Porphyrograph-src/pg_script_header.h Porphyrograph/Porphyrograph-src/pg_script_body.cpp alKemi/LYM_alKemi.conf

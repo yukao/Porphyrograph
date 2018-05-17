@@ -1,0 +1,42 @@
+RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17
+VERBATIM	double window	wide screen	window width	window height	window x for 1360x768	window y	minimal interframe latency	time scale	initial time	camera ID	message pixel length	trace output frame number	trace time	first frame number	last frame number	max mouse recording frames (for track drawing reording)	max network message length	nb of particles
+TYPE	bool	bool	int	int	int	int	float	float	float	int	int	bool	bool	int	int	int	int	int
+ID	double_window	wide_screen	window_width	window_height	window_x	window_y	minimal_interframe_latency	time_scale	initial_time	camID	message_pixel_length	trace_output_frame_number	trace_time	first_frame_number	last_frame_number	max_mouse_recording_frames	max_network_message_length	nb_particles
+initial_values																		
+	1	0	2048	768	336	0	0.01	1	0	0	4096	0	0	0	1000000	16384	65535	200000
+/initial_values																		
+rendering_files																		
+TYPE	int	int	int	string	string													
+ID	begin	end	step	id	shots													
+VIDEO	1000000	90000	1	test.avi	video/													
+SVG	1000000	90000	600	pic-LYM-TVW	snapshots/pic_TVW/													
+PNG	1000000	90000	600	pic-LYM-TVW	snapshots/pic_TVW/													
+JPG	1	90000	600	pic-LYM-TVW	snapshots/pic_TVW/													
+/rendering_files																		
+udp_local_server	2																	
+VERBATIM																		
+TYPE	string	int	string	bool	int	bool	bool											
+ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal											
+server	udp_PD_receive	1978	Plain	0	300	1	1											
+server	udp_BITWIG_receive	9000	OSC	0	300	0	1											
+/udp_local_server																		
+udp_remote_client	3																	
+VERBATIM																		
+TYPE	string	string	int	string	bool	int	bool											
+ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal											
+client	udp_QT_send	127.0.0.1	1979	Plain	0	300	1											
+client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
+client	udp_BITWIG_send	127.0.0.1	8000	OSC	0	300	1											
+/udp_remote_client																		
+shader_files	6																	
+VERBATIM																		
+TYPE	string																	
+ID	id																	
+filename	LYM_ParticleAnimation_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_Update_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ParticleSplat_TVW	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
+filename	LYM_Mixing_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_Master_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_Sensor_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+/shader_files																		
+/head																		
