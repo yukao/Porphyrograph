@@ -148,6 +148,9 @@ extern GLint uniform_Update_vp_proj;
 extern GLint uniform_Update_vp_2fv_width_height;
 extern GLint uniform_Update_fs_4fv_W_H_time_currentScene;
 extern GLint uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+#ifdef MALAUSSENA
+extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
+#endif
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
 extern GLint uniform_Update_fs_4fv_trkDecay;
 extern GLint uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
@@ -317,6 +320,10 @@ extern GLint uniform_Master_vp_view;
 extern GLint uniform_Master_vp_proj;
 extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 extern GLint uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+extern GLint uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
+extern GLint uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_Render_curr;         // previous pass output

@@ -147,6 +147,7 @@ using namespace cv;
 #include <list>
 #include <vector>
 #include <map>
+#include <unordered_map>
 using std::list;
 using std::vector;
 using std::map;

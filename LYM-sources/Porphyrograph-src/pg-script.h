@@ -63,6 +63,11 @@ extern float LastGUIShippedValuesInterpVar[_MaxInterpVarIDs];
 // initial values in the configuration file
 extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 
+//////////////////////////////////////////////
+// Cuurent palette after interpolation
+extern float pen_base_3color_palette[9];
+extern float repop_base_3color_palette[9];
+
 #if defined (GN) || defined (MALAUSSENA)
 #define CA_GOL                    0
 #define CA_TOTALISTIC             1
@@ -186,6 +191,34 @@ extern float AbsoluteInitialScenarioTime;
 extern int BeatNo;
 extern float lastBeatTime;
 
+// +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
+#ifdef MALAUSSENA
+enum pg_CAseed_types
+{
+	_pg_CAseed_dot = 0,
+	_pg_CAseed_h_line,
+	_pg_CAseed_v_line,
+	_pg_CAseed_cross,
+	_pg_CAseed_X,
+	_pg_CAseed_square,
+	_pg_Nb_CAseed_types,
+};
+enum pg_CAseed_locations
+{
+	_pg_CAseed_loc_center = 0,
+	_pg_CAseed_loc_N,
+	_pg_CAseed_loc_E,
+	_pg_CAseed_loc_S,
+	_pg_CAseed_loc_W,
+	_pg_Nb_CAseed_locations,
+}; extern pg_CAseed_types pg_CAseed_type;
+extern pg_CAseed_locations pg_CAseed_location;
+extern int pg_CAseed_coordinates[2];
+extern int pg_CAseed_size;
+extern bool pg_CAseed_trigger;
+void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordinates[2]);
+#endif
+
 // +++++++++++++++++++++++ Aux Var +++++++++++++++++++++++++++++++++
 extern char AuxString[1024];
 
@@ -222,7 +255,7 @@ void pg_continuous_flahes( void );
 void pg_aliasScript( char * command_pattern , 
 		     char * string_argument_0 ,
 		     float arguments[MAX_OSC_ARGUMENTS] );
-void pulse_color(void);
+void update_pulsed_colors(void);
 void pg_path_recording_onOff( int indPath );
 // playing track onoff
 void pg_path_replay_trackNo_onOff( int indPath, int trackNo);

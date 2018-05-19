@@ -130,7 +130,8 @@
 	      (GLfloat)trackMasterWeight_0,
 	      (GLfloat)trackMasterWeight_1,
 	      (GLfloat)trackMasterWeight_2 );
- glUniform3f( uniform_Master_fs_3fv_trackMasterWeight_3_hide_mute_screen ,
+ glUniform4f( uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen ,
 	      (GLfloat)trackMasterWeight_3,
+	      (GLfloat)interfaceOnScreen,
 	      (GLfloat)hide,
 	      (GLfloat)mute_screen );

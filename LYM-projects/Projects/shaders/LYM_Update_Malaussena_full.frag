@@ -281,6 +281,7 @@ uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
+uniform vec4 uniform_Update_fs_4fv_CAseed_type_size_loc;
 
 /////////////////////////////////////
 // INPUT
@@ -1613,6 +1614,60 @@ void main() {
       // currentCA.rgb = out_track_FBO[1].rgb;
       // currentCA.rgb = vec3(1,0,0);
     }
+    // seeding the CA with a predefined shape, size and location
+#define  _pg_CAseed_dot        0
+#define  _pg_CAseed_h_line     1
+#define  _pg_CAseed_v_line     2
+#define  _pg_CAseed_cross      3
+#define  _pg_CAseed_X          4
+#define  _pg_CAseed_square     5
+    if(uniform_Update_fs_4fv_CAseed_type_size_loc.z > 0) {
+      int CAseed_type = int(uniform_Update_fs_4fv_CAseed_type_size_loc.x);
+      int CAseed_size = int(uniform_Update_fs_4fv_CAseed_type_size_loc.y);
+      vec2 CAseed_location = uniform_Update_fs_4fv_CAseed_type_size_loc.zw;
+      switch(CAseed_type) {
+        case _pg_CAseed_dot:
+        if( length(vec2(decalCoords - CAseed_location)) < CAseed_size) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
+        case _pg_CAseed_h_line:
+        if( abs(decalCoords.y - CAseed_location.y) < 1
+          && abs(decalCoords.x - CAseed_location.x) < CAseed_size) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
+        case _pg_CAseed_v_line:
+        if( abs(decalCoords.x - CAseed_location.x) < 1
+          && abs(decalCoords.y - CAseed_location.y) < CAseed_size) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
+        case _pg_CAseed_cross:
+        if(( abs(decalCoords.y - CAseed_location.y) < 1
+            && abs(decalCoords.x - CAseed_location.x) < CAseed_size)
+          || ( abs(decalCoords.x - CAseed_location.x) < 1
+              && abs(decalCoords.y - CAseed_location.y) < CAseed_size) ) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
+        case _pg_CAseed_X:
+        if(( abs(decalCoords.y - decalCoords.x) <= 1.2
+            || abs(decalCoords.y + decalCoords.x) <= 1.2)
+          && length(vec2(decalCoords - CAseed_location)) < CAseed_size ) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
+        case _pg_CAseed_square:
+        if( (abs(abs(decalCoords.y - CAseed_location.y) - CAseed_size) < 1
+          && abs(decalCoords.x - CAseed_location.x) < CAseed_size)
+          || (abs(abs(decalCoords.x - CAseed_location.x) - CAseed_size) < 1
+          && abs(decalCoords.y - CAseed_location.y) < CAseed_size) ) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
+      }
+    }
 
      // calculates the new state of the automaton
     CA_out( currentCA );
@@ -1747,6 +1802,7 @@ void main() {
   }
 
   // init CA beginning of GN for CA_GENERAL_BINARY_MOORE / 3
+  /*
   if(frameNo % 1000 == 0) {
      if( length(vec2(decalCoords.x - width/2 , decalCoords.y - height/2)) < 1.2 ) {
         out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);
@@ -1757,6 +1813,7 @@ void main() {
         out_track_FBO[0] = vec4(0,0,0,1);
       }
   }
+  */
 
   //////////////////////////////////////////////
   // CA LAYER CLEAR

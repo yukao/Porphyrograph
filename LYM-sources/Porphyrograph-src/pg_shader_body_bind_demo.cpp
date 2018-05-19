@@ -118,6 +118,11 @@
   if ( uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale == -1 ) {
     fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale : %d\n" , uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale );
   }
+  uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen 
+    = glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen");
+  if ( uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen == -1 ) {
+    fprintf(stderr, "Could not bind uniform Master uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen : %d\n" , uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen );
+  }
   uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius 
     = glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius");
   if ( uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius == -1 ) {
@@ -127,9 +132,4 @@
     = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast");
   if ( uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast == -1 ) {
     fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast : %d\n" , uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast );
-  }
-  uniform_Master_fs_3fv_trackMasterWeight_3_hide_mute_screen 
-    = glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_3fv_trackMasterWeight_3_hide_mute_screen");
-  if ( uniform_Master_fs_3fv_trackMasterWeight_3_hide_mute_screen == -1 ) {
-    fprintf(stderr, "Could not bind uniform Master uniform_Master_fs_3fv_trackMasterWeight_3_hide_mute_screen : %d\n" , uniform_Master_fs_3fv_trackMasterWeight_3_hide_mute_screen );
   }

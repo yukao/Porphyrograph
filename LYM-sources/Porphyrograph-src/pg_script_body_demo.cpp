@@ -219,7 +219,7 @@ float movieSobel          ;
 int   playing_movieNo     ;
 bool  BGSubtr             ;
 int   CAstep              ;
-bool  interfaceMode       ;
+bool  interfaceOnScreen   ;
 bool  CAcolorSpread       ;
 float sound_volume        ;
 float sound_min           ;
@@ -672,7 +672,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&playing_movieNo,
    (void *)&BGSubtr,
    (void *)&CAstep,
-   (void *)&interfaceMode,
+   (void *)&interfaceOnScreen,
    (void *)&CAcolorSpread,
    (void *)&sound_volume,
    (void *)&sound_min,
@@ -1186,7 +1186,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"playing_movieNo",
   (char *)"BGSubtr",
   (char *)"CAstep",
-  (char *)"interfaceMode",
+  (char *)"interfaceOnScreen",
   (char *)"CAcolorSpread",
   (char *)"sound_volume",
   (char *)"sound_min",
@@ -1413,7 +1413,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"playing_movieNo",
   (char *)"BGSubtr",
   (char *)"CAstep",
-  (char *)"interfaceMode",
+  (char *)"interfaceOnScreen",
   (char *)"CAcolorSpread",
   (char *)"sound_volume",
   (char *)"sound_min",

@@ -507,6 +507,9 @@ void updateMouseEnvironmentVariablesAndTables(float theTime) {
 	mouse_x = (float)CurrentMousePos_x;
 	mouse_y = (float)CurrentMousePos_y;
 
+	// change colors according to music pulse
+	update_pulsed_colors();
+
 	///////////////////////////////////////////////////////////////////////////
 	// PATH RECORDING
 	// no update if the mouse has not been moving
@@ -731,9 +734,6 @@ void updateMouseEnvironmentVariablesAndTables(float theTime) {
 	///////////////////////////////////////////////////////////////////////
 	// PARTICLE COLOR UPDATING INDEPENDENTLY OF TRACK READING OR WRITING
 	///////////////////////////////////////////////////////////////////////
-	/// change colors according to music pulse
-	pulse_color();
-
 	/// uses pulsed color to repop
 	repop_Color_r
 		= repop_grey

@@ -657,6 +657,11 @@ void one_frame_variables_reset(void) {
 	is_blur_1 = false;
 	is_blur_2 = false;
 
+#ifdef MALAUSSENA
+	// CA seed
+	pg_CAseed_trigger = false;
+#endif
+
 	// /////////////////////////
 	// particle initialization reset
 	part_initialization = -1;
@@ -945,6 +950,19 @@ void pg_update_shader_uniforms(void) {
 		(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
 		pixel_radius + pulse_average * pixel_radius_pulse,
 		fabs(pulse_average - pulse_average_prec) * part_Vshift_pulse);
+
+#ifdef MALAUSSENA
+	if (pg_CAseed_trigger) {
+		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc,
+			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
+			(GLfloat)pg_CAseed_coordinates[0], (GLfloat)pg_CAseed_coordinates[1]);
+	}
+	else {
+		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc,
+			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
+			-1.f, -1.f);
+	}
+#endif
 
 	//if (isClearAllLayers > 0) {
 	//	printf("-> clear all layers\n");
@@ -1376,6 +1394,18 @@ void pg_update_shader_uniforms(void) {
 	glUniform3f(uniform_Master_fs_3fv_width_height_rightWindowVMargin,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(rightWindowVMargin));
 	// printf("hoover %d %d\n",CurrentCursorHooverPos_x, CurrentCursorHooverPos_y);
+
+	// draws the palette on screen
+	glUniform4f(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey,
+		pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pen_grey);
+	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb,
+		pen_base_3color_palette[0], pen_base_3color_palette[1], pen_base_3color_palette[2]);
+	//printf("Low palette color update %.2f %.2f %.2f\n",
+	//	pen_base_3color_palette[0], pen_base_3color_palette[1], pen_base_3color_palette[2]);
+	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb,
+		pen_base_3color_palette[3], pen_base_3color_palette[4], pen_base_3color_palette[5]);
+	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb,
+		pen_base_3color_palette[6], pen_base_3color_palette[7], pen_base_3color_palette[8]);
 
 #ifdef PG_SENSORS
 	/////////////////////////////////////////////////////////////////////////
