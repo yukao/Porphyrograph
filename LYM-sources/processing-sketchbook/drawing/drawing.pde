@@ -4,7 +4,9 @@ import netP5.*;
 OscP5 oscP5;
 
 // final String TouchOSC_IP_address_String = "192.168.2.65";
-final String TouchOSC_IP_address_String = "100.83.161.98";
+// final String TouchOSC_IP_address_String = "100.83.161.98";
+final String TouchOSC_IP_address_String = "192.168.43.108";
+
 NetAddress TouchOSC_IP_Address;
 
 final int BRUSH_LINE = 0;
@@ -56,7 +58,7 @@ float damp = DAMP_MAX;
 void setup() {
   smooth();
   noCursor();
-  fullScreen(2);
+  fullScreen(3);
   // size(1024, 768);
   println("Frame size HxW ", width, "x",height);
   background(0);

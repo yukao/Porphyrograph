@@ -210,6 +210,10 @@ enum pg_CAseed_locations
 	_pg_CAseed_loc_E,
 	_pg_CAseed_loc_S,
 	_pg_CAseed_loc_W,
+	_pg_CAseed_loc_NW,
+	_pg_CAseed_loc_NE,
+	_pg_CAseed_loc_SE,
+	_pg_CAseed_loc_SW,
 	_pg_Nb_CAseed_locations,
 }; extern pg_CAseed_types pg_CAseed_type;
 extern pg_CAseed_locations pg_CAseed_location;

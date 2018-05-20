@@ -208,7 +208,6 @@ pg_CAseed_locations pg_CAseed_location = _pg_CAseed_loc_center;
 int pg_CAseed_coordinates[2] = { -1, -1 };
 int pg_CAseed_size = 1;
 bool pg_CAseed_trigger = false;
-void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordinates[2]);
 #endif
 
 
@@ -400,6 +399,26 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 	case 	_pg_CAseed_loc_W: {
 		coordinates[0] = 0;
 		coordinates[1] = window_height / 2;
+		break;
+	}
+	case 	_pg_CAseed_loc_NW: {
+		coordinates[0] = 0;
+		coordinates[1] = 0;
+		break;
+	}
+	case 	_pg_CAseed_loc_NE: {
+		coordinates[0] = leftWindowWidth;
+		coordinates[1] = 0;
+		break;
+	}
+	case 	_pg_CAseed_loc_SE: {
+		coordinates[0] = leftWindowWidth;
+		coordinates[1] = window_height;
+		break;
+	}
+	case 	_pg_CAseed_loc_SW: {
+		coordinates[0] = 0;
+		coordinates[1] = window_height;
 		break;
 	}
 	}
@@ -617,12 +636,19 @@ void pg_initializationScript(void) {
 #ifdef MALAUSSENA
 	// CA seed
 	pg_CAseed_trigger = false;
+	pg_CAseed_type = _pg_CAseed_dot;
+	sprintf(AuxString, "/CAseed_dot %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	pg_CAseed_location = _pg_CAseed_loc_center;
-	sprintf(AuxString, "/seed_loc %d", pg_CAseed_location);
-	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	pg_CAseed_coordinates[0] = -1;
 	pg_CAseed_coordinates[1] = -1;
 	pg_CAseed_size = 1;
+	sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 #endif
 
 	// copy to layer above (+1) or to layer below (-1)
@@ -3266,7 +3292,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 	case _CA1SubType_minus: {
-		CA1SubType = (CA1SubType - 1 + PG_NB_CA_TYPES) % PG_NB_CA_SUBTYPES;
+		CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
 		BrokenInterpolationVar[_CA1SubType] = true;
 		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
@@ -3539,44 +3565,79 @@ void pg_aliasScript(char *command_symbol,
 
 	case _CAseed_dot: {
 		pg_CAseed_type = _pg_CAseed_dot;
+		sprintf(AuxString, "/CAseed_dot %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		break;
 	}
 	case _CAseed_h_line: {
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		pg_CAseed_type = _pg_CAseed_h_line;
 		break;
 	}
 	case _CAseed_v_line: {
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		pg_CAseed_type = _pg_CAseed_v_line;
 		break;
 	}
 	case _CAseed_cross: {
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		pg_CAseed_type = _pg_CAseed_cross;
 		break;
 	}
 	case _CAseed_X: {
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		pg_CAseed_type = _pg_CAseed_X;
 		break;
 	}
 	case _CAseed_square: {
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		pg_CAseed_type = _pg_CAseed_square;
 		break;
 	}
 	case _CAseed_size: {
 		pg_CAseed_size = int(arguments[0]);
+		sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		break;
 	}
 	case _CAseed_loc: {
 		pg_CAseed_location = pg_CAseed_locations(int(arguments[0]) % _pg_Nb_CAseed_locations);
 		pg_CAseed_location_to_coordinates(pg_CAseed_location, pg_CAseed_coordinates);
-		sprintf(AuxString, "/seed_loc %d", pg_CAseed_location);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		break;
 	}
 	case _CAseed_loc_plus: {
 		pg_CAseed_location = pg_CAseed_locations((pg_CAseed_location + 1) % _pg_Nb_CAseed_locations);
 		pg_CAseed_location_to_coordinates(pg_CAseed_location, pg_CAseed_coordinates);
-		sprintf(AuxString, "/seed_loc %d", pg_CAseed_location);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		break;
 	}
 	case _CAseed_trigger: {
