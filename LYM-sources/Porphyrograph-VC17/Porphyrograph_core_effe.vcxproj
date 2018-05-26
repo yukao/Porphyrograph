@@ -104,7 +104,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;effe;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;effe;VC_HAVE_FFMPEG;VC_EXTERN_LIVE_VIDEO;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\dirent-1.21\include</AdditionalIncludeDirectories>
       <FloatingPointModel>Precise</FloatingPointModel>
       <StringPooling>true</StringPooling>

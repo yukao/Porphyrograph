@@ -85,7 +85,7 @@ const float PI = 3.1415926535897932384626433832795;
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
 #define PG_NB_TRACKS 1
-#define PG_NB_PATHS 7
+#define PG_NB_PATHS  7
 
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
@@ -94,15 +94,24 @@ const uint pg_FBO_fs_Pixels_attacht = 1;
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-#define CA_GOL                    0
-#define CA_TOTALISTIC             1
-#define CA_GENERATION             2
-#define CA_GENERAL_BINARY_MOORE   3
-#define CA_GENERAL_BINARY_NEUMANN 4
-#define CA_NEUMANN_BINARY         5
-#define CA_TUMOR_CELL             6
-#define CA_WORM                   7
-#define CA_TIME_TUNNEL            8
+#define CA_SQUENCR                       0
+#define CA_SQUENCR_NB_SUBTYPES           9
+#define CA_SQUENCR_TABLE_OFFSET          0
+#define CA_TOTALISTIC                    1
+#define CA_TOTALISTIC_NB_SUBTYPES        9
+#define CA_TOTALISTIC_TABLE_OFFSET       (CA_SQUENCR_TABLE_OFFSET + CA_SQUENCR_NB_SUBTYPES)
+#define CA_GENERATION                    2
+#define CA_GENERATION_NB_SUBTYPES        10
+#define CA_GENERATION_TABLE_OFFSET       (CA_TOTALISTIC_TABLE_OFFSET + CA_TOTALISTIC_NB_SUBTYPES)
+#define CA_GAL_BIN_MOORE                 3
+#define CA_GAL_BIN_MOORE_NB_SUBTYPES     6
+#define CA_GAL_BIN_MOORE_TABLE_OFFSET    (CA_GENERATION_TABLE_OFFSET + CA_GENERATION_NB_SUBTYPES)
+#define CA_GAL_BIN_NEUMANN               4
+#define CA_GAL_BIN_NEUMANN_NB_SUBTYPES   4
+#define CA_GAL_BIN_NEUMANN_TABLE_OFFSET  (CA_GAL_BIN_MOORE_TABLE_OFFSET + CA_GAL_BIN_MOORE_NB_SUBTYPES)
+#define CA_NEUMANN_BIN                   5
+#define CA_NEUMANN_BIN_NB_SUBTYPES       10
+#define CA_NEUMANN_BIN_TABLE_OFFSET      (CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CA_GAL_BIN_NEUMANN_NB_SUBTYPES)
 
 // CA OFFSETS
 const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
@@ -453,7 +462,7 @@ void CA_out( vec4 currentCA ) {
 
   //////////////////////////////////////////////////////
   // GAME OF LIFE - TOTALISTIC OR GENERATION
-  if(/* CAType == CA_GOL || CAType == CA_TOTALISTIC || */ CAType == CA_GENERATION ) {
+  if(CAType == CA_SQUENCR || CAType == CA_TOTALISTIC || CAType == CA_GENERATION ) {
     int nbSurroundingLives =
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
@@ -483,7 +492,6 @@ void CA_out( vec4 currentCA ) {
     }
     
     #define nbStatesGeneration 25
-    #define CArankGeneration 18
 
     /*
     uint nbStates = 16;
@@ -496,7 +504,7 @@ void CA_out( vec4 currentCA ) {
       nbStates = 3;
     }
 
-    if( CAType == CA_GOL ) { // GOL number of states + rank (height in data texture)
+    if( CAType == CA_SQUENCR ) { // SQUENCR number of states + rank (height in data texture)
       nbStates = 2;
       CArank = 0;
     }
@@ -523,12 +531,12 @@ void CA_out( vec4 currentCA ) {
         out4_CA.rgb = vec3(1);//averageSurrounding.rgb;
       // }
     }
-    else {
+    if( CAType == CA_GENERATION ) {
       float state = clamp(currentCA.a,0,nbStatesGeneration);
       float newState = 0;
       newState = texelFetch(uniform_Update_texture_fs_CATable, 
                        ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
-                              CArankGeneration + CASubType ) ).r;
+                              CA_GENERATION_TABLE_OFFSET + CASubType ) ).r;
       out4_CA.a = float(newState);
       if( newState > 0 ) {
         out4_CA.rgb = averageSurrounding.rgb;
@@ -541,8 +549,8 @@ void CA_out( vec4 currentCA ) {
   }
 
   ////////////////////////////////////////////////////// 
-  // GENERAL BINARY MOORE NEIGHBORHOOD
-  else if( CAType == CA_GENERAL_BINARY_MOORE ) {
+  // GAL BIN MOORE NEIGHBORHOOD
+  else if( CAType == CA_GAL_BIN_MOORE ) {
     // Fallski
     // C48,NM,Sb255a,Babb189ab63a
     // 48 states 0-47
@@ -586,13 +594,15 @@ void CA_out( vec4 currentCA ) {
     float newState = 0;
     if( currentCA.a < 0 ) {
       // newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
-      out4_CA.a = nbStatesGeneralBinary;
+     //  out4_CA.a = nbStatesGeneralBinary;
+      out4_CA.a = 1;
     }
     else {
       // survival
       if( state != 0 ) {
          newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                               ivec2( nbSurroundingLives + 1 , 38 + CASubType ) ).r;
+                               ivec2( nbSurroundingLives + 1 , 
+                                      CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
          // survival
          if( newState != 0 && out4_CA.a >= 0.0 ) {
             // out4_CA.a -= 1.0;
@@ -604,7 +614,8 @@ void CA_out( vec4 currentCA ) {
       // birth
       else {
         newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                       ivec2( 256 + nbSurroundingLives + 1 , 38 + CASubType ) ).r;
+                       ivec2( 256 + nbSurroundingLives + 1 , 
+                              CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
         // birth
         if( newState != 0 ) {
           out4_CA.a = nbStatesGeneralBinary;
@@ -620,8 +631,81 @@ void CA_out( vec4 currentCA ) {
   }
 
   ////////////////////////////////////////////////////// 
-  // NEUMANN BINARY VON NEUMANN NEIGHBORHOOD + CENTER
-  else if( CAType == CA_NEUMANN_BINARY ) {
+  // GAL BIN VON NEUMANN NEIGHBORHOOD
+  else if( CAType == CA_GAL_BIN_NEUMANN ) {
+    // Banks,
+    // C0,NN,S3babbabbabba3b,B7ab3aba3b
+    // 2 states 0-1
+    // von Neumann neihborhood Order N,E,S,W
+    // states are encoded: N + 2 * E + 4 * S + 8 * W
+    // 0000 0 neighbor
+    // 1000 N neighbor
+    // 0100 E neighbor
+    // 3 = 1100 N and E neighbors
+    // Survive 3babbabbabba3b survival on 
+    //         1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,
+    // Birth   7ab3aba3b birth on 
+    //         0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,
+    // Encoding of Survival and Birth
+    // 16 0/1 digits encode 
+
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+
+    int nbSurroundingLives =
+      (neighborValues[0].a > 0?   2:0) +  // E
+      (neighborValues[1].a > 0?   8:0) +  // W
+      (neighborValues[2].a > 0?   1:0) +  // N
+      (neighborValues[3].a > 0?   4:0) ;  // S
+
+    // uint CArank = 38;
+    uint nbStates = uint(texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( 0 , 
+                                      CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r * 255);
+
+    // The first CA value is negative so that it is not 
+    // displayed, here we change alpha value to positive
+    // because it is the second time it is displayed if 
+    uint state = int(clamp(currentCA.a,0,nbStates));
+    float newState = 0;
+    if( currentCA.a < 0 ) {
+      newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
+      out4_CA.a = float(nbStates);
+    }
+    else {
+      // survival
+      if( state > 0 ) {
+         newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( nbSurroundingLives + 1 , 
+                                      CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r;
+         // survival
+         if( newState > 0 && out4_CA.a >= 0.0 ) {
+            out4_CA.a -= 1.0;
+         }
+      }
+      // birth
+      else {
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( 16 + nbSurroundingLives + 1 , 
+                              CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r;
+        // birth
+        if( newState > 0 ) {
+          out4_CA.a = float(nbStates);
+        }
+      }
+    }
+
+    if( out4_CA.a > 0 ) {
+      out4_CA.rgb = vec3(out4_CA.a/float(nbStates-1));
+    }
+    else {
+      out4_CA.rgb = vec3(0,0,0);
+    }
+  }
+
+  ////////////////////////////////////////////////////// 
+  // NEUMANN BIN VON NEUMANN NEIGHBORHOOD + CENTER
+  else if( CAType == CA_NEUMANN_BIN ) {
     // Fredkin2 rule has the following definition: 2,01101001100101101001011001101001
     // The first digit, '2', tells the rule has 2 states (it's a 1 bit rule).
     // The second digit, '0', tells a cell in a configuration ME=0,N=0,E=0,S=0,W=0 will get the state 0.
@@ -651,7 +735,8 @@ void CA_out( vec4 currentCA ) {
     }
     else {
       newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                    ivec2( nbSurroundingLives + 1 , 50 + CASubType ) ).r * 255.0;
+                    ivec2( nbSurroundingLives + 1 , 
+                            CA_NEUMANN_BIN_TABLE_OFFSET + CASubType ) ).r * 255.0;
       // newState = texelFetch(uniform_Update_texture_fs_CATable, 
       //                       ivec2( nbSurroundingLives + 1 , 58 ) ).r;
       out4_CA.a = float(newState);
@@ -666,309 +751,6 @@ void CA_out( vec4 currentCA ) {
     }
     // out4_CA = vec4(1.0,0.0,0.0,1.0);
   }
-
-  //////////////////////////////////////////////////////
-  // TUMOR CELL
-  else if( CAType == CA_TUMOR_CELL ) { // CAType == 6
-    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
-    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
-
-    // vec4 neighborValues[8]=vec4[8](vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),
-    //                                vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0));
-
-    // STATES:
-    // 0: free
-    // 1: normal cell, 2-9: normal cell candidate for subdivision 
-    //                      in one of the 8 Moore neighborhoods
-    // 11: cancer cell, 12-19: cancer cell candidate for subdivision 
-    //                         in one of the 8 Moore neighborhoods
-    // states 10 and 20 had been made for quiescent cell but they
-    // are not necessary to deal with such cells (surrounded by living cells)
-
-    #define nbStatesTumorCell 21
-    uint state = int(clamp(currentCA.a,0,nbStatesTumorCell));
-    out4_CA = currentCA;
-    if( currentCA.a < 0 ) {
-      // free cell generated by pen
-      if( noiseCA.r < 0.6 ) {
-        out4_CA = vec4(0.0,0.0,0.0,0.0);
-      }
-      // normal cell generated by pen
-      else if( noiseCA.r < 0.6 + CAParams3 * 0.4 ) {
-        out4_CA = vec4(1.0,1.0,1.0,1.0);
-      }
-      // cancer cell generated by pen
-      else {
-        out4_CA = vec4(1.0,1.0,1.0,11.0);
-      }
-    }
-    else {
-      // stores and count free neighbor cells
-      int nbFreeNeighborCells = 0;
-      int indFreeNeighborCells[8];
-      int nbUsedNeighborCells = 0;
-      int indUsedNeighborCells[8];
-      for(int ind = 0 ; ind < 8 ; ind++ ) {
-        if( neighborValues[ind].a == 0 ) {
-          indFreeNeighborCells[nbFreeNeighborCells] = ind;
-          nbFreeNeighborCells++;
-        }
-        else {
-          indUsedNeighborCells[nbUsedNeighborCells] = ind;
-          nbUsedNeighborCells++;
-        }
-      }
-
-      // quiescent state does not have to be dealt with separately
-      // (a state with 8 alive neighbors)
-
-      // free slot: checks for neighboring cell subdivision
-      if( state == 0 ) {
-        // offsets and states are ranked accordingly
-        // so as to guess easily the expected state from the
-        // position of the offset 
-        for(int ind = 0 ; ind < nbUsedNeighborCells ; ind++ ) {
-          int indUsedNeighborCell = indUsedNeighborCells[ind];
-          // if the used neighbor cell is in the state of subdivision
-          // and if the subdivision location corresponds to the
-          // current free cell (diametrically opposite)
-          // normal cell candidate for subdivision at preceding step produces an offspring
-          // at the current location
-          if( neighborValues[indUsedNeighborCell].a == 2 + (7 - indUsedNeighborCell) ) {
-            out4_CA = vec4(1.0,1.0,1.0,1.0);
-          }
-          // cancer cell candidate for subdivision at preceding step produces an offspring
-          // at the current location
-          if( neighborValues[indUsedNeighborCell].a == 12 + (7 - indUsedNeighborCell) ) {
-            out4_CA = vec4(1.0,1.0,1.0,11.0);
-          }
-        }
-      }
-      // subdivision of a normal or cancer cell
-      else if( nbFreeNeighborCells > 0 ) {
-        // normal cell subdivision
-        if( state == 1 ) {
-           // subdivision
-           if( noiseCA.r < CAParams1 ) { // 0.85 
-              int indMigration = int(clamp(floor(noiseCA.b * nbFreeNeighborCells),
-                                                  0.0,float(nbFreeNeighborCells)));
-              out4_CA = vec4(1.0,1.0,1.0,2 + indFreeNeighborCells[indMigration]);
-           }
-           // ageing is made after update in main function
-           // out4_CA.rgb = clamp( out4_CA.rgb - 10 * vec3(CAdecay) , 0.0 , 1.0 );
-        }
-        // cancer cell subdivision
-        else if( state == 11 ) {
-           // subdivision
-           if( noiseCA.r < CAParams2 ) { // 0.9 
-              int indMigration = int(clamp(floor(noiseCA.b * nbFreeNeighborCells),
-                                                  0.0,float(nbFreeNeighborCells)));
-              out4_CA = vec4(1.0,1.0,1.0,12 + indFreeNeighborCells[indMigration]);
-           }
-        }
-        // the normal cell candidate for subdivision
-        // returns to normal state
-        else if( state >= 2 && state <= 9 ) {
-          out4_CA.a = 1.0;
-          // out4_CA.rgb = clamp( out4_CA.rgb - 10 * vec3(CAdecay) , 0.0 , 1.0 );
-        }
-        // the cancer cell candidate for subdivision
-        // returns to normal state
-        else if( state >= 12 && state <= 19 ) {
-          out4_CA.a = 11.0;
-        }
-      }
-    }
-
-    if( out4_CA.a <= 0 ) {
-      out4_CA.rgb = vec3(0.0,0.0,0.0);
-    }
-    // if( out4_CA.a > 0 ) {
-    //   out4_CA = vec4(1.0,0.0,0.0,11.0);
-    // }
-  }
-
-
-  ////////////////////////////////////////////////////// 
-  // GENERAL BINARY VON NEUMANN NEIGHBORHOOD
-  else if( CAType == CA_GENERAL_BINARY_NEUMANN ) {
-    // Banks,
-    // C0,NN,S3babbabbabba3b,B7ab3aba3b
-    // 2 states 0-1
-    // von Neumann neihborhood Order N,E,S,W
-    // states are encoded: N + 2 * E + 4 * S + 8 * W
-    // 0000 0 neighbor
-    // 1000 N neighbor
-    // 0100 E neighbor
-    // 3 = 1100 N and E neighbors
-    // Survive 3babbabbabba3b survival on 
-    //         1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,
-    // Birth   7ab3aba3b birth on 
-    //         0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,
-    // Encoding of Survival and Birth
-    // 16 0/1 digits encode 
-
-    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
-    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
-
-    int nbSurroundingLives =
-      (neighborValues[0].a > 0?   2:0) +  // E
-      (neighborValues[1].a > 0?   8:0) +  // W
-      (neighborValues[2].a > 0?   1:0) +  // N
-      (neighborValues[3].a > 0?   4:0) ;  // S
-
-    // uint CArank = 38;
-    uint nbStates = uint(texelFetch(uniform_Update_texture_fs_CATable, 
-                               ivec2( 0 , 46 + CASubType ) ).r * 255);
-
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    uint state = int(clamp(currentCA.a,0,nbStates));
-    float newState = 0;
-    if( currentCA.a < 0 ) {
-      newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
-      out4_CA.a = float(nbStates);
-    }
-    else {
-      // survival
-      if( state > 0 ) {
-         newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                               ivec2( nbSurroundingLives + 1 , 46 + CASubType ) ).r;
-         // survival
-         if( newState > 0 && out4_CA.a >= 0.0 ) {
-            out4_CA.a -= 1.0;
-         }
-      }
-      // birth
-      else {
-        newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                       ivec2( 16 + nbSurroundingLives + 1 , 46 + CASubType ) ).r;
-        // birth
-        if( newState > 0 ) {
-          out4_CA.a = float(nbStates);
-        }
-      }
-    }
-
-    if( out4_CA.a > 0 ) {
-      out4_CA.rgb = vec3(out4_CA.a/float(nbStates-1));
-    }
-    else {
-      out4_CA.rgb = vec3(0,0,0);
-    }
-  }
-
-  //////////////////////////////////////////////////////
-  // TIME TUNNEL
-  else if( CAType == CA_TIME_TUNNEL ) { // CAType == 6
-    float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
-
-    int nbSurroundingFiring =
-      (currentCA.a > 0? 1:0) +
-      (neighborValues[0].a > 0? 1:0) +
-      (neighborValues[1].a > 0? 1:0) +
-      (neighborValues[2].a > 0? 1:0) +
-      (neighborValues[3].a > 0? 1:0);
-    bool fired = false;
-    if( CASubType == 1 ) {
-      fired = (nbSurroundingFiring > 0 && nbSurroundingFiring < 5);
-    }
-    else if( CASubType == 2 ) {
-      fired = (nbSurroundingFiring > (0 + int(noiseCA.x * 2.0))
-         && nbSurroundingFiring < (5 - int(noiseCA.y * 2.0)) );
-    }
-    else if( CASubType == 3 ) {
-      fired = (nbSurroundingFiring > (0 + int(noiseCA.x * 2.0))
-         && nbSurroundingFiring < (4 - int(noiseCA.y * 2.0)) );
-    }
-    if( fired ) {
-      if( previousGray == 0.0 ) {
-        vec4 gatherSurroundingLives =
-          currentCA +
-         (neighborValues[0]) +
-         (neighborValues[1]) +
-         (neighborValues[2]) +
-         (neighborValues[3]);
-        out4_CA = gatherSurroundingLives/nbSurroundingFiring; // ready
-      }
-      else {
-        out4_CA = vec4(0.0); // ready
-      }
-    }
-    else {
-      out4_CA = vec4(0.0); // ready
-    }
-    return;
-  }
-
-  //////////////////////////////////////////////////////
-  // WORM
-/*
-  else if( CAType == CA_WORM ) {
-    // > 0.5 firing
-    // > 0 && <= 0.5 refractory
-    // 0 ready
-    // ready -> firing  (w 2 neighbors firing)
-    // firing -> rafractory
-    // refractory -> ready
-    float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
-    int nbSurroundingFiring =
-      (neighborValues[0].a > 0? 1:0) +
-      (neighborValues[1].a > 0? 1:0) +
-      (neighborValues[2].a > 0? 1:0) +
-      (neighborValues[3].a > 0? 1:0) +
-      (neighborValues[4].a > 0? 1:0) +
-      (neighborValues[5].a > 0? 1:0) +
-      (neighborValues[6].a > 0? 1:0) +
-      (neighborValues[7].a > 0? 1:0);
-
-    /////////////
-    // COLOR WORM
-    if( CASubType == 1 ) {
-      // alarm is off && many neighbors
-      if( (nbSurroundingFiring == 2 + int( noiseCA.x * 2) 
-           || nbSurroundingFiring == 3 + int( noiseCA.y * 2) 
-           || nbSurroundingFiring == 5 + int( noiseCA.z * 2) )
-             && currentCA.a <= 0 ) {
-        vec4 gatherSurroundingLives =
-          (neighborValues[0]) +
-          (neighborValues[1]) +
-          (neighborValues[2]) +
-          (neighborValues[3]) +
-          (neighborValues[4]) +
-          (neighborValues[5]) +
-          (neighborValues[6]) +
-          (neighborValues[7]);
-        out4_CA = clamp(gatherSurroundingLives/nbSurroundingFiring,0.0,1.0); // resets alarm
-      }
-      else {
-        out4_CA = currentCA - 100.0 * vec4(CAdecay);
-        if( out4_CA.a < 0.0 ) {
-          out4_CA = vec4(0.0);
-        }
-      }
-    }
-
-    /////////////
-    // B/W WORM
-    else if( CASubType == 2 ) {
-      // alarm is off && many neighbors
-      if( (nbSurroundingFiring == 2 + int( noise.x * 2) 
-       || nbSurroundingFiring == 3 + int( noise.y * 2) 
-       || nbSurroundingFiring == 5 + int( noise.z * 2) )
-       && currentCA.a <= 0 ) {
-         out4_CA = vec4(1.0); // resets alarm
-      }
-      else {
-        out4_CA = currentCA - 100.0 * vec4(CAdecay);
-        if( out4_CA.a < 0.0 ) {
-          out4_CA = vec4(0.0);
-        }
-      }
-    }
-  }
-*/
 
   //////////////////////////////////////////////////////
   // NO CA
@@ -1766,28 +1548,6 @@ void main() {
     if( CAType == CA_GENERATION ) {
       newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
     }
-    // normal or normal quiescent cell ageing
-    else if( CAType == CA_TUMOR_CELL ) {
-      // fast decay for normal cells
-      if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a >= 1 && out_attachment_FBO[pg_FBO_fs_CA_attacht].a <= 10 ) { 
-        newCA_w_decay = clamp( newCA_w_decay - 10.0 * vec3(CAdecay) , 0.0 , 1.0 );
-        newCA_w_decay = clamp( newCA_w_decay - 10.0 * vec3(CAdecay) , 0.0 , 1.0 );
-      }
-      // slow decay for tumor cells
-      if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a >= 11 && out_attachment_FBO[pg_FBO_fs_CA_attacht].a <= 20 ) { 
-        newCA_w_decay = clamp( newCA_w_decay - 2.0 * vec3(CAdecay) , 0.0 , 1.0 );
-        newCA_w_decay = clamp( newCA_w_decay - 2.0 * vec3(CAdecay) , 0.0 , 1.0 );
-      }
-    }
-    /*
-    // normal or normal quiescent cell ageing
-    else if( CAType == CA_GENERAL_BINARY_MOORE ) {
-      // random decay for 
-      if( noiseCA.g < CAdecay ) { 
-        newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
-      }
-    }
-    */
 
     //////////////////////////////////////////////
     // rebuilds output for the gray/drawing buffer after decay
@@ -1801,7 +1561,7 @@ void main() {
     }
   }
 
-  // init CA beginning of GN for CA_GENERAL_BINARY_MOORE / 3
+  // init CA beginning of GN for CA_GAL_BIN_MOORE / 3
   /*
   if(frameNo % 1000 == 0) {
      if( length(vec2(decalCoords.x - width/2 , decalCoords.y - height/2)) < 1.2 ) {

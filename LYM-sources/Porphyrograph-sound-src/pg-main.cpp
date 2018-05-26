@@ -320,7 +320,8 @@ void pg_aliasScript(char *newCommand,
 				printf("Loop %d cleaned\n", ind + 1);
 				LoopBuffer[ind]->loopEmpty = true;
 				LoopBuffer[ind]->loopFlashing = true;
-				memset((void *)LoopBuffer[ind]->loopSoundBuffer, 0, (LoopBuffer[ind]->nbLoopFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
+				int nbLoopFrames = long(LoopBuffer[ind]->loopDur * PG_AUDIO_SAMPLE_RATE);
+				memset((void *)LoopBuffer[ind]->loopSoundBuffer, 0, (nbLoopFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
 				// flashes the two buttons
 				sprintf(AuxString, "/loop_recording_can %d %d", ind, 1); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
 				sprintf(AuxString, "/loop_playing_can %d %d", ind, 1); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
@@ -415,21 +416,7 @@ void pg_aliasScript(char *newCommand,
 	else  if (commandAlias.compare("BeatsPerMinute") == 0) {
 		BeatsPerMinute = arguments[0];
 		BeatDurationRealTime = 60.0f / (float)BeatsPerMinute;
-		for (int indLoopTrack = 0; indLoopTrack < PG_NB_LOOP_BUFFERS; indLoopTrack++) {
-			LoopBuffer[indLoopTrack]->loopDur = 16. * BeatDurationRealTime;
-			LoopBuffer[indLoopTrack]->nbLoopFrames = long(LoopBuffer[indLoopTrack]->loopDur * PG_AUDIO_SAMPLE_RATE);
-			if (LoopBuffer[indLoopTrack]->nbLoopFrames > LoopBuffer[indLoopTrack]->nbBufferFrames) {
-				if (LoopBuffer[indLoopTrack]->loopSoundBuffer) {
-					delete[]LoopBuffer[indLoopTrack]->loopSoundBuffer;
-				}
-				LoopBuffer[indLoopTrack]->nbBufferFrames = LoopBuffer[indLoopTrack]->nbLoopFrames;
-				LoopBuffer[indLoopTrack]->loopSoundBuffer = new float[(unsigned long)(LoopBuffer[indLoopTrack]->nbBufferFrames * PG_AUDIO_NB_CHANNELS)];
-				memset((void *)LoopBuffer[indLoopTrack]->loopSoundBuffer, 0, (LoopBuffer[indLoopTrack]->nbBufferFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
-			}
-			else {
-				memset((void *)LoopBuffer[indLoopTrack]->loopSoundBuffer, 0, (LoopBuffer[indLoopTrack]->nbLoopFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
-			}
-		}
+		printf("Beats per minute %.2f\n", BeatsPerMinute);
 		return;
 	}
 
@@ -1047,7 +1034,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	// loop initializing
-	// loop duration 16 seconds
+	// loop duration 15 seconds
 	for (int ind = 0; ind < PG_NB_LOOP_BUFFERS; ind++) {
 		LoopBuffer[ind] = new AudioLoopBuffer(16. * BeatDurationRealTime);
 	}

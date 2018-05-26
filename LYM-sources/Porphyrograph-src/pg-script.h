@@ -69,15 +69,12 @@ extern float pen_base_3color_palette[9];
 extern float repop_base_3color_palette[9];
 
 #if defined (GN) || defined (MALAUSSENA)
-#define CA_GOL                    0
+#define CA_SQUENCR                0
 #define CA_TOTALISTIC             1
 #define CA_GENERATION             2
-#define CA_GENERAL_BINARY_MOORE   3
-#define CA_GENERAL_BINARY_NEUMANN 4
+#define CA_GAL_BIN_MOORE          3
+#define CA_GAL_BIN_NEUMANN        4
 #define CA_NEUMANN_BINARY         5
-#define CA_TUMOR_CELL             6
-#define CA_WORM					  7
-#define CA_TIME_TUNNEL            8
 #endif
 
 #ifdef GN

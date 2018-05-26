@@ -645,8 +645,8 @@ void pg_initializationScript(void) {
 	sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	pg_CAseed_location = _pg_CAseed_loc_center;
 	sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	pg_CAseed_coordinates[0] = -1;
-	pg_CAseed_coordinates[1] = -1;
+	pg_CAseed_coordinates[0] = leftWindowWidth / 2;
+	pg_CAseed_coordinates[1] = window_height / 2;
 	pg_CAseed_size = 1;
 	sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 #endif

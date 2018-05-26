@@ -229,15 +229,12 @@ using std::ifstream;
 // NB CA TYPES
 #if defined(GN) || defined(MALAUSSENA)
 #define PG_NB_CA_TYPES 8
-//#define CA_GOL                    0
+//#define CA_SQUENCR                    0
 //#define CA_TOTALISTIC             1
 //#define CA_GENERATION             2
-//#define CA_GENERAL_BINARY_MOORE   3
-//#define CA_GENERAL_BINARY_NEUMANN 4
+//#define CA_GAL_BIN_MOORE   3
+//#define CA_GAL_BIN_NEUMANN 4
 //#define CA_NEUMANN_BINARY         5
-//#define CA_TUMOR_CELL             6
-//#define CA_WORM                   7
-//#define CA_TIME_TUNNEL            8
 #endif
 #if defined(TVW) || defined (CRITON)
 #define PG_NB_CA_TYPES 5

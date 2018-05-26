@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\0fe861be4b73856a97fc5db4522c16e3\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{830E768A-D83A-33A4-A137-EA4E12366C71}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

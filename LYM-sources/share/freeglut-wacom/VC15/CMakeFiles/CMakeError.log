@@ -1,0 +1,412 @@
+Determining if files unistd.h exist failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_69cf0.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:01 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_69cf0.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_69cf0.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_69cf0.dir\Debug\cmTC_69cf0.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_69cf0.dir\Debug\cmTC_69cf0.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_69cf0.dir\Debug\\" /Fd"cmTC_69cf0.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_69cf0.dir\Debug\\" /Fd"cmTC_69cf0.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  
+  CheckIncludeFiles.c
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'unistd.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_69cf0.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_69cf0.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_69cf0.vcxproj" (default target) (1) ->
+(ClCompile target) -> 
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'unistd.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_69cf0.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.32
+
+Source:
+/* */
+#include <unistd.h>
+
+
+int main(void){return 0;}
+
+Determining if files sys/time.h exist failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_9b731.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:01 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_9b731.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_9b731.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_9b731.dir\Debug\cmTC_9b731.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_9b731.dir\Debug\cmTC_9b731.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9b731.dir\Debug\\" /Fd"cmTC_9b731.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9b731.dir\Debug\\" /Fd"cmTC_9b731.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  
+  CheckIncludeFiles.c
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'sys/time.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_9b731.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_9b731.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_9b731.vcxproj" (default target) (1) ->
+(ClCompile target) -> 
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'sys/time.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_9b731.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.30
+
+Source:
+/* */
+#include <sys/time.h>
+
+
+int main(void){return 0;}
+
+Determining if files sys/param.h exist failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_292ad.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:02 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_292ad.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_292ad.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_292ad.dir\Debug\cmTC_292ad.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_292ad.dir\Debug\cmTC_292ad.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_292ad.dir\Debug\\" /Fd"cmTC_292ad.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_292ad.dir\Debug\\" /Fd"cmTC_292ad.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  
+  CheckIncludeFiles.c
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'sys/param.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_292ad.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_292ad.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_292ad.vcxproj" (default target) (1) ->
+(ClCompile target) -> 
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'sys/param.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_292ad.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.30
+
+Source:
+/* */
+#include <sys/param.h>
+
+
+int main(void){return 0;}
+
+Determining if files sys/ioctl.h exist failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_de335.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:02 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_de335.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_de335.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_de335.dir\Debug\cmTC_de335.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_de335.dir\Debug\cmTC_de335.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_de335.dir\Debug\\" /Fd"cmTC_de335.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_de335.dir\Debug\\" /Fd"cmTC_de335.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  
+  CheckIncludeFiles.c
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'sys/ioctl.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_de335.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_de335.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_de335.vcxproj" (default target) (1) ->
+(ClCompile target) -> 
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'sys/ioctl.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_de335.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.29
+
+Source:
+/* */
+#include <sys/ioctl.h>
+
+
+int main(void){return 0;}
+
+Determining if files usbhid.h exist failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_95ceb.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:04 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_95ceb.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_95ceb.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_95ceb.dir\Debug\cmTC_95ceb.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_95ceb.dir\Debug\cmTC_95ceb.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_95ceb.dir\Debug\\" /Fd"cmTC_95ceb.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_95ceb.dir\Debug\\" /Fd"cmTC_95ceb.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c"
+  
+  CheckIncludeFiles.c
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'usbhid.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_95ceb.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_95ceb.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_95ceb.vcxproj" (default target) (1) ->
+(ClCompile target) -> 
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\CheckIncludeFiles.c(2): fatal error C1083: Cannot open include file: 'usbhid.h': No such file or directory [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_95ceb.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.32
+
+Source:
+/* */
+#include <usbhid.h>
+
+
+int main(void){return 0;}
+
+Determining if the function gettimeofday exists failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_cb1be.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:04 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_cb1be.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_cb1be.dir\Debug\cmTC_cb1be.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_cb1be.dir\Debug\cmTC_cb1be.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=gettimeofday /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cb1be.dir\Debug\\" /Fd"cmTC_cb1be.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\Program Files\CMake\share\cmake-3.6\Modules\CheckFunctionExists.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=gettimeofday /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cb1be.dir\Debug\\" /Fd"cmTC_cb1be.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\Program Files\CMake\share\cmake-3.6\Modules\CheckFunctionExists.c"
+  
+  CheckFunctionExists.c
+Link:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\cmTC_cb1be.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp/Debug/cmTC_cb1be.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp/Debug/cmTC_cb1be.lib" /MACHINE:X86 /SAFESEH  /machine:X86 cmTC_cb1be.dir\Debug\CheckFunctionExists.obj
+CheckFunctionExists.obj : error LNK2019: unresolved external symbol _gettimeofday referenced in function _main [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj]
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\cmTC_cb1be.exe : fatal error LNK1120: 1 unresolved externals [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj" (default target) (1) ->
+(Link target) -> 
+  CheckFunctionExists.obj : error LNK2019: unresolved external symbol _gettimeofday referenced in function _main [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj]
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\cmTC_cb1be.exe : fatal error LNK1120: 1 unresolved externals [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_cb1be.vcxproj]
+
+    0 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:00.46
+
+
+Determining if the function XParseGeometry exists failed with the following output:
+Change Dir: D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_f3e3f.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/23/2016 11:30:05 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "cmTC_f3e3f.dir\Debug\".
+  Creating directory "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\".
+  Creating directory "cmTC_f3e3f.dir\Debug\cmTC_f3e3f.tlog\".
+InitializeBuildStatus:
+  Creating "cmTC_f3e3f.dir\Debug\cmTC_f3e3f.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=XParseGeometry /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f3e3f.dir\Debug\\" /Fd"cmTC_f3e3f.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\Program Files\CMake\share\cmake-3.6\Modules\CheckFunctionExists.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /Zi /W3 /WX- /Od /Ob0 /Oy- /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=XParseGeometry /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f3e3f.dir\Debug\\" /Fd"cmTC_f3e3f.dir\Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:queue "D:\Program Files\CMake\share\cmake-3.6\Modules\CheckFunctionExists.c"
+  
+  CheckFunctionExists.c
+Link:
+  D:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\cmTC_f3e3f.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp/Debug/cmTC_f3e3f.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeTmp/Debug/cmTC_f3e3f.lib" /MACHINE:X86 /SAFESEH  /machine:X86 cmTC_f3e3f.dir\Debug\CheckFunctionExists.obj
+CheckFunctionExists.obj : error LNK2019: unresolved external symbol _XParseGeometry referenced in function _main [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj]
+D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\cmTC_f3e3f.exe : fatal error LNK1120: 1 unresolved externals [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj" (default target) (1) ->
+(Link target) -> 
+  CheckFunctionExists.obj : error LNK2019: unresolved external symbol _XParseGeometry referenced in function _main [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj]
+  D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\Debug\cmTC_f3e3f.exe : fatal error LNK1120: 1 unresolved externals [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\CMakeTmp\cmTC_f3e3f.vcxproj]
+
+    0 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:00.46
+
+
+Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+Compiler:  
+Build flags: ;/DWIN32;/D_WINDOWS;/W3
+Id flags:  
+
+The output was:
+1
+Microsoft (R) Build Engine version 15.1.1012.6693
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 7/4/2017 11:43:22 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj" on node 1 (default targets).
+D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj" (default target) (1) ->
+(PlatformPrepareForBuild target) -> 
+  D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.03
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler:  
+Build flags: ;/DWIN32;/D_WINDOWS;/W3;/GR;/EHsc
+Id flags:  
+
+The output was:
+1
+Microsoft (R) Build Engine version 15.1.1012.6693
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 7/4/2017 11:43:25 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj" on node 1 (default targets).
+D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj" (default target) (1) ->
+(PlatformPrepareForBuild target) -> 
+  D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.12
+
+
+Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+Compiler:  
+Build flags: ;/DWIN32;/D_WINDOWS;/W3
+Id flags:  
+
+The output was:
+1
+Microsoft (R) Build Engine version 15.1.1012.6693
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 7/4/2017 11:43:56 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj" on node 1 (default targets).
+D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj" (default target) (1) ->
+(PlatformPrepareForBuild target) -> 
+  D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdC\CompilerIdC.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.22
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler:  
+Build flags: ;/DWIN32;/D_WINDOWS;/W3;/GR;/EHsc
+Id flags:  
+
+The output was:
+1
+Microsoft (R) Build Engine version 15.1.1012.6693
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 7/4/2017 11:43:57 PM.
+Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj" on node 1 (default targets).
+D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj]
+Done Building Project "D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj" (default targets) -- FAILED.
+
+Build FAILED.
+
+"D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj" (default target) (1) ->
+(PlatformPrepareForBuild target) -> 
+  D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution". [D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\3.8.0\CompilerIdCXX\CompilerIdCXX.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.28
+
+

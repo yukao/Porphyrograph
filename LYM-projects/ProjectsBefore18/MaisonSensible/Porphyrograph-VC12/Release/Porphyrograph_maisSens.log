@@ -1,0 +1,29 @@
+﻿La génération a démarré 04/02/2017 17:21:08.
+     1>Projet "C:\Users\Heracles\Desktop\MaisonSensibleSafran\Porphyrograph-VC12\Porphyrograph_maisSens.vcxproj" sur le nœud 2 (Rebuild cible(s)).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\Microsoft.CppBuild.targets(345,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\opencv\build\include" /I"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\glew-1.11.0-win32\glew-1.11.0\include" /I"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\freeglut-2.8.1\include" /I"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\glm-0.9.6.1\glm\glm" /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /D WIN32 /D NDEBUG /D _WINDOWS /D _VISUAL_STUDIO /D _WIN32 /D VC_HAVE_CG /D VC_HAVE_FFMPEG /D VC_EXTERN_LIVE_VIDEO /D _CRT_SECURE_NO_WARNINGS /D _UNICODE /D UNICODE /GF /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt "..\Porphyrograph-maisSens-src\pg-conf.cpp" "..\Porphyrograph-maisSens-src\pg-draw.cpp" "..\Porphyrograph-maisSens-src\pg-main.cpp" "..\Porphyrograph-maisSens-src\pg-mesh.cpp" "..\Porphyrograph-maisSens-src\pg-script.cpp" "..\Porphyrograph-maisSens-src\pg-shader.cpp" "..\Porphyrograph-maisSens-src\pg-stroke.cpp" "..\Porphyrograph-maisSens-src\pg-udp.cpp"
+         pg-conf.cpp
+         pg-draw.cpp
+         pg-main.cpp
+         pg-mesh.cpp
+         pg-script.cpp
+         pg-shader.cpp
+         pg-stroke.cpp
+         pg-udp.cpp
+         Génération de code en cours...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Heracles\Desktop\MaisonSensibleSafran\bin\Porphyrograph_maisSens.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\freeglut-2.8.1\lib\x86\Debug" /LIBPATH:"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\glew-1.11.0-win32\glew-1.11.0\lib\Release\Win32" /LIBPATH:"C:\Users\Heracles\Desktop\MaisonSensibleLogiciels\maisonSensible-libraries\opencv\build\x86\vc12\lib" opengl32.lib vfw32.lib ws2_32.lib freeglut.lib glew32.lib opencv_core249.lib opencv_imgproc249.lib opencv_highgui249.lib opencv_calib3d249.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Heracles\Desktop\MaisonSensibleSafran\bin\Porphyrograph_maisSens.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Heracles\Desktop\MaisonSensibleSafran\bin\Porphyrograph_maisSens.lib" /MACHINE:X86 /SAFESEH "Release\pg-conf.obj"
+         "Release\pg-draw.obj"
+         "Release\pg-main.obj"
+         "Release\pg-mesh.obj"
+         "Release\pg-script.obj"
+         "Release\pg-shader.obj"
+         "Release\pg-stroke.obj"
+         "Release\pg-udp.obj"
+         Porphyrograph_maisSens.vcxproj -> C:\Users\Heracles\Desktop\MaisonSensibleSafran\bin\Porphyrograph_maisSens.exe
+     1>Génération du projet "C:\Users\Heracles\Desktop\MaisonSensibleSafran\Porphyrograph-VC12\Porphyrograph_maisSens.vcxproj" terminée (Rebuild cible(s)).
+
+La génération a réussi.
+
+Temps écoulé 00:00:20.33

@@ -956,6 +956,8 @@ void pg_update_shader_uniforms(void) {
 		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc,
 			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
 			(GLfloat)pg_CAseed_coordinates[0], (GLfloat)pg_CAseed_coordinates[1]);
+		printf("pg_CAseed_trigger %d %d at %d %d\n", pg_CAseed_type, pg_CAseed_size,
+			pg_CAseed_coordinates[0], pg_CAseed_coordinates[1]);
 	}
 	else {
 		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc,

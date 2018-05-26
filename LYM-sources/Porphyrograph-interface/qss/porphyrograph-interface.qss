@@ -1,0 +1,250 @@
+.QWidget {
+   background-color: #120e36;
+}
+
+/* Nice Windows-XP-style password character. */
+QLineEdit[echoMode="2"] {
+    lineedit-password-character: 9679;
+}
+
+/* We provide a min-width and min-height for push buttons
+   so that they look elegant regardless of the width of the text. */
+   QPushButton, QLabel {
+       background-color: #000000;
+       border-width: 1px;
+       border-color: darkkhaki;
+       border-style: solid;
+       border-radius: 5;
+       /* padding: 3px;
+       min-width: 9ex;
+       min-height: 2.5ex; */
+   }
+
+   QPushButton[highlight=true], QLabel[highlight=true], QDoubleSpinBox[highlight=true] {
+       border-width: 2px;
+       border-color: red;
+   }
+   QLabel[inversed=true] {
+        border: 8px solid #0ff;
+    }
+    QSlider {
+         border: 0px solid #00f;
+    }
+    QSlider[highlight=true] {
+         border: 2px solid #f00;
+    }
+    QSlider[inversed=true] {
+        background-color: #00FFFF;
+    }
+
+QLabel, QAbstractButton {
+    font-weight: bold;
+    color:white;
+}
+
+/* Mark mandatory fields with a brownish color. */
+.mandatory {
+    color: brown;
+}
+
+QSlider::handle:vertical {
+    background: #ffffff;
+    border: 2px solid #000000;
+    /* width: 40px;
+    height: 10px; */
+    margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+    border-radius: 3px;
+}
+
+/* Bold text on status bar looks awful. */
+QStatusBar {
+   font-weight: normal;
+}
+
+QStatusBar::item {
+    border-width: 1px;
+    border-color: darkkhaki;
+    border-style: solid;
+    border-radius: 2;
+}
+
+QGroupBox, QComboBox, QLineEdit, QSpinBox, QTextEdit, QListView {
+    background-color: #120e36;
+    selection-color: #0a214c;
+    selection-background-color: #C19A6B;
+    border-width: 1px;
+    /* margin: 2px ;
+    spacing: 2px ;
+    padding: 0px ; */
+}
+
+QListView {
+    show-decoration-selected: 1;
+}
+
+QListView::item:hover {
+    background-color: wheat;
+}
+
+/* We reserve 1 pixel space in padding. When we get the focus,
+   we kill the padding and enlarge the border. This makes the items
+   glow.
+QLineEdit, QFrame {
+    border-width: 1px;
+    padding: 1px;
+    border-style: solid;
+    border-color: darkblue;
+    border-radius: 5px;
+    background-color: #120e36;
+} */
+
+/* As mentioned above, eliminate the padding and increase the border. */
+QLineEdit:focus, QFrame:focus {
+    border-width: 1px;
+    padding: 0px;
+}
+
+/* A QLabel is a QFrame ...
+QLabel {
+    border: none;
+    padding: 0;
+    background: none;
+} */
+
+/* A QToolTip is a QLabel ... */
+QToolTip {
+    border: 1px solid darkkhaki;
+    padding: 5px;
+    border-radius: 3px;
+    opacity: 200;
+}
+
+/* Nice to have the background color change when hovered. */
+QRadioButton:hover, QCheckBox:hover {
+    background-color: wheat;
+}
+
+/* Force the dialog's buttons to follow the Windows guidelines. */
+QDialogButtonBox {
+    button-layout: 0;
+}
+
+QGroupBox#FLASH, QPushButton#FLASH, QLabel#FLASH {
+      background-color: #333366;
+}
+QGroupBox#PIXEL, QPushButton#PIXEL, QLabel#PIXEL {
+      background-color: #663333;
+}
+QGroupBox#PEN, QPushButton#PEN, QLabel#PEN {
+      background-color: #336633;
+}
+QGroupBox#PULSE, QPushButton#PULSE, QLabel#PULSE {
+      background-color: #666600;
+}
+QGroupBox#BEAT, QPushButton#BEAT, QLabel#BEAT {
+      background-color: #663366;
+}
+QGroupBox#REPOP, QPushButton#REPOP, QLabel#REPOP {
+      background-color: #336666;
+}
+QGroupBox#TKWGH, QPushButton#TKWGH, QLabel#TKWGH {
+      background-color: #336699;
+}
+QGroupBox#MEDIA, QPushButton#MEDIA, QLabel#MEDIA {
+      background-color: #996633;
+}
+QGroupBox#SENSOR, QPushButton#SENSOR, QLabel#SENSOR {
+      background-color: #006633;
+}
+QGroupBox#NOISE, QPushButton#NOISE, QLabel#NOISE {
+      background-color: #003366;
+}
+QGroupBox#TRACK, QPushButton#TRACK, QLabel#TRACK {
+      background-color: #339966;
+}
+QGroupBox#ECHO, QPushButton#ECHO, QLabel#ECHO {
+      background-color: #333333;
+}
+QGroupBox#SOUND, QPushButton#SOUND, QLabel#SOUND {
+      background-color: #666666;
+}
+QGroupBox#GUI, QPushButton#GUI, QLabel#GUI {
+      background-color: #330000;
+}
+QGroupBox#PART, QPushButton#PART, QLabel#PART {
+      background-color: #003300;
+}
+QGroupBox#CA, QPushButton#CA, QLabel#CA {
+      background-color: #000033;
+}
+QGroupBox#PATH, QPushButton#PATH, QLabel#PATH {
+      background-color: #3333FF;
+}
+QGroupBox#EMPTY, QPushButton#EMPTY, QLabel#EMPTY {
+      background-color: #120e36;
+}
+QGroupBox#VOID, QPushButton#VOID, QLabel#VOID {
+      /* background-color: #FF0000; */
+      border: 1px;
+      margin: -9px ;
+      spacing: 0px ;
+      padding: 0px ;
+}
+
+QPushButton:hover, QSlider:hover, QDoubleSpinBox:hover  {
+   border: 2px solid blue;
+}
+
+/* Increase the padding, so the text is shifted when the button is
+   pressed. */
+QPushButton:pressed, QSlider:pressed, QDoubleSpinBox:pressed {
+    border: 2px solid #ff0;
+}
+
+
+
+QGroupBox {
+    font-weight: bold;
+}
+QGroupBox::title {
+      /* subcontrol-origin: margin;
+      subcontrol-position: top center; */ /* position at the top center */
+      /* padding: 0 3px; */
+      background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                        stop: 0 #AAAAAA, stop: 1 #FFFFFF);
+}
+
+
+QTabWidget::pane { /* The tab widget frame */
+    border-top: 2px solid #C2C7CB;
+}
+
+QTabWidget::tab-bar {
+    left: 5px; /* move to the right by 5px */
+}
+
+/* Style the tab using the tab sub-control. Note that
+    it reads QTabBar _not_ QTabWidget */
+QTabBar::tab {
+    border: 3px solid #FFFFFF;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    min-width: 20ex;
+    padding: 4px;
+}
+
+QTabBar::tab:selected, QTa33ar::tab:selected, QTa33ar::tab:hover {
+    background: #FFFFFF;
+    font-weight: bold;
+    border-bottom-color: #FFFFFF; /* same as the pane color */
+}
+
+QTabBar::tab:!selected {
+    /* margin-top: 2px; /* make non-selected tabs look smaller */
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #CCCCCC, stop: 0.4 #BBBBBB,
+                                stop: 0.5 #BBBBBB, stop: 1.0 #CCCCCC);
+                                font-weight: normal;
+    border-bottom-color: #CCCCCC; /* same as the pane color */
+}
+

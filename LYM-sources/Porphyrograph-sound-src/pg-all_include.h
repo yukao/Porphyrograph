@@ -132,7 +132,7 @@ using std::ifstream;
 #include <fstream>
 #include <sstream>
 
-// #define PG_TERRAINS_VAGUES
+#define PG_TERRAINS_VAGUES
 
 #include "audioeffectx.h"
 #include "Filter.h"

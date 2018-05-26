@@ -1,0 +1,14 @@
+INPUT(
+./release\pg-interface-core-main.o
+./release\pg-interface-core-window.o
+./release\pg-interface-core-comm.o
+./release\pg-interface-core-display.o
+./release\pg-interface-core-udp.o
+./release\pg-interface-core-control.o
+./release\pg-interface-core-data.o
+./release\moc_pg-interface-core-comm.o
+./release\moc_pg-interface-core-display.o
+./release\moc_pg-interface-core-udp.o
+./release\moc_pg-interface-core-window.o
+./release\moc_pg-interface-core-control.o
+);

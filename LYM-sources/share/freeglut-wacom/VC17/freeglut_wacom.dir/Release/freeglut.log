@@ -1,0 +1,21 @@
+﻿  Building Custom Rule D:/cloud/Porphyrograph/share/freeglut-wacom/CMakeLists.txt
+  CMake is re-running because D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\generate.stamp is out-of-date.
+    the file 'D:/Program Files/CMake/share/cmake-3.7/Modules/CMakeSystemSpecificInitialize.cmake'
+    is newer than 'D:\cloud\Porphyrograph\share\freeglut-wacom\VC15\CMakeFiles\generate.stamp.depend'
+    result='0'
+  -- The C compiler identification is unknown
+  -- The CXX compiler identification is unknown
+  CMake Error at CMakeLists.txt:2 (PROJECT):
+    No CMAKE_C_COMPILER could be found.
+  
+  
+  
+  CMake Error at CMakeLists.txt:2 (PROJECT):
+    No CMAKE_CXX_COMPILER could be found.
+  
+  
+  
+  -- Configuring incomplete, errors occurred!
+  See also "D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeOutput.log".
+  See also "D:/cloud/Porphyrograph/share/freeglut-wacom/VC15/CMakeFiles/CMakeError.log".
+D:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(171,5): error MSB6006: "cmd.exe" exited with code 1.

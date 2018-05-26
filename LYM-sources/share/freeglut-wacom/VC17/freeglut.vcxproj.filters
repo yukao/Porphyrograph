@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_callbacks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_cursor.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_display.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_ext.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_font_data.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_gamemode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_geometry.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_gl2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_input_devices.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_joystick.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_misc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_overlay.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_spaceball.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_state.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_stroke_mono_roman.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_stroke_roman.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_structure.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_teapot.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_videoresize.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_window.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_font.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_menu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_cursor_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_display_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_ext_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_gamemode_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_init_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_input_devices_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_joystick_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_main_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_menu_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_spaceball_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_state_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_structure_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_window_mswin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\util\xparsegeometry_repl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\fg_wacom.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\include\GL\freeglut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\include\GL\freeglut_ext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\include\GL\freeglut_std.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\include\GL\glut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_gl2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_init.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\fg_teapot_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\mswin\fg_internal_mswin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\cloud\Porphyrograph\share\freeglut-wacom\src\util\xparsegeometry_repl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\cloud\Porphyrograph\share\freeglut-wacom\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\cloud\Porphyrograph\share\freeglut-wacom\VC17\freeglutdll.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="D:\cloud\Porphyrograph\share\freeglut-wacom\VC17\freeglut.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{61244EAB-A26E-3B86-98C4-EDAF7CBEA384}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{133BE578-A959-37C1-B2C5-0252CE39B312}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
