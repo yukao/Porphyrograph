@@ -203,7 +203,7 @@ float lastBeatTime = 0.0f;
 int CASubTypeMem = 1;
 
 #ifdef MALAUSSENA
-pg_CAseed_types pg_CAseed_type = _pg_CAseed_dot;
+pg_CAseed_types pg_CAseed_type = _pg_CAseed_dot_center;
 pg_CAseed_locations pg_CAseed_location = _pg_CAseed_loc_center;
 int pg_CAseed_coordinates[2] = { -1, -1 };
 int pg_CAseed_size = 1;
@@ -275,6 +275,7 @@ enum pg_stringCommands_IDs
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
 #ifdef MALAUSSENA
+	_CAseed_dot_center,
 	_CAseed_dot,
 	_CAseed_h_line,
 	_CAseed_v_line,
@@ -354,6 +355,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
 #ifdef MALAUSSENA
+	{ "CAseed_dot_center", _CAseed_dot_center },
 	{ "CAseed_dot", _CAseed_dot },
 	{ "CAseed_h_line", _CAseed_h_line },
 	{ "CAseed_v_line", _CAseed_v_line },
@@ -636,8 +638,9 @@ void pg_initializationScript(void) {
 #ifdef MALAUSSENA
 	// CA seed
 	pg_CAseed_trigger = false;
-	pg_CAseed_type = _pg_CAseed_dot;
-	sprintf(AuxString, "/CAseed_dot %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	pg_CAseed_type = _pg_CAseed_dot_center;
+	sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -2596,9 +2599,10 @@ void pg_aliasScript(char *command_symbol,
 
 	// special command not in the scenario file
 	switch (pg_stringCommands[newCommand]) {
-		// ====================================== 
-		// test UDP connection                    
-		// ====================================== 
+
+	// ====================================== 
+	// test UDP connection                    
+	// ====================================== 
 	case _testUDP: {
 		sprintf(AuxString, "*** OK ***"); pg_writeMessageOnScreen(AuxString);
 		sprintf(AuxString, "/message TEST_UDP"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
@@ -2607,12 +2611,12 @@ void pg_aliasScript(char *command_symbol,
 	}
 	case _QT_connected: {
 		sprintf(AuxString, "*** QT ***"); pg_writeMessageOnScreen(AuxString);
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ PD CONNECTION CONFIRMATION ++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ PD CONNECTION CONFIRMATION ++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _PD_connected: {
 		// from Yukao's PD
 		pg_send_message_udp((char *)"s", (char *)"/PD_connected 1", (char *)"udp_QT_send");
@@ -2621,57 +2625,58 @@ void pg_aliasScript(char *command_symbol,
 	}
 	case _return_message: {
 		pg_writeMessageOnScreen(string_argument_0);
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ LAUNCH TIMER ++++++++++++++++++++++++++ 
-		// +++++++++++++++++   keystroke (t)  ++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ LAUNCH TIMER ++++++++++++++++++++++++++ 
+	// +++++++++++++++++   keystroke (t)  ++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _launch: {
 		pg_launch_performance();
-
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ PD CONNECTION CONFIRMATION ++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ SOUND RESET ++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _reset_sound: {
 		pg_send_message_udp((char *)"i", (char *)"/reset_sound 1", (char *)"udp_PD_send");
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ CONNECTS PD ++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ CONNECTS PD ++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _connect_PD: {
 		pg_send_message_udp((char *)"i", (char *)"/connect 1", (char *)"udp_PD_send");
 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ QUITS +++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++   keystroke (ESC)  ++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ QUITS +++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++   keystroke (ESC)  ++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _quit: {
 		quit();
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ VIDEO FLASH ++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ VIDEO FLASH ++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _flashCamera: {
 		is_flashCameraTrk = true;
 		flashCameraTrk_weight = 0.0f;
 		// printf("start flash\n");
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		//    break;
+		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _pulse_average: {
 		//	pulse_average_prec = pulse_average;
 		//	pulse_average = arguments[0] * sound_volume + sound_min;
@@ -2681,6 +2686,7 @@ void pg_aliasScript(char *command_symbol,
 		//}
 		break;
 	}
+
 	case _pulse_spectrum: {
 		pulse[0] = arguments[0] * sound_volume + sound_min;
 		pulse[1] = arguments[1] * sound_volume + sound_min;
@@ -2697,15 +2703,16 @@ void pg_aliasScript(char *command_symbol,
 		pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
 		sprintf(AuxString, "/pulse_enveloppe %.5f", pulse_attack);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ BEAT: MUSCI TEMPO SYNC ++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// flashPixel (f)                              
-		// BackFlash (L)                          
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ FLASHES +++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ======================================== 
+	// flash triggering according to beat & frequency, weight, and on/off values 
+	// ======================================== 
+	// flashes are synchronized on beats according to their frequency
 	case _beat: {
 		int argt0 = (int)round(arguments[0]);
 		if (argt0 >= 0) {
@@ -2748,13 +2755,6 @@ void pg_aliasScript(char *command_symbol,
 			//	flashCameraTrk_weight , flashCameraTrk_decay );
 		}
 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ FLASHES +++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ======================================== 
-		// flash triggering according to beat & frequency, weight, and on/off values 
-		// ======================================== 
-		// flashes are synchronized on beats according to their frequency
 		if (flashPixel_freq > 0
 			&& flashPixel_freq <= PG_LOOP_SIZE // if flashPixel_freq > PG_LOOP_SIZE -> update every frame
 			&& (pg_BeatNo % (PG_LOOP_SIZE / flashPixel_freq)) == 0) {
@@ -2922,6 +2922,7 @@ void pg_aliasScript(char *command_symbol,
 
 		break;
 	}
+
 	// ======================================== 
 	// flash on/off values
 	// ======================================== 
@@ -3018,11 +3019,12 @@ void pg_aliasScript(char *command_symbol,
 #endif
 		}
 
-		// ====================================== 
-		// keystroke s: Snapshot                  
-		// ====================================== 
 		break;
 	}
+
+	// ====================================== 
+	// keystroke s: Snapshot                  
+	// ====================================== 
 	case _snapshot: {
 		pg_snapshot((char *)"jpg");
 
@@ -3043,12 +3045,12 @@ void pg_aliasScript(char *command_symbol,
 	case _initCA: {
 		initCA = 1.2f;
 #endif
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ TRACK SHIFT +++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ TRACK SHIFT +++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _currentVideoTrack_plus: {
 		currentVideoTrack = (currentVideoTrack + 1) % PG_NB_TRACKS;
 
@@ -3056,33 +3058,33 @@ void pg_aliasScript(char *command_symbol,
 	}
 	case _currentPhotoTrack_plus: {
 		currentPhotoTrack = (currentPhotoTrack + 1) % PG_NB_TRACKS;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ INTERFACE SELECTION +++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ INTERFACE SELECTION +++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _minimal_display: {
 		pg_send_message_udp((char *)"i", (char *)"/minimal_display 1", (char *)"udp_QT_send");
 		break;
 	}
 	case _paths_display: {
 		pg_send_message_udp((char *)"i", (char *)"/paths_display 1", (char *)"udp_QT_send");
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ PEN POSITION ++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ PEN POSITION ++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _pen_xy: {
 		CurrentMousePos_x = int(leftWindowWidth * arguments[1]);
 		CurrentMousePos_y = int(window_height * (1.f - arguments[0]));
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ TRACK COPY +++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ TRACK COPY +++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _copyTrack_above: {
 		copyToNextTrack = +1;
 		//sprintf(AuxString, "/message copy_track_%d_to_%d",
@@ -3100,9 +3102,10 @@ void pg_aliasScript(char *command_symbol,
 
 		break;
 	}
-						   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-						   // +++++++++++++++++ PART EXIT/STROKE/COLOR MODE +++++++++++++++++++++++++++ 
-						   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ PART EXIT/STROKE/COLOR MODE +++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _partStroke_mode_0: {
 		*((int *)ScenarioVarPointers[_partStroke_mode]) = 0;
 
@@ -3220,30 +3223,32 @@ void pg_aliasScript(char *command_symbol,
 		}
 		break;
 	}
-						   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-						   // +++++++++++++++++ BLUR +++++++++++++++++++++++++++ 
-						   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ BLUR +++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _is_blur_1: {
 		is_blur_1 = true;
 		break;
 	}
 	case _is_blur_2: {
 		is_blur_2 = true;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraCumul_plus: {
 		cameraCumul = (cameraCumul + 1) % PG_NB_VIDEO_CUMUL_MODES;
 		BrokenInterpolationVar[_cameraCumul] = true;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ BRUSH ID SHIFT ++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ BRUSH ID SHIFT ++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _pen_brush_plus: {
 		if (nb_pen_brushes > 0) {
 			pen_brush = (pen_brush + 1) % (nb_pen_brushes * 3);
@@ -3256,21 +3261,21 @@ void pg_aliasScript(char *command_symbol,
 			}
 
 		}
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ PIXEL MODE +++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ PIXEL MODE +++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _pixel_mode_plus: {
 		pixel_mode = (pixel_mode + 1) % PG_NB_PIXEL_MODES;
 		BrokenInterpolationVar[_pixel_mode] = true;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _CA1Type_plus: {
 		CA1Type = (CA1Type + 1) % PG_NB_CA_TYPES;
 		BrokenInterpolationVar[_CA1Type] = true;
@@ -3308,12 +3313,12 @@ void pg_aliasScript(char *command_symbol,
 		BrokenInterpolationVar[_CA1SubType] = true;
 		printf("CA1SubType ON/OFF %d\n", CA1SubType);
 		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _sensor_layout_plus: {
 		sensor_layout = (sensor_layout + 1) % PG_NB_MAX_SENSOR_LAYOUTS;
 		BrokenInterpolationVar[_sensor_layout] = true;
@@ -3333,12 +3338,12 @@ void pg_aliasScript(char *command_symbol,
 		sensor_activation = (sensor_activation + 1) % PG_NB_MAX_SENSOR_ACTIVATIONS;
 		BrokenInterpolationVar[_sensor_activation] = true;
 		assignSensorActivations();
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _partExit_mode_plus: {
 		partExit_mode = (partExit_mode + 1) % PG_NB_PARTEXIT_MODES;
 		BrokenInterpolationVar[_partExit_mode] = true;
@@ -3352,13 +3357,13 @@ void pg_aliasScript(char *command_symbol,
 	case _partColor_mode_plus: {
 		partColor_mode = (partColor_mode + 1) % PG_NB_PARTCOLOR_MODES;
 		BrokenInterpolationVar[_partColor_mode] = true;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ B/W SWITCH ++++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ B/W SWITCH ++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _pen_BW: {
 		//	if (pen_grey > 0) {
 		//		pen_grey = 0.0f;
@@ -3379,13 +3384,13 @@ void pg_aliasScript(char *command_symbol,
 		}
 		BrokenInterpolationVar[_repop_grey] = true;
 		// printf("repop color %.1f\n", repop_grey);
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ PRESSURE SWITCH +++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ PRESSURE SWITCH +++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _pressure_onOff: {
 #define PG_PRESSURE_STANDARD 10.0f
 		if (pen_radius_pressure_coef > 0) {
@@ -3395,13 +3400,13 @@ void pg_aliasScript(char *command_symbol,
 			pen_radius_pressure_coef = PG_PRESSURE_STANDARD;
 		}
 		BrokenInterpolationVar[_pen_radius_pressure_coef] = true;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ TRACK DECAY SWITCH ++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ TRACK DECAY SWITCH ++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _decay_onOff: {
 #define PG_DECAY_STANDARD 0.0003f
 		switch (currentDrawingTrack) {
@@ -3448,13 +3453,13 @@ void pg_aliasScript(char *command_symbol,
 			break;
 #endif
 		}
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ DIAPORAMA +++++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ DIAPORAMA +++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _diaporama_plus: {
 		string fileName = "";
 		for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
@@ -3497,25 +3502,25 @@ void pg_aliasScript(char *command_symbol,
 				return;
 			}
 		}
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ TRACK NO ++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ TRACK NO ++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _soundtrack_plus: {
 		if (nb_soundtracks > 0) {
 			currentlyPlaying_trackNo = (currentlyPlaying_trackNo + 1) % nb_soundtracks;
 			PlayCurrentTrack();
 		}
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ PALETTE NO ++++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ PALETTE NO ++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _pen_colorPreset_minus: {
 		if (nb_pen_colorPresets > 0) {
 			current_pen_colorPreset = (current_pen_colorPreset - 1 + nb_pen_colorPresets) % nb_pen_colorPresets;
@@ -3563,8 +3568,20 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 
+	case _CAseed_dot_center: {
+		pg_CAseed_type = _pg_CAseed_dot_center;
+		sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		break;
+	}
 	case _CAseed_dot: {
 		pg_CAseed_type = _pg_CAseed_dot;
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_dot %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -3574,6 +3591,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 	case _CAseed_h_line: {
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_h_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -3584,6 +3602,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 	case _CAseed_v_line: {
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_v_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -3594,6 +3613,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 	case _CAseed_cross: {
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -3604,6 +3624,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 	case _CAseed_X: {
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -3614,6 +3635,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 	case _CAseed_square: {
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -3645,6 +3667,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 #endif
+
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 	// +++++++++++++++++ MOVIE NO ++++++++++++++++++++++++++++++ 
@@ -3696,13 +3719,13 @@ void pg_aliasScript(char *command_symbol,
 #endif
 			}
 		}
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// ====================================== 
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
 	case _resend_all: {
 		resend_all_variables = true;
 		break;

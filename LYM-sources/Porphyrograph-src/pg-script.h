@@ -68,13 +68,21 @@ extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 extern float pen_base_3color_palette[9];
 extern float repop_base_3color_palette[9];
 
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN)
 #define CA_SQUENCR                0
 #define CA_TOTALISTIC             1
 #define CA_GENERATION             2
 #define CA_GAL_BIN_MOORE          3
 #define CA_GAL_BIN_NEUMANN        4
 #define CA_NEUMANN_BINARY         5
+#endif
+
+#if defined (MALAUSSENA)
+#define CA_TOTALISTIC             0
+#define CA_GENERATION             1
+#define CA_GAL_BIN_MOORE          2
+#define CA_GAL_BIN_NEUMANN        3
+#define CA_NEUMANN_BINARY         4
 #endif
 
 #ifdef GN
@@ -192,7 +200,8 @@ extern float lastBeatTime;
 #ifdef MALAUSSENA
 enum pg_CAseed_types
 {
-	_pg_CAseed_dot = 0,
+	_pg_CAseed_dot_center = 0,
+	_pg_CAseed_dot,
 	_pg_CAseed_h_line,
 	_pg_CAseed_v_line,
 	_pg_CAseed_cross,

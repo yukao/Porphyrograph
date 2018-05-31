@@ -227,14 +227,22 @@ using std::ifstream;
 #define PG_NB_PARTCOLOR_MODES 3
 
 // NB CA TYPES
-#if defined(GN) || defined(MALAUSSENA)
+#if defined(GN)
 #define PG_NB_CA_TYPES 8
-//#define CA_SQUENCR                    0
+//#define CA_SQUENCR                0
 //#define CA_TOTALISTIC             1
 //#define CA_GENERATION             2
-//#define CA_GAL_BIN_MOORE   3
-//#define CA_GAL_BIN_NEUMANN 4
+//#define CA_GAL_BIN_MOORE          3
+//#define CA_GAL_BIN_NEUMANN        4
 //#define CA_NEUMANN_BINARY         5
+#endif
+#if defined(MALAUSSENA)
+#define PG_NB_CA_TYPES 7
+//#define CA_TOTALISTIC             0
+//#define CA_GENERATION             1
+//#define CA_GAL_BIN_MOORE			2
+//#define CA_GAL_BIN_NEUMANN		3
+//#define CA_NEUMANN_BINARY         4
 #endif
 #if defined(TVW) || defined (CRITON)
 #define PG_NB_CA_TYPES 5
