@@ -31,22 +31,19 @@ const uint pg_FBO_fs_Pixels_attacht = 1;
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-#define CA_SQUENCR                       0
-#define CA_SQUENCR_NB_SUBTYPES           9
-#define CA_SQUENCR_TABLE_OFFSET          0
-#define CA_TOTALISTIC                    1
-#define CA_TOTALISTIC_NB_SUBTYPES        9
-#define CA_TOTALISTIC_TABLE_OFFSET       (CA_SQUENCR_TABLE_OFFSET + CA_SQUENCR_NB_SUBTYPES)
-#define CA_GENERATION                    2
-#define CA_GENERATION_NB_SUBTYPES        10
+#define CA_TOTALISTIC                    0
+#define CA_TOTALISTIC_NB_SUBTYPES        4
+#define CA_TOTALISTIC_TABLE_OFFSET       0
+#define CA_GENERATION                    1
+#define CA_GENERATION_NB_SUBTYPES        4
 #define CA_GENERATION_TABLE_OFFSET       (CA_TOTALISTIC_TABLE_OFFSET + CA_TOTALISTIC_NB_SUBTYPES)
-#define CA_GAL_BIN_MOORE                 3
-#define CA_GAL_BIN_MOORE_NB_SUBTYPES     6
+#define CA_GAL_BIN_MOORE                 2
+#define CA_GAL_BIN_MOORE_NB_SUBTYPES     9
 #define CA_GAL_BIN_MOORE_TABLE_OFFSET    (CA_GENERATION_TABLE_OFFSET + CA_GENERATION_NB_SUBTYPES)
-#define CA_GAL_BIN_NEUMANN               4
+#define CA_GAL_BIN_NEUMANN               3
 #define CA_GAL_BIN_NEUMANN_NB_SUBTYPES   4
 #define CA_GAL_BIN_NEUMANN_TABLE_OFFSET  (CA_GAL_BIN_MOORE_TABLE_OFFSET + CA_GAL_BIN_MOORE_NB_SUBTYPES)
-#define CA_NEUMANN_BIN                   5
+#define CA_NEUMANN_BIN                   4
 #define CA_NEUMANN_BIN_NB_SUBTYPES       10
 #define CA_NEUMANN_BIN_TABLE_OFFSET      (CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CA_GAL_BIN_NEUMANN_NB_SUBTYPES)
 
@@ -68,6 +65,9 @@ const float shadeDisloc[5] = {0,0.4,              // empty new/old border
                                  0.6, 0.8,  1.0};       // new/old nucleus
 const float inverseShadeDisloc[5] = {0.0,2.5,              // empty new/old border
                                  1.67,1.25,  1.0};       // new/old nucleus
+
+const int nbStatesTotalistic[CA_TOTALISTIC_NB_SUBTYPES] ={1, 16, 16, 16};
+const int nbStatesGeneration[CA_GENERATION_NB_SUBTYPES] ={1,  4,  4, 25};
 
 ////////////////////////////////////////////////////////////////////
 // pixel mode
@@ -399,7 +399,7 @@ void CA_out( vec4 currentCA ) {
 
   //////////////////////////////////////////////////////
   // GAME OF LIFE - TOTALISTIC OR GENERATION
-  if(CAType == CA_SQUENCR || CAType == CA_TOTALISTIC || CAType == CA_GENERATION ) {
+  if(CAType == CA_TOTALISTIC || CAType == CA_GENERATION ) {
     int nbSurroundingLives =
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
@@ -428,59 +428,64 @@ void CA_out( vec4 currentCA ) {
       averageSurrounding = vec4(0.0);
     }
     
-    #define nbStatesGeneration 25
-
-    /*
-    uint nbStates = 16;
-    uint CArank = 9;
-
-    if( CAType == CA_TOTALISTIC && CASubType == 4 ) { // Wire number of states
-      nbStates = 4;
-    }
-    if( CAType == CA_TOTALISTIC && (CASubType == 5 || CASubType == 8) ) { // Busy Brain and Brian's Brain number of states
-      nbStates = 3;
-    }
-
-    if( CAType == CA_SQUENCR ) { // SQUENCR number of states + rank (height in data texture)
-      nbStates = 2;
-      CArank = 0;
-    }
-
-    if( CAType == CA_GENERATION ) { // CA generation number of states + rank (height in data texture)
-      CArank = 18;
-      nbStates = texelFetch(uniform_Update_texture_fs_CATable, 
-                            ivec2( 0 , CArank + CASubType ) ).r;
-    }
-    */
-
     // The first CA alpha value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed 
     // then alpha represents the state of the automaton
     if( currentCA.a < 0 ) {
-      /* out4_CA.a = noiseCA.r * (nbStates+1); // nbStates states randomly
+      /* out4_CA.a = noiseCA.r * (nbStates+1); // nbStates states randomly */
       // out4_CA.rgb = averageSurrounding.rgb;
       
       // special treatment for generation, otherwise
       // it does not start from flashCA
-      if( CAType == CA_GENERATION ) { */
-        out4_CA.a = 1;
-        out4_CA.rgb = vec3(1);//averageSurrounding.rgb;
-      // }
-    }
-    if( CAType == CA_GENERATION ) {
-      float state = clamp(currentCA.a,0,nbStatesGeneration);
-      float newState = 0;
-      newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                       ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
-                              CA_GENERATION_TABLE_OFFSET + CASubType ) ).r;
-      out4_CA.a = float(newState);
-      if( newState > 0 ) {
-        out4_CA.rgb = averageSurrounding.rgb;
-        // out4_CA.rgb = vec3(1);
+      if( CAType == CA_TOTALISTIC ) { 
+        int nbStates = nbStatesTotalistic[CASubType];
+        float newState = clamp(noiseCA.r * (nbStates+1),1,nbStates); // nbStates states randomly
+        out4_CA.a = newState;
+        out4_CA.rgb = vec3(1);
+        // out4_CA.rgb = averageSurrounding.rgb;
       }
-      else {
-        out4_CA.rgb = vec3(0,0,0);
+      else if( CAType == CA_GENERATION ) { 
+        int nbStates = nbStatesGeneration[CASubType];
+        float newState = clamp(noiseCA.r * (nbStates+1),1,nbStates); // nbStates states randomly
+        newState = 1;
+        out4_CA.a = newState;
+        out4_CA.rgb = vec3(1);
+        // out4_CA.rgb = averageSurrounding.rgb;
+      }
+    }
+    else {
+      if( CAType == CA_TOTALISTIC ) {
+        int nbStates = nbStatesTotalistic[CASubType];
+        float state = clamp(currentCA.a,0,nbStates);
+        float newState = 0;
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
+                                CA_TOTALISTIC_TABLE_OFFSET + CASubType ) ).r;
+        out4_CA.a = float(newState);
+        if( newState > 0 ) {
+          // out4_CA.rgb = averageSurrounding.rgb;
+          out4_CA.rgb = vec3(1);
+        }
+        else {
+          out4_CA.rgb = vec3(0,0,0);
+        }
+      }
+      else if( CAType == CA_GENERATION ) {
+        int nbStates = nbStatesGeneration[CASubType];
+        float state = clamp(currentCA.a,0,nbStates);
+        float newState = 0;
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
+                                CA_GENERATION_TABLE_OFFSET + CASubType ) ).r;
+        out4_CA.a = float(newState);
+        if( newState > 0 ) {
+          // out4_CA.rgb = averageSurrounding.rgb;
+          out4_CA.rgb = vec3(1);
+        }
+        else {
+          out4_CA.rgb = vec3(0,0,0);
+        }
       }
     }
   }
@@ -524,46 +529,88 @@ void CA_out( vec4 currentCA ) {
                                ivec2( 0 , 38 + CASubType ) ).r;
     */
 
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
-    float newState = 0;
-    if( currentCA.a < 0 ) {
-      // newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
-     //  out4_CA.a = nbStatesGeneralBinary;
-      out4_CA.a = 1;
-    }
-    else {
-      // survival
-      if( state != 0 ) {
-         newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                               ivec2( nbSurroundingLives + 1 , 
-                                      CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
-         // survival
-         if( newState != 0 && out4_CA.a >= 0.0 ) {
-            // out4_CA.a -= 1.0;
-         }
-         else {
-            out4_CA.a = 0;
-         }
+    // previous automata collected from the web
+    if(CASubType <= 5) {
+      // The first CA value is negative so that it is not 
+      // displayed, here we change alpha value to positive
+      // because it is the second time it is displayed if 
+      float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
+      float newState = 0;
+      if( currentCA.a < 0 ) {
+        newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
+       //  out4_CA.a = nbStatesGeneralBinary;
+        out4_CA.a = newState;
       }
-      // birth
       else {
-        newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                       ivec2( 256 + nbSurroundingLives + 1 , 
-                              CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+        // survival
+        if( state != 0 ) {
+           newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                                 ivec2( nbSurroundingLives + 1 , 
+                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+           // survival
+           if( newState != 0 && out4_CA.a >= 0.0 ) {
+              // out4_CA.a -= 1.0;
+           }
+           else {
+              out4_CA.a = 0;
+           }
+        }
         // birth
-        if( newState != 0 ) {
-          out4_CA.a = nbStatesGeneralBinary;
+        else {
+          newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( 256 + nbSurroundingLives + 1 , 
+                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+          // birth
+          if( newState != 0 ) {
+            out4_CA.a = nbStatesGeneralBinary;
+          }
+        }
+      }
+    }
+    // personal automata
+    else {
+      // The first CA value is negative so that it is not 
+      // displayed, here we change alpha value to positive
+      // because it is the second time it is displayed if 
+      float state = clamp(currentCA.a,0,1);
+      float newState = 0;
+      if( currentCA.a < 0 ) {
+        out4_CA.a = 1;
+      }
+      else {
+        // survival
+        if( state > 0 ) {
+           newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                                 ivec2( nbSurroundingLives + 1 , 
+                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+           // survival
+           if( newState != 0) {
+              out4_CA.a = 1;
+           }
+           else {
+              out4_CA.a = 0;
+           }
+        }
+        // birth
+        else {
+          newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( 256 + nbSurroundingLives + 1 , 
+                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+          // birth
+          if( newState != 0 ) {
+            out4_CA.a = 1;
+          }
+          else {
+              out4_CA.a = 0;
+           }
         }
       }
     }
     if( out4_CA.a != 0 ) {
-      out4_CA.rgb = vec3(1.0,1.0,1.0);
+      out4_CA.rgb = vec3(1);
     }
     else {
-      out4_CA.rgb = vec3(0,0,0);
+      out4_CA.rgb = vec3(0);
     }
   }
 
@@ -606,7 +653,7 @@ void CA_out( vec4 currentCA ) {
     uint state = int(clamp(currentCA.a,0,nbStates));
     float newState = 0;
     if( currentCA.a < 0 ) {
-      newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
+      // newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
       out4_CA.a = float(nbStates);
     }
     else {
@@ -1284,17 +1331,23 @@ void main() {
       // currentCA.rgb = vec3(1,0,0);
     }
     // seeding the CA with a predefined shape, size and location
-#define  _pg_CAseed_dot        0
-#define  _pg_CAseed_h_line     1
-#define  _pg_CAseed_v_line     2
-#define  _pg_CAseed_cross      3
-#define  _pg_CAseed_X          4
-#define  _pg_CAseed_square     5
+#define  _pg_CAseed_dot_center      0
+#define  _pg_CAseed_dot               1
+#define  _pg_CAseed_h_line            2
+#define  _pg_CAseed_v_line            3
+#define  _pg_CAseed_cross             4
+#define  _pg_CAseed_X                 5
+#define  _pg_CAseed_square            6
     if(uniform_Update_fs_4fv_CAseed_type_size_loc.z > 0) {
       int CAseed_type = int(uniform_Update_fs_4fv_CAseed_type_size_loc.x);
       int CAseed_size = int(uniform_Update_fs_4fv_CAseed_type_size_loc.y);
       vec2 CAseed_location = uniform_Update_fs_4fv_CAseed_type_size_loc.zw;
       switch(CAseed_type) {
+        case _pg_CAseed_dot_center:
+        if( length(vec2(decalCoords - CAseed_location - vec2(0.5,0.5))) < CAseed_size) {
+            currentCA = vec4(1,1,1,-1);
+        }
+        break;
         case _pg_CAseed_dot:
         if( length(vec2(decalCoords - CAseed_location)) < CAseed_size) {
             currentCA = vec4(1,1,1,-1);
