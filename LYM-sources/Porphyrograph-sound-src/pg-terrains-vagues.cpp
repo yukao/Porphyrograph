@@ -61,7 +61,7 @@ int IndPlayedAudioDronesSampleDir = 0;
 int IndPlayedAudioRhythmsSample = 0;
 // int IndPlayedAudioDronesSample = 0;
 
-std::string StringRhythmsBaseDir = "./SoundData/soundYN-TVW-data/rhythms";
+std::string StringRhythmsBaseDir = "./sound/rhythms";
 // std::string DronesSampleDir = "./moire/samples/drones";
 
 static int pg_audio_paStreamCallback( const void *inputBuffer, void *outputBuffer,

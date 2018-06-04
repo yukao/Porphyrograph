@@ -614,7 +614,7 @@ void pg_IPClient::sendIPmessages(void) {
 			else if (send_format == OSC && *Output_Message_OSC == '/') {
 				rc = 0;
 				rc = send(SocketToRemoteServer, Output_Message_OSC,
-					localCommandLineLength, 0);
+							localCommandLineLength, 0);
 				//(struct sockaddr *) &remoteServAddr, 
 				//sizeof(remoteServAddr));
 				if (rc != localCommandLineLength) {

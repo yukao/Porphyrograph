@@ -70,13 +70,14 @@ float sensorLayouts[3 * PG_NB_SENSORS * PG_NB_MAX_SENSOR_LAYOUTS];
 bool sensor_onOff[PG_NB_SENSORS];
 float sensor_last_activation_time;
 // sensor activation as read from the pixel under their center
-float sensorValues[PG_NB_SENSORS];
+float sensorLevel[PG_NB_SENSORS];
 // all sensor activation patterns
 bool sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 
 // sample choice
 // current sample choice
 int sample_choice[PG_NB_SENSORS];
+#ifndef MALAUSSENA
 // all possible sensor layouts
 int sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 },
@@ -91,6 +92,16 @@ float sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+#else
+// all possible sensor layouts
+int sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
+{ { 0 }, { 1 }, { 2 } };
+// sample start playing time for muting after 1 cycle
+float sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
+{ -1.f, -1.f, -1.f };
+float sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
+{ 0.0, 0.0, 0.0 };
+#endif
 
 #ifdef PG_SUPERCOLLIDER
 // groups of samples for aliasing with additive samples
@@ -370,7 +381,7 @@ void window_display( void ) {
 //// groups of samples for aliasing with additive samples
 
 void readSensors(void) {
-	bool sensorOn[PG_NB_SENSORS + 18];
+	bool sensorOn[PG_NB_SENSORS];
 
 	bool sampleOn[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 	int sampleToSensorPointer[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
@@ -394,9 +405,9 @@ void readSensors(void) {
 				(int)(sensorPositions[3 * indSens + 1]),
 				1, 1,
 				GL_RGB, GL_UNSIGNED_BYTE, pixelColor + 3 * indSens);
-			sensorValues[indSens] =
+			sensorLevel[indSens] =
 				(pixelColor[3 * indSens] + pixelColor[3 * indSens + 1] + pixelColor[3 * indSens + 2]) / (255.f * 3.f);
-			sensorOn[indSens] = (sensorValues[indSens] > 0.0f);
+			sensorOn[indSens] = (sensorLevel[indSens] > 0.0f);
 			if (sensorOn[indSens]) {
 				sampleOn[sample_choice[indSens]] = true;
 				sampleToSensorPointer[sample_choice[indSens]] = indSens;
@@ -404,16 +415,18 @@ void readSensors(void) {
 			}
 		}
 		else {
-			sensorValues[indSens] = 0.0f;
+			sensorLevel[indSens] = 0.0f;
 			sensorOn[indSens] = false;
 		}
 	}
 	//printf("\n");
 	printOglError(691);
 
+	///////////////////////////////////////////////////////////////
+	// SENSOR-BASED SOUND IN SUPERCOLLIDER
 #ifdef PG_SUPERCOLLIDER
 	// looks for buffer aliasing possibilities: groups of sounds that could be replaced by a single buffer
-	float sensorValues[PG_NB_SENSORS + 18];
+	float sensorLevel[PG_NB_SENSORS + 18];
 	bool groupOn[PG_NB_SENSOR_GROUPS];
 	float groupValues[PG_NB_SENSOR_GROUPS];
 	//printf("group on ");
@@ -422,18 +435,18 @@ void readSensors(void) {
 			&& sampleOn[sample_groups[indgroup][2]] && sampleOn[sample_groups[indgroup][3]]) {
 			// switches on the group with the average activation value
 			groupOn[indgroup] = true;
-			groupValues[indgroup] = (sensorValues[sampleToSensorPointer[sample_groups[indgroup][0]]]
-				+ sensorValues[sampleToSensorPointer[sample_groups[indgroup][1]]]
-				+ sensorValues[sampleToSensorPointer[sample_groups[indgroup][2]]]
-				+ sensorValues[sampleToSensorPointer[sample_groups[indgroup][3]]]);
+			groupValues[indgroup] = (sensorLevel[sampleToSensorPointer[sample_groups[indgroup][0]]]
+				+ sensorLevel[sampleToSensorPointer[sample_groups[indgroup][1]]]
+				+ sensorLevel[sampleToSensorPointer[sample_groups[indgroup][2]]]
+				+ sensorLevel[sampleToSensorPointer[sample_groups[indgroup][3]]]);
 			// switches off the associated sensors
-			sensorValues[sampleToSensorPointer[sample_groups[indgroup][0]]] = 0.0f;
+			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][0]]] = 0.0f;
 			sensorOn[sampleToSensorPointer[sample_groups[indgroup][0]]] = false;
-			sensorValues[sampleToSensorPointer[sample_groups[indgroup][1]]] = 0.0f;
+			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][1]]] = 0.0f;
 			sensorOn[sampleToSensorPointer[sample_groups[indgroup][1]]] = false;
-			sensorValues[sampleToSensorPointer[sample_groups[indgroup][2]]] = 0.0f;
+			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][2]]] = 0.0f;
 			sensorOn[sampleToSensorPointer[sample_groups[indgroup][2]]] = false;
-			sensorValues[sampleToSensorPointer[sample_groups[indgroup][3]]] = 0.0f;
+			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][3]]] = 0.0f;
 			sensorOn[sampleToSensorPointer[sample_groups[indgroup][3]]] = false;
 			//printf("%d (%d,%d,%d,%d) ",indgroup,sampleToSensorPointer[ sample_groups[ indgroup ][ 0 ] ],
 			//  sampleToSensorPointer[ sample_groups[ indgroup ][ 1 ] ],
@@ -453,10 +466,10 @@ void readSensors(void) {
 	float totalAmplitude = 0.0;
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 		if (sensorOn[indSens]) {
-			float_str = std::to_string(static_cast<long double>(sensorValues[indSens]));
+			float_str = std::to_string(static_cast<long double>(sensorLevel[indSens]));
 			// float_str.resize(4);
 			message += " " + float_str;
-			totalAmplitude += sensorValues[indSens];
+			totalAmplitude += sensorLevel[indSens];
 		}
 		else {
 			message += " 0.0";
@@ -492,6 +505,9 @@ void readSensors(void) {
 	pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_SC_send");
 #endif
 
+	///////////////////////////////////////////////////////////////
+	// SENSOR-BASED SOUND IN RENOISE OR PORPHYROGRAPH SOUND
+#ifndef SUPERCOLLIDER
 	// message value
 	std::string float_string;
 	std::string int_string;
@@ -499,10 +515,13 @@ void readSensors(void) {
 	//printf("ON-OFF %d %d %d %d %d %d %d %d\n", sensor_onOff[0], sensor_onOff[1], sensor_onOff[2], sensor_onOff[3], sensor_onOff[4], sensor_onOff[5], sensor_onOff[6], sensor_onOff[7]);
 	//printf("ON %d %d %d %d %d %d %d %d\n", sensorOn[0], sensorOn[1], sensorOn[2], sensorOn[3], sensorOn[4], sensorOn[5], sensorOn[6], sensorOn[7]);
 	//printf("PLAY %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f\n", sample_play_start[0], sample_play_start[1], sample_play_start[2], sample_play_start[3], sample_play_start[4], sample_play_start[5], sample_play_start[6], sample_play_start[7]);
-	//printf("VAL %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f\n", sensorValues[0], sensorValues[1], sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5], sensorValues[6], sensorValues[7]);
+	//printf("VAL %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f\n", sensorLevel[0], sensorLevel[1], sensorLevel[2], sensorLevel[3], sensorLevel[4], sensorLevel[5], sensorLevel[6], sensorLevel[7]);
+
+	///////////////////////////////////////////////
+	// TRIGGERING THE SAMPLE
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 		if (sensorOn[indSens] // active sensor
-			&& sensorValues[indSens] > 0 // non black pixel
+			&& sensorLevel[indSens] > 0 // non black pixel
 			&& sample_play_start[sample_choice[indSens]] < 0 // not currently playing
 			) {
 			// message format
@@ -512,7 +531,7 @@ void readSensors(void) {
 			std::string message = "/renoise/song/track/";
 			int_string = std::to_string(sample_choice[indSens] + 1);
 			message += int_string + "/unmute_vol";
-			float_string = std::to_string(static_cast<long double>(sensorValues[indSens])*sensor_vol);
+			float_string = std::to_string(static_cast<long double>(sensorLevel[indSens])*sensor_vol);
 			// float_str.resize(4);
 			message += " " + float_string;
 			// printf("send %s\n", message.c_str());
@@ -523,30 +542,33 @@ void readSensors(void) {
 			std::string message = "/track_";
 			int_string = std::to_string(sample_choice[indSens] + 1);
 			message += int_string + "_level";
-			float_string = std::to_string(static_cast<long double>(sensorValues[indSens]));
+			float_string = std::to_string(static_cast<long double>(sensorLevel[indSens])*sensor_vol);
 			// float_str.resize(4);
 			message += " " + float_string;
 			// message posting
 			pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
-			// printf("send %s\n", message.c_str());
+			printf("send %s\n", message.c_str());
+			PlaySound(TEXT("D:/sync.com/Sync/LYM-projects/SoundData/soundYN-GN-data/samples-YN/samples_part1/sample_part1-002.wav"), NULL, SND_ASYNC);
 #endif
 
 			// starts the clock for stopping the sample play after a certain time
 			sample_play_start[sample_choice[indSens]] = CurrentClockTime;
-			sample_play_volume[sample_choice[indSens]] = sensorValues[indSens];
+			sample_play_volume[sample_choice[indSens]] = sensorLevel[indSens];
 			// printf("lights sensor #%d\n", indSens);
 		}
+
 		// the sample has been triggered and has not yet reached 90% of its playing duration
 		if (sample_play_start[sample_choice[indSens]] > 0.0
 			&& CurrentClockTime - sample_play_start[sample_choice[indSens]] <= 0.9f * BEAT_DURATION) {
 			// set the value to the initial value until 0.9 so that there is one visual feedback per loop
-			sensorValues[indSens] = (sample_play_volume[sample_choice[indSens]]
+			sensorLevel[indSens] = (sample_play_volume[sample_choice[indSens]]
 				* ((CurrentClockTime - sample_play_start[sample_choice[indSens]]) / BEAT_DURATION));
 		}
 	}
 	printOglError(689);
 
-
+	///////////////////////////////////////////////
+	// MANAGING THE SAMPLE SEVEL
 	for (int indSetup = 0; indSetup < PG_NB_MAX_SAMPLE_SETUPS; indSetup++) {
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 			int indSample = sample_setUps[indSetup][indSens];
@@ -585,6 +607,7 @@ void readSensors(void) {
 			}
 		}
 	}
+#endif
 	printOglError(690);
 
 	// message trace
@@ -2186,8 +2209,13 @@ void pg_SensorPass(void) {
 	glUniformMatrix4fv(uniform_Sensor_vp_proj, 1, GL_FALSE, doubleProjMatrix);
 	printOglError(597);
 
+#ifndef MALAUSSENA
 	// sensor rendering
 	int Sensor_order[PG_NB_SENSORS] = { 8, 13, 14, 11, 7, 2, 1, 4, 12, 15, 3, 0, 9, 10, 5, 6 };
+#else
+	// sensor rendering
+	int Sensor_order[PG_NB_SENSORS] = { 0 };
+#endif
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 		int reindexed_Sensor = Sensor_order[indSens];
 		if (sensor_onOff[reindexed_Sensor]) {
@@ -2196,10 +2224,10 @@ void pg_SensorPass(void) {
 			modelMatrixSensor[14] = sensorPositions[3 * reindexed_Sensor + 2];
 			glUniformMatrix4fv(uniform_Sensor_vp_model, 1, GL_FALSE, modelMatrixSensor);
 
-			// sensorValues[indSens]
+			// sensorLevel[indSens]
 			glUniform4f(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency,
 				(sensor_onOff[reindexed_Sensor] ? 1.0f : -1.0f), (reindexed_Sensor == currentSensor ? 1.0f : -1.0f),
-				(sensorFollowMouse_onOff ? 1.0f : -1.0f), sensorValues[reindexed_Sensor]);
+				(sensorFollowMouse_onOff ? 1.0f : -1.0f), sensorLevel[reindexed_Sensor]);
 
 			// draw points from the currently bound VAO with current in-use shader
 			glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
@@ -2227,7 +2255,7 @@ void pg_SensorPass(void) {
 
 				glUniform4f(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency,
 					(sensor_onOff[reindexed_Sensor] ? 1.0f : -1.0f), (reindexed_Sensor == currentSensor ? 1.0f : -1.0f),
-					(sensorFollowMouse_onOff ? 1.0f : -1.0f), sensorValues[reindexed_Sensor]);
+					(sensorFollowMouse_onOff ? 1.0f : -1.0f), sensorLevel[reindexed_Sensor]);
 
 				// draw points from the currently bound VAO with current in-use shader
 				glDrawArrays(GL_TRIANGLES, 0, 3 * 2);

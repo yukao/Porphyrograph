@@ -212,7 +212,8 @@ class AudioLoopBuffer {
 public:
 	double  loopDur;                // loop duration
 	long  nbLoopFrames;             // loop nb of frames
-	float *loopSoundBuffer;              // loop float buffer
+	long  nbBufferFrames;             // buffer nb of frames
+	float *loopSoundBuffer;         // loop float buffer
 	double startRecordingTime;      // working variable: time at which the recording of the loop has started
 	float loopOutLevel;             // playing level
 	bool loopRecording;             // loop is recording
@@ -223,9 +224,10 @@ public:
 
 	AudioLoopBuffer(double loop_duration) {
 		loopDur = loop_duration;
-		nbLoopFrames = long(loop_duration * PG_AUDIO_SAMPLE_RATE);
-	    loopSoundBuffer = new float[(unsigned long)(nbLoopFrames * PG_AUDIO_NB_CHANNELS)];
-		memset((void *)loopSoundBuffer, 0, (nbLoopFrames * PG_AUDIO_NB_CHANNELS)*sizeof(float));
+		nbLoopFrames = long(loopDur * PG_AUDIO_SAMPLE_RATE);
+		nbBufferFrames = nbLoopFrames;
+	    loopSoundBuffer = new float[(unsigned long)(nbBufferFrames * PG_AUDIO_NB_CHANNELS)];
+		memset((void *)loopSoundBuffer, 0, (nbBufferFrames * PG_AUDIO_NB_CHANNELS)*sizeof(float));
 		// printf("Loop dur %.4f nbFrames %ld \n",loop_duration,nbLoopFrames);
 		startRecordingTime = 0.0;
 		loopOutLevel = 0.f;
@@ -238,6 +240,7 @@ public:
 	~AudioLoopBuffer(void) {
 		loopDur = 0.;
 		nbLoopFrames = 0;
+		nbBufferFrames = 0;
 		if (loopSoundBuffer) {
 			delete[]loopSoundBuffer;
 			loopSoundBuffer = NULL;

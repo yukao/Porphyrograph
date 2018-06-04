@@ -420,11 +420,11 @@ void InitializeConfigurationVar(void) {
 	for (int indVar = 0; indVar < _MaxConfigurationVarIDs; indVar++) {
 		if (ConfigurationVarTypes[indVar] == _pg_float) {
 			*((float *)ConfigurationVarPointers[indVar]) = InitialValuesConfigurationVar[indVar];
-			printf("float variable %d value %.3f\n", indVar, *((float *)ConfigurationVarPointers[indVar]));
+			// printf("float variable %d value %.3f\n", indVar, *((float *)ConfigurationVarPointers[indVar]));
 		}
 		else if (ConfigurationVarTypes[indVar] == _pg_int) {
 			*((int *)ConfigurationVarPointers[indVar]) = (int)round(InitialValuesConfigurationVar[indVar]);
-			printf("int variable %d value %d\n", indVar, *((int *)ConfigurationVarPointers[indVar]));
+			// printf("int variable %d value %d\n", indVar, *((int *)ConfigurationVarPointers[indVar]));
 		}
 		else if (ConfigurationVarTypes[indVar] == _pg_bool) {
 			*((bool *)ConfigurationVarPointers[indVar]) = (InitialValuesConfigurationVar[indVar] > 0 ? true : false);

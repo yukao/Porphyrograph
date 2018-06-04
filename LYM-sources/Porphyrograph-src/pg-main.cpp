@@ -229,12 +229,17 @@ int main(int argcMain, char **argvMain) {
 
 	// initializations before rendering
 
+	// sensor initialization
+	SensorInitialization();
+
 	// matrices, geometry, shaders and FBOs
 	pg_initRenderingMatrices();
 	printOglError(31);
+
 	// buiilds the quads to be rendered
 	pg_initGeometry_quads();
 	printOglError(32);
+	
 	// loads the shaders
 	pg_loadAllShaders();
 	printOglError(33);
@@ -253,6 +258,7 @@ int main(int argcMain, char **argvMain) {
 	// connects PD to porphyrograph
 	pg_send_message_udp((char *)"i", (char *)"/connect 1", (char *)"udp_PD_send");
 
+#ifdef RENOISE
 	pg_send_message_udp((char *)"i", (char *)"/track/1/solo 1", (char *)"udp_RN_send");
 	pg_send_message_udp((char *)"i", (char *)"/track/2/solo 1", (char *)"udp_RN_send");
 	pg_send_message_udp((char *)"i", (char *)"/track/3/mute 1", (char *)"udp_RN_send");
@@ -260,6 +266,8 @@ int main(int argcMain, char **argvMain) {
 	pg_send_message_udp((char *)"i", (char *)"/track/4/volume 0", (char *)"udp_RN_send");
 	pg_send_message_udp((char *)"i", (char *)"/master/mute 1", (char *)"udp_RN_send");
 	pg_send_message_udp((char *)"", (char *)"/scene/1/launch", (char *)"udp_RN_send");
+#endif
+
 
 	// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
 	pg_initializationScript();

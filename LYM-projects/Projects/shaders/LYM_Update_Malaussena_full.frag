@@ -645,24 +645,26 @@ void CA_out( vec4 currentCA ) {
         if( state > 0 ) {
            newState = texelFetch(uniform_Update_texture_fs_CATable, 
                                  ivec2( nbSurroundingLives + 1 , 
-                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r * 255;
            // survival
            if( newState != 0) {
-              out4_CA.a = 1;
+              out4_CA.a = currentCA.a;
            }
+           // ageing
            else {
-              out4_CA.a = 0;
+              out4_CA.a = max(0,round(currentCA.a - 1));
            }
         }
         // birth
         else {
           newState = texelFetch(uniform_Update_texture_fs_CATable, 
                          ivec2( 256 + nbSurroundingLives + 1 , 
-                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r * 255;
           // birth
           if( newState != 0 ) {
-            out4_CA.a = 1;
+            out4_CA.a = round(newState);
           }
+          // nothing (stays dead)
           else {
               out4_CA.a = 0;
            }

@@ -367,7 +367,7 @@ bool pg_Sequences_and_Backtracks_Playback(float *out_RhythmsBackTrack, float *ou
 			seq->startStreamingTime = StreamingRealTime;
 			seq->seqPlaying = true;
 			seq->seqStarted = false;
-			// printf("play non synchronized sequence %s %.2f\n", seq->name.c_str(), seq->seqLevel);
+			// printf("PLAY non synchronized sequence %s %.2f\n", seq->name.c_str(), seq->seqLevel);
 		}
 	}
 
@@ -449,8 +449,8 @@ bool pg_Sequences_and_Backtracks_Playback(float *out_RhythmsBackTrack, float *ou
 					track->startStreamingTime = LastStreamingBeatRealTime;
 					track->trackPlaying = true;
 					track->trackStarted = false;
-					printf("Play track %s %.2f\n", LongTrackBufferData[ind_long_tracks]->name.c_str(),
-						track->trackLevel);
+					//printf("Play track %s %.2f\n", LongTrackBufferData[ind_long_tracks]->name.c_str(),
+					//	track->trackLevel);
 				}
 			}
 
@@ -459,12 +459,12 @@ bool pg_Sequences_and_Backtracks_Playback(float *out_RhythmsBackTrack, float *ou
 				for (int ind_sequences = 0; ind_sequences < NbAudioSequences; ind_sequences++) {
 					AudioSequenceStreaming *seq = AudioSequences[ind_sequences];
 					// plays a sequence that was set as Started, but not yet Playing
-					if (seq->seqStarted && !seq->seqPlaying) {
+					if (seq->seqStarted && !seq->seqPlaying && seq->synchronized) {
 						seq->startStreamingTime = LastStreamingBeatRealTime;
 						seq->seqPlaying = true;
 						seq->seqStarted = false;
-						printf("Play synchronized sequence %s %.2f beats %d start %.5f\n", 
-							seq->name.c_str(), seq->seqLevel, NbStreamingBeats, LastStreamingBeatRealTime);
+						//printf("Play synchronized sequence %s %.2f beats %d start %.5f\n", 
+						//	seq->name.c_str(), seq->seqLevel, NbStreamingBeats, LastStreamingBeatRealTime);
 					}
 				}
 			}
@@ -543,10 +543,10 @@ bool pg_Sequences_and_Backtracks_Playback(float *out_RhythmsBackTrack, float *ou
 						seq->currPiece = 0;
 						seq->currPieceTime
 							= seqTimeSinceBeginning - nbSeqRepetitions * seq->singleFrameDuration;
+						//if( indCurFrame == 0 ){
+						 // printf("sequence #%d time %f\n", ind_sequences , seq->currPieceTime);
+						//}
 					}
-					//if( indCurFrame == 0 ){
-					// printf("sequence #%d time %f\n", ind_sequences , seq->currPieceTime);
-					//}
 				}
 			}
 			// not playing
@@ -633,6 +633,8 @@ bool pg_Sequences_and_Backtracks_Playback(float *out_RhythmsBackTrack, float *ou
 									->largeSampleBuffer[indFrameInTrack*PG_AUDIO_NB_CHANNELS + indCh];
 							}
 						}
+						// printf("sequence #%d indFrameInTrack %ld buffer size %ld indFrame %ld currStreamRealTime %.2f\n", ind_sequences, indFrameInTrack, bufferFrameSize,
+									//indCurFrame, currentStreamingRealTime);
 					}
 #ifdef PG_TERRAINS_VAGUES
 				}
@@ -772,6 +774,8 @@ static int pg_audio_paStreamCallback( const void *inputBuffer, void *outputBuffe
     float *floatOutputBuffer = (float*)outputBuffer;
     float *floatInputBuffer = (float*)inputBuffer;
     (void) userData;
+
+	// printf("audio streaming callback ini %.2f\n", StreamingRealTime);
 
 	/////////////////////////////////////////////////////////////////
 	// DEALLOCATION / REALLOCATION IN CASE OF TOO SMALL OUTPUT BUFFER
@@ -938,6 +942,7 @@ static int pg_audio_paStreamCallback( const void *inputBuffer, void *outputBuffe
 
 	// increases the streaming real time by the time sent out
 	StreamingRealTime += FramesToDuration(framesPerBuffer);
+	// printf("audio streaming callback end %.2f\n", StreamingRealTime);
 	return 0;
 }
 

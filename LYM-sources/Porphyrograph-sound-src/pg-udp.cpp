@@ -162,7 +162,7 @@ void udp_init( void ) {
   //for( int ind = 0 ; ind < nb_IP_Servers ; ind++ ) {
   //  IP_Servers[ ind ] = new pg_IPServer();
   //}
-  //IP_Servers[ 0 ]->id = "udp_PD_receive";
+  //IP_Servers[ 0 ]->id = "udp_QT_receive";
   //IP_Servers[ 0 ]->Local_server_port = 1978;
   //IP_Servers[ 0 ]->receive_format = Plain;
   //IP_Servers[ 0 ]->IP_message_trace = false;
@@ -180,7 +180,7 @@ void udp_init( void ) {
   //for( int ind_IP_Client = 0 ; ind_IP_Client < nb_IP_Clients ; ind_IP_Client++ ) {
   //  IP_Clients[ ind_IP_Client ] = new pg_IPClient();
   //}
-  //IP_Clients[ 0 ]->id = "udp_PD_send";
+  //IP_Clients[ 0 ]->id = "udp_QT_send";
   //IP_Clients[ 0 ]->Remote_server_IP = "127.0.0.1";
   //IP_Clients[ 0 ]->Remote_server_port = 1979;
   //IP_Clients[ 0 ]->send_format = Plain;
@@ -193,7 +193,7 @@ void udp_init( void ) {
 }
 
 void pg_send_message_udp( char *pattern , char * message , char *targetHostid ) {
-	// sprintf( AuxString , "/particles_can %f" , particleMode ); pg_send_message_udp( (char *)"f" , AuxString , (char *)"udp_PD_send" );
+	// sprintf( AuxString , "/particles_can %f" , particleMode ); pg_send_message_udp( (char *)"f" , AuxString , (char *)"udp_QT_send" );
 	pg_IPClient* targetHost = NULL;
 	for( int ind = 0 ; ind < nb_IP_Clients ; ind++ ) {
 		if( strcmp( targetHostid , IP_Clients[ ind ]->id.c_str() ) == 0 ) {

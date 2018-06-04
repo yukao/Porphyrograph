@@ -279,20 +279,28 @@ using std::ifstream;
 #endif
 
 // SENSORS
+#if defined (MALAUSSENA)
 #define PG_SENSORS
+#define PG_NB_SENSORS 1
+#define PG_NB_MAX_SENSOR_ACTIVATIONS 2
+#define BEAT_DURATION (0.1f)
+#define PG_PORPHYROGRAPH_SOUND
+#endif
+#if defined (DEMO) || defined (GN)
+#define PG_SENSORS
+#define PG_NB_SENSORS 16
+#define PG_NB_MAX_SENSOR_ACTIVATIONS 6
+#define BEAT_DURATION (1.0f)
+#define PG_RENOISE
+#endif
 #ifdef PG_SENSORS
 #define PG_SENSOR_TEXTURE_WIDTH 100
 #define PG_SENSOR_GEOMETRY_WIDTH 10
-#define PG_NB_SENSORS 16
-#define PG_NB_SENSOR_GROUPS 12
 #define PG_NB_MAX_SENSOR_LAYOUTS 4
-#define PG_NB_MAX_SENSOR_ACTIVATIONS 6
 #define PG_NB_MAX_SAMPLE_SETUPS 3
-#if defined (DEMO) || defined (GN) || defined (MALAUSSENA)
-#define PG_RENOISE
-// #define PG_PORPHYROGRAPH_SOUND
 #endif
-#define BEAT_DURATION (1.0f)
+#ifdef SUPERCOLLIDER
+#define PG_NB_SENSOR_GROUPS 12
 #endif
 
 #ifdef _WIN32

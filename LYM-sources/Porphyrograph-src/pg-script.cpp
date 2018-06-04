@@ -2183,43 +2183,6 @@ void pg_launch_performance(void) {
 		PlayCurrentTrack();
 	}
 
-#ifdef PG_SENSORS
-#ifdef PG_RENOISE
-	sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
-#endif
-#ifdef PG_PORPHYROGRAPH_SOUND
-	sprintf(AuxString, "/loop_level 0.0"); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PGsound_send");
-	sprintf(AuxString, "/input_level 0.0"); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PGsound_send");
-#endif
-	for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
-#ifdef PG_RENOISE
-		std::string message = "/renoise/song/track/";
-		std::string int_string = std::to_string(indSample + 1);
-		message += int_string + "/mute";
-
-		// message format
-		std::string format = "";
-
-		// message posting
-		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_RN_send");
-#endif
-#ifdef PG_PORPHYROGRAPH_SOUND
-		std::string message = "/track_";
-		std::string int_string = std::to_string(indSample + 1);
-		message += int_string + "_level 0";
-
-		// message format
-		std::string format = "f";
-
-		// message posting
-		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
-#endif
-
-		// resets the clock for replaying the sample if sensor triggered again
-		sample_play_start[indSample] = -1.0f;
-	}
-#endif
-
 #ifdef GN
 	initCA = 1.2f;
 #endif
@@ -2286,10 +2249,10 @@ void pg_keyStrokeScripts(int key) {
 
 	switch (key) {
 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ TEST UDP ++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++   keystroke (T)  ++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ TEST UDP ++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++   keystroke (T)  ++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case'T':
 		pg_writeMessageOnScreen((char *)"******");
 		pg_send_message_udp((char *)"f", (char *)"/testUDP 0", (char *)"udp_SC");
@@ -2297,140 +2260,13 @@ void pg_keyStrokeScripts(int key) {
 		sprintf(AuxString, "/return_message returnUPD_%f", CurrentClockTime); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
 		break;
 
-		// ======================================== 
-		// background subtraction modes (Z) 
-		// ======================================== 
-	case'y':
-		BGSubtr = !BGSubtr;
-		BrokenInterpolationVar[_BGSubtr] = true;
-		break;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++++++ LAUNCH TIMER ++++++++++++++++++++++++++ 
-		// +++++++++++++++++   keystroke (t)  ++++++++++++++++++++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ LAUNCH TIMER ++++++++++++++++++++++++++ 
+	// +++++++++++++++++   keystroke (t)  ++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case't':
 		pg_launch_performance();
 		break;
-
-		// ======================================== 
-		// loop size (number of beats in each loop) (V) 
-		// ======================================== 
-	case'V':
-		flashCABG_freq = (flashCABG_freq < PG_LOOP_SIZE ? 2 * flashCABG_freq : 1);
-		flashCAPart_freq = (flashCAPart_freq < PG_LOOP_SIZE ? 2 * flashCAPart_freq : 1);
-		flashPartBG_freq = (flashPartBG_freq < PG_LOOP_SIZE ? 2 * flashPartBG_freq : 1);
-		flashPartCA_freq = (flashPartCA_freq < PG_LOOP_SIZE ? 2 * flashPartCA_freq : 1);
-
-		flashPixel_freq = (flashPixel_freq < PG_LOOP_SIZE ? 2 * flashPixel_freq : 1);
-		// printf( "Loop size (PG_LOOP_SIZE)\n" );
-		BrokenInterpolationVar[_flashTrkCA_freq_0] = true;
-#if PG_NB_TRACKS >= 2
-		BrokenInterpolationVar[_flashTrkCA_freq_1] = true;
-#endif
-#if PG_NB_TRACKS >= 3
-		BrokenInterpolationVar[_flashTrkCA_freq_2] = true;
-#endif
-#if PG_NB_TRACKS >= 4
-		BrokenInterpolationVar[_flashTrkCA_freq_3] = true;
-#endif
-		// printf( "Loop size (PG_LOOP_SIZE)\n" );
-		BrokenInterpolationVar[_flashTrkPart_freq_0] = true;
-#if PG_NB_TRACKS >= 2
-		BrokenInterpolationVar[_flashTrkPart_freq_1] = true;
-#endif
-#if PG_NB_TRACKS >= 3
-		BrokenInterpolationVar[_flashTrkPart_freq_2] = true;
-#endif
-#if PG_NB_TRACKS >= 4
-		BrokenInterpolationVar[_flashTrkPart_freq_3] = true;
-#endif
-		BrokenInterpolationVar[_flashCABG_freq] = true;
-		BrokenInterpolationVar[_flashCAPart_freq] = true;
-		BrokenInterpolationVar[_flashPartBG_freq] = true;
-		BrokenInterpolationVar[_flashPartCA_freq] = true;
-		BrokenInterpolationVar[_flashPixel_freq] = true;
-		break;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// +++++++++++++ FLASHES BETWEEN LAYERS, CA & PARTICLES ++++ 
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// flashPixel          (f)                 
-		// flashTrkPart            (F)                 
-		// flashTrkCA            (h)                 
-		// flashCABG          (H)                 
-		// flashCAPart          (i)                 
-		// flashPixel duration (Q)                 
-		// ====================================== 
-	case'f':
-		flashPixel = flashPixel_duration;
-		break;
-
-	case'F':
-		flashTrkPart_weights[currentDrawingTrack] = 1.0;
-		break;
-
-	case'h':
-		flashTrkCA_weights[currentDrawingTrack] = 1.0;
-		break;
-
-	case'H':
-		flashCABG_weight = 1.0;
-
-	case'i':
-		flashCAPart_weight = 1.0;
-		break;
-
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		/* ------------------------------- dump particle animation FBO values */
-		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-	case 'w':
-	{
-		int nbLines = nb_particles / leftWindowWidth + 1;
-		float *storageBuffer = new float[leftWindowWidth * nbLines * 4];
-
-		printOglError(97);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
-		glReadBuffer(GL_COLOR_ATTACHMENT0 + pg_Part_pos_speed_FBO_ParticleAnimation_attcht);
-
-		// OpenGL's default 4 byte pack alignment would leave extra bytes at the
-		//   end of each image row so that each full row contained a number of bytes
-		//   divisible by 4.  Ie, an RGB row with 3 pixels and 8-bit componets would
-		//   be laid out like "RGBRGBRGBxxx" where the last three "xxx" bytes exist
-		//   just to pad the row out to 12 bytes (12 is divisible by 4). To make sure
-		//   the rows are packed as tight as possible (no row padding), set the pack
-		//   alignment to 1.
-		// glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, leftWindowWidth, nbLines, GL_RGBA, GL_FLOAT, (float *)storageBuffer);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-
-		// prints first line
-		for (int indCol = 0; indCol < leftWindowWidth; indCol++) {
-			fprintf(fileLog, "\t%d\t-\t-\t-", indCol);
-		}
-		fprintf(fileLog, "\n");
-		// prints data line
-		for (int indRow = 0; indRow < nbLines; indRow++) {
-			for (int indCol = 0; indCol < leftWindowWidth; indCol++) {
-				int indBuff = indRow * leftWindowWidth * 4 + indCol * 4;
-				if (indCol % 2 == 0) {
-					fprintf(fileLog, "\tHpx:%.2f\tHpy:%.2f\tHvx:%.2f\tHvy:%.2f",
-						storageBuffer[indBuff + 0], storageBuffer[indBuff + 1],
-						storageBuffer[indBuff + 2], storageBuffer[indBuff + 3]);
-				}
-				else {
-					fprintf(fileLog, "\tTpx:%.2f\tTpy:%.2f\tTvx:%.2f\tTvy:%.2f",
-						storageBuffer[indBuff + 0], storageBuffer[indBuff + 1],
-						storageBuffer[indBuff + 2], storageBuffer[indBuff + 3]);
-				}
-			}
-			fprintf(fileLog, "\n");
-		}
-		delete[] storageBuffer;
-		printf("FBO rendering completed\n");
-		printOglError(101);
-	}
-	break;
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 
@@ -2441,9 +2277,8 @@ void pg_keyStrokeScripts(int key) {
 		setup_plus();
 		break;
 
-		// advances to next scene and keeps the global timing
-	case's':
-	{
+	// advances to next scene and keeps the global timing
+	case's': {
 		restoreInitialTimesAndDurations();
 		float elapsedTime = (CurrentClockTime - InitialScenarioTime) - Scenario[pg_CurrentScene].scene_initial_time;
 		// only accepted if the current scene has been on for a while
@@ -2464,8 +2299,47 @@ void pg_keyStrokeScripts(int key) {
 				StartNewScene(new_scene);
 			}
 		}
+		break;
 	}
-	break;
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ CA SEEDING ++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
+#ifdef MALAUSSENA
+	case'C':
+		pg_CAseed_trigger = true;
+		break;
+#endif
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++ FLASHES BETWEEN LAYERS, CA & PARTICLES ++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// flashPixel          (f)                 
+	// flashTrkPart        (F)                 
+	// flashTrkCA          (h)                 
+	// flashCABG           (H)                 
+	// flashCAPart         (i)                 
+	// flashPixel duration (Q)                 
+	// ====================================== 
+	case'f':
+		flashPixel = flashPixel_duration;
+		break;
+
+	case'F':
+		flashTrkPart_weights[currentDrawingTrack] = 1.0;
+		break;
+
+	case'h':
+		flashTrkCA_weights[currentDrawingTrack] = 1.0;
+		break;
+
+	case'H':
+		flashCABG_weight = 1.0;
+
+	case'i':
+		flashCAPart_weight = 1.0;
+		break;
 	}
 }
 

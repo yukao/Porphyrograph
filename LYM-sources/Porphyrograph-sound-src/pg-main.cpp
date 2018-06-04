@@ -108,8 +108,8 @@ void pg_aliasScript(char *newCommand,
 		// level and playing initialization
 		for (int ind_sequences = 0; ind_sequences < NbAudioSequences; ind_sequences++) {
 			sprintf(AuxString, "/%s_onOff_can %d", AudioSequences[ind_sequences]->name.c_str(), int(AudioSequences[ind_sequences]->seqStarted
-				|| AudioSequences[ind_sequences]->seqPlaying)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-			sprintf(AuxString, "/%s_can %.2f", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				|| AudioSequences[ind_sequences]->seqPlaying)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/%s_can %.2f", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		for (int ind_long_tracks = 0; ind_long_tracks < NbLongTracks; ind_long_tracks++) {
 			size_t pos = LongTrackBufferData[ind_long_tracks]->name.find_last_of('/');
@@ -122,11 +122,11 @@ void pg_aliasScript(char *newCommand,
 				filename.resize(pos);
 			}
 			sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), int(LongTrackStreamings[ind_long_tracks]->trackStarted
-				|| LongTrackStreamings[ind_long_tracks]->trackPlaying)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-			sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				|| LongTrackStreamings[ind_long_tracks]->trackPlaying)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 
-		sprintf(AuxString, "/record_output_can %d", int(record_output)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/record_output_can %d", int(record_output)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 
 		// if (InitialPerformanceTime == -1.0) {"
 		// starts the time reference when the first streaming is made
@@ -156,8 +156,8 @@ void pg_aliasScript(char *newCommand,
 					LongTrackStreamings[ind_long_tracks]->trackStarted = false;
 					LongTrackStreamings[ind_long_tracks]->trackPlaying = false;
 					printf("OFF track %s %.2f\n", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel);
-					sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 0); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-					sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+					sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 0); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 				}
 			}
 		}
@@ -170,8 +170,8 @@ void pg_aliasScript(char *newCommand,
 			LongTrackStreamings[0]->trackPlaying = false;
 			std::string filename = LongTrackBufferData[0]->name;
 			printf("ON track %s %.2f\n", filename.c_str(), LongTrackStreamings[0]->trackLevel);
-			sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 1); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-			sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[0]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 1); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[0]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			printf("***********************************************\n");
 			printf("LAUNCH\n");
 			printf("***********************************************\n");
@@ -213,7 +213,7 @@ void pg_aliasScript(char *newCommand,
 			pg_active_recordingbuffer = 0;
 			pg_frame_recordingbuffer = 0;
 		}
-		sprintf(AuxString, "/record_output_can %d", int(record_output) ); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/record_output_can %d", int(record_output) ); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 	}
 
 #ifdef PG_TERRAINS_VAGUES
@@ -227,27 +227,27 @@ void pg_aliasScript(char *newCommand,
 
 	else  if (commandAlias.compare("TV_track_shuffle") == 0) {
 		TV_track_shuffle = arguments[0];
-		sprintf(AuxString, "/TV_track_shuffle_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/TV_track_shuffle_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		return;
 	}
 	else  if (commandAlias.compare("TV_drone_mix") == 0) {
 		TV_drone_mix = arguments[0];
-		sprintf(AuxString, "/TV_drone_mix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/TV_drone_mix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		return;
 	}
 	else  if (commandAlias.compare("TV_drone_size") == 0) {
 		TV_drone_size = long(arguments[0] / 1000.f * PG_AUDIO_SAMPLE_RATE);;
-		sprintf(AuxString, "/TV_drone_size_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/TV_drone_size_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		return;
 	}
 	else  if (commandAlias.compare("TV_swap_freq") == 0) {
 		TV_swap_freq = arguments[0];
-		sprintf(AuxString, "/TV_swap_freq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/TV_swap_freq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		return;
 	}
 	else  if (commandAlias.compare("TV_swap_dur") == 0) {
 		TV_swap_dur = arguments[0];
-		sprintf(AuxString, "/TV_swap_dur_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/TV_swap_dur_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		return;
 	}
 	else  if (commandAlias.compare("TV_blast") == 0) {
@@ -312,19 +312,18 @@ void pg_aliasScript(char *newCommand,
 				LoopBuffer[ind]->loopPlaying = false;
 				printf("Loop %d stopped\n", ind + 1);
 				LoopBuffer[ind]->time_stopped = RealTime();
-				sprintf(AuxString, "/loop_recording_can %d %d", ind, int(LoopBuffer[ind]->loopRecording)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
-				sprintf(AuxString, "/loop_playing_can %d %d", ind, int(LoopBuffer[ind]->loopPlaying)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/loop_recording_can %d %d", ind, int(LoopBuffer[ind]->loopRecording)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/loop_playing_can %d %d", ind, int(LoopBuffer[ind]->loopPlaying)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
 			}
 			// already stopped or not yet started to record, nothing to do
 			else if (RealTime() - LoopBuffer[ind]->time_stopped < 0.2) {
 				printf("Loop %d cleaned\n", ind + 1);
 				LoopBuffer[ind]->loopEmpty = true;
 				LoopBuffer[ind]->loopFlashing = true;
-				int nbLoopFrames = long(LoopBuffer[ind]->loopDur * PG_AUDIO_SAMPLE_RATE);
-				memset((void *)LoopBuffer[ind]->loopSoundBuffer, 0, (nbLoopFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
+				memset((void *)LoopBuffer[ind]->loopSoundBuffer, 0, (LoopBuffer[ind]->nbLoopFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
 				// flashes the two buttons
-				sprintf(AuxString, "/loop_recording_can %d %d", ind, 1); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
-				sprintf(AuxString, "/loop_playing_can %d %d", ind, 1); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/loop_recording_can %d %d", ind, 1); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/loop_playing_can %d %d", ind, 1); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
 				LoopBuffer[ind]->time_stopped = RealTime();
 			}
 			// takes note of stopping time
@@ -372,8 +371,8 @@ void pg_aliasScript(char *newCommand,
 			else {
 				printf("Recording and playing together should not happen\n");
 			}
-			sprintf(AuxString, "/loop_recording_can %d %d", ind, int(LoopBuffer[ind]->loopRecording)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
-			sprintf(AuxString, "/loop_playing_can %d %d", ind, int(LoopBuffer[ind]->loopPlaying)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/loop_recording_can %d %d", ind, int(LoopBuffer[ind]->loopRecording)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/loop_playing_can %d %d", ind, int(LoopBuffer[ind]->loopPlaying)); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
 			return;
 		}
 	}
@@ -384,7 +383,7 @@ void pg_aliasScript(char *newCommand,
 		int ind = int(arguments[0]);
 		if (ind < PG_NB_LOOP_BUFFERS) {
 			LoopBuffer[ind]->loopOutLevel = arguments[1];
-			sprintf(AuxString, "/loop_out_level_can %d %f", ind, arguments[1]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/loop_out_level_can %d %f", ind, arguments[1]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			return;
 		}
 	}
@@ -399,7 +398,7 @@ void pg_aliasScript(char *newCommand,
 	// INPUT LEVEL
 	else  if (commandAlias.compare("input_level") == 0) {
 		input_level = arguments[0];
-		sprintf(AuxString, "/input_level_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/input_level_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		return;
 	}
 
@@ -416,7 +415,21 @@ void pg_aliasScript(char *newCommand,
 	else  if (commandAlias.compare("BeatsPerMinute") == 0) {
 		BeatsPerMinute = arguments[0];
 		BeatDurationRealTime = 60.0f / (float)BeatsPerMinute;
-		printf("Beats per minute %.2f\n", BeatsPerMinute);
+		for (int indLoopTrack = 0; indLoopTrack < PG_NB_LOOP_BUFFERS; indLoopTrack++) {
+			LoopBuffer[indLoopTrack]->loopDur = 16. * BeatDurationRealTime;
+			LoopBuffer[indLoopTrack]->nbLoopFrames = long(LoopBuffer[indLoopTrack]->loopDur * PG_AUDIO_SAMPLE_RATE);
+			if (LoopBuffer[indLoopTrack]->nbLoopFrames > LoopBuffer[indLoopTrack]->nbBufferFrames) {
+				if (LoopBuffer[indLoopTrack]->loopSoundBuffer) {
+					delete[]LoopBuffer[indLoopTrack]->loopSoundBuffer;
+				}
+				LoopBuffer[indLoopTrack]->nbBufferFrames = LoopBuffer[indLoopTrack]->nbLoopFrames;
+				LoopBuffer[indLoopTrack]->loopSoundBuffer = new float[(unsigned long)(LoopBuffer[indLoopTrack]->nbBufferFrames * PG_AUDIO_NB_CHANNELS)];
+				memset((void *)LoopBuffer[indLoopTrack]->loopSoundBuffer, 0, (LoopBuffer[indLoopTrack]->nbBufferFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
+			}
+			else {
+				memset((void *)LoopBuffer[indLoopTrack]->loopSoundBuffer, 0, (LoopBuffer[indLoopTrack]->nbLoopFrames * PG_AUDIO_NB_CHANNELS) * sizeof(float));
+			}
+		}
 		return;
 	}
 
@@ -426,21 +439,21 @@ void pg_aliasScript(char *newCommand,
 		if (!isSampleEffectCommand) {
 			if (arguments[0] < 0.5f) {
 				VST_reverb_inLine.setParameter(MVerb<float>::MIX, .0f);
-				sprintf(AuxString, "/mix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/mix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 			else {
 				VST_reverb_inLine.setParameter(MVerb<float>::MIX, (arguments[0] - .5f) * .2f);
-				sprintf(AuxString, "/mix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/mix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 		}
 		else {
 			if (arguments[0] < 0.5f) {
 				VST_reverb_samples.setParameter(MVerb<float>::MIX, .0f);
-				sprintf(AuxString, "/sample_mix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/sample_mix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 			else {
 				VST_reverb_samples.setParameter(MVerb<float>::MIX, (arguments[0] - .5f) * .2f);
-				sprintf(AuxString, "/sample_mix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/sample_mix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 		}
 	}
@@ -448,91 +461,91 @@ void pg_aliasScript(char *newCommand,
 	else if (commandAlias.compare("mix") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::MIX, arguments[0]);
-			sprintf(AuxString, "/mix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/mix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::MIX, arguments[0]);
-			sprintf(AuxString, "/sample_mix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_mix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	} */
 	else  if (commandAlias.compare("dampingfreq") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::DAMPINGFREQ, arguments[0]);
-			sprintf(AuxString, "/dampingfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/dampingfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::DAMPINGFREQ, arguments[0]);
-			sprintf(AuxString, "/sample_dampingfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_dampingfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare("density") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::DENSITY, arguments[0]);
-			sprintf(AuxString, "/density_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/density_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::DENSITY, arguments[0]);
-			sprintf(AuxString, "/sample_density_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_density_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare("bandwidthfreq") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::BANDWIDTHFREQ, arguments[0]);
-			sprintf(AuxString, "/bandwidthfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/bandwidthfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::BANDWIDTHFREQ, arguments[0]);
-			sprintf(AuxString, "/sample_bandwidthfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_bandwidthfreq_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare("decay") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::DECAY, arguments[0]);
-			sprintf(AuxString, "/decay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/decay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::DECAY, arguments[0]);
-			sprintf(AuxString, "/sample_decay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_decay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare("predelay") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::PREDELAY, arguments[0]);
-			sprintf(AuxString, "/predelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/predelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::PREDELAY, arguments[0]);
-			sprintf(AuxString, "/sample_predelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_predelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare("size") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::SIZE, arguments[0]);
-			sprintf(AuxString, "/size_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/size_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::SIZE, arguments[0]);
-			sprintf(AuxString, "/sample_size_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_size_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare("gain") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::GAIN, arguments[0]);
-			sprintf(AuxString, "/gain_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/gain_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::GAIN, arguments[0]);
-			sprintf(AuxString, "/sample_gain_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_gain_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare( "earlymix") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_reverb_inLine.setParameter(MVerb<float>::EARLYMIX, arguments[0]);
-			sprintf(AuxString, "/earlymix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/earlymix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_reverb_samples.setParameter(MVerb<float>::EARLYMIX, arguments[0]);
-			sprintf(AuxString, "/sample_earlymix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_earlymix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 
@@ -542,22 +555,22 @@ void pg_aliasScript(char *newCommand,
 		if (!isSampleEffectCommand) {
 			if (arguments[0] < 0.5f) {
 				VST_delay_inLine.setParameter(kMix, .0f);
-				sprintf(AuxString, "/kMix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/kMix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 			else {
 				VST_delay_inLine.setParameter(kMix, (arguments[0] - .5f) * .2f);
-				sprintf(AuxString, "/kMix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/kMix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 
 		}
 		else {
 			if (arguments[0] < 0.5f) {
 				VST_delay_samples.setParameter(kMix, .0f);
-				sprintf(AuxString, "/sample_kMix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/sample_kMix_can %f", .0f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 			else {
 				VST_delay_samples.setParameter(kMix, (arguments[0] - .5f) * .2f);
-				sprintf(AuxString, "/sample_kMix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/sample_kMix_can %f", (arguments[0] - .5f) * .2f); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			}
 
 		}
@@ -565,62 +578,62 @@ void pg_aliasScript(char *newCommand,
 	/* else if (commandAlias.compare("kMix") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_delay_inLine.setParameter(kMix, arguments[0]);
-			sprintf(AuxString, "/kMix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/kMix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_delay_samples.setParameter(kMix, arguments[0]);
-			sprintf(AuxString, "/sample_kMix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_kMix_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	} */
 	else if (commandAlias.compare( "kLDelay") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_delay_inLine.setParameter(kLDelay, arguments[0]);
-			sprintf(AuxString, "/kPreDelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/kPreDelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_delay_samples.setParameter(kLDelay, arguments[0]);
-			sprintf(AuxString, "/sample_kPreDelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_kPreDelay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare( "kLRDelayRatio") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_delay_inLine.setParameter(kLRDelayRatio, arguments[0]);
-			sprintf(AuxString, "/kDecay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/kDecay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_delay_samples.setParameter(kLRDelayRatio, arguments[0]);
-			sprintf(AuxString, "/sample_kDecay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_kDecay_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare( "kFeedBk") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_delay_inLine.setParameter(kFeedBk, arguments[0]);
-			sprintf(AuxString, "/kFeedBk_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/kFeedBk_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_delay_samples.setParameter(kFeedBk, arguments[0]);
-			sprintf(AuxString, "/sample_kFeedBk_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_kFeedBk_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 	else if (commandAlias.compare( "kTone") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_delay_inLine.setParameter(kTone, arguments[0]);
-			sprintf(AuxString, "/kTone_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/kTone_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_delay_samples.setParameter(kTone, arguments[0]);
-			sprintf(AuxString, "/sample_kTone_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_kTone_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 
 	else if (commandAlias.compare( "kLevel") == 0) {
 		if (!isSampleEffectCommand) {
 			VST_delay_inLine.setParameter(kLevel, arguments[0]);
-			sprintf(AuxString, "/kLevel_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/kLevel_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 		else {
 			VST_delay_samples.setParameter(kLevel, arguments[0]);
-			sprintf(AuxString, "/sample_kLevel_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/sample_kLevel_can %f", arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		}
 	}
 
@@ -647,8 +660,8 @@ void pg_aliasScript(char *newCommand,
 					AudioSequences[ind_sequences]->seqLevel = 0.f;
 					AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
 					printf("OFF sequence %s %.2f\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel);
-					sprintf(AuxString, "/%s_onOff_can %d", AudioSequences[ind_sequences]->name.c_str(), 0); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-					sprintf(AuxString, "/%s_can %.2f", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+					sprintf(AuxString, "/%s_onOff_can %d", AudioSequences[ind_sequences]->name.c_str(), 0); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s_can %.2f", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 				}
 				else {
 					AudioSequences[ind_sequences]->seqStarted = true;
@@ -656,8 +669,8 @@ void pg_aliasScript(char *newCommand,
 					AudioSequences[ind_sequences]->seqLevel = 0.f;
 					AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
 					printf("ON sequence %s %.2f\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel);
-					sprintf(AuxString, "/%s_onOff_can %d", AudioSequences[ind_sequences]->name.c_str(), 1); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-					sprintf(AuxString, "/%s_can %.2f", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+					sprintf(AuxString, "/%s_onOff_can %d", AudioSequences[ind_sequences]->name.c_str(), 1); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s_can %.2f", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 				}
 #ifdef PG_TERRAINS_VAGUES
 				if (AudioSequences[ind_sequences]->isSequenceTerrainVagues
@@ -672,17 +685,21 @@ void pg_aliasScript(char *newCommand,
 			if (commandAlias.compare(AudioSequences[ind_sequences]->name + "_level") == 0) {
 				AudioSequences[ind_sequences]->seqLevel = arguments[0];
 				// printf("sequence %s %.2f\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel);
-				sprintf(AuxString, "/%s_can %f", AudioSequences[ind_sequences]->name.c_str(), arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/%s_can %f", AudioSequences[ind_sequences]->name.c_str(), arguments[0]); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 
 				if (!AudioSequences[ind_sequences]->isSequenceTerrainVagues) {
+#ifndef STOPPABLE_SEQUENCES
+					// VOL > 0: STARTS NON PLAYING SEQUENCE
 					if (AudioSequences[ind_sequences]->seqLevel > 0.0f
 						&& !AudioSequences[ind_sequences]->seqStarted
 						&& !AudioSequences[ind_sequences]->seqPlaying) {
 						AudioSequences[ind_sequences]->seqStarted = true;
 						AudioSequences[ind_sequences]->seqPlaying = false;
 						AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
-						// printf("start sequence %s %.2f\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel);
+						//printf("START sequence %s level %.2f sync %d\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel,
+						//	AudioSequences[ind_sequences]->synchronized);
 					}
+					// VOL <= 0: stops PLAYING SEQUENCE
 					else if (AudioSequences[ind_sequences]->seqLevel <= 0.0f
 						&& (AudioSequences[ind_sequences]->seqStarted
 							|| AudioSequences[ind_sequences]->seqPlaying)) {
@@ -690,8 +707,40 @@ void pg_aliasScript(char *newCommand,
 						AudioSequences[ind_sequences]->seqPlaying = false;
 						AudioSequences[ind_sequences]->seqLevel = 0.f;
 						AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
-						// printf("stop sequence %s %.2f\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel);
+						//printf("STOP sequence %s level %.2f sync %d\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel,
+						//	AudioSequences[ind_sequences]->synchronized);
 					}
+#else
+					// VOL > 0: STARTS NON PLAYING SEQUENCE
+					if (AudioSequences[ind_sequences]->seqLevel > 0.0f) {
+						// stops playing sequence or starts stopped sequence
+						if (!AudioSequences[ind_sequences]->seqStarted) {
+							AudioSequences[ind_sequences]->seqStarted = true;
+							AudioSequences[ind_sequences]->seqPlaying = false;
+							AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
+							//printf("START sequence %s level %.2f sync %d\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel,
+							//	AudioSequences[ind_sequences]->synchronized);
+						}
+						// already started and not playing: restarts
+						else {
+							AudioSequences[ind_sequences]->seqPlaying = false;
+							AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
+							//printf("RE-START sequence %s level %.2f sync %d\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel,
+							//	AudioSequences[ind_sequences]->synchronized);
+						}
+					}
+					// VOL <= 0: stops PLAYING SEQUENCE
+					else if (AudioSequences[ind_sequences]->seqLevel <= 0.0f
+						&& (AudioSequences[ind_sequences]->seqStarted
+							|| AudioSequences[ind_sequences]->seqPlaying)) {
+						AudioSequences[ind_sequences]->seqStarted = false;
+						AudioSequences[ind_sequences]->seqPlaying = false;
+						AudioSequences[ind_sequences]->seqLevel = 0.f;
+						AudioSequences[ind_sequences]->nbSeqRepetitions = 0;
+						//printf("STOP sequence %s level %.2f sync %d\n", AudioSequences[ind_sequences]->name.c_str(), AudioSequences[ind_sequences]->seqLevel,
+						//	AudioSequences[ind_sequences]->synchronized);
+					}
+#endif
 				}
 
 				// CJ UNCOMMENTED FEB 2018
@@ -719,7 +768,7 @@ void pg_aliasScript(char *newCommand,
 			// printf("file name long track %s %d\n", filename.c_str(), ind_long_tracks);
 			if (commandAlias.compare(filename + "_level") == 0) {
 				LongTrackStreamings[ind_long_tracks]->trackLevel = arguments[0];
-				sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 				printf("long track %s %.2f\n", LongTrackBufferData[ind_long_tracks]->name.c_str(),
 					LongTrackStreamings[ind_long_tracks]->trackLevel);
 
@@ -747,16 +796,16 @@ void pg_aliasScript(char *newCommand,
 					LongTrackStreamings[ind_long_tracks]->trackStarted = false;
 					LongTrackStreamings[ind_long_tracks]->trackPlaying = false;
 					printf("OFF track %s %.2f\n", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel);
-					sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 0); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-					sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+					sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 0); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 				}
 				// starts a track that is not playing 
 				else {
 					LongTrackStreamings[ind_long_tracks]->trackStarted = true;
 					LongTrackStreamings[ind_long_tracks]->trackPlaying = false;
 					printf("ON track %s %.2f\n", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel);
-					sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 1); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
-					sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+					sprintf(AuxString, "/%s_onOff_can %d", filename.c_str(), 1); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s_can %.2f", filename.c_str(), LongTrackStreamings[ind_long_tracks]->trackLevel); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 					printf("***********************************************\n");
 					printf("LAUNCH\n");
 					printf("***********************************************\n");
@@ -800,7 +849,7 @@ void* processUDP(void * lpParam) {
 			= long(floor((RealTime() - InitialPerformanceTime) / BeatDurationRealTime)) % BeatsPerSequence;
 		if (newNbPorphyrographBeats != NbPorphyrographBeats) {
 			NbPorphyrographBeats = newNbPorphyrographBeats;
-			sprintf(AuxString, "/beat %d", NbPorphyrographBeats); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/beat %d", NbPorphyrographBeats); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 			pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_Porphyrograph_send");
 			// printf("real time beat %d %.3f\n", NbPorphyrographBeats, BeatDurationRealTime);
 			// printf( "/loop_level_can %f\n", LoopBuffer->loopLevel);
@@ -828,8 +877,8 @@ void* processUDP(void * lpParam) {
 		for (int ind = 0; ind < PG_NB_LOOP_BUFFERS; ind++) {
 			if (LoopBuffer[ind]->loopFlashing && RealTime() - LoopBuffer[ind]->time_stopped > 0.5) {
 				LoopBuffer[ind]->loopFlashing = false;
-				sprintf(AuxString, "/loop_recording_can %d %d", ind, 0); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
-				sprintf(AuxString, "/loop_playing_can %d %d", ind, 0); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_PD_send");
+				sprintf(AuxString, "/loop_recording_can %d %d", ind, 0); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/loop_playing_can %d %d", ind, 0); pg_send_message_udp((char *)"i i", (char *)AuxString, (char *)"udp_QT_send");
 			}
 		}
 
@@ -891,7 +940,7 @@ void pg_audio_deallocation(void) {
 	// full buffer to be finished
 	if (record_output) {
 		record_output = false;
-		sprintf(AuxString, "/record_output_can %d", int(record_output)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/record_output_can %d", int(record_output)); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 		sf_writef_float(pg_recordingData->pg_recordingfile,
 			pg_recordingData->pg_doubleRecordingbuffer[pg_active_recordingbuffer],
 			pg_frame_recordingbuffer);
@@ -1034,7 +1083,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	// loop initializing
-	// loop duration 15 seconds
+	// loop duration 16 seconds
 	for (int ind = 0; ind < PG_NB_LOOP_BUFFERS; ind++) {
 		LoopBuffer[ind] = new AudioLoopBuffer(16. * BeatDurationRealTime);
 	}
@@ -1054,9 +1103,9 @@ int main(int argc, char * argv[]) {
 	Pa_portaudio_init_and_effects();
 
 	// connects PD to Porphyrograph
-	sprintf(AuxString, "/connect 1"); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_PD_send");
+	sprintf(AuxString, "/connect 1"); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	// launches first scene
-	sprintf(AuxString, "/interfaceNbFromPorph 0"); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_PD_send");
+	sprintf(AuxString, "/interfaceNbFromPorph 0"); pg_send_message_udp((char *)"f", (char *)AuxString, (char *)"udp_QT_send");
 
 	// thread: UDP message processing + idle 
 	int pData = 0;

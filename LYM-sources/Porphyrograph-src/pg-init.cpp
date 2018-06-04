@@ -854,7 +854,10 @@ void pg_initGeometry_quads(void) {
 	// sensor layouts
 	///////////////////////////////////////////////////////////////////////////////////////
 	int indLayout;
+	
+#ifndef MALAUSSENA
 	int indSens;
+
 	// square grid
 	indLayout = 0;
 	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
@@ -912,22 +915,50 @@ void pg_initGeometry_quads(void) {
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f;
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 	}
+#else
+	// right
+	indLayout = 0;
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(7 * leftWindowWidth / 8);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(window_height / 2);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
+
+	// center
+	indLayout = 1;
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(leftWindowWidth / 2);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(window_height / 2);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
+
+	// top
+	indLayout = 2;
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(leftWindowWidth / 2);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(7 * window_height / 8);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
+
+	// corner
+	indLayout = 3;
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(7 * leftWindowWidth / 8);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(7 * window_height / 8);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
+
+#endif
+
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	// sensor activations
 	///////////////////////////////////////////////////////////////////////////////////////
 	int indActivation;
 
+#ifndef MALAUSSENA
 	// no activation
 	indActivation = 0;
-	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensorActivations[indActivation * PG_NB_SENSORS + indSens] = false;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = false;
 	}
 
 	// corners activation
 	indActivation = 1;
-	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensorActivations[indActivation * PG_NB_SENSORS + indSens] = false;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = false;
 	}
 	sensorActivations[indActivation * PG_NB_SENSORS + 0] = true;
 	sensorActivations[indActivation * PG_NB_SENSORS + 3] = true;
@@ -936,8 +967,8 @@ void pg_initGeometry_quads(void) {
 
 	// central square activation
 	indActivation = 2;
-	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensorActivations[indActivation * PG_NB_SENSORS + indSens] = false;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = false;
 	}
 	sensorActivations[indActivation * PG_NB_SENSORS + 5] = true;
 	sensorActivations[indActivation * PG_NB_SENSORS + 6] = true;
@@ -946,26 +977,39 @@ void pg_initGeometry_quads(void) {
 
 	// every second activation
 	indActivation = 3;
-	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		if (indSens % 2 == 0) {
-			sensorActivations[indActivation * PG_NB_SENSORS + indSens] = true;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		if (indSensor % 2 == 0) {
+			sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = true;
 		}
 		else {
-			sensorActivations[indActivation * PG_NB_SENSORS + indSens] = false;
+			sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = false;
 		}
 	}
 
 	// full activation
 	indActivation = 4;
-	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensorActivations[indActivation * PG_NB_SENSORS + indSens] = true;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = true;
 	}
 
 	// no activation and activation of an additional sensor each 10 seconds
 	indActivation = 5;
-	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensorActivations[indActivation * PG_NB_SENSORS + indSens] = false;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = false;
 	}
+#else
+	// full activation
+	indActivation = 0;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = true;
+	}
+
+	// no activation 
+	indActivation = 1;
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensorActivations[indActivation * PG_NB_SENSORS + indSensor] = false;
+	}
+#endif
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	// sample setup
@@ -1061,24 +1105,66 @@ void pg_initGeometry_quads(void) {
 		doubleWindowWidth, window_height);
 }
 
+/////////////////////////////////////////////////////////////////
+// SENSOR INITIALIZATION
+/////////////////////////////////////////////////////////////////
+
+void SensorInitialization(void) {
+#ifdef PG_SENSORS
+#ifdef PG_RENOISE
+	sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
+#endif
+#ifdef PG_PORPHYROGRAPH_SOUND
+	sprintf(AuxString, "/loop_level 0.0"); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PGsound_send");
+	sprintf(AuxString, "/input_level 0.0"); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PGsound_send");
+#endif
+	for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
+#ifdef PG_RENOISE
+		std::string message = "/renoise/song/track/";
+		std::string int_string = std::to_string(indSample + 1);
+		message += int_string + "/mute";
+
+		// message format
+		std::string format = "";
+
+		// message posting
+		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_RN_send");
+#endif
+#ifdef PG_PORPHYROGRAPH_SOUND
+		std::string message = "/track_";
+		std::string int_string = std::to_string(indSample + 1);
+		message += int_string + "_level 0";
+
+		// message format
+		std::string format = "f";
+
+		// message posting
+		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
+#endif
+
+		// resets the clock for replaying the sample if sensor triggered again
+		sample_play_start[indSample] = -1.0f;
+	}
+#endif
+}
 
 #ifdef PG_SENSORS
 void assignSensorPositions(void) {
 	int indLayout = max(0, min(sensor_layout, PG_NB_MAX_SENSOR_LAYOUTS - 1));
 	// non random layout: copy
 	if (indLayout < PG_NB_MAX_SENSOR_LAYOUTS - 1) {
-		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-			sensorPositions[3 * indSens] = sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens];
-			sensorPositions[3 * indSens + 1] = sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1];
-			sensorPositions[3 * indSens + 2] = 0.1f;
+		for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+			sensorPositions[3 * indSensor] = sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSensor];
+			sensorPositions[3 * indSensor + 1] = sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSensor + 1];
+			sensorPositions[3 * indSensor + 2] = 0.1f;
 		}
 	}
 	// random layout: regenerate
 	else {
-		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-			sensorPositions[3 * indSens] = leftWindowWidth / 2.0f + leftWindowWidth / 2.0f * (2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
-			sensorPositions[3 * indSens + 1] = window_height / 2.0f + window_height / 2.0f * (2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
-			sensorPositions[3 * indSens + 2] = 0.1f;
+		for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+			sensorPositions[3 * indSensor] = leftWindowWidth / 2.0f + leftWindowWidth / 2.0f * (2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
+			sensorPositions[3 * indSensor + 1] = window_height / 2.0f + window_height / 2.0f * (2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
+			sensorPositions[3 * indSensor + 2] = 0.1f;
 		}
 	}
 }
@@ -1086,8 +1172,8 @@ void assignSensorPositions(void) {
 void assignSensorActivations(void) {
 	// copies the single central activation
 	int indActivation = std::max(0, std::min(sensor_activation, PG_NB_MAX_SENSOR_ACTIVATIONS - 1));
-	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensor_onOff[indSens] = sensorActivations[indActivation * PG_NB_SENSORS + indSens];
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		sensor_onOff[indSensor] = sensorActivations[indActivation * PG_NB_SENSORS + indSensor];
 	}
 	// incremental sensor activation
 	if (sensor_activation == 5) {
@@ -1133,14 +1219,14 @@ void sample_setUp_interpolation(void) {
 #ifdef PG_SUPERCOLLIDER
 	std::string message = "/sample_setUp";
 	std::string format = "";
-	for (int indSens = 0; indSens < PG_NB_SENSORS - 1; indSens++) {
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS - 1; indSensor++) {
 		format += "i ";
 	}
 	format += "i";
 
 	// sensor readback
-	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		std::string float_str = std::to_string((long long)sample_choice[indSens]);
+	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
+		std::string float_str = std::to_string((long long)sample_choice[indSensor]);
 		// float_str.resize(4);
 		message += " " + float_str;
 	}

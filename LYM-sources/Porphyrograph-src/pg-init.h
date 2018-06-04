@@ -519,6 +519,7 @@ int pg_displayMessage_update(int indMesg);
 
 void pg_initParticlePosition_Texture(void);
 #ifdef PG_SENSORS
+void SensorInitialization(void);
 void assignSensorPositions(void);
 void assignSensorActivations(void);
 void sample_setUp_interpolation(void);
