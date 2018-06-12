@@ -524,10 +524,11 @@ void readSensors(void) {
 			&& sensorLevel[indSens] > 0 // non black pixel
 			&& sample_play_start[sample_choice[indSens]] < 0 // not currently playing
 			) {
+
+#ifdef PG_RENOISE
 			// message format
 			std::string format = "f";
 
-#ifdef PG_RENOISE
 			std::string message = "/renoise/song/track/";
 			int_string = std::to_string(sample_choice[indSens] + 1);
 			message += int_string + "/unmute_vol";
@@ -539,6 +540,9 @@ void readSensors(void) {
 			pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_RN_send");
 #endif
 #ifdef PG_PORPHYROGRAPH_SOUND
+			// message format
+			std::string format = "f";
+
 			std::string message = "/track_";
 			int_string = std::to_string(sample_choice[indSens] + 1);
 			message += int_string + "_level";
@@ -616,7 +620,145 @@ void readSensors(void) {
 }
 #endif
 
-	//////////////////////////////////////////////////////
+#ifdef MALAUSSENA
+class GreyNote {
+public:
+	float grey;
+	int note;
+};
+void playChord() {
+	// line reading
+	GLubyte *rowColor = new GLubyte[3 * 1024];
+	GreyNote *rowGrey = new GreyNote[1024];
+	glReadPixels(0, 10,
+		1024, 1,
+		GL_RGB, GL_UNSIGNED_BYTE, rowColor);
+	GLubyte *ptr = rowColor;
+	std::string float_string;
+	std::string int_string;
+	std::string message;
+	// message format
+	std::string format = "f f f f f f f f f f f f f f f f f f f f";
+	int nbGrey = 0;
+	for (int indPixel = 0; indPixel < 1024; indPixel++) {
+		GLubyte r, g, b;
+		r = *(ptr++);
+		g = *(ptr++);
+		b = *(ptr++);
+		float greyVal = (r + g + b) / (255.f * 3.f);
+		if (greyVal > 0) {
+			rowGrey[nbGrey].note = indPixel;
+			rowGrey[nbGrey].grey = greyVal;
+			nbGrey++;
+		}
+	}
+
+	// no non null note
+	if (nbGrey <= 0) {
+		delete rowColor;
+		return;
+	}
+
+	// less than 10 notes play them all
+	if (nbGrey < 10) {
+		message = "/chord ";
+		// non null notes
+		for (int indGreyNote = 0; indGreyNote < nbGrey; indGreyNote++) {
+			// MESSAGE CONSTRUCTION
+			// the note is converted into a frequency
+			int_string
+				= std::to_string(static_cast<long double>(440 * pow(pow(2., 1. / 12.),
+				(rowGrey[indGreyNote].note - 512) / 8)));
+			message += int_string + " ";
+			// the intensity is turned into decibels
+			float_string = std::to_string(static_cast<long double>(rowGrey[indGreyNote].grey * 100.f));
+			// float_str.resize(4);
+			message += float_string;
+		}
+		// remaining nul notes to fill up to 10 notes in a chord
+		for (int indGreyNote = nbGrey; indGreyNote < 10; indGreyNote++) {
+			// MESSAGE CONSTRUCTION
+			// the note is outside the scale
+			int_string = std::to_string(-1);
+			message += int_string + " ";
+			// the intensity is null
+			float_string = std::to_string(static_cast<long double>(0.f));
+			// float_str.resize(4);
+			message += float_string;
+		}
+		// message posting
+		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
+	}
+	else {
+		message = "/chord ";
+		// notes are grouped by package of same size into metaNotes with a metaIntensity
+		// number minimal of notes per metanote
+		int nbNotesMinPerMetaNote = nbGrey / 10; // integer part
+												 // some metaNotes are built from 1 additional note
+		int nbMetaNotesWithNbNMPMPlus1 = (nbGrey * 10) % 10; // first decimal
+															 // rank of the non null note
+		int indGreyNote = 0;
+		// rank of the note inside the metaNote group
+		int indNotesMinPerMetaNote = 0;
+		// builds the metaNotes from note groups
+		for (int indMetaNote = 0; indMetaNote < 10; indMetaNote++) {
+			// average note value
+			float metaNote = 0;
+			// average intensity values
+			float metaGrey = 0;
+
+			// METANOTE SIZE
+			// number of notes building the metaNote
+			int nbNotes
+				= (indMetaNote < nbMetaNotesWithNbNMPMPlus1 ? nbNotesMinPerMetaNote + 1 : nbNotesMinPerMetaNote);
+			// the last metaNote uses the remaining non null notes
+			if (indMetaNote == 10 - 1) {
+				nbNotes = nbGrey - indGreyNote;
+			}
+
+			// METANOTE computation
+			// average note and intensity value
+			for (int indLocalGreyNote = 0; indLocalGreyNote < nbNotes && indGreyNote < nbGrey; indLocalGreyNote++) {
+				metaGrey += rowGrey[indGreyNote].grey;
+				metaNote += rowGrey[indGreyNote].note * rowGrey[indGreyNote].grey;
+				indGreyNote++;
+			}
+
+			// AVERAGE VALUES
+			// the note is corrected by the sum of weights (intensities) to turn it into a barycenter
+			if (metaGrey > 0) {
+				metaNote /= metaGrey;
+			}
+			else {
+				metaNote = -1;
+			}
+			if (nbNotes > 0) {
+				metaGrey /= nbNotes;
+			}
+
+			// MESSAGE CONSTRUCTION
+			// the note is converted into a frequency
+			int_string
+				= std::to_string(static_cast<long double>(440 * pow(pow(2., 1. / 12.),
+				(int(round(metaNote)) - 512) / 8)));
+			message += int_string + " ";
+			// the intensity is turned into decibels
+			float_string = std::to_string(static_cast<long double>(metaGrey * 100.f));
+			// float_str.resize(4);
+			if (indMetaNote < 10 - 1) {
+				message += float_string + " ";
+			}
+			else {
+				message += float_string;
+			}
+		}
+		// message posting
+		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
+	}
+	delete rowColor;
+}
+#endif
+//////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 // SCENE VARIABLE UPDATES
 //////////////////////////////////////////////////////
@@ -2491,6 +2633,13 @@ void pg_draw_scene( DrawingMode mode ) {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 #endif
 
+#ifdef MALAUSSENA
+#ifdef PG_PUREDATA_SOUND
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Update[((pg_FrameNo) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]); // drawing memory on odd and even frames for echo and sensors	
+	playChord();
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
+#endif
 
   }
 

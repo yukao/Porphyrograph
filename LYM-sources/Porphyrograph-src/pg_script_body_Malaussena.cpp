@@ -792,9 +792,6 @@ void partMove_rand_callBack(pg_Parameter_Input_Type param_input_type , float sce
 void hide_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void soundtrack_onOff_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void sample_setUp_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { 
    &pen_brush_callBack,
    NULL,
@@ -999,9 +996,9 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
-   &sample_setUp_callBack,
-   &sensor_layout_callBack,
-   &sensor_activation_callBack,
+   NULL,
+   NULL,
+   NULL,
    NULL,
    NULL,
    NULL,

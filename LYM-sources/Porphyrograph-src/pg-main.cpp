@@ -155,15 +155,15 @@ int main(int argcMain, char **argvMain) {
 			&& (strstr(argv[ind + 2], ".csv") || strstr(argv[ind + 2], ".txt"))) {
 			LoadConfigurationFile(argv[ind + 1], argv[ind + 2]);
 			configurationFileLoaded = true;
+			printf("Configuration file loaded: nb tracks %d\n", PG_NB_TRACKS);
 			break;
 		}
 	}
-	printf("Configuration file loaded: nb tracks %d\n", PG_NB_TRACKS);
 
 	// or the default conf file name
 	if (!configurationFileLoaded) {
-		LoadConfigurationFile((char *)("configuration/LYM_" + project_name + "-head-single.csv").c_str(),
-			(char *)("scenarios/LYM_" + project_name + "-scenario.csv").c_str());
+		LoadConfigurationFile((char *)("configuration/LYM_" + project_name + "-head-single.txt").c_str(),
+			(char *)("scenarios/LYM_" + project_name + "-scenario.txt").c_str());
 	}
 
 	///////////////////////////////////////////////
@@ -230,7 +230,10 @@ int main(int argcMain, char **argvMain) {
 	// initializations before rendering
 
 	// sensor initialization
+
+#ifdef PG_SENSORS
 	SensorInitialization();
+#endif
 
 	// matrices, geometry, shaders and FBOs
 	pg_initRenderingMatrices();
@@ -516,7 +519,7 @@ void pg_init_scene( void ) {
 
 #if defined (TVW) || defined (CRITON)
   // reads the text messages in the text file
-  pg_ReadAllDisplayMessages("Data/TVW-data/messages/TVW-wandering/", "message_list.txt");
+  pg_ReadAllDisplayMessages(MessageDir, "message_list.txt");
 
   // ------ display message initialization  ------------- //
   pg_init_display_message();

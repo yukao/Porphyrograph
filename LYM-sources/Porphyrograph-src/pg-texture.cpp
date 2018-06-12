@@ -59,9 +59,9 @@ int pg_CurrentDiaporamaFile = 0;
 int pg_CurrentDiaporamaDir = -1;
 bool ascendingDiaporama = true;
 
-std::string DiaporamaDir = "Data/" + project_name + "-data/photos/";
-std::string MaskDir = "Data/TVW-data/masks/TVW-wandering";
-std::string ImageDir = "Data/TVW-data/images/TVW-wandering";
+std::string ImageDir;
+std::string MaskDir;
+std::string MessageDir;
 
 // FUNCTION FOR CLEARING A DIRECTORY
 void remove_files_in_dir(std::string *dirpath) {
@@ -1085,12 +1085,6 @@ DWORD WINAPI pg_initVideoMoviePlayback(LPVOID lpParam) {
 #else
 void* pg_initVideoMoviePlayback(void * lpParam) {
 #endif
-	//cv::VideoCapture cap(("D:/cloud/LYM/" + "Data/" + project_name + "-data/videos/birds.avi" ).c_str());
-	//if (!cap.isOpened()) {
-	//	printf("cap movie file %s not opened!\n", ("D:/cloud/LYM/" + "Data/" + project_name + "-data/videos/birds.avi").c_str());
-	//	return -1;
-	//}
-
 	string * fileName = (string *)lpParam;
 
 	// film loading openCV
@@ -1156,7 +1150,8 @@ void pg_launch_diaporama(void) {
 	pg_CurrentDiaporamaFile = 0;
 	for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
 		// printf("load diaporama initial files #%d\n", indPhoto);
-		if (photoAlbumDirName[photo_diaporama].compare("captures") == 0) {
+		if (photo_diaporama < nb_photo_albums
+			&& photoAlbumDirName[photo_diaporama].compare("captures") == 0) {
 			printf("The scanning of captures should be reimplemented to take into consideration the preloading of images (vs dynamic as in the previous versions)\n");
 			ascendingDiaporama = false;
 			int nextCompressedImage
@@ -1328,27 +1323,16 @@ int pg_IndInitialSwapPhoto = 0;
 //////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS FOR TESTING SUBDIR FILES (MADE FOR SAMPLES AND IMAGES)
 
-bool is_substring_index(std::string str, int ind) {
+bool is_substring_index(char * char_string_subdir, int ind) {
+	std::string string_subdir(char_string_subdir);
 	char string_number[16];
 	sprintf(string_number, "%03d", ind);
 	std::string string_number_s(string_number);
 
-	if (str.find(string_number_s) != std::string::npos) {
-		// std::cout << "*** FOUND: " + filepath << std::endl;
-		return true;
-	}
-	return false;
-}
+	// std::cout << "subdir index: " + string_number_s << std::endl;
 
-bool is_substring_index(char * charstr, int ind) {
-	std::string str(charstr);
-
-	char string_number[16];
-	sprintf(string_number, "%03d", ind);
-	std::string string_number_s(string_number);
-
-	if (str.find(string_number_s) != std::string::npos) {
-		// std::cout << "*** FOUND: " + filepath << std::endl;
+	if (string_subdir.find(string_number_s) != std::string::npos) {
+		// std::cout << "*** FOUND: " + std::string(string_subdir) << " index " << ind << std::endl;
 		return true;
 	}
 	return false;
@@ -1519,6 +1503,7 @@ std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
 // AND POSSIBLY JUMPS TO NEXT DIRECTORY IF ALL IMAGES ARE USED
 // USED FOR LOADING ALL IMAGES
 // STOPS AT THE LAST DIRECTORY
+// SUBDIRECTORY AND FILE NAMES SHOULD END WITH 000, 001, 002...
 string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex,
 	int maxFilesPerFolder) {
 	// printf("dir path %s cur dir index %d cur file index %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex);
@@ -1638,12 +1623,15 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
 		{
 		case FOURCC_DXT1:
 			compressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+			// printf("compressed format #1\n");
 			break;
 		case FOURCC_DXT3:
 			compressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+			// printf("compressed format #2\n");
 			break;
 		case FOURCC_DXT5:
 			compressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+			// printf("compressed format #3\n");
 			break;
 		default:
 			sprintf(ErrorStr, "Unexpected compression format %s %d!",
@@ -2016,6 +2004,7 @@ bool pg_swap_image(int indcomprImage) {
 	return false;
 }
 
+
 /////////////////////////////////////////////////////////
 // INITIAL IMAGE UPLOADING
 /////////////////////////////////////////////////////////
@@ -2057,13 +2046,12 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 
 	////////////////////////////////////////////
 	// COUNTS IMAGES AND FOLDERS
-	ImageDir = "Data/TVW-data/images/TVW-wandering";
 	pg_CurrentDiaporamaDir = 0;
 	pg_CurrentDiaporamaFile = 0;
 	if (nbImages <= 0 || nbFolders <= 0) {
 		pg_nbCompressedImages = 0;
 		pg_nbCompressedImageDirs = 0;
-		std::cout << "Counting Terrains Vagues Images " << std::endl;
+		std::cout << "Counting Diaporama Images " << std::endl;
 		while ((fileName
 			= nextFileIndexDiskNoLoop(&ImageDir,
 				&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))) {
@@ -2093,7 +2081,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	pg_CurrentDiaporamaDir = 0;
 	pg_CurrentDiaporamaFile = 0;
 	int indCompressedImage = 0;
-	std::cout << "Loading Terrains Vagues " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
+	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
 	if (pg_nbCompressedImageDirs != NbTextChapters) {
 		printf("Incoherent text and image database!");
 		exit(0);
@@ -2131,8 +2119,8 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 		}
 		indCompressedImage++;
 	}
-	std::cout << "Terrains Vagues Images loading completed " << pg_nbCompressedImages << " files." << std::endl;
-	std::cout << "folder";
+	std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages << " files." << std::endl;
+	std::cout << "Folders index/nbFiles/1stFileIndex";
 	for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
 		std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
 	}

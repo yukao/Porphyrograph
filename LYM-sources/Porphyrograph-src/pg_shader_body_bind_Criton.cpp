@@ -108,8 +108,8 @@
   if ( uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast == -1 ) {
     fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast : %d\n" , uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast );
   }
-  uniform_Master_fs_1fv_mute_screen 
-    = glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_1fv_mute_screen");
-  if ( uniform_Master_fs_1fv_mute_screen == -1 ) {
-    fprintf(stderr, "Could not bind uniform Master uniform_Master_fs_1fv_mute_screen : %d\n" , uniform_Master_fs_1fv_mute_screen );
+  uniform_Master_fs_2fv_interfaceOnScreen_mute_screen 
+    = glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_2fv_interfaceOnScreen_mute_screen");
+  if ( uniform_Master_fs_2fv_interfaceOnScreen_mute_screen == -1 ) {
+    fprintf(stderr, "Could not bind uniform Master uniform_Master_fs_2fv_interfaceOnScreen_mute_screen : %d\n" , uniform_Master_fs_2fv_interfaceOnScreen_mute_screen );
   }

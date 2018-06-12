@@ -169,7 +169,7 @@ uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_CAType_SubType;
+uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
 // layer weights combined with mask value to assess the visibility of a layer
 uniform vec4 uniform_Update_fs_4fv_weights03;
@@ -1776,8 +1776,8 @@ void main() {
   height = uniform_Update_fs_4fv_W_H_time_currentScene.y;
 
   // CAType
-  CAType = int(uniform_Update_fs_2fv_CAType_SubType.x);
-  CASubType = int(uniform_Update_fs_2fv_CAType_SubType.y);
+  CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
+  CASubType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.y);
 
   // decay of drawing and CA layers
   CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x;

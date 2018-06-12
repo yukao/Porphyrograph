@@ -28,7 +28,7 @@ client	udp_QT_send	100.108.128.60	8000	OSC	0	300	1
 client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
 client	udp_BITWIG_send	127.0.0.1	8000	OSC	0	300	1											
 /udp_remote_client																		
-shader_files	6																	
+shader_files	5																	
 VERBATIM																		
 TYPE	string																	
 ID	id																	
@@ -37,6 +37,5 @@ filename	LYM_Update_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER
 filename	LYM_ParticleSplat_Criton	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
 filename	LYM_Mixing_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_Sensor_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

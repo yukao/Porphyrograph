@@ -156,11 +156,6 @@ extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
 // and according to directory size
 extern int pg_CurrentDiaporamaDir;
 extern int pg_CurrentDiaporamaFile;
-extern int pg_CurrentDiaporamaDir;
-extern int pg_CurrentDiaporamaFile;
-
-extern std::string ImageDir;
-extern std::string MaskDir;
 
 ///////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
@@ -188,6 +183,10 @@ extern GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
 extern int pg_IndInitialSwapPhoto;
 #endif
 
+extern std::string ImageDir;
+extern std::string MaskDir;
+extern std::string MessageDir;
+
 
 ////////////////////////////////////////////////////////////////////
 // IMAGE FILES
@@ -199,8 +198,6 @@ extern int pg_IndInitialSwapPhoto;
 extern int pg_CurrentDiaporamaFile;
 extern int pg_CurrentDiaporamaDir;
 extern bool ascendingDiaporama;
-
-extern std::string DiaporamaDir;
 
 ////////////////////////////////////////////////////////////////////
 // PROTOTYPES
@@ -219,7 +216,6 @@ string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *cur
 	int maxFilesPerFolder);
 #endif
 // FUNCTIONS FOR TESTING SUBDIR FILES (MADE FOR SAMPLES AND IMAGES)
-bool is_substring_index(std::string str, int ind);
 bool is_substring_index(char * charstr, int ind);
 bool is_subdir_index(struct dirent *dirp, std::string *dirpath, int inddir);
 bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile);

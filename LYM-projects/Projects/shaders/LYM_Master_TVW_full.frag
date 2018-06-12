@@ -17,8 +17,9 @@ float     trackMasterWeight_0;
 float     trackMasterWeight_1;
 float     trackMasterWeight_2;
 uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2;
+bool      interfaceOnScreen;
 bool      mute_screen;
-uniform float uniform_Master_fs_1fv_mute_screen;
+uniform vec2 uniform_Master_fs_2fv_interfaceOnScreen_mute_screen;
 
 #define PG_NB_TRACKS 2
 #define PG_WITH_CA
@@ -50,6 +51,11 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
 
+uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
@@ -63,7 +69,8 @@ void main() {
   trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
   trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
   trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
-  mute_screen = (uniform_Master_fs_1fv_mute_screen > 0 ? true : false);
+  interfaceOnScreen = (uniform_Master_fs_2fv_interfaceOnScreen_mute_screen[0] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_2fv_interfaceOnScreen_mute_screen[1] > 0 ? true : false);
 
   float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
   float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
@@ -72,18 +79,38 @@ void main() {
                       decalCoords.y);
   vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
 
-// mute
-if(mute_screen && decalCoords.x > width) {
-  outColor0 = vec4(0, 0, 0, 1);
-  return;
-}
-// margin
-if(margin > 0 
-    && (decalCoords.x >= 2 * width + margin 
-        || (decalCoords.x >= width && decalCoords.x < width + margin))) {
-  outColor0 = vec4(0, 0, 0, 1);
-  return;
-}
+  // mute
+  if(mute_screen && decalCoords.x > width) {
+    outColor0 = vec4(0, 0, 0, 1);
+    return;
+  }
+  // margin
+  if(margin > 0 
+      && (decalCoords.x >= 2 * width + margin 
+          || (decalCoords.x >= width && decalCoords.x < width + margin))) {
+    outColor0 = vec4(0, 0, 0, 1);
+    return;
+  }
+
+  // interface
+  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+    if(decalCoords.x < 100) {
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb, 1);
+    }
+    else if(decalCoords.x < 200) {
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
+    }
+    else if(decalCoords.x < 300) {
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
+    }
+    else if(decalCoords.x > 320 && decalCoords.x < 420) {
+      outColor0 = vec4(vec3(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.w), 1);
+    }
+    else if(decalCoords.x > 440 && decalCoords.x < 540) {
+      outColor0 = vec4(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.rgb, 1);
+    }
+    return;
+  }
 
 #ifdef PG_WITH_CA
   vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);

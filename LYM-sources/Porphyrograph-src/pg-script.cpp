@@ -1164,16 +1164,6 @@ void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		// printf("pen_radiusMultiplier %.2f\n", pen_radiusMultiplier);
 	}
 }
-//void pixel_acc_center_0_callBack( pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value) {
-//	if(param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-//		sprintf( AuxString , "/message part_center_HV_%.1f_%.1f" , pixel_acc_center_0 , pixel_acc_center_1 ); pg_send_message_udp( (char *)"s" , (char *)AuxString , (char *)"udp_QT_send" );
-//	}
-//}
-//void pixel_acc_center_1_callBack( pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value) {
-//	if(param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-//		sprintf( AuxString , "/message part_center_HV_%.1f_%.1f" , pixel_acc_center_0, pixel_acc_center_1); pg_send_message_udp( (char *)"s" , (char *)AuxString , (char *)"udp_QT_send" );
-//	}
-//}
 void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 		// printf("delta %.3f\n", (float)(CurrentClockTime - lastClearTime) );
@@ -3193,6 +3183,7 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#ifdef PG_SENSORS
 	case _sensor_layout_plus: {
 		sensor_layout = (sensor_layout + 1) % PG_NB_MAX_SENSOR_LAYOUTS;
 		BrokenInterpolationVar[_sensor_layout] = true;
@@ -3214,6 +3205,7 @@ void pg_aliasScript(char *command_symbol,
 		assignSensorActivations();
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 

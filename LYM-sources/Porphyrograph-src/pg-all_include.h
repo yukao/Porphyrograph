@@ -280,11 +280,11 @@ using std::ifstream;
 
 // SENSORS
 #if defined (MALAUSSENA)
-#define PG_SENSORS
-#define PG_NB_SENSORS 1
-#define PG_NB_MAX_SENSOR_ACTIVATIONS 2
+// #define PG_SENSORS
+// #define PG_NB_SENSORS 1
+// #define PG_NB_MAX_SENSOR_ACTIVATIONS 2
 #define BEAT_DURATION (0.1f)
-#define PG_PORPHYROGRAPH_SOUND
+#define PG_PUREDATA_SOUND
 #endif
 #if defined (DEMO) || defined (GN)
 #define PG_SENSORS

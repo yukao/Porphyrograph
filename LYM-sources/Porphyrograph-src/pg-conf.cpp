@@ -855,6 +855,30 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		//std::cout << "movie : " << 
 		// photoAlbumDirName[indVideo] << "\n";
 	}
+	ImageDir = "Data/" + project_name + "-data/";
+	if (nb_photo_albums > 0) {
+		ImageDir += photoAlbumDirName[0];
+	}
+	else {
+		ImageDir += "images/";
+	}
+	std::cout << "Loading images from " << ImageDir << std::endl;
+	MaskDir = "Data/" + project_name + "-data/";
+	if (nb_photo_albums > 1) {
+		MaskDir += photoAlbumDirName[1];
+	}
+	else {
+		MaskDir += "masks/";
+	}
+	std::cout << "Loading masks from " << MaskDir << std::endl;
+	MessageDir = "Data/" + project_name + "-data/";
+	if (nb_photo_albums > 2) {
+		MessageDir += photoAlbumDirName[2];
+	}
+	else {
+		MessageDir += "messages/";
+	}
+	std::cout << "Loading messages from " << MessageDir << std::endl;
 	// /photos
 	std::getline(scenarioFin, line);
 	sstrem.clear();
