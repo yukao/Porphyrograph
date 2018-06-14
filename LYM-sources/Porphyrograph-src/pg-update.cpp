@@ -238,7 +238,6 @@ int nb_movies = 0;
 // soundtracks
 vector<string> trackFileName;
 vector<string> trackShortName;
-int currentlyPlaying_trackNo = -1;
 int nb_soundtracks = 0;
 // pen palettes presets
 int nb_pen_colorPresets = 0;

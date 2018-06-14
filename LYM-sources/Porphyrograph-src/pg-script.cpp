@@ -106,6 +106,10 @@ std::string cwd;
 // track loading 
 int currentSVGTrack = 0;
 
+// sound track playing
+int currentlyPlaying_trackNo = -1;
+bool soundTrack_on = true;
+
 // ++++++++++++++++++++++ FLASHES +++++++++++++++++++++++++
 // flash: Trk->CA -> values passed to the shader
 // as a function of on/off values and weights
@@ -271,6 +275,7 @@ enum pg_stringCommands_IDs
 	_diaporama_plus,
 	_diaporama_minus,
 	_soundtrack_plus,
+	_soundtrack_onOff,
 	_pen_colorPreset_minus,
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
@@ -351,6 +356,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "diaporama_plus", _diaporama_plus },
 	{ "diaporama_minus", _diaporama_minus },
 	{ "soundtrack_plus", _soundtrack_plus },
+	{ "soundtrack_onOff", _soundtrack_onOff },
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
@@ -639,6 +645,7 @@ void pg_initializationScript(void) {
 	// CA seed
 	pg_CAseed_trigger = false;
 	pg_CAseed_type = _pg_CAseed_dot_center;
+	// INTERFACE VARIABLE INITIALIZATION
 	sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
 	sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
@@ -715,6 +722,9 @@ void pg_initializationScript(void) {
 	messageTransparency = 0.0;
 
 	// pg_send_message_udp((char *)"s", (char *)"/message init_completed", (char *)"udp_QT_send");
+	// INTERFACE VARIABLE INITIALIZATION
+	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -969,14 +979,6 @@ void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
 	}
 }
-void soundtrack_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (param_input_type == _PG_GUI_COMMAND) {
-		soundtrack_onOff = !soundtrack_onOff;
-		sprintf(AuxString, "/soundtrack_onOff %d", int(soundtrack_onOff));
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("soundtrack [%s]\n", AuxString);
-	}
-}
 void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND) {
 		adc_onOff = !adc_onOff;
@@ -1091,6 +1093,21 @@ void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 		}
 	}
 #endif
+}
+void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+		if (playing_soundtrackNo != currentlyPlaying_trackNo
+			&& playing_soundtrackNo >= 0 
+			&& playing_soundtrackNo < nb_soundtracks) {
+			soundTrack_on = true;
+			sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
+			sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			currentlyPlaying_trackNo = playing_soundtrackNo;
+			PlayTrack(currentlyPlaying_trackNo);
+		}
+	}
 }
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -2125,19 +2142,19 @@ void pg_process_special_key( int key ) {
   // }   
 }
 
-void PlayCurrentTrack(void) {
+void PlayTrack(int indTrack) {
 	if (nb_soundtracks > 0) {
 		// std::cout << "cwd: " << cwd << std::endl;
-		currentlyPlaying_trackNo = currentlyPlaying_trackNo % nb_soundtracks;
+		currentlyPlaying_trackNo = indTrack % nb_soundtracks;
 		sprintf(AuxString, "/soundtrack_fileName %s",
 			(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
-		sprintf(AuxString, "/soundtrack_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
-		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+		//sprintf(AuxString, "/soundtrack_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
+		//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
 		printf("soundtrack #%d launching %s\n", currentlyPlaying_trackNo,
 			trackFileName[currentlyPlaying_trackNo].c_str());
-		BrokenInterpolationVar[_soundtrack_onOff] = true;
-		soundtrack_onOff = true;
+		BrokenInterpolationVar[_playing_soundtrackNo] = true;
+		currentlyPlaying_trackNo = indTrack;
 	}
 }
 
@@ -2166,12 +2183,6 @@ void pg_launch_performance(void) {
 
 	// lights up the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_QT_send");
-
-	// launches first soundtrack if soundtrack is on
-	if (nb_soundtracks > 0 && soundtrack_onOff) {
-		currentlyPlaying_trackNo = 0;
-		PlayCurrentTrack();
-	}
 
 #ifdef GN
 	initCA = 1.2f;
@@ -3377,9 +3388,24 @@ void pg_aliasScript(char *command_symbol,
 	// ====================================== 
 	case _soundtrack_plus: {
 		if (nb_soundtracks > 0) {
-			currentlyPlaying_trackNo = (currentlyPlaying_trackNo + 1) % nb_soundtracks;
-			PlayCurrentTrack();
+			if (currentlyPlaying_trackNo >= 0) {
+				currentlyPlaying_trackNo = (currentlyPlaying_trackNo + 1) % nb_soundtracks;
+			}
+			else {
+				currentlyPlaying_trackNo = 0;
+			}
+			PlayTrack(currentlyPlaying_trackNo);
+			BrokenInterpolationVar[_playing_soundtrackNo] = true;
+			*((int *)ScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
 		}
+		break;
+	}
+	case _soundtrack_onOff: {
+		soundTrack_on = !soundTrack_on;
+		sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 		break;
 	}
 

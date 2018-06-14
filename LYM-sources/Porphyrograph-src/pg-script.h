@@ -251,7 +251,7 @@ void pg_displaySceneVariables( void );
 void pg_send_message_udp( char *pattern , char * message , char *targetHostid );
 void pg_logCurrentLineSceneVariables(char *fileName);
 void pg_logFirstLineSceneVariables(void);
-void PlayCurrentTrack(void);
+void PlayTrack(int trackNo);
 #if defined (TVW) || defined (CRITON)
 float starting_time(float elapsed_time_from_start);
 #endif

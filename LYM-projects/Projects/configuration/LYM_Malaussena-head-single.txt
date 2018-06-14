@@ -11,7 +11,7 @@ ID	begin	end	step	id	shots
 VIDEO	1000000	90000	1	test.avi	video/													
 SVG	1000000	90000	600	pic-LYM-Malaussena	snapshots/pic_Malaussena/													
 PNG	1000000	90000	600	pic-LYM-Malaussena	snapshots/pic_Malaussena/													
-JPG	1	900000	10000	pic-LYM-Malaussena	snapshots/pic_Malaussena/													
+JPG	1	900000	600	pic-LYM-Malaussena	snapshots/pic_Malaussena/													
 /rendering_files																		
 udp_local_server	1																	
 VERBATIM																		
