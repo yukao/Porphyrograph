@@ -1582,7 +1582,8 @@ void main() {
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
                * cameraWH;
  */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
-               * cameraWH;
+              // added for wide angle lens that covers more than the drawing surface
+               * (0.7 * cameraWH) + (0.1 * cameraWH);
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 

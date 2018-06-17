@@ -948,11 +948,6 @@ void pg_update_shader_uniforms(void) {
 #endif
 	printOglError(510);
 
-	/////////////////////////////////////////////////////////////////////////
-	// CAMERA SHADER UNIFORM VARIABLES
-//	glUseProgram(shader_programme[pg_shader_Camera]);
-//	glUniform4f(uniform_Camera_fs_4fv_W_H,
-//			(GLfloat)pg_camera_frame_width, (GLfloat)pg_camera_frame_height, 0.f, 0.f);
 
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES

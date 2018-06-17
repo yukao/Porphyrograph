@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 430
 
 #include_declarations
 
@@ -17,11 +17,23 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 const float PI = 3.1415926535897932384626433832795;
 
+// Gaussian blur
+const float weights[8][10] = {
+  { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
+  { 0.160943513523684, 0.0976171754339892, 0.0217813359878234, 0.00178792093458716, 0, 0, 0, 0, 0, 0, },
+  { 0.0906706626819157, 0.0684418069308968, 0.0294364543567006, 0.00721371337812935, 0.00100726007785354, 0, 0, 0, 0, 0, },
+  { 0.0578976290770481, 0.0483601648793973, 0.0281818015679868, 0.0114578654743735, 0.00325006967689874, 0.000643184560989364, 0, 0, 0, 0, },
+  { 0.0402440592208142, 0.0355152576097996, 0.0244092557887147, 0.0130653331225529, 0.0054464411532399, 0.00176820055872139, 0.000447071114568843, 0, 0, 0, },
+  { 0.0296130974533233, 0.0270146688793152, 0.0205091228908708, 0.0129576472196559, 0.00681297573282909, 0.00298111793949366, 0.0010855581688134, 0.000328971797095601, 0, 0, },
+  { 0.022659246945633, 0.0211207405530146, 0.0171040969458123, 0.0120342352127056, 0.00735638042938192, 0.00390694415457561, 0.00180275855491957, 0.000722711999073055, 0.000251721495878215, 0, },
+  { 0.0178892106047989, 0.0169224681628769, 0.0143245600399185, 0.0108503547098669, 0.00735447434710435, 0.00446071417758884, 0.00242104138407988, 0.00117583149116467, 0.000511014259566371, 0.000198731178680599, },
+};
+
 #define SPLAT_PARTICLES
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
-#define PG_NB_TRACKS 4
+#define PG_NB_TRACKS 3
 #define PG_NB_PATHS 7
 
 ///////////////////////////////////////////////////////////////////
@@ -215,7 +227,7 @@ uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
-uniform vec2 uniform_Update_fs_2fv_CAType_SubType;
+uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
 /////////////////////////////////////
 // INPUT
@@ -1274,8 +1286,8 @@ void main() {
   height = uniform_Update_fs_4fv_W_H_time_currentScene.y;
 
   // CAType
-  CAType = int(uniform_Update_fs_2fv_CAType_SubType.x);
-  CASubType = int(uniform_Update_fs_2fv_CAType_SubType.y);
+  CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
+  CASubType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.y);
 
   // cellular automata
   CA_on_off = (CASubType > 0);
@@ -1335,6 +1347,7 @@ void main() {
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[0] = texture( uniform_Update_texture_fs_Trk0 , decalCoordsPrevStep );
+  // BLUR
   }
   else {
     out_track_FBO[0] = vec4( 0, 0, 0, 0 );
@@ -1349,9 +1362,19 @@ void main() {
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
-  }
-  else {
-    out_track_FBO[1] = vec4( 0, 0, 0, 0 );
+    // BLUR
+    if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
+      int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
+      vec3 valPixel = vec3(0);
+      for( int i = -blurRad ; i <= blurRad ; i++ ) {
+        for( int j = -blurRad ; j <= blurRad ; j++ ) {
+          int dist = min(int(length(vec2(i,j))),10);
+          valPixel += texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep + vec2(i,j)).rgb 
+                      * weights[blurRad - 2][dist];
+        }
+      }
+      out_track_FBO[1] = vec4(valPixel, out_track_FBO[1].a);
+    }
   }
 #endif
 
@@ -1359,10 +1382,24 @@ void main() {
 #if PG_NB_TRACKS >= 3
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
+  // BLUR
+  if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
+    int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
+    vec3 valPixel = vec3(0);
+    for( int i = -blurRad ; i <= blurRad ; i++ ) {
+      for( int j = -blurRad ; j <= blurRad ; j++ ) {
+        int dist = min(int(length(vec2(i,j))),10);
+        valPixel += texture( uniform_Update_texture_fs_Trk2 , decalCoords + vec2(i,j)).rgb 
+                    * weights[blurRad - 2][dist];
+      }
+    }
+    out_track_FBO[2] = vec4(valPixel, out_track_FBO[2].a);
+  }
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
     = texture( uniform_Update_texture_fs_Trk3 , decalCoords );
+  // BLUR
 #endif
 
   // if freeze, just keep values as they are
@@ -1420,8 +1457,12 @@ void main() {
   // video texture used for drawing
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
                * cameraWH;
- */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+     cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
                * cameraWH;
+ */
+  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+              // added for wide angle lens that covers more than the drawing surface
+               * (0.7 * cameraWH) + (0.1 * cameraWH);
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 

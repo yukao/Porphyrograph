@@ -1375,9 +1375,6 @@ void main() {
       out_track_FBO[1] = vec4(valPixel, out_track_FBO[1].a);
     }
   }
-  else {
-    out_track_FBO[1] = vec4( 0, 0, 0, 0 );
-  }
 #endif
 
   // track colors FBO copy
@@ -1459,8 +1456,12 @@ void main() {
   // video texture used for drawing
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
                * cameraWH;
- */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+     cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
                * cameraWH;
+ */
+  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+              // added for wide angle lens that covers more than the drawing surface
+               * (0.7 * cameraWH) + (0.1 * cameraWH);
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 
