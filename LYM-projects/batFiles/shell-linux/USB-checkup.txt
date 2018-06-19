@@ -1,4 +1,0 @@
-- lowest two left buttons: 0/127 (instead of 64)
-  otherwise
-  type the following button sequences
-  - SELECT / button to modify / *2 times* DATA MSB / 000 / *2 times* DATA LSB / 127
