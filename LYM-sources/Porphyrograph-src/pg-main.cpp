@@ -287,8 +287,10 @@ int main(int argcMain, char **argvMain) {
 
 #if defined (TVW) || defined (CRITON)
 	// loads the texture buffer of the initial images and masks
-	// pg_ReadInitalImageTextures(0, 2130, 28, -1);
-	// pg_ReadInitalImageTextures(0, 200, 28, -1);
+	// pg_ReadInitalImageTexturesTVW(0, 2130, 28, -1);
+	// pg_ReadInitalImageTexturesTVW(0, 200, 28, -1);
+	pg_ReadInitalImageTexturesTVW(0, -1, -1, 15);
+#else
 	pg_ReadInitalImageTextures(0, -1, -1, 15);
 #endif
 
@@ -839,6 +841,7 @@ void window_idle_browse(int step) {
 
 		// updates diaporama
 		if (photo_diaporama >= 0 && photo_diaporama < nb_photo_albums) {
+			// printf("pg_update_diaporama\n");
 			pg_update_diaporama();
 		}
 

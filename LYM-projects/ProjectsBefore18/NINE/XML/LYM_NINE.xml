@@ -1,0 +1,522 @@
+<!-- ***********************************************************************
+File: NINE/XML/LYM_NINE.xml
+
+LYM NINE & Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+************************************************************************* -->
+
+<node id="drawing_node">
+
+  <!--========================================================-->
+  <!-- EVEN IN / ODD OUT                                      -->
+  <!--========================================================-->
+  <!--========================================================-->
+  <!-- Drawing the mouse position in MousePositionTexture_Odd -->
+  <!-- from MousePositionTexture_Even                         -->
+  <!--========================================================-->
+  <node id="evenInput_oddOutput">
+
+    <!-- selects the FBO output -->
+    <node id="FBStartStoreMousePosition_Odd">
+      <FBO_storage id="FBStartStoreMousePosition_Odd" xlink:href="#root"  >
+	<color color_id="MousePositionTexture_Odd" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- copies the previous storage texture (Even) and updates it
+         with the current mouse position                     -->
+    <node id="QuadStoreMousePosition_Odd" depth_test="false">
+      <quad id="QuadStoreMousePosition_Odd" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="decal" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="MousePositionTexture_Even" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="NINE/shaders/LYM_Drawing_NINE-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="NINE/shaders/LYM_Drawing_NINE-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="PositionShader" 
+	     nb_textures="2" 
+	     type="shaderfinite" 
+	     cg_fs_clearup="0"
+	     cg_fs_3fv_H_drawingStart_drawingMode="({#height},0,2)" 
+	     cg_fs_4fv_filling_xy_modifier_nbFrames="(-1,-1,-1,-1)"
+	     cg_fs_4fv_radiusXY_brushID_rend_mode="(3,3,1,1)"
+	     cg_fs_4fv_spread_radius_decay="({#spread_radius_radial},{#spread_radius_H},{#spread_radius_V},0)"
+	     cg_fs_4fv_xy_frameno_freqDots="(0,0,0,1)"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     cg_fs_4fv_mouse_xy_prev="(0,0,0,0)"
+	     >
+            <shader_source_texture index="1" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Even" 
+				   attachment="2"
+				   rectangle="true" />
+            <shader_source_texture index="2" encoding="pnga" 
+				   xlink:href="NINE/textures/pen.png" 
+				   id="hand" 
+				   texture_min_filter="linear_filter" 
+				   texture_max_filter="linear_filter" 
+				   mipmapped="true" rectangle="false"/>
+	    <!-- trace for filling debugging purpose -->
+            <!-- shader_source_texture index="3" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Even" 
+				   attachment="3"
+				   rectangle="true" / -->
+	  </shader_source>
+	</shader>
+      </quad>
+    </node>
+
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStoreMousePosition_Odd">
+      <FB_display id="MousePositionTexture_Odd"  />
+    </node>
+
+
+    <!-- selects the FBO output -->
+    <node id="FBStorage_node" displayed="false">
+      <FBO_storage id="FBStorage_node" xlink:href="#root"  >
+	<color color_id="FBStorage" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- Outputs drawing according to MousePositionTexture_Odd texture -->
+    <node id="FinalQuad_Odd"  shared_reference="false"  depth_test="false">
+      <quad id="FinalQuad_Odd" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="blend_fragment" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="MousePositionTexture_Odd" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="NINE/shaders/LYM_Composition_NINE-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="NINE/shaders/LYM_Composition_NINE-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="DrawShader" 
+	     nb_textures="7" 
+	     type="shaderfinite"
+	     cg_fs_4fv_blend_color="(1,1,1,1)"
+	     cg_vp_2fv_width_height="({#width},{#height})"
+	     cg_fs_3fv_width_height_trace="({#width},{#height},0)"
+	     cg_fs_decay="0" 
+	     cg_fs_3fv_kaleidoscopeID_BGfx_timer="(0,0,0)"
+	     cg_fs_3fv_xy_frameno="(0,0,0)"
+	     cg_fs_3fv_phase_amplitude_length="(75,53.23,0.01181)"
+             cg_fs_4fv_opacity02_savedFG="(1.0,0.5,0.5,0)" 
+             cg_fs_3fv_maskOpacity02="(1.0,1.0,1.0)" 
+	     cg_fs_4fv_BG_compositionOpacity="(0,0,0,0)"
+	     cg_fs_4fv_drawing_brush_kaleid_spread="(0,0,0,1)"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     >
+            <shader_source_texture index="1" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Odd" 
+				   attachment="2"
+				   rectangle="true" />
+	    <!-- trace for filling debugging purpose -->
+	    <!-- shader_source_texture index="2" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Odd" 
+				   attachment="3"
+				   rectangle="true" / -->
+	  <!-- background layers -->
+          <shader_source_texture index="2" encoding="pnga" 
+				 xlink:href="NINE/textures/egg_layer1-3.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+          <shader_source_texture index="3" encoding="pnga" 
+				 xlink:href="NINE/textures/egg_layerMask1-3.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+          <shader_source_texture index="4" encoding="pnga" 
+				 xlink:href="NINE/textures/foetus_layer1-3.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+	  <!-- contour mask layer -->
+          <shader_source_texture index="5" encoding="pnga" 
+				 xlink:href="NINE/textures/egg_contour_mask.png" 
+				 id="hand"
+				 texture_min_filter="nearest_filter" 
+				 texture_max_filter="nearest_filter" 
+				 mipmapped="false" rectangle="true"/>
+          <shader_source_texture index="6" type="variable_texture" 
+				 encoding="raw" xlink:href="#root" 
+	   			 mipmapped="true" env_mode="decal" 
+				 id="ground_metal" 
+				 tile_s="{#width}" tile_t="{#height}" 
+				 value="FBStorage" 
+				 rectangle="true" />
+          <shader_source_texture index="7" encoding="pnga" 
+				 xlink:href="NINE/textures/tools.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+	  </shader_source>
+	</shader>
+	
+      </quad>
+    </node>
+  </node>
+
+  <!-- ================================================== -->
+  <!-- reads the frame buffer and copy into texture -->
+  <!-- ================================================== -->
+  <node id="displayStoredFB" displayed="false">
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStorage">
+      <FB_display id="FBStorage" />
+    </node>
+    
+    <!--===============================-->
+    <!-- Outputs FBStorage for scene blending purpose -->
+    <node id="SimpleDisplay"  shared_reference="false" depth_test="false">
+      <quad id="SimpleDisplay" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="decal" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="FBStorage" attachment="1"
+		 rectangle="true" />
+
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="NINE/shaders/LYM_Composition_NINE-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="NINE/shaders/LYM_SimpleDisplay_NINE-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="DrawShader" 
+	     nb_textures="0" 
+	     type="shaderfinite" 
+	     cg_vp_2fv_width_height="({#width},{#height})"
+	     >
+	  </shader_source>
+	</shader>
+	
+      </quad>
+    </node>
+
+  </node>
+
+  <!--========================================================-->
+  <!-- EVEN IN / ODD OUT                                      -->
+  <!--========================================================-->
+
+
+
+
+
+  <!--========================================================-->
+  <!-- ODD IN / EVEN OUT                                      -->
+  <!--========================================================-->
+
+  <!--========================================================-->
+  <!-- Drawing the mouse position in MousePositionTexture_Even -->
+  <!-- from MousePositionTexture_Odd                         -->
+  <!--========================================================-->
+  <node id="oddInput_evenOutput">
+
+    <!-- selects the FBO output -->
+    <node id="FBStartStoreMousePosition_Even">
+      <FBO_storage id="FBStartStoreMousePosition_Even" xlink:href="#root"  >
+	<color color_id="MousePositionTexture_Even" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- copies the previous storage texture (Odd) and updates it
+         with the current mouse position                     -->
+    <node id="QuadStoreMousePosition_Even" depth_test="false">
+      <quad id="QuadStoreMousePosition_Even" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="decal" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="MousePositionTexture_Odd" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="NINE/shaders/LYM_Drawing_NINE-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="NINE/shaders/LYM_Drawing_NINE-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="PositionShader" 
+	     nb_textures="2" 
+	     type="shaderfinite" 
+	     cg_fs_clearup="0"
+	     cg_fs_3fv_H_drawingStart_drawingMode="({#height},0,2)" 
+	     cg_fs_4fv_filling_xy_modifier_nbFrames="(-1,-1,-1,-1)"
+	     cg_fs_4fv_radiusXY_brushID_rend_mode="(3,3,1,1)"
+	     cg_fs_4fv_spread_radius_decay="({#spread_radius_radial},{#spread_radius_H},{#spread_radius_V},0)" 
+	     cg_fs_4fv_xy_frameno_freqDots="(0,0,0,1)"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     cg_fs_4fv_mouse_xy_prev="(0,0,0,0)"
+	     >
+            <shader_source_texture index="1" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Odd" 
+				   attachment="2"
+				   rectangle="true" />
+            <shader_source_texture index="2" encoding="pnga" 
+				   xlink:href="NINE/textures/pen.png" 
+				   id="hand" 
+				   texture_min_filter="linear_filter" 
+				   texture_max_filter="linear_filter" 
+				   mipmapped="true" rectangle="false"/>
+	    <!-- trace for filling debugging purpose -->
+            <!-- shader_source_texture index="3" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Odd" 
+				   attachment="3"
+				   rectangle="true" / -->
+	  </shader_source>
+	</shader>
+      </quad>
+    </node>
+
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStoreMousePosition_Even">
+      <FB_display id="MousePositionTexture_Even"  />
+    </node>
+
+
+    <!-- selects the FBO output -->
+    <node id="FBStorage_node" displayed="false">
+      <FBO_storage id="FBStorage_node" xlink:href="#root"  >
+	<color color_id="FBStorage" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- Outputs drawing according to MousePositionTexture_Even texture -->
+    <node id="FinalQuad_Even"  shared_reference="false" depth_test="false">
+      <quad id="FinalQuad_Even" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="blend_fragment" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="MousePositionTexture_Even" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="NINE/shaders/LYM_Composition_NINE-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="NINE/shaders/LYM_Composition_NINE-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="DrawShader" 
+	     nb_textures="7" 
+	     type="shaderfinite" 
+	     cg_fs_4fv_blend_color="(1,1,1,1)"
+	     cg_vp_2fv_width_height="({#width},{#height})"
+	     cg_fs_3fv_width_height_trace="({#width},{#height},0)"
+	     cg_fs_decay="0" 
+	     cg_fs_3fv_kaleidoscopeID_BGfx_timer="(0,0,0)"
+	     cg_fs_3fv_xy_frameno="(0,0,0)"
+	     cg_fs_3fv_phase_amplitude_length="(75,53.23,0.01181)"
+             cg_fs_4fv_opacity02_savedFG="(1.0,0.5,0.5,0)" 
+             cg_fs_3fv_maskOpacity02="(1.0,1.0,1.0)" 
+	     cg_fs_4fv_BG_compositionOpacity="(0,0,0,0)"
+	     cg_fs_4fv_drawing_brush_kaleid_spread="(0,0,0,1)"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     >
+            <shader_source_texture index="1" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Even" 
+				   attachment="2"
+				   rectangle="true" />
+	    <!-- trace for filling debugging purpose -->
+	    <!-- shader_source_texture index="2" type="variable_texture" 
+				   encoding="raw" xlink:href="#root" 
+	   			   mipmapped="true" env_mode="decal" 
+				   id="ground_metal" 
+				   tile_s="{#width}" tile_t="{#height}" 
+				   value="MousePositionTexture_Even" 
+				   attachment="3"
+				   rectangle="true" / -->
+	  <!-- background layers -->
+          <shader_source_texture index="2" encoding="pnga" 
+				 xlink:href="NINE/textures/egg_layer1-3.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+          <shader_source_texture index="3" encoding="pnga" 
+				 xlink:href="NINE/textures/egg_layerMask1-3.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+          <shader_source_texture index="4" encoding="pnga" 
+				 xlink:href="NINE/textures/foetus_layer1-3.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+	  <!-- contour mask layer -->
+          <shader_source_texture index="5" encoding="pnga" 
+				 xlink:href="NINE/textures/egg_contour_mask.png" 
+				 id="hand"
+				 texture_min_filter="nearest_filter" 
+				 texture_max_filter="nearest_filter" 
+				 mipmapped="false" rectangle="true"/>
+          <shader_source_texture index="6" type="variable_texture" 
+				 encoding="raw" xlink:href="#root" 
+	   			 mipmapped="true" env_mode="decal" 
+				 id="ground_metal" 
+				 tile_s="{#width}" tile_t="{#height}" 
+				 value="FBStorage" 
+				 rectangle="true" />
+          <shader_source_texture index="7" encoding="pnga" 
+				 xlink:href="NINE/textures/tools.png" 
+				 id="hand" 
+				 texture_min_filter="linear_filter" 
+				 texture_max_filter="linear_filter" 
+				 mipmapped="false" rectangle="true"/>
+	  </shader_source>
+	</shader>
+	
+      </quad>
+    </node>
+  </node>
+
+  <!-- ================================================== -->
+  <!-- reads the frame buffer and copy into texture -->
+  <!-- ================================================== -->
+  <node id="displayStoredFB" displayed="false">
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStorage">
+      <FB_display id="FBStorage" />
+    </node>
+    
+    <!--===============================-->
+    <!-- Outputs FBStorage for scene blending purpose -->
+    <node id="SimpleDisplay"  shared_reference="false" depth_test="false">
+      <renderingScript id="SimpleDisplay">
+	<!-- if the buffer is saved, goes to next step of 
+	  clearing and blending: starts blending, stops capturing 
+	  the FBO, and resets the parameters -->
+	<command>	
+	  <action>
+	    <set_node_scalar_value id="clearing_step" value="2" operator="="/>
+            <target type="single_node" value="#root"/>
+	  </action>
+	</command>	
+      </renderingScript>
+      <quad id="SimpleDisplay" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	
+	
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="decal" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="FBStorage" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="NINE/shaders/LYM_Composition_NINE-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="NINE/shaders/LYM_SimpleDisplay_NINE-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="DrawShader" 
+	     nb_textures="0" 
+	     type="shaderfinite" 
+	     cg_vp_2fv_width_height="({#width},{#height})"
+	     >
+	  </shader_source>
+	</shader>
+	
+      </quad>
+    </node>
+
+  </node>
+
+  <!--========================================================-->
+  <!-- ODD IN / EVEN OUT                                      -->
+  <!--========================================================-->
+</node>

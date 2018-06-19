@@ -132,7 +132,6 @@ enum pg_TextureFormat { pg_byte_tex_format = 0, pg_float_tex_format, Emptypg_Tex
 #define PG_PHOTO_NB_TEXTURES_TVW                 (6)
 #endif
 
-extern PhotoDataStruct pg_Photo_buffer_data[PG_PHOTO_NB_TEXTURES];
 // cv::Mat imgPhotoBuffer[PG_PHOTO_NB_TEXTURES];
 extern PhotoDataStruct pg_CameraFrame_buffer_data;
 extern PhotoDataStruct pg_MovieFrame_buffer_data;
@@ -141,10 +140,10 @@ extern float pg_Photo_weight[PG_PHOTO_NB_TEXTURES];
 
 #if defined (TVW) || defined (CRITON)
 extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW];
-extern PhotoDataStruct **pg_Photo_buffer_dataTVW;
 #else
 extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
 #endif
+extern PhotoDataStruct **pg_Photo_buffer_data;
 
 #if defined (TVW) || defined (CRITON)
 /////////////////////////////////////////////////////////////////////
@@ -297,7 +296,11 @@ bool update_image_buffer_swapping(void);
 int available_swap_image_buffer(int indInitialImage);
 int available_random_swap_image_buffer(int indOpposedCenter);
 bool pg_swap_image(int indcomprImage);
-bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder);
 #endif
 
+bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder);
+
+
 #endif
+
+bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder);

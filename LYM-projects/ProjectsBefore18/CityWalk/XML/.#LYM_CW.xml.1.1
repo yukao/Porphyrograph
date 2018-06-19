@@ -1,0 +1,598 @@
+<!-- ***********************************************************************
+     File: CityWalk/XML/LYM_CW.xml
+
+     LYM Painting Machine (c) Yukao Nagemi & Lola Ajima
+
+     ************************************************************************* -->
+
+<node id="drawing_node">
+
+  <!--========================================================-->
+  <!-- EVEN IN / ODD OUT                                      -->
+  <!--========================================================-->
+  <!--========================================================-->
+  <!-- Drawing the mouse position in PositionColorTexture_Odd -->
+  <!-- from PositionColorTexture_Even                         -->
+  <!--========================================================-->
+  <node id="evenInput_oddOutput">
+    <!-- orthographic projection -->
+    <node id="SetOrtho_Odd">
+      <renderingScript>
+	<command>
+	  <!-- defines orthographic camera as the current camera -->
+	  <!-- action>
+          <set_viewpoint xlink:href="#camera_ortho" />
+          <target type="single_node" value="#user_0" />
+	  </action -->  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="ortho" x_min="0" x_max="{#width}" 
+			   y_min="0" y_max="{#height}" 
+			   near="-100" far="100" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action>
+	</command>
+      </renderingScript>
+      <quad id="NullQuad" x1="0" y1="0" z1="0" x2="0" y2="0" z2="0" x3="0" y3="0" z3="0" x4="0" y4="0" z4="0"></quad>
+    </node>
+
+    <!-- selects the FBO output -->
+    <node id="FBStartStorePositionColor_Odd">
+      <FBO_storage id="FBStartStorePositionColor_Odd" xlink:href="#root"  >
+	<color color_id="PositionColorTexture_Odd" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- copies the previous storage texture (Even) and updates it
+         with the current mouse position                     -->
+    <node id="QuadStorePositionColor_Odd" depth_test="false">
+      <quad id="QuadStorePositionColor_Odd" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="replace" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="PositionColorTexture_Even" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="CityWalk/shaders/LYM_Painting_CW-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="CityWalk/shaders/LYM_Painting_CW-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="PositionShader" 
+	     nb_textures="0" 
+	     type="shaderfinite" 
+	     cg_fs_clearup="0"
+	     cg_fs_4fv_H_W_drawingFrame_lineLength="({#height},{#width},-1,{#lineLength})" 
+	     cg_fs_4fv_local_displact_decay="({#local_displact_depth},{#local_displact_H},{#local_displact_V},0)"
+	     cg_fs_4x4fv_invTransformation
+             ="(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)" 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth="(1,1,0,{#canonical_depth})"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     cg_fs_3fv_mouse_xy_noise_z="(0,0,0)"
+	     >
+	  </shader_source>
+	</shader>
+      </quad>
+    </node>
+
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStorePositionColor_Odd">
+      <FB_display id="PositionColorTexture_Odd"  />
+    </node>
+
+    <!--===============================-->
+    <!-- perspective projection -->
+    <node id="SetPerspective_Odd">
+      <renderingScript>
+	<command>
+	  <!-- defines orthographic camera as current camera>
+	  <action>
+            <set_viewpoint xlink:href="#camera_ortho" />
+            <target type="single_node" value="#user_0" />
+	  </action>  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="ortho" x_min="0" x_max="{#width}" 
+			   y_min="0" y_max="{#height}" 
+			   near="-100" far="100" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action -->
+	  <!-- defines perspective camera as current camera -->
+	  <!-- action>
+          <set_viewpoint xlink:href="#camera_perspective" />
+          <target type="single_node" value="#user_0" />
+	  </action -->  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="frustum" 
+			   x_min="(0.0-({#width}/({#canonical_depth}*2.0)))" 
+			   x_max="({#width}/({#canonical_depth}*2.0))" 
+			   y_min="(0.0-({#height}/({#canonical_depth}*2.0)))" 
+			   y_max="({#height}/({#canonical_depth}*2.0))" 
+			   near="1.0" far="10000.0" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action>
+	</command>
+      </renderingScript>
+      <quad id="NullQuad" x1="0" y1="0" z1="0" x2="0" y2="0" z2="0" x3="0" y3="0" z3="0" x4="0" y4="0" z4="0"></quad>
+    </node>
+
+    <!-- selects the FBO output -->
+    <node id="FBStartStoreFrameTexture_Odd">
+      <FBO_storage id="FBStartStoreFrameTexture_Odd" xlink:href="#root"  >
+	<color color_id="FrameTexture_Odd" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- Outputs drawing according to PositionColorTexture_Odd texture -->
+    <node id="FinalQuad_transl_Odd" displayed="true">
+      <transformation id="FinalQuad_transl_Odd" geometry="matrix" 
+		      matrix="(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)" />
+      <node id="FinalQuad_Odd"  shared_reference="false"  depth_test="true">
+	<!-- quad id="QuadStorePositionColor_Odd" 
+	     z1="(0.0)"      y1="(0.0)"       x1="0" 
+	     z2="{#width}"   y2="(0.0)"       x2="0" 
+	     z3="{#width}"   y3="{#height}"   x3="0" 
+	     z4="(0.0)"      y4="{#height}"   x4="0" 
+	  -->
+	<strip id="FinalQuad_Odd" type="line"
+	       nbVertices="{#lineLength}" nbTexCoords="0"  nbNormals="0"  >
+          <tabvertex size="{#lineLength}">
+	    <include xlink:href="bib/LYM_PaintingMachine_v4/vertices.xml" />
+          </tabvertex>
+	  
+          <tabnormal size="0">
+            <normalCoordinate vector="" />
+          </tabnormal>
+	  
+          <tabtextureCoord size="0">
+            <textureCoordinate point="" />
+          </tabtextureCoord>
+	  
+          <texture encoding="pnga" 
+		   xlink:href="CityWalk/textures/Brushes.png" 
+		   id="hand" env_mode="blend_fragment"
+		   tile_s="1.0" tile_t="1.0" 
+		   texture_min_filter="linear_filter" 
+		   texture_max_filter="linear_filter" 
+		   mipmapped="false" rectangle="false"/>
+	  <!-- texture encoding="jpeg" 
+	       xlink:href="CityWalk/textures/mire.jpg" 
+	       id="hand" 
+	       tile_s="1024" tile_t="768" 
+	       texture_min_filter="linear_filter" 
+	       texture_max_filter="linear_filter" 
+	       mipmapped="false" rectangle="true"/ -->
+	  <shader id="video-shader" type="general"> 
+	    <vertexShader xmlns:xlink="xlink" 
+			  xlink:href="CityWalk/shaders/LYM_Render_CW-VP.cg"/>
+	    <geometryShader xlink:href="CityWalk/shaders/LYM_Render_CW-GS.cg" output_type="triangle" />
+	    <fragmentShader xmlns:xlink="xlink" 
+			    xlink:href="CityWalk/shaders/LYM_Render_CW-FS.cg"/>
+	    <shader_source 
+	       begin="0" dur="100.0" end="10.0" period="100.0" 
+	       id="DrawShader" 
+	       nb_textures="2" 
+	       type="shaderfinite"
+	       cg_vp_4fv_H_W_drawingFrame_lineLength="({#height},{#width},-1,{#lineLength})" 
+	       cg_vp_3fv_noise_global_radius_frameno="(0,1,0)"
+	       >
+              <shader_source_texture target="vertex_texture" index="1" 
+				     type="variable_texture" encoding="raw" 
+				     xlink:href="#root" mipmapped="false" 
+				     value="PositionColorTexture_Odd" 
+				     attachment="1"
+				     id="Pos" env_mode="blend_fragment"
+				     tile_s="{#width}" tile_t="{#height}" 
+				     rectangle="true" />
+              <shader_source_texture target="vertex_texture" index="2" 
+				     encoding="pnga" 
+				     xlink:href="CityWalk/textures/noise.png" 
+				     id="hand" env_mode="blend_fragment"
+				     tile_s="1.0" tile_t="1.0" 
+				     texture_min_filter="linear_filter" 
+				     texture_max_filter="linear_filter" 
+				     mipmapped="true" rectangle="true"/>
+	    </shader_source>
+	  </shader>
+	  
+	</strip>
+      </node>
+    </node>
+
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStoreFrameTexture_Odd">
+      <FB_display id="FrameTexture_Odd"  />
+    </node>
+
+
+    <!-- orthographic projection -->
+    <node id="SetOrtho_Odd">
+      <renderingScript>
+	<command>
+	  <!-- defines orthographic camera as current camera -->
+	  <!-- action>
+          <set_viewpoint xlink:href="#camera_ortho" />
+          <target type="single_node" value="#user_0" />
+	  </action -->  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="ortho" x_min="0" x_max="{#width}" 
+			   y_min="0" y_max="{#height}" 
+			   near="-100" far="100" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action>
+	</command>
+      </renderingScript>
+      <quad id="NullQuad" x1="0" y1="0" z1="0" x2="0" y2="0" z2="0" x3="0" y3="0" z3="0" x4="0" y4="0" z4="0"></quad>
+    </node>
+
+    <!--===============================-->
+    <!-- Outputs FBStorage for scene blending purpose -->
+    <node id="SimpleDisplay_Odd"  shared_reference="false" depth_test="false">
+      <quad id="SimpleDisplay_Odd" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="blend_fragment" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="FrameTexture_Odd" attachment="1"
+		 rectangle="true" />
+
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="CityWalk/shaders/LYM_Composition_CW-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="CityWalk/shaders/LYM_Composition_CW-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="DrawShader" 
+	     nb_textures="1" 
+	     type="shaderfinite" 
+	     cg_vp_2fv_width_height="({#width},{#height})"
+	     cg_fs_4fv_blend_color="(1,1,1,1)"
+	     cg_fs_4fv_width_height_frameNo_trace="({#width},{#height},0,0)"
+	     cg_fs_4fv_kaleidoscopeID_timer_mouse_xy="(0,0,0,0)"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     cg_fs_4fv_post_effects="(0,0,0,0)"
+	     cg_fs_3fv_drawingMode_brushID_rampMode="(0,1,0)"
+	     >
+            <shader_source_texture index="1" encoding="pnga" 
+				   xlink:href="CityWalk/textures/tools_CW.png" 
+				   id="hand" 
+				   texture_min_filter="linear_filter" 
+				   texture_max_filter="linear_filter" 
+				   mipmapped="false" rectangle="true"/>
+	  </shader_source>
+	</shader>
+	
+      </quad>
+    </node>
+
+  </node>
+
+  <!--========================================================-->
+  <!-- EVEN IN / ODD OUT                                      -->
+  <!--========================================================-->
+
+
+
+
+
+  <!--========================================================-->
+  <!-- ODD IN / EVEN OUT                                      -->
+  <!--========================================================-->
+
+  <!--========================================================-->
+  <!-- Drawing the mouse position in PositionColorTexture_Even -->
+  <!-- from PositionColorTexture_Odd                         -->
+  <!--========================================================-->
+  <node id="oddInput_evenOutput">
+    <!-- orthographic projection -->
+    <node id="SetOrtho_Even">
+      <renderingScript>
+	<command>
+	  <!-- defines orthographic camera as current camera -->
+	  <!-- action>
+          <set_viewpoint xlink:href="#camera_ortho" />
+          <target type="single_node" value="#user_0" />
+	  </action -->  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="ortho" x_min="0" x_max="{#width}" 
+			   y_min="0" y_max="{#height}" 
+			   near="-100" far="100" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action>
+	</command>
+      </renderingScript>
+      <quad id="NullQuad" x1="0" y1="0" z1="0" x2="0" y2="0" z2="0" x3="0" y3="0" z3="0" x4="0" y4="0" z4="0"></quad>
+    </node>
+
+    <!-- selects the FBO output -->
+    <node id="FBStartStorePositionColor_Even">
+      <FBO_storage id="FBStartStorePositionColor_Even" xlink:href="#root"  >
+	<color color_id="PositionColorTexture_Even" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- copies the previous storage texture (Odd) and updates it
+         with the current mouse position                     -->
+    <node id="QuadStorePositionColor_Even" depth_test="false">
+      <quad id="QuadStorePositionColor_Even" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="replace" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="PositionColorTexture_Odd" attachment="1"
+		 rectangle="true" />
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="CityWalk/shaders/LYM_Painting_CW-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="CityWalk/shaders/LYM_Painting_CW-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="PositionShader" 
+	     nb_textures="0" 
+	     type="shaderfinite" 
+	     cg_fs_clearup="0"
+	     cg_fs_4fv_H_W_drawingFrame_lineLength="({#height},{#width},-1,{#lineLength})" 
+	     cg_fs_4fv_local_displact_decay="({#local_displact_depth},{#local_displact_H},{#local_displact_V},0)"
+	     cg_fs_4x4fv_invTransformation
+             ="(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)" 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth="(1,1,0,{#canonical_depth})"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     cg_fs_3fv_mouse_xy_noise_z="(0,0,0)"
+	     >
+	  </shader_source>
+	</shader>
+      </quad>
+    </node>
+
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStorePositionColor_Even">
+      <FB_display id="PositionColorTexture_Even"  />
+    </node>
+
+
+    <!--===============================-->
+    <!-- perspective projection -->
+    <node id="SetPerspective_Even">
+      <renderingScript>
+	<command>
+	  <!-- defines orthographic camera as current camera>
+	  <action>
+            <set_viewpoint xlink:href="#camera_ortho" />
+            <target type="single_node" value="#user_0" />
+	  </action>  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="ortho" x_min="0" x_max="{#width}" 
+			   y_min="0" y_max="{#height}" 
+			   near="-100" far="100" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action -->
+	  <!-- defines perspective camera as current camera -->
+	  <!-- action>
+          <set_viewpoint xlink:href="#camera_perspective" />
+          <target type="single_node" value="#user_0" />
+	  </action -->  
+	  <action>
+            <set_user_attribute_value operator="="> 
+              <view_volume type="frustum" 
+			   x_min="(0.0-({#width}/({#canonical_depth}*2.0)))" 
+			   x_max="({#width}/({#canonical_depth}*2.0))" 
+			   y_min="(0.0-({#height}/({#canonical_depth}*2.0)))" 
+			   y_max="({#height}/({#canonical_depth}*2.0))" 
+			   near="1.0" far="10000.0" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action>
+	</command>
+      </renderingScript>
+      <quad id="NullQuad" x1="0" y1="0" z1="0" x2="0" y2="0" z2="0" x3="0" y3="0" z3="0" x4="0" y4="0" z4="0"></quad>
+    </node>
+
+    <!-- selects the FBO output -->
+    <node id="FBStartStoreFrameTexture_Even">
+      <FBO_storage id="FBStartStoreFrameTexture_Even" xlink:href="#root"  >
+	<color color_id="FrameTexture_Even" 
+	       color_storage="texture" color_cleared="true" 
+	       color_r="0" color_g="0" color_b="0" color_a="1" />
+	<depth depth_storage="none"  />      
+	<stencil stencil_storage="none" />
+      </FBO_storage>
+    </node>
+    
+    <!--===============================-->
+    <!-- Outputs drawing according to PositionColorTexture_Even texture -->
+    <node id="FinalQuad_transl_Even" displayed="true">
+      <transformation id="FinalQuad_transl_Even" geometry="matrix" 
+		      matrix="(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)" />
+       <node id="FinalQuad_Even"  shared_reference="false" depth_test="true">
+	<!-- quad id="QuadStorePositionColor_Odd" 
+	     z1="(0.0)"      y1="(0.0)"       x1="0" 
+	     z2="{#width}"   y2="(0.0)"       x2="0" 
+	     z3="{#width}"   y3="{#height}"   x3="0" 
+	     z4="(0.0)"      y4="{#height}"   x4="0" 
+	  -->
+	<strip id="FinalQuad_Even" type="line"
+	       nbVertices="{#lineLength}" nbTexCoords="0"  nbNormals="0"  >
+          <tabvertex size="{#lineLength}">
+	    <include xlink:href="bib/LYM_PaintingMachine_v4/vertices.xml" />
+          </tabvertex>
+
+          <tabnormal size="0">
+            <normalCoordinate vector="" />
+          </tabnormal>
+
+          <tabtextureCoord size="0">
+            <textureCoordinate point="" />
+          </tabtextureCoord>
+	  
+          <texture encoding="pnga" 
+		   xlink:href="CityWalk/textures/Brushes.png" 
+		   id="hand" env_mode="blend_fragment"
+		   tile_s="1.0" tile_t="1.0" 
+		   texture_min_filter="linear_filter" 
+		   texture_max_filter="linear_filter" 
+		   mipmapped="false" rectangle="false"/>
+	  <!-- texture encoding="jpeg" 
+	       xlink:href="CityWalk/textures/mire.jpg" 
+	       id="hand" 
+	       tile_s="1024" tile_t="768" 
+	       texture_min_filter="linear_filter" 
+	       texture_max_filter="linear_filter" 
+	       mipmapped="false" rectangle="true"/ -->
+	  <shader id="video-shader" type="general"> 
+	    <vertexShader xmlns:xlink="xlink" 
+			  xlink:href="CityWalk/shaders/LYM_Render_CW-VP.cg"/>
+	    <geometryShader xlink:href="CityWalk/shaders/LYM_Render_CW-GS.cg" output_type="triangle" />
+	    <fragmentShader xmlns:xlink="xlink" 
+			    xlink:href="CityWalk/shaders/LYM_Render_CW-FS.cg"/>
+	    <shader_source 
+	       begin="0" dur="100.0" end="10.0" period="100.0" 
+	       id="DrawShader" 
+	       nb_textures="2" 
+	       type="shaderfinite" 
+	       cg_vp_4fv_H_W_drawingFrame_lineLength="({#height},{#width},-1,{#lineLength})" 
+	       cg_vp_3fv_noise_global_radius_frameno="(0,1,0)"
+	       >
+              <shader_source_texture target="vertex_texture" index="1" 
+				     type="variable_texture" encoding="raw" 
+				     xlink:href="#root" mipmapped="false" 
+				     value="PositionColorTexture_Even" 
+				     attachment="1"
+				     id="Pos" env_mode="blend_fragment"
+				     tile_s="{#width}" tile_t="{#height}" 
+				     rectangle="true" />
+              <shader_source_texture target="vertex_texture" index="2" 
+				     encoding="pnga" 
+				     xlink:href="CityWalk/textures/noise.png" 
+				     id="hand" env_mode="blend_fragment"
+				     tile_s="1.0" tile_t="1.0" 
+				     texture_min_filter="linear_filter" 
+				     texture_max_filter="linear_filter" 
+				     mipmapped="true" rectangle="true"/>
+	    </shader_source>
+	  </shader>
+	  
+	</strip>
+      </node>
+    </node>
+
+    <!-- closes the FBO and switches to frame buffer rendering -->
+    <node id="FBFinishStoreFrameTexture_Even">
+      <FB_display id="FrameTexture_Even"  />
+    </node>
+
+    <!-- orthographic projection -->
+    <node id="SetOrtho_Even">
+      <renderingScript>
+	<command>
+	  <!-- defines orthographic camera as current camera -->
+	  <!-- action>
+          <set_viewpoint xlink:href="#camera_ortho" />
+          <target type="single_node" value="#user_0" />
+	  </action -->  
+	  <action>
+            <set_user_attribute_value  operator="="> 
+              <view_volume type="ortho" x_min="0" x_max="{#width}" 
+			   y_min="0" y_max="{#height}" 
+			   near="-100" far="100" />
+            </set_user_attribute_value> 
+            <target type="single_node" value="#user_0" />
+	  </action>
+	</command>
+      </renderingScript>
+      <quad id="NullQuad" x1="0" y1="0" z1="0" x2="0" y2="0" z2="0" x3="0" y3="0" z3="0" x4="0" y4="0" z4="0"></quad>
+    </node>
+
+    <!--===============================-->
+    <!-- Outputs FBStorage for scene blending purpose -->
+    <node id="SimpleDisplay_Even"  shared_reference="false" depth_test="false">
+      <quad id="SimpleDisplay_Even" 
+	    z1="(0.0)"      y1="(0.0)"       x1="0" 
+	    z2="{#width}"   y2="(0.0)"       x2="0" 
+	    z3="{#width}"   y3="{#height}"   x3="0" 
+	    z4="(0.0)"      y4="{#height}"   x4="0" 
+	    >
+	
+	<texture type="variable_texture" encoding="raw" xlink:href="#root" 
+	   	 mipmapped="true" env_mode="blend_fragment" id="ground_metal" 
+		 tile_s="{#width}" tile_t="{#height}" 
+		 value="FrameTexture_Even" attachment="1"
+		 rectangle="true" />
+
+	<shader id="video-shader" type="general"> 
+	  <vertexShader xmlns:xlink="xlink" 
+			xlink:href="CityWalk/shaders/LYM_Composition_CW-VP.cg"/>
+	  <fragmentShader xmlns:xlink="xlink" 
+			  xlink:href="CityWalk/shaders/LYM_Composition_CW-FS.cg"/>
+	  <shader_source 
+	     begin="0" dur="100.0" end="10.0" period="100.0" 
+	     id="DrawShader" 
+	     nb_textures="1" 
+	     type="shaderfinite" 
+	     cg_vp_2fv_width_height="({#width},{#height})"
+	     cg_fs_4fv_blend_color="(1,1,1,1)"
+	     cg_fs_4fv_width_height_frameNo_trace="({#width},{#height},0,0)"
+	     cg_fs_4fv_kaleidoscopeID_timer_mouse_xy="(0,0,0,0)"
+	     cg_fs_4fv_local_color="(1,1,1,1)"
+	     cg_fs_4fv_post_effects="(0,0,0,0)"
+	     cg_fs_3fv_drawingMode_brushID_rampMode="(0,1,0)"
+	     >
+            <shader_source_texture index="1" encoding="pnga" 
+				   xlink:href="CityWalk/textures/tools_CW.png" 
+				   id="hand" 
+				   texture_min_filter="linear_filter" 
+				   texture_max_filter="linear_filter" 
+				   mipmapped="false" rectangle="true"/>
+	  </shader_source>
+	</shader>
+	
+      </quad>
+    </node>
+
+  </node>
+
+  <!--========================================================-->
+  <!-- ODD IN / EVEN OUT                                      -->
+  <!--========================================================-->
+</node>

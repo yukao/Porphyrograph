@@ -1,0 +1,1374 @@
+<!-- ***********************************************************************
+File: CityWalk/XML/LYM_script_CW.xml
+
+LYM CityWalk & Painting Machine (c) Yukao Nagemi & Lola Ajima
+
+************************************************************************* -->
+
+  <!-- ================================================================= -->
+  <!-- MAIN SCRIPT ============================================= -->
+  <!-- contains keyboard and inten message triggers  -->
+  <!-- ================================================================= -->
+  <script id="script FES">
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ TEST UDP ++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++   keystroke (T)  ++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command>
+      <trigger type="keystroke" value="T"/>
+      <action>
+	<send_message_udp pattern="f" value="/testUDP 0" />
+	<target type="single_host" value="udp_SC" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ SCREENSHOT EVERY MN +++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command>
+      <trigger type="cyclic_time" begin="0" period="10" />
+      <action>
+        <screenshot value="frame_LYM" type="jpg"/>
+      </action>
+      <action>
+	<write_log_file value="-----------------------------" />
+	<write_log_file value="drawingMode ({$root:drawingMode})" />
+	<write_log_file value="lineLength ({$root:lineLength})" />
+	<write_log_file value="brushID ({$root:brushID})" />
+	<write_log_file value="granularID ({$root:granularID})" />
+	<write_log_file value="decay ({$root:decay})" />
+	<write_log_file value="local_radius ({$root:local_radius})" />
+	<write_log_file value="decay ({$root:decay})" />
+	<write_log_file value="local_color ({@root:local_color})" />
+	<write_log_file value="blend_alpha ({$root:blend_alpha})" />
+	<write_log_file value="xyz_spectrum_coef ({@root:xyz_spectrum_coef})" />
+	<write_log_file value="color_spectrum_coef ({$root:color_spectrum_coef})" />
+	<write_log_file value="noise_vol_coef ({$root:noise_vol_coef})" />
+	<write_log_file value="local_radius_vol_coef ({$root:local_radius_vol_coef})" />
+	<write_log_file value="global_radius_vol_coef ({$root:global_radius_vol_coef})" />
+	<write_log_file value="=============================" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ LAUNCH BACKTRACK ++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++   keystroke (t)  ++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command>
+      <trigger type="keystroke" value="t"/>
+      <action>
+	<send_message_udp pattern="f" value="/launch (now)" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+	<write_console value="************************************" />
+	<write_console value="******** SCHEDULE START ************" />
+	<write_console value="************************************" />
+	<write_message value="start" />
+      </action>
+      
+      <action>
+        <set_node_scalar_value id="backtrack_begin_time" 
+			       value="(now)" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      
+      <!-- timer reset -->
+      <action>
+        <set_node_scalar_value id="timer" value="0" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_timer_mouse_xy
+			 ="(({$root:timer}),
+			   ({$root:mouse_position_prev[3]}),({$root:mouse_position_prev[4]}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++ SCENE DEPTH INCREASE/DECREASE +++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase scene depth   (D)             -->
+    <!-- Decrease scene depth   (d)             -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="d"/>
+      <action>
+        <set_node_scalar_value id="scene_pre_Z" value="0.1" operator="-=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="scene_pre_Z ({$root:scene_pre_Z})" />
+      </action>
+      <action>
+        <set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:scene_pre_Z})" 
+			      index="7"
+			      operator="="/>
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="D"/>
+      <action>
+        <set_node_scalar_value id="scene_pre_Z" value="0.1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="scene_pre_Z ({$root:scene_pre_Z})" />
+      </action>
+      <action>
+        <set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:scene_pre_Z})" 
+			      index="7"
+			      operator="="/>
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++ X ROTATION INCREASE/DECREASE ++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase X rotation   (X)                -->
+    <!-- Decrease X rotation   (x)                -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="x"/>
+      <action>
+        <set_node_scalar_value id="angle_X" value="0.1" operator="-=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="angle_X ({$root:angle_X})" />
+      </action>
+      <action>
+        <set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:angle_X})"
+			      index="6"
+			      operator="="/>
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+
+    <command>
+      <trigger type="keystroke" value="X"/>
+      <action>
+        <set_node_scalar_value id="angle_X" value="0.1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="angle_X ({$root:angle_X})" />
+      </action>
+      <action>
+        <set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:angle_X})"
+			      index="6"
+			      operator="="/>
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++ Y ROTATION INCREASE/DECREASE ++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase Y rotation   (O)                -->
+    <!-- Decrease Y rotation   (o)                -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="o"/>
+      <ifAction value1="({$root:linear_speed})" value2="0" 
+		  bool_operator=">">
+	<action>
+          <set_node_scalar_value id="linear_speed" value="0.01" operator="-=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<write_console value="linear_speed ({$root:linear_speed})" />
+      </action>
+      <action>
+	<write_message value="({$root:linear_speed})"  index="3" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="O"/>
+      <action>
+        <set_node_scalar_value id="linear_speed" value="0.01" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="linear_speed ({$root:linear_speed})" />
+      </action>
+      <action>
+	<write_message value="({$root:linear_speed})"  index="3" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++ Z ROTATION INCREASE/DECREASE ++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase Z rotation   (Z)                -->
+    <!-- Decrease Z rotation   (z)                -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="z"/>
+      <action>
+        <set_node_scalar_value id="angle_Z" value="0.1" operator="-=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="angle_Z ({$root:angle_Z})" />
+      </action>
+      <action>
+        <set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:angle_Z})"
+			      index="6"
+			      operator="="/>
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+
+
+    <command>
+      <trigger type="keystroke" value="Z"/>
+      <action>
+        <set_node_scalar_value id="angle_Z" value="0.1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="angle_Z ({$root:angle_Z})" />
+      </action>
+      <action>
+        <set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:angle_Z})"
+			      index="6"
+			      operator="="/>
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DRAWING MODE ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: void/no output (v)      -->
+    <!-- 1: line drawing on (l)     -->
+    <!-- 2: Bezier drawing on ()   -->
+    <!-- 3: dot drawing on (b)    -->
+    <!-- 4: radial drawing on (B)   -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="v"/>
+      <action>
+	<write_console value="drawing mode: Void" />
+      </action>
+      <action>
+	<set_node_scalar_value id="drawingMode" value="{#transition_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+	<set_node_scalar_value id="next_drawingMode" value="{#void_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="l"/>
+      <action>
+	<write_console value="drawing mode: Line" />
+      </action>
+      <action>
+	<set_node_scalar_value id="drawingMode" value="{#transition_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+	<set_node_scalar_value id="next_drawingMode" value="{#line_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="b"/>
+      <action>
+	<write_console value="drawing mode: Dot" />
+      </action>
+      <action>
+	<set_node_scalar_value id="drawingMode" value="{#transition_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+	<set_node_scalar_value id="next_drawingMode" value="{#dot_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="B"/>
+      <action>
+	<write_console value="drawing mode: Radial" />
+      </action>
+      <action>
+	<set_node_scalar_value id="drawingMode" value="{#transition_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+	<set_node_scalar_value id="next_drawingMode" value="{#radial_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BRUSH +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: disk (0)       -->
+    <!-- 1: square (1)     -->
+    <!-- 2: ellispse (2)   -->
+    <!-- 3: ring (3)       -->
+    <!-- 4: star (4)       -->
+    <!-- 5: sun (5)        -->
+    <!-- 6: dots (6)       -->
+    <!-- 7: concentric (7) -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="0"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="0" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="1"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="1" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="2"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="2" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="3"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="3" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="4"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="4" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="5"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="5" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="6"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="6" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="7"/>
+      <action>
+        <set_node_scalar_value id="brushID" value="7" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ GRANULAR SYNTH ++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: noeffect                            -->
+    <!-- 1: left y symm                         -->
+    <!-- 2: right y symm                        -->
+    <!-- 3: bottom x symmm                      -->
+    <!-- 4: top x symm                          -->
+    <!-- 5: bottom left symm                    -->
+    <!-- 6: top left symm                       -->
+    <!-- 7: bottom right symm                   -->
+    <!-- 8: top right symm                      -->
+    <!-- Next effect (K)                        -->
+    <!-- Previous effect (k)                    -->
+    <!-- ====================================== -->
+    <command>
+      <!-- previous granular ID -->
+      <trigger type="keystroke" value="k"/>
+      <action>
+        <send_message value = "granular_minus"/>
+        <target type = "single_node" value = "#root"/>
+      </action>
+    </command>
+    <command>
+      <trigger type = "message_event" value = "granular_minus"/>
+
+      <ifAction value1="({$root:granularID})" value2="0" 
+		  bool_operator="==">
+	<action>
+          <set_node_scalar_value id="granularID" value="1" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="granularID" value="1" operator="-=" />
+        <target type="single_node" value="#root" />
+      </action>
+
+      <action>
+	<write_console value="granularID: ({$root:granularID})" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_blend_alpha_granularID_center_width
+			 ="(({$root:blend_alpha}),
+			   ({$root:granularID}),
+			   ({$root:granular_center}),
+			   ({$root:granular_width}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+
+    </command>
+
+
+    <command>
+      <trigger type="keystroke" value="K"/>
+      <action>
+        <send_message value = "granular_plus"/>
+        <target type = "single_node" value = "#root"/>
+      </action>
+    </command>
+    <command>
+      <trigger type = "message_event" value = "granular_plus"/>
+
+      <!-- increments granular ID -->
+      <ifAction value1="({$root:granularID})" value2="8" 
+		  bool_operator=">=">
+	<action>
+          <set_node_scalar_value id="granularID" value="7" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="granularID" value="1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+
+      <action>
+	<write_console value="granularID ({$root:granularID})" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_blend_alpha_granularID_center_width
+			 ="(({$root:blend_alpha}),
+			   ({$root:granularID}),
+			   ({$root:granular_center}),
+			   ({$root:granular_width}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+
+     </command>
+
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DECAY +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase decay   (Y)                   -->
+    <!-- Decrease decay   (y)                   -->
+    <!-- Erase thru decay (e)                   -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="y"/>
+      <ifAction value1="({$root:decay})" value2="0" 
+		  bool_operator="<=">
+	<action>
+          <set_node_scalar_value id="decay" value="0.0001" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="decay" value="1.1" operator="/=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_message value="({$root:decay})" />
+      </action>
+    </command>
+
+
+    <command>
+      <trigger type="keystroke" value="Y"/>
+      <ifAction value1="({$root:decay})" value2="0" 
+		  bool_operator="<=">
+	<action>
+          <set_node_scalar_value id="decay" value="0.000001" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="decay" value="1.1" operator="*=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_message value="decay ({$root:decay})" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="e"/>
+      <action>
+	<set_node_scalar_value id="drawingMode" value="{#void_drawing}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+
+      <!-- starts decay interpolation -->
+      <action>
+	<set_node_scalar_value id="decay_interp1" 
+			       value="({$root:decay})" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_schedule_attribute_value variable="fast_decay_and_reset" 
+				      index="1" operator="=">
+          <schedule begin="now" dur="1"/>
+        </set_schedule_attribute_value>
+        <target type="single_node" value="#root"/>
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_drawingMode_brushID_rampMode
+	     ="(({$root:drawingMode}),({$root:brushID}),({$root:rampMode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ LOCAL RADIUS ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase local radius (R)              -->
+    <!-- Decrease local radius (r)              -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="r"/>
+      <action>
+        <set_node_scalar_value id="local_radius" value="1.1" operator="/=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="local_radius ({$root:local_radius})" />
+      </action>
+      <action>
+	<write_message value="({$root:local_radius})" index="2" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="R"/>
+      <action>
+        <set_node_scalar_value id="local_radius" value="1.1" operator="*=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="local_radius ({$root:local_radius})" />
+      </action>
+      <action>
+	<write_message value="({$root:local_radius})"  index="2" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radius_brushID_drawingMode_depth
+	     ="(({$root:local_radius}),
+	       ({$root:brushID}),({$root:drawingMode}),{#canonical_depth})" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ GLOBAL RADIUS ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase global radius (U)             -->
+    <!-- Decrease global radius (u)             -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="u"/>
+      <action>
+        <set_node_scalar_value id="global_radius" value="1.1" operator="/=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="global_radius ({$root:global_radius})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source  
+	     cg_vp_3fv_noise_global_radius_frameno="(
+(({$root:xy_noise_vol})*({$root:xy_noise_vol_coef})),
+(({$root:global_radius_vol})*({$root:global_radius_vol_coef})),
+({$config:current_frame}))" />
+         </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+
+    <command>
+      <trigger type="keystroke" value="U"/>
+      <action>
+        <set_node_scalar_value id="global_radius" value="1.1" operator="*=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="global_radius ({$root:global_radius})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source  
+	     cg_vp_3fv_noise_global_radius_frameno="(
+(({$root:xy_noise_vol})*({$root:xy_noise_vol_coef})),
+(({$root:global_radius_vol})*({$root:global_radius_vol_coef})),
+({$config:current_frame}))" />
+         </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ RAMPS +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command>
+      <trigger type="keystroke" value="p"/>
+      <action>
+	<set_node_scalar_value id="ramp_scene_post_Z1" 
+			      value="({$root:scene_post_Z})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_scalar_value id="rampMode" 
+			      value="2" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_scalar_value id="ramp_scene_post_Z2" 
+			      value="(({$root:scene_post_Z}) + 1000)" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_schedule_attribute_value variable="ramp_scene_post_Z" 
+				      index="1" operator="=">
+          <schedule begin="now" dur="10"/>
+        </set_schedule_attribute_value>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke s: screenshot                -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="s"/>
+      <action>
+        <screenshot value="frame_LYM" type="png"/>
+      </action>
+      <action>
+	<write_log_file value="-----------------------------" />
+	<write_log_file value="drawingMode ({$root:drawingMode})" />
+	<write_log_file value="lineLength ({$root:lineLength})" />
+	<write_log_file value="brushID ({$root:brushID})" />
+	<write_log_file value="granularID ({$root:granularID})" />
+	<write_log_file value="decay ({$root:decay})" />
+	<write_log_file value="local_radius ({$root:local_radius})" />
+	<write_log_file value="decay ({$root:decay})" />
+	<write_log_file value="local_color ({@root:local_color})" />
+	<write_log_file value="blend_alpha ({$root:blend_alpha})" />
+	<write_log_file value="=============================" />
+      </action>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke c: clear-up                  -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="c"/>
+      <action>
+        <send_message value = "clear"/>
+        <target type = "single_node" value = "#root"/>
+      </action>
+    </command>
+
+    <command>
+      <trigger type = "message_event" value = "clear"/>
+      <action>
+	<write_message value="clear" />
+      </action>
+      <action>
+	<write_console value="********************************************************" />
+      </action>
+      <action>
+	<write_console value="           CLEAR!!!!!!" />
+      </action>
+      <action>
+	<write_console value="********************************************************" />
+      </action>
+      <action>
+        <set_schedule_attribute_value variable="ramp_linear_speed" 
+				      index="1" operator="=">
+	  <schedule begin="9999999999999999" dur="10"/>
+        </set_schedule_attribute_value>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<set_node_scalar_value id="drawingFrame" value="-1" operator="=" />
+	<set_node_scalar_value id="drawingMode" value="{#void_drawing}" operator="=" />
+	<set_node_scalar_value id="decay" value="0" operator="=" />
+	<set_node_scalar_value id="echo" value="0" operator="=" />
+	<set_node_scalar_value id="local_radius" value="1.0" operator="=" />
+	<set_node_scalar_value id="global_radius" value="1.0" operator="=" />
+	<set_node_scalar_value id="brushID" value="0" operator="=" />
+	<set_node_scalar_value id="linear_speed" value="0" operator="=" />
+	<set_node_scalar_value id="global_radius_vol" value="1" operator="=" />
+	<set_node_scalar_value id="local_radius_vol" value="1" operator="=" />
+	<set_node_scalar_value id="noise_vol" value="0" operator="=" />
+	<set_node_scalar_value id="color_spectrum_coef" value="0" operator="=" />
+	<set_node_scalar_value id="global_radius_vol_coef" value="0" operator="=" />
+	<set_node_scalar_value id="local_radius_vol_coef" value="0" operator="=" />
+	<set_node_scalar_value id="noise_vol_coef" value="0" operator="=" />
+	<set_node_scalar_value id="scene_pre_Z" value="(1.1*{#canonical_depth})" operator="=" />
+	<set_node_scalar_value id="scene_pre_Y" value="0" operator="=" />
+	<set_node_scalar_value id="scene_pre_X" value="0" operator="=" />
+	<set_node_scalar_value id="scene_post_Z" value="0" operator="=" />
+	<set_node_scalar_value id="scene_post_Y" value="0" operator="=" />
+	<set_node_scalar_value id="scene_post_X" value="0" operator="=" />
+	<set_node_scalar_value id="angle_X" value="0" operator="=" />
+	<set_node_scalar_value id="angle_Y" value="0" operator="=" />
+	<set_node_scalar_value id="angle_Z" value="0" operator="=" />
+	<set_node_table_value id="sceneTransformationParameters" 
+			      value="({$root:scene_post_Z},{$root:scene_post_Y},{$root:scene_post_X},{$root:angle_Z},{$root:angle_Y},{$root:angle_X},{$root:scene_pre_Z},{$root:scene_pre_Y},{$root:scene_pre_X})"
+			      operator="="/>
+	<set_node_scalar_value id="angle_step" value="0.01" operator="=" />
+	<set_node_table_value id="xyz_spectrum" value="(0,0,0)" operator="=" />
+	<set_node_table_value id="color_spectrum_coef" value="(0,0,0)" operator="=" />
+	<set_node_table_value id="color_spectrum" value="(0,0,0,1)" operator="=" />
+	<set_node_table_value id="local_color" value="(1,1,1,1)" operator="=" />
+	<set_node_table_value id="local_color_memory" value="(1,1,1,1)" operator="=" />
+	<set_node_scalar_value id="blend_alpha" value="1" operator="=" />
+	<set_node_table_value id="post_effects" value="(0,0,0,0)" operator="=" />
+	<set_node_scalar_value id="granularID" value="0" operator="=" />
+	<set_node_scalar_value id="granular_center" value="0" operator="=" />
+	<set_node_scalar_value id="granular_width" value="{#width}" operator="=" />
+	<target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke W: whitecolor                -->
+    <!-- keystroke n: blackcolor                -->
+    <!-- keystroke H/h: redcolor                -->
+    <!-- keystroke J/j: greencolor              -->
+    <!-- keystroke M/m: bluecolor               -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="W"/>
+      <action>
+        <write_console value="white local color"/>
+      </action>
+      <action>
+	<set_node_table_value id="local_color" 
+			      value="(1,1,1,1)" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="n"/>
+      <action>
+        <write_console value="black local color"/>
+      </action>
+      <action>
+	<set_node_table_value id="local_color" 
+			      value="(0,0,0,1)" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#SimpleDisplay_*" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="H"/>
+      <action>
+        <write_console value="+ Red local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[1]})" value2="1" 
+		  bool_operator="<">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0.1,0,0,0)" operator="+="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+    <command>
+      <trigger type="keystroke" value="h"/>
+      <action>
+        <write_console value="- Red local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[1]})" value2="0" 
+		  bool_operator=">">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0.1,0,0,0)" operator="-="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="J"/>
+      <action>
+        <write_console value="+ Green local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[2]})" value2="1" 
+		  bool_operator="<">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0,0.1,0,0)" operator="+="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+    <command>
+      <trigger type="keystroke" value="j"/>
+      <action>
+        <write_console value="- Green local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[2]})" value2="0" 
+		  bool_operator=">">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0,0.1,0,0)" operator="-="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="M"/>
+      <action>
+        <write_console value="+ Blue local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[3]})" value2="1" 
+		  bool_operator="<">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0,0,0.1,0)" operator="+="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+    <command>
+      <trigger type="keystroke" value="m"/>
+      <action>
+        <write_console value="- Blue local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[3]})" value2="0" 
+		  bool_operator=">">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0,0,0.1,0)" operator="-="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="A"/>
+      <action>
+        <write_console value="+ Transparency local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[4]})" value2="1" 
+		  bool_operator="<">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0,0,0,0.1)" operator="+="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+    <command>
+      <trigger type="keystroke" value="a"/>
+      <action>
+        <write_console value="- Transparency local color ({@root:local_color})"/>
+      </action>
+      <ifAction value1="({$root:local_color[4]})" value2="0" 
+		  bool_operator=">">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(0,0,0,0.1)" operator="-="/>
+          <target type="single_node" value="#root"/>
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#QuadStorePositionColor_*" />
+	</action>
+	<action>
+          <set_material_attribute_value operator="=">
+            <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+          </set_material_attribute_value>
+          <target type="multiple_nodes" value="#SimpleDisplay_*" />
+	</action>
+      </ifAction>
+    </command>
+
+
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase xyz_spectrum_coef (.)         -->
+    <!-- Decrease xyz_spectrum_coef (;)         -->
+    <!-- Increase color_spectrum_coef (/)       -->
+    <!-- Decrease color_spectrum_coef (:)       -->
+    <!-- Increase global_radius_vol (%)        -->
+    <!-- Decrease global_radius_vol (,)        -->
+    <!-- Increase local_radius_vol ({)          -->
+    <!-- Decrease local_radius_vol (})          -->
+    <!-- ====================================== -->
+    <command>
+      <trigger type="keystroke" value="."/>
+      <action>
+        <set_node_table_value id="xyz_spectrum_coef" value="0.1" index="2" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="xyz_spectrum_coef ({@root:xyz_spectrum_coef})" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value=";"/>
+      <ifAction value1="({$root:xyz_spectrum_coef[1]})" value2="0.099" 
+		  bool_operator=">">
+	<action>
+          <set_node_table_value id="xyz_spectrum_coef" value="0.1" index="1" operator="-=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<write_console value="xyz_spectrum_coef ({@root:xyz_spectrum_coef})" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="/"/>
+      <action>
+        <set_node_table_value id="color_spectrum_coef" value="0.1" index="1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="color_spectrum_coef ({$root:color_spectrum_coef})" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value=":"/>
+      <ifAction value1="({$root:color_spectrum_coef})" value2="0.099" 
+		  bool_operator=">">
+	<action>
+          <set_node_scalar_value id="color_spectrum_coef" value="0.1" operator="-=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<write_console value="color_spectrum_coef ({$root:color_spectrum_coef})" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="%"/>
+      <action>
+        <set_node_scalar_value id="global_radius_vol_coef" value="0.1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="global_radius_vol_coef ({$root:global_radius_vol_coef})" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value=","/>
+      <ifAction value1="({$root:global_radius_vol_coef})" value2="0.099" 
+		  bool_operator=">">
+	<action>
+          <set_node_scalar_value id="global_radius_vol_coef" value="0.1" operator="-=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<write_console value="global_radius_vol_coef ({$root:global_radius_vol_coef})" />
+      </action>
+    </command>
+
+    <command>
+      <trigger type="keystroke" value="{"/>
+      <action>
+        <set_node_scalar_value id="local_radius_vol_coef" value="0.1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="local_radius_vol_coef ({$root:local_radius_vol_coef})" />
+      </action>
+    </command>
+    <command>
+      <trigger type="keystroke" value="}"/>
+      <ifAction value1="({$root:local_radius_vol_coef})" value2="0.099" 
+		  bool_operator=">">
+	<action>
+          <set_node_scalar_value id="local_radius_vol_coef" value="0.1" operator="-=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<write_console value="local_radius_vol_coef ({$root:local_radius_vol_coef})" />
+      </action>
+    </command>
+  </script>

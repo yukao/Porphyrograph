@@ -1,0 +1,1250 @@
+#!/usr/bin/perl
+
+# ods to conf
+
+# PG_confGenerator-v3.prl
+# July 2015
+# (c) Lola and Yukao Meet
+
+# input: format csv (export from libreoffice
+# output: C++ (for additional program variables and constants) 
+#         and ASCII for configuration file
+#
+
+use strict;
+use warnings;
+use 5.010;
+
+# reading modes
+my $COMMENT = 1;
+my $HTML = 2;
+my $SPECIFICATION = 3;
+my $SCENE = 4;
+my $INITIALIZATION = 5;
+my $RENDERING_FILES = 6;
+my $UDP_LOCAL_SERVER = 7;
+my $UDP_REMOTE_CLIENT = 8;
+my $SCENARIO = 9;
+
+my $pad_len = 12;
+
+# command to regenerate cpp files + shaders: to be called after each change of variables in the scenario
+# perl song\cmd\PG_confGenerator_song-v1.prl song\configuration\LYM_song-head-single.csv song\scenarios\LYM_song-scenario-v1.csv song\shaders\LYM_Update_song.frag song\shaders\LYM_Update_song_full.frag song\shaders\LYM_Mixing_song.frag song\shaders\LYM_Mixing_song_full.frag song\shaders\LYM_Particle_song.frag song\shaders\LYM_Particle_song_full.frag song\shaders\LYM_Master_song.frag song\shaders\LYM_Master_song_full.frag ..\Porphyrograph\Porphyrograph-song-src\pg_script_header.h ..\Porphyrograph\Porphyrograph-song-src\pg_script_body.cpp  ..\Porphyrograph\Porphyrograph-song-src\pg_shader_header.h ..\Porphyrograph\Porphyrograph-song-src\pg_shader_body_decl.cpp ..\Porphyrograph\Porphyrograph-song-src\pg_shader_body_bind.cpp ..\Porphyrograph\Porphyrograph-song-src\pg_update_body.cpp
+
+if( @ARGV != 16 && @ARGV != 14 ) {
+    printf "Incorrect number of arguments %d\n" , @ARGV + 0 ;
+    print "Usage: perl song/cmd/PG_confGenerator_song-v1.prl song/configuration/LYM_song-head-single.csv song/scenarios/LYM_song-scenario-v1.csv song/shaders/LYM_Update_song.frag song/shaders/LYM_Update_song_full.frag song/shaders/LYM_Mixing_song.frag song/shaders/LYM_Mixing_song_full.frag song/shaders/LYM_Particle_song.frag song/shaders/LYM_Particle_song_full.frag song/shaders/LYM_Master_song.frag song/shaders/LYM_Master_song_full.frag ../Porphyrograph/Porphyrograph-song-src/pg_script_header.h ../Porphyrograph/Porphyrograph-song-src/pg_script_body.cpp  ../Porphyrograph/Porphyrograph-song-src/pg_shader_header.h ../Porphyrograph/Porphyrograph-song-src/pg_shader_body_decl.cpp ../Porphyrograph/Porphyrograph-song-src/pg_shader_body_bind.cpp ../Porphyrograph/Porphyrograph-song-src/pg_update_body.cpp\n";
+    print "PG_confGenerator.prl: A program for generating shader file & C++ code for Porphyrograph\n";
+    exit 0;
+}
+
+my $withParticleShaders = 1;
+if(  @ARGV == 14 ) {
+ $withParticleShaders = 0;
+}
+
+my $NAMEScriptHeaderfile;
+my $NAMEScriptBodyfile;
+my $NAMEShaderHeaderfile;
+my $NAMEShaderBodyfile;
+my $NAMEDrawBodyfile;
+my $NAMEOutputfile;
+
+
+my $NAMEInputfileHEAD = $ARGV[0];
+open( INPUT_HEAD_CSV , "<$NAMEInputfileHEAD" ) 
+    || die "File $NAMEInputfileHEAD not found!";
+
+my $NAMEInputfileSCENARIO = $ARGV[1];
+open( INPUT_SCENARIO_CSV , "<$NAMEInputfileSCENARIO" ) 
+    || die "File $NAMEInputfileSCENARIO not found!";
+
+my $NAMEShaderUpdateInputFile = $ARGV[2];
+open( INPUT_SHADERUPDATE_FILE , "<$NAMEShaderUpdateInputFile" ) 
+    || die "File $NAMEShaderUpdateInputFile not opened!";
+printf "Reading shader file $NAMEShaderUpdateInputFile\n";
+
+my $NAMEShaderUpdateOuptputFile = $ARGV[3];
+open( OUTPUT_SHADERUPDATE_FILE , ">$NAMEShaderUpdateOuptputFile" ) 
+    || die "File $NAMEShaderUpdateOuptputFile not opened!";
+printf "Writing shader file $NAMEShaderUpdateOuptputFile\n";
+
+my $NAMEShaderMixingInputFile = $ARGV[4];
+open( INPUT_SHADERMIXING_FILE , "<$NAMEShaderMixingInputFile" ) 
+    || die "File $NAMEShaderMixingInputFile not opened!";
+printf "Reading shader file $NAMEShaderMixingInputFile\n";
+
+my $NAMEShaderMixingOuptputFile = $ARGV[5];
+open( OUTPUT_SHADERMIXING_FILE , ">$NAMEShaderMixingOuptputFile" ) 
+    || die "File $NAMEShaderMixingOuptputFile not opened!";
+printf "Writing shader file $NAMEShaderMixingOuptputFile\n";
+
+if(  $withParticleShaders ) {
+	my $NAMESHADERPARTICLEInputFile = $ARGV[6];
+	open( INPUT_SHADERPARTICLE_FILE , "<$NAMESHADERPARTICLEInputFile" ) 
+	    || die "File $NAMESHADERPARTICLEInputFile not opened!";
+	printf "Reading shader file $NAMESHADERPARTICLEInputFile\n";
+
+	my $NAMESHADERPARTICLEOuptputFile = $ARGV[7];
+	open( OUTPUT_SHADERPARTICLE_FILE , ">$NAMESHADERPARTICLEOuptputFile" ) 
+	    || die "File $NAMESHADERPARTICLEOuptputFile not opened!";
+	printf "Writing shader file $NAMESHADERPARTICLEOuptputFile\n";
+
+	my $NAMEShaderMasterInputFile = $ARGV[8];
+	open( INPUT_SHADERMASTER_FILE , "<$NAMEShaderMasterInputFile" ) 
+	    || die "File $NAMEShaderMasterInputFile not opened!";
+	printf "Reading shader file $NAMEShaderMasterInputFile\n";
+
+	my $NAMEShaderMasterOuptputFile = $ARGV[9];
+	open( OUTPUT_SHADERMASTER_FILE , ">$NAMEShaderMasterOuptputFile" ) 
+	    || die "File $NAMEShaderMasterOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderMasterOuptputFile\n";
+
+	$NAMEScriptHeaderfile = $ARGV[10];
+	open( OUTPUT_SCRIPT_HEADER_FILE , ">$NAMEScriptHeaderfile" ) 
+	    || die "File $NAMEScriptHeaderfile not opened!";
+	printf "Generating header file $NAMEScriptHeaderfile\n";
+
+	$NAMEScriptBodyfile = $ARGV[11];
+	open( OUTPUT_SCRIPT_BODY_FILE , ">$NAMEScriptBodyfile" ) 
+	    || die "File $NAMEScriptBodyfile not opened!";
+	printf "Generating cpp file $NAMEScriptBodyfile\n";
+
+	$NAMEShaderHeaderfile = $ARGV[12];
+	open( OUTPUT_SHADER_HEADER_FILE , ">$NAMEShaderHeaderfile" ) 
+	    || die "File $NAMEShaderHeaderfile not opened!";
+	printf "Generating header file $NAMEShaderHeaderfile\n";
+
+	$NAMEShaderBodyfile = $ARGV[13];
+	open( OUTPUT_SHADER_BODY_DECL_FILE , ">$NAMEShaderBodyfile" ) 
+	    || die "File $NAMEShaderBodyfile not opened!";
+	printf "Generating cpp file $NAMEShaderBodyfile\n";
+
+	$NAMEShaderBodyfile = $ARGV[14];
+	open( OUTPUT_SHADER_BODY_BIND_FILE , ">$NAMEShaderBodyfile" ) 
+	    || die "File $NAMEShaderBodyfile not opened!";
+	printf "Generating cpp file $NAMEShaderBodyfile\n";
+
+	$NAMEDrawBodyfile = $ARGV[15];
+	open( OUTPUT_DRAW_BODY_FILE , ">$NAMEDrawBodyfile" ) 
+	    || die "File $NAMEShaderBodyfile not opened!";
+	printf "Generating cpp file $NAMEDrawBodyfile\n";
+}
+else {
+	my $NAMEShaderMasterInputFile = $ARGV[6];
+	open( INPUT_SHADERMASTER_FILE , "<$NAMEShaderMasterInputFile" ) 
+	    || die "File $NAMEShaderMasterInputFile not opened!";
+	printf "Reading shader file $NAMEShaderMasterInputFile\n";
+
+	my $NAMEShaderMasterOuptputFile = $ARGV[7];
+	open( OUTPUT_SHADERMASTER_FILE , ">$NAMEShaderMasterOuptputFile" ) 
+	    || die "File $NAMEShaderMasterOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderMasterOuptputFile\n";
+
+	$NAMEScriptHeaderfile = $ARGV[8];
+	open( OUTPUT_SCRIPT_HEADER_FILE , ">$NAMEScriptHeaderfile" ) 
+	    || die "File $NAMEScriptHeaderfile not opened!";
+	printf "Generating header file $NAMEScriptHeaderfile\n";
+
+	$NAMEScriptBodyfile = $ARGV[9];
+	open( OUTPUT_SCRIPT_BODY_FILE , ">$NAMEScriptBodyfile" ) 
+	    || die "File $NAMEScriptBodyfile not opened!";
+	printf "Generating cpp file $NAMEScriptBodyfile\n";
+
+	$NAMEShaderHeaderfile = $ARGV[10];
+	open( OUTPUT_SHADER_HEADER_FILE , ">$NAMEShaderHeaderfile" ) 
+	    || die "File $NAMEShaderHeaderfile not opened!";
+	printf "Generating header file $NAMEShaderHeaderfile\n";
+
+	$NAMEShaderBodyfile = $ARGV[11];
+	open( OUTPUT_SHADER_BODY_DECL_FILE , ">$NAMEShaderBodyfile" ) 
+	    || die "File $NAMEShaderBodyfile not opened!";
+	printf "Generating cpp file $NAMEShaderBodyfile\n";
+
+	$NAMEShaderBodyfile = $ARGV[12];
+	open( OUTPUT_SHADER_BODY_BIND_FILE , ">$NAMEShaderBodyfile" ) 
+	    || die "File $NAMEShaderBodyfile not opened!";
+	printf "Generating cpp file $NAMEShaderBodyfile\n";
+
+	$NAMEDrawBodyfile = $ARGV[13];
+	open( OUTPUT_DRAW_BODY_FILE , ">$NAMEDrawBodyfile" ) 
+	    || die "File $NAMEShaderBodyfile not opened!";
+	printf "Generating cpp file $NAMEDrawBodyfile\n";
+}
+
+my $line = <INPUT_HEAD_CSV>;
+my $mode = $COMMENT;
+my $value = 0;
+while (!eof(INPUT_HEAD_CSV)) {
+    chomp $line;
+    if( $line =~ m/^RANK/ ) {
+		$mode = $SPECIFICATION;
+    }
+    elsif( $line =~ m/^rendering_files/ ) {
+		$mode = $RENDERING_FILES;
+    }
+    elsif( $line =~ m/^initial_values/ ) {
+		$mode = $INITIALIZATION;
+    }
+    elsif( $line =~ m/^udp_local_server/ ) {
+		$mode = $UDP_LOCAL_SERVER;
+    }
+    elsif( $line =~ m/^udp_remote_client/ ) {
+		$mode = $UDP_REMOTE_CLIENT;
+    }
+    elsif( $line =~ m/^\/head/ ) {
+		last;
+    }
+    else {
+		die "Unknown head mode [$line] !\n";
+    }
+
+    if( $mode == $INITIALIZATION ) {
+		# initial values
+		$line = <INPUT_HEAD_CSV>;
+
+		#closing tag
+		$line = <INPUT_HEAD_CSV>;
+
+		#next line
+		$line = <INPUT_HEAD_CSV>;
+	}
+    elsif( $mode == $RENDERING_FILES ) {
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable IDs
+		$line = <INPUT_HEAD_CSV>;
+
+	    while( 1 ) {
+			chomp $line;
+		    if( $line =~ m/^VIDEO/ || $line =~ m/^SVG/ 
+		    	|| $line =~ m/^PNG/ || $line =~ m/^JPG/ ) {
+				$line = <INPUT_HEAD_CSV>;
+		    }
+		    else {
+		    	last;
+		    }
+		}
+		# closing tag
+		$line = <INPUT_HEAD_CSV>;
+    }
+    elsif( $mode == $UDP_LOCAL_SERVER ) {
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		my $nb_servers = $values[1];
+		print $nb_servers." servers / ";
+		$line = <INPUT_HEAD_CSV>;
+
+		# verbatim
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable IDs
+		$line = <INPUT_HEAD_CSV>;
+
+	    for( my $ind = 0 ; $ind <  $nb_servers ; $ind++ ) {
+			chomp $line;
+		    if( $line =~ m/^server/ ) {
+				$line = <INPUT_HEAD_CSV>;
+		    }
+		    else {
+		    	die $line . "\nserver line expected!\n";
+		    }
+		}
+		# closing tag
+		$line = <INPUT_HEAD_CSV>;
+    }
+    elsif( $mode == $UDP_REMOTE_CLIENT ) {
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		my $nb_clients = $values[1];
+		print $nb_clients." clients\n";
+		$line = <INPUT_HEAD_CSV>;
+
+		# verbatim
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable IDs
+		$line = <INPUT_HEAD_CSV>;
+
+	    for( my $ind = 0 ; $ind <  $nb_clients ; $ind++ ) {
+			chomp $line;
+		    if( $line =~ m/^client/ ) {
+				$line = <INPUT_HEAD_CSV>;
+		    }
+		    else {
+		    	die $line . "\nclient line expected!\n";
+		    }
+		}
+		# closing tag
+		$line = <INPUT_HEAD_CSV>;
+
+		last;
+    }
+    elsif( $mode == $SPECIFICATION ) {
+		# variable rank -> comment
+		chomp $line;
+		$line =~ s/\t+$//;
+		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable verbatim
+		chomp $line;
+		# -> nb of variables 
+		my @verbatims = split /\t/ , $line;
+		my $nb_variables = @verbatims - 1;
+		printf "%d configuration variables\n" , $nb_variables;
+		# -> comment in the header file
+		$line =~ s/\t+$//;
+		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable types (used for declarations)
+		# builds two times variable  array because the variable
+		# and constant declaration commands destruct the variable list
+		chomp $line;
+		my @types = split /\t/ , $line;
+		my $frontTag  = shift(@types);
+		if( $frontTag ne "TYPE") {
+			die "TYPE line expected not [$frontTag]!";
+		}
+		my @typesCopy = split /\t/ , $line;
+		shift(@typesCopy);
+		my @typesCopyCopy = split /\t/ , $line;
+		shift(@typesCopyCopy);
+		$line = <INPUT_HEAD_CSV>;
+
+		# variable strings (used for alias commands from PD 
+		# and for variable & initial values declarations)
+		chomp $line;
+		my @ids = split /\t/ , $line;
+		$frontTag  = shift(@ids);
+		if( $frontTag ne "ID") {
+			die "ID line expected not [$frontTag]!";
+		}
+		# builds three times variable strings array because the variable
+		# and constant declaration commands detruct the variable list
+		my @idsCopy = split /\t/ , $line;
+		shift(@idsCopy);
+		my @idsCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopy);
+		my @idsCopyCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopyCopy);
+		# var IDs -> comment in the config file
+		$line =~ s/\t+$//;
+		$line = <INPUT_HEAD_CSV>;
+		
+		############################### constant declarations
+		# number of scene variables
+		printf OUTPUT_SCRIPT_HEADER_FILE "enum ConfigurationVarIDs{ \n";
+		# scene variable initialization
+			my $idsCopyCopy = shift(@idsCopyCopy);
+			printf OUTPUT_SCRIPT_HEADER_FILE "  _%s = 0,\n", $idsCopyCopy;
+		while (@idsCopyCopy) {
+		 			$idsCopyCopy = shift(@idsCopyCopy);
+		 			printf OUTPUT_SCRIPT_HEADER_FILE "  _%s,\n", $idsCopyCopy;
+		 			# printf "  _%s,\n", $idsCopyCopy;
+		}
+		printf OUTPUT_SCRIPT_HEADER_FILE "  _MaxConfigurationVarIDs};\n";
+
+		############################### configuration variable declarations
+		# extern configuration variable declaration in the header file
+		while (@idsCopy) {
+   			my $id = shift(@idsCopy);
+   			my $type = shift(@typesCopy);
+   			if( $type eq "sign") {
+   					$type = "float";
+   			}
+   			elsif( $type eq "path") {
+   					$type = "bool";
+   			}
+   			printf OUTPUT_SCRIPT_HEADER_FILE "extern %-5s %-20s;\n", $type , $id;
+		}
+		# configuration variable declaration
+		while (@ids) {
+   			my $id = shift(@ids);
+   			my $type = shift(@types);
+   			if( $type eq "sign") {
+   					$type = "float";
+   			}
+   			elsif( $type eq "path") {
+   					$type = "bool";
+   			}
+   			printf OUTPUT_SCRIPT_BODY_FILE "%-5s %-20s;\n", $type , $id;
+		}
+
+		############################### configuration variable declarations
+		# extern configuration variable types & pointers declarations
+   		printf OUTPUT_SCRIPT_HEADER_FILE "enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };\n";
+   		printf OUTPUT_SCRIPT_HEADER_FILE "extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];\n";
+   		printf OUTPUT_SCRIPT_HEADER_FILE "extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];\n";
+
+		# scenario variable types declarations
+		printf OUTPUT_SCRIPT_BODY_FILE "VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs] = { \n";
+		while (@typesCopyCopy) {
+   			my $type = shift(@typesCopyCopy);
+   			printf OUTPUT_SCRIPT_BODY_FILE "    _pg_%s,\n", $type;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		# scenario variable pointers declarations
+		printf OUTPUT_SCRIPT_BODY_FILE "void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = { \n";
+		while (@idsCopyCopyCopy) {
+   			my $id = shift(@idsCopyCopyCopy);
+   			printf OUTPUT_SCRIPT_BODY_FILE "   (void *)&%s,\n", $id;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+    }
+}
+close( INPUT_HEAD_CSV );
+
+$line = <INPUT_SCENARIO_CSV>;
+chomp $line;
+while (!eof(INPUT_SCENARIO_CSV)) {
+    chomp $line;
+    if( $line =~ m/^RANK/ ) {
+		$mode = $SPECIFICATION;
+    }
+    elsif( $line =~ m/^scenario/ ) {
+		$mode = $SCENARIO;
+    }
+    elsif( $line =~ m/^scene/ ) {
+		$mode = $SCENE;
+    }
+    elsif( $line =~ m/^initial_values/ ) {
+		$mode = $INITIALIZATION;
+    }
+    elsif( $line =~ m/^\/scenario/ ) {
+    	print "\n";
+		last;
+    }
+    else {
+		die "Unknown configuration mode [$line] !\n";
+    }
+
+    if( $mode == $INITIALIZATION ) {
+    	# opening tag
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# initial values
+		$line = <INPUT_SCENARIO_CSV>;
+
+    	# closing tag
+		$line = <INPUT_SCENARIO_CSV>;
+	}
+    elsif( $mode == $SCENARIO ) {
+		chomp $line;
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		my $nb_scenes = $values[1];
+		print $nb_scenes." scenes: ";
+		$line = <INPUT_SCENARIO_CSV>;
+	}
+    elsif( $mode == $SCENE ) {
+		# scene name and duration
+		chomp $line;
+		$line =~ s/^\t+//;
+		my @values = split /\t/ , $line;
+		print $values[1].", ";
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# scene comments
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# scene comments
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# initial values
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# final values
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# interpolation commands
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# final tag
+		$line = <INPUT_SCENARIO_CSV>;
+    }
+    elsif( $mode == $SPECIFICATION ) {
+		# variable rank -> comment
+		chomp $line;
+		$line =~ s/\t+$//;
+		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable verbatim
+		chomp $line;
+		# -> nb of variables 
+		my @verbatims = split /\t/ , $line;
+		my $nb_variables = @verbatims - 1;
+		printf "%d scenario variables\n" , $nb_variables;
+		# -> comment in the header file
+		$line =~ s/\t+$//;
+		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable types (used for declarations)
+		# builds two times variable  array because the variable
+		# and constant declaration commands destruct the variable list
+		chomp $line;
+		my @types = split /\t/ , $line;
+		my $frontTag  = shift(@types);
+		if( $frontTag ne "TYPE") {
+			die "TYPE line expected not [$frontTag]!";
+		}
+		my @typesCopy = split /\t/ , $line;
+		shift(@typesCopy);
+		my @typesCopyCopy = split /\t/ , $line;
+		shift(@typesCopyCopy);
+		my @typesCopyCopyCopy = split /\t/ , $line;
+		shift(@typesCopyCopyCopy);
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable strings (used for alias commands from PD 
+		# and for variable & initial values declarations)
+		chomp $line;
+		my @ids = split /\t/ , $line;
+		$frontTag  = shift(@ids);
+		if( $frontTag ne "ID") {
+			die "ID line expected not [$frontTag]!";
+		}
+		# builds three times variable strings array because the variable
+		# and constant declaration commands detruct the variable list
+		my @idsCopy = split /\t/ , $line;
+		shift(@idsCopy);
+		my @idsCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopy);
+		my @idsCopyCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopyCopy);
+		my @idsCopyCopyCopyCopy = split /\t/ , $line;
+		shift(@idsCopyCopyCopyCopy);
+		my @idstrings = split /\t/ , $line;
+		shift(@idstrings);
+		# var IDs -> comment in the config file
+		$line =~ s/\t+$//;
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# function pointers for specific additional updates
+		chomp $line;
+		my @callBacks = split /\t/ , $line;
+		$frontTag  = shift(@callBacks);
+		if( $frontTag ne "FUNCTION") {
+			die "FUNCTION line expected not [$frontTag]!";
+		}
+		my @callBacksCopy = split /\t/ , $line;
+		shift(@callBacksCopy);
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# string for message display on GUI
+		chomp $line;
+		my @messageStrings = split /\t/ , $line;
+		$frontTag  = shift(@messageStrings);
+		if( $frontTag ne "GUI") {
+			die "GUI line expected not [$frontTag]!";
+		}
+		$line = <INPUT_SCENARIO_CSV>;
+
+		#####################################################
+		##### WRITES THE SCENARIO VARIABLES & CALLBACKS IN THE SCRIPT HEADER AND BODY FILES
+
+		############################### constant declarations
+		# number of scene variables
+		printf OUTPUT_SCRIPT_HEADER_FILE "enum InterpVarIDs{ \n";
+		# scene variable initialization
+			my $idsCopyCopy = shift(@idsCopyCopy);
+			printf OUTPUT_SCRIPT_HEADER_FILE "  _%s = 0,\n", $idsCopyCopy;
+		while (@idsCopyCopy) {
+		 			$idsCopyCopy = shift(@idsCopyCopy);
+		 			printf OUTPUT_SCRIPT_HEADER_FILE "  _%s,\n", $idsCopyCopy;
+		 			# printf "  _%s,\n", $idsCopyCopy;
+		}
+		printf OUTPUT_SCRIPT_HEADER_FILE "  _MaxInterpVarIDs};\n";
+
+		############################### scenario variable declarations
+		# interpolation cancelation variable declaration
+		# printf OUTPUT_SCRIPT_BODY_FILE "bool BrokenInterpolationVar[ _MaxInterpVarIDs ];\n";
+		# scenario variable declarations
+		while (@ids) {
+   			my $id = shift(@ids);
+   			my $type = shift(@types);
+   			if( $type eq "sign") {
+   					$type = "float";
+   			}
+   			elsif( $type eq "path") {
+   					$type = "bool";
+   			}
+   			printf OUTPUT_SCRIPT_BODY_FILE "%-5s %-20s;\n", $type , $id;
+		}
+
+		# extern scenario variable declaration in the header file
+		while (@idsCopy) {
+   			my $id = shift(@idsCopy);
+   			my $type = shift(@typesCopy);
+   			if( $type eq "sign") {
+   					$type = "float";
+   			}
+   			elsif( $type eq "path") {
+   					$type = "bool";
+   			}
+   			printf OUTPUT_SCRIPT_HEADER_FILE "extern %-5s %-20s;\n", $type , $id;
+		}
+
+		# extern scenario variable types, pointers and messages declaration in the header file
+		printf OUTPUT_SCRIPT_HEADER_FILE "extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];\n";
+		printf OUTPUT_SCRIPT_HEADER_FILE "extern void * ScenarioVarPointers[_MaxInterpVarIDs];\n";
+		printf OUTPUT_SCRIPT_HEADER_FILE "extern char *ScenarioVarMessages[_MaxInterpVarIDs];\n";
+		printf OUTPUT_SCRIPT_HEADER_FILE "extern char *CmdString[_MaxInterpVarIDs];\n";
+
+		# scenario variable types declarations
+		printf OUTPUT_SCRIPT_BODY_FILE "VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { \n";
+		while (@typesCopyCopy) {
+   			my $type = shift(@typesCopyCopy);
+   			printf OUTPUT_SCRIPT_BODY_FILE "    _pg_%s,\n", $type;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		# scenario variable pointers declarations
+		printf OUTPUT_SCRIPT_BODY_FILE "void * ScenarioVarPointers[_MaxInterpVarIDs] = { \n";
+		while (@idsCopyCopyCopy) {
+   			my $id = shift(@idsCopyCopyCopy);
+   			printf OUTPUT_SCRIPT_BODY_FILE "   (void *)&%s,\n", $id;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		# variable callback pointers declarations
+		while (@callBacks) {
+   			my $id = shift(@callBacks);
+   			if( $id ne "NULL" ) {
+   				printf OUTPUT_SCRIPT_BODY_FILE "void %s(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);\n", $id;
+   			}
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { \n";
+		while (@callBacksCopy) {
+   			my $id = shift(@callBacksCopy);
+   			if( $id eq "NULL" ) {
+   				printf OUTPUT_SCRIPT_BODY_FILE "   NULL,\n";
+   			}
+   			else {
+   				printf OUTPUT_SCRIPT_BODY_FILE "   &%s,\n", $id;
+   			}
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		printf OUTPUT_SCRIPT_BODY_FILE "char *ScenarioVarMessages[_MaxInterpVarIDs] = { \n";
+		while (@messageStrings) {
+   			my $id = shift(@messageStrings);
+   			if( $id eq "NULL" ) {
+   				printf OUTPUT_SCRIPT_BODY_FILE "  (char *)\"\",\n";
+   			}
+   			else {
+		    	printf OUTPUT_SCRIPT_BODY_FILE "  (char *)\"".$id."\",\n";
+   			}
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		# alias string list declarations (commands received from PD)
+		printf OUTPUT_SCRIPT_BODY_FILE "char *CmdString[_MaxInterpVarIDs] = { \n";
+		my $idstring;
+		foreach $idstring ( @idstrings ) {
+		    printf OUTPUT_SCRIPT_BODY_FILE "  (char *)\"".$idstring."\",\n";
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		#######################################################################
+		#  WRITES THE SCENARIO VARIABLES AS SHADER INPUTS 
+		# destination shader for variables
+		chomp $line;
+		my @values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "SHADER") {
+			die "SHADER line expected not [$frontTag]!";
+		}
+		my $Particle_fs_index = 0;
+		my $Master_fs_index = 0;
+		my $Update_fs_index = 0;
+		my $Mixing_fs_index = 0;
+
+		my @Particle_fs_IDs = ();
+		my @Master_fs_IDs = ();
+		my @Update_fs_IDs = ();
+		my @Mixing_fs_IDs = ();
+
+		my @Particle_fs_types = ();
+		my @Master_fs_types = ();
+		my @Update_fs_types = ();
+		my @Mixing_fs_types = ();
+
+		my $Particle_bindingString_cpp = "";
+		my $Master_bindingString_cpp = "";
+		my $Update_bindingString_cpp = "";
+		my $Mixing_bindingString_cpp = "";
+
+		my $Particle_fs_var_string = "";
+		my $Master_fs_var_string = "";
+		my $Update_fs_var_string = "";
+		my $Mixing_fs_var_string = "";
+
+		my $Particle_head_glsl = "";
+		my $Master_head_glsl = "";
+		my $Update_head_glsl = "";
+		my $Mixing_head_glsl = "";
+
+		my $Particle_body_glsl = "";
+		my $Master_body_glsl = "";
+		my $Update_body_glsl = "";
+		my $Mixing_body_glsl = "";
+
+		# scans the line of the scenario file that indicates what is the target shader for each variable
+		# variables are grouped by 4 to be declared as vec4
+		foreach $value (@values) { # $value is * / Particle_fs / Master_fs / Update_fs / Mixing_fs
+			my $id = shift( @idsCopyCopyCopyCopy );
+			my $type = shift( @typesCopyCopyCopy );
+			if( $value eq "*" ) {
+				# nothing is done, the variable is not a shader parameter
+			}
+			elsif( $value eq "Update_fs" ) {
+				# Update_fs parameter
+				if(  $Update_fs_index == 3  ) {
+				 	$Update_fs_var_string = $Update_fs_var_string . $id;
+				}
+				else {
+				 	$Update_fs_var_string = $Update_fs_var_string . $id . "_";
+				}
+				$Update_fs_IDs[$Update_fs_index] = $id;
+				$Update_fs_types[$Update_fs_index] = $type;
+				if( $type eq "bool" || $type eq "path" ) {
+					$Update_head_glsl .= "bool      " . $id . ";\n";
+				}
+				elsif( $type eq "int" ) {
+					$Update_head_glsl .= "int       " . $id . ";\n";
+				}
+				else {
+					$Update_head_glsl .= "float     " . $id . ";\n";
+				}
+
+				$Update_fs_index++;
+				if( $Update_fs_index == 4 ) {
+					my $varshader = "uniform_Update_fs_" . $Update_fs_index . "fv_" . $Update_fs_var_string;
+					$Update_head_glsl .= "uniform vec" . $Update_fs_index . " " . $varshader  . ";\n";
+
+					print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Update], \"$varshader\");\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Update $varshader : %d\\n\" , $varshader );\n  }\n";
+
+					$Update_bindingString_cpp .= " glUniform" . $Update_fs_index . "f( $varshader ";
+
+				 	for( my $ind = 0 ; $ind < $Update_fs_index ; $ind++ ) {
+						if( $Update_fs_types[$ind] eq "bool" || $Update_fs_types[$ind] eq "path" ) {
+							$Update_body_glsl .= "  " . $Update_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+						}
+						elsif( $Update_fs_types[$ind] eq "int" ) {
+							$Update_body_glsl .= "  " . $Update_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+						}
+						else {
+							$Update_body_glsl .= "  " . $Update_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+						}
+						$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind];
+				 	}
+					$Update_bindingString_cpp .= " );\n";
+				 	$Update_fs_index = 0;
+				 	$Update_fs_var_string = "";
+				}
+			}
+			elsif( $value eq "Mixing_fs" ) {
+				# Mixing_fs parameter
+				if(  $Mixing_fs_index == 3  ) {
+				 	$Mixing_fs_var_string = $Mixing_fs_var_string . $id;
+				}
+				else {
+				 	$Mixing_fs_var_string = $Mixing_fs_var_string . $id . "_";
+				}
+				$Mixing_fs_IDs[$Mixing_fs_index] = $id;
+				$Mixing_fs_types[$Mixing_fs_index] = $type;
+				if( $type eq "bool" || $type eq "path" ) {
+					$Mixing_head_glsl .= "bool      " . $id . ";\n";
+				}
+				elsif( $type eq "int" ) {
+					$Mixing_head_glsl .= "int       " . $id . ";\n";
+				}
+				else {
+					$Mixing_head_glsl .= "float     " . $id . ";\n";
+				}
+
+				$Mixing_fs_index++;
+				if( $Mixing_fs_index == 4 ) {
+					my $varshader = "uniform_Mixing_fs_" . $Mixing_fs_index . "fv_" . $Mixing_fs_var_string;
+					$Mixing_head_glsl .= "uniform vec" . $Mixing_fs_index . " " . $varshader  . ";\n";
+
+					print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Mixing], \"$varshader\");\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Mixing $varshader : %d\\n\" , $varshader );\n  }\n";
+
+					$Mixing_bindingString_cpp .= " glUniform" . $Mixing_fs_index . "f( $varshader ";
+
+				 	for( my $ind = 0 ; $ind < $Mixing_fs_index ; $ind++ ) {
+						if( $Mixing_fs_types[$ind] eq "bool" || $Mixing_fs_types[$ind] eq "path" ) {
+							$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+						}
+						elsif( $Mixing_fs_types[$ind] eq "int" ) {
+							$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+						}
+						else {
+							$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+						}
+						$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind];
+				 	}
+					$Mixing_bindingString_cpp .= " );\n";
+				 	$Mixing_fs_index = 0;
+				 	$Mixing_fs_var_string = "";
+				}
+			}
+
+			elsif( $value eq "Particle_fs" ) {
+				# Particle_fs parameter
+				if(  $Particle_fs_index == 3  ) {
+				 	$Particle_fs_var_string = $Particle_fs_var_string . $id;
+				}
+				else {
+				 	$Particle_fs_var_string = $Particle_fs_var_string . $id . "_";
+				}
+				$Particle_fs_IDs[$Particle_fs_index] = $id;
+				$Particle_fs_types[$Particle_fs_index] = $type;
+				if( $type eq "bool" || $type eq "path" ) {
+					$Particle_head_glsl .= "bool      " . $id . ";\n";
+				}
+				elsif( $type eq "int" ) {
+					$Particle_head_glsl .= "int       " . $id . ";\n";
+				}
+				else {
+					$Particle_head_glsl .= "float     " . $id . ";\n";
+				}
+
+				$Particle_fs_index++;
+				if( $Particle_fs_index == 4 ) {
+					my $varshader = "uniform_Particle_fs_" . $Particle_fs_index . "fv_" . $Particle_fs_var_string;
+					$Particle_head_glsl .= "uniform vec" . $Particle_fs_index . " " . $varshader  . ";\n";
+
+					print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Particle], \"$varshader\");\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Particle $varshader : %d\\n\" , $varshader );\n  }\n";
+
+					$Particle_bindingString_cpp .= " glUniform" . $Particle_fs_index . "f( $varshader ";
+
+				 	for( my $ind = 0 ; $ind < $Particle_fs_index ; $ind++ ) {
+						if( $Particle_fs_types[$ind] eq "bool" || $Particle_fs_types[$ind] eq "path" ) {
+							$Particle_body_glsl .= "  " . $Particle_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+						}
+						elsif( $Particle_fs_types[$ind] eq "int" ) {
+							$Particle_body_glsl .= "  " . $Particle_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+						}
+						else {
+							$Particle_body_glsl .= "  " . $Particle_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+						}
+						$Particle_bindingString_cpp .= ",\n	      (GLfloat)" . $Particle_fs_IDs[$ind];
+				 	}
+					$Particle_bindingString_cpp .= " );\n";
+				 	$Particle_fs_index = 0;
+				 	$Particle_fs_var_string = "";
+				}
+			}
+
+			elsif( $value eq "Master_fs" ) {
+				# Master_fs parameter
+				if(  $Master_fs_index == 3  ) {
+				 	$Master_fs_var_string = $Master_fs_var_string . $id;
+				}
+				else {
+				 	$Master_fs_var_string = $Master_fs_var_string . $id . "_";
+				}
+				$Master_fs_IDs[$Master_fs_index] = $id;
+				$Master_fs_types[$Master_fs_index] = $type;
+				if( $type eq "bool" || $type eq "path" ) {
+					$Master_head_glsl .= "bool      " . $id . ";\n";
+				}
+				elsif( $type eq "int" ) {
+					$Master_head_glsl .= "int       " . $id . ";\n";
+				}
+				else {
+					$Master_head_glsl .= "float     " . $id . ";\n";
+				}
+
+				$Master_fs_index++;
+				if( $Master_fs_index == 4 ) {
+					my $varshader = "uniform_Master_fs_" . $Master_fs_index . "fv_" . $Master_fs_var_string;
+					$Master_head_glsl .= "uniform vec" . $Master_fs_index . " " . $varshader  . ";\n";
+
+					print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Master], \"$varshader\");\n";
+					print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Master $varshader : %d\\n\" , $varshader );\n  }\n";
+
+					$Master_bindingString_cpp .= " glUniform" . $Master_fs_index . "f( $varshader ";
+
+				 	for( my $ind = 0 ; $ind <  $Master_fs_index ; $ind++ ) {
+						if( $Master_fs_types[$ind] eq "bool" || $Master_fs_types[$ind] eq "path" ) {
+							$Master_body_glsl .= "  " . $Master_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+						}
+						elsif( $Master_fs_types[$ind] eq "int" ) {
+							$Master_body_glsl .= "  " . $Master_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+						}
+						else {
+							$Master_body_glsl .= "  " . $Master_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+						}
+						$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind];
+				 	}
+					$Master_bindingString_cpp .= " );\n";
+				 	$Master_fs_index = 0;
+				 	$Master_fs_var_string = "";
+				}
+			}
+		}
+
+		# once the varaiabes have been scanned and grouped by 4, the remaining ones are transformed into variables
+		if( $Update_fs_index > 0 ) {
+			chop( $Update_fs_var_string );
+			my $varshader = "uniform_Update_fs_" . $Update_fs_index . "fv_" . $Update_fs_var_string;
+			if( $Update_fs_index > 1 ) {
+				$Update_head_glsl .= "uniform vec" . $Update_fs_index . " " . $varshader  . ";\n";
+			}
+			else {
+				$Update_head_glsl .= "uniform float " . $varshader  . ";\n";
+			}
+
+			print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+			print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+			print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Update], \"$varshader\");\n";
+			print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Update $varshader : %d\\n\" , $varshader );\n  }\n";
+
+			$Update_bindingString_cpp .= " glUniform" . $Update_fs_index . "f( $varshader ";
+
+			if( $Update_fs_index > 1 ) {
+			 	for( my $ind = 0 ; $ind <  $Update_fs_index ; $ind++ ) {
+					if( $Update_fs_types[$ind] eq "bool" || $Update_fs_types[$ind] eq "path" ) {
+						$Update_body_glsl .= "  " . $Update_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+					}
+					elsif( $Update_fs_types[$ind] eq "int" ) {
+						$Update_body_glsl .= "  " . $Update_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+					}
+					else {
+						$Update_body_glsl .= "  " . $Update_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+					}
+					$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind];
+			 	}
+			 }
+			 else {
+				if( $Update_fs_types[0] eq "bool" || $Update_fs_types[0] eq "path" ) {
+					$Update_body_glsl .= "  " . $Update_fs_IDs[0] . " = (" . $varshader . " > 0 ? true : false);\n";
+				}
+				elsif( $Update_fs_types[0] eq "int" ) {
+					$Update_body_glsl .= "  " . $Update_fs_IDs[0] . " = int(" . $varshader . ");\n";
+				}
+				else {
+					$Update_body_glsl .= "  " . $Update_fs_IDs[0] . " = " . $varshader . ";\n";
+				}
+				$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[0];
+			 }
+			$Update_bindingString_cpp .= " );\n";
+		 	$Update_fs_index = 0;
+		 	$Update_fs_var_string = "";
+		}
+		if( $Mixing_fs_index > 0 ) {
+			chop( $Mixing_fs_var_string );
+			my $varshader = "uniform_Mixing_fs_" . $Mixing_fs_index . "fv_" . $Mixing_fs_var_string;
+			if( $Mixing_fs_index > 1 ) {
+				$Mixing_head_glsl .= "uniform vec" . $Mixing_fs_index . " " . $varshader  . ";\n";
+			}
+			else {
+				$Mixing_head_glsl .= "uniform float " . $varshader  . ";\n";
+			}
+
+			print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+			print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+			print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Mixing], \"$varshader\");\n";
+			print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Mixing $varshader : %d\\n\" , $varshader );\n  }\n";
+
+			$Mixing_bindingString_cpp .= " glUniform" . $Mixing_fs_index . "f( $varshader ";
+
+			if( $Mixing_fs_index > 1 ) {
+			 	for( my $ind = 0 ; $ind < $Mixing_fs_index ; $ind++ ) {
+					if( $Mixing_fs_types[$ind] eq "bool" || $Mixing_fs_types[$ind] eq "path" ) {
+						$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+					}
+					elsif( $Mixing_fs_types[$ind] eq "int" ) {
+						$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+					}
+					else {
+						$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+					}
+					$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind];
+			 	}
+			 }
+			 else {
+				if( $Mixing_fs_types[0] eq "bool" || $Mixing_fs_types[0] eq "path" ) {
+					$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[0] . " = (" . $varshader . " > 0 ? true : false);\n";
+				}
+				elsif( $Mixing_fs_types[0] eq "int" ) {
+					$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[0] . " = int(" . $varshader . ");\n";
+				}
+				else {
+					$Mixing_body_glsl .= "  " . $Mixing_fs_IDs[0] . " = " . $varshader . ";\n";
+				}
+				$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[0];
+			 }
+			$Mixing_bindingString_cpp .= " );\n";
+		 	$Mixing_fs_index = 0;
+		 	$Mixing_fs_var_string = "";
+		}
+		if(  $withParticleShaders ) {
+			if( $Particle_fs_index > 0 ) {
+				chop( $Particle_fs_var_string );
+				my $varshader = "uniform_Particle_fs_" . $Particle_fs_index . "fv_" . $Particle_fs_var_string;
+				$Particle_head_glsl .= "uniform vec" . $Particle_fs_index . " " . $varshader  . ";\n";
+				print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+				print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+				print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Particle], \"$varshader\");\n";
+				print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Particle $varshader : %d\\n\" , $varshader );\n  }\n";
+				$Particle_bindingString_cpp .= " glUniform" . $Particle_fs_index . "f( $varshader ";
+
+			 	for( my $ind = 0 ; $ind < $Particle_fs_index ; $ind++ ) {
+						if( $Particle_fs_types[$ind] eq "bool" || $Particle_fs_types[$ind] eq "path" ) {
+							$Particle_body_glsl .= "  " . $Particle_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+						}
+						elsif( $Particle_fs_types[$ind] eq "int" ) {
+							$Particle_body_glsl .= "  " . $Particle_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+						}
+						else {
+							$Particle_body_glsl .= "  " . $Particle_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+						}
+					$Particle_bindingString_cpp .= ",\n	      (GLfloat)" . $Particle_fs_IDs[$ind];
+			 	}
+				$Particle_bindingString_cpp .= " );\n";
+			 	$Particle_fs_index = 0;
+			 	$Particle_fs_var_string = "";
+			}
+		}
+		if( $Master_fs_index > 0 ) {
+			chop( $Master_fs_var_string );
+			my $varshader = "uniform_Master_fs_" . $Master_fs_index . "fv_" . $Master_fs_var_string;
+			if( $Master_fs_index > 1 ) {
+				$Master_head_glsl .= "uniform vec" . $Master_fs_index . " " . $varshader  . ";\n";
+			}
+			else {
+				$Master_head_glsl .= "uniform float " . $varshader  . ";\n";
+			}
+
+			print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+			print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+			print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Master], \"$varshader\");\n";
+			print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Master $varshader : %d\\n\" , $varshader );\n  }\n";
+
+			$Master_bindingString_cpp .= " glUniform" . $Master_fs_index . "f( $varshader ";
+
+			if( $Master_fs_index > 1 ) {
+			 	for( my $ind = 0 ; $ind <  $Master_fs_index ; $ind++ ) {
+					if( $Master_fs_types[$ind] eq "bool" || $Master_fs_types[$ind] eq "path" ) {
+						$Master_body_glsl .= "  " . $Master_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+					}
+					elsif( $Master_fs_types[$ind] eq "int" ) {
+						$Master_body_glsl .= "  " . $Master_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+					}
+					else {
+						$Master_body_glsl .= "  " . $Master_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+					}
+					$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind];
+			 	}
+			}
+		 	else {
+				if( $Master_fs_types[0] eq "bool" || $Master_fs_types[0] eq "path" ) {
+					$Master_body_glsl .= "  " . $Master_fs_IDs[0] . " = (" . $varshader . " > 0 ? true : false);\n";
+				}
+				elsif( $Master_fs_types[0] eq "int" ) {
+					$Master_body_glsl .= "  " . $Master_fs_IDs[0] . " = int(" . $varshader . ");\n";
+				}
+				else {
+					$Master_body_glsl .= "  " . $Master_fs_IDs[0] . " = " . $varshader . ";\n";
+				}
+				$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[0];
+		 	}
+			$Master_bindingString_cpp .= " );\n";
+		 	$Master_fs_index = 0;
+		 	$Master_fs_var_string = "";
+		}
+		# draws the bindings grouped by shader in the draw.cpp file
+
+		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Update]);\n" , $Update_bindingString_cpp;
+		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Mixing]);\n" , $Mixing_bindingString_cpp;
+		if(  $withParticleShaders ) {
+			print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Particle]);\n" , $Particle_bindingString_cpp;
+		}
+		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Master]);\n" , $Master_bindingString_cpp;
+
+		# manages the inclusions inside the shader files to generate the linearized shader files
+		while ($line = <INPUT_SHADERUPDATE_FILE>) {
+			if( $line =~ /#include_declarations/ ) {
+				print OUTPUT_SHADERUPDATE_FILE $Update_head_glsl;
+			}
+			elsif( $line =~ /#include_initializations/ ) {
+				print OUTPUT_SHADERUPDATE_FILE $Update_body_glsl;
+			}
+			else {
+				print OUTPUT_SHADERUPDATE_FILE $line;
+			}
+		}
+		while ($line = <INPUT_SHADERMIXING_FILE>) {
+			if( $line =~ /#include_declarations/ ) {
+				print OUTPUT_SHADERMIXING_FILE $Mixing_head_glsl;
+			}
+			elsif( $line =~ /#include_initializations/ ) {
+				print OUTPUT_SHADERMIXING_FILE $Mixing_body_glsl;
+			}
+			else {
+				print OUTPUT_SHADERMIXING_FILE $line;
+			}
+		}
+		if(  $withParticleShaders ) {
+			while ($line = <INPUT_SHADERPARTICLE_FILE>) {
+				if( $line =~ /#include_declarations/ ) {
+					print OUTPUT_SHADERPARTICLE_FILE $Particle_head_glsl;
+				}
+				elsif( $line =~ /#include_initializations/ ) {
+					print OUTPUT_SHADERPARTICLE_FILE $Particle_body_glsl;
+				}
+				else {
+					print OUTPUT_SHADERPARTICLE_FILE $line;
+				}
+			}
+		}
+		while ($line = <INPUT_SHADERMASTER_FILE>) {
+			if( $line =~ /#include_declarations/ ) {
+				print OUTPUT_SHADERMASTER_FILE $Master_head_glsl;
+			}
+			elsif( $line =~ /#include_initializations/ ) {
+				print OUTPUT_SHADERMASTER_FILE $Master_body_glsl;
+			}
+			else {
+				print OUTPUT_SHADERMASTER_FILE $line;
+			}
+		}
+
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# minus step command chars declarations
+
+		# minus step command chars declarations
+		printf OUTPUT_SCRIPT_BODY_FILE "char CmdCharMinus[_MaxInterpVarIDs+1] = ";
+		chomp $line;
+		@values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "CHAR-") {
+			die "CHAR- line expected not [$frontTag]!";
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "\"".join( '' , @values )."\";\n";
+
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# plus step command chars declarations
+		printf OUTPUT_SCRIPT_BODY_FILE "char CmdCharPlus[_MaxInterpVarIDs+1] = ";
+		chomp $line;
+		@values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "CHAR+") {
+			die "CHAR+ line expected not [$frontTag]!";
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "\"".join( '' , @values )."\";\n";
+
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable step minus declarations
+		chomp $line;
+		printf OUTPUT_SCRIPT_BODY_FILE "float StepMinus[_MaxInterpVarIDs] = { \n";
+		@values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "STEP-") {
+			die "STEP- line expected not [$frontTag]!";
+		}
+		foreach $value ( @values ) {
+		    printf OUTPUT_SCRIPT_BODY_FILE "  %.6fF,\n", $value;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable step plus declarations
+		chomp $line;
+		printf OUTPUT_SCRIPT_BODY_FILE "float StepPlus[_MaxInterpVarIDs] = { \n";
+		@values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "STEP+") {
+			die "STEP+ line expected not [$frontTag]!";
+		}
+		foreach $value ( @values ) {
+		    printf OUTPUT_SCRIPT_BODY_FILE "  %.6fF,\n", $value;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable mins declarations
+		chomp $line;
+		printf OUTPUT_SCRIPT_BODY_FILE "float MinValues[_MaxInterpVarIDs] = { \n";
+		@values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "MIN_OR_EQUAL") {
+			die "MIN_OR_EQUAL line expected not [$frontTag]!";
+		}
+		foreach $value ( @values ) {
+		    printf OUTPUT_SCRIPT_BODY_FILE "  %.6fF,\n", $value;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		$line = <INPUT_SCENARIO_CSV>;
+
+		# variable max declarations
+		chomp $line;
+		printf OUTPUT_SCRIPT_BODY_FILE "float MaxValues[_MaxInterpVarIDs] = { \n";
+		@values = split /\t/ , $line;
+		$frontTag = shift (@values);
+		if( $frontTag ne "MAX_OR_EQUAL") {
+			die "MAX_OR_EQUAL line expected not [$frontTag]!";
+		}
+		foreach $value ( @values ) {
+		    printf OUTPUT_SCRIPT_BODY_FILE "  %.6fF,\n", $value;
+		}
+		printf OUTPUT_SCRIPT_BODY_FILE "};\n";
+
+		$line = <INPUT_SCENARIO_CSV>;
+    }
+}
+
+close( INPUT_HEAD_CSV );
+close( INPUT_SCENARIO_CSV );
+close( INPUT_SHADERUPDATE_FILE );
+close( OUTPUT_SHADERUPDATE_FILE );
+close( INPUT_SHADERMIXING_FILE );
+close( OUTPUT_SHADERMIXING_FILE );
+if(  $withParticleShaders ) {
+	close( INPUT_SHADERPARTICLE_FILE ); 
+	close( OUTPUT_SHADERPARTICLE_FILE ); 
+}
+close( INPUT_SHADERMASTER_FILE ); 
+close( OUTPUT_SHADERMASTER_FILE ); 
+
+close( OUTPUT_SCRIPT_HEADER_FILE ); 
+close( OUTPUT_SCRIPT_BODY_FILE ); 
+close( OUTPUT_SHADER_HEADER_FILE ); 
+close( OUTPUT_SHADER_BODY_DECL_FILE ); 
+close( OUTPUT_SHADER_BODY_BIND_FILE ); 
+close( OUTPUT_DRAW_BODY_FILE ); 
+

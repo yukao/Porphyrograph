@@ -117,6 +117,8 @@ extern GLuint pg_camera_BGIni_texture_texID;
 // extern IplImage *pg_movie_frame;
 extern int pg_camera_frame_width;
 extern int pg_camera_frame_height;
+extern int pg_camera_x_offset;
+extern int pg_camera_y_offset;
 extern int pg_movie_frame_width;
 extern int pg_movie_frame_height;
 extern int currentlyPlaying_movieNo;

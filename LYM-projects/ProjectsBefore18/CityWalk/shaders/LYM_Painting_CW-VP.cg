@@ -1,0 +1,34 @@
+/***********************************************************************
+File: CityWalk/shaders/LYM_Painting_CW-VP.cg
+
+LYM Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+*************************************************************************/
+
+void main(float4 position      : POSITION,     // espace objet
+          float3 normal        : NORMAL,       // espace objet
+          float3 tangent       : TANGENT,      // espace objet
+	  float2 texcoords     : TEXCOORD0,
+
+	  // matrices standard
+          uniform float4x4 ModelViewProj,      // esp objet -> esp clipping
+          uniform float4x4 ModelView,          // esp objet -> esp de l'obs.3
+          uniform float3 diffuse,
+          uniform float3 specular,
+	 // parametres garnis pour tous les shaders
+          uniform float3 lightDir,             // esp de l'observateur
+          uniform float window_number,         // No de fenetre (si
+                                               // shader dép. de no de fenetre)
+
+	  out float Size          : PSIZE,
+	  out float4 HPosition    : POSITION,
+          out float2 decalCoords  : TEXCOORD0
+	  )
+{
+    // calcul de la position en coordonnees homogenes
+    // (dans le cube canonique: l'espace de clipping) pour le rasteriseur
+    HPosition = mul(ModelViewProj, position) ;
+
+    // passe les coordonnees de texture (decalCoords), 
+    decalCoords = texcoords;
+}

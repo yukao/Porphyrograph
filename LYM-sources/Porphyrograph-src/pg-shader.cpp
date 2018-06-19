@@ -147,6 +147,7 @@ GLint uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 GLint uniform_Update_fs_4fv_photo01_wh;
 GLint uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
+GLint uniform_Update_fs_2fv_Camera_offSetsXY;
 GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 #if defined (GN) || defined (MALAUSSENA)
@@ -731,6 +732,8 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo01_wh");
 	uniform_Update_fs_4fv_photo01Wghts_Camera_W_H
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo01Wghts_Camera_W_H");
+	uniform_Update_fs_2fv_Camera_offSetsXY
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_2fv_Camera_offSetsXY");
 	uniform_Update_fs_4fv_xy_transl_tracks_0_1
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_xy_transl_tracks_0_1");
 	uniform_Update_fs_4fv_CAType_SubType_blurRadius
@@ -882,6 +885,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres == -1)
 		|| (uniform_Update_fs_4fv_photo01_wh == -1)
 		|| (uniform_Update_fs_4fv_photo01Wghts_Camera_W_H == -1)
+		|| (uniform_Update_fs_2fv_Camera_offSetsXY == -1)
 		|| (uniform_Update_texture_fs_CA == -1)
 		|| (uniform_Update_fs_4fv_xy_transl_tracks_0_1 == -1)
 		|| (uniform_Update_fs_4fv_CAType_SubType_blurRadius == -1)
@@ -916,7 +920,7 @@ void pg_loadAllShaders(void) {
 #endif
 		|| (uniform_Update_texture_fs_Part_render == -1)
 		) {
-		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift : %d, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d, uniform_Update_fs_4fv_trkDecay : %d, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_flashTrkCAWghts : %d, uniform_Update_texture_fs_CA : %d, uniform_Update_texture_fs_Pixels : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_photo01_wh: %d, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H: %d, uniform_Update_fs_4fv_CAType_SubType_blurRadius: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, uniform_Update_fs_4fv_trkDecay, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_flashTrkCAWghts, uniform_Update_texture_fs_CA, uniform_Update_texture_fs_Pixels, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_photo01_wh, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H, uniform_Update_fs_4fv_CAType_SubType_blurRadius, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
+		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift : %d, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d, uniform_Update_fs_4fv_trkDecay : %d, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_flashTrkCAWghts : %d, uniform_Update_texture_fs_CA : %d, uniform_Update_texture_fs_Pixels : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_photo01_wh: %d, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H: %d, uniform_Update_fs_2fv_Camera_offSetsXY: %d, uniform_Update_fs_4fv_CAType_SubType_blurRadius: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, uniform_Update_fs_4fv_trkDecay, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_flashTrkCAWghts, uniform_Update_texture_fs_CA, uniform_Update_texture_fs_Pixels, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_photo01_wh, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H, uniform_Update_fs_2fv_Camera_offSetsXY, uniform_Update_fs_4fv_CAType_SubType_blurRadius, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
 #ifdef MALAUSSENA
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_CAseed_type_size_loc : %d\n", uniform_Update_fs_4fv_CAseed_type_size_loc);
 #endif

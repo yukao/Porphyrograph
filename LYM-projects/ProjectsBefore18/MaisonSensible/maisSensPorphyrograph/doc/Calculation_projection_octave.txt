@@ -1,0 +1,43 @@
+P=[5.95;3.09;5.25]
+L=[-0.1;9.15;1.89]
+v=P-L
+u=[0;0;1]
+w=cross(u,v)
+w=w/norm(w)
+r=rotv(w',-0.4256417538)
+vprime = r * v
+vprimenorm=vprime/norm(vprime)
+Pprime = L+vprimenorm *dot(v,vprimenorm) 
+
+P=[5.95;8.94;4.93]
+L=[-0.2;2.53;1.87]
+v=P-L
+u=[0;0;1]
+w=cross(u,v)
+w=w/norm(w)
+r=rotv(w',-0.4256417538)
+vprime = r * v
+vprimenorm=vprime/norm(vprime)
+Pprime = L+vprimenorm *dot(v,vprimenorm) 
+
+h=tan(atan(0.32/1.147)+atan(0.52/1.147))
+
+w=h*4.0/3.0
+
+
+
+Pprime =
+   5.8113
+   3.2290
+   1.4569
+
+Pprime =
+   5.6982
+   8.6775
+   1.0677
+
+h =  0.83839
+
+w =  1.1178
+
+

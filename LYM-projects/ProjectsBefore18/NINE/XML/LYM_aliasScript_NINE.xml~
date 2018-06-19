@@ -1,0 +1,1547 @@
+<!-- ***********************************************************************
+File: LYM_aliasScript_v7.xml
+
+LYM Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+************************************************************************* -->
+
+  <!-- ================================================================= -->
+  <!-- Alias SCRIPT ============================================= -->
+  <!-- contains udp message triggers  -->
+  <!-- ================================================================= -->
+  <aliasScript>
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DRAWING MODE ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: void/no output (v)      -->
+    <!-- 1: point drawing on (p)    -->
+    <!-- 2: line drawing on (l)     -->
+    <!-- 3: Bezier drawing on (b)   -->
+    <!-- 4: filling on (f)          -->
+    <!-- 5: un-filling on (u)       -->
+    <!-- ====================================== -->
+    <command pattern="/drawing_mode i">
+      <action>
+        <write_console value="drawing mode: ({$1})"/>
+      </action>
+      <action>
+        <set_node_scalar_value id="drawingMode" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/drawingmode ({$root:drawingMode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_H_drawingStart_drawingMode
+	               ="({#height},({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))" 
+	     cg_fs_4fv_xy_frameno_freqDots
+	     ="(({$config:mouse_x}),({$config:mouse_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ RENDERING MODE ++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 1: None (non spreading)  (N)                        -->
+    <!-- 2: vertical line  (V)                               -->
+    <!-- 3: horizontal line  (H)                             -->
+    <!-- 4: Y/vertically spreading  (Y)                      -->
+    <!-- 5: X/horizontally spreading  (X)                    -->
+    <!-- 6: T/vertically + bidirectionnally spreading  (T)   -->
+    <!-- 7: S/horizontally + bidirectionnally spreading (S)  -->
+    <!-- 8: bidirectionnally spreading (B)                   -->
+    <!-- ====================================== -->
+    <command pattern="/rendering_mode i">
+      <action>
+        <write_console value="rendering mode: ({$1})"/>
+      </action>
+      <action>
+        <set_node_scalar_value id="rendering_mode" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/renderingmode ({$root:rendering_mode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/normal_bidir">
+      <ifAction value1="({$root:rendering_mode})" value2="1" 
+		  bool_operator="!=">
+	<action>
+          <write_console value="rendering mode: Normal rendering"/>
+	</action>
+	<action>
+          <set_node_scalar_value id="rendering_mode" value="1" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <write_console value="rendering mode: Bidirectionnally spreading" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="rendering_mode" value="8" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/renderingmode ({$root:rendering_mode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+
+    <command pattern="/ST i">
+      <ifAction value1="({$root:rendering_mode})" value2="7" 
+		  bool_operator="!=">
+	<action>
+          <write_console value="rendering mode: S/horizontally + bidirectionnally spreading"/>
+	</action>
+	<action>
+          <set_node_scalar_value id="rendering_mode" value="7" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <write_console value="rendering mode: T/vertically + bidirectionnally spreading" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="rendering_mode" value="6" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/renderingmode ({$root:rendering_mode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+
+    <command pattern="/HV">
+      <ifAction value1="({$root:rendering_mode})" value2="5" 
+		  bool_operator="!=">
+	<action>
+	  <write_console value="rendering mode: Y/vertically spreading" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="rendering_mode" value="5" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+          <write_console value="rendering mode: X/horizontally spreading"/>
+	</action>
+	<action>
+          <set_node_scalar_value id="rendering_mode" value="4" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/renderingmode ({$root:rendering_mode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+
+    <command pattern="/XY">
+      <ifAction value1="({$root:rendering_mode})" value2="3" 
+		  bool_operator="!=">
+	<action>
+          <write_console value="rendering mode: Horizontal line"/>
+	</action>
+	<action>
+          <set_node_scalar_value id="rendering_mode" value="3" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <write_console value="rendering mode: Vertical line" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="rendering_mode" value="2" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/renderingmode ({$root:rendering_mode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/oO">
+      <ifAction value1="({$root:rendering_mode})" value2="9" 
+		  bool_operator="!=">
+	<action>
+          <write_console value="rendering mode: oblique spreading"/>
+	</action>
+	<action>
+          <set_node_scalar_value id="rendering_mode" value="9" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <write_console value="rendering mode: anti-oblique spreading" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="rendering_mode" value="10" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/renderingmode ({$root:rendering_mode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke c: clear-up                  -->
+    <!-- keystroke C: clear-up                  -->
+    <!-- ====================================== -->
+    <command pattern="/clear_CLEAR">
+      <ifAction value1="({$config:current_frame}-{$root:clearFrame})" value2="100" 
+		  bool_operator="<">
+      <action>
+        <send_message value = "STORE_FB"/>
+        <target type = "single_node" value = "#root"/>
+      </action>
+      <elseAction/>
+        <!-- action>
+          <send_message value = "clear"/>
+          <target type = "single_node" value = "#root"/>
+	</action -->
+	<action>
+	  <set_node_scalar_value id="clearFrame" value="({$config:current_frame})" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+    </command>
+
+    <!-- ====================================== -->
+    <!-- keystroke s: Snapshot                  -->
+    <!-- ====================================== -->
+    <command pattern="/snapshot">
+      <action>
+        <screenshot value="frame_LYM" type="jpg"/>
+      </action>
+      <action>
+	<write_log_file value="-----------------------------" />
+	<write_log_file value="frameNo ({$config:current_frame})" />
+	<write_log_file value="drawingMode ({$root:drawingMode})" />
+	<write_log_file value="freqDots ({$root:freqDots})" />
+	<write_log_file value="rendering_mode ({$root:rendering_mode})" />
+	<write_log_file value="brushID ({$root:brushID})" />
+	<write_log_file value="kaleidoscopeID ({$root:kaleidoscopeID})" />
+	<write_log_file value="BGEffectID ({$root:BGEffectID})" />
+	<write_log_file value="decay ({$root:decay})" />
+	<write_log_file value="radius ({$root:radiusX}) x ({$root:radiusY})" />
+	<write_log_file value="spread_radius + decay ({@root:spread_radius_decay})" />
+	<write_log_file value="local_color ({@root:local_color})" />
+	<write_log_file value="blend_color ({@root:blend_color})" />
+	<write_log_file value="composition opacities ({@root:BG_compositionOpacity})" />
+	<write_log_file value="xy_spectrum_coef ({$root:xy_spectrum_coef})" />
+	<write_log_file value="color_spectrum_coef ({$root:color_spectrum_coef})" />
+	<write_log_file value="spread_radius_vol_coef ({$root:spread_radius_vol_coef})" />
+	<write_log_file value="brush_radius_vol_coef ({$root:brush_radius_vol_coef})" />
+	<write_log_file value="=============================" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BACKGOUND EFFECTS +++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: zero effect (z)                     -->
+    <!-- 1: waves (w)                           -->
+    <!-- ====================================== -->
+    <command pattern="/waves f">
+      <ifAction value1="({$1})" value2="0" 
+		bool_operator="==">
+	<!-- no backgroiund effect -->
+	<action>
+          <set_node_scalar_value id="BGEffectID" value="0" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+
+	<action>
+	  <write_console value="background effect: None" />
+	</action>
+      <elseAction/>
+	<!-- wave backgroiund effect -->
+	<action>
+          <set_node_scalar_value id="BGEffectID" value="1" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+
+	<action>
+	  <write_console value="background effect: Waves" />
+	</action>
+      </ifAction>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_kaleidoscopeID_BGfx_timer
+			 ="(({$root:kaleidoscopeID}),({$root:BGEffectID}),({$root:timer}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+    <command pattern="/wave_phase_amp_length f f f">
+      <action>
+        <write_console value="/Wave phaes/amplitude/length ({$1}) ({$2}) ({$3}) ({$4})"/>
+      </action>
+      <action>
+	<set_node_table_value id="phase_amplitude_length" 
+			      value="(({$1}),({$2}),({$3}))" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_phase_amplitude_length="({@root:phase_amplitude_length})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DRAWING MODE ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: void/no output (v)      -->
+    <!-- 1: point drawing on (p)    -->
+    <!-- 2: line drawing on (l)     -->
+    <!-- 3: Bezier drawing on (b)   -->
+    <!-- 4: filling on (f)          -->
+    <!-- 5: un-filling on (u)       -->
+    <!-- ====================================== -->
+    <command pattern="/void_line f">
+      <ifAction value1="({$1})" value2="0" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Void" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="0" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <write_console value="drawing mode: Line" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="2" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/drawingmode ({$root:drawingMode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_H_drawingStart_drawingMode
+	               ="(({$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"  
+	     cg_fs_4fv_xy_frameno_freqDots
+	     ="(({$config:mouse_x}),({$config:mouse_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+
+
+    <command pattern="/point_fill f">
+      <trigger type="keystroke" value="v"/>
+      <ifAction value1="({$1})" value2="0" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Point" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="1" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      <elseAction/>
+	<action>
+	  <write_console value="drawing mode: Fill" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="4" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f" value="/drawingmode ({$root:drawingMode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_H_drawingStart_drawingMode
+	               ="(({$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"  
+	     cg_fs_4fv_xy_frameno_freqDots
+	     ="(({$config:mouse_x}),({$config:mouse_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+
+
+    <command pattern="/mode_plus">
+      <ifAction value1="({$root:drawingMode})" value2="1" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Fill" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="4" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <ifAction value1="({$root:drawingMode})" value2="2" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Point" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="1" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <ifAction value1="({$root:drawingMode})" value2="0" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Line" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="2" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+	<send_message_udp pattern="f" value="/drawingmode ({$root:drawingMode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_H_drawingStart_drawingMode
+	               ="(({$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"  
+	     cg_fs_4fv_xy_frameno_freqDots
+	     ="(({$config:mouse_x}),({$config:mouse_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+
+
+    <command pattern="/mode_minus">
+      <ifAction value1="({$root:drawingMode})" value2="2" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Void" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="0" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <ifAction value1="({$root:drawingMode})" value2="1" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Line" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="2" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <ifAction value1="({$root:drawingMode})" value2="4" 
+		  bool_operator="==">
+	<action>
+	  <write_console value="drawing mode: Point" />
+	</action>
+	<action>
+	  <set_node_scalar_value id="drawingMode" value="1" operator="=" />
+	  <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+
+      <action>
+	<send_message_udp pattern="f" value="/drawingmode ({$root:drawingMode})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_node_scalar_value id="drawing_start_frame" 
+			       value="({$config:current_frame})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_3fv_H_drawingStart_drawingMode
+	               ="(({$config:window_height}),
+			 ({$root:drawing_start_frame}),
+			 ({$root:drawingMode}))"  
+	     cg_fs_4fv_xy_frameno_freqDots
+	     ="(({$config:mouse_x}),({$config:mouse_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<set_node_table_value id="mouse_position_prev" 
+			      value="(-1,-1,-1,-1)" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ KALEIDOSCOPE ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: noeffect                            -->
+    <!-- 1: left y symm                         -->
+    <!-- 2: right y symm                        -->
+    <!-- 3: bottom x symmm                      -->
+    <!-- 4: top x symm                          -->
+    <!-- 5: bottom left symm                    -->
+    <!-- 6: top left symm                       -->
+    <!-- 7: bottom right symm                   -->
+    <!-- 8: top right symm                      -->
+    <!-- Next effect (K)                        -->
+    <!-- Previous effect (k)                    -->
+    <!-- ====================================== -->
+    <command pattern="/kaleidoscope f">
+      <action>
+        <set_node_scalar_value id="kaleidoscopeID" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="i" value="/kaleidnumber ({$root:kaleidoscopeID})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+	<write_console value="kaleidoscopeID ({$root:kaleidoscopeID})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_kaleidoscopeID_BGfx_timer
+			 ="(({$root:kaleidoscopeID}),({$root:BGEffectID}),({$root:timer}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+     </command>
+    
+    <command pattern="/kaleid_plus">
+      <action>
+        <send_message value = "kaleid_plus"/>
+        <target type = "single_node" value = "#root"/>
+      </action>
+     </command>
+    
+    <command pattern="/kaleid_minus">
+      <action>
+        <send_message value = "kaleid_minus"/>
+        <target type = "single_node" value = "#root"/>
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BRUSH +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: disk (0)       -->
+    <!-- 1: square (1)     -->
+    <!-- 2: ellispse (2)   -->
+    <!-- 3: ring (3)       -->
+    <!-- 4: star (4)       -->
+    <!-- 5: sun (5)        -->
+    <!-- 6: dots (6)       -->
+    <!-- 7: concentric (7) -->
+    <!-- ====================================== -->
+    <command pattern="/brushID i">
+      <action>
+        <write_console value="brushID: ({$1})"/>
+      </action>
+      <action>
+        <set_node_scalar_value id="brushID" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/brushnumber ({$root:brushID})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/brush_plus">
+      <!-- increments kaleidoscpe ID -->
+      <ifAction value1="({$root:brushID})" value2="2" 
+		  bool_operator=">=">
+	<action>
+          <set_node_scalar_value id="brushID" value="1" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="brushID" value="1" operator="+=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/brushnumber ({$root:brushID})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode="(({$root:radiusX}),({$root:radiusY}),({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/brush_minus">
+      <!-- previous kaleidoscpe ID -->
+      <ifAction value1="({$root:brushID})" value2="0" 
+		  bool_operator="==">
+	<action>
+          <set_node_scalar_value id="brushID" value="1" operator="=" />
+          <target type="single_node" value="#root" />
+	</action>
+      </ifAction>
+      <action>
+        <set_node_scalar_value id="brushID" value="1" operator="-=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/brushnumber ({$root:brushID})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+	<write_console value="brush: ({$root:brushID})" />
+      </action>
+
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode="(({$root:radiusX}),({$root:radiusY}),({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_drawing_brush_kaleid_spread
+	               ="(({$root:drawingMode}),
+			 ({$root:brushID}),
+			 ({$root:kaleidoscopeID}),
+			 ({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BACKGOUND EFFECTS +++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- 0: zero effect (z)                     -->
+    <!-- 1: ripples (r)                         -->
+    <!-- ====================================== -->
+    <command pattern="/BGfx f">
+      <action>
+        <set_node_scalar_value id="BGEffectID" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="background effect: ({$root:BGEffectID}) " />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_kaleidoscopeID_BGfx_timer
+			 ="(({$root:kaleidoscopeID}),({$root:BGEffectID}),({$root:timer}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+     </command>
+    
+    <command pattern="/noBackGround">
+      <action>
+        <set_node_scalar_value id="with_BG" value="1" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="background removed: ({$root:with_BG}) " />
+      </action>
+     </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ DECAY +++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase decay (D)                     -->
+    <!-- Decrease decay (d)                     -->
+    <!-- ====================================== -->
+    <command pattern="/decay f">
+      <action>
+        <set_node_scalar_value id="decay" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/decay ({$root:decay})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <write_console value="/decay ({$root:decay})"/>
+      </action>
+      <action>
+        <write_message value="({$root:decay})" index="4" />
+      </action>
+      <action>
+	<set_node_table_value id="spread_radius_decay" index="4"
+			      value="({$root:decay})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <!-- action>
+      <write_console value="/spread_radius V/H/radial & decay ({@root:spread_radius_decay})"/>
+      </action -->
+      <action>
+        <set_material_attribute_value operator="=">
+	  <shader_source cg_fs_4fv_spread_radius_decay="({@root:spread_radius_decay})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_decay="({$root:decay})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BRUSH RADIUS ++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase radius (R)                    -->
+    <!-- Decrease radius (r)                    -->
+    <!-- ====================================== -->
+    <command pattern="/radiusX f">
+      <action>
+        <set_node_scalar_value id="radiusX" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <write_console value="/radiusX ({$root:radiusX})"/>
+      </action>
+      <action>
+        <write_message value="({$root:radiusX})" index="2" />
+      </action>
+      <action>
+	<send_message_udp pattern="f f" value="/brushradius ({$root:radiusX}) ({$root:radiusY})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+    <command pattern="/radiusY f">
+      <action>
+        <set_node_scalar_value id="radiusY" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <write_console value="/radiusY ({$root:radiusY})"/>
+      </action>
+      <action>
+        <write_message value="({$root:radiusY})" index="2" />
+      </action>
+      <action>
+	<send_message_udp pattern="f f" value="/brushradius ({$root:radiusX}) ({$root:radiusY})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusYY_brushID_rend_mode
+	     ="(({$root:radiusY}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+    <command pattern="/radiusXY f">
+      <action>
+        <set_node_scalar_value id="radiusX" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <set_node_scalar_value id="radiusY" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+        <write_console value="/radiusXY ({$1}) x ({$1})"/>
+      </action>
+      <action>
+        <write_message value="({$root:radiusY})" index="2" />
+      </action>
+      <action>
+	<send_message_udp pattern="f f" value="/brushradius ({$root:radiusX}) ({$root:radiusY})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_radiusXY_brushID_rend_mode
+	     ="(({$root:radiusX}),({$root:radiusY}),
+	       ({$root:brushID}),({$root:rendering_mode}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ POINT DRAWING FREQUENCY +++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase frequency   (I)               -->
+    <!-- Decrease frequency   (i)               -->
+    <!-- ====================================== -->
+    <command pattern="/dot_frequency f">
+      <action>
+        <set_node_scalar_value id="freqDots" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/dotfreq ({$root:freqDots})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+	<write_console value="point frequency ({$root:freqDots})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source 
+	     cg_fs_4fv_xy_frameno_freqDots
+	     ="(({$config:mouse_x}),({$config:mouse_y}),
+	       ({$config:current_frame}),({$root:freqDots}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ SPREAD RADIUS +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/spread_radius f f f">
+      <action>
+        <write_console value="/spread_radius V/H/radial ({$1}) ({$2}) ({$3})"/>
+      </action>
+      <action>
+        <write_message value="({$1})" index="3" />
+      </action>
+      <action>
+	<set_node_table_value id="spread_radius_decay" 
+			      value="(({$1}),({$2}),({$3}),({$root:decay}))" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f f f" value="/spreadradius ({$root:spread_radius_decay[1]}) ({$root:spread_radius_decay[2]}) ({$root:spread_radius_decay[3]})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_spread_radius_decay="({@root:spread_radius_decay})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BG EFFECT: PHASE / AMPLITUDE / LENGTH + -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/BG_wave f f f">
+      <action>
+        <write_console value="/background_wave ({$1}) ({$2}) ({$3})"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_phase_amplitude_length
+			 ="(({$1}),({$2}),({$3}))"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BLEND COLOR +++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/blend_color f f f f">
+      <action>
+        <write_console value="/blend_color ({$1}) ({$2}) ({$3}) ({$4})"/>
+      </action>
+      <action>
+	<set_node_table_value id="blend_color" 
+			      value="(({$1}),({$2}),({$3}),({$4}))" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_blend_color="({@root:blend_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+      <action>
+	<send_message_udp pattern="f" value="/fade ({$root:blend_color[4]})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ BG COMPOSITION OPACITIES ++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/BG_opacity f f f f">
+      <action>
+        <write_console value="/BG_opacity ({$1}) ({$2}) ({$3}) ({$4})"/>
+      </action>
+      <!-- action>
+	<set_node_table_value id="BG_compositionOpacity" 
+			      value="(({$1}),({$2}),({$3}),({$4}))" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_BG_compositionOpacity="({@root:BG_compositionOpacity})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action -->
+    </command>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ LOCAL COLOR +++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/local_color f f f f">
+      <action>
+        <write_console value="/local_color ({$1}) ({$2}) ({$3}) ({$4})"/>
+      </action>
+      <action>
+	<set_node_table_value id="local_color" 
+			      value="(({$1}),({$2}),({$3}),({$4}))" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f f f f" value="/localcolor ({@root:local_color})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+	<set_node_table_value id="local_color_memory" 
+			      value="({@root:local_color})" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/local_gray f">
+      <action>
+        <write_console value="/local_gray ({$1})"/>
+      </action>
+      <action>
+	<set_node_table_value id="local_color" 
+			      value="(({$1}),({$1}),({$1}),({$root:local_color[4]}))" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+	<send_message_udp pattern="f f f f" value="/localcolor ({@root:local_color})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+      <action>
+	<set_node_table_value id="local_color_memory" 
+			      value="({@root:local_color})" 
+			      operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/black_white f">
+      <action>
+        <write_console value="/black_white ({$1}) ({$root:local_color_count}%3)"/>
+      </action>
+      <ifAction value1="({$root:local_color_count}%3)" value2="0" 
+		  bool_operator="==">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(({$1}),({$1}),({$1}),1)" 
+				operator="="/>
+          <target type="single_node" value="#root"/>
+	</action>
+      </ifAction>
+      <ifAction value1="({$root:local_color_count}%3)" value2="1" 
+		  bool_operator="==">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="(({$1}),({$1}),({$1}),1)" 
+				operator="="/>
+          <target type="single_node" value="#root"/>
+	</action>
+      </ifAction>
+      <ifAction value1="({$root:local_color_count}%3)" value2="2" 
+		  bool_operator="==">
+	<action>
+	  <set_node_table_value id="local_color" 
+				value="({@root:local_color_memory})" 
+				operator="="/>
+          <target type="single_node" value="#root"/>
+	</action>
+      </ifAction>
+      <action>
+	<send_message_udp pattern="f f f f" value="/localcolor ({@root:local_color})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+
+      <action>
+        <write_console value="/black_white ({@root:local_color})"/>
+      </action>
+      <action>
+	<set_node_scalar_value id="local_color_count" 
+			      value="1" operator="+="/>
+        <target type="single_node" value="#root"/>
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#QuadStoreMousePosition_*" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_4fv_local_color="({@root:local_color})"  />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ SPECTRUM ++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/xy_spectrum f f">
+      <!-- action>
+        <write_console value="/xy ({$1}) ({$2})"/>
+      </action -->
+      <action>
+        <set_node_table_value id="xy_spectrum" value="(({$1}),({$2}))" 
+			      operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/color_spectrum f f f">
+      <!-- action>
+        <write_console value="/local_color ({$1}) ({$2}) ({$3})"/>
+      </action -->
+      <action>
+        <set_node_table_value id="color_spectrum" 
+			      value="(({$1}),({$2}),({$3}),1)" 
+			      operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+    
+    <command pattern="/spread_radius_vol f">
+      <!-- action>
+        <write_console value="/spread_radius_vol V/H/radial ({$1}) ({$1}) ({$1})"/>
+      </action -->
+      <action>
+	<set_node_scalar_value id="spread_radius_vol" 
+			      value="({$1})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+    </command>
+    
+    <command pattern="/brush_radius_vol f">
+      <!-- action>
+        <write_console value="/brush_radius_vol ({$1})"/>
+      </action -->
+      <action>
+	<set_node_scalar_value id="brush_radius_vol" 
+			      value="({$1})" operator="="/>
+        <target type="single_node" value="#root"/>
+      </action>
+   </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ ATTACK ++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <command pattern="/x_loc f">
+      <!-- action>
+        <write_console value="/x_loc ({$1})"/>
+      </action -->
+      <action>
+        <set_node_scalar_value id="x_loc" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <command pattern="/y_loc f">
+      <!-- action>
+        <write_console value="/y_loc ({$1})"/>
+      </action -->
+      <action>
+        <set_node_scalar_value id="y_loc" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <!-- Increase xy_spectrum_coef (.)          -->
+    <!-- Decrease xy_spectrum_coef (;)          -->
+    <!-- Increase color_spectrum_coef (/)       -->
+    <!-- Decrease color_spectrum_coef (:)       -->
+    <!-- Increase spread_radius_vol (%)          -->
+    <!-- Decrease spread_radius_vol (,)          -->
+    <!-- Increase brush_radius_vol ({)          -->
+    <!-- Decrease brush_radius_vol (})          -->
+    <!-- ====================================== -->
+    <command pattern="/music_control f f f f">
+      <action>
+        <set_node_scalar_value id="xy_spectrum_coef" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="xy_spectrum_coef ({$root:xy_spectrum_coef})" />
+      </action>
+
+      <action>
+        <set_node_scalar_value id="color_spectrum_coef" value="({$2})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="color_spectrum_coef ({$root:color_spectrum_coef})" />
+      </action>
+
+      <action>
+        <set_node_scalar_value id="spread_radius_vol_coef" value="({$3})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="spread_radius_vol_coef ({$root:spread_radius_vol_coef})" />
+      </action>
+
+      <action>
+        <set_node_scalar_value id="brush_radius_vol_coef" value="({$4})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="brush_radius_vol_coef ({$root:brush_radius_vol_coef})" />
+      </action>
+
+      <action>
+	<send_message_udp pattern="f f f f" value="/musicXYColSpRad ({$root:xy_spectrum_coef}) ({$root:color_spectrum_coef}) ({$root:spread_radius_vol_coef}) ({$root:brush_radius_vol_coef})" />
+	<target type="single_host" value="udp_sound_client" />
+      </action>
+    </command>
+
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++ TIMER (FROM PD) +++++++++++++++++++++++ -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- ====================================== -->
+    <command pattern="/timer f">
+      <action>
+        <set_node_scalar_value id="timer" value="({$1})" operator="=" />
+        <target type="single_node" value="#root" />
+      </action>
+      <action>
+	<write_console value="timer ({$root:timer})" />
+      </action>
+      <action>
+        <set_material_attribute_value operator="=">
+          <shader_source cg_fs_3fv_kaleidoscopeID_BGfx_timer
+			 ="(({$root:kaleidoscopeID}),({$root:BGEffectID}),({$root:timer}))" />
+        </set_material_attribute_value>
+        <target type="multiple_nodes" value="#FinalQuad_*" />
+      </action>
+    </command>
+
+    <command pattern="/countdown i i">
+      <action>
+	<write_console value="countdown ({$1}):({$2})" />
+      </action>
+      <action>
+	<write_message value="({$1}):({$2})" index="0"/>
+      </action>
+    </command>
+  </aliasScript>

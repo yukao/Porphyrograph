@@ -1,0 +1,1004 @@
+/***********************************************************************
+File: NINE/shaders/LYM_Drawing_NINE-FS.cg
+
+LYM NINE & Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+*************************************************************************/
+
+float normalized_dist_to_mousePos;
+float unsigned_rx;
+float unsigned_ry;
+float signed_rx;
+float signed_ry;
+float3 out_drawn_filled;
+float out_gray;
+float radiusX;
+float radiusY;
+float brushID;
+float2 radiusXY;
+float2 spread_vector;
+sampler2D    penPatterns;    // pen
+samplerRECT  Drawn_FilledFBO;
+samplerRECT  local_colorFBO;
+float height;
+float local_transparency;
+
+// filling modes according to what is already drawn or filled
+#define FILL_COPY 0
+#define FILL_EXPANSION 1
+#define FILL_BORDER 2
+#define NON_FILLED_AREA 3
+#define FILL_OVERDRAW 4
+#define FILL_BORDER_OVERDRAW 5
+#define FILL_INIT 6
+#define NON_FILLING_MODE 7
+#define NON_FILLED_OVERDRAW 8
+#define FILL_UNKNOWN 9
+
+#define SPREAD_NONE 1
+#define SPREAD_VERTICAL_LINE 2
+#define SPREAD_HORIZONTAL_LINE 3
+#define SPREAD_Y_VERTICALLY_SPREADING 4
+#define SPREAD_X_HORIZONTALLY_SPREADING 5
+#define SPREAD_T_VERTICALLY_BIDIRECTIONNALLY_SPREADING 6
+#define SPREAD_S_HORIZONTALLY_BIDIRECTIONNALLY_SPREADING 7
+#define SPREAD_BIDIRECTIONNALLY_SPREADING 8
+#define SPREAD_OBLIQUE_SPREADING 9
+#define SPREAD_ANTI_OBLIQUE_SPREADING 10
+
+// trace pixel in a trace FBO for debugging purposes
+int filling_pixel;
+
+// drawing modes
+#define DRAWING_VOID   0
+#define DRAWING_POINT  1
+#define DRAWING_LINE   2
+#define DRAWING_BEZIER 3
+#define DRAWING_FILL   4
+
+float Bezier( float x1 , float y1 , float x2 , float y2 , 
+	      float mouse_x , float mouse_y , float interp_mouse_x ) {
+  return mouse_y + (y1 - mouse_y)/(x1 - mouse_x) * (interp_mouse_x - mouse_x);
+}
+
+
+float Line( float x1 , float y1 , 
+	    float mouse_x , float mouse_y , float interp_mouse_x ) {
+  return mouse_y + (y1 - mouse_y)/(x1 - mouse_x) * (interp_mouse_x - mouse_x);
+}
+
+
+void fill_out( float2 decalCoords ,
+		 int drawing_mode ,
+		 float4 cg_fs_4fv_filling_xy_modifier_nbFrames ) {
+  // the BLUE channel of the graylevel output
+  // is used as a boolean to stop filling
+  // when a border is encountered
+
+  // counts the number of frames since the start of filling
+  int nbFrames = int(cg_fs_4fv_filling_xy_modifier_nbFrames.w);
+
+  // reads the gray level at the filling point to check whether 
+  // a border is encountered
+  float4 currentGrayLevel = texRECT(Drawn_FilledFBO, decalCoords);
+  float currentGray = currentGrayLevel.g;
+
+  // a filling starting point has been defined by mouse click
+  // got from glut modifier value
+  // vector from the starting point to the current filling position
+  int2 vector_to_mousePicking 
+    = int2( int(cg_fs_4fv_filling_xy_modifier_nbFrames.x - decalCoords.x),
+	    int((height - cg_fs_4fv_filling_xy_modifier_nbFrames.y) 
+		- decalCoords.y) );
+  int2 abs_vector_to_mousePicking = abs( vector_to_mousePicking  );
+  int2 sign_vector_to_mousePicking = sign( vector_to_mousePicking  );
+  
+  // horizontal or vertical distance to the filling point
+  // expansion is made by squares
+  int dist = max( abs_vector_to_mousePicking.x, 
+		  abs_vector_to_mousePicking.y );
+  
+  filling_pixel = FILL_UNKNOWN; // for debugging purposes: pink
+
+  // operates at the frontier of a filling region
+  // the border is nbFrames away from the filling center
+  // comment: bounds could be multiplied by spread_radius
+
+  // filling expanding fringe outside border:
+  // sets filling channed to 2 to indicate a filled area
+  // fills during the first frames whatever is inside 
+  // so that not to take into
+  // account the possible colour under the pointer
+  
+  // fills the pixel under the cursor
+  if( dist == nbFrames && nbFrames <= 1 ) {
+    filling_pixel = FILL_INIT; // magenta
+    // sets blue channel of out_Drawn_Filled to 2
+    out_gray = 1;
+    out_drawn_filled = float3(1 , out_gray , 2);
+    return;
+  }
+  
+  // DRAWING FILL: CHECKS WHETHER AT LEAST ONE
+  // SURROUNDING PIXEL IS FILLED
+
+  // fills untils the borders
+  // fills if the one of the surrounding pixels
+  //  is also filled and no border is encountered
+  // sets the blue channel to 2
+  float4 precedingGrayLevel = texRECT(Drawn_FilledFBO, 
+				      decalCoords + float2(1,0));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				  decalCoords + float2(-1,0));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				decalCoords + float2(0,1));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				decalCoords + float2(0,-1));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				decalCoords + float2(1,1));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				  decalCoords + float2(1,-1));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				decalCoords + float2(-1,-1));
+  precedingGrayLevel += texRECT(Drawn_FilledFBO, 
+				decalCoords + float2(-1,1));
+  
+  // filling expanding fringe outside border:
+  // sets filling channed to 2 to indicate a filled area
+  if( (precedingGrayLevel.b >= 1.5) && (currentGrayLevel.r == 0) ) {
+    if( currentGrayLevel.b == 0 ) {
+      filling_pixel = FILL_EXPANSION; // red
+      
+      // sets blue channel of out_Drawn_Filled to 2
+      out_gray = 1;
+      out_drawn_filled = float3( 1 , out_gray , 2 );
+      return;
+    }
+    else {
+      filling_pixel = FILL_OVERDRAW; // yellow
+      
+      // sets blue channel of out_Drawn_Filled to 2
+      out_gray = currentGray;
+      out_drawn_filled = currentGrayLevel.rgb;
+      return;
+    }
+  }
+  
+  // a border or a filled area
+  else if( (precedingGrayLevel.b >= 1.5) && (currentGrayLevel.r > 0) ) {
+    // filling expanding fringe meets a border: 
+    // returns the border gray level
+    // and sets the BLUE channel to 0 to indicate to
+    // stop filling at the next steps
+    
+    if( currentGrayLevel.b == 0 ) {
+      // a border of a filled area: 
+      // blue channel of inner pixel is equal to 2
+      filling_pixel = FILL_BORDER; // green
+      // stops filling
+      out_gray = currentGray;
+      out_drawn_filled = float3(1 , out_gray , 0);
+      return;
+    }
+    else {
+      filling_pixel = FILL_BORDER_OVERDRAW; // cyan
+      
+      // sets blue channel of out_Drawn_Filled to 2
+      out_gray = currentGray;
+      out_drawn_filled = currentGrayLevel.rgb;
+      return;
+    }
+    
+  }
+  
+  // a non-filled area: precedingGrayLevel.b == 0
+  else {
+    // filling a non filled area
+    if( currentGrayLevel.b == 0 ) {
+      
+      // copies incoming graylevel
+      filling_pixel = NON_FILLED_AREA; // blue
+      out_gray = currentGray;
+      out_drawn_filled = currentGrayLevel.rgb;
+      return;
+    }
+    
+    // filling a filled area
+    else {
+      
+      // copies incoming graylevel
+      filling_pixel = NON_FILLED_OVERDRAW; // light blue
+      out_gray = currentGray;
+      out_drawn_filled = currentGrayLevel.rgb;
+      return;
+    }
+  }
+}
+
+float stroke_out( ) {
+  
+    // drawing mode: writes under the cursor
+    // tries to avoid artefacts at the junction between two segments
+    // vector from the pen center to the current position
+    float2 vector_to_mousePosition = float2(signed_rx,signed_ry)/radiusXY;
+
+    normalized_dist_to_mousePos = length( vector_to_mousePosition );
+
+    // it is blended with preceding pen color at this position
+    // gray level 
+    // horizontal texture coordinate shift according to pen number
+    float penOutGrayLevel 
+      = tex2D(penPatterns,
+	      float2( (brushID+(vector_to_mousePosition.y/2.0+0.5))/8.0,
+		      vector_to_mousePosition.x/2.0+0.5 ) ).r;
+    return penOutGrayLevel * local_transparency;
+}
+
+float vertical_line_out( ) {
+    // horizontal distance from the pen center to the current position
+    normalized_dist_to_mousePos = unsigned_rx/radiusX;
+
+    // gray level 
+    // horizontal texture coordinate shift according to pen number
+    float penOutGrayLevel 
+      = tex2D(penPatterns,
+	      float2( (brushID+(normalized_dist_to_mousePos/2.0+0.5))/8.0,
+		      normalized_dist_to_mousePos/2+0.5 ) ).r;
+    return penOutGrayLevel * local_transparency;
+}
+
+float horizontal_line_out( ) {
+    // vertical distance from the pen center to the current position
+    normalized_dist_to_mousePos = unsigned_ry/radiusY;
+
+    // gray level 
+    // horizontal texture coordinate shift according to pen number
+    float penOutGrayLevel 
+      = tex2D(penPatterns,
+	      float2( (brushID+(normalized_dist_to_mousePos/2.0+0.5))/8.0,
+		      normalized_dist_to_mousePos/2+0.5 ) ).r;
+    return penOutGrayLevel * local_transparency;
+}
+
+void one_direction_spreading_dot( float2 decalCoords ) {
+  // spread vector normalized
+  float2 normalized_spread_vector =  normalize( spread_vector ); 
+
+  // distance from the pen center to the current position
+  float dist_to_mousePos 
+    = abs( dot( float2(-normalized_spread_vector.y,
+    		       normalized_spread_vector.x) , float2(unsigned_rx , unsigned_ry)) );
+    /* = abs( dot( normalized_spread_vector , float2(unsigned_rx , unsigned_ry)) ); */
+  normalized_dist_to_mousePos 
+    = abs( dot( normalized_spread_vector , float2(unsigned_rx , unsigned_ry) /radiusXY ) );
+    
+    
+  // gray level 
+  // horizontal texture coordinate shift according to pen number
+  float penOutGrayLevel;
+  
+  // under the cursor, copies the brush
+  if( dist_to_mousePos <= 1 ) {
+    penOutGrayLevel 
+      = tex2D(penPatterns,
+	      float2( (brushID+(normalized_dist_to_mousePos/2.0+0.5))/8.0,
+		      normalized_dist_to_mousePos/2+0.5 ) ).r;
+    
+    // the new pen gray level is brighter than the current pen gray level
+    // the new position is memorized with the new gray level
+    if(penOutGrayLevel > out_gray) {
+      out_gray = penOutGrayLevel;
+      out_drawn_filled = float3( 1, out_gray , out_drawn_filled.z );
+      return;
+      // we dont blend the local color, blending is made at drawing time
+      // preserves the blue channel (filling tag)
+      }
+    // the new pen gray level is darker than the current pen gray level
+    // the new position is memorized with the old gray level
+    else {
+      out_drawn_filled = float3( 1, out_gray , out_drawn_filled.z );
+      // out_gray preserved
+      return;
+      // we dont blend the local color, blending is made at drawing time
+      // preserves the blue channel (filling tag)
+      }
+  }
+  // otherwise spreads in the direction of the spreading vector
+  // by copying neighboring pixel
+  else {
+    out_drawn_filled = texRECT(Drawn_FilledFBO,
+			   float2(decalCoords.x - spread_vector.x,
+				  decalCoords.y + spread_vector.y)).rgb;
+    out_gray = out_drawn_filled.g;
+    return;
+    //out_drawn_filled = float3( 1, out_drawn_filled.g, 0, 1 );
+  }
+}
+
+void bidirectionnally_spreading_dot( float2 decalCoords ) {
+      // vector from the pen center to the current position
+      float2 vector_to_mousePosition 
+	= float2(signed_rx,signed_ry)/radiusXY;
+      normalized_dist_to_mousePos
+	= length(vector_to_mousePosition);
+      
+      // gray level 
+      // horizontal texture coordinate shift according to pen number
+      float penOutGrayLevel;
+
+      // under the cursor, copies vertically the brush
+      if( unsigned_rx <= radiusX && unsigned_ry <= radiusY ) {
+	penOutGrayLevel
+	  = tex2D(penPatterns,
+		  float2( (brushID+(vector_to_mousePosition.y/2.0+0.5))/8.0,
+			  vector_to_mousePosition.x/2.0+0.5 ) ).r;
+	
+	// the new pen gray level is brighter than the current pen gray level
+	// the new position is memorized with the new gray level
+	if(penOutGrayLevel > out_drawn_filled.g) {
+	  out_gray = penOutGrayLevel;
+	  out_drawn_filled = float3( 1, out_gray , out_drawn_filled.z );
+	  return;
+	  // we dont blend the local color, blending is made at drawing time
+	  // preserves the blue channel (filling tag)
+	}
+	// the new pen gray level is darker than the current pen gray level
+	// the new position is memorized with the old gray level
+	else {
+	  out_drawn_filled = float3( 1, out_drawn_filled.g , out_drawn_filled.b );
+	  // out_gray preserved
+	  return;
+	  // we dont blend the local color, blending is made at drawing time
+	  // preserves the blue channel (filling tag)
+	}
+      }
+      // otherwise spreads bidirectionnally by copying neighboring pixel
+      else {
+	out_drawn_filled = texRECT(Drawn_FilledFBO,
+					 float2(decalCoords.x - spread_vector.x,
+						decalCoords.y + spread_vector.y)).rgb;
+	out_gray = out_drawn_filled.g;
+	return;
+	//OutGrayLevel = float4( 1, OutGrayLevel.g, 0, 1 );
+      }
+}
+
+// Main shader.
+
+void main(
+	    // obtained from Vertex Program
+	    float2 decalCoords  : TEXCOORD0,  // coord text
+	    
+	    // passed by the C program
+	    uniform float cg_fs_clearup,
+	    uniform float4 cg_fs_4fv_filling_xy_modifier_nbFrames,
+	    uniform float4 cg_fs_3fv_H_drawingStart_drawingMode,
+	    uniform float4 cg_fs_4fv_xy_frameno_freqDots,
+	    uniform float4 cg_fs_4fv_mouse_xy_prev,         // previous 2 frame
+	                                                    // mouse position
+	    uniform float4 cg_fs_4fv_spread_radius_decay,         // V/H/radial
+	    uniform float4 cg_fs_4fv_local_color,
+	    uniform float4 cg_fs_4fv_radiusXY_brushID_rend_mode,
+	    uniform samplerRECT  decal         : TEXUNIT0,  // ping-pong mouse 
+	                                                    // pos FBO
+	    uniform samplerRECT  lookupTable1  : TEXUNIT1,  // ping-pong color 
+	                                                    // FBO
+	    uniform sampler2D    lookupTable2  : TEXUNIT2,  // pen
+	    // uniform samplerRECT  lookupTable3  : TEXUNIT3,  // ping-pong trace 
+	                                                       // FBO
+
+	    /////////////////////////////////////
+	    // GRAY LEVEL OUTPUT
+	    // the RED canal contains 1 if it is written
+	    // the GREEN canal of out_Drawn_Filled contains the current gray level
+	    // the BLUE canal contains a boolean that is set to 1 when a 
+	    //     border is reached by filling to stop filling 
+	    //     in the next expansions
+	    // it is set to 2 if the area is filled normally
+	    // it is set to 0 otherwise
+	    out float4 out_Drawn_Filled          : COLOR0,      // 
+
+	    /////////////////////////////////////
+	    // COLOR OUTPUT
+	    out float4 out_local_color                 : COLOR1
+	    // the local color copied from the
+	    // ping pong color FBO
+	    // the out_local_color is copied from the preceding buffer value
+	    // unless we are in the filling mode
+	    // in this case it is replaced by a filling color
+	    // the out_local_color can also be displaced by non null spreading values
+
+	    /////////////////////////////////////
+	    // TRACE PIXEL OUTPUT
+	    // out float4 out_trace_pixel                 : COLOR2
+	  ) {
+  // at first frames resets the BLUE channel of the graylevel output
+  // to 0 so that it can be used as a boolean to stop filling
+  // when a border is encountered
+  int frameNo = cg_fs_4fv_xy_frameno_freqDots.z;
+  if(frameNo <= 10 || cg_fs_clearup > 0.5) {
+    out_Drawn_Filled = float4( 0, 0, 0, 1 );
+    out_local_color = float4( 0, 0, 0, 1 );
+    // out_trace_pixel = float4( 0, 0, 0, 1 );
+    return;
+  }  
+
+  // renaming for legibility
+  radiusX = cg_fs_4fv_radiusXY_brushID_rend_mode.x;
+  radiusY = cg_fs_4fv_radiusXY_brushID_rend_mode.y;
+  radiusXY = float2(radiusX,radiusY);
+  brushID = cg_fs_4fv_radiusXY_brushID_rend_mode.z;
+  float rendering_mode = cg_fs_4fv_radiusXY_brushID_rend_mode.w;
+
+  float decay = cg_fs_4fv_spread_radius_decay.w;
+
+  // transparency of the local color
+  local_transparency = cg_fs_4fv_local_color.w;
+
+  Drawn_FilledFBO = decal; // ping-pong mouse & pos FBO
+  local_colorFBO = lookupTable1; // ping-pong color FBO
+  // samplerRECT  trace_pixelFBO = lookupTable3; // ping-pong trace pixel FBO
+  penPatterns = lookupTable2;    // pen
+
+  float mouse_x = cg_fs_4fv_xy_frameno_freqDots.x;
+  float mouse_y = cg_fs_4fv_xy_frameno_freqDots.y;
+
+  height = cg_fs_3fv_H_drawingStart_drawingMode.x;
+
+  int drawing_mode = int(cg_fs_3fv_H_drawingStart_drawingMode.z);
+
+
+  //////////////////////////////////////
+  //////////////////////////////////////
+  // NON DRAWING
+  //////////////////////////////////////
+  //////////////////////////////////////
+
+  // void drawing, copies the previous pixel, just manages decay
+  if( drawing_mode == DRAWING_VOID ) {
+    out_drawn_filled 
+      = texRECT(Drawn_FilledFBO , decalCoords).rgb;
+    // copies the previous color
+    out_local_color = texRECT(local_colorFBO , decalCoords);
+    // copies the previous gray level
+    out_gray = out_drawn_filled.g;
+
+    // copies the previous trace
+    // out_trace_pixel = texRECT(trace_pixelFBO , decalCoords);
+
+    // computes the decay (if it is not close to pen center in case
+    // of dot painting)
+    float newGrayLevel_w_decay = out_gray - (decay/1000.0);
+    if(newGrayLevel_w_decay > 0) {
+      out_drawn_filled = float3(out_drawn_filled.r, 0 , out_drawn_filled.z);
+      out_gray = newGrayLevel_w_decay;
+    }
+    else {
+      // in case color has faded out or pen has never written
+      // returns what was before
+      // out_drawn_filled = float3( 0, 0, 0, 1);
+    }
+    out_drawn_filled.g = out_gray; 
+    out_Drawn_Filled = float4( out_drawn_filled , 1 );
+    return;
+  }
+
+  /////////////////////////////////////
+  /////////////////////////////////////
+  // GRAY LEVEL OUTPUT
+  /////////////////////////////////////
+  /////////////////////////////////////
+    
+  // the RED canal contains 1 if it is written
+  // the GREEN canal of out_drawn_filled contains the current gray level
+  // the BLUE canal contains a boolean that is set to 2 when 
+  //     it is a filled area
+
+  /////////////////////////////////////////////////
+  // STROKE INTERPOLATION FOR LINE OR BEZIER
+
+  // distance to closest point in case of curve drawing
+  // is in curve drawing mode
+  float interp_mouse_x = mouse_x;
+  float interp_mouse_y = mouse_y;
+  float interpolated = 0;
+  // float insideInterpolatedInterval = 0;
+
+  // drawing occurs at every frame
+  // gets the previous mouse position
+  float x1 = cg_fs_4fv_mouse_xy_prev.z;
+  float y1 = cg_fs_4fv_mouse_xy_prev.w;
+
+  // line based rendering
+  if( drawing_mode == DRAWING_LINE ) {
+    /* out_drawn_filled=float4(1,1,0,1); */
+    /* out_local_color=float4(1,0,0,1); */
+    /* return; */
+    interpolated = 1;
+
+    // insideInterpolatedInterval = 1;
+
+    if( x1 > 0 && y1 > 0 ) {
+      // angle of line wrt Ox is between -45deg and +45deg: drawing
+      // is controlled by x and interpolated y is a function of x
+      if( abs(mouse_x - x1) > abs(mouse_y - y1) ) {
+	if( ( x1 < mouse_x && decalCoords.x > x1 
+	      && decalCoords.x <= mouse_x ) 
+	    || ( x1 > mouse_x && decalCoords.x >= mouse_x 
+		 && decalCoords.x < x1 ) ) {
+	  interp_mouse_x = decalCoords.x;
+	  interp_mouse_y 
+	    = Line( x1 , y1 , mouse_x , mouse_y , 
+		    interp_mouse_x );
+	} 
+	/* else { */
+	/*   if( abs(mouse_x - decalCoords.x) > radiusX ) { */
+	/*     insideInterpolatedInterval = 0; */
+	/*   } */
+	/* } */
+      } 
+      // angle of line wrt Ox is under -45deg or above +45deg: drawing
+      // is controlled by y and interpolated x is a function of y
+      else {
+	if( ( y1 < mouse_y && (height - decalCoords.y) > y1 
+	      && (height - decalCoords.y) <= mouse_y ) 
+	    || ( y1 > mouse_y  && (height - decalCoords.y) >= mouse_y 
+		 && (height - decalCoords.y) < y1 ) ) {
+	  interp_mouse_y = (height - decalCoords.y);
+	  interp_mouse_x
+	    = Line( y1 , x1 , mouse_y , mouse_x , 
+		    interp_mouse_y );
+	} 
+	/* else { */
+	/*   if( abs(mouse_y - (height - decalCoords.y)) > radiusY ) { */
+	/*     insideInterpolatedInterval = 0; */
+	/*   } */
+	/* } */
+      } 
+    }
+  }
+
+  // Bezier drawing
+  else if( drawing_mode == DRAWING_BEZIER ) {
+    interpolated = 1;
+
+    // it is the third frame: a drawed frame
+    if( fmod((float)frameNo - cg_fs_3fv_H_drawingStart_drawingMode.y , 3.0)
+	> 1.8 ) {
+
+      float x2 = cg_fs_4fv_mouse_xy_prev.z;
+      float y2 = cg_fs_4fv_mouse_xy_prev.w;
+      // float4 signs = sign( float4( x2 - x1, y2 - y1,  
+      //		   decalCoords.x - x2, decalCoords.y - y2 ) ); 
+
+      if( x1 > 0 && y1 > 0 && x2 > 0 && y2 > 0 ) {
+	if( abs(x2 - x1) > abs(y2 - y1) ) {
+	  if( ( x1 < x2 && decalCoords.x >= x1 && decalCoords.x <= x2 ) 
+	      || ( x1 > x2 && decalCoords.x >= x2 
+		   && decalCoords.x <= x1 ) ) {
+	    interp_mouse_x = decalCoords.x;
+	    interp_mouse_y 
+	      = Bezier( x1 , y1 , x2 , y2 , mouse_x , mouse_y , 
+			interp_mouse_x );
+	  } 
+	} 
+	else {
+	  if( ( y1 < y2 && decalCoords.y >= y1 && decalCoords.y <= y2 ) 
+	      || ( y1 > y2 && decalCoords.y >= y2 
+		   && decalCoords.y <= y1 ) ) {
+	    interp_mouse_y = decalCoords.y;
+	    interp_mouse_x
+	      = Bezier( y1 , x1 , y2 , x2 , mouse_y , mouse_x , 
+			interp_mouse_y );
+	  } 
+	} 
+	
+	if( abs(mouse_x - x2) > abs(mouse_y - y2) ) {
+	  if( ( x2 < mouse_x && decalCoords.x >= x2 
+		&& decalCoords.x <= mouse_x ) 
+	      || ( x2 > mouse_x && decalCoords.x >= mouse_x 
+		   && decalCoords.x <= x2 ) ) {
+	    interp_mouse_x = decalCoords.x;
+	    interp_mouse_y 
+	      = Bezier( x1 , y1 , x2 , y2 , mouse_x , mouse_y , 
+			interp_mouse_x );
+	  } 
+	} 
+	else {
+	  if( ( y2 < mouse_y && decalCoords.y >= y2 
+		&& decalCoords.y <= mouse_y ) 
+	      || ( y2 > mouse_y && decalCoords.y >= mouse_y 
+		   && decalCoords.y <= y2 ) ) {
+	    interp_mouse_y = decalCoords.y;
+	    interp_mouse_x 
+	      = Bezier( y1 , x1 , y2 , x2 , mouse_y , mouse_x , 
+			interp_mouse_y );
+	  } 
+	} 
+      }
+    }
+  }
+
+
+  /////////////////////////////////////////////////
+  // FILLLING MODE GRAY LEVEL OUTPUT
+  // is it a pixel usedlf to fill a region
+  filling_pixel = FILL_COPY; // outputs input trace
+
+  if( drawing_mode == DRAWING_FILL ) {
+    // spreading frame by frame in filling mode
+    // the pixels looked at are around the current pixel
+    // the 8 bits of a 3x3 mask centered on the current pixel
+    // and spreading stops when a border is encountered
+    fill_out( decalCoords , drawing_mode ,
+	      cg_fs_4fv_filling_xy_modifier_nbFrames );
+    
+    /////////////////////////////////////
+    // TRACE PIXEL OUTPUT
+    /* 
+    // FOR DEBUGGING PURPOSES
+    // TO BE COMMENTED LATER
+    // filling modifies the outcolor value to change the
+    // drawing inside filled areas
+    out_trace_pixel = float4( 0, 0, 0, 1 );
+
+    // FILL_COPY 0
+    // copies input trace pixel
+    if( filling_pixel == FILL_COPY )
+      out_trace_pixel = texRECT(trace_pixelFBO , decalCoords);
+    
+    // FILL_EXPANSION 1
+    // red
+    else if( filling_pixel == FILL_EXPANSION )
+      out_trace_pixel = float4( 1, 0, 0, 1);
+    
+    // FILL_BORDER 2
+    // green
+    else if( filling_pixel == FILL_BORDER )
+      out_trace_pixel = float4( 0, 1, 0, 1);
+    
+    // NON_FILLED_AREA 3
+    // blue
+    else if( filling_pixel == NON_FILLED_AREA )
+      out_trace_pixel = float4( 0, 0, 1, 1);
+    
+    // FILL_OVERDRAW 4
+    // yellow
+    else if( filling_pixel == FILL_OVERDRAW )
+      out_trace_pixel = float4( 1, 1, 0, 1);
+    
+    // FILL_BORDER_OVERDRAW 5
+    // cyan
+    else if( filling_pixel == FILL_BORDER_OVERDRAW )
+      out_trace_pixel = float4( 0, 1, 1, 1);
+    
+    // FILL_INIT 6
+    // magenta
+    else if( filling_pixel == FILL_INIT )
+      out_trace_pixel = float4( 1, 0, 1, 1);
+    
+    // NON_FILLING_MODE 7
+    // grey
+    else if( filling_pixel == NON_FILLING_MODE )
+      out_trace_pixel = float4( 0.5, 0.5, 0.5, 1);
+    
+    // NON_FILLED_OVERDRAW 8
+    // light blue
+    else if( filling_pixel == NON_FILLED_OVERDRAW )
+      out_trace_pixel = float4( 0.5, 0.5, 1, 1);
+    
+    // FILL_UNKNOWN 9
+    // pink
+    else if( filling_pixel == FILL_UNKNOWN )
+      out_trace_pixel = float4( 1, 0.5, 0.5, 1);
+    */
+  }
+
+  /////////////////////////////////////////////////
+  // DRAWING MODE GRAY LEVEL OUTPUT
+  // point, line or Bezier stroke
+  else if( drawing_mode == DRAWING_POINT 
+	   || drawing_mode == DRAWING_LINE 
+	   || drawing_mode == DRAWING_BEZIER ) {
+    // in case of point drawing only points every freqDots are drawn
+    // otherwise the pen is considered out of the screen
+    if( drawing_mode == DRAWING_POINT 
+	&& (fmod((float)frameNo , cg_fs_4fv_xy_frameno_freqDots.w ) > 0.8 )) {
+      interp_mouse_x = -100;
+      interp_mouse_y = -100;
+    }
+
+    // distance from pen center
+    signed_rx = decalCoords.x - interp_mouse_x;
+    signed_ry = height - decalCoords.y - interp_mouse_y;
+    unsigned_rx = abs( signed_rx );
+    unsigned_ry = abs( signed_ry );
+    
+    // copies the previous gray level
+    out_drawn_filled 
+      = texRECT(Drawn_FilledFBO , decalCoords).rgb;
+    out_gray = out_drawn_filled.g;
+
+    /////////////////////////////////////////////////
+    // STROKE SPREADING (BOTH DRAWING & FILLING MODES)
+    // It is used to spread strokes
+    
+    // rendering_mode values
+    // 1 = non spreading
+    // 2 = vertical line
+    // 3 = horizontal line
+    // 4 = vertically spreading dot
+    // 5 = horizontally spreading dot
+    // 6 = vertically + bidirectionnally spreading dot
+    // 7 = horizontally + bidirectionnally spreading dot
+    // 8 = bidirectionnally spreading dot
+
+    /////////////////////////////////////////////////
+    // COMPUTE THE SPREADING VECTOR
+    spread_vector = float2( 0, 0 ); // spreading is defined 
+    // by the last modes 6-7-8 otherwise is null
+    
+    // vertically spreading dot
+    if( rendering_mode == SPREAD_VERTICAL_LINE && unsigned_rx < radiusX) {
+      spread_vector = float2( normalize(signed_rx) * cg_fs_4fv_spread_radius_decay.x , 0 );
+    }
+    else if( rendering_mode == SPREAD_HORIZONTAL_LINE && unsigned_ry < radiusY) {
+      spread_vector = float2( 0 , normalize(signed_ry) * cg_fs_4fv_spread_radius_decay.y );
+    }
+    else if( rendering_mode == SPREAD_Y_VERTICALLY_SPREADING) {
+      spread_vector = float2( normalize(signed_rx) * cg_fs_4fv_spread_radius_decay.x , 0 );
+    }
+    // horizontally spreading dot
+    else if( rendering_mode == SPREAD_X_HORIZONTALLY_SPREADING) {
+      spread_vector = float2( 0 , normalize(signed_ry) * cg_fs_4fv_spread_radius_decay.y );
+    }
+    // vertically && bidirectionnally spreading dot
+    else if ( rendering_mode == SPREAD_T_VERTICALLY_BIDIRECTIONNALLY_SPREADING ) {
+      if( unsigned_rx < radiusX) {
+	spread_vector = float2( sign(signed_ry) * cg_fs_4fv_spread_radius_decay.x , 0 );
+      }
+      // bidirectionnally spreading dot
+      else {
+	// vector from the pen center to the current position
+	float2 vector_to_mousePosition = float2(signed_rx,signed_ry);
+	spread_vector 
+	  = normalize( vector_to_mousePosition ) * cg_fs_4fv_spread_radius_decay.z;
+      }
+    }
+    // horizontally && bidirectionnally spreading dot
+    else if ( rendering_mode == SPREAD_S_HORIZONTALLY_BIDIRECTIONNALLY_SPREADING ) {
+      if( unsigned_ry < radiusY) {
+	spread_vector = float2( 0 , sign(signed_rx) * cg_fs_4fv_spread_radius_decay.y );
+      }
+      // bidirectionnally spreading dot
+      else {
+	// vector from the pen center to the current position
+	float2 vector_to_mousePosition = float2(signed_rx,signed_ry);
+	spread_vector 
+	  = normalize( vector_to_mousePosition ) * cg_fs_4fv_spread_radius_decay.z;
+      }
+    }
+    // bidirectionnally spreading dot
+    else if( rendering_mode == SPREAD_BIDIRECTIONNALLY_SPREADING ) {
+      // vector from the pen center to the current position
+      float2 vector_to_mousePosition 
+	= float2(signed_rx,signed_ry);
+      spread_vector 
+	= normalize( vector_to_mousePosition ) * cg_fs_4fv_spread_radius_decay.z;
+    }
+    // oblique spreading dot
+    else if( rendering_mode == SPREAD_OBLIQUE_SPREADING) {
+      spread_vector = float2( normalize(signed_rx) * cg_fs_4fv_spread_radius_decay.x , normalize(signed_ry) * cg_fs_4fv_spread_radius_decay.y );
+    }
+    // anti-oblique spreading dot
+    else if( rendering_mode == SPREAD_ANTI_OBLIQUE_SPREADING) {
+      spread_vector = float2( -normalize(signed_rx) * cg_fs_4fv_spread_radius_decay.x , normalize(signed_ry) * cg_fs_4fv_spread_radius_decay.y );
+    }
+
+    /////////////////////////////////////////////////
+    // SPREADS THE OUTPUT GRAYLEVEL (WRITING POSITION)
+    // non spreading mode
+    if( rendering_mode == SPREAD_NONE ) {
+      if( (x1 != mouse_x || y1 != mouse_y) // doesnt redraw on 
+	  // previously drawn place
+	  && unsigned_rx < radiusX && unsigned_ry < radiusY ) {
+
+	// blue channel that
+	// contains filling info is preserved ,
+	out_drawn_filled = float3( 1 , 0 , out_drawn_filled.b ); 
+
+	out_gray = stroke_out( );
+      }
+      else {
+	// out_gray and out_drawn_filled preserved
+	normalized_dist_to_mousePos = length( float2(unsigned_rx/radiusX, unsigned_ry/radiusY) );
+      }
+    }
+    // vertical line
+    else if( rendering_mode == SPREAD_VERTICAL_LINE ) {
+      if( unsigned_rx < radiusX ) {
+	out_drawn_filled = float3( 1 , 0 , out_drawn_filled.b ); // blue channel that
+		    // contains filling info is preserved ,
+	out_gray = vertical_line_out( );
+      }
+      else {
+	// out_gray and out_drawn_filled preserved
+	normalized_dist_to_mousePos = length( float2(unsigned_rx/radiusX, unsigned_ry/radiusY) );
+      }
+    }
+    // horizontal line
+    else if( rendering_mode == SPREAD_HORIZONTAL_LINE ) {
+      if( unsigned_ry < radiusY ) {
+	out_drawn_filled = float3( 1 , 0 , out_drawn_filled.b ); // blue channel that
+		    // contains filling info is preserved ,
+	out_gray = horizontal_line_out( );
+      }
+      else {
+	// out_gray and out_drawn_filled preserved
+	normalized_dist_to_mousePos = length( float2(unsigned_rx/radiusX, unsigned_ry/radiusY) );
+      }
+    }
+    // vertically spreading dot
+    else if( rendering_mode == SPREAD_Y_VERTICALLY_SPREADING ) {
+	one_direction_spreading_dot( decalCoords );
+    }
+    // horizontally spreading dot
+    else if( rendering_mode == SPREAD_X_HORIZONTALLY_SPREADING ) {
+	one_direction_spreading_dot( decalCoords );
+    }
+    // vertically && bidirectionnally spreading dot
+    else if ( rendering_mode == SPREAD_T_VERTICALLY_BIDIRECTIONNALLY_SPREADING ) {
+      if( unsigned_rx < radiusX) {
+	one_direction_spreading_dot( decalCoords );
+      }
+      // bidirectionnally spreading dot
+      else {
+	bidirectionnally_spreading_dot( decalCoords );
+      }
+    }
+    // horizontally && bidirectionnally spreading dot
+    else if ( rendering_mode == SPREAD_S_HORIZONTALLY_BIDIRECTIONNALLY_SPREADING ) {
+      if( unsigned_ry < radiusY) {
+	one_direction_spreading_dot( decalCoords );
+      }
+      // bidirectionnally spreading dot
+      else {
+	bidirectionnally_spreading_dot( decalCoords );
+      }
+    }
+    // bidirectionnally spreading dot
+    else if( rendering_mode == SPREAD_BIDIRECTIONNALLY_SPREADING ) {
+      bidirectionnally_spreading_dot( decalCoords );
+    }
+    // oblique spreading dot
+    else if( rendering_mode == SPREAD_OBLIQUE_SPREADING ) {
+	one_direction_spreading_dot( decalCoords );
+    }
+    // anti-oblique spreading dot
+    else if( rendering_mode == SPREAD_ANTI_OBLIQUE_SPREADING ) {
+	one_direction_spreading_dot( decalCoords );
+    }
+    
+    /////////////////////////////////////
+    // TRACE PIXEL OUTPUT
+    
+    // copies input trace pixel
+    // out_trace_pixel = texRECT(trace_pixelFBO , decalCoords);
+  }
+    
+  
+  /////////////////////////////////////
+  /////////////////////////////////////
+  // COLOR OUTPUT
+  /////////////////////////////////////
+  /////////////////////////////////////
+  
+  /////////////////////////////////////////////////
+  // FILLLING MODE
+
+  if( drawing_mode == DRAWING_FILL ) {
+    // filling : outputs the current color parameter
+    if( filling_pixel == FILL_INIT 
+	|| filling_pixel == FILL_EXPANSION 
+	|| filling_pixel == FILL_OVERDRAW 
+	||  filling_pixel == FILL_BORDER_OVERDRAW ) {
+      out_local_color = texRECT( local_colorFBO,
+				 float2( decalCoords.x - spread_vector.x,
+					 decalCoords.y + spread_vector.y));
+      if( filling_pixel == FILL_EXPANSION ) {
+	out_local_color.rgb 
+	  = lerp( out_local_color.rgb,
+		  cg_fs_4fv_local_color.rgb,
+		  local_transparency );
+      }
+    }
+    // otherwise copies the current color input
+    else {
+      out_local_color = texRECT( local_colorFBO,
+				 float2( decalCoords.x - spread_vector.x,
+					 decalCoords.y + spread_vector.y));
+    }
+    out_Drawn_Filled = float4( out_drawn_filled , 1);
+  }
+
+  /////////////////////////////////////////////////
+  // DRAWING MODE
+
+  // point, line or Bezier stroke
+  else if( drawing_mode == DRAWING_POINT
+	   || drawing_mode == DRAWING_LINE 
+	   || drawing_mode == DRAWING_BEZIER ) {
+    // color output is the pen color at this position
+    // copies the previous color output
+    
+    // local color displacement according to gray level displacement
+    // reads the previous color from the FBO for color storage
+    out_local_color.rgb = texRECT( local_colorFBO,
+    			       float2( decalCoords.x - spread_vector.x,
+    				       decalCoords.y + spread_vector.y)).rgb;
+
+    // out_local_color.w = 1;
+    // out_local_color.rgb = cg_fs_4fv_local_color.rgb;
+    
+    // in tracing mode
+    // blending occurs if the distance of the current pixel
+    // to the mouse_position is close enough
+    // if interpolated drawing (curve or line), only draws if
+    // inside a drawing interval, to avoid drawing artefacts
+    // at the extremities (draws a cylinder)
+    if( normalized_dist_to_mousePos <= 1.0 && 
+	(  x1 != mouse_x || y1 != mouse_y ) ) {
+      out_local_color.rgb 
+	= lerp( out_local_color.rgb,
+		cg_fs_4fv_local_color.rgb,
+		(out_gray) );
+    }
+
+
+    // PREVIOUS GRAY LEVEL
+    float previous_out_gray 
+      = texRECT( Drawn_FilledFBO,
+		 float2( decalCoords.x - spread_vector.x,
+			 decalCoords.y + spread_vector.y)).g;
+
+    // the new pen gray level is brighter than the current pen gray level
+    // the new position is memorized with the new gray level
+    if(out_gray > previous_out_gray) {
+      out_Drawn_Filled.g = out_gray;
+      // we dont blend the local color, blending is made at drawing time
+    }
+    // the new pen gray level is darker than the current pen gray level
+    // the new position is memorized with the old gray level
+    else {
+      out_Drawn_Filled.g = previous_out_gray;
+      // we dont blend the local color, blending is made at drawing time
+    }
+
+    /* if( normalized_dist_to_mousePos <= 1.0) { */
+    /*   out_local_color.rgb  */
+    /* 	= (1-cg_fs_4fv_local_color.w) * out_local_color.rgb */
+    /* 	+ cg_fs_4fv_local_color.rgb*cg_fs_4fv_local_color.w; */
+    /* } */
+    // copies the gray level into the fourth color channel
+  }
+
+  /////////////////////////////////////
+  // GRAY LEVEL DECAY (FOR BOTH FILLING AND DRAWING)
+  // computes the decay (if it is not close to pen center in case
+  // of dot painting)
+  // preserves the BLUE channel (filling boolean)
+  float newGrayLevel_w_decay = out_Drawn_Filled.g - (decay/1000.0);
+  if(newGrayLevel_w_decay > 0) {
+    out_Drawn_Filled = float4( out_drawn_filled.r ,
+			       newGrayLevel_w_decay , out_drawn_filled.b, 1);
+  }
+  else {
+    // in case color has faded out or pen has never written
+    // returns black
+    out_Drawn_Filled = float4( 0, 0 , 0, 1);
+    out_local_color = float4( 0,0,0,1); 
+  }
+
+  out_local_color.w = 1;
+  out_Drawn_Filled.w = 1;
+}

@@ -1,0 +1,452 @@
+/***********************************************************************
+File: NINE/shaders/LYM_Composition_NINE-FS.cg
+
+LYM NINE & Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+*************************************************************************/
+
+// Main shader.
+
+float4 main(
+	    // obtained from Vertex Program
+	    float2 decalCoords    : TEXCOORD0,  // coord text
+	    float2 decalCoordsBGD : TEXCOORD1,  // 512x512 texcture coords
+	    
+	    uniform float3 cg_fs_3fv_width_height_trace,
+	    uniform float  cg_fs_decay,
+	    uniform float3 cg_fs_3fv_xy_frameno,
+	    uniform float3 cg_fs_3fv_kaleidoscopeID_BGfx_timer,
+	    uniform float3 cg_fs_3fv_phase_amplitude_length,
+	    uniform float4 cg_fs_4fv_blend_color,
+	    uniform float4 cg_fs_4fv_drawing_brush_kaleid_spread,
+	    uniform float4 cg_fs_4fv_local_color,
+	    
+	    /////////////////////////////////////
+	    // BG LAYER OPACITIES
+	    uniform float4 cg_fs_4fv_opacity02_savedFG,   // image layer opacity #0-3
+	    uniform float3 cg_fs_3fv_maskOpacity02, // mask layer opacity #0-3
+	    /////////////////////////////////////
+	    // BG COMPOSITION OPACITIES
+	    uniform float4 cg_fs_4fv_BG_compositionOpacity, // BG compo opacity #0-3
+
+	    /////////////////////////////////////
+	    // GRAY LEVEL INPUT
+	    // the RED canal contains 1 if it is written
+	    // the GREEN canal of OutGrayLevel contains the current gray level
+	    // the BLUE canal contains a boolean that is set to 2 when a 
+	    //     a region is filled
+	    uniform samplerRECT  decal        : TEXUNIT0, // ping-pong mouse 
+	                                                  // pos FBO
+
+	    /////////////////////////////////////
+	    // COLOR INPUT
+	    uniform samplerRECT  lookupTable1 : TEXUNIT1,  // ping-pong color 
+	                                                   // FBO
+	    // uniform samplerRECT  lookupTable2 : TEXUNIT2,  // trace pixel in FBO for 
+	                                                   // drawing of filling algos
+	    // uniform samplerRECT  lookupTable3 : TEXUNIT3,   // background color
+
+	    /////////////////////////////////////
+	    // BG LAYERS
+	    uniform samplerRECT  lookupTable2,     // image layer #1-3
+	    uniform samplerRECT  lookupTable3,     // image masks #1-3
+	    uniform samplerRECT  lookupTable4,     // image layer and mask #1-3
+	    uniform samplerRECT  lookupTable5,     // contour layer #1-2
+	    uniform samplerRECT  lookupTable6,     // saved Frame Buffer
+	    uniform samplerRECT  lookupTable7      // tools
+	    ) : COLOR {
+  // new texture coordinates for foreground kaleidoscopic effects
+  float2 new_FGdecalCoords;
+  float width = cg_fs_3fv_width_height_trace.x;
+  float height = cg_fs_3fv_width_height_trace.y;
+  float trace = cg_fs_3fv_width_height_trace.z;
+
+  // kaleidoscopic effects and FBO copies
+  float kaleidoscopeID = cg_fs_3fv_kaleidoscopeID_BGfx_timer.x;
+  if( kaleidoscopeID >= 7.8 ) {
+    if( decalCoords.x > width/2 
+	&& decalCoords.y > height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x > width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y > height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 6.8 ) {
+    if( decalCoords.x > width/2 
+	&& decalCoords.y < height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x > width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y < height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 5.8 ) {
+    if( decalCoords.x < width/2 
+	&& decalCoords.y > height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x < width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y > height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 4.8 ) {
+    if( decalCoords.x < width/2 
+	&& decalCoords.y < height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x < width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y < height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 3.8 ) {
+    if( decalCoords.y > height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 2.8 ) {
+    if( decalCoords.y < height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 1.8 ) {
+    if( decalCoords.x > width/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+  }
+  else if( kaleidoscopeID >= 0.8 ) {
+    if( decalCoords.x < width/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+  }
+  else {
+    new_FGdecalCoords = decalCoords;
+  }
+
+  // Foreground texture access
+  // renaming for legibility
+  samplerRECT  Drawn_FilledFBO = decal;      // ping-pong mouse & pos FBO
+  samplerRECT  local_colorFBO = lookupTable1;      // ping-pong color FBO
+  // samplerRECT  trace_pixelFBO = lookupTable2;      // trace pixel in FBO
+  
+  float3 drawn_filled
+    = texRECT(Drawn_FilledFBO, new_FGdecalCoords).rgb;
+  // float4 trace_pixel
+  // = texRECT(trace_pixelFBO, new_FGdecalCoords);
+  float4 local_color
+    = texRECT(local_colorFBO, new_FGdecalCoords);
+  float gray_level = drawn_filled.g;
+  // return float4(gray_level,gray_level,gray_level,1);
+
+
+  // new texture coordinates for background
+  float2 new_BGdecalCoordsBGD;
+
+  float BG_EffectsID = cg_fs_3fv_kaleidoscopeID_BGfx_timer.y;
+  float frameno = cg_fs_3fv_xy_frameno.z;
+  if( BG_EffectsID >= 0.8 ) {
+    // EGG'n SPERM scene: wave effect
+    frameno  /= cg_fs_3fv_phase_amplitude_length.x;
+    float2 radius =  decalCoords - float2(width/2,height/2);
+    float r = cg_fs_3fv_phase_amplitude_length.z * sqrt(dot( radius , radius ));
+    // rain drops
+    // float r = dot( decalCoords , decalCoords );
+    new_BGdecalCoordsBGD = decalCoordsBGD + cg_fs_3fv_phase_amplitude_length.y 
+      * float2( cos(r - frameno) , sin(r - frameno) );
+    new_BGdecalCoordsBGD /= 1.2;
+    new_BGdecalCoordsBGD += 100;
+  }
+  else {
+    new_BGdecalCoordsBGD = decalCoordsBGD;
+  }
+
+  // BG color
+  float4 couleur;
+  // shape masks
+  float contourShapeMask;
+  // samplerRECT  background_colorFBO = lookupTable3; // background color FBO
+  // float4 background_color = texRECT(background_colorFBO, new_BGdecalCoords);
+  /* cg_fs_4fv_BG_compositionOpacity.x = 1.0; */
+  /* cg_fs_4fv_opacity02_savedFG = float4(0,0,0,1); */
+  /* cg_fs_3fv_maskOpacity02 = float4(1,0,0,0); */
+  if( cg_fs_4fv_BG_compositionOpacity.x > 0 ) {
+    // Previous content of the background shader that was rendered
+    // in a separate quad and has been included here for optimization purposes
+    // Compute pixel color
+    // bottom layer
+    couleur = texRECT( lookupTable2 , new_BGdecalCoordsBGD );
+    //return couleur;
+    // mask of bottom layer
+    float mask0 = 1 - texRECT( lookupTable3 , new_BGdecalCoordsBGD ).r;
+    mask0 *= cg_fs_3fv_maskOpacity02[0];
+    float opacity0 = cg_fs_4fv_opacity02_savedFG[0] * (1 - mask0) * couleur.a;
+    couleur.rgb *= opacity0;
+    couleur.a = opacity0;
+    
+    // layer 1
+    float4 couleur1 = texRECT( lookupTable2 , new_BGdecalCoordsBGD + float2(1024,0) );
+    // mask of layer 1
+    float mask1 = 1 - texRECT( lookupTable3 , new_BGdecalCoordsBGD + float2(1024,0) ).r;
+    mask1 *= cg_fs_3fv_maskOpacity02[1];
+    float opacity1 = cg_fs_4fv_opacity02_savedFG[1] * (1 - mask1) * couleur1.a;
+    couleur.rgb = couleur.rgb * (1 - opacity1) + couleur1.rgb * opacity1;
+    couleur.a = max(couleur.a,opacity1);
+    
+    // layer 2
+    float4 couleur2 = texRECT( lookupTable2 , new_BGdecalCoordsBGD + float2(2048,0) );
+    // mask of layer 2
+    float mask2 = 1 - texRECT( lookupTable3 , new_BGdecalCoordsBGD + float2(2048,0) ).r;
+    mask2 *= cg_fs_3fv_maskOpacity02[2];
+    float opacity2 = cg_fs_4fv_opacity02_savedFG[2] * (1 - mask2) * couleur2.a;
+    couleur.rgb = couleur.rgb * (1 - opacity2) + couleur2.rgb * opacity2;
+    couleur.a = max(couleur.a,opacity2);
+    couleur *= cg_fs_4fv_BG_compositionOpacity.x;
+
+    // shape masks
+    contourShapeMask = texRECT( lookupTable5 , decalCoordsBGD ).r;
+  }
+  else if( cg_fs_4fv_BG_compositionOpacity.y > 0 ) {
+    // Previous content of the background shader that was rendered
+    // in a separate quad and has been included here for optimization purposes
+    // Compute pixel color
+    // bottom layer
+    couleur = texRECT( lookupTable4 , new_BGdecalCoordsBGD );
+    float mask0 = 1 - couleur.b;
+    couleur = float4( couleur.r , couleur.r , couleur.r , 1.0 );
+    // mask of bottom layer
+    mask0 *= cg_fs_3fv_maskOpacity02[0];
+
+    float opacity0 = cg_fs_4fv_opacity02_savedFG[0] * (1 - mask0) * couleur.a;
+    couleur.rgb *= opacity0;
+    couleur.a = opacity0;
+    
+    // layer 1
+    float4 couleur1 = texRECT( lookupTable4 , new_BGdecalCoordsBGD + float2(1024,0) );
+    float mask1 = 1 - couleur1.b;
+    couleur1 = float4( couleur1.r , couleur1.r , couleur1.r , 1.0 );
+    // mask of layer 1
+    mask1 *= cg_fs_3fv_maskOpacity02[1];
+
+    float opacity1 = cg_fs_4fv_opacity02_savedFG[1] * (1 - mask1) * couleur1.a;
+    couleur.rgb = couleur.rgb * (1 - opacity1) + couleur1.rgb * opacity1;
+    couleur.a = max(couleur.a,opacity1);
+    
+    // layer 2
+    float4 couleur2 = texRECT( lookupTable4 , new_BGdecalCoordsBGD + float2(2048,0) );
+    float mask2 = 1 - couleur2.b;
+    couleur2 = float4( couleur2.r , couleur2.r , couleur2.r , 1.0 );
+    // mask of layer 2
+    mask2 *= cg_fs_3fv_maskOpacity02[2];
+
+    float opacity2 = cg_fs_4fv_opacity02_savedFG[2] * (1 - mask2) * couleur2.a;
+    couleur.rgb = couleur.rgb * (1 - opacity2) + couleur2.rgb * opacity2;
+    couleur.a = max(couleur.a,opacity2);
+    couleur *= cg_fs_4fv_BG_compositionOpacity.y;
+
+    // shape masks
+    contourShapeMask = texRECT( lookupTable5 , decalCoordsBGD ).b;
+  }
+  else {
+    couleur = float4(0,0,0,0);
+    contourShapeMask = 0;
+  }
+
+  // returns pixel color
+  float4  background_color = float4(couleur.rgb,contourShapeMask * couleur.a);
+
+  // if( trace > 0 ) {
+  // return trace_pixel;
+  // }
+
+  // return float4(drawn_filled.b,drawn_filled.b,drawn_filled.b,1);
+
+  //return local_color;
+  
+  // blinking cursor 1 pixel wide under the mouse
+  float mouse_x = cg_fs_3fv_xy_frameno.x;
+  float mouse_y = cg_fs_3fv_xy_frameno.y;
+  if( abs(decalCoords.x - mouse_x) < 1 
+      && abs(height - decalCoords.y - mouse_y) < 1 ) {
+    return float4(abs(sin(frameno)),abs(sin(frameno)),abs(sin(frameno)),1);
+  }
+
+  /*
+  // drawn or filled area
+  if( drawn_filled.b >= 0 ) {
+    // a decaying stroke
+    if( drawn_filled.r > 0 
+	&& local_color.w > cg_fs_decay/1000.0 ) {
+      // blend of blend color and local color
+      cg_fs_4fv_blend_color.xyz *= local_color.xyz;
+      
+      // combined with the gray level of pen and decay
+      // return background_color;
+      return background_color  * (1 - local_color.w)
+	+ cg_fs_4fv_blend_color * local_color.w;
+    }
+    return background_color;
+  }
+  */
+
+  // integrates transparency into the BG color by
+  // blending with black
+  background_color.rgb *= background_color.a;
+  background_color.a = 1;
+
+  // blend with a saved background in case of clearing up
+  float savedFG_weight = cg_fs_4fv_opacity02_savedFG[3];
+  float4 returnC; // return color
+
+  /* background_color = texRECT( lookupTable2 , new_BGdecalCoordsBGD ); */
+  /* background_color.a = 0.5; */
+  //return background_color;
+  // visual feedback
+
+  // drawn or filled area
+  // a decaying stroke
+  if( drawn_filled.b >= 0 && drawn_filled.r > 0 ) {
+    
+    cg_fs_4fv_blend_color.xyz *= local_color.xyz;
+    /* return float4(local_color.xyz,1); */
+    // return float4(gray_level,gray_level,gray_level,1); 
+    
+    returnC =
+      float4( lerp( background_color.rgb , cg_fs_4fv_blend_color.xyz , 
+		    gray_level ), 
+	      cg_fs_4fv_blend_color.a );
+
+    /* float3 returnColor = background_color.rgb * (1 - gray_level) */
+    /*   + cg_fs_4fv_blend_color.rgb * local_color.rgb * gray_level;  */
+    
+    // combined with the gray level of pen and decay
+    // return background_color;
+    /* return float4( cg_fs_4fv_blend_color.a * returnColor, cg_fs_4fv_blend_color.a ); */
+  }
+  else {
+    // only background
+    returnC =
+      cg_fs_4fv_blend_color.a * background_color;
+  }
+  /* float4 colorFG = texRECT(lookupTable6, decalCoords); */
+  /* return 0.5 * returnC + 0.5 * colorFG; */
+
+  // blends the color with the possible saved foreground in case
+  // of clearing up with decay
+  if( savedFG_weight > 0.01 ) {
+    float4 colorFG = texRECT(lookupTable6, decalCoords);
+    /* colorFG.rgb *= savedFG_weight; */
+    /* if( returnC.r == 0 ) { */
+    /*   returnC.r = colorFG.r; */
+    /* } */
+    /* if( returnC.g == 0 ) { */
+    /*   returnC.g = colorFG.g; */
+    /* } */
+    /* if( returnC.b == 0 ) { */
+    /*   returnC.b = colorFG.b; */
+    /* } */
+    returnC = lerp( returnC , colorFG , savedFG_weight );
+  }
+
+  // VERTICAL TOOL BAR
+  float barYmin = 4.0 * (height - 120.0);
+  if( decalCoords.x < 20.0 && decalCoords.y > (height - 120.0) ) {
+    // reads the tool texture first row (0-80): drawing mode
+    if( decalCoords.y > (height - 20.0) ) {
+      returnC = 
+	texRECT(lookupTable7, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_4fv_drawing_brush_kaleid_spread.x),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture 2nd row (80-160): brush
+    else if( decalCoords.y > (height - 40.0) ) {
+      returnC = 
+	texRECT(lookupTable7, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_4fv_drawing_brush_kaleid_spread.y),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture 3rd row (160-240): kaleid
+    else if( decalCoords.y > (height - 60.0) ) {
+      returnC = 
+	texRECT(lookupTable7, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_4fv_drawing_brush_kaleid_spread.z),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture 4th row (240-320): spread mode
+    else if( decalCoords.y > (height - 80.0) ) {
+      returnC = 
+	texRECT(lookupTable7, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_4fv_drawing_brush_kaleid_spread.w),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture fifth row (320-400): timer
+    else if( decalCoords.y > (height - 100.0) ) {
+      returnC = 
+	texRECT(lookupTable7, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_3fv_kaleidoscopeID_BGfx_timer.z),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reports the local color
+    else  {
+      returnC = texRECT(lookupTable7, 
+       float2(decalCoords.x*4.0,
+	      (decalCoords.y*4.0-barYmin))).a
+	* cg_fs_4fv_local_color;
+    }
+    
+    // returnC = lerp(returnC, returnC, 1.0 - returnC.a);
+  }
+  // returnC.a *= cg_fs_4fv_blend_color.a;
+  return returnC;
+}

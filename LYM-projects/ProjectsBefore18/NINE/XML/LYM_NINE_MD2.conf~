@@ -1,0 +1,79 @@
+<node id="config">
+  <environment id="config">
+
+    <windows>
+      <!-- dont forget to change the width and height params --> 
+      <!-- when changing the resolution (at the bottom of this file) --> 
+      <window 
+	 type="main-window" id="frame"
+	 width="1440" height="1050" x="0" y="0" user_id="user_0"
+	 mouse_passive_selection="false" passive_highlight="false"/>
+    </windows>
+
+    <frame_rate 
+       crowd_step="60." minimal_interframe_latency="0.01"
+       interpolation_refreshing_variation="0.0040" vsync="false"/>
+
+    <scene_schedule
+       initial_time="0" time_step="0.00001" real_time="true"/>
+
+    <video_rendering_file begin="0" end="1000" step="1" id=""/>
+
+    <png_rendering_file begin="100" end="90" step="1" 
+			 id="" shots="pic/"/>
+    <jpg_rendering_file begin="110" end="100" step="1" 
+			 id="LYM-session-27-3-2011-" shots="pic/"/>
+
+    <log_file id="pic/LYM-session.log" log_date_output="true"/>
+
+    <udp_hosts
+       nb_udp_local_servers="1" nb_udp_remote_clients="1">
+
+      <udp_local_server 
+	 id="" local_port="1978" UDP_message_acknowledgement="false" 
+	 UDP_message_trace="false" input_message_stack_depth="300" 
+	 receive_format="OSC" receive_prefix="sound " 
+	 acknowledge_prefix="graphic " 
+	 offset_UDP_message_received="0" carbon_copy="" 
+	 OSC_duplicate_removal="true" OSC_endian_reversal="true"/>
+      
+      <udp_remote_client 
+	 id="udp_sound_client" remote_ip="127.0.0.1" remote_port="1979" 
+	 UDP_message_acknowledgement="false" first_UDP_message_number="0" 
+	 maximal_UDP_message_delay="0.10000" UDP_message_trace="false"
+	 output_message_stack_depth="300" 
+	 send_format="OSC" send_prefix="" send_ID="true" 
+	 OSC_endian_reversal="true" />
+      
+    </udp_hosts>
+
+    <trace
+       trace_input_file="false" trace_output_frame_number="false" 
+       trace_time="false" first_frame_number="0" 
+       last_frame_number="1000000"/>
+
+    <display  
+       with_splash_screen="false" splash_screen_encoding="pnga" 
+       splash_screen_file="textures/splash_screen-petit.png" 
+       success_screen_encoding="pnga" 
+       success_screen_file="textures/success_screen.png" 
+       defeat_screen_encoding="pnga" 
+       defeat_screen_file="textures/defeat_screen.png" 
+       with_screen_time_display="false" full_screen="false" 
+       game_mode="true"/>
+
+    <cursor
+       shape="no_cursor" /> <!-- left_arrow -->
+
+    <max_values 
+       max_shaders="200" max_textures="200" max_displays="8" 
+       max_viewpoints="100" max_embedded_parameters="320" 
+       max_scenes="300" max_targets="1000" max_selected_objects="300"/>
+
+  </environment>
+</node>
+
+<!-- Global constant parameters -->
+<set id="width"              value="1400"/>
+<set id="height"             value="1050"/>
+<set id="with_background"    value="1"/>

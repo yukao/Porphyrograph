@@ -1,0 +1,144 @@
+#N canvas 930 12 974 651 10;
+#X msg -634 328 disconnect;
+#X obj -693 280 bng 50 250 50 0 empty empty empty 0 -6 0 8 -24198 -1
+-1;
+#X obj -627 279 bng 50 250 50 0 empty empty empty 0 -6 0 8 -258699
+-1 -1;
+#X text -699 259 OPEN UDP CONNECTION;
+#X obj -716 330 send reset;
+#X obj -449 418 print;
+#X obj -529 294 receive reset;
+#X obj -761 286 loadbang;
+#X text -325 327 DELAY;
+#X floatatom -632 473 5 0 0 0 - - -;
+#X obj -757 193 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -760 249 send oscOut;
+#X text -577 341 comment;
+#X obj -556 375 receive oscOut;
+#X obj -632 449 sendOSC;
+#X msg -529 319 connect 127.0.0.1 8000;
+#X text -572 274 messages for the RENOISE OSC server;
+#X obj -758 25 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -762 153 send oscOut;
+#X obj -697 21 hradio 15 1 0 16 empty empty empty 0 -8 0 10 -262144
+-1 -1 2;
+#X obj -699 191 hradio 15 1 0 8 empty empty empty 0 -8 0 10 -262144
+-1 -1 2;
+#X obj -367 102 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -370 158 send oscOut;
+#X obj -369 -19 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -372 37 send oscOut;
+#X obj -310 -89 hradio 15 1 0 8 empty empty empty 0 -8 0 10 -262144
+-1 -1 0;
+#X obj -291 -70 hradio 15 1 0 8 empty empty empty 0 -8 0 10 -262144
+-1 -1 0;
+#X obj -336 -23 pack f f;
+#X obj -291 -49 t b f;
+#X obj -282 36 hradio 15 1 0 8 empty empty empty 0 -8 0 10 -262144
+-1 -1 0;
+#X obj -263 55 hradio 15 1 0 8 empty empty empty 0 -8 0 10 -262144
+-1 -1 0;
+#X obj -308 102 pack f f;
+#X obj -263 76 t b f;
+#X text -771 0 track unmute;
+#X text -770 168 track mute;
+#X text -392 -47 note on;
+#X text -380 77 note off;
+#X text -165 -84 intrument;
+#X text -153 -57 track;
+#X text -135 30 intrument;
+#X text -123 57 track;
+#X msg -373 8 send /renoise/trigger/note_on 0 \$1 \$1 127;
+#X msg -371 128 send /renoise/trigger/note_off 0 \$1 \$1 127;
+#X msg -761 219 send /renoise/song/track/\$1/mute;
+#X obj -751 -87 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -754 -31 send oscOut;
+#X obj -690 -93 hradio 15 1 0 17 empty empty empty 0 -8 0 10 -262144
+-1 -1 2;
+#X text -764 -112 track mute/unmute;
+#X msg -755 -61 send /renoise/song/track/\$1/mute_unmute;
+#X floatatom -666 -23 5 0 0 0 - - -;
+#X obj -676 42 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 10300 1;
+#X obj -683 63 t b f;
+#X obj -761 95 pack i f;
+#X msg -764 127 send /renoise/song/track/\$1/unmute_vol \$2;
+#X obj -535 192 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -538 248 send oscOut;
+#X obj -477 190 hradio 15 1 0 8 empty empty empty 0 -8 0 10 -262144
+-1 -1 1;
+#X msg -539 218 send /renoise/song/track/\$1/unmute;
+#X floatatom -595 71 5 0 0 0 - - -;
+#X obj -320 269 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -323 325 send oscOut;
+#X text -321 422 DELAY;
+#X obj -316 364 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -319 420 send oscOut;
+#X msg -324 295 send /renoise/transport/start;
+#X msg -320 390 send /renoise/transport/stop;
+#X msg -731 21 50;
+#X text -268 237 DELAY;
+#X obj -263 179 bng 15 250 50 0 empty empty empty 17 7 0 10 -232576
+-1 -1;
+#X obj -266 235 send oscOut;
+#X msg -267 205 send /renoise/song/bpm \$1;
+#X floatatom -205 155 5 0 0 0 - - -;
+#X obj -205 177 int;
+#X connect 0 0 14 0;
+#X connect 1 0 4 0;
+#X connect 2 0 0 0;
+#X connect 6 0 15 0;
+#X connect 7 0 4 0;
+#X connect 10 0 43 0;
+#X connect 13 0 5 0;
+#X connect 13 0 14 0;
+#X connect 14 0 9 0;
+#X connect 15 0 14 0;
+#X connect 17 0 52 0;
+#X connect 19 0 52 0;
+#X connect 20 0 43 0;
+#X connect 21 0 42 0;
+#X connect 23 0 41 0;
+#X connect 25 0 27 0;
+#X connect 26 0 28 0;
+#X connect 27 0 41 0;
+#X connect 28 0 27 0;
+#X connect 28 1 27 1;
+#X connect 29 0 31 0;
+#X connect 30 0 32 0;
+#X connect 31 0 42 0;
+#X connect 32 0 31 0;
+#X connect 32 1 31 1;
+#X connect 41 0 24 0;
+#X connect 42 0 22 0;
+#X connect 43 0 11 0;
+#X connect 44 0 48 0;
+#X connect 46 0 48 0;
+#X connect 46 0 49 0;
+#X connect 48 0 45 0;
+#X connect 50 0 51 0;
+#X connect 50 0 58 0;
+#X connect 51 0 52 0;
+#X connect 51 1 52 1;
+#X connect 52 0 53 0;
+#X connect 53 0 18 0;
+#X connect 54 0 57 0;
+#X connect 56 0 57 0;
+#X connect 57 0 55 0;
+#X connect 59 0 64 0;
+#X connect 62 0 65 0;
+#X connect 64 0 60 0;
+#X connect 65 0 63 0;
+#X connect 66 0 52 0;
+#X connect 68 0 70 0;
+#X connect 70 0 69 0;
+#X connect 71 0 72 0;
+#X connect 72 0 70 0;

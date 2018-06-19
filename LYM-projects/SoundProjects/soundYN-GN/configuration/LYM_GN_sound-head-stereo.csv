@@ -1,0 +1,72 @@
+RANK	0	1	2	3	4			
+VERBATIM	audio in device	audio out device	audio device verbose output	beat count	beats per minute			
+TYPE	int	int	int	int	int			
+ID	AudioInputDevice	AudioOutputDevice	VerboseDeviceOutput	BeatsPerSequence	BeatsPerMinute			
+initial_values								
+	-1	-1	0	4	60			
+/initial_values								
+udp_local_server	1							
+VERBATIM								
+TYPE	string	int	string	bool	int	bool	bool	bool
+ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal	OSC_endian_reversal
+server	udp_PD_receive	1978	Plain	0	300	1	1	1
+/udp_local_server								
+udp_remote_client	2							
+VERBATIM								
+TYPE	string	string	int	string	bool	int	bool	bool
+ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal	OSC_endian_reversal
+client	udp_PD_send	127.0.0.1	1979	Plain	0	300	1	1
+client	udp_Porphyrograph_send	192.168.0.2	1978	Plain	0	300	1	1
+/udp_remote_client								
+short_samples	21							
+VERBATIM	index	file						
+	0	./SoundData/soundYN-GN-data/samples-LA/GN_dumpdrum_EQ2.wav						
+	1	./SoundData/soundYN-GN-data/samples-LA/tromme-transformer.wav						
+	2	./SoundData/soundYN-GN-data/samples-LA/GN_knas_11.wav						
+	3	./SoundData/soundYN-GN-data/samples-LA/GN_knit_15.wav						
+	4	./SoundData/soundYN-GN-data/samples-LA/GN_knag_9.wav						
+	5	./SoundData/soundYN-GN-data/samples-LA/GN_ghost_11.wav						
+	6	./SoundData/soundYN-GN-data/samples-LA/GN_brand_9.wav						
+	7	./SoundData/soundYN-GN-data/samples-LA/GN_legebil_16.wav						
+	8	./SoundData/soundYN-GN-data/samples-LA/GN_bling1.wav						
+	9	./SoundData/soundYN-GN-data/samples-LA/GN_bling2.wav						
+	10	./SoundData/soundYN-GN-data/samples-LA/GN_babai_cello.wav						
+	11	./SoundData/soundYN-GN-data/samples-LA/GN_babai_rytme.wav						
+	12	./SoundData/soundYN-GN-data/samples-LA/GN_FemPath_cello2.wav						
+	13	./SoundData/soundYN-GN-data/samples-LA/GN_bitcrush_stortromme.wav						
+	14	./SoundData/soundYN-GN-data/samples-LA/GN_babai_synth_pling.wav						
+	15	./SoundData/soundYN-GN-data/samples-LA/GN_babai_heman.wav						
+	16	./SoundData/soundYN-GN-data/samples-LA/GN_Fem_klik_synthv2.wav						
+	17	./SoundData/soundYN-GN-data/samples-LA/GN_cubase_instr_pling.wav						
+	18	./SoundData/soundYN-GN-data/samples-LA/GN_iye_bassdrum.wav						
+	19	./SoundData/soundYN-GN-data/samples-LA/GN_iye_tiktakdrum.wav						
+	20	./SoundData/soundYN-GN-data/samples-LA/empty.wav						
+/short_samples								
+long_samples	1							
+VERBATIM	index	file						
+	0	./SoundData/soundYN-GN-data/samples-LA/GN_btFull12_EQ.wav						
+/long_samples								
+sequences	20							
+VERBATIM	index	size	ID	buffer #	dur (beats)	Amp (0 = silence)	loops	sync
+	0	4	dumpstortromme	0, 0, 0, 0	1, 1, 1, 1	1, 0.8, 1, 0.8	-1	1
+	1	4	bitcrush_stortromme	13, 13, 13, 13	1, 1, 1, 1	2, 1.5, 2, 1.5	-1	1
+	2	3	snareP3de	1, 1, 1	2, 1, 1	0, 1, 0	-1	1
+	3	1	bling1	8	8	1	-1	1
+	4	1	bling2	9	8	1	-1	1
+	5	1	iyebassdrum	18	8	2	-1	1
+	6	1	iyetiktak	19	8	1	-1	1
+	7	1	femPath_cello	12	16	1.3	-1	1
+	8	1	femPath_klik_synth	16	16	2	-1	1
+	9	2	pling	17, 17	2.5, 13.5	0, 1	-1	1
+	10	1	babai_synthpling	14	16	1.5	-1	1
+	11	1	babai_heman	15	16	1.3	-1	1
+	12	1	babai_cello	10	16	2	-1	1
+	13	1	babai_rytme	11	16	2	-1	1
+	14	1	knas	2	20	3	-1	1
+	15	1	knit	3	28	3	-1	1
+	16	1	knag	4	16	2.5	-1	1
+	17	1	ghost	5	21	3	-1	1
+	18	1	brand	6	17	3	-1	1
+	19	1	legebil	7	35	2.5	-1	1
+/sequences								
+/head								

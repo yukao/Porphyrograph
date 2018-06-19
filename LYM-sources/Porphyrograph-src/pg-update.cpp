@@ -226,6 +226,8 @@ GLuint pg_camera_BGIni_texture_texID = 0;
 // IplImage *pg_movie_frame = NULL;
 int pg_camera_frame_width = 0;
 int pg_camera_frame_height = 0;
+int pg_camera_x_offset = 0;
+int pg_camera_y_offset = 0;
 int pg_movie_frame_width = 0;
 int pg_movie_frame_height = 0;
 int currentlyPlaying_movieNo = -1;
@@ -1289,12 +1291,14 @@ void pg_update_shader_uniforms(void) {
 	// photo size 
 #if defined (TVW) || defined (CRITON)
 	glUniform4f(uniform_Update_fs_4fv_photo01_wh,
-		(GLfloat)pg_Photo_buffer_dataTVW[0]->w, (GLfloat)pg_Photo_buffer_dataTVW[0]->h,
-		(GLfloat)pg_Photo_buffer_dataTVW[1]->w, (GLfloat)pg_Photo_buffer_dataTVW[1]->h);
+		(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
+		(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
 #else
 	glUniform4f(uniform_Update_fs_4fv_photo01_wh,
-		(GLfloat)pg_Photo_buffer_data[0].w, (GLfloat)pg_Photo_buffer_data[0].h,
-		(GLfloat)pg_Photo_buffer_data[1].w, (GLfloat)pg_Photo_buffer_data[1].h);
+					1.f, .75f, 1.f, .75f);
+	//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
+	//	(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
+	//	(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
 #endif
 
 	// photo weights 
@@ -1305,6 +1309,10 @@ void pg_update_shader_uniforms(void) {
 	//	pg_Photo_weight[0] * photoWeight, pg_Photo_weight[1] * photoWeight);
 	//printf("camera movie weight %.2f %.2f\n",
 	//	*((float *)ScenarioVarPointers[_cameraWeight]), *((float *)ScenarioVarPointers[_movieWeight]));
+
+	// camera texture offset 
+	glUniform2f(uniform_Update_fs_2fv_Camera_offSetsXY,
+		(GLfloat)pg_camera_x_offset, (GLfloat)pg_camera_y_offset);
 
 #if defined (TVW) || defined (CRITON)
 	// image buffer layer weights
@@ -1833,11 +1841,11 @@ void pg_UpdatePass(void) {
 #if !defined (TVW) && !defined (CRITON)
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Photo_buffer_data[0].texBuffID);
+	glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[0]->texBuffID);
 
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Photo_buffer_data[1].texBuffID);
+	glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[1]->texBuffID);
 #endif
 
 	// FBO capture of particle rendering used for flashing layers with particles
@@ -1847,27 +1855,27 @@ void pg_UpdatePass(void) {
 #if defined (TVW) || defined (CRITON)
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels0);
 	glBindTexture(GL_TEXTURE_2D, 
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID);
 	// image buffer texture #1
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels1);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[1].indOldPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indOldPhoto]->texBuffID);
 	// image buffer texture #2
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels2);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[2].indOldPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indOldPhoto]->texBuffID);
 	// image buffer texture #3
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels3);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[3].indOldPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indOldPhoto]->texBuffID);
 	// image buffer texture #4
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels4);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[4].indOldPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indOldPhoto]->texBuffID);
 	// image buffer texture #5
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels5);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[5].indOldPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indOldPhoto]->texBuffID);
 	// image buffer mask #0
 	glActiveTexture(GL_TEXTURE0 + pg_TVWMask02);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Photo_mask_buffer_data[0].texBuffID);
@@ -1877,42 +1885,42 @@ void pg_UpdatePass(void) {
 	// buffer swap image #0
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap0);
 	glBindTexture(GL_TEXTURE_2D, 
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
 	// buffer swap image #1
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap1);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
 	// buffer swap image #2
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap2);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[2].indSwappedPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indSwappedPhoto]->texBuffID);
 	// buffer swap image #3
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap3);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[3].indSwappedPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indSwappedPhoto]->texBuffID);
 	// buffer swap image #4
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap4);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[4].indSwappedPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indSwappedPhoto]->texBuffID);
 	// buffer swap image #5
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap5);
 	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[5].indSwappedPhoto]->texBuffID);
+		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indSwappedPhoto]->texBuffID);
 #endif
 
 	//printf("texID %02d/%02d %02d/%02d %02d/%02d %02d/%02d %02d/%02d %02d/%02d\n",
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[1].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[2].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[2].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[3].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[3].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[4].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[4].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[5].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_dataTVW[pg_Photo_swap_buffer_data[5].indSwappedPhoto]->texBuffID);
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indOldPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indOldPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indSwappedPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indOldPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indSwappedPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indOldPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indSwappedPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indOldPhoto]->texBuffID,
+		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indSwappedPhoto]->texBuffID);
 
 	// 2-cycle ping-pong BG track step n (FBO attachment 5)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Update_sampler);

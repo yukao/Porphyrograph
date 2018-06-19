@@ -1,0 +1,160 @@
+/***********************************************************************
+File: CityWalk/shaders/LYM_Render_CW-VP.cg
+
+LYM Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+*************************************************************************/
+
+#define NB_CHANNELS 3
+#define VOID_CHANNEL 0
+#define POSITION_CHANNEL 1
+#define COLOR_CHANNEL 2
+#define RADIUS_BRUSHID_DRAWINGMODE_CHANNEL 3
+
+void main(float4 position      : POSITION,     // espace objet
+          float3 normal        : NORMAL,       // espace objet
+          float3 tangent       : TANGENT,      // espace objet
+	  float2 texcoords     : TEXCOORD0,
+
+	  // matrices standard
+          uniform float4x4 ModelViewProj,      // esp objet -> esp clipping
+          uniform float4x4 ModelView,          // esp objet -> esp de l'obs.3
+	  uniform float4x4 ModelViewInverse,          
+          uniform float3 diffuse,
+          uniform float3 specular,
+	 // parametres garnis pour tous les shaders
+          uniform float3 lightDir,             // esp de l'observateur
+          uniform float window_number,         // No de fenetre (si
+                                               // shader dép. de no de fenetre)
+          uniform samplerRECT  lookupTable1,   // ping-pong FBO
+          uniform samplerRECT  lookupTable2,   // noise
+	  // 3 channel position, color, radius, brush id and drawing mode
+          /*
+	  uniform samplerRECT  lookupTable2,     // color
+          uniform samplerRECT  lookupTable3,     // radius, brush ID and rendering mode
+	  */
+
+	  uniform float4 cg_vp_4fv_H_W_drawingFrame_lineLength,
+	  uniform float4 cg_vp_3fv_noise_global_radius_frameno,
+
+          out float4 color_out                               : COLOR0,
+          out float4 position_out                            : POSITION,
+          out float2 decalCoords                             : TEXCOORD0,
+          out float3 tangent_out                             : TEXCOORD1,
+          out float3 normal_out                              : TEXCOORD2,
+	  out float4 radius_Brush_drawingMode_depth_out      : TEXCOORD3
+	  )
+{
+  int drawingFrame = (int)cg_vp_4fv_H_W_drawingFrame_lineLength.z;
+  int lineLength = (int)cg_vp_4fv_H_W_drawingFrame_lineLength.w;
+
+  int vertexRank = (int)(position.x);
+  int width = (int)cg_vp_4fv_H_W_drawingFrame_lineLength.y;
+
+  // if there are more frames gone than the line length
+  // the line begins at drawingFrame (modulo the line length)
+  if( drawingFrame > lineLength ) {
+    vertexRank = (vertexRank + drawingFrame - lineLength + 1) % lineLength;
+  }
+
+  // line end: before the end of the first line
+  // the end of the line is collapsed to drawingFrame
+  if( vertexRank > drawingFrame + 1) {
+    vertexRank = drawingFrame;
+    position_out = float4(100000,100000,100000,-1);
+    color_out = float4(0,0,0,0);
+  }
+  else {
+    //////////////////////////////////////////////////
+    // draws NB_CHANNELS vertex buffer objects (VBO) in sequance
+    // each VBO has lineLength vertices (each pixel stores 1 vertex channel)
+    // 1 VBO for the positions
+    // 1 VBO for the color
+    // 1 VBO for the radius, brush ID and drawing mode
+    
+    ////////////////////////////////////////////////
+    // POSITION_CHANNEL
+    // the pixel rank of the drawn channel
+    int pixelRank = vertexRank;
+    int noiseRank = vertexRank + cg_vp_3fv_noise_global_radius_frameno.z;
+
+    // cg_vp_3fv_noise_global_radius_frameno.xy = float2(100,100);
+
+    float2 texCoords_prev = float2( (pixelRank - 1) % width , 
+				    (pixelRank - 1) / width );
+    float2 texCoordsNoise_prev = float2( (noiseRank - 1) % width , 
+					 (noiseRank - 1) / width );
+    float noiseAmplitude = 10.0 * cg_vp_3fv_noise_global_radius_frameno.x;
+    float3 noise 
+      = noiseAmplitude 
+      * (texRECT( lookupTable2, texCoordsNoise_prev ).rgb 
+	 - float3(0.5,0.5,0.5));
+    float4 prev_position 
+      = texRECT( lookupTable1, texCoords_prev ) + float4( noise , 0 );
+    
+    float2 texCoords_cur = float2( pixelRank % width , 
+				   pixelRank / width );
+    float2 texCoordsNoise_cur = float2( noiseRank % width , 
+					noiseRank / width );
+    noise 
+      = noiseAmplitude 
+      * (texRECT( lookupTable2, texCoordsNoise_cur ).rgb 
+	 - float3(0.5,0.5,0.5));
+    float4 cur_position 
+      = texRECT( lookupTable1, texCoords_cur ) + float4( noise , 0 );
+    
+    float2 texCoords_next = float2( (pixelRank + 1) % width , 
+				    (pixelRank + 1) / width );
+    float2 texCoordsNoise_next = float2( (noiseRank + 1) % width , 
+					 (noiseRank + 1) / width );
+    noise 
+      = noiseAmplitude 
+      * (texRECT( lookupTable2, texCoordsNoise_next ).rgb
+	 - float3(0.5,0.5,0.5));
+    float4 next_position 
+      = texRECT( lookupTable1, texCoords_next ) + float4( noise , 0 );
+    
+    // computes tangent from 3 steps and transforms it into the view space
+    float3 previous2current = normalize(cur_position.xyz - prev_position.xyz);
+    float3 current2next = normalize(next_position.xyz - cur_position.xyz);
+    tangent_out = (previous2current + current2next);
+    tangent_out = normalize( tangent_out );
+    
+    // computes the cur_position in the view space to get the view vector
+    // float4 posview = mul(ModelView, cur_position) ;
+    // normal_out = normalize(posview.xyz); // view vector
+    normal_out = mul( ModelViewInverse , float4(0,0,1,0)).xyz ; // view vector
+
+    position_out = cur_position/cur_position.wwww;
+    
+    // transmits texture coordinates (decalCoords) 
+    decalCoords = texcoords;
+    
+    ////////////////////////////////////////////////
+    // COLOR CHANNEL
+    // reads and transmits color 
+    pixelRank += lineLength;
+    color_out = texRECT( lookupTable1, 
+			 float2( pixelRank % width , 
+				 pixelRank / width ));
+    
+    // fog
+    /* float posz = mul( ModelView , position_out).z; */
+    /* color_out.rg *= (1000/posz); */
+    
+    ////////////////////////////////////////////////
+    // RADIUS, BRUSH ID and DRAWING MODE CHANNEL
+    pixelRank += lineLength;
+    // reads and transmits radius, brush ID and drawing mode 
+    // drawing mode is not used for the moment
+    radius_Brush_drawingMode_depth_out 
+      = float4( texRECT( lookupTable1,
+			 float2( pixelRank % width , 
+				 pixelRank / width )).xyz ,
+		position_out.z );
+    
+    // global radius scaling
+    radius_Brush_drawingMode_depth_out.x 
+      += cg_vp_3fv_noise_global_radius_frameno.y;
+  }
+}

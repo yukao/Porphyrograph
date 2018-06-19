@@ -1,0 +1,252 @@
+/***********************************************************************
+File: CityWalk/shaders/LYM_Composition_CW-FS.cg
+
+LYM Drawing Machine (c) Yukao Nagemi & Lola Ajima
+
+*************************************************************************/
+
+// Main shader.
+
+float4 main(
+	    // obtained from Vertex Program
+	    float2 decalCoords    : TEXCOORD0,  // coord text
+	    
+	    uniform float4 cg_fs_4fv_blend_alpha_granularID_center_width,
+	    uniform float4 cg_fs_4fv_local_color,
+	    uniform float4 cg_fs_4fv_width_height_frameNo_trace,
+	    uniform float3 cg_fs_3fv_timer_mouse_xy,
+	    uniform float3 cg_fs_3fv_drawingMode_brushID_rampMode,
+	    uniform float4 cg_fs_4fv_post_effects,
+
+	    /////////////////////////////////////
+	    // saved foreground
+	    uniform samplerRECT  decal        : TEXUNIT0,
+	    uniform samplerRECT  lookupTable1 : TEXUNIT1  // tools
+	    ) : COLOR 
+{
+  // new texture coordinates for foreground granular effects
+  float2 new_FGdecalCoords;
+  float width = cg_fs_4fv_width_height_frameNo_trace.x;
+  float height = cg_fs_4fv_width_height_frameNo_trace.y;
+  float trace = cg_fs_4fv_width_height_frameNo_trace.w;
+
+  // blinking cursor 1 pixel wide under the mouse
+  float frameno = cg_fs_4fv_width_height_frameNo_trace.z;
+  float mouse_x = cg_fs_3fv_timer_mouse_xy.y;
+  float mouse_y = cg_fs_3fv_timer_mouse_xy.z;
+  if( abs(decalCoords.x - mouse_x) < 1 
+      && abs(height - decalCoords.y - mouse_y) < 1 ) {
+    return float4(abs(sin(frameno)),abs(sin(frameno)),abs(sin(frameno)),1);
+  }
+
+  // granular effects and FBO copies
+  float granularID = cg_fs_4fv_blend_alpha_granularID_center_width.y;
+  if( granularID >= 7.8 ) {
+    if( decalCoords.x > width/2 
+	&& decalCoords.y > height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x > width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y > height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( granularID >= 6.8 ) {
+    if( decalCoords.x > width/2 
+	&& decalCoords.y < height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x > width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y < height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( granularID >= 5.8 ) {
+    if( decalCoords.x < width/2 
+	&& decalCoords.y > height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x < width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y > height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( granularID >= 4.8 ) {
+    if( decalCoords.x < width/2 
+	&& decalCoords.y < height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else if( decalCoords.x < width/2 ) {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+    else if( decalCoords.y < height/2 ) {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( granularID >= 3.8 ) {
+    if( decalCoords.y > height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( granularID >= 2.8 ) {
+    if( decalCoords.y < height/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(decalCoords.x,
+			       height-decalCoords.y);
+    }
+  }
+  else if( granularID >= 1.8 ) {
+    if( decalCoords.x > width/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+  }
+  else if( granularID >= 0.8 ) {
+    if( decalCoords.x < width/2 ) {
+      new_FGdecalCoords = decalCoords;
+    }
+    else {
+      new_FGdecalCoords = float2(width-decalCoords.x,
+			       decalCoords.y);
+    }
+  }
+  else {
+    new_FGdecalCoords = decalCoords;
+  }
+
+  // FX pixellization
+  float pixellization = cg_fs_4fv_post_effects.y;
+  if( pixellization > 0.02 ) {
+    int nbPixels = int(pixellization * 100) + 1; 
+    new_FGdecalCoords = nbPixels * (int2(new_FGdecalCoords) / nbPixels);
+  }
+
+  float4 returnC;
+  float warp = cg_fs_4fv_post_effects.z;
+  // FX warp
+  if( warp > 0.01 ) {
+    float vec_X = (new_FGdecalCoords.x 
+		   - (cg_fs_4fv_width_height_frameNo_trace.x/2));
+    float vec_Y = (new_FGdecalCoords.y 
+		   - (cg_fs_4fv_width_height_frameNo_trace.y/2));
+    float radius = sqrt( vec_X * vec_X + vec_Y * vec_Y );
+    float alpha = warp * radius * 0.01;
+    returnC = texRECT( decal, float2( cg_fs_4fv_width_height_frameNo_trace.x/2
+				   + vec_X * cos( alpha )
+				   + vec_Y * sin( alpha ) ,
+				   cg_fs_4fv_width_height_frameNo_trace.y/2
+				   + - vec_X * sin( alpha )
+				   + vec_Y * cos( alpha ) ) );
+  }
+  else {
+    returnC = texRECT(decal, new_FGdecalCoords);
+  }
+
+  // FX posterisaton
+  float posterization = cg_fs_4fv_post_effects.x;
+  if( posterization > 0.02 ) {
+    if( posterization > 0.87 ) {
+      posterization = 0.87;
+    }
+    int nbColors = int(16.0 * (1.0 - posterization)); 
+    int3 colors = int3(returnC.rgb * nbColors);
+    returnC = float4( float3(colors) / float(nbColors), returnC.a);
+  }
+
+  // return float4(1,0,0,1);
+  returnC.a *= cg_fs_4fv_blend_alpha_granularID_center_width.x;
+
+  // FX
+  // if( cg_fs_4fv_post_effects.w > 0.13 ) {
+  // }
+
+  // VERTICAL TOOL BAR
+  float barYmin = 4.0 * (height - 120.0);
+  if( decalCoords.x < 20.0 && decalCoords.y > (height - 120.0) ) {
+    // reads the tool texture first row (0-80): drawing mode
+    if( decalCoords.y > (height - 20.0) ) {
+      returnC = 
+	texRECT(lookupTable1, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_3fv_drawingMode_brushID_rampMode.x),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture 2nd row (80-160): brush
+    else if( decalCoords.y > (height - 40.0) ) {
+      returnC = 
+	texRECT(lookupTable1, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_3fv_drawingMode_brushID_rampMode.y),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture 3rd row (160-240): granular
+    else if( decalCoords.y > (height - 60.0) ) {
+      returnC = 
+	texRECT(lookupTable1, 
+       float2(decalCoords.x*4.0+(80.0*granularID),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture 4th row (240-320): xxxx
+    else if( decalCoords.y > (height - 80.0) ) {
+      returnC = 
+	texRECT(lookupTable1, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_3fv_drawingMode_brushID_rampMode.z),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reads the tool texture fifth row (320_400): timer
+    else if( decalCoords.y > (height - 100.0) ) {
+      returnC = 
+	texRECT(lookupTable1, 
+       float2(decalCoords.x*4.0+(80.0*cg_fs_3fv_timer_mouse_xy.x),
+	      (decalCoords.y*4.0-barYmin)));
+    }
+    // reports the local color
+    else  {
+      returnC = texRECT(lookupTable1, 
+			float2(decalCoords.x*4.0,
+			       (decalCoords.y*4.0-barYmin))).a
+	* cg_fs_4fv_local_color;
+    }
+    
+    // returnC = lerp(returnC, returnC, 1.0 - returnC.a);
+  }
+
+  return returnC;
+}

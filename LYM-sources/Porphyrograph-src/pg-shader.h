@@ -187,6 +187,7 @@ extern GLint uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 extern GLint uniform_Update_fs_4fv_photo01_wh;
 extern GLint uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
+extern GLint uniform_Update_fs_2fv_Camera_offSetsXY;
 extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 #if defined (GN) || defined (MALAUSSENA)

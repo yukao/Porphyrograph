@@ -1155,8 +1155,8 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float sc
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value >= 0 && scenario_or_gui_command_value != pg_CurrentDiaporamaDir) {
-			pg_launch_diaporama();
 			pg_CurrentDiaporamaDir = int(scenario_or_gui_command_value);
+			pg_launch_diaporama();
 		}
 	}
 }

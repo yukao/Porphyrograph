@@ -29,8 +29,6 @@
 // PhotoBufferDataStructOld describing a buffer of images stored in the GPU
 // these images are used to make piled rendering 
 // they are doubled by blend images used to smoothly change between images
-PhotoDataStruct pg_Photo_buffer_data[PG_PHOTO_NB_TEXTURES]
-= { PhotoDataStruct() , PhotoDataStruct() };
 PhotoDataStruct pg_CameraFrame_buffer_data = PhotoDataStruct();
 PhotoDataStruct pg_MovieFrame_buffer_data = PhotoDataStruct();
 
@@ -780,18 +778,33 @@ void loadCameraFrame(bool initial_capture) {
 		if ( pg_camera_frame.rows * window_ratio < pg_camera_frame.cols) {
 			pg_camera_frame_width = int(pg_camera_frame.rows * window_ratio);
 			pg_camera_frame_height = pg_camera_frame.rows;
+			pg_camera_x_offset = (pg_camera_frame.rows - pg_camera_frame_width) / 2;
+			pg_camera_y_offset = 0;
 		}
 		else {
 			pg_camera_frame_width = pg_camera_frame.cols;
 			if (pg_camera_frame.cols / window_ratio < pg_camera_frame.rows) {
 				pg_camera_frame_height = int(pg_camera_frame.cols / window_ratio);
+				pg_camera_x_offset = 0;
+				pg_camera_y_offset = (pg_camera_frame.cols - pg_camera_frame_height) / 2;
 			}
 			else {
 				pg_camera_frame_height = pg_camera_frame.rows;
+				pg_camera_x_offset = 0;
+				pg_camera_y_offset = 0;
 			}
 		}
-		printf("Camera frame %dx%d (before ratio %dx%d) ch %d size %d\n", pg_camera_frame_width, pg_camera_frame_height,
+		// DASEIN float ratioSubImage = 0.5f;
+		float ratioSubImage = 0.5f;
+		pg_camera_x_offset = pg_camera_x_offset + int(pg_camera_frame_width * (1 - ratioSubImage) * 0.5);
+		pg_camera_x_offset = 350;
+		pg_camera_frame_width = int(pg_camera_frame_width * ratioSubImage);
+		pg_camera_y_offset = pg_camera_y_offset + int(pg_camera_frame_height * (1 - ratioSubImage) * 0.5);
+		pg_camera_frame_height = int(pg_camera_frame_height * ratioSubImage);
+		printf("Camera frame %dx%d (before ratio %dx%d) offset (%dx%d) ch %d size %d\n", 
+			pg_camera_frame_width, pg_camera_frame_height,
 			pg_camera_frame.cols, pg_camera_frame.rows,
+			pg_camera_x_offset, pg_camera_y_offset, 
 			pg_camera_frame.channels(), pg_camera_frame.total() * pg_camera_frame.elemSize());
 	}
 	
@@ -1168,9 +1181,10 @@ void pg_launch_diaporama(void) {
 			pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
 				= nextCompressedImage;
 		}
+		// printf("ama initial files #%d\n", indPhoto);
 	}
 
-	// printOglError(469);
+	printOglError(469);
 
 	// launches blending of the first image
 	pg_Photo_swap_buffer_data[0].blendStart = CurrentClockTime;
@@ -1300,7 +1314,7 @@ bool pg_update_diaporama(void) {
 // PhotoDataStruct describing a buffer of images stored in the GPU
 // these images are used to make piled rendering 
 // they are doubled by swap images used to smoothly change between images
-PhotoDataStruct **pg_Photo_buffer_dataTVW = NULL;
+PhotoDataStruct **pg_Photo_buffer_data = NULL;
 int pg_nbCompressedImageDirs = 0;
 int *pg_nbCompressedImagesPerFolder = NULL;
 int *pg_firstCompressedFileInFolder = NULL;
@@ -1906,8 +1920,8 @@ bool update_image_buffer_swapping(void) {
 	char * ptr[6];
 	for (int indImage = 0; indImage < PG_PHOTO_NB_TEXTURES_TVW;
 	indImage++) {
-	ptr[indImage] = strrchr(pg_Photo_buffer_dataTVW[indImage]->PhotoName, '/');
-	ptr[indImage] = (ptr[indImage] ? ptr[indImage] + 1 : pg_Photo_buffer_dataTVW[indImage]->PhotoName);
+	ptr[indImage] = strrchr(pg_Photo_buffer_data[indImage]->PhotoName, '/');
+	ptr[indImage] = (ptr[indImage] ? ptr[indImage] + 1 : pg_Photo_buffer_data[indImage]->PhotoName);
 	}
 	printf("img %s %s %s %s %s %s \n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
 	for (int indImage = 0; indImage < PG_PHOTO_NB_TEXTURES_TVW;
@@ -1960,7 +1974,7 @@ int available_swap_image_buffer(int indInitialImage) {
 
 // threaded upload of the free swap image from a randomly chosen available layer
 bool pg_swap_image(int indcomprImage) {
-	if (pg_Photo_buffer_dataTVW[indcomprImage]->texBuffID == NULL_ID) {
+	if (pg_Photo_buffer_data[indcomprImage]->texBuffID == NULL_ID) {
 		return false;
 	}
 
@@ -1978,11 +1992,11 @@ bool pg_swap_image(int indcomprImage) {
 
 		// trace
 		int indOld = pg_Photo_swap_buffer_data[indAvailableSwapImage].indOldPhoto;
-		char * ptr1 = strrchr(pg_Photo_buffer_dataTVW[indcomprImage]->PhotoName, '/');
-		char * ptr2 = strrchr(pg_Photo_buffer_dataTVW[indOld]->PhotoName, '/');
+		char * ptr1 = strrchr(pg_Photo_buffer_data[indcomprImage]->PhotoName, '/');
+		char * ptr2 = strrchr(pg_Photo_buffer_data[indOld]->PhotoName, '/');
 		printf("Swap image (%s replaces %s layer %d (dur %.2f))\n",
-			(ptr1 ? ptr1 + 1 : pg_Photo_buffer_dataTVW[indcomprImage]->PhotoName),
-			(ptr2 ? ptr2 + 1 : pg_Photo_buffer_dataTVW[indOld]->PhotoName),
+			(ptr1 ? ptr1 + 1 : pg_Photo_buffer_data[indcomprImage]->PhotoName),
+			(ptr2 ? ptr2 + 1 : pg_Photo_buffer_data[indOld]->PhotoName),
 			indAvailableSwapImage, photo_diaporama_fade);
 
 		// launches swapping
@@ -2008,7 +2022,7 @@ bool pg_swap_image(int indcomprImage) {
 /////////////////////////////////////////////////////////
 // INITIAL IMAGE UPLOADING
 /////////////////////////////////////////////////////////
-bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder) {
+bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder) {
 	// printf("Image dir %d # %d dur %.2f\n" , dir_index, file_index, duration);
 	std::string * fileName;
 	bool valret = true;
@@ -2070,9 +2084,9 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	pg_firstCompressedFileInFolder = NULL;
 	pg_nbCompressedImagesPerFolder = new int[pg_nbCompressedImageDirs];
 	pg_firstCompressedFileInFolder = new int[pg_nbCompressedImageDirs];
-	pg_Photo_buffer_dataTVW = new PhotoDataStruct *[pg_nbCompressedImages];
+	pg_Photo_buffer_data = new PhotoDataStruct *[pg_nbCompressedImages];
 	for (int ind = 0; ind < pg_nbCompressedImages; ind++) {
-		pg_Photo_buffer_dataTVW[ind] = new PhotoDataStruct();
+		pg_Photo_buffer_data[ind] = new PhotoDataStruct();
 	}
 	for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
 		pg_nbCompressedImagesPerFolder[ind] = 0;
@@ -2099,19 +2113,19 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 		if (pg_CurrentDiaporamaFile == 1) {
 			pg_firstCompressedFileInFolder[pg_CurrentDiaporamaDir] = indCompressedImage;
 		}
-		if (*(pg_Photo_buffer_dataTVW[indCompressedImage]->PhotoName) == 0) {
-			if (!pg_Photo_buffer_dataTVW[indCompressedImage]->IDallocated) {
-				glGenTextures(1, &(pg_Photo_buffer_dataTVW[indCompressedImage]->texBuffID));
-				pg_Photo_buffer_dataTVW[indCompressedImage]->IDallocated = true;
+		if (*(pg_Photo_buffer_data[indCompressedImage]->PhotoName) == 0) {
+			if (!pg_Photo_buffer_data[indCompressedImage]->IDallocated) {
+				glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
+				pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
 
-				strcpy(pg_Photo_buffer_dataTVW[indCompressedImage]->PhotoName,
+				strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName,
 					fileName->c_str());
-				valret &= pg_Photo_buffer_dataTVW[indCompressedImage]->pg_loadPhoto(
+				valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
 					true, leftWindowWidth, leftWindowWidth, false);
 				delete fileName;
 				fileName = NULL;
 
-				pg_Photo_buffer_dataTVW[indCompressedImage]->pg_toGPUPhoto(false,
+				pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false,
 					GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
 
 				printOglError(8);
@@ -2138,3 +2152,94 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 #endif
 
 
+bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder) {
+	std::string * fileName;
+	bool valret = true;
+
+	////////////////////////////////////////////
+	// COUNTS IMAGES AND FOLDERS
+	pg_CurrentDiaporamaDir = 0;
+	pg_CurrentDiaporamaFile = 0;
+	if (nbImages <= 0 || nbFolders <= 0) {
+		pg_nbCompressedImages = 0;
+		pg_nbCompressedImageDirs = 0;
+		std::cout << "Counting Diaporama Images " << std::endl;
+		while ((fileName
+			= nextFileIndexDiskNoLoop(&ImageDir,
+				&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))) {
+			pg_nbCompressedImages++;
+		}
+		pg_nbCompressedImageDirs = pg_CurrentDiaporamaDir;
+	}
+	else {
+		pg_nbCompressedImages = nbImages;
+		pg_nbCompressedImageDirs = nbFolders;
+	}
+
+	////////////////////////////////////////////
+	// LOADS IMAGES FROM FOLDERS
+	pg_nbCompressedImagesPerFolder = NULL;
+	pg_firstCompressedFileInFolder = NULL;
+	pg_nbCompressedImagesPerFolder = new int[pg_nbCompressedImageDirs];
+	pg_firstCompressedFileInFolder = new int[pg_nbCompressedImageDirs];
+	pg_Photo_buffer_data = new PhotoDataStruct *[pg_nbCompressedImages];
+	for (int ind = 0; ind < pg_nbCompressedImages; ind++) {
+		pg_Photo_buffer_data[ind] = new PhotoDataStruct();
+	}
+	for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
+		pg_nbCompressedImagesPerFolder[ind] = 0;
+		pg_firstCompressedFileInFolder[ind] = -1;
+	}
+	pg_CurrentDiaporamaDir = 0;
+	pg_CurrentDiaporamaFile = 0;
+	int indCompressedImage = 0;
+	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
+	while ((fileName
+		= nextFileIndexDiskNoLoop(&ImageDir,
+			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
+		&& indCompressedImage < pg_nbCompressedImages
+		&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
+		// std::cout << "file " << *fileName << std::endl;
+		// counts files in dir
+		pg_nbCompressedImagesPerFolder[pg_CurrentDiaporamaDir] = pg_CurrentDiaporamaFile;
+		// if first file, stores the pointer to the file index, so that ID can be retrived 
+		// later from index in folder
+		if (pg_CurrentDiaporamaFile == 1) {
+			pg_firstCompressedFileInFolder[pg_CurrentDiaporamaDir] = indCompressedImage;
+		}
+		if (*(pg_Photo_buffer_data[indCompressedImage]->PhotoName) == 0) {
+			if (!pg_Photo_buffer_data[indCompressedImage]->IDallocated) {
+				glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
+				pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
+
+				strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName,
+					fileName->c_str());
+				valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
+					true, leftWindowWidth, leftWindowWidth, false);
+				delete fileName;
+				fileName = NULL;
+
+				pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false,
+					GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
+
+				printOglError(8);
+			}
+		}
+		indCompressedImage++;
+	}
+	std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages << " files." << std::endl;
+	std::cout << "Folders index/nbFiles/1stFileIndex";
+	for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
+		std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
+	}
+	std::cout << std::endl;
+
+	// INITIALIZES SWAP
+	for (int indBuffer = 0; indBuffer < PG_PHOTO_NB_TEXTURES;
+		indBuffer++) {
+		pg_Photo_swap_buffer_data[indBuffer].swapping = false;
+		pg_Photo_swap_buffer_data[indBuffer].indOldPhoto = indBuffer;
+		pg_Photo_swap_buffer_data[indBuffer].indSwappedPhoto = indBuffer;
+	}
+	return valret;
+}
