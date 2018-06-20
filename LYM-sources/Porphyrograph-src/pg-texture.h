@@ -145,7 +145,6 @@ extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
 #endif
 extern PhotoDataStruct **pg_Photo_buffer_data;
 
-#if defined (TVW) || defined (CRITON)
 /////////////////////////////////////////////////////////////////////
 // IMAGE FILES
 ////////////////////////////////////////////////////////////////////
@@ -167,7 +166,13 @@ extern int pg_nbCompressedImages;
 extern int pg_nbCompressedImageDirs;
 extern int *pg_nbCompressedImagesPerFolder;
 extern int *pg_firstCompressedFileInFolder;
+
+// the index from which an image available for swapping is looked for
+extern int pg_IndInitialSwapPhoto;
+
+#if defined (TVW) || defined (CRITON)
 extern PhotoDataStruct pg_Photo_mask_buffer_data[PG_PHOTO_NB_TEXTURES_TVW / 3];
+
 // interpolation weight between image buffer swap buffer in each layer
 extern GLfloat pg_Photo_alphaSwap02[PG_PHOTO_NB_TEXTURES_TVW / 2];
 extern GLfloat pg_Photo_alphaSwap35[PG_PHOTO_NB_TEXTURES_TVW / 2];
@@ -178,14 +183,13 @@ extern GLfloat pg_Photo_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
 extern GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
 // GLfloat mask_inverse_buffer_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
 
-// the index from which an image available for swapping is looked for
-extern int pg_IndInitialSwapPhoto;
 #endif
 
-extern std::string ImageDir;
-extern std::string MaskDir;
-extern std::string MessageDir;
-
+extern std::string pg_ImageDirectory;
+#if defined (TVW) || defined (CRITON)
+extern std::string pg_MaskDirectory;
+extern std::string pg_MessageDirectory;
+#endif
 
 ////////////////////////////////////////////////////////////////////
 // IMAGE FILES

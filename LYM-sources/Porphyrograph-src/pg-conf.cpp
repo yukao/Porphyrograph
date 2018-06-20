@@ -855,30 +855,38 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		//std::cout << "movie : " << 
 		// photoAlbumDirName[indVideo] << "\n";
 	}
-	ImageDir = "Data/" + project_name + "-data/";
-	if (nb_photo_albums > 0) {
-		ImageDir += photoAlbumDirName[0];
+	if (photoAlbumDirName[0].compare("captures") != 0) {
+		pg_ImageDirectory = "Data/" + project_name + "-data/";
+		if (nb_photo_albums > 0) {
+			pg_ImageDirectory += photoAlbumDirName[0];
+		}
+		else {
+			pg_ImageDirectory += "images/";
+		}
+		std::cout << "Loading images from " << pg_ImageDirectory << std::endl;
 	}
 	else {
-		ImageDir += "images/";
+		pg_ImageDirectory = "captures";
+		std::cout << "Using capture images" << std::endl;
 	}
-	std::cout << "Loading images from " << ImageDir << std::endl;
-	MaskDir = "Data/" + project_name + "-data/";
+#if defined (TVW) || defined (CRITON)
+	pg_MaskDirectory = "Data/" + project_name + "-data/";
 	if (nb_photo_albums > 1) {
-		MaskDir += photoAlbumDirName[1];
+		pg_MaskDirectory += photoAlbumDirName[1];
 	}
 	else {
-		MaskDir += "masks/";
+		pg_MaskDirectory += "masks/";
 	}
-	std::cout << "Loading masks from " << MaskDir << std::endl;
-	MessageDir = "Data/" + project_name + "-data/";
+	std::cout << "Loading masks from " << pg_MaskDirectory << std::endl;
+	pg_MessageDirectory = "Data/" + project_name + "-data/";
 	if (nb_photo_albums > 2) {
-		MessageDir += photoAlbumDirName[2];
+		pg_MessageDirectory += photoAlbumDirName[2];
 	}
 	else {
-		MessageDir += "messages/";
+		pg_MessageDirectory += "messages/";
 	}
-	std::cout << "Loading messages from " << MessageDir << std::endl;
+	std::cout << "Loading messages from " << pg_MessageDirectory << std::endl;
+#endif
 	// /photos
 	std::getline(scenarioFin, line);
 	sstrem.clear();

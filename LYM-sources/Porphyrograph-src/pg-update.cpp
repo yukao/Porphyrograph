@@ -1079,6 +1079,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius,
 		(GLfloat)flashCAPart_weight, (GLfloat)nb_particles, (GLfloat)isClearAllLayers,
 		(part_radius + pulse_average * part_radius_pulse * part_radius));
+	// printf("part radius ANIM %.2f\n", (part_radius + pulse_average * part_radius_pulse * part_radius));
 
 	// repop values 
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor,
@@ -1490,8 +1491,8 @@ void pg_update_shader_uniforms(void) {
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 	glUniform3f(uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse,
 		(part_radius + pulse_average * part_radius_pulse * part_radius) / 512.f,
-		(GLfloat)particle_type,
-		pulse[2]);
+		(GLfloat)particle_type, pulse[2]);
+	// printf("part radius GS %.2f\n", (part_radius + pulse_average * part_radius_pulse * part_radius));
 
 	///////////////////////////////////////////////////////////////////////
 	bool assigned = false;
@@ -1841,11 +1842,15 @@ void pg_UpdatePass(void) {
 #if !defined (TVW) && !defined (CRITON)
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[0]->texBuffID);
+	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2) {
+		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[0]->texBuffID);
+	}
 
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[1]->texBuffID);
+	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2) {
+		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[1]->texBuffID);
+	}
 #endif
 
 	// FBO capture of particle rendering used for flashing layers with particles

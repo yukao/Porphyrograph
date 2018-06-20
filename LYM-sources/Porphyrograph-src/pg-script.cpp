@@ -606,7 +606,12 @@ void pg_initializationScript(void) {
 		pg_path_recording_stop(7);
 	}
 #endif
-
+	for (int indPath = 1; indPath < PG_NB_PATHS; indPath++) {
+		sprintf(AuxString, "/path_replay_trackNo_%d 0", indPath);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/path_record_%d 0", indPath);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	}
 
 	/////////////////////////////////////////////////////////////////////////
 	// SOUND-CONTROLLED UNIFORM VARIABLES: dynamic values received from PD 
@@ -846,7 +851,7 @@ void pg_displaySceneVariables(void) {
 		// time display
 		// time exceeded in scene
 		if (remainingTimeInScene >= 0) {
-			sprintf(AuxString, "/time _%d:%d", (int)remainingTimeInScene / 60, (int)remainingTimeInScene % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time _%d:%d", (int)remainingTimeInScene / 60, (int)remainingTimeInScene % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
 			if (remainingTimeInScene < 10) {
 				sprintf(AuxString, "/time_color_red 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 				sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
@@ -1156,6 +1161,7 @@ void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, float sc
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value >= 0 && scenario_or_gui_command_value != pg_CurrentDiaporamaDir) {
 			pg_CurrentDiaporamaDir = int(scenario_or_gui_command_value);
+			printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
 			pg_launch_diaporama();
 		}
 	}
@@ -1260,6 +1266,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		if (playing_track < 0 || playing_track >= PG_NB_TRACKS) {
 			sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			//printf("replay unchanged (stop) invalid track\n");
 			return;
 		}
 
@@ -1274,10 +1281,12 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 			}
 			sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			//printf("replay on recorded track (%s)\n", AuxString);
 		}
 		else {
 			sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			//printf("replay off non recorded track\n");
 		}
 	}
 	// is currently reading && playing_track < 0 (scenario) or on/off command -> stops reading 
@@ -1287,8 +1296,9 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		}
 		if (playing_track == -1) {
 			pg_path_replay_trackNo_onOff(pathNo, playing_track);
-			sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
+			sprintf(AuxString,  "/path_replay_trackNo_%d 0", pathNo);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			//printf("replay off track was currently read (%s)\n", AuxString);
 		}
 	}
 	// otherwise do nothing
@@ -3844,9 +3854,13 @@ void pg_path_recording_onOff( int indPath ) {
 
 	// launches source recording 
 	pg_path_recording_start(indPath);
+	sprintf(AuxString, "/path_record_%d 1", indPath);
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
   } else {
 	// stops source recording 
 	pg_path_recording_stop(indPath);
+	sprintf(AuxString, "/path_record_%d 0", indPath);
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
   }
 }
 
@@ -3999,6 +4013,8 @@ void pg_path_recording_stop(int indPath) {
 		&& pg_Path_Status[indPath].isActiveRecording == true) {
 		pg_Path_Status[indPath].isActiveRecording = false;
 		// printf("start playing %d\n",indPath);
+		sprintf(AuxString, "/path_record_%d 0", indPath);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 	}
 }
 
@@ -4086,6 +4102,8 @@ void pg_path_replay_trackNo_stop(int indPath) {
 			break;
 #endif
 		}
+		sprintf(AuxString, "/path_replay_trackNo_%d 0", indPath);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 	}
 }
 

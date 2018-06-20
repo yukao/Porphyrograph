@@ -57,9 +57,11 @@ int pg_CurrentDiaporamaFile = 0;
 int pg_CurrentDiaporamaDir = -1;
 bool ascendingDiaporama = true;
 
-std::string ImageDir;
-std::string MaskDir;
-std::string MessageDir;
+std::string pg_ImageDirectory;
+#if defined (TVW) || defined (CRITON)
+std::string pg_MaskDirectory;
+std::string pg_MessageDirectory;
+#endif
 
 // FUNCTION FOR CLEARING A DIRECTORY
 void remove_files_in_dir(std::string *dirpath) {
@@ -2027,9 +2029,24 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 	std::string * fileName;
 	bool valret = true;
 
+	///////////////////////////////////////////////
+	// NULL INITIALIZATIONS
+	pg_nbCompressedImagesPerFolder = NULL;
+	pg_firstCompressedFileInFolder = NULL;
+	pg_Photo_buffer_data = NULL;
+	pg_CurrentDiaporamaDir = 0;
+	pg_CurrentDiaporamaFile = 0;
+
 	// assigns standard weights to each image buffer
 	for (int ind = 0; ind < PG_PHOTO_NB_TEXTURES_TVW; ind++) {
 		pg_Photo_weightTVW[ind] = 1.0f / PG_PHOTO_NB_TEXTURES_TVW;
+	}
+
+	////////////////////////////////////////////
+	// CAPTURE DIAPORAMA
+	if (pg_ImageDirectory.compare("captures") == 0) {
+		std::cout << "Multilayer Diaporama loading completed 0 files." << std::endl;
+		return false;
 	}
 
 	// loads all the associated masks
@@ -2041,7 +2058,7 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 
 				int indDir = 0;
 				int indFile = indBuffer;
-				if ((fileName = nextFileIndexDiskLoop(&MaskDir, &indDir, &indFile))) {
+				if ((fileName = nextFileIndexDiskLoop(&pg_MaskDirectory, &indDir, &indFile))) {
 					strcpy(pg_Photo_mask_buffer_data[indBuffer].PhotoName,
 						fileName->c_str());
 					valret &= pg_Photo_mask_buffer_data[indBuffer].pg_loadPhoto(
@@ -2067,7 +2084,7 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 		pg_nbCompressedImageDirs = 0;
 		std::cout << "Counting Diaporama Images " << std::endl;
 		while ((fileName
-			= nextFileIndexDiskNoLoop(&ImageDir,
+			= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
 				&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))) {
 			pg_nbCompressedImages++;
 		}
@@ -2080,8 +2097,10 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 
 	////////////////////////////////////////////
 	// LOADS IMAGES FROM FOLDERS
-	pg_nbCompressedImagesPerFolder = NULL;
-	pg_firstCompressedFileInFolder = NULL;
+	if (pg_nbCompressedImageDirs <= 0) {
+		std::cout << "Multilayer Diaporama loading completed 0 files." << std::endl;
+		return false;
+	}
 	pg_nbCompressedImagesPerFolder = new int[pg_nbCompressedImageDirs];
 	pg_firstCompressedFileInFolder = new int[pg_nbCompressedImageDirs];
 	pg_Photo_buffer_data = new PhotoDataStruct *[pg_nbCompressedImages];
@@ -2092,8 +2111,6 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 		pg_nbCompressedImagesPerFolder[ind] = 0;
 		pg_firstCompressedFileInFolder[ind] = -1;
 	}
-	pg_CurrentDiaporamaDir = 0;
-	pg_CurrentDiaporamaFile = 0;
 	int indCompressedImage = 0;
 	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
 	if (pg_nbCompressedImageDirs != NbTextChapters) {
@@ -2101,7 +2118,7 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 		exit(0);
 	}
 	while ((fileName
-		= nextFileIndexDiskNoLoop(&ImageDir,
+		= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
 			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
 		&& indCompressedImage < pg_nbCompressedImages
 		&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
@@ -2156,6 +2173,22 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	std::string * fileName;
 	bool valret = true;
 
+	///////////////////////////////////////////////
+	// NULL INITIALIZATIONS
+	pg_nbCompressedImagesPerFolder = NULL;
+	pg_firstCompressedFileInFolder = NULL;
+	pg_Photo_buffer_data = NULL;
+	pg_CurrentDiaporamaDir = 0;
+	pg_CurrentDiaporamaFile = 0;
+
+	////////////////////////////////////////////
+	// CAPTURE DIAPORAMA
+	std::cout << "Directory name " << pg_ImageDirectory << std::endl;
+	if (pg_ImageDirectory.compare("captures") == 0) {
+		std::cout << "Multilayer Diaporama loading completed 0 files." << std::endl;
+		return false;
+	}
+
 	////////////////////////////////////////////
 	// COUNTS IMAGES AND FOLDERS
 	pg_CurrentDiaporamaDir = 0;
@@ -2165,7 +2198,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 		pg_nbCompressedImageDirs = 0;
 		std::cout << "Counting Diaporama Images " << std::endl;
 		while ((fileName
-			= nextFileIndexDiskNoLoop(&ImageDir,
+			= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
 				&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))) {
 			pg_nbCompressedImages++;
 		}
@@ -2178,8 +2211,10 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 
 	////////////////////////////////////////////
 	// LOADS IMAGES FROM FOLDERS
-	pg_nbCompressedImagesPerFolder = NULL;
-	pg_firstCompressedFileInFolder = NULL;
+	if (pg_nbCompressedImageDirs <= 0) {
+		std::cout << "Multilayer Diaporama loading completed 0 files." << std::endl;
+		return false;
+	}
 	pg_nbCompressedImagesPerFolder = new int[pg_nbCompressedImageDirs];
 	pg_firstCompressedFileInFolder = new int[pg_nbCompressedImageDirs];
 	pg_Photo_buffer_data = new PhotoDataStruct *[pg_nbCompressedImages];
@@ -2190,12 +2225,10 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 		pg_nbCompressedImagesPerFolder[ind] = 0;
 		pg_firstCompressedFileInFolder[ind] = -1;
 	}
-	pg_CurrentDiaporamaDir = 0;
-	pg_CurrentDiaporamaFile = 0;
 	int indCompressedImage = 0;
 	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
 	while ((fileName
-		= nextFileIndexDiskNoLoop(&ImageDir,
+		= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
 			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
 		&& indCompressedImage < pg_nbCompressedImages
 		&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {

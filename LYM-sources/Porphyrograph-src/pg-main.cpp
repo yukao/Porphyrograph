@@ -521,7 +521,7 @@ void pg_init_scene( void ) {
 
 #if defined (TVW) || defined (CRITON)
   // reads the text messages in the text file
-  pg_ReadAllDisplayMessages(MessageDir, "message_list.txt");
+  pg_ReadAllDisplayMessages(pg_MessageDirectory, "message_list.txt");
 
   // ------ display message initialization  ------------- //
   pg_init_display_message();
