@@ -1,0 +1,2 @@
+cp demo.PG-double.bat Bonnotte.PG-double.bat
+cp demo.PG-single.bat Bonnotte.PG-single.bat

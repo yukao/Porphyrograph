@@ -35,11 +35,17 @@
 #ifdef DEMO
 #include "pg_script_body_demo.cpp"
 #endif
+#ifdef VOLUSPA
+#include "pg_script_body_voluspa.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_script_body_Malaussena.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_script_body_dasein.cpp"
+#endif
+#ifdef BONNOTTE
+#include "pg_script_body_bonnotte.cpp"
 #endif
 
 std::string project_name = "core";
@@ -110,6 +116,13 @@ int currentSVGTrack = 0;
 int currentlyPlaying_trackNo = -1;
 bool soundTrack_on = true;
 
+// movie playing
+int currentlyPlaying_movieNo = -1;
+bool movie_on = true;
+
+// pen preset
+int current_pen_colorPreset = -1;
+
 // ++++++++++++++++++++++ FLASHES +++++++++++++++++++++++++
 // flash: Trk->CA -> values passed to the shader
 // as a function of on/off values and weights
@@ -174,6 +187,8 @@ int isClearAllLayers;
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
 bool is_blur_1 = false;
 bool is_blur_2 = false;
+int nb_blur_frames_1 = 0;
+int nb_blur_frames_2 = 0;
 
 // +++++++++++++++++++++ COPY LAYERS +++++++++++++++++++++++++++
 // copy to layer above (+1) or to layer below (-1)
@@ -253,6 +268,8 @@ enum pg_stringCommands_IDs
 	_partExit_mode_1,
 	_partExit_mode_2,
 	_is_blur_1,
+	_is_blur_1_plus,
+	_is_blur_1_plus_plus,
 	_is_blur_2,
 	_cameraCumul_plus,
 	_pen_brush_plus,
@@ -276,6 +293,7 @@ enum pg_stringCommands_IDs
 	_diaporama_minus,
 	_soundtrack_plus,
 	_soundtrack_onOff,
+	_movie_onOff,
 	_pen_colorPreset_minus,
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
@@ -334,6 +352,8 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "partExit_mode_1", _partExit_mode_1 },
 	{ "partExit_mode_2", _partExit_mode_2 },
 	{ "is_blur_1", _is_blur_1 },
+	{ "is_blur_1_plus", _is_blur_1_plus },
+	{ "is_blur_1_plus_plus", _is_blur_1_plus_plus },
 	{ "is_blur_2", _is_blur_2 },
 	{ "cameraCumul_plus", _cameraCumul_plus },
 	{ "pen_brush_plus", _pen_brush_plus },
@@ -357,6 +377,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "diaporama_minus", _diaporama_minus },
 	{ "soundtrack_plus", _soundtrack_plus },
 	{ "soundtrack_onOff", _soundtrack_onOff },
+	{ "movie_onOff", _movie_onOff },
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
@@ -645,6 +666,8 @@ void pg_initializationScript(void) {
 	// blur
 	is_blur_1 = false;
 	is_blur_2 = false;
+	nb_blur_frames_1 = 0;
+	nb_blur_frames_2 = 0;
 
 #ifdef MALAUSSENA
 	// CA seed
@@ -729,6 +752,8 @@ void pg_initializationScript(void) {
 	// pg_send_message_udp((char *)"s", (char *)"/message init_completed", (char *)"udp_QT_send");
 	// INTERFACE VARIABLE INITIALIZATION
 	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/movie_onOff %d", !movie_on);
 	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 }
 
@@ -1119,6 +1144,9 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float sc
 		if (playing_movieNo != currentlyPlaying_movieNo
 			&& playing_movieNo >= 0 && playing_movieNo < nb_movies) {
 			currentlyPlaying_movieNo = playing_movieNo;
+			movie_on = true;
+			sprintf(AuxString, "/movie_onOff %d", !movie_on);
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 			sprintf(AuxString, "/movie_shortName %s", movieShortName[playing_movieNo].c_str());
 			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
 
@@ -2006,7 +2034,12 @@ void pg_update_scenario(void) {
 					case pg_bezier_interpolation:
 						// approximation of a bezier with cosine (more slow at beginning and end)
 						transformedInterpolation
-							= 0.5F * (cos((3*pow(fabs(coefInterpolation),2) -2*pow(fabs(coefInterpolation),3) - 1.0F) * (float)M_PI) + 1.0F);
+							= 0.5F * (cos((3 * pow(fabs(coefInterpolation), 2) - 2 * pow(fabs(coefInterpolation), 3) - 1.0F) * (float)M_PI) + 1.0F);
+						break;
+					case pg_exponential_interpolation:
+						// approximation of a bezier with cosine (more slow at beginning and end)
+						transformedInterpolation
+							= pow(fabs(coefInterpolation), Scenario[ind_scene].scene_interpolations[indP].exponent);
 						break;
 					case pg_bell_interpolation:
 						transformedInterpolation = coefInterpolation;
@@ -2278,6 +2311,16 @@ void pg_keyStrokeScripts(int key) {
 	case't':
 		pg_launch_performance();
 		break;
+
+		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+		// +++++++++++++++++ BLUR TRACK 1 ++++++++++++++++++++++++++ 
+		// +++++++++++++++++   keystroke (b)  ++++++++++++++++++++++ 
+		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	case 'b': {
+		is_blur_1 = true;
+		break;
+	}
+
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 
@@ -3114,10 +3157,22 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _is_blur_1: {
 		is_blur_1 = true;
+		nb_blur_frames_1 = 1;
+		break;
+	}
+	case _is_blur_1_plus: {
+		is_blur_1 = true;
+		nb_blur_frames_1 = 3;
+		break;
+	}
+	case _is_blur_1_plus_plus: {
+		is_blur_1 = true;
+		nb_blur_frames_1 = 10;
 		break;
 	}
 	case _is_blur_2: {
 		is_blur_2 = true;
+		nb_blur_frames_2 = 1;
 		break;
 	}
 
@@ -3419,7 +3474,14 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 
-	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	case _movie_onOff: {
+		movie_on = !movie_on;
+		sprintf(AuxString, "/movie_onOff %d", !movie_on);
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		break;
+	}
+
+							// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PALETTE NO ++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
@@ -3694,7 +3756,8 @@ void update_pulsed_colors(void) {
 			+ percentage * pen_palette_colors_values[indUpperPenPalette][ind];
 		pen_base_3color_palette[ind] = min(1.f, pen_base_3color_palette[ind]);
 	}
-	//printf("colors %.1f %.1f %.1f       %.1f %.1f %.1f        %.1f %.1f %.1f\n", pen_base_3color_palette[0]*255.f,
+	//printf("pen color %.2f palette low/upper/perc %d/%d/%.2f -> colors %.1f %.1f %.1f       %.1f %.1f %.1f        %.1f %.1f %.1f\n", 
+	//	pen_color, indLowPenPalette, indUpperPenPalette, percentage, pen_base_3color_palette[0]*255.f,
 	//	pen_base_3color_palette[1]*255.f, pen_base_3color_palette[2]*255.f, pen_base_3color_palette[3]*255.f, pen_base_3color_palette[4]*255.f, pen_base_3color_palette[5]*255.f,
 	//	pen_base_3color_palette[6]*255.f, pen_base_3color_palette[7]*255.f, pen_base_3color_palette[8]*255.f);
 	// calculating the pulsed color from base luminance + palette colors modulated by the three frequence ranges
@@ -3716,10 +3779,11 @@ void update_pulsed_colors(void) {
 	pulsed_pen_color[3] = 1.f;
 	float value = (pulsed_pen_color[0] < pulsed_pen_color[1]) ? pulsed_pen_color[1] : pulsed_pen_color[0];
 	value = (value < pulsed_pen_color[2]) ? pulsed_pen_color[2] : value;
-	// printf( "pulsed_pen_color: %f %f %f\n" , pulsed_pen_color[0] , pulsed_pen_color[1] , pulsed_pen_color[2] );
+    //printf( "pulsed_pen_color: %.2f %.2f %.2f    pulse: %.2f %.2f %.2f\n" , pulsed_pen_color[0] , pulsed_pen_color[1] , pulsed_pen_color[2] , pulse[0], pulse[1], pulse[2]);
 
 	// pen_color_pulse == -1 => saturation of the pulsed color
 	if (pen_color_pulse < 0 && value > 0) {
+		//printf("color saturation\n");
 		for (int indChannel = 0; indChannel < 3; indChannel++) {
 			pulsed_pen_color[indChannel] /= value;
 		}

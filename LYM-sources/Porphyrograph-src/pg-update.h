@@ -121,9 +121,6 @@ extern int pg_camera_x_offset;
 extern int pg_camera_y_offset;
 extern int pg_movie_frame_width;
 extern int pg_movie_frame_height;
-extern int currentlyPlaying_movieNo;
-extern int currentlyPlaying_trackNo;
-extern int current_pen_colorPreset;
 
 // video tracks
 extern vector<string> movieFileName;

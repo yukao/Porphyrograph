@@ -41,11 +41,17 @@
 #ifdef DEMO
 #include "pg_shader_header_demo.h"
 #endif
+#ifdef VOLUSPA
+#include "pg_shader_header_voluspa.h"
+#endif
 #ifdef MALAUSSENA
 #include "pg_shader_header_Malaussena.h"
 #endif
 #ifdef DASEIN
 #include "pg_shader_header_dasein.h"
+#endif
+#ifdef BONNOTTE
+#include "pg_shader_header_bonnotte.h"
 #endif
 
 unsigned long pg_getFileLength(ifstream& file);

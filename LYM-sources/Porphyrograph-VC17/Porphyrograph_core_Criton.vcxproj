@@ -18,7 +18,6 @@
     <ClCompile Include="..\Porphyrograph-src\pg-shader.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-stroke.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-texture.cpp" />
-    <ClCompile Include="..\Porphyrograph-src\pg-textureTVW.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-udp.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-update.cpp" />
   </ItemGroup>

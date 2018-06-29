@@ -230,8 +230,6 @@ int pg_camera_x_offset = 0;
 int pg_camera_y_offset = 0;
 int pg_movie_frame_width = 0;
 int pg_movie_frame_height = 0;
-int currentlyPlaying_movieNo = -1;
-int current_pen_colorPreset = -1;
 
 // video tracks
 vector<string> movieFileName;
@@ -820,8 +818,18 @@ void one_frame_variables_reset(void) {
 	copyToNextTrack = 0;
 
 	// blur reset
-	is_blur_1 = false;
-	is_blur_2 = false;
+	if (nb_blur_frames_1 > 0) {
+		nb_blur_frames_1--;
+		if (nb_blur_frames_1 <= 0) {
+			is_blur_1 = false;
+		}
+	}
+	if (nb_blur_frames_2 > 0) {
+		nb_blur_frames_2--;
+		if (nb_blur_frames_2 <= 0) {
+			is_blur_2 = false;
+		}
+	}
 
 #ifdef MALAUSSENA
 	// CA seed
@@ -942,11 +950,17 @@ void pg_update_shader_uniforms(void) {
 #ifdef DEMO
 #include "pg_update_body_demo.cpp"
 #endif
+#ifdef VOLUSPA
+#include "pg_update_body_voluspa.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_update_body_Malaussena.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_update_body_dasein.cpp"
+#endif
+#ifdef BONNOTTE
+#include "pg_update_body_bonnotte.cpp"
 #endif
 	printOglError(510);
 
@@ -1106,6 +1120,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_W_H_time_currentScene,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)CurrentClockTime, (GLfloat)pg_CurrentScene);
 	// printf("time %.2f\n", (GLfloat)CurrentClockTime);
+	//printf("scene %d\n", pg_CurrentScene);
 
 	// pixels acceleration
 	glUniform4f(uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift,
@@ -1279,6 +1294,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack,
 		(GLfloat)pg_movie_frame_width, (GLfloat)pg_movie_frame_height,
 		flashCameraTrk_weight, (GLfloat)copyToNextTrack);
+	// printf("Movie size %dx%d\n", pg_movie_frame_width, pg_movie_frame_height);
 	// printf("Flash camera coef %.1f\n", flashCameraTrk_weight);
 	if (copyToNextTrack != 0)
 		printf("copyToNextTrack %d\n", copyToNextTrack);
@@ -1842,14 +1858,20 @@ void pg_UpdatePass(void) {
 #if !defined (TVW) && !defined (CRITON)
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_FBO_Update_sampler);
-	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2) {
-		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[0]->texBuffID);
+	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2 
+		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto >= 0
+		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto < pg_nbCompressedImages) {
+		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
+		// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[0]->texBuffID);
 	}
 
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_FBO_Update_sampler);
-	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2) {
-		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[1]->texBuffID);
+	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2
+		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto >= 0
+		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto < pg_nbCompressedImages) {
+		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
+		// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[1]->texBuffID);
 	}
 #endif
 

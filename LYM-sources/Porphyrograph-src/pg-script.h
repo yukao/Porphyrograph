@@ -112,6 +112,8 @@ extern int isClearAllLayers;
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
 extern bool is_blur_1;
 extern bool is_blur_2;
+extern int nb_blur_frames_1;
+extern int nb_blur_frames_2;
 
 // +++++++++++++++++++++ COPY LAYERS +++++++++++++++++++++++++++
 // copy to layer above (+1) or to layer below (-1)
@@ -131,6 +133,15 @@ extern float pulsed_repop_color[3];
 extern float pulse_average;
 extern float pulse_average_prec;
 extern float pulse_attack;
+
+// sound track playing
+extern int currentlyPlaying_trackNo;
+
+// movie playing
+extern int currentlyPlaying_movieNo;
+
+// pen preset
+extern int current_pen_colorPreset;
 
 // +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
 extern float pulse[3];

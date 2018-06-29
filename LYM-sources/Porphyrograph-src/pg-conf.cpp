@@ -613,7 +613,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		// storing the interpolation mode
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 			char valCh = 0;
-			float val, val2;
+			float val, val2, val3;
 
 			Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
 			Scenario[indScene].scene_interpolations[indP].duration = 1.0;
@@ -701,7 +701,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				// z: value interpolates cosinely between initial and final value from 0.0% to 1.0%
 				// Z: value is initial from 0.0% until offset, 
 				// Beizer approximated with a cosine and a non linear input 3x^2-2x^3
-				// COSINE INTERPOLATION
+				// BEZIER INTERPOLATION
 			case 'z':
 			case 'Z':
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
@@ -711,6 +711,43 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 					sstrem >> val2;
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of Z(Bezier) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+					}
+					if (val <= 1.0) {
+						Scenario[indScene].scene_interpolations[indP].offSet = val;
+						// deals with approximate values that can summ above 1.0
+						if (val + val2 <= 1.00001) {
+							if (val + val2 > 1.0) {
+								val2 = 1.0f - val;
+							}
+							Scenario[indScene].scene_interpolations[indP].duration = val2;
+							if (Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
+								sprintf(ErrorStr, "Error: null Z(Bezier) interpolation #%d duration [%f]!", indP + 1, Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
+							}
+						}
+						else {
+							sprintf(ErrorStr, "Error: total duration of Z(Bezier) interpolation #%d greater than 1.0: %.3f + %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+						}
+					}
+					else {
+						sprintf(ErrorStr, "Error: offset value Z(Bezier) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+					}
+				}
+				break;
+				// e: value interpolates exponentially between initial and final value from 0.0% to 1.0%
+				// E: value is initial from 0.0% until offset, 
+				// exponential interpolation: alpha ^ exponent
+				// BEZIER INTERPOLATION
+			case 'e':
+			case 'E':
+				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+					= pg_exponential_interpolation;
+				sstrem >> val3;
+				Scenario[indScene].scene_interpolations[indP].exponent = val3;
+				if (valCh == 'E') {
+					sstrem >> val;
+					sstrem >> val2;
+					if (val < 0.0 || val2 < 0.0) {
+						sprintf(ErrorStr, "Error: one of values of E(exponential) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
 						Scenario[indScene].scene_interpolations[indP].offSet = val;
@@ -855,7 +892,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		//std::cout << "movie : " << 
 		// photoAlbumDirName[indVideo] << "\n";
 	}
-	if (photoAlbumDirName[0].compare("captures") != 0) {
+	if (nb_photo_albums > 0 && photoAlbumDirName[0].compare("captures") != 0) {
 		pg_ImageDirectory = "Data/" + project_name + "-data/";
 		if (nb_photo_albums > 0) {
 			pg_ImageDirectory += photoAlbumDirName[0];

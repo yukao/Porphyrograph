@@ -594,9 +594,9 @@ int printOglError(int no) {
 }
 
 void ReportError(char *errorString) {
-	if (fileLog) {
-		fprintf(fileLog, "%s\n", errorString);
-	}
+	//if (fileLog) {
+	//	fprintf(fileLog, "%s\n", errorString);
+	//}
 
 	fprintf(stderr, "%s\n", errorString);
 }

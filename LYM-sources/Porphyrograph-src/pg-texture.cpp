@@ -184,11 +184,20 @@ bool pg_initTextures(void) {
 	printOglError(8);
 #endif
 
+#ifndef VOLUSPA
 	pg_loadTexture3D((char *)("Data/" + project_name + "-data/textures/Noise_" + project_name + "_3D").c_str(),
 		".png", 2, 4, true,
 		&Noise_texture_3D, GL_RGBA8, GL_RGBA,
 		GL_LINEAR,
 		2048, 1024, 2);
+#else
+	// swirl circular texture
+	pg_loadTexture3D((char *)("Data/" + project_name + "-data/textures/Noise_voluspa_3D").c_str(),
+		".png", 2, 4, true,
+		&Noise_texture_3D, GL_RGBA8, GL_RGBA,
+		GL_LINEAR,
+		2048, 1024, 2);
+#endif
 	printOglError(9);
 
 #ifdef PG_SENSORS
@@ -797,13 +806,24 @@ void loadCameraFrame(bool initial_capture) {
 			}
 		}
 		// DASEIN float ratioSubImage = 0.5f;
+#ifdef PG_WIDE_ANGLE_CAMERA
 		float ratioSubImage = 0.5f;
-		pg_camera_x_offset = pg_camera_x_offset + int(pg_camera_frame_width * (1 - ratioSubImage) * 0.5);
+#else
+		float ratioSubImage = 1.0f;
+#endif
+		pg_camera_x_offset = pg_camera_x_offset + int(pg_camera_frame_width * (1.f - ratioSubImage) * 0.5);
+#ifdef PG_WIDE_ANGLE_CAMERA
 		pg_camera_x_offset = 350;
+#endif
 		pg_camera_frame_width = int(pg_camera_frame_width * ratioSubImage);
-		pg_camera_y_offset = pg_camera_y_offset + int(pg_camera_frame_height * (1 - ratioSubImage) * 0.5);
+		pg_camera_y_offset = pg_camera_y_offset + int(pg_camera_frame_height * (1.f - ratioSubImage) * 0.5);
 		pg_camera_frame_height = int(pg_camera_frame_height * ratioSubImage);
-		printf("Camera frame %dx%d (before ratio %dx%d) offset (%dx%d) ch %d size %d\n", 
+		// old cam
+		pg_camera_frame_width = pg_camera_frame.cols;
+		pg_camera_frame_height = pg_camera_frame.rows;
+		pg_camera_x_offset = 0;
+		pg_camera_y_offset = 0;
+		printf("Camera frame %dx%d (before ratio %dx%d) offset (%dx%d) ch %d size %d\n",
 			pg_camera_frame_width, pg_camera_frame_height,
 			pg_camera_frame.cols, pg_camera_frame.rows,
 			pg_camera_x_offset, pg_camera_y_offset, 
@@ -2227,6 +2247,8 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	}
 	int indCompressedImage = 0;
 	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
+	pg_CurrentDiaporamaDir = 0;
+	pg_CurrentDiaporamaFile = 0;
 	while ((fileName
 		= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
 			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
@@ -2254,6 +2276,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 
 				pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false,
 					GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
+				printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
 
 				printOglError(8);
 			}

@@ -25,12 +25,13 @@
 #ifndef PG_CONF_H
 #define PG_CONF_H
 
-enum InterpolationType{ pg_linear_interpolation = 0, pg_cosine_interpolation, pg_bell_interpolation, pg_bezier_interpolation, pg_sawtooth_interpolation, pg_stepwise_interpolation , pg_keep_value , EmptyInterpolationType };
+enum InterpolationType{ pg_linear_interpolation = 0, pg_cosine_interpolation, pg_bell_interpolation, pg_bezier_interpolation, pg_sawtooth_interpolation, pg_stepwise_interpolation , pg_keep_value , pg_exponential_interpolation, EmptyInterpolationType };
 
 struct pg_Interpolation
 {
   InterpolationType interpolation_mode;
   float offSet;
+  float exponent;
   float duration;
   float midTermValue;
 };

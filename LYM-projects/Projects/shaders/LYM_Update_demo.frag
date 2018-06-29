@@ -1428,15 +1428,15 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y);
+  vec2 coordsImage = vec2( 0.0 );
   if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
-    coordsImage *= uniform_Update_fs_4fv_photo01_wh.xy;
+    coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
     photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
   if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
-    coordsImage *= uniform_Update_fs_4fv_photo01_wh.zw;
+    coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
     photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;

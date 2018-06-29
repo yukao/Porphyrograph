@@ -168,10 +168,8 @@ using std::ifstream;
 #endif // _VISUAL_STUDIO
 
 #if defined (TVW) || defined (CRITON)
-// NB TRACKS -> ***** ALSO TO BE CHANGED IN DRAWING AND COMPOSITION FRAGMENT SHADERS ****
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #elif defined (GN) || defined (MALAUSSENA)
-// NB TRACKS -> ***** ALSO TO BE CHANGED IN DRAWING AND COMPOSITION FRAGMENT SHADERS ****
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #else
 // NB TRACKS -> ***** ALSO TO BE CHANGED IN DRAWING AND COMPOSITION FRAGMENT SHADERS ****
@@ -266,9 +264,9 @@ using std::ifstream;
 
 // CURVE VS SPLAT PARTICLES
 // #define BLURRED_SPLAT_PARTICLES
-#if defined(TVW) || defined (CRITON)
+#if defined(TVW) || defined (CRITON) || defined (BONNOTTE)
 #define BLURRED_SPLAT_PARTICLES
-#elif defined DASEIN
+#elif defined (DASEIN)
 #define CURVE_PARTICLES
 #else
 #define LINE_SPLAT_PARTICLES
@@ -344,11 +342,17 @@ using std::ifstream;
 #ifdef DEMO
 #include "pg_script_header_demo.h"
 #endif
+#ifdef VOLUSPA
+#include "pg_script_header_voluspa.h"
+#endif
 #ifdef MALAUSSENA
 #include "pg_script_header_Malaussena.h"
 #endif
 #ifdef DASEIN
 #include "pg_script_header_dasein.h"
+#endif
+#ifdef BONNOTTE
+#include "pg_script_header_bonnotte.h"
 #endif
 
 #include "pg-udp.h"

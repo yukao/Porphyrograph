@@ -39,11 +39,17 @@
 #ifdef DEMO
 #include "pg_shader_body_decl_demo.cpp"
 #endif
+#ifdef VOLUSPA
+#include "pg_shader_body_decl_voluspa.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_shader_body_decl_Malaussena.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_shader_body_decl_dasein.cpp"
+#endif
+#ifdef BONNOTTE
+#include "pg_shader_body_decl_bonnotte.cpp"
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -478,11 +484,17 @@ void pg_loadAllShaders(void) {
 #ifdef DEMO
 #include "pg_shader_body_bind_demo.cpp"
 #endif
+#ifdef VOLUSPA
+#include "pg_shader_body_bind_voluspa.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_shader_body_bind_Malaussena.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_shader_body_bind_dasein.cpp"
+#endif
+#ifdef BONNOTTE
+#include "pg_shader_body_bind_bonnotte.cpp"
 #endif
 
 	////////////////////////////////////////
