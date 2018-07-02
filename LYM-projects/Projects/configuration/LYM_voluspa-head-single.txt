@@ -18,13 +18,14 @@ VERBATIM
 TYPE	string	int	string	bool	int	bool	bool											
 ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal											
 server	udp_PD_receive	1978	Plain	0	300	1	1											
-server	udp_BITWIG_receive	9000	OSC	0	300	0	1											
+server	udp_TouchOSC_receive	9000	OSC	0	300	0	1											
 /udp_local_server																		
-udp_remote_client	3																	
+udp_remote_client	4																	
 VERBATIM																		
 TYPE	string	string	int	string	bool	int	bool											
 ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal											
-client	udp_QT_send	192.168.43.1	8000	OSC	0	300	1											
+client	udp_TouchOSC_send	192.168.1.74	8000	OSC	0	300	1											
+client	udp_Usine_send	192.168.43.189	9000	OSC	0	300	1											
 client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
 client	udp_RN_send	127.0.0.1	8000	OSC	0	300	1											
 /udp_remote_client																		

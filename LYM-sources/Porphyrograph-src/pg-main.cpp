@@ -261,6 +261,14 @@ int main(int argcMain, char **argvMain) {
 	// connects PD to porphyrograph
 	pg_send_message_udp((char *)"i", (char *)"/connect 1", (char *)"udp_PD_send");
 
+	// lights off the LED
+	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
+#ifdef VOLUSPA
+	// tells Usine that it is not launched
+	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_Usine_send");
+#endif
+
+
 #ifdef RENOISE
 	pg_send_message_udp((char *)"i", (char *)"/track/1/solo 1", (char *)"udp_RN_send");
 	pg_send_message_udp((char *)"i", (char *)"/track/2/solo 1", (char *)"udp_RN_send");
@@ -283,7 +291,7 @@ int main(int argcMain, char **argvMain) {
 	printOglError(467);
 
 	// lights out the LEDs
-	pg_send_message_udp((char *)"i", (char *)"/reset_LEDs 1", (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"i", (char *)"/reset_LEDs 1", (char *)"udp_TouchOSC_send");
 
 #if defined (TVW) || defined (CRITON)
 	// loads the texture buffer of the initial images and masks
@@ -311,7 +319,7 @@ int main(int argcMain, char **argvMain) {
 		is_movieLoading = true;
 		printf("Loading %s\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
 		sprintf(AuxString, "/movie_shortName %s", movieShortName[currentlyPlaying_movieNo].c_str());
-		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
 #ifdef WIN32
 		DWORD rc;
@@ -581,17 +589,23 @@ void pg_init_scene( void ) {
 bool pg_shutdown = false;
 
 void quit( void ) {
+	// lights off the LED
+	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
+#ifdef VOLUSPA
+	// starts the backtrack
+	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_Usine_send");
+#endif
 #ifdef PG_RENOISE
 	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
 #endif
-	pg_send_message_udp((char *)"f", (char *)"/quit 1", (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"f", (char *)"/quit 1", (char *)"udp_TouchOSC_send");
 	pg_send_message_udp((char *)"f", (char *)"/stopsoundtrack 0", (char *)"udp_PD_send");
 
 	// soundtrack off
 	pg_send_message_udp((char *)"i", "/soundtrack_onOff 0", (char *)"udp_PD_send");
 
 	// lights out the LEDs
-	pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
 
 	// sends all the remaining messages
 	for (int ind = 0; ind < nb_IP_Clients; ind++) {

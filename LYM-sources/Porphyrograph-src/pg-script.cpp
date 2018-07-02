@@ -629,9 +629,9 @@ void pg_initializationScript(void) {
 #endif
 	for (int indPath = 1; indPath < PG_NB_PATHS; indPath++) {
 		sprintf(AuxString, "/path_replay_trackNo_%d 0", indPath);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		sprintf(AuxString, "/path_record_%d 0", indPath);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	}
 
 	/////////////////////////////////////////////////////////////////////////
@@ -674,19 +674,19 @@ void pg_initializationScript(void) {
 	pg_CAseed_trigger = false;
 	pg_CAseed_type = _pg_CAseed_dot_center;
 	// INTERFACE VARIABLE INITIALIZATION
-	sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-	sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	pg_CAseed_location = _pg_CAseed_loc_center;
-	sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	pg_CAseed_coordinates[0] = leftWindowWidth / 2;
 	pg_CAseed_coordinates[1] = window_height / 2;
 	pg_CAseed_size = 1;
-	sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 #endif
 
 	// copy to layer above (+1) or to layer below (-1)
@@ -749,12 +749,12 @@ void pg_initializationScript(void) {
 	// message transparency & echo
 	messageTransparency = 0.0;
 
-	// pg_send_message_udp((char *)"s", (char *)"/message init_completed", (char *)"udp_QT_send");
+	// pg_send_message_udp((char *)"s", (char *)"/message init_completed", (char *)"udp_TouchOSC_send");
 	// INTERFACE VARIABLE INITIALIZATION
 	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
-	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/movie_onOff %d", !movie_on);
-	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -798,7 +798,7 @@ void pg_displaySceneVariables(void) {
 				if (ScenarioVarTypes[indVar] == _pg_float
 					&& (LastGUIShippedValuesInterpVar[indVar] != float(*((float *)ScenarioVarPointers[indVar]))
 						|| resend_all_variables)) {
-					sprintf(AuxString, "/%s %.4f", ScenarioVarMessages[indVar], *((float *)ScenarioVarPointers[indVar])); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s %.4f", ScenarioVarMessages[indVar], *((float *)ScenarioVarPointers[indVar])); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 					LastGUIShippedValuesInterpVar[indVar] = float(*((float *)ScenarioVarPointers[indVar]));
 					//if (indVar == _repop_grey) {
 					//	printf("repop_grey %s %.1f\n", ScenarioVarMessages[indVar], *((float *)ScenarioVarPointers[indVar]));
@@ -807,38 +807,38 @@ void pg_displaySceneVariables(void) {
 				else if (ScenarioVarTypes[indVar] == _pg_int
 					&& (LastGUIShippedValuesInterpVar[indVar] != float(*((int *)ScenarioVarPointers[indVar]))
 						|| resend_all_variables)) {
-					sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], *((int *)ScenarioVarPointers[indVar])); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], *((int *)ScenarioVarPointers[indVar])); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 					// memorizes the shipped value in order to resend it only when changed
 					LastGUIShippedValuesInterpVar[indVar] = float(*((int *)ScenarioVarPointers[indVar]));
 				}
 				else if (ScenarioVarTypes[indVar] == _pg_bool
 					&& (LastGUIShippedValuesInterpVar[indVar] != float(*((bool *)ScenarioVarPointers[indVar]))
 						|| resend_all_variables)) {
-					sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], (int)(*((bool *)ScenarioVarPointers[indVar]))); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], (int)(*((bool *)ScenarioVarPointers[indVar]))); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 					LastGUIShippedValuesInterpVar[indVar] = float(*((bool *)ScenarioVarPointers[indVar]));
 				}
 				else if (ScenarioVarTypes[indVar] == _pg_sign
 					&& (LastGUIShippedValuesInterpVar[indVar] != float(*((float *)ScenarioVarPointers[indVar]))
 						|| resend_all_variables)) {
-					sprintf(AuxString, "/%s %.4f", ScenarioVarMessages[indVar], *((float *)ScenarioVarPointers[indVar])); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s %.4f", ScenarioVarMessages[indVar], *((float *)ScenarioVarPointers[indVar])); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 					LastGUIShippedValuesInterpVar[indVar] = float(*((float *)ScenarioVarPointers[indVar]));
 				}
 				else if (ScenarioVarTypes[indVar] == _pg_path
 					&& (LastGUIShippedValuesInterpVar[indVar] != float(*((bool *)ScenarioVarPointers[indVar]))
 						|| resend_all_variables)) {
-					sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], (int)(*((bool *)ScenarioVarPointers[indVar]))); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], (int)(*((bool *)ScenarioVarPointers[indVar]))); pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 					LastGUIShippedValuesInterpVar[indVar] = float(*((bool *)ScenarioVarPointers[indVar]));
 				}
 			}
 		}
 		if (resend_all_variables) {
 			if (pg_CurrentScene >= 0 && pg_CurrentScene < pg_NbScenes) {
-				sprintf(AuxString, "/setup _%s", Scenario[pg_CurrentScene].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/setup _%s", Scenario[pg_CurrentScene].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/setup _initial_setup"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/setup _initial_setup"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
-			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			InterfaceInitializations();
 
 			// resends the sound variables to PD (as in the callback)
@@ -849,22 +849,22 @@ void pg_displaySceneVariables(void) {
 
 			for (int ind = 0; ind < 3; ind++) {
 				if (ind == *((int *)ScenarioVarPointers[_partColor_mode])) {
-					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 				else {
-					sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 				if (ind == *((int *)ScenarioVarPointers[_partStroke_mode])) {
-					sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 				else {
-					sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 				if (ind == *((int *)ScenarioVarPointers[_partExit_mode])) {
-					sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 				else {
-					sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+					sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 			}
 
@@ -876,33 +876,33 @@ void pg_displaySceneVariables(void) {
 		// time display
 		// time exceeded in scene
 		if (remainingTimeInScene >= 0) {
-				sprintf(AuxString, "/time _%d:%d", (int)remainingTimeInScene / 60, (int)remainingTimeInScene % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time _%d:%d", (int)remainingTimeInScene / 60, (int)remainingTimeInScene % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			if (remainingTimeInScene < 10) {
-				sprintf(AuxString, "/time_color_red 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
-				sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
-				sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time_color_red 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else if (remainingTimeInScene < 20) {
-				sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
-				sprintf(AuxString, "/time_color_orange 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
-				sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time_color_orange 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
-				sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
-				sprintf(AuxString, "/time_color_green 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time_color_green 1"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		// time exceeded in scene
 		else {
 			int remTime = (int)remainingTimeInScene;
 			if (remTime > -60) {
-				sprintf(AuxString, "/time _%d:%d", remTime / 60, remTime % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time _%d:%d", remTime / 60, remTime % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/time _%d:%d", remTime / 60, -(remTime % 60)); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/time _%d:%d", remTime / 60, -(remTime % 60)); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
-			sprintf(AuxString, "/time_color 3"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/time_color 3"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		}
 	}
 }
@@ -1006,7 +1006,7 @@ void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type, float sce
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/pen_colorPreset -1.0");
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
 void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
@@ -1019,7 +1019,7 @@ void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 #ifdef PG_WITH_CAMERA_CAPTURE
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		// sprintf(AuxString, "/message Exposure_%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
+		// sprintf(AuxString, "/message Exposure_%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		if (scenario_or_gui_command_value != CameraCurrent_exposure) {
 			printf("Cam exposure %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
@@ -1033,7 +1033,7 @@ void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float sce
 void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 #ifdef PG_WITH_CAMERA_CAPTURE
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		// sprintf(AuxString, "/message Gamma%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
+		// sprintf(AuxString, "/message Gamma%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		if (scenario_or_gui_command_value != CameraCurrent_gamma) {
 			printf("Cam gamma %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
@@ -1133,7 +1133,7 @@ void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, flo
 			sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 			sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
-			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			currentlyPlaying_trackNo = playing_soundtrackNo;
 			PlayTrack(currentlyPlaying_trackNo);
 		}
@@ -1146,9 +1146,9 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float sc
 			currentlyPlaying_movieNo = playing_movieNo;
 			movie_on = true;
 			sprintf(AuxString, "/movie_onOff %d", !movie_on);
-			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			sprintf(AuxString, "/movie_shortName %s", movieShortName[playing_movieNo].c_str());
-			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
 			// texture ID initialization (should not be inside a thread)
 			if (pg_movie_texture_texID == NULL_ID) {
@@ -1219,7 +1219,7 @@ void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, float sce
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 		// printf("delta %.3f\n", (float)(CurrentClockTime - lastClearTime) );
 		if (CurrentClockTime - lastClearTime < 0.5f) {
-			// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_QT_send");
+			// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_TouchOSC_send");
 			isClearAllLayers = 1;
 			lastClearTime = 0.0f;
 			printf("****** isClearAllLayers %d\n",isClearAllLayers);
@@ -1229,7 +1229,7 @@ void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, float sce
 		}
 	}
 	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value > 0.0) {
-		// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_QT_send");
+		// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_TouchOSC_send");
 		isClearAllLayers = 1;
 		lastClearTime = CurrentClockTime;
 		// printf("****** isClearAllLayers %d\n", isClearAllLayers);
@@ -1240,12 +1240,12 @@ void clearLayer_callBack( pg_Parameter_Input_Type param_input_type , float scena
 		if( CurrentClockTime - lastClearTime  < 0.2f ) {
 			isClearLayer = 1;
 			lastClearTime = 0.0f;
-			// pg_send_message_udp((char *)"s", (char *)"/message clear_all_layers", (char *)"udp_QT_send");
+			// pg_send_message_udp((char *)"s", (char *)"/message clear_all_layers", (char *)"udp_TouchOSC_send");
 		}
 		else {
 			isClearLayer = 1;
 			lastClearTime = CurrentClockTime;
-			// pg_send_message_udp((char *)"s", (char *)"/message clear_layer", (char *)"udp_QT_send");
+			// pg_send_message_udp((char *)"s", (char *)"/message clear_layer", (char *)"udp_TouchOSC_send");
 		}
 	}
 	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value > 0.0 ) {
@@ -1269,7 +1269,7 @@ void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scen
 }
 void clearCA_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-		// pg_send_message_udp((char *)"s", (char *)"/message clear_CA", (char *)"udp_QT_send");
+		// pg_send_message_udp((char *)"s", (char *)"/message clear_CA", (char *)"udp_TouchOSC_send");
 		isClearCA = 1;
 	}
 	else if (param_input_type == _PG_SCENARIO  && scenario_or_gui_command_value > 0.0) {
@@ -1293,7 +1293,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		// does not change anything if it is not a valid track
 		if (playing_track < 0 || playing_track >= PG_NB_TRACKS) {
 			sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
-			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay unchanged (stop) invalid track\n");
 			return;
 		}
@@ -1308,12 +1308,12 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 				pg_path_replay_trackNo_onOff(pathNo, playing_track);
 			}
 			sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
-			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay on recorded track (%s)\n", AuxString);
 		}
 		else {
 			sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
-			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay off non recorded track\n");
 		}
 	}
@@ -1325,7 +1325,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		if (playing_track == -1) {
 			pg_path_replay_trackNo_onOff(pathNo, playing_track);
 			sprintf(AuxString,  "/path_replay_trackNo_%d 0", pathNo);
-			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay off track was currently read (%s)\n", AuxString);
 		}
 	}
@@ -1918,7 +1918,7 @@ void pg_update_visual_and_text_chapters(bool new_scene) {
 void StartNewScene(int ind_scene) {
 	pg_CurrentScene = ind_scene;
 	pg_FirstFrameInScene = true;
-	sprintf(AuxString, "/setup _%s", Scenario[pg_CurrentScene].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/setup _%s", Scenario[pg_CurrentScene].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	// printf( "/setup %s\n" , Scenario[pg_CurrentScene].scene_IDs.c_str() ); 
 	// reinitialization of the interpolation control variables at the beginning of a new scene
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
@@ -2134,7 +2134,7 @@ void pg_process_key( int key ) {
   
 	  /* ------------------------------- check connection to QT */
   case 'q':
-	  pg_send_message_udp((char *)"", (char *)"/QT_connected", (char *)"udp_QT_send");
+	  pg_send_message_udp((char *)"", (char *)"/QT_connected", (char *)"udp_TouchOSC_send");
 	  break;
 
 	  /* ------------------------------- check connection to PD */
@@ -2193,7 +2193,7 @@ void PlayTrack(int indTrack) {
 			(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
 		//sprintf(AuxString, "/soundtrack_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
-		//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+		//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 		printf("soundtrack #%d launching %s\n", currentlyPlaying_trackNo,
 			trackFileName[currentlyPlaying_trackNo].c_str());
 		BrokenInterpolationVar[_playing_soundtrackNo] = true;
@@ -2202,7 +2202,7 @@ void PlayTrack(int indTrack) {
 }
 
 void pg_launch_performance(void) {
-	// sprintf(AuxString, "/message launching"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+	// sprintf(AuxString, "/message launching"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	
 	// cleaning up
 	isClearCA = 1; // clean CA layer
@@ -2214,7 +2214,7 @@ void pg_launch_performance(void) {
 	restoreInitialTimesAndDurations();
 	InitialScenarioTime = CurrentClockTime - Scenario[0].scene_initial_time;
 	AbsoluteInitialScenarioTime = CurrentClockTime - Scenario[0].scene_initial_time;
-	sprintf(AuxString, "/setup _%s", Scenario[0].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+	sprintf(AuxString, "/setup _%s", Scenario[0].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	// printf( "/setup %s" , Scenario[0].scene_IDs.c_str() ); 
 	// reinitialization of the interpolation control variables at the beginning of a new scene
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
@@ -2225,7 +2225,11 @@ void pg_launch_performance(void) {
 	remove_files_in_dir(&snapshots_dir_path_name); // removes snapshots before pg_launch_performance
 
 	// lights up the LED
-	pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_TouchOSC_send");
+#ifdef VOLUSPA
+	// starts the backtrack
+	pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_Usine_send");
+#endif
 
 #ifdef GN
 	initCA = 1.2f;
@@ -2300,8 +2304,8 @@ void pg_keyStrokeScripts(int key) {
 	case'T':
 		pg_writeMessageOnScreen((char *)"******");
 		pg_send_message_udp((char *)"f", (char *)"/testUDP 0", (char *)"udp_SC");
-		sprintf(AuxString, "/message TEST_UDP"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/return_message returnUPD_%f", CurrentClockTime); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/message TEST_UDP"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/return_message returnUPD_%f", CurrentClockTime); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 		break;
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -2533,7 +2537,7 @@ void pg_aliasScript(char *command_symbol,
 	// ====================================== 
 	case _testUDP: {
 		sprintf(AuxString, "*** OK ***"); pg_writeMessageOnScreen(AuxString);
-		sprintf(AuxString, "/message TEST_UDP"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/message TEST_UDP"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 		// from Yukao's QT
 		break;
 	}
@@ -2547,7 +2551,7 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _PD_connected: {
 		// from Yukao's PD
-		pg_send_message_udp((char *)"s", (char *)"/PD_connected 1", (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"s", (char *)"/PD_connected 1", (char *)"udp_TouchOSC_send");
 		sprintf(AuxString, "*** PD ***"); pg_writeMessageOnScreen(AuxString);
 		break;
 	}
@@ -2609,7 +2613,7 @@ void pg_aliasScript(char *command_symbol,
 		//	pulse_average_prec = pulse_average;
 		//	pulse_average = arguments[0] * sound_volume + sound_min;
 		//	sprintf(AuxString, "/pulse_enveloppe %.5f", pulse[2]);
-		//	pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+		//	pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 
 		//}
 		break;
@@ -2621,16 +2625,16 @@ void pg_aliasScript(char *command_symbol,
 		pulse[2] = arguments[2] * sound_volume + sound_min;
 		pulse_attack = arguments[3] * sound_volume + sound_min;
 		sprintf(AuxString, "/pulse_low %.5f", pulse[0]);
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 		sprintf(AuxString, "/pulse_medium %.5f", pulse[1]);
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 		sprintf(AuxString, "/pulse_high %.5f", pulse[2]);
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 
 		pulse_average_prec = pulse_average;
 		pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
 		sprintf(AuxString, "/pulse_enveloppe %.5f", pulse_attack);
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 
@@ -2650,7 +2654,7 @@ void pg_aliasScript(char *command_symbol,
 			pg_BeatNo++;
 		}
 
-		sprintf(AuxString, "/loop_beat %d", pg_BeatNo % PG_LOOP_SIZE); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/loop_beat %d", pg_BeatNo % PG_LOOP_SIZE); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 
 		// loop start 
 		if ((pg_BeatNo % PG_LOOP_SIZE) == 0) {
@@ -2993,11 +2997,11 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++ INTERFACE SELECTION +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _minimal_display: {
-		pg_send_message_udp((char *)"i", (char *)"/minimal_display 1", (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", (char *)"/minimal_display 1", (char *)"udp_TouchOSC_send");
 		break;
 	}
 	case _paths_display: {
-		pg_send_message_udp((char *)"i", (char *)"/paths_display 1", (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", (char *)"/paths_display 1", (char *)"udp_TouchOSC_send");
 		break;
 	}
 
@@ -3017,7 +3021,7 @@ void pg_aliasScript(char *command_symbol,
 		copyToNextTrack = +1;
 		//sprintf(AuxString, "/message copy_track_%d_to_%d",
 		//	currentDrawingTrack, (currentDrawingTrack + 1) % PG_NB_TRACKS);
-		//pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
+		//pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 
 		break;
 	}
@@ -3025,7 +3029,7 @@ void pg_aliasScript(char *command_symbol,
 		copyToNextTrack = -1;
 		//sprintf(AuxString, "/message copy_track_%d_to_%d", 
 		//	currentDrawingTrack , (currentDrawingTrack - 1 + PG_NB_TRACKS) % PG_NB_TRACKS); 
-		//pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
+		//pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 
 
 		break;
@@ -3039,10 +3043,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partStroke_mode])) {
-				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3052,10 +3056,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partStroke_mode])) {
-				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3065,10 +3069,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partStroke_mode])) {
-				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3078,10 +3082,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partColor_mode])) {
-				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3091,10 +3095,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partColor_mode])) {
-				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3104,10 +3108,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partColor_mode])) {
-				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3117,10 +3121,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partExit_mode])) {
-				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3130,10 +3134,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partExit_mode])) {
-				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3143,10 +3147,10 @@ void pg_aliasScript(char *command_symbol,
 
 		for (int ind = 0; ind < 3; ind++) {
 			if (ind == *((int *)ScenarioVarPointers[_partExit_mode])) {
-				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			}
 		}
 		break;
@@ -3470,14 +3474,14 @@ void pg_aliasScript(char *command_symbol,
 		sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 
 	case _movie_onOff: {
 		movie_on = !movie_on;
 		sprintf(AuxString, "/movie_onOff %d", !movie_on);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 
@@ -3492,9 +3496,9 @@ void pg_aliasScript(char *command_symbol,
 			BrokenInterpolationVar[_pen_color] = true;
 			*((float *)ScenarioVarPointers[_pen_color]) = pen_colorPreset_values[current_pen_colorPreset];
 			// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
-			// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
-			// sprintf(AuxString, "/message palette_%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
-			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+			// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+			// sprintf(AuxString, "/message palette_%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
+			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		}
 
 		break;
@@ -3505,9 +3509,9 @@ void pg_aliasScript(char *command_symbol,
 			BrokenInterpolationVar[_pen_color] = true;
 			*((float *)ScenarioVarPointers[_pen_color]) = pen_colorPreset_values[current_pen_colorPreset];
 			// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
-			// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
-			// sprintf(AuxString, "/message palette_%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
-			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+			// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+			// sprintf(AuxString, "/message palette_%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
+			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		}
 		break;
 	}
@@ -3517,10 +3521,10 @@ void pg_aliasScript(char *command_symbol,
 			BrokenInterpolationVar[_pen_color] = true;
 			*((float *)ScenarioVarPointers[_pen_color]) = pen_colorPreset_values[current_pen_colorPreset];
 			// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
-			// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
-			// sprintf(AuxString, "/message palette_%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
+			// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+			// sprintf(AuxString, "/message palette_%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			// printf("************* palette %d\n", current_pen_colorPreset);
-			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			printf("sent: %s\n", AuxString);
 		}
 		break;
@@ -3534,96 +3538,96 @@ void pg_aliasScript(char *command_symbol,
 
 	case _CAseed_dot_center: {
 		pg_CAseed_type = _pg_CAseed_dot_center;
-		sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 	case _CAseed_dot: {
 		pg_CAseed_type = _pg_CAseed_dot;
-		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 	case _CAseed_h_line: {
-		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		pg_CAseed_type = _pg_CAseed_h_line;
 		break;
 	}
 	case _CAseed_v_line: {
-		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		pg_CAseed_type = _pg_CAseed_v_line;
 		break;
 	}
 	case _CAseed_cross: {
-		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		pg_CAseed_type = _pg_CAseed_cross;
 		break;
 	}
 	case _CAseed_X: {
-		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		pg_CAseed_type = _pg_CAseed_X;
 		break;
 	}
 	case _CAseed_square: {
-		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
-		sprintf(AuxString, "/CAseed_square %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_dot_center %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_dot %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_h_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_v_line %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_cross %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_X %d", 0); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/CAseed_square %d", 1); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		pg_CAseed_type = _pg_CAseed_square;
 		break;
 	}
 	case _CAseed_size: {
 		pg_CAseed_size = int(arguments[0]);
-		sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 	case _CAseed_loc: {
 		pg_CAseed_location = pg_CAseed_locations(int(arguments[0]) % _pg_Nb_CAseed_locations);
 		pg_CAseed_location_to_coordinates(pg_CAseed_location, pg_CAseed_coordinates);
-		sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 	case _CAseed_loc_plus: {
 		pg_CAseed_location = pg_CAseed_locations((pg_CAseed_location + 1) % _pg_Nb_CAseed_locations);
 		pg_CAseed_location_to_coordinates(pg_CAseed_location, pg_CAseed_coordinates);
-		sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_QT_send");
+		sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
 	case _CAseed_trigger: {
@@ -3641,7 +3645,7 @@ void pg_aliasScript(char *command_symbol,
 		if (nb_movies > 0) {
 			playing_movieNo = (playing_movieNo + 1) % nb_movies;
 			sprintf(AuxString, "/movie_shortName %s", movieShortName[playing_movieNo].c_str());
-			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_QT_send");
+			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			BrokenInterpolationVar[_playing_movieNo] = true;
 
 			if (playing_movieNo >= 0 && playing_movieNo < nb_movies
@@ -3655,7 +3659,7 @@ void pg_aliasScript(char *command_symbol,
 
 				is_movieLoading = true;
 				printf("Loading %s\n", movieFileName[currentlyPlaying_movieNo].c_str());
-				// sprintf(AuxString, "/message %s", movieFileName[currentlyPlaying_movieNo].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
+				// sprintf(AuxString, "/message %s", movieFileName[currentlyPlaying_movieNo].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 #ifdef WIN32
 				DWORD rc;
 				HANDLE  hThread = CreateThread(
@@ -3798,10 +3802,10 @@ void update_pulsed_colors(void) {
 	/***************************** SHOULD BE REACTIVATED WHEN THE INTERFACE CAN DISPLAY COLORS 
 	sprintf(AuxString, "/pen_colorPenPalette %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f",
 		pen_base_3color_palette[0], pen_base_3color_palette[1], pen_base_3color_palette[2], pen_base_3color_palette[3], pen_base_3color_palette[4], pen_base_3color_palette[5], pen_base_3color_palette[6], pen_base_3color_palette[7], pen_base_3color_palette[8]);
-	pg_send_message_udp((char *)"f f f f f f f f f", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"f f f f f f f f f", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/pulsed_pen_color %.5f %.5f %.5f",
 		pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2]);
-	pg_send_message_udp((char *)"f f f", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"f f f", AuxString, (char *)"udp_TouchOSC_send");
 	*/
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3858,10 +3862,10 @@ void update_pulsed_colors(void) {
 	/***************************** SHOULD BE REACTIVATED WHEN THE INTERFACE CAN DISPLAY COLORS
 	sprintf(AuxString, "/repop_colorRepopPalette %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f",
 		pen_base_3color_palette[0], pen_base_3color_palette[1], pen_base_3color_palette[2], pen_base_3color_palette[3], pen_base_3color_palette[4], pen_base_3color_palette[5], pen_base_3color_palette[6], pen_base_3color_palette[7], pen_base_3color_palette[8]);
-	pg_send_message_udp((char *)"f f f f f f f f f", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"f f f f f f f f f", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/pulsed_repop_color %.5f %.5f %.5f",
 		pulsed_repop_color[0], pulsed_repop_color[1], pulsed_repop_color[2]);
-	pg_send_message_udp((char *)"f f f", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"f f f", AuxString, (char *)"udp_TouchOSC_send");
 	*/
 }
 
@@ -3919,12 +3923,12 @@ void pg_path_recording_onOff( int indPath ) {
 	// launches source recording 
 	pg_path_recording_start(indPath);
 	sprintf(AuxString, "/path_record_%d 1", indPath);
-	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
   } else {
 	// stops source recording 
 	pg_path_recording_stop(indPath);
 	sprintf(AuxString, "/path_record_%d 0", indPath);
-	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
   }
 }
 
@@ -4078,7 +4082,7 @@ void pg_path_recording_stop(int indPath) {
 		pg_Path_Status[indPath].isActiveRecording = false;
 		// printf("start playing %d\n",indPath);
 		sprintf(AuxString, "/path_record_%d 0", indPath);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
 
@@ -4167,7 +4171,7 @@ void pg_path_replay_trackNo_stop(int indPath) {
 #endif
 		}
 		sprintf(AuxString, "/path_replay_trackNo_%d 0", indPath);
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
 

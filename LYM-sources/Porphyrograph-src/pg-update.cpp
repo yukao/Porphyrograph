@@ -1464,9 +1464,9 @@ void pg_update_shader_uniforms(void) {
 	if (CAInterpolatedType_prev != CAInterpolatedType
 		|| CAInterpolatedSubType_prev != CAInterpolatedSubType) {
 		sprintf(AuxString, "/CAType %d", CAInterpolatedType); 
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		sprintf(AuxString, "/CASubType %d", CAInterpolatedSubType); 
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		CAInterpolatedType_prev = CAInterpolatedType;
 		CAInterpolatedSubType_prev = CAInterpolatedSubType;
 	}
