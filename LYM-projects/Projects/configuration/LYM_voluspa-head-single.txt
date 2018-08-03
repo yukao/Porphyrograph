@@ -24,7 +24,7 @@ udp_remote_client	4
 VERBATIM																		
 TYPE	string	string	int	string	bool	int	bool											
 ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal											
-client	udp_TouchOSC_send	192.168.1.74	8000	OSC	0	300	1											
+client	udp_TouchOSC_send	192.168.2.97	8000	OSC	0	300	1											
 client	udp_Usine_send	192.168.43.189	9000	OSC	0	300	1											
 client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
 client	udp_RN_send	127.0.0.1	8000	OSC	0	300	1											

@@ -9,6 +9,8 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 3
 #define ATELIERS_PORTATIFS
+// #define WHITE_CIRCLE
+
 
 float     blendTransp;
 bool      invertAllLayers;
@@ -51,7 +53,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -77,8 +79,8 @@ void main() {
   hide = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
   mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
 
-  float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
-  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
+  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
+  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
 #ifdef ATELIERS_PORTATIFS
   float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
@@ -89,9 +91,10 @@ void main() {
 #endif
 
   // vertical mirror
-  // TO UNCOMMENT FOR CHATEAU  coords.y = height - coords.y;
+  // TO UNCOMMENT FOR CHATEAU  
+  //    coords.y = height - coords.y;
   // ST OUEN horizontal mirror
-  // coords.x = width - coords.x;
+   coords.x = width - coords.x;
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
@@ -186,22 +189,44 @@ void main() {
 // vertical mirror
 //   coords.y = height - coords.y;
 // ST OUEN horizontal mirror
-// coordX = width - coordX;
+  coordX = width - coordX;
 // double mirror
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;
 
+  // invert
+  if( invertAllLayers ) {
+     outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
+  }
+
+  // white flash
+  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
+  if(timeFromStart > 1016 && timeFromStart < 1024) {
+    outColor0.rgb = clamp(outColor0.rgb + vec3(4 - abs(timeFromStart - 1020)), 0.0, 1.0);
+  }
+  else if(timeFromStart > 1035 && timeFromStart < 1043) {
+    outColor0.rgb = clamp(outColor0.rgb + vec3(4 - abs(timeFromStart - 1039)), 0.0, 1.0);
+  }
+  else if(timeFromStart > 1436 && timeFromStart < 1444) {
+    outColor0.rgb = clamp(outColor0.rgb + vec3(4 - abs(timeFromStart - 1440)), 0.0, 1.0);
+  }
+
   // central circle
-  float radiusCircle;
+  int  radiusCircle;
   if( coordX > width) {
     coordX -= width;
   }
-  radiusCircle = length(vec2(coordX - 512 , coords.y - 384)) ;
-  if( radiusCircle > 512 ) {
-    outColor0.rgb *= 0;
+  radiusCircle = int(length(vec2(coordX - 512 , coords.y - 384)));
+  if( radiusCircle > 384  ) {
+    outColor0.rgb = vec3(0);
   }
+  #ifdef WHITE_CIRCLE
+   else if( radiusCircle == 384 ) {
+    outColor0.rgb = vec3(1);
+  }
+  #endif
   else if( radiusCircle > 350 ) {
-    outColor0.rgb *= ((512 - radiusCircle)/162.0);
+    outColor0.rgb *= ((384 - radiusCircle)/34.0);
   }
 
   // cursor
@@ -210,11 +235,6 @@ void main() {
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
-  }
-
-  // invert
-  if( invertAllLayers ) {
-     outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
 
   outColor0.rgb *= blendTransp;

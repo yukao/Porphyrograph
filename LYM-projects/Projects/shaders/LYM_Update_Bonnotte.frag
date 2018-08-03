@@ -18,7 +18,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 const float PI = 3.1415926535897932384626433832795;
 
 // Gaussian blur
-const float weights[8][10] = {
+const float weights_GaussianBlur[8][10] = {
   { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
   { 0.160943513523684, 0.0976171754339892, 0.0217813359878234, 0.00178792093458716, 0, 0, 0, 0, 0, 0, },
   { 0.0906706626819157, 0.0684418069308968, 0.0294364543567006, 0.00721371337812935, 0.00100726007785354, 0, 0, 0, 0, 0, },
@@ -33,7 +33,7 @@ const float weights[8][10] = {
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 #define PG_NB_PATHS 7
 
 ///////////////////////////////////////////////////////////////////
@@ -43,9 +43,9 @@ const uint pg_FBO_fs_Pixels_attacht = 1;
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-const uint CA_DISLOCATION = 0;
+const uint CA_PROTOCELLS = 0;
+const uint CA_DISLOCATION = 2;
 const uint CA_CYCLIC_1 = 1;
-const uint CA_PROTOCELLS = 2;
 const uint GOL_1 = 3;
 const uint CA_CYCLIC = 4;
 // const uint CA_PATHS = 4;
@@ -335,12 +335,12 @@ float snoise(vec2 v , float noiseScale) {
   m = m*m ;
 
   // Gradients: 
-  //  41 pts uniformly over a line, mapped onto a diamond
+  //  41 pts uniformly over a line, mapped onto a diamo
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
   //  The ring size 17*17 = 289 is close to a multiple 
   //      of 41 (41*7 = 287)
 
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
   vec3 ox = floor(x + 0.5);
   vec3 a0 = x - ox;
 
@@ -419,6 +419,7 @@ void CA_out( vec4 currentCA ) {
 
   //////////////////////////////////////////////////////
   // CCA MOORE
+  /*
   if( CAType == CA_CYCLIC  || CAType == CA_CYCLIC_1 ) {
     const int nbStates = 5;
     uint nbNeighbors[nbStates];
@@ -646,8 +647,9 @@ void CA_out( vec4 currentCA ) {
       }
     }
   }
+  */
 
-  else if( CAType == CA_PROTOCELLS ) {
+  if( CAType == CA_PROTOCELLS ) {
     int nbNeighbors =
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
@@ -789,7 +791,7 @@ void CA_out( vec4 currentCA ) {
       }
     }
   }
-
+  /*
   //////////////////////////////////////////////////////
   // DISLOCATION
   // parameter values: 0.314  0.606 0.354 0.409
@@ -802,6 +804,7 @@ void CA_out( vec4 currentCA ) {
     float CAParams5 = 0.196939;
     float CAParams6 = 0.322857;
  */
+  /*
     int nbSurroundingNewBorders =
       (neighborValues[0].a == 1? 1:0) +
       (neighborValues[1].a == 1? 1:0) +
@@ -964,6 +967,7 @@ void CA_out( vec4 currentCA ) {
     //                              {0,1,0},{0,0,1},   // new/old border
     //                              {1,0,0},{1,1,0}};  // new/old nucleus
   }
+  */
 
   //////////////////////////////////////////////////////
   // NO CA
@@ -1366,14 +1370,17 @@ void main() {
     if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
       int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
       vec3 valPixel = vec3(0);
+      float totWeight = 0;
       for( int i = -blurRad ; i <= blurRad ; i++ ) {
         for( int j = -blurRad ; j <= blurRad ; j++ ) {
           int dist = min(int(length(vec2(i,j))),10);
+          float locWeight = weights_GaussianBlur[blurRad - 2][dist];
           valPixel += texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                      * weights[blurRad - 2][dist];
+                      * locWeight;
+          totWeight += locWeight;
         }
       }
-      out_track_FBO[1] = vec4(valPixel, out_track_FBO[1].a);
+      out_track_FBO[1] = vec4(valPixel/totWeight, out_track_FBO[1].a);
     }
   }
 #endif
@@ -1386,14 +1393,17 @@ void main() {
   if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
     int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
     vec3 valPixel = vec3(0);
+    float totWeight = 0;
     for( int i = -blurRad ; i <= blurRad ; i++ ) {
       for( int j = -blurRad ; j <= blurRad ; j++ ) {
         int dist = min(int(length(vec2(i,j))),10);
-        valPixel += texture( uniform_Update_texture_fs_Trk2 , decalCoords + vec2(i,j)).rgb 
-                    * weights[blurRad - 2][dist];
+        float locWeight = weights_GaussianBlur[blurRad - 2][dist];
+        valPixel += texture( uniform_Update_texture_fs_Trk2 , decalCoordsPrevStep + vec2(i,j)).rgb 
+                    * locWeight;
+        totWeight += locWeight;
       }
     }
-    out_track_FBO[2] = vec4(valPixel, out_track_FBO[2].a);
+    out_track_FBO[2] = vec4(valPixel/totWeight, out_track_FBO[1].a);
   }
 #endif
 #if PG_NB_TRACKS >= 4
@@ -1430,13 +1440,13 @@ void main() {
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
   if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
+    coordsImage = vec2(1.0 - decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
     photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
   if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
+    coordsImage = vec2(1.0 - decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
     photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
@@ -1461,52 +1471,60 @@ void main() {
      cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
                * cameraWH;
  */
-  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+
+  // CAMERA IMAGE
+  cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
-               * cameraWH + uniform_Update_fs_2fv_Camera_offSetsXY;
-  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
-               * movieWH;
+               * (cameraWH + (2 * uniform_Update_fs_2fv_Camera_offSetsXY)) - uniform_Update_fs_2fv_Camera_offSetsXY;
 
   // image reading
-  cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
-  // gamma correction
-  // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( BGSubtr ) {
-    cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
-  }
-  if( graylevel(cameraImage) < cameraThreshold ) {
-    cameraImage = vec3(0.0);
-  }
+  if(cameraCoord.x >= 0 && cameraCoord.x  < cameraWH.x && cameraCoord.y >= 0 && cameraCoord.y  < cameraWH.y) {
+    cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
 
+    // gamma correction
+    // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
+    if( BGSubtr ) {
+      cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
+    }
+    if( graylevel(cameraImage) < cameraThreshold ) {
+      cameraImage = vec3(0.0);
+    }
+
+    // Sobel on camera
+    if( cameraSobel > 0 ) {
+        vec3 samplerSobel;
+        // sobel
+        vec3 sobelX = vec3(0.0);
+        vec3 sobelY = vec3(0.0);
+
+        // samples the center pixel and its Moore neighborhood
+        for( int i = 0 ; i < 4 ; i++ ) {
+            samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
+            sobelX += sobelMatrixX[i] * samplerSobel;
+            sobelY += sobelMatrixY[i] * samplerSobel;
+        }
+        for( int i = 5 ; i < 9 ; i++ ) {
+            samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
+            sobelX += sobelMatrixX[i] * samplerSobel;
+            sobelY += sobelMatrixY[i] * samplerSobel;
+        }
+
+        samplerSobel = cameraImage;
+        sobelX = mix( samplerSobel , sobelX , cameraSobel );
+        sobelY = mix( samplerSobel , sobelY , cameraSobel );
+
+        cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+    }
+  }
   // cameraImage = vec3(1) - cameraImage;
+
+
+  // MOVIE IMAGE
+  movieCoord = vec2(1 - decalCoordsPOT.x , decalCoordsPOT.y )
+               * movieWH;
 
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
 
-  // Sobel on camera
-  if( cameraSobel > 0 ) {
-      vec3 samplerSobel;
-      // sobel
-      vec3 sobelX = vec3(0.0);
-      vec3 sobelY = vec3(0.0);
-
-      // samples the center pixel and its Moore neighborhood
-      for( int i = 0 ; i < 4 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
-          sobelX += sobelMatrixX[i] * samplerSobel;
-          sobelY += sobelMatrixY[i] * samplerSobel;
-      }
-      for( int i = 5 ; i < 9 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
-          sobelX += sobelMatrixX[i] * samplerSobel;
-          sobelY += sobelMatrixY[i] * samplerSobel;
-      }
-
-      samplerSobel = cameraImage;
-      sobelX = mix( samplerSobel , sobelX , cameraSobel );
-      sobelY = mix( samplerSobel , sobelY , cameraSobel );
-
-      cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
-  }
   // Sobel on movie
   if( movieSobel > 0 ) {
       vec3 samplerSobel;
@@ -1624,7 +1642,7 @@ void main() {
                 pathStroke );
             if(indPath == 0 && // rubber stylus
                                Cursor < 0) {
-                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
+                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * uniform_Update_fs_4fv_paths03_a[indPath]);
                 curTrack_grayLevel = 0;
             }
             curTrack_color.rgb

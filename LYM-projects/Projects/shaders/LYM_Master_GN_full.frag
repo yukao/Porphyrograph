@@ -16,9 +16,11 @@ float     CAMasterWeight;
 uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
+bool      interfaceOnScreen;
 bool      hide;
+uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide;
 bool      mute_screen;
-uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen;
+uniform float uniform_Master_fs_1fv_mute_screen;
 
 // Main shader.
 
@@ -48,7 +50,12 @@ layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // 
 // uniform vec4 uniform_Master_fs_4fv_transparency_scale_leftwidth_rightVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+
+uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
@@ -59,15 +66,16 @@ void main() {
   invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
   cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
   CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[0];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[1];
-  hide = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[2] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_hide_mute_screen[3] > 0 ? true : false);
+  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[0];
+  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[1];
+  interfaceOnScreen = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[2] > 0 ? true : false);
+  hide = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[3] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_1fv_mute_screen > 0 ? true : false);
 
   vec2 coords = decalCoords;
-  float leftWindowWidth = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
-  float rightWindowVMargin = uniform_Master_fs_3fv_width_height_rightWindowVMargin.z;
-  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
+  float leftWindowWidth = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
+  float rightWindowVMargin = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.z;
+  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
 
   if( coords.x > leftWindowWidth ) {
     if( coords.x < leftWindowWidth + rightWindowVMargin
@@ -92,6 +100,26 @@ void main() {
   // mute screen
   if(mute_screen && decalCoords.x > leftWindowWidth) {
     outColor0 = vec4(0, 0, 0, 1);
+    return;
+  }
+
+  // interface
+  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+    if(decalCoords.x < 100) {
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb, 1);
+    }
+    else if(decalCoords.x < 200) {
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
+    }
+    else if(decalCoords.x < 300) {
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
+    }
+    else if(decalCoords.x > 320 && decalCoords.x < 420) {
+      outColor0 = vec4(vec3(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.w), 1);
+    }
+    else if(decalCoords.x > 440 && decalCoords.x < 540) {
+      outColor0 = vec4(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.rgb, 1);
+    }
     return;
   }
 

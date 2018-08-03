@@ -159,7 +159,7 @@ uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
 uniform vec2 uniform_Update_fs_2fv_Camera_offSetsXY;
-uniform vec2 uniform_Update_fs_2fv_CAType_SubType;
+uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 uniform vec2 uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
 
 /////////////////////////////////////
@@ -1175,8 +1175,8 @@ void main() {
   CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x;
   
   // CAType
-  CAType = int(uniform_Update_fs_2fv_CAType_SubType.x);
-  CASubType = int(uniform_Update_fs_2fv_CAType_SubType.y);
+  CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
+  CASubType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.y);
   CA_on_off = (CASubType > 0);
   
   // pixels
@@ -1626,8 +1626,8 @@ void main() {
 
   // launching airstrike 
   if( CAType == CA_NEUMANN_BINARY
-     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 1500
-     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 1500 < 10
+     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 2200
+     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 2200 < 10
      && abs(decalCoords.x - width + 10) < 3.2  
      && abs(decalCoords.y - height/2) < 3.2 ) {
     out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);

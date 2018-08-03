@@ -8,7 +8,7 @@
 #X text 124 14 AUDIO ON;
 #X obj 123 30 loadbang;
 #X msg 123 46 \; pd dsp 1;
-#N canvas 465 343 871 355 UDPinOut 1;
+#N canvas 465 343 871 355 UDPinOut 0;
 #X msg 194 64 disconnect;
 #X text 58 8 OPEN UDP CONNECTION;
 #X text 200 8 CLOSE UDP CONNECTION;
@@ -80,7 +80,7 @@
 #X connect 36 0 32 0;
 #X coords 0 0 10 10 0 0 0;
 #X restore 23 145 pd UDPinOut;
-#N canvas 417 50 1089 271 play_soundtrack 1;
+#N canvas 417 50 1089 271 play_soundtrack 0;
 #X msg 61 109 open \$1;
 #X obj 60 179 readsf~ 2;
 #X obj 36 135 delay 1;
@@ -125,7 +125,7 @@
 #X connect 17 0 1 0;
 #X connect 18 0 0 0;
 #X restore 190 53 pd play_soundtrack;
-#X text 209 139 MUSIC CONTROL;
+#X text 203 142 MUSIC CONTROL;
 #X text 189 35 SOUNDTRACKS;
 #N canvas 0 50 450 300 not_implemented 0;
 #N canvas 684 50 450 300 video_satur_pulse 0;
@@ -864,9 +864,9 @@
 #X connect 18 0 20 5;
 #X connect 19 0 20 4;
 #X restore 200 113 pd CameraCAParams;
-#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 20.9 0 18 1 36
+#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 20.0 0 18 1 36
 -204800 -33289 0;
-#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 94.3 0 18 1 36
+#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 88.0 0 18 1 36
 -262130 -33289 0;
 #X obj 23 322 cnv 15 150 35 empty sound_env_min_can 25 0 18 1 48 -4032
 -33289 0;

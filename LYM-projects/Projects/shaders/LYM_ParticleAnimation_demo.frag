@@ -185,7 +185,7 @@ layout (binding = 1) uniform samplerRect uniform_ParticleAnimation_texture_fs_Pa
 layout (binding = 2) uniform samplerRect uniform_ParticleAnimation_texture_fs_CA;         // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
 layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong ParticleAnimation pass position/speed of Particles step n (FBO attachment 2)
 layout (binding = 4) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong ParticleAnimation pass color/radius of Particles step n (FBO attachment 3)
-layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
+layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
 layout (binding = 6) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
 #ifdef PG_VIDEO_ACTIVE

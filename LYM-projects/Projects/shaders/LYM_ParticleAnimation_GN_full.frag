@@ -42,7 +42,7 @@ uniform vec2 uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius;
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 #define PG_VIDEO_ACTIVE
-#define PG_NB_TRACKS 2
+#define PG_NB_TRACKS 1
 #define PG_NB_PATHS 3
 
 // VIDEO UPDATE

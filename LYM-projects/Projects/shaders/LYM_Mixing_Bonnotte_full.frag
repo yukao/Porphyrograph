@@ -7,7 +7,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 #define ATELIERS_PORTATIFS
 
 float     echo;

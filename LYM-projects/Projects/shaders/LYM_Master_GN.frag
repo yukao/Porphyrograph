@@ -39,7 +39,7 @@ layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // 
 // uniform vec4 uniform_Master_fs_4fv_transparency_scale_leftwidth_rightVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -54,9 +54,9 @@ void main() {
 #include_initializations
 
   vec2 coords = decalCoords;
-  float leftWindowWidth = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
-  float rightWindowVMargin = uniform_Master_fs_3fv_width_height_rightWindowVMargin.z;
-  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
+  float leftWindowWidth = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
+  float rightWindowVMargin = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.z;
+  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
 
   if( coords.x > leftWindowWidth ) {
     if( coords.x < leftWindowWidth + rightWindowVMargin

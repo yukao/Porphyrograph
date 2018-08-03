@@ -207,7 +207,8 @@ uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
-uniform vec2 uniform_Update_fs_2fv_CAType_SubType;
+uniform vec2 uniform_Update_fs_2fv_Camera_offSetsXY;
+uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 uniform vec2 uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
 
 /////////////////////////////////////
@@ -219,8 +220,8 @@ layout (binding = 3) uniform samplerRect  uniform_Update_texture_fs_Camera_frame
 layout (binding = 4) uniform samplerRect  uniform_Update_texture_fs_Camera_BG;     // current background camera texture
 layout (binding = 5) uniform samplerRect  uniform_Update_texture_fs_Movie_frame;  // movie textures
 layout (binding = 6) uniform sampler3D    uniform_Update_texture_fs_Noise;  // noise texture for pixel acceleration 
-layout (binding = 7) uniform samplerRect  uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 8) uniform samplerRect  uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 7) uniform sampler2D    uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 8) uniform sampler2D    uniform_Update_texture_fs_Photo1;  // photo_1 texture
 layout (binding = 9) uniform samplerRect  uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
 layout (binding = 10) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
 #if PG_NB_TRACKS >= 2
@@ -1262,8 +1263,8 @@ void main() {
   CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x;
   
   // CAType
-  CAType = int(uniform_Update_fs_2fv_CAType_SubType.x);
-  CASubType = int(uniform_Update_fs_2fv_CAType_SubType.y);
+  CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
+  CASubType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.y);
   CA_on_off = (CASubType > 0);
   
   // pixels
@@ -1399,14 +1400,16 @@ void main() {
   ///////////////////////////////////////////////////
   // each track possibly covers the previous color
 
+  vec3 photocolor = vec3( 0.0 );
+  vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y);
   if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
-    vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
+    coordsImage *= uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
     photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
   if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
-    vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
+    coordsImage *= uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
     photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
@@ -1415,7 +1418,8 @@ void main() {
 
   // video texture used for drawing
   cameraCoord = vec2(1.0-decalCoordsPOT.x , decalCoordsPOT.y )
-               * uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw;
+               * uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw
+               + uniform_Update_fs_2fv_Camera_offSetsXY;
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
 
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
@@ -1710,8 +1714,8 @@ void main() {
 
   // launching airstrike 
   if( CAType == CA_NEUMANN_BINARY
-     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 1500
-     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 1500 < 10
+     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 2200
+     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 2200 < 10
      && abs(decalCoords.x - width + 10) < 3.2  
      && abs(decalCoords.y - height/2) < 3.2 ) {
     out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);

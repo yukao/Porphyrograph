@@ -37,7 +37,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -51,9 +51,9 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
-  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
-  float margin = uniform_Master_fs_3fv_width_height_rightWindowVMargin.z;
+  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
+  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float margin = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.z;
   vec2 coords = vec2( (decalCoords.x >= width + margin ? decalCoords.x - width - margin : decalCoords.x) , 
                       decalCoords.y);
   vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
