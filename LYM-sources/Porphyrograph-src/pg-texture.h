@@ -41,8 +41,8 @@ public:
 	float blendStart;        // start of blending the current photo (<0 if not displayed)
 	float intervalDuration;  // duration between end of plateau and start of the other photo
 	PhotoSwapDataStruct(void) {
-		int indSwappedPhoto = -1;
-		int indOldPhoto = -1;
+		indSwappedPhoto = -1;
+		indOldPhoto = -1;
 		swapping = false;
 		swapStart = 0.0f;
 		blendStart = -1.0f; // convention blendStart < 0 == no blending
@@ -128,7 +128,7 @@ enum pg_TextureFormat { pg_byte_tex_format = 0, pg_float_tex_format, Emptypg_Tex
 // these images are used to make piled rendering 
 // they are doubled by blend images used to smoothly change between images
 #define PG_PHOTO_NB_TEXTURES                 (2)
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 #define PG_PHOTO_NB_TEXTURES_TVW                 (6)
 #endif
 
@@ -138,7 +138,7 @@ extern PhotoDataStruct pg_MovieFrame_buffer_data;
 
 extern float pg_Photo_weight[PG_PHOTO_NB_TEXTURES];
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW];
 #else
 extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
@@ -170,7 +170,7 @@ extern int *pg_firstCompressedFileInFolder;
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 extern PhotoDataStruct pg_Photo_mask_buffer_data[PG_PHOTO_NB_TEXTURES_TVW / 3];
 
 // interpolation weight between image buffer swap buffer in each layer
@@ -186,7 +186,7 @@ extern GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
 #endif
 
 extern std::string pg_ImageDirectory;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 extern std::string pg_MaskDirectory;
 extern std::string pg_MessageDirectory;
 #endif
@@ -213,7 +213,7 @@ extern bool ascendingDiaporama;
 void remove_files_in_dir(std::string *dirpath);
 
 // ONLY FOR TERRAINS VAGUES
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex, int *currentFileIndex);
 string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex, 
 	int maxFilesPerFolder);
@@ -294,7 +294,7 @@ bool pg_update_diaporama(void);
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);
 #endif
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 // TEXTURE BUFFER MANAGEMENT
 bool update_image_buffer_swapping(void);
 int available_swap_image_buffer(int indInitialImage);

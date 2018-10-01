@@ -27,7 +27,11 @@
 ////////////////////////////////////////////////////////////////////
 // PORTAUDIO STREAMING
 ////////////////////////////////////////////////////////////////////
+#ifdef CRITON
+#define PG_AUDIO_SAMPLE_RATE                (48000)
+#else
 #define PG_AUDIO_SAMPLE_RATE                (44100)
+#endif
 #define PG_AUDIO_NB_CHANNELS                (2)
 #define PG_AUDIO_BYTES_PER_SAMPLE           (sizeof(float))
 #define PG_AUDIO_SAMPLE_FORMAT              (paFloat32)
@@ -59,6 +63,9 @@ extern std::stringstream  date_stringStream;
 
 // boolean for recording the audio output
 extern bool record_output;
+
+// boolean for tracing FFT output
+extern bool traceFFT;
 
 ////////////////////////////////////////////////////////////////////
 // UDP PROCESSING THREAD
@@ -101,7 +108,6 @@ DWORD WINAPI processUDP(LPVOID lpParam);
 void* processUDP(void * lpParam);
 #endif
 void pg_aliasScript(char *command_symbol,
-					char* string_argument_0 ,
-					float arguments[MAX_OSC_ARGUMENTS] );
+					float arguments[] );
 
 #endif

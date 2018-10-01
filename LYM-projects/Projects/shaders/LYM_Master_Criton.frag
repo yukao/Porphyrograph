@@ -1,16 +1,16 @@
 /***********************************************************************
-File: effe/shaders/LYM_Final_effe-FS.cg
+File: song/shaders/LYM_Master_song-FS.cg
 
-LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
+LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
 #version 420
 
-#include_declarations
+#define PG_NB_TRACKS 1
+#define ATELIERS_PORTATIFS
 
-#define PG_NB_TRACKS 2
-#define PG_WITH_CA
+#include_declarations
 
 // Main shader.
 
@@ -21,16 +21,15 @@ in vec2 decalCoords;  // coord text
 // INPUT
 layout (binding = 0) uniform samplerRect uniform_Master_texture_fs_Render_curr; // Master pass output with possible echo
 layout (binding = 1) uniform samplerRect uniform_Master_texture_fs_CA;  // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Part_render;  // Particle step n
-layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Update pass BG track step n (FBO attachment 3)
+layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Update pass BG track step n (FBO attachment 3)
 #if PG_NB_TRACKS >= 2
-layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 4)
+layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 4)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 5)
+layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 5)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
+layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
 #endif
 
 /////////////////////////////////////
@@ -48,25 +47,31 @@ uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
 
+
 void main() {
 #include_initializations
 
   float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
   float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
-  float margin = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.z;
-  vec2 coords = vec2( (decalCoords.x >= width + margin ? decalCoords.x - width - margin : decalCoords.x) , 
+#ifdef ATELIERS_PORTATIFS
+  float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
+  vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
                       decalCoords.y);
-  vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
+#else
+  vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
+                      decalCoords.y);
+#endif
 
-  // mute
+  // vertical mirror
+    coords.y = height - coords.y;
+  // ST OUEN horizontal mirror
+  // coords.x = width - coords.x;
+  // double mirror
+  //   coords.y = height - coords.y;
+  //   coords.x = width - coords.x;
+
+  // mute screen
   if(mute_screen && decalCoords.x > width) {
-    outColor0 = vec4(0, 0, 0, 1);
-    return;
-  }
-  // margin
-  if(margin > 0 
-      && (decalCoords.x >= 2 * width + margin 
-          || (decalCoords.x >= width && decalCoords.x < width + margin))) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -91,59 +96,82 @@ void main() {
     return;
   }
 
-#ifdef PG_WITH_CA
-  vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);
-#endif
-  vec4 particle_color = texture(uniform_Master_texture_fs_Part_render, coords);
+  ////////////////////////////////////////////////////////////////////
+  // mix of echoed layers according to Mixing weights
+  vec4 MixingColor = texture(uniform_Master_texture_fs_Render_curr, coords );
 
-  vec4 bg_color = texture(uniform_Master_texture_fs_Trk0, coords);
+  ////////////////////////////////////////////////////////////////////
+  // non-echoed layers
+  vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);
+  if( CA_color.a < 0 ) {
+    CA_color = vec4(0.0);
+  }
+
+  vec4 track0_color = texture(uniform_Master_texture_fs_Trk0, coords);
 #if PG_NB_TRACKS >= 2
   vec4 track1_color = texture(uniform_Master_texture_fs_Trk1, coords);
 #endif
 #if PG_NB_TRACKS >= 3
   vec4 track2_color = texture(uniform_Master_texture_fs_Trk2, coords);
 #endif
+#if PG_NB_TRACKS >= 4
+  vec4 track3_color = texture(uniform_Master_texture_fs_Trk3, coords);
+#endif
 
-  vec3 localColor
-    = vec3(bg_color.rgb) * trackMasterWeight_0
+  ////////////////////////////////////////////////////////////////////
+  // mix of non echoed layers according to final weights
+  vec3 NonEchoedColor
+    = vec3(track0_color.rgb) * trackMasterWeight_0
 #if PG_NB_TRACKS >= 2
     + vec3(track1_color.rgb) * trackMasterWeight_1
 #endif
 #if PG_NB_TRACKS >= 3
     + vec3(track2_color.rgb) * trackMasterWeight_2
 #endif
+#if PG_NB_TRACKS >= 4
+    + vec3(track3_color.rgb) * trackMasterWeight_3
+#endif
+    + CA_color.rgb * CAMasterWeight
     ;
 
-#ifdef PG_WITH_CA
-  if( CA_color.a < 0 ) {
-    CA_color = vec4(0.0);
-  }
-#endif
-
   ////////////////////////////////////////////////////////////////////
-  // drawing / GOL interpolated combination: should be parameterized
-  // drawing and GOL combination
-  // should be reworked
+  // mix of echoed and non-echoed layer mixes
+  // and clamping
   outColor0 
-    = vec4( clamp( CompositionAndTrackDisplayColor.rgb + localColor 
-#ifdef PG_WITH_CA
-       +  CAMasterWeight * CA_color.rgb
-#endif
-    + particle_color.rgb * PartMasterWeight * particle_color.a
-      , 0.0 , 1.0 ) , 1.0);
+    = vec4( clamp( MixingColor.rgb + NonEchoedColor , 0.0 , 1.0 ) , 1.0 );
 
   ////////////////////////////////////////////////////////////////////
-  // blinking cursor 1 pixel wide under the mouse
+  // blinking cursor 1 pixel wide under the mouse (except for hide)
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
   float mouse_y = uniform_Master_fs_4fv_xy_frameno_pulsedShift.y;
   float frameno = uniform_Master_fs_4fv_xy_frameno_pulsedShift.z;
-   if( length(vec2(decalCoords.x - mouse_x , height - decalCoords.y - mouse_y)) 
-      < 3 /* cursorSize */ ) { 
+
+  // possible double cursor
+  float coordX = decalCoords.x;
+
+  // comment for single cursor
+  if( coordX > width) {
+    coordX -= width;
+  }
+  // comment for single cursor
+
+// vertical mirror
+//   coords.y = height - coords.y;
+// ST OUEN horizontal mirror
+// coordX = width - coordX;
+// double mirror
+//   coords.y = height - coords.y;
+//   coords.x = width - coords.x;
+
+  if( !hide
+      && mouse_x < width && mouse_x > 0 
+      && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
+      < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
-/*  if( decalCoords.x > 100 || decalCoords.y < 660) {
-    outColor0.rgb = mix( outColor0.rgb , vec3(0),0.99);
+  if( invertAllLayers ) {
+     outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-*/}
+  outColor0.rgb *= blendTransp;
+}

@@ -25,7 +25,7 @@
 
 #include<stdlib.h>
 
-#ifdef _VISUAL_STUDIO
+#ifdef _WIN32
 // only for VC++
 #include<crtdbg.h>
 #endif
@@ -258,8 +258,10 @@ int main(int argcMain, char **argvMain) {
 	// initialisation of cwd
 	cwd = GetCurrentWorkingDir();
 
+#ifdef PG_WITH_PUREDATA
 	// connects PD to porphyrograph
 	pg_send_message_udp((char *)"i", (char *)"/connect 1", (char *)"udp_PD_send");
+#endif
 
 	// lights off the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
@@ -287,7 +289,7 @@ int main(int argcMain, char **argvMain) {
 	pg_displaySceneVariables();
 
 	// LOADS DIAPORAMA
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	// loads the texture buffer of the initial images and masks
 	// pg_ReadInitalImageTexturesTVW(0, 2130, 28, -1);
 	// pg_ReadInitalImageTexturesTVW(0, 200, 28, -1);
@@ -449,7 +451,7 @@ void  pg_init_screen_message( void ) {
   LastDecayTime = CurrentClockTime;
 }
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 void  pg_init_display_message(void) {
 	// screen message initialization
 	pg_CurrentDiaporamaDir = -1;
@@ -525,7 +527,7 @@ void pg_init_scene( void ) {
   // ------ screen message initialization  ------------- //
   pg_init_screen_message();
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
   // reads the text messages in the text file
   pg_ReadAllDisplayMessages(pg_MessageDirectory, "message_list.txt");
 
@@ -597,10 +599,13 @@ void quit( void ) {
 	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
 #endif
 	pg_send_message_udp((char *)"f", (char *)"/quit 1", (char *)"udp_TouchOSC_send");
+
+#ifdef PG_WITH_PUREDATA
 	pg_send_message_udp((char *)"f", (char *)"/stopsoundtrack 0", (char *)"udp_PD_send");
 
 	// soundtrack off
 	pg_send_message_udp((char *)"i", "/soundtrack_onOff 0", (char *)"udp_PD_send");
+#endif
 
 	// lights out the LEDs
 	pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
@@ -830,7 +835,7 @@ void window_idle_browse(int step) {
 		// printf( "Window %s\n" , CurrentWindow->id );
 		pg_screenMessage_update();
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 		// updates message alpha
 		// only for the terrain vagues scenes
 		if (pg_CurrentScene > 0 && pg_CurrentScene < pg_NbScenes - 1) {
@@ -848,6 +853,13 @@ void window_idle_browse(int step) {
 
 			// updates image swapping
 			update_image_buffer_swapping();
+		}
+#endif
+
+#ifdef CRITON
+		if (MAX_OSC_ARGUMENTS < 3 * 8) {
+			std::cout << "Error: unsufficient MAX_OSC_ARGUMENTS value for processing fftLevel8 command!" << std::endl;
+			exit(-1);
 		}
 #endif
 

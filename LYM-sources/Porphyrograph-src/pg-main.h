@@ -25,7 +25,7 @@
 #define PG_MAIN_H
 
 #ifndef MAXFLOAT 
-#ifndef _VISUAL_STUDIO
+#ifndef _WIN32
 #define MAXFLOAT                        3.40282347e+38F
 #else
 #define MAXFLOAT                        3.40282346e+38F

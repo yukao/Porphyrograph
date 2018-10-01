@@ -27,7 +27,7 @@
 #ifndef PG_UDP_H
 #define PG_UDP_H
 
-#define MAX_OSC_ARGUMENTS 12
+#define MAX_OSC_ARGUMENTS 24
 
 #define _SpaceChar(c) (c == ' ' || c == '\n' || c == 13 || c == '\t')
 #define _Num(c) (c >= '0' && c <= '9')
@@ -57,7 +57,7 @@ class pg_IPClient {
   struct hostent     *Remote_server_host;
 
   // remote server socket
-  int SocketToRemoteServer;
+  SOCKET SocketToRemoteServer;
   struct sockaddr_in remoteServAddr;
 
   // client stack: stores pending output messages
@@ -109,11 +109,11 @@ class pg_IPServer {
   char *OSCTag;
 
   // local server socket
-  int                 SocketToLocalServer;
+  SOCKET              SocketToLocalServer;
   struct sockaddr_in  localServerAddr;
 
   // remote server socket
-  int SocketToRemoteClient;
+  SOCKET SocketToRemoteClient;
   struct sockaddr_in remoteClientAddr;
 
   // server address

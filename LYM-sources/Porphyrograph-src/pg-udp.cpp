@@ -36,7 +36,7 @@ void pg_CopyAndAllocString( char **target , const char *source ) {
     delete [] *target;
     *target = NULL;
   }
-  int str_l = strlen( source ) + 1;
+  int str_l = int(strlen( source ) + 1);
   if( !(*target) ) {
     *target = new char[ str_l ];
   }
@@ -136,7 +136,7 @@ pg_IPClient::pg_IPClient( void ) {
   Remote_server_host = NULL;
 
   // remote server socket
-  SocketToRemoteServer = -1;
+  SocketToRemoteServer = SOCKET(-1);
 
   // client stack: stores pending output messages
   output_pattern_stack = NULL;
@@ -218,8 +218,8 @@ void pg_IPClient::InitClient( void ) {
     char                    hname[1024];
     err = getnameinfo(
 	    result->ai_addr,             // Pointer to your struct sockaddr
-	    result->ai_addrlen,          // Size of this struct
-	    hname,                       // Pointer to hostname string
+		socklen_t(result->ai_addrlen),          // Size of this struct
+		hname,                       // Pointer to hostname string
 	    sizeof hname,                // Size of this string
 	    NULL,                        // Pointer to service name string
 	    0,                           // Size of this string
@@ -234,10 +234,10 @@ void pg_IPClient::InitClient( void ) {
 	memset(&remoteServAddr, 0, sizeof(remoteServAddr));
 	remoteServAddr.sin_family = AF_INET;
 	inet_pton(AF_INET, hname, &(remoteServAddr.sin_addr));
-	remoteServAddr.sin_port = htons(Remote_server_port);
+	remoteServAddr.sin_port = htons(u_short(Remote_server_port));
 
-	printf("Network client: sending data to '%s' (%s) on port %d\n",
-		Remote_server_IP.c_str(), hname, Remote_server_port);
+	printf("Network client '%s': sending data to '%s' (%s) on port %d\n",
+		id.c_str(), Remote_server_IP.c_str(), hname, Remote_server_port);
 
 	/* socket creation */
 	//memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
@@ -247,7 +247,7 @@ void pg_IPClient::InitClient( void ) {
 	if (SocketToRemoteServer < 0) {
 		sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
 	}
-	err = connect(SocketToRemoteServer, result->ai_addr, result->ai_addrlen);
+	err = connect(SocketToRemoteServer, result->ai_addr, int(result->ai_addrlen));
 	if (err == -1) {
 		sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
 	}
@@ -311,7 +311,7 @@ void pg_IPClient::sendIPmessages(void) {
 				// message that does not begin by an OSC address
 				if (*(output_message_stack[0]) != '/') {
 					strcpy(Output_Message_OSC, "#bundle");
-					for (int ind = strlen("#bundle"); ind < 20 - 1; ind++) {
+					for (int ind = int(strlen("#bundle")); ind < 20 - 1; ind++) {
 						Output_Message_OSC[ind] = 0;
 					}
 					strncpy(Output_Message_OSC + 20, output_message_stack[0],
@@ -345,10 +345,10 @@ void pg_IPClient::sendIPmessages(void) {
 					// /xxxx000,f00argi0000
 					char *messageOut = output_message_stack[0];
 					// inChSource: the end of the message address
-					int inChSource = strlen(messageOut);
+					int inChSource = int(strlen(messageOut));
 					char *pch;
 					if ((pch = strchr(messageOut, ' '))) {
-						inChSource = pch - messageOut;
+						inChSource = int(pch - messageOut);
 					}
 
 					// copies message address
@@ -434,7 +434,7 @@ void pg_IPClient::sendIPmessages(void) {
 									int i = 0;
 									p_c = messageOut[inChSource++];
 									while (p_c != '"' && i < StringLength - 1 && p_c != 0) {
-										temporaryValue[i++] = p_c;
+										temporaryValue[i++] = char(p_c);
 										p_c = messageOut[inChSource++];
 									}
 									if (i == StringLength - 1) {
@@ -450,7 +450,7 @@ void pg_IPClient::sendIPmessages(void) {
 									int i = 0;
 									p_c = messageOut[inChSource++];
 									while (p_c != ' ' && i < StringLength - 1 && p_c != 0) {
-										temporaryValue[i++] = p_c;
+										temporaryValue[i++] = char(p_c);
 										p_c = messageOut[inChSource++];
 									}
 									if (i == StringLength - 1) {
@@ -467,7 +467,7 @@ void pg_IPClient::sendIPmessages(void) {
 
 								Output_Message_Pattern[nbArg++] = 's';
 								// int indArgListIni = indArgList;
-								indArgList += strlen(Output_Message_ArgList + indArgList);
+								indArgList += int(strlen(Output_Message_ArgList + indArgList));
 								Output_Message_ArgList[indArgList++] = 0;
 								// pads with 0s 
 								while (indArgList % 4 != 0) {
@@ -546,7 +546,7 @@ void pg_IPClient::sendIPmessages(void) {
 			int length;
 			int localCommandLineLength = 0;
 			if (send_format == Plain) {
-				length = strlen(Output_Message_String);
+				length = int(strlen(Output_Message_String));
 				int inchar;
 				for (inchar = length; inchar < length + (12 - length % 4) - 1;
 					inchar++) {
@@ -562,7 +562,7 @@ void pg_IPClient::sendIPmessages(void) {
 			}
 			// OSC bundle
 			else if (send_format == OSC && *Output_Message_OSC == '#') {
-				length = 20 + strlen(Output_Message_OSC + 20);
+				length = int(20 + strlen(Output_Message_OSC + 20));
 				int inchar;
 				for (inchar = length; inchar < length + (4 - length % 4) - 1;
 					inchar++) {
@@ -596,7 +596,7 @@ void pg_IPClient::sendIPmessages(void) {
 			// OSC bundle
 			else if (send_format == OSC && *Output_Message_OSC == '#') {
 				rc = 0;
-				int len = 20 + strlen(Output_Message_OSC + 20) + 1;
+				int len = int(20 + strlen(Output_Message_OSC + 20) + 1);
 				rc = send(SocketToRemoteServer, Output_Message_OSC, len, 0);
 				//(struct sockaddr *) &remoteServAddr, 
 				//sizeof(remoteServAddr));
@@ -685,7 +685,7 @@ pg_IPServer::pg_IPServer( void ) {
   Remote_client_host = NULL;
 
   // local server socket
-  SocketToLocalServer = -1;
+  SocketToLocalServer = SOCKET(-1);
 
   // server stack: stores received input messages
   input_message_stack = NULL;
@@ -793,8 +793,8 @@ void pg_IPServer::InitServer( void ) {
   /* bind local server port */
   localServAddr.sin_family = AF_INET;
   localServAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  localServAddr.sin_port = htons(Local_server_port);
-  
+  localServAddr.sin_port = htons(u_short(Local_server_port));
+
   int rc = bind( SocketToLocalServer, (struct sockaddr *) &localServAddr,
 		 sizeof(localServAddr) );
   if(rc < 0) {
@@ -833,7 +833,7 @@ void pg_IPServer::processReceivedOSC(char *localCommandLine,
 	// copies address pattern that terminates by a NULL char
 	strcpy(localCommandLine, message);
 	// first char after address pattern
-	int indChar = strlen(message);
+	int indChar = int(strlen(message));
 	// jumps over the null chars after the add pattern
 	while (indChar < n && message[indChar] == 0) {
 		indChar++;
@@ -914,7 +914,7 @@ void pg_IPServer::processReceivedOSC(char *localCommandLine,
 				else {
 					strcat(localCommandLine, message + indChar);
 				}
-				indChar += strlen(message + indChar) + 1;
+				indChar += int(strlen(message + indChar) + 1);
 			}
 		}
 	}
@@ -1054,10 +1054,10 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message) {
 	char *messString = message;
 
 	// tag length: the non blank chars at the beginning of the message
-	int tagLength = strlen(messString);
+	int tagLength = int(strlen(messString));
 	char *pch;
 	if ((pch = strchr(messString, ' '))) {
-		tagLength = pch - messString;
+		tagLength = int(pch - messString);
 	}
 
 	//printf( "new message [%s] current_depth_input_stack %d\n" , messString ,
@@ -1111,7 +1111,7 @@ void pg_IPServer::ProcessFilteredInputMessages( void ) {
     // general message just as in an ordinary script
     int         indChar = 0;
     int         p_c = ' ';
-    int         message_length = strlen( messString );
+	int         message_length = int(strlen(messString));
 
     ////////////////////////
     // parsing the associated command
@@ -1139,14 +1139,14 @@ void pg_IPServer::ProcessFilteredInputMessages( void ) {
 
       // computes the length of the message tag
       int tagLength = 0;
-      if( (pch = strchr( messString ,  ' ' ) ) ) {
-      	tagLength = pch -  messString;
-	p_c = ' ';
-      }
-      else {
-      	tagLength = strlen( messString );
-	p_c = 0;
-      }
+	  if ((pch = strchr(messString, ' '))) {
+		  tagLength = int(pch - messString);
+		  p_c = ' ';
+	  }
+	  else {
+		  tagLength = int(strlen(messString));
+		  p_c = 0;
+	  }
 
       strncpy( OSCTag , messString , tagLength );
       OSCTag[ tagLength ] = 0;
@@ -1169,15 +1169,15 @@ void pg_IPServer::ProcessFilteredInputMessages( void ) {
 	     && indChar < message_length + 1 ) {
 	// computes the length of the message tag
 	tagLength = 0;
-	if( (pch = strchr( messString ,  ' ' ) ) ) {
-	  tagLength = pch -  messString;
-	  p_c = ' ';
+	if ((pch = strchr(messString, ' '))) {
+		tagLength = int(pch - messString);
+		p_c = ' ';
 	}
 	else {
-	  tagLength = strlen( messString );
-	  p_c = 0;
+		tagLength = int(strlen(messString));
+		p_c = 0;
 	}
-	
+
 	strncpy( OSC_arguments[indOSCParam] , messString , tagLength );
 	OSC_arguments[indOSCParam][ tagLength ] = 0;
 	messString += tagLength;
@@ -1196,7 +1196,7 @@ void pg_IPServer::ProcessFilteredInputMessages( void ) {
       }
       
       if( p_c ) {
-	sprintf( ErrorStr , "Error: OCS maximal parameter count too low (%d)!" , MAX_OSC_ARGUMENTS); ReportError( ErrorStr ); 
+	sprintf( ErrorStr , "Error: OSC maximal parameter count too low (%d)!" , MAX_OSC_ARGUMENTS); ReportError( ErrorStr ); 
       }
 
       // printf("Alias command %s size %d :\n" , OSCTag , indOSCParam );

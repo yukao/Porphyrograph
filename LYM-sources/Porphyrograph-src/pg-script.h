@@ -240,6 +240,14 @@ extern bool pg_CAseed_trigger;
 void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordinates[2]);
 #endif
 
+// +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
+#ifdef CRITON
+extern float fftLevels[8];
+extern float fftFrequencies[8];
+extern float fftPhases[8];
+#endif
+
+
 // +++++++++++++++++++++++ Aux Var +++++++++++++++++++++++++++++++++
 extern char AuxString[1024];
 
@@ -263,7 +271,7 @@ void pg_send_message_udp( char *pattern , char * message , char *targetHostid );
 void pg_logCurrentLineSceneVariables(char *fileName);
 void pg_logFirstLineSceneVariables(void);
 void PlayTrack(int trackNo);
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 float starting_time(float elapsed_time_from_start);
 #endif
 void pg_update_scenario( void );

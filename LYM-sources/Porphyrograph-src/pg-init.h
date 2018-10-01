@@ -42,12 +42,14 @@ enum pg_FBO_Update_samplers
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Update_sampler,
-#if defined (TVW) || defined (CRITON)
+#endif
+#if defined (TVW)
 	pg_TVWPixels0,
 	pg_TVWPixels1,
 	pg_TVWPixels2,
@@ -81,11 +83,13 @@ enum pg_FBO_Update_attachments
 enum pg_FBO_Mixing_samplers
 {
 	pg_CA_FBO_Mixing_sampler = 0,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
+#endif
 	pg_Render_prec_FBO_Mixing_sampler,
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -96,12 +100,15 @@ enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
 	pg_CA_FBO_Master_sampler,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
+#endif
 	pg_Trk0_FBO_Master_sampler,
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 	pg_LYMlogo_Master_sampler,
 #endif
 };
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler = 0,
@@ -116,6 +123,7 @@ enum pg_FBO_ParticleAnimation_samplers
 	pg_Trk0_FBO_ParticleAnimation_sampler,
 };
 #endif
+#endif
 
 #if PG_NB_TRACKS == 2
 enum pg_FBO_Update_samplers
@@ -127,12 +135,14 @@ enum pg_FBO_Update_samplers
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Update_sampler,
-#if defined (TVW) || defined (CRITON)
+#endif
+#if defined (TVW)
 	pg_TVWPixels0,
 	pg_TVWPixels1,
 	pg_TVWPixels2,
@@ -162,11 +172,13 @@ enum pg_FBO_Update_attachments
 enum pg_FBO_Mixing_samplers
 {
 	pg_CA_FBO_Mixing_sampler = 0,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
+#endif
 	pg_Render_prec_FBO_Mixing_sampler,
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -178,10 +190,16 @@ enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
 	pg_CA_FBO_Master_sampler,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
+#endif
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
+#if defined (GN) || defined (INTERFERENCE)
+	pg_LYMlogo_Master_sampler,
+#endif
 };
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler = 0,
@@ -197,6 +215,7 @@ enum pg_FBO_ParticleAnimation_samplers
 	pg_Trk1_FBO_ParticleAnimation_sampler,
 };
 #endif
+#endif
 
 #if PG_NB_TRACKS == 3
 enum pg_FBO_Update_samplers
@@ -208,11 +227,13 @@ enum pg_FBO_Update_samplers
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Update_sampler,
+#endif
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
@@ -229,11 +250,13 @@ enum pg_FBO_Update_attachments
 enum pg_FBO_Mixing_samplers
 {
 	pg_CA_FBO_Mixing_sampler = 0,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
+#endif
 	pg_Render_prec_FBO_Mixing_sampler,
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -246,11 +269,17 @@ enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
 	pg_CA_FBO_Master_sampler,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
+#endif
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
 	pg_Trk2_FBO_Master_sampler,
+#if defined (GN) || defined (INTERFERENCE)
+	pg_LYMlogo_Master_sampler,
+#endif
 };
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler = 0,
@@ -267,6 +296,7 @@ enum pg_FBO_ParticleAnimation_samplers
 	pg_Trk2_FBO_ParticleAnimation_sampler,
 };
 #endif
+#endif
 
 #if PG_NB_TRACKS == 4
 enum pg_FBO_Update_samplers
@@ -278,11 +308,13 @@ enum pg_FBO_Update_samplers
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Update_sampler,
+#endif
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
@@ -301,11 +333,13 @@ enum pg_FBO_Update_attachments
 enum pg_FBO_Mixing_samplers
 {
 	pg_CA_FBO_Mixing_sampler = 0,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
+#endif
 	pg_Render_prec_FBO_Mixing_sampler,
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -319,12 +353,15 @@ enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
 	pg_CA_FBO_Master_sampler,
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
+#endif
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
 	pg_Trk2_FBO_Master_sampler,
 	pg_Trk3_FBO_Master_sampler,
 };
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler = 0,
@@ -342,7 +379,9 @@ enum pg_FBO_ParticleAnimation_samplers
 	pg_Trk3_FBO_ParticleAnimation_sampler,
 };
 #endif
+#endif
 
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 enum pg_FBO_ParticleAnimation_attachments
 {
 	pg_Part_pos_speed_FBO_ParticleAnimation_attcht = 0,
@@ -350,10 +389,13 @@ enum pg_FBO_ParticleAnimation_attachments
 	pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_attcht,
 	PG_FBO_PARTICLEANIMATION_NBATTACHTS
 };
+#endif
 
 enum eVertexArrayObject
 {
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 	pg_VAOParticle,
+#endif
 	pg_VAOQuad,
 	pg_VAOQuadMaster,
 	pg_VAOCount
@@ -361,7 +403,9 @@ enum eVertexArrayObject
 
 enum eVertexBufferObject
 {
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 	pg_VBOParticle,
+#endif
 #if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
 	pg_VBOParticleTexCoords,
 	pg_VBOpartRadius,
@@ -372,7 +416,9 @@ enum eVertexBufferObject
 	pg_VBOpartRadius,
 	pg_VBOParticleColors,
 #endif
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 	pg_EAOParticle,
+#endif
 	pg_EABQuad,
 	pg_EABQuadMaster,
 	pg_VBOCount
@@ -419,7 +465,9 @@ extern GLfloat *pg_Particle_vertices;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
 #endif
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 extern unsigned int *pg_Particle_indices;
+#endif
 
 #ifdef PG_SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -456,17 +504,19 @@ extern GLuint drawBuffers[16];
 /////////////////////////////////////////////
 // FBO 
 extern GLuint pg_FBO_Update[2]; // update
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 extern GLuint pg_FBO_ParticleAnimation[2]; // particle animation
+extern GLuint pg_FBO_ParticleRendering; // particle rendering
+extern GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
+extern GLuint pg_FBO_ParticleRendering_texID; // particle rendering
+#endif
 extern GLuint pg_FBO_Mixing_capturedFB_prec[2]; //  drawing memory on odd and even frames for echo
 // extern GLuint FBO_CameraFrame; //  video preprocessing outcome
-extern GLuint pg_FBO_ParticleRendering; // particle rendering
 
 // FBO texture
 extern GLuint pg_FBO_Update_texID[2 * PG_FBO_UPDATE_NBATTACHTS]; // update 
-extern GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
 extern GLuint pg_FBO_Mixing_capturedFB_prec_texID[2]; // drawing memory on odd and even frames for echo 
 // extern GLuint FBO_CameraFrame_texID; // video preprocessing outcome 
-extern GLuint pg_FBO_ParticleRendering_texID; // particle rendering
 
 /////////////////////////////////////////////////////////////////
 // TEXTURES
@@ -512,7 +562,7 @@ bool pg_initFBO(void);
 void pg_initRenderingMatrices(void);
 
 void pg_screenMessage_update(void);
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 bool pg_ReadAllDisplayMessages(string dir, string basefilename);
 int pg_displayMessage_update(int indMesg);
 #endif

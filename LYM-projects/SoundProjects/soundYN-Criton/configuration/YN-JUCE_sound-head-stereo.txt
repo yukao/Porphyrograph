@@ -1,0 +1,32 @@
+RANK	0	1	2	3	4		
+VERBATIM	audio in device	audio out device	audio device verbose output	beat count	beats per minute		
+TYPE	int	int	int	int	int		
+ID	AudioInputDevice	AudioOutputDevice	VerboseDeviceOutput	BeatsPerSequence	BeatsPerMinute		
+initial_values							
+	-1	-1	0	1	60		
+/initial_values							
+udp_local_server	2						
+VERBATIM							
+TYPE	string	int	string	bool	int	bool	bool
+ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal
+server	udp_Porphyrograph_receive	9000	OSC	0	300	0	1
+server	udp_TouchOSC_receive	1978	OSC	0	300	1	1
+/udp_local_server							
+udp_remote_client	2						
+VERBATIM							
+TYPE	string	string	int	string	bool	int	bool
+ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal
+client	udp_TouchOSC_send	192.168.1.33	8000	OSC	0	300	1
+client	udp_Porphyrograph_send	127.0.0.1	8001	Plain	0	300	1
+/udp_remote_client							
+short_samples	3						
+VERBATIM	index	file					
+	0	./SoundData/soundYN-Criton-data/samples-YN/samples_part1/sample_part1_48k-001.wav					
+	1	./SoundData/soundYN-Criton-data/samples-YN/samples_part1/sample_part1_48k-002.wav					
+	2	./SoundData/soundYN-Criton-data/samples-YN/samples_part1/sample_part1_48k-003.wav					
+/short_samples							
+long_samples	1						
+VERBATIM	index	file					
+	0	./SoundData/soundYN-Criton-data/20180513_WanderSteps_Prise4_MixV1.wav					
+/long_samples							
+/head							

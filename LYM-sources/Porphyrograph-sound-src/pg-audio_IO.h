@@ -46,7 +46,7 @@ extern float *pg_InLine_OutputBuffer;
 extern float *pg_Samples_OutputBuffer;
 
 // LAUNCHED PERFORMANCE
-extern bool pg_Launched_Perfromance;
+extern bool  pg_Launched_Performance;
 
 
 ////////////////////////////////////////////////////////////////////

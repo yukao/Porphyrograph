@@ -1,28 +1,25 @@
 /***********************************************************************
-File: effe/shaders/LYM_Final_effe-FS.cg
+File: song/shaders/LYM_Master_song-FS.cg
 
-LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
+LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
 #version 420
+
+#define PG_NB_TRACKS 1
+#define ATELIERS_PORTATIFS
 
 float     blendTransp;
 bool      invertAllLayers;
 int       cursorSize;
 float     CAMasterWeight;
 uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
-float     PartMasterWeight;
 float     trackMasterWeight_0;
-float     trackMasterWeight_1;
-float     trackMasterWeight_2;
-uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2;
 bool      interfaceOnScreen;
+bool      hide;
 bool      mute_screen;
-uniform vec2 uniform_Master_fs_2fv_interfaceOnScreen_mute_screen;
-
-#define PG_NB_TRACKS 2
-#define PG_WITH_CA
+uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen;
 
 // Main shader.
 
@@ -33,23 +30,22 @@ in vec2 decalCoords;  // coord text
 // INPUT
 layout (binding = 0) uniform samplerRect uniform_Master_texture_fs_Render_curr; // Master pass output with possible echo
 layout (binding = 1) uniform samplerRect uniform_Master_texture_fs_CA;  // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Part_render;  // Particle step n
-layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Update pass BG track step n (FBO attachment 3)
+layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Update pass BG track step n (FBO attachment 3)
 #if PG_NB_TRACKS >= 2
-layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 4)
+layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 4)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 5)
+layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 5)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
+layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
 #endif
 
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -60,34 +56,38 @@ uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
 
+
 void main() {
   blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
   invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
   cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
   CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
-  trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
-  trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
-  interfaceOnScreen = (uniform_Master_fs_2fv_interfaceOnScreen_mute_screen[0] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_2fv_interfaceOnScreen_mute_screen[1] > 0 ? true : false);
+  trackMasterWeight_0 = uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[0];
+  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
+  hide = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
 
-  float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
-  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
-  float margin = uniform_Master_fs_3fv_width_height_rightWindowVMargin.z;
-  vec2 coords = vec2( (decalCoords.x >= width + margin ? decalCoords.x - width - margin : decalCoords.x) , 
+  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
+  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+#ifdef ATELIERS_PORTATIFS
+  float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
+  vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
                       decalCoords.y);
-  vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
+#else
+  vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
+                      decalCoords.y);
+#endif
 
-  // mute
+  // vertical mirror
+    coords.y = height - coords.y;
+  // ST OUEN horizontal mirror
+  // coords.x = width - coords.x;
+  // double mirror
+  //   coords.y = height - coords.y;
+  //   coords.x = width - coords.x;
+
+  // mute screen
   if(mute_screen && decalCoords.x > width) {
-    outColor0 = vec4(0, 0, 0, 1);
-    return;
-  }
-  // margin
-  if(margin > 0 
-      && (decalCoords.x >= 2 * width + margin 
-          || (decalCoords.x >= width && decalCoords.x < width + margin))) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -112,59 +112,82 @@ void main() {
     return;
   }
 
-#ifdef PG_WITH_CA
-  vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);
-#endif
-  vec4 particle_color = texture(uniform_Master_texture_fs_Part_render, coords);
+  ////////////////////////////////////////////////////////////////////
+  // mix of echoed layers according to Mixing weights
+  vec4 MixingColor = texture(uniform_Master_texture_fs_Render_curr, coords );
 
-  vec4 bg_color = texture(uniform_Master_texture_fs_Trk0, coords);
+  ////////////////////////////////////////////////////////////////////
+  // non-echoed layers
+  vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);
+  if( CA_color.a < 0 ) {
+    CA_color = vec4(0.0);
+  }
+
+  vec4 track0_color = texture(uniform_Master_texture_fs_Trk0, coords);
 #if PG_NB_TRACKS >= 2
   vec4 track1_color = texture(uniform_Master_texture_fs_Trk1, coords);
 #endif
 #if PG_NB_TRACKS >= 3
   vec4 track2_color = texture(uniform_Master_texture_fs_Trk2, coords);
 #endif
+#if PG_NB_TRACKS >= 4
+  vec4 track3_color = texture(uniform_Master_texture_fs_Trk3, coords);
+#endif
 
-  vec3 localColor
-    = vec3(bg_color.rgb) * trackMasterWeight_0
+  ////////////////////////////////////////////////////////////////////
+  // mix of non echoed layers according to final weights
+  vec3 NonEchoedColor
+    = vec3(track0_color.rgb) * trackMasterWeight_0
 #if PG_NB_TRACKS >= 2
     + vec3(track1_color.rgb) * trackMasterWeight_1
 #endif
 #if PG_NB_TRACKS >= 3
     + vec3(track2_color.rgb) * trackMasterWeight_2
 #endif
+#if PG_NB_TRACKS >= 4
+    + vec3(track3_color.rgb) * trackMasterWeight_3
+#endif
+    + CA_color.rgb * CAMasterWeight
     ;
 
-#ifdef PG_WITH_CA
-  if( CA_color.a < 0 ) {
-    CA_color = vec4(0.0);
-  }
-#endif
-
   ////////////////////////////////////////////////////////////////////
-  // drawing / GOL interpolated combination: should be parameterized
-  // drawing and GOL combination
-  // should be reworked
+  // mix of echoed and non-echoed layer mixes
+  // and clamping
   outColor0 
-    = vec4( clamp( CompositionAndTrackDisplayColor.rgb + localColor 
-#ifdef PG_WITH_CA
-       +  CAMasterWeight * CA_color.rgb
-#endif
-    + particle_color.rgb * PartMasterWeight * particle_color.a
-      , 0.0 , 1.0 ) , 1.0);
+    = vec4( clamp( MixingColor.rgb + NonEchoedColor , 0.0 , 1.0 ) , 1.0 );
 
   ////////////////////////////////////////////////////////////////////
-  // blinking cursor 1 pixel wide under the mouse
+  // blinking cursor 1 pixel wide under the mouse (except for hide)
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
   float mouse_y = uniform_Master_fs_4fv_xy_frameno_pulsedShift.y;
   float frameno = uniform_Master_fs_4fv_xy_frameno_pulsedShift.z;
-   if( length(vec2(decalCoords.x - mouse_x , height - decalCoords.y - mouse_y)) 
-      < 3 /* cursorSize */ ) { 
+
+  // possible double cursor
+  float coordX = decalCoords.x;
+
+  // comment for single cursor
+  if( coordX > width) {
+    coordX -= width;
+  }
+  // comment for single cursor
+
+// vertical mirror
+//   coords.y = height - coords.y;
+// ST OUEN horizontal mirror
+// coordX = width - coordX;
+// double mirror
+//   coords.y = height - coords.y;
+//   coords.x = width - coords.x;
+
+  if( !hide
+      && mouse_x < width && mouse_x > 0 
+      && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
+      < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
-/*  if( decalCoords.x > 100 || decalCoords.y < 660) {
-    outColor0.rgb = mix( outColor0.rgb , vec3(0),0.99);
+  if( invertAllLayers ) {
+     outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-*/}
+  outColor0.rgb *= blendTransp;
+}

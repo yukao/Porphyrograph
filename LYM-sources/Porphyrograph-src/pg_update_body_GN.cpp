@@ -1,34 +1,4 @@
 
- glUseProgram(shader_programme[pg_shader_ParticleAnimation]);
- glUniform4f( uniform_ParticleAnimation_fs_4fv_noiseScale_pixel_acc_center_0_pixel_acc_center_1_part_path_follow_0 ,
-	      (GLfloat)noiseScale,
-	      (GLfloat)pixel_acc_center_0,
-	      (GLfloat)pixel_acc_center_1,
-	      (GLfloat)part_path_follow_0 );
- glUniform4f( uniform_ParticleAnimation_fs_4fv_part_path_follow_1_part_path_follow_2_part_path_follow_3_part_path_repulse_0 ,
-	      (GLfloat)part_path_follow_1,
-	      (GLfloat)part_path_follow_2,
-	      (GLfloat)part_path_follow_3,
-	      (GLfloat)part_path_repulse_0 );
- glUniform4f( uniform_ParticleAnimation_fs_4fv_part_path_repulse_1_part_path_repulse_2_part_path_repulse_3_freeze ,
-	      (GLfloat)part_path_repulse_1,
-	      (GLfloat)part_path_repulse_2,
-	      (GLfloat)part_path_repulse_3,
-	      (GLfloat)freeze );
- glUniform4f( uniform_ParticleAnimation_fs_4fv_part_initialization_partMove_target_partMove_rand_partExit_mode ,
-	      (GLfloat)part_initialization,
-	      (GLfloat)partMove_target,
-	      (GLfloat)partMove_rand,
-	      (GLfloat)partExit_mode );
- glUniform4f( uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_part_damp_targtRad_part_timeToTargt ,
-	      (GLfloat)partStroke_mode,
-	      (GLfloat)partColor_mode,
-	      (GLfloat)part_damp_targtRad,
-	      (GLfloat)part_timeToTargt );
- glUniform2f( uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius ,
-	      (GLfloat)part_field_weight,
-	      (GLfloat)partRepopRadius );
-
  glUseProgram(shader_programme[pg_shader_Update]);
  glUniform4f( uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale ,
 	      (GLfloat)pixel_mode,
@@ -82,15 +52,11 @@
 	      (GLfloat)photo_scale );
 
  glUseProgram(shader_programme[pg_shader_Mixing]);
- glUniform4f( uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight ,
+ glUniform4f( uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0 ,
 	      (GLfloat)echo,
 	      (GLfloat)echoNeg,
 	      (GLfloat)CAMixingWeight,
-	      (GLfloat)PartMixingWeight );
- glUniform1f( uniform_Mixing_fs_1fv_trackMixingWeight_0 ,
 	      (GLfloat)trackMixingWeight_0 );
-
- glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
  glUseProgram(shader_programme[pg_shader_Master]);
  glUniform4f( uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight ,
@@ -98,10 +64,8 @@
 	      (GLfloat)invertAllLayers,
 	      (GLfloat)cursorSize,
 	      (GLfloat)CAMasterWeight );
- glUniform4f( uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide ,
-	      (GLfloat)PartMasterWeight,
+ glUniform4f( uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen ,
 	      (GLfloat)trackMasterWeight_0,
 	      (GLfloat)interfaceOnScreen,
-	      (GLfloat)hide );
- glUniform1f( uniform_Master_fs_1fv_mute_screen ,
+	      (GLfloat)hide,
 	      (GLfloat)mute_screen );

@@ -42,6 +42,9 @@
 #ifdef VOLUSPA
 #include "pg_shader_body_decl_voluspa.cpp"
 #endif
+#ifdef INTERFERENCE
+#include "pg_shader_body_decl_interference.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_shader_body_decl_Malaussena.cpp"
 #endif
@@ -117,7 +120,9 @@ GLint uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
 #ifdef MALAUSSENA
 GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
+#endif
 GLint uniform_Update_fs_4fv_trkDecay;
 GLint uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
 GLint uniform_Update_fs_4fv_flashTrkCAWghts;
@@ -146,6 +151,14 @@ GLint uniform_Update_fs_4fv_paths47_a;
 GLint uniform_Update_fs_4fv_paths47_BrushID;
 GLint uniform_Update_fs_4fv_paths47_RadiusX;
 GLint uniform_Update_fs_4fv_paths47_RadiusY;
+#endif
+#ifdef CRITON
+GLint uniform_Update_fs_4fv_fftLevels03;
+GLint uniform_Update_fs_4fv_fftFrequencies03;
+GLint uniform_Update_fs_4fv_fftPhases03;
+GLint uniform_Update_fs_4fv_fftLevels47;
+GLint uniform_Update_fs_4fv_fftFrequencies47;
+GLint uniform_Update_fs_4fv_fftPhases47;
 #endif
 GLint uniform_Update_fs_4fv_pulse;
 GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
@@ -182,12 +195,14 @@ GLint uniform_Update_texture_fs_Camera_frame;  // camera frame
 GLint uniform_Update_texture_fs_Camera_BG;  // current camera BG capture
 GLint uniform_Update_texture_fs_Movie_frame;  // movie frame
 GLint uniform_Update_texture_fs_Noise;  // 3D noise
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 GLint uniform_Update_texture_fs_Photo0;  // photo[0]
 GLint uniform_Update_texture_fs_Photo1;  // photo[1]
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 GLint uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering used for flashing layers with particles
-#if defined (TVW) || defined (CRITON)
+#endif
+#if defined (TVW)
 GLint uniform_Update_fs_4fv_weights03;
 GLint uniform_Update_fs_2fv_weights45;
 GLint uniform_Update_fs_3fv_alphaSwap02;
@@ -240,7 +255,7 @@ GLint uniform_ParticleCurve_texture_vp_Part_col_rad;          // Particle color/
 // color texture
 GLint uniform_ParticleCurve_Comet_texture_fs_decal;  // comet texture
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
 // color texture
 GLint uniform_ParticleSplat_BlurredDisk_texture_fs_decal;  // blurred disk texture
 #endif
@@ -256,7 +271,9 @@ GLint uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 // MIXING SHADER TEXTURE IDS
 GLint uniform_Mixing_texture_fs_CA;         // ping-pong CA (FBO)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 GLint uniform_Mixing_texture_fs_Part_render;  // Particles (FBO)
+#endif
 GLint uniform_Mixing_texture_fs_Trk0;  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
 GLint uniform_Mixing_texture_fs_Trk1;  // ping-pong track 1 (FBO)
@@ -270,7 +287,7 @@ GLint uniform_Mixing_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 GLint uniform_Mixing_texture_fs_Render_prec;  // preceding snapshot
 GLint uniform_Mixing_texture_fs_Screen_Font;  // message Font
 GLint uniform_Mixing_texture_fs_Screen_Message;  // message string
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 GLint uniform_Mixing_texture_fs_Display_Font;  // display Font
 GLint uniform_Mixing_texture_fs_Display_Message1; // tweets at the bottom of the screen
 GLint uniform_Mixing_texture_fs_Display_Message2; // tweets at the bottom of the screen
@@ -292,7 +309,9 @@ GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 // MASTER SHADER TEXTURE IDS
 GLint uniform_Master_texture_fs_Render_curr;         // previous pass output
 GLint uniform_Master_texture_fs_CA;  // ping-pong CA (FBO)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 GLint uniform_Master_texture_fs_Part_render;  // Particles
+#endif
 GLint uniform_Master_texture_fs_Trk0;  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
 GLint uniform_Master_texture_fs_Trk1;  // ping-pong track 1 (FBO)
@@ -303,7 +322,7 @@ GLint uniform_Master_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 GLint uniform_Master_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 GLint uniform_Master_texture_fs_LYMlogo;  // LYM logo (texture)
 #endif
 
@@ -410,7 +429,7 @@ int pg_loadshader(string filename, GLuint shader)
   
   unsigned int i=0;
   while (file.good()) {
-    shaderSource[i] = file.get();       // get character from file.
+    shaderSource[i] = GLchar(file.get());       // get character from file.
     if (!file.eof())
       i++;
   }
@@ -487,6 +506,9 @@ void pg_loadAllShaders(void) {
 #ifdef VOLUSPA
 #include "pg_shader_body_bind_voluspa.cpp"
 #endif
+#ifdef INTERFERENCE
+#include "pg_shader_body_bind_interference.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_shader_body_bind_Malaussena.cpp"
 #endif
@@ -497,6 +519,7 @@ void pg_loadAllShaders(void) {
 #include "pg_shader_body_bind_bonnotte.cpp"
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	////////////////////////////////////////
 	// Particle Animation shader parameeter bindings
 	uniform_ParticleAnimation_vp_model
@@ -656,6 +679,7 @@ void pg_loadAllShaders(void) {
 		fprintf(stderr, "Could not bind uniforms uniform_ParticleAnimation_texture_fs_Camera_frame  : %d, uniform_ParticleAnimation_texture_fs_Movie_frame : %d\n", uniform_ParticleAnimation_texture_fs_Camera_frame, uniform_ParticleAnimation_texture_fs_Movie_frame);
 		fprintf(stderr, "Could not bind uniforms uniform_ParticleAnimation_texture_fs_Noise : %d, uniform_ParticleAnimation_texture_fs_Part_init_pos_speed : %d, uniform_ParticleAnimation_texture_fs_Part_init_col_rad : %d\n", uniform_ParticleAnimation_texture_fs_Noise, uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, uniform_ParticleAnimation_texture_fs_Part_init_col_rad);
 	}
+#endif
 
 	////////////////////////////////////////
 	// Update shader parameeter bindings
@@ -676,8 +700,10 @@ void pg_loadAllShaders(void) {
 	uniform_Update_fs_4fv_CAseed_type_size_loc
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAseed_type_size_loc");
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 	uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght");
+#endif
 	uniform_Update_fs_4fv_trkDecay
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_trkDecay");
 	uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght
@@ -731,6 +757,20 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_RadiusX");
 	uniform_Update_fs_4fv_paths47_RadiusY
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_RadiusY");
+#endif
+#ifdef CRITON
+	uniform_Update_fs_4fv_fftLevels03
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_fftLevels03");
+	uniform_Update_fs_4fv_fftFrequencies03
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_fftFrequencies03");
+	uniform_Update_fs_4fv_fftPhases03
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_fftPhases03");
+	uniform_Update_fs_4fv_fftLevels47
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_fftLevels47");
+	uniform_Update_fs_4fv_fftFrequencies47
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_fftFrequencies47");
+	uniform_Update_fs_4fv_fftPhases47
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_fftPhases47");
 #endif
 	uniform_Update_fs_4fv_pulse
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_pulse");
@@ -798,15 +838,17 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_Noise");  // 3D noise
 
 																										// photo frames
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	uniform_Update_texture_fs_Photo0
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_Photo0");  // photo[0] frame
 	uniform_Update_texture_fs_Photo1
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_Photo1");  // photo[1] frame
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	uniform_Update_texture_fs_Part_render
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_Part_render");  // particle rendering capture
-#if defined (TVW) || defined (CRITON)
+#endif
+#if defined (TVW)
 	uniform_Update_fs_4fv_weights03
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_weights03");
 	uniform_Update_fs_2fv_weights45
@@ -861,7 +903,9 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_CAseed_type_size_loc == -1)
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 		|| (uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght == -1)
+#endif
 		|| (uniform_Update_fs_4fv_trkDecay == -1)
 		|| (uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght == -1)
 		|| (uniform_Update_fs_4fv_flashTrkCAWghts == -1)
@@ -890,6 +934,14 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths47_BrushID == -1)
 		|| (uniform_Update_fs_4fv_paths47_RadiusX == -1)
 		|| (uniform_Update_fs_4fv_paths47_RadiusY == -1)
+#endif
+#ifdef CRITON
+		|| (uniform_Update_fs_4fv_fftLevels03 == -1)
+		|| (uniform_Update_fs_4fv_fftFrequencies03 == -1)
+		|| (uniform_Update_fs_4fv_fftPhases03 == -1)
+		|| (uniform_Update_fs_4fv_fftLevels47 == -1)
+		|| (uniform_Update_fs_4fv_fftFrequencies47 == -1)
+		|| (uniform_Update_fs_4fv_fftPhases47 == -1)
 #endif
 		|| (uniform_Update_fs_4fv_pulse == -1)
 		|| (uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack == -1)
@@ -926,13 +978,18 @@ void pg_loadAllShaders(void) {
 #endif
 		|| (uniform_Update_texture_fs_Movie_frame == -1)
 		|| (uniform_Update_texture_fs_Noise == -1)
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 		|| (uniform_Update_texture_fs_Photo0 == -1)
 		|| (uniform_Update_texture_fs_Photo1 == -1)
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 		|| (uniform_Update_texture_fs_Part_render == -1)
+#endif
 		) {
-		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift : %d, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d, uniform_Update_fs_4fv_trkDecay : %d, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_flashTrkCAWghts : %d, uniform_Update_texture_fs_CA : %d, uniform_Update_texture_fs_Pixels : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_photo01_wh: %d, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H: %d, uniform_Update_fs_2fv_Camera_offSetsXY: %d, uniform_Update_fs_4fv_CAType_SubType_blurRadius: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, uniform_Update_fs_4fv_trkDecay, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_flashTrkCAWghts, uniform_Update_texture_fs_CA, uniform_Update_texture_fs_Pixels, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_photo01_wh, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H, uniform_Update_fs_2fv_Camera_offSetsXY, uniform_Update_fs_4fv_CAType_SubType_blurRadius, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
+		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift : %d, uniform_Update_fs_4fv_trkDecay : %d, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_flashTrkCAWghts : %d, uniform_Update_texture_fs_CA : %d, uniform_Update_texture_fs_Pixels : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_photo01_wh: %d, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H: %d, uniform_Update_fs_2fv_Camera_offSetsXY: %d, uniform_Update_fs_4fv_CAType_SubType_blurRadius: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift, uniform_Update_fs_4fv_trkDecay, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_flashTrkCAWghts, uniform_Update_texture_fs_CA, uniform_Update_texture_fs_Pixels, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_photo01_wh, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H, uniform_Update_fs_2fv_Camera_offSetsXY, uniform_Update_fs_4fv_CAType_SubType_blurRadius, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
+		fprintf(stderr, "Could not bind uniforms Update uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d\n",, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght);
+#endif
 #ifdef MALAUSSENA
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_CAseed_type_size_loc : %d\n", uniform_Update_fs_4fv_CAseed_type_size_loc);
 #endif
@@ -951,6 +1008,9 @@ void pg_loadAllShaders(void) {
 #if PG_NB_PATHS == 7
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths47_x : %d, uniform_Update_fs_4fv_paths47_y : %d, uniform_Update_fs_4fv_paths47_x_prev : %d, uniform_Update_fs_4fv_paths47_y_prev : %d, uniform_Update_fs_4fv_paths47_r : %d, uniform_Update_fs_4fv_paths47_g : %d, uniform_Update_fs_4fv_paths47_b : %d, uniform_Update_fs_4fv_paths47_a : %d, uniform_Update_fs_4fv_paths47_BrushID : %d, uniform_Update_fs_4fv_paths47_RadiusX : %d, uniform_Update_fs_4fv_paths47_RadiusY : %d\n", uniform_Update_fs_4fv_paths47_x, uniform_Update_fs_4fv_paths47_y, uniform_Update_fs_4fv_paths47_x_prev, uniform_Update_fs_4fv_paths47_y_prev, uniform_Update_fs_4fv_paths47_r, uniform_Update_fs_4fv_paths47_g, uniform_Update_fs_4fv_paths47_b, uniform_Update_fs_4fv_paths47_a, uniform_Update_fs_4fv_paths47_BrushID, uniform_Update_fs_4fv_paths47_RadiusX, uniform_Update_fs_4fv_paths47_RadiusY);
 #endif
+#ifdef CRITON
+		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_fftLevels03 : %d, uniform_Update_fs_4fv_fftFrequencies03 : %d, uniform_Update_fs_4fv_fftPhases03 : %d, uniform_Update_fs_4fv_fftLevels47 : %d, uniform_Update_fs_4fv_fftFrequencies47 : %d, uniform_Update_fs_4fv_fftPhases47 : %d\n", uniform_Update_fs_4fv_fftLevels03, uniform_Update_fs_4fv_fftFrequencies03, uniform_Update_fs_4fv_fftPhases03, uniform_Update_fs_4fv_fftLevels47, uniform_Update_fs_4fv_fftFrequencies47, uniform_Update_fs_4fv_fftPhases47);
+#endif
 		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Trk0 : %d\n", uniform_Update_texture_fs_Trk0);
 #if PG_NB_TRACKS >= 2
 		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Trk1 : %d\n", uniform_Update_texture_fs_Trk1);
@@ -962,10 +1022,13 @@ void pg_loadAllShaders(void) {
 		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Trk3 : %d\n", uniform_Update_texture_fs_Trk3);
 #endif
 		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Movie_frame : %d\n", uniform_Update_texture_fs_Movie_frame);
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Photo0 : %d, uniform_Update_texture_fs_Photo1 : %d\n", uniform_Update_texture_fs_Photo0, uniform_Update_texture_fs_Photo1);
 #endif
-		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Brushes : %d, uniform_Update_texture_fs_Noise : %d, uniform_Update_texture_fs_Part_render : %d\n", uniform_Update_texture_fs_Brushes, uniform_Update_texture_fs_Noise, uniform_Update_texture_fs_Part_render);
+		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_Brushes : %d, uniform_Update_texture_fs_Noise : %d\n", uniform_Update_texture_fs_Brushes, uniform_Update_texture_fs_Noise);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+		fprintf(stderr, "Could not bind uniform_Update_texture_fs_Part_render : %d\n", uniform_Update_texture_fs_Part_render);
+#endif
 	}
 
 	////////////////////////////////////////
@@ -1016,12 +1079,13 @@ void pg_loadAllShaders(void) {
 	uniform_ParticleCurve_Comet_texture_fs_decal
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleRender], "fs_comet");
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
 	// color texture
 	uniform_ParticleSplat_BlurredDisk_texture_fs_decal
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleRender], "uniform_ParticleSplat_BlurredDisk_texture_fs_decal");
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	if (
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 		(uniform_ParticleSplat_vp_model == -1)
@@ -1044,7 +1108,7 @@ void pg_loadAllShaders(void) {
 #ifdef CURVE_PARTICLES
 		|| (uniform_ParticleCurve_Comet_texture_fs_decal == -1)
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
 		|| (uniform_ParticleSplat_BlurredDisk_texture_fs_decal == -1)
 #endif
 		) {
@@ -1054,12 +1118,13 @@ void pg_loadAllShaders(void) {
 #ifdef CURVE_PARTICLES
 		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleCurve_vp_model : %d, uniform_ParticleCurve_vp_view : %d, uniform_ParticleCurve_vp_proj : %d, uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse : %d, uniform_ParticleCurve_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleCurve_texture_vp_Part_pos_speed : %d, uniform_ParticleCurve_texture_vp_Part_col_rad : %d, uniform_ParticleCurve_Comet_texture_fs_decal : %d\n", uniform_ParticleCurve_vp_model, uniform_ParticleCurve_vp_view, uniform_ParticleCurve_vp_proj, uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse, uniform_ParticleCurve_vp_3fv_trackReplay_xy_height, uniform_ParticleCurve_texture_vp_Part_pos_speed, uniform_ParticleCurve_texture_vp_Part_col_rad, uniform_ParticleCurve_Comet_texture_fs_decal);
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
 		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleSplat_vp_model : %d, uniform_ParticleSplat_vp_view : %d, uniform_ParticleSplat_vp_proj : %d, uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse : %d, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleSplat_texture_vp_Part_pos_speed : %d, uniform_ParticleSplat_texture_vp_Part_col_rad : %d, uniform_ParticleSplat_BlurredDisk_texture_fs_decal : %d\n", uniform_ParticleSplat_vp_model, uniform_ParticleSplat_vp_view, uniform_ParticleSplat_vp_proj, uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, uniform_ParticleSplat_texture_vp_Part_pos_speed, uniform_ParticleSplat_texture_vp_Part_col_rad, uniform_ParticleSplat_BlurredDisk_texture_fs_decal);
 #endif
 	}
+#endif
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	if (
 		(uniform_Update_fs_4fv_weights03 == -1)
 		|| (uniform_Update_fs_2fv_weights45 == -1)
@@ -1103,8 +1168,10 @@ void pg_loadAllShaders(void) {
 
 	uniform_Mixing_texture_fs_CA
 		= glGetUniformLocation(shader_programme[pg_shader_Mixing], "uniform_Mixing_texture_fs_CA"); // ping-pong CA (FBO)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	uniform_Mixing_texture_fs_Part_render
 		= glGetUniformLocation(shader_programme[pg_shader_Mixing], "uniform_Mixing_texture_fs_Part_render");  // Particles (FBO)
+#endif
 	uniform_Mixing_texture_fs_Trk0
 		= glGetUniformLocation(shader_programme[pg_shader_Mixing], "uniform_Mixing_texture_fs_Trk0");  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
@@ -1119,7 +1186,7 @@ void pg_loadAllShaders(void) {
 	uniform_Mixing_texture_fs_Trk3
 		= glGetUniformLocation(shader_programme[pg_shader_Mixing], "uniform_Mixing_texture_fs_Trk3");  // ping-pong track 3 (FBO)
 #endif
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	uniform_Mixing_texture_fs_Display_Font
 		= glGetUniformLocation(shader_programme[pg_shader_Mixing], "uniform_Mixing_texture_fs_Display_Font");  // message Font
 	uniform_Mixing_texture_fs_Display_Message1
@@ -1140,7 +1207,9 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght == -1)
 		|| (uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha == -1)
 		|| (uniform_Mixing_texture_fs_CA == -1)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 		|| (uniform_Mixing_texture_fs_Part_render == -1)
+#endif
 		|| (uniform_Mixing_texture_fs_Trk0 == -1)
 #if PG_NB_TRACKS >= 2
 		|| (uniform_Mixing_texture_fs_Trk1 == -1)
@@ -1151,7 +1220,7 @@ void pg_loadAllShaders(void) {
 #if PG_NB_TRACKS >= 4
 		|| (uniform_Mixing_texture_fs_Trk3 == -1)
 #endif
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 		|| (uniform_Mixing_texture_fs_Display_Font == -1)
 		|| (uniform_Mixing_texture_fs_Display_Message1 == -1)
 		|| (uniform_Mixing_texture_fs_Display_Message2 == -1)
@@ -1170,10 +1239,13 @@ void pg_loadAllShaders(void) {
 #if PG_NB_TRACKS >= 4
 		fprintf(stderr, "Could not bind uniforms uniform_Mixing_texture_fs_Trk3 : %d\n", uniform_Mixing_texture_fs_Trk3);
 #endif
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 			fprintf(stderr, "Could not bind uniforms uniform_Mixing_texture_fs_Screen_Font : %d , uniform_Mixing_texture_fs_Display_Message1 : %d , uniform_Mixing_texture_fs_Display_Message2 : %d\n", uniform_Mixing_texture_fs_Screen_Font, uniform_Mixing_texture_fs_Display_Message1, uniform_Mixing_texture_fs_Display_Message2);
 #endif
-		fprintf(stderr, "Could not bind uniforms Mixing uniform_Mixing_vp_proj : %d, uniform_Mixing_vp_view : %d, uniform_Mixing_vp_model : %d, uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha : %d, uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght : %d, uniform_Mixing_texture_fs_CA : %d, uniform_Mixing_texture_fs_Part_render : %d, uniform_Mixing_texture_fs_Render_prec : %d, uniform_Mixing_texture_fs_Screen_Font : %d, uniform_Mixing_texture_fs_Screen_Message : %d\n", uniform_Mixing_vp_proj, uniform_Mixing_vp_view, uniform_Mixing_vp_model, uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha, uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght, uniform_Mixing_texture_fs_CA, uniform_Mixing_texture_fs_Part_render, uniform_Mixing_texture_fs_Render_prec, uniform_Mixing_texture_fs_Screen_Font, uniform_Mixing_texture_fs_Screen_Message);
+		fprintf(stderr, "Could not bind uniforms Mixing uniform_Mixing_vp_proj : %d, uniform_Mixing_vp_view : %d, uniform_Mixing_vp_model : %d, uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha : %d, uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght : %d, uniform_Mixing_texture_fs_CA  : %d, uniform_Mixing_texture_fs_Render_prec : %d, uniform_Mixing_texture_fs_Screen_Font : %d, uniform_Mixing_texture_fs_Screen_Message : %d\n", uniform_Mixing_vp_proj, uniform_Mixing_vp_view, uniform_Mixing_vp_model, uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha, uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght, uniform_Mixing_texture_fs_CA, uniform_Mixing_texture_fs_Render_prec, uniform_Mixing_texture_fs_Screen_Font, uniform_Mixing_texture_fs_Screen_Message);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+		fprintf(stderr, "Could not bind uniforms uniform_Mixing_texture_fs_Part_render : %d\n", uniform_Mixing_texture_fs_Part_render);
+#endif
 		// return 0;
 	}
 
@@ -1202,11 +1274,13 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_texture_fs_Render_curr"); // previous pass output
 	uniform_Master_texture_fs_CA
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_texture_fs_CA"); // ping-pong CA (FBO)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	uniform_Master_texture_fs_Part_render
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_texture_fs_Part_render"); // Particles
+#endif
 	uniform_Master_texture_fs_Trk0
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_texture_fs_Trk0"); // ping-pong track 0 (FBO)
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 	uniform_Master_texture_fs_LYMlogo
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_texture_fs_LYMlogo"); // LYM logo (texture)
 #endif
@@ -1228,7 +1302,9 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Master_vp_model == -1)
 		|| (uniform_Master_texture_fs_Render_curr == -1)
 		|| (uniform_Master_texture_fs_CA == -1)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 		|| (uniform_Master_texture_fs_Part_render == -1)
+#endif
 		|| (uniform_Master_texture_fs_Trk0 == -1)
 #if PG_NB_TRACKS >= 2
 		|| (uniform_Master_texture_fs_Trk1 == -1)
@@ -1239,7 +1315,7 @@ void pg_loadAllShaders(void) {
 #if PG_NB_TRACKS >= 4
 		|| (uniform_Master_texture_fs_Trk3 == -1)
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 		|| (uniform_Master_texture_fs_LYMlogo == -1)
 #endif
 		|| (uniform_Master_fs_4fv_xy_frameno_pulsedShift == -1)
@@ -1249,7 +1325,10 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb == -1)
 		|| (uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb == -1)
 	) {
-		fprintf(stderr, "Could not bind uniforms Master uniform_Master_vp_proj : %d, uniform_Master_vp_view : %d, uniform_Master_vp_model : %d , uniform_Master_texture_fs_Render_curr: %d, uniform_Master_texture_fs_CA: %d, uniform_Master_texture_fs_Part_render: %d, uniform_Master_fs_4fv_xy_frameno_pulsedShift : %d, uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart : %d\n", uniform_Master_vp_proj, uniform_Master_vp_view, uniform_Master_vp_model, uniform_Master_texture_fs_Render_curr, uniform_Master_texture_fs_CA, uniform_Master_texture_fs_Part_render, uniform_Master_fs_4fv_xy_frameno_pulsedShift, uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart);
+		fprintf(stderr, "Could not bind uniforms Master uniform_Master_vp_proj : %d, uniform_Master_vp_view : %d, uniform_Master_vp_model : %d , uniform_Master_texture_fs_Render_curr: %d, uniform_Master_texture_fs_CA: %d, uniform_Master_fs_4fv_xy_frameno_pulsedShift : %d, uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart : %d\n", uniform_Master_vp_proj, uniform_Master_vp_view, uniform_Master_vp_model, uniform_Master_texture_fs_Render_curr, uniform_Master_texture_fs_CA, uniform_Master_fs_4fv_xy_frameno_pulsedShift, uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+		fprintf(stderr, "Could not bind uniforms uniform_Master_texture_fs_Part_render: %d\n", uniform_Master_texture_fs_Part_render);
+#endif
 		fprintf(stderr, "Could not bind uniforms Master uniform_Master_texture_fs_Trk0: %d, uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey: %d, uniform_Master_fs_3fv_interpolatedPaletteLow_rgb: %d, uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb: %d, uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb: %d\n", uniform_Master_texture_fs_Trk0, uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey, uniform_Master_fs_3fv_interpolatedPaletteLow_rgb, uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb);
 #if PG_NB_TRACKS >= 2
 		fprintf(stderr, "Could not bind uniforms Master uniform_Master_texture_fs_Trk1: %d\n", uniform_Master_texture_fs_Trk1);
@@ -1260,7 +1339,7 @@ void pg_loadAllShaders(void) {
 #if PG_NB_TRACKS >= 4
 		fprintf(stderr, "Could not bind uniforms Master uniform_Master_texture_fs_Trk3: %d\n", uniform_Master_texture_fs_Trk3);
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 		fprintf(stderr, "Could not bind uniforms Master uniform_Master_texture_fs_LYMlogo: %d\n", uniform_Master_texture_fs_LYMlogo);
 #endif
 		// return 0;

@@ -66,9 +66,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>Porphyrograph_song</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\song\</OutDir>
-    <IntDir>$(Configuration)\song\</IntDir>
+    <TargetName>Porphyrograph_core_GN</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\core_GN\</OutDir>
+    <IntDir>$(Configuration)\core_GN\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -116,7 +116,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core320.lib;opencv_imgproc320.lib;opencv_imgcodecs320.lib;opencv_highgui320.lib;opencv_video320.lib;opencv_videoio320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core341.lib;opencv_imgproc341.lib;opencv_imgcodecs341.lib;opencv_highgui341.lib;opencv_video341.lib;opencv_videoio341.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\share\freeglut-wacom\VC17\lib\Release;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Release;..\share\freeglut-3.0.0\VC15\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>

@@ -42,7 +42,7 @@ string					 log_file_name;
 string					 snapshots_dir_path_name;
 string					 screen_font_file_name;
 int                      screen_font_size;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 string					 display_font_file_name;
 int                      display_font_size;
 #endif
@@ -139,7 +139,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	screen_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
 	screen_font_size = 15;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	display_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_25_usascii.png";
 	display_font_size = 25;
 #endif
@@ -361,7 +361,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// sstrem = std::stringstream(line);
 	sstrem >> ID;
 	sstrem >> nb_shader_files;
-	// std::cout << "nb_shader_files: " << nb_shader_files << "\n";
+	std::cout << "nb_shader_files: " << nb_shader_files << "\n";
 	if (nb_shader_files != pg_NbShaderTotal) {
 		sprintf(ErrorStr, "Error: number of shader file names does not match expectation [%d/%d]!", nb_shader_files, pg_NbShaderTotal); ReportError(ErrorStr); throw 429;
 	}
@@ -912,7 +912,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		pg_ImageDirectory = "captures";
 		std::cout << "Using capture images" << std::endl;
 	}
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_MaskDirectory = "Data/" + project_name + "-data/";
 	if (nb_photo_albums > 1) {
 		pg_MaskDirectory += photoAlbumDirName[1];

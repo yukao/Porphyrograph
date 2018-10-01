@@ -44,6 +44,9 @@
 #ifdef VOLUSPA
 #include "pg_shader_header_voluspa.h"
 #endif
+#ifdef INTERFERENCE
+#include "pg_shader_header_interference.h"
+#endif
 #ifdef MALAUSSENA
 #include "pg_shader_header_Malaussena.h"
 #endif
@@ -65,12 +68,13 @@ void pg_initializationScript( void );
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
 enum ShaderFileTypes {
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_shader_ParticleAnimation = 0,
 	pg_shader_Update,
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
-	pg_shader_ParticleRender,
+#else
+	pg_shader_Update = 0,
 #endif
-#if defined (CURVE_PARTICLES) 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_shader_ParticleRender,
 #endif
 	pg_shader_Mixing,
@@ -95,6 +99,7 @@ extern unsigned int shader_programme[pg_NbShaderTotal];
 //extern GLint uniform_Camera_texture_fs_decal;         // camera capture
 //extern GLint uniform_Camera_texture_fs_lookupTable1;  // current background video frame
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
@@ -144,6 +149,7 @@ extern GLint uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_ParticleAnimation_texture_fs_Noise;  // 3D noise
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // particle initialization pairs of textures color/radius
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // UPDATE SHADER
@@ -157,7 +163,9 @@ extern GLint uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShif
 #ifdef MALAUSSENA
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
+#endif
 extern GLint uniform_Update_fs_4fv_trkDecay;
 extern GLint uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts;
@@ -186,6 +194,14 @@ extern GLint uniform_Update_fs_4fv_paths47_a;
 extern GLint uniform_Update_fs_4fv_paths47_BrushID;
 extern GLint uniform_Update_fs_4fv_paths47_RadiusX;
 extern GLint uniform_Update_fs_4fv_paths47_RadiusY;
+#endif
+#ifdef CRITON
+extern GLint uniform_Update_fs_4fv_fftLevels03;
+extern GLint uniform_Update_fs_4fv_fftFrequencies03;
+extern GLint uniform_Update_fs_4fv_fftPhases03;
+extern GLint uniform_Update_fs_4fv_fftLevels47;
+extern GLint uniform_Update_fs_4fv_fftFrequencies47;
+extern GLint uniform_Update_fs_4fv_fftPhases47;
 #endif
 extern GLint uniform_Update_fs_4fv_pulse;
 extern GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
@@ -222,11 +238,13 @@ extern GLint uniform_Update_texture_fs_Camera_frame;  // camera frame
 extern GLint uniform_Update_texture_fs_Camera_BG;  // camera BG capture
 extern GLint uniform_Update_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_Update_texture_fs_Noise;  // 3D noise
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 extern GLint uniform_Update_texture_fs_Photo0;  // photo[0]
 extern GLint uniform_Update_texture_fs_Photo1;  // photo[1]
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering used for flashing layers with particles
+#endif
 extern GLint uniform_Update_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
 extern GLint uniform_Update_texture_fs_Part_init_col_rad;  // particle initialization pairs of textures color/radius
 
@@ -259,7 +277,7 @@ extern GLint uniform_ParticleCurve_texture_vp_Part_col_rad;          // Particle
 // color texture
 extern GLint uniform_ParticleCurve_Comet_texture_fs_decal;  // comet texture
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
 // color texture
 extern GLint uniform_ParticleSplat_BlurredDisk_texture_fs_decal;  // blurred disk texture
 #endif
@@ -276,7 +294,9 @@ extern GLint uniform_Mixing_texture_fs_CA; // ping-pong BG track (FBO)
 
 // MIXING SHADER TEXTURE IDS
 extern GLint uniform_Mixing_texture_fs_CA;         // ping-pong CA (FBO)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Mixing_texture_fs_Part_render;  // Particles (FBO)
+#endif
 extern GLint uniform_Mixing_texture_fs_Trk0;  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
 extern GLint uniform_Mixing_texture_fs_Trk1;  // ping-pong track 1 (FBO)
@@ -287,7 +307,7 @@ extern GLint uniform_Mixing_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Mixing_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 extern GLint uniform_Mixing_texture_fs_Display_Font;  // message Font
 extern GLint uniform_Mixing_texture_fs_Display_Message1; // tweets at the bottom of the screen
 extern GLint uniform_Mixing_texture_fs_Display_Message2; // tweets at the bottom of the screen
@@ -295,7 +315,7 @@ extern GLint uniform_Mixing_texture_fs_Display_Message2; // tweets at the bottom
 extern GLint uniform_Mixing_texture_fs_Render_prec;  // preceding snapshot
 extern GLint uniform_Mixing_texture_fs_Screen_Font;  // message Font
 extern GLint uniform_Mixing_texture_fs_Screen_Message;  // message string
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 extern GLint uniform_Update_fs_4fv_weights03;
 extern GLint uniform_Update_fs_2fv_weights45;
 extern GLint uniform_Update_fs_3fv_alphaSwap02;
@@ -335,7 +355,9 @@ extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_Render_curr;         // previous pass output
 extern GLint uniform_Master_texture_fs_CA;  // ping-pong CA (FBO)
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Master_texture_fs_Part_render;  // Particles
+#endif
 extern GLint uniform_Master_texture_fs_Trk0;  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
 extern GLint uniform_Master_texture_fs_Trk1;  // ping-pong track 1 (FBO)
@@ -346,7 +368,7 @@ extern GLint uniform_Master_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Master_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 extern GLint uniform_Master_texture_fs_LYMlogo;  // LYM logo (texture)
 #endif
 

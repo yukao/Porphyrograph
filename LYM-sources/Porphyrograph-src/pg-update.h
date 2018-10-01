@@ -37,7 +37,7 @@ extern GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
 extern GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
 
 extern GLuint Screen_Font_texture_Rectangle_texID;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 extern GLuint Display_Font_texture_Rectangle_texID;
 #endif
 extern cv::Mat Screen_Font_image;
@@ -53,7 +53,7 @@ extern GLuint Sensor_texture_rectangle;
 extern cv::Mat Sensor_image;
 #endif
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 #define   PG_NB_DISPLAY_MESSAGES 3500
 
 ////////////////////////////////////////////////////////////////
@@ -205,7 +205,7 @@ extern float paths_RadiusY[PG_NB_PATHS + 1];
 extern GLuint pg_CATable_ID;
 extern GLubyte *pg_CATable;
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 extern GLuint pg_LYMlogo_texID;
 extern cv::Mat pg_LYMlogo_image;
 #endif
@@ -255,12 +255,16 @@ void window_display(void);
 void one_frame_variables_reset(void);
 void pg_update_shader_uniforms(void);
 void camera_and_video_frame_updates(void);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #0: PARTICLE ANIMATION PASS
 void pg_ParticleAnimationPass(void);
+#endif
 // PASS #1: UPDATE (CA, PIXELS, PARTICLES)
 void pg_UpdatePass(void);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #2: PARTICLE RENDERING PASS
 void pg_ParticleRenderingPass(void);
+#endif
 // PASS #3: COMPOSITION + PING-PONG ECHO: ECHOED MIX OF LAYERS
 void pg_MixingPass(void);
 // PASS #4: FINAL DISPLAY: MIX OF ECHOED AND NON-ECHOED LAYERS

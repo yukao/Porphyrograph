@@ -68,9 +68,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>Porphyrograph_song</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\song\</OutDir>
-    <IntDir>$(Configuration)\song\</IntDir>
+    <TargetName>Porphyrograph_core_Criton</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\core_Criton\</OutDir>
+    <IntDir>$(Configuration)\core_Criton\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -85,15 +85,15 @@
       </PrecompiledHeader>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;_CRT_SECURE_NO_WARNINGS;DEMO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;_CRT_SECURE_NO_WARNINGS;CRITON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\dirent-1.21\include</AdditionalIncludeDirectories>
       <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglutd.lib;glew32.lib;opencv_core320d.lib;opencv_imgproc320d.lib;opencv_imgcodecs320d.lib;opencv_highgui320d.lib;opencv_video320d.lib;opencv_videoio320d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\share\freeglut-wacom\VC15\lib\Debug;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Debug;..\share\freeglut-3.0.0\VC15\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core341d.lib;opencv_imgproc341d.lib;opencv_imgcodecs341d.lib;opencv_highgui341d.lib;opencv_video341d.lib;opencv_videoio341d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\share\freeglut-wacom\VC17\lib\Release;..\share\freeglut-wacom\VC17\lib\Debug;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -117,7 +117,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core320.lib;opencv_imgproc320.lib;opencv_imgcodecs320.lib;opencv_highgui320.lib;opencv_video320.lib;opencv_videoio320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core341.lib;opencv_imgproc341.lib;opencv_imgcodecs341.lib;opencv_highgui341.lib;opencv_video341.lib;opencv_videoio341.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\share\freeglut-wacom\VC17\lib\Release;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Release;..\share\freeglut-3.0.0\VC15\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>

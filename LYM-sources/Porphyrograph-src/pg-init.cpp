@@ -142,17 +142,19 @@ GLuint drawBuffers[16] = {
 /////////////////////////////////////////////
 // FBO 
 GLuint pg_FBO_Update[2]; // PG_FBO_UPDATE_NBATTACHTS
+#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 GLuint pg_FBO_ParticleAnimation[2]; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
+GLuint pg_FBO_ParticleRendering = 0; // particle rendering
+GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
+GLuint pg_FBO_ParticleRendering_texID = 0; // particle rendering
+#endif
 GLuint pg_FBO_Mixing_capturedFB_prec[2] = { 0,0 }; //  drawing memory on odd and even frames for echo
 // GLuint FBO_CameraFrame = 0; //  video preprocessing outcome
-GLuint pg_FBO_ParticleRendering = 0; // particle rendering
 
 						  // FBO texture
 GLuint pg_FBO_Update_texID[2 * PG_FBO_UPDATE_NBATTACHTS]; // Update
-GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
 GLuint pg_FBO_Mixing_capturedFB_prec_texID[2] = { 0,0 }; // drawing memory on odd and even frames for echo 
 // GLuint FBO_CameraFrame_texID = 0; // video preprocessing outcome 
-GLuint pg_FBO_ParticleRendering_texID = 0; // particle rendering
 
 //////////////////////////////////////////////////////////////////////
 // TEXT
@@ -1026,6 +1028,7 @@ void pg_initGeometry_quads(void) {
 #endif
 
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	/////////////////////////////////////////////////////////////////////
 	// PARTICLES TO BE TESSELATED
 	// initializes the arrays that contains the positions and the indices of the particles
@@ -1096,7 +1099,7 @@ void pg_initGeometry_quads(void) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * sizeof(unsigned int),
 		pg_Particle_indices, GL_STATIC_DRAW);
 #endif
-
+#endif
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	printOglError(32);
@@ -1313,6 +1316,7 @@ bool pg_initFBO(void) {
 	//printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
 	printOglError(341);
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// FBO: multi-attachment for particle animation 
 	glGenFramebuffers(2, pg_FBO_ParticleAnimation);
 	// initializations to NULL
@@ -1339,6 +1343,7 @@ bool pg_initFBO(void) {
 	pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1);
 	glDrawBuffers(1, drawBuffers);
 	printOglError(344);
+#endif
 
 	// FBO: composition output for echo
 	glGenFramebuffers(2, pg_FBO_Mixing_capturedFB_prec);  // drawing memory on odd and even frames for echo 
@@ -1556,7 +1561,7 @@ void pg_screenMessage_update(void) {
 			for (int indPixel = 0;
 				indPixel < wfont[cur_car_rank] && pixelRank + indPixel < lengthMax; indPixel++) {
 				int indPixelColor = (pixelRank + indPixel) * 4;
-				pg_screenMessageBitmap[indPixelColor] = sfont[cur_car_rank] + indPixel;
+				pg_screenMessageBitmap[indPixelColor] = GLubyte(sfont[cur_car_rank] + indPixel);
 				pg_screenMessageBitmap[indPixelColor + 1] = tfont[cur_car_rank];
 				pg_screenMessageBitmap[indPixelColor + 2] = hfont[cur_car_rank];
 				pg_screenMessageBitmap[indPixelColor + 3] = yfont[cur_car_rank];
@@ -1586,7 +1591,7 @@ void pg_screenMessage_update(void) {
 	}
 }
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 ///////////////////////////////////////////////////////
 // Message Uploads
 
@@ -1726,7 +1731,7 @@ int pg_displayMessage_update(int indMesg) {
 			int indPixelColor = (pixelRank + indPixel) * 4;
 			// X encodes the s texture coordinate of the current character (it is offseted by
 			// indPixel because we are on the indPixel_th horizontal pixel
-			offSetText[indPixelColor] = sfont[cur_car_rank] + indPixel;
+			offSetText[indPixelColor] = GLubyte(sfont[cur_car_rank] + indPixel);
 			// Y encodes the t texture coordinate of the current character
 			offSetText[indPixelColor + 1] = tfont[cur_car_rank];
 			// Z and W encode height H and vertical offsets Y

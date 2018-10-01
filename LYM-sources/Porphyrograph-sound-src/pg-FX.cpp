@@ -165,7 +165,7 @@ void initVSTPlugin(AEffect *plugin, dispatcherFuncPtr dispatcher) {
 	dispatcher(plugin, effOpen, 0, 0, NULL, 0.0f);
 
 	// Set some default properties
-	float sampleRate = 44100.0f;
+	float sampleRate = PG_AUDIO_SAMPLE_RATE;
 	dispatcher(plugin, effSetSampleRate, 0, 0, NULL, sampleRate);
 	int blocksize = 512;
 	dispatcher(plugin, effSetBlockSize, 0, blocksize, NULL, 0.0f);

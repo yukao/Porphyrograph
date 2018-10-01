@@ -17,24 +17,21 @@ udp_local_server	2
 VERBATIM																		
 TYPE	string	int	string	bool	int	bool	bool											
 ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal											
-server	udp_PD_receive	1978	Plain	0	300	1	1											
-server	udp_BITWIG_receive	9000	OSC	0	300	0	1											
+server	udp_SoundJUCE_receive	9001	OSC	0	300	1	1											
+server	udp_TouchOSC_receive	9000	OSC	0	300	0	1											
 /udp_local_server																		
-udp_remote_client	3																	
+udp_remote_client	2																	
 VERBATIM																		
 TYPE	string	string	int	string	bool	int	bool											
 ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal											
-client	udp_QT_send	100.108.128.60	8000	OSC	0	300	1											
-client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
-client	udp_BITWIG_send	127.0.0.1	8000	OSC	0	300	1											
+client	udp_SoundJUCE_send	127.0.0.1	8001	OSC	0	300	1											
+client	udp_TouchOSC_send	192.168.1.34	8000	OSC	0	300	1											
 /udp_remote_client																		
-shader_files	5																	
+shader_files	3																	
 VERBATIM																		
 TYPE	string																	
-ID	id																	
-filename	LYM_ParticleAnimation_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+ID	udp_remote_client																	
 filename	LYM_Update_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_ParticleSplat_Criton	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
 filename	LYM_Mixing_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		

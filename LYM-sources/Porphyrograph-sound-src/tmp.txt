@@ -1,0 +1,42 @@
+	if (newCommand.compare(0, sample_prefix.length(), sample_prefix) == 0) {
+	if (newCommand.compare("testUDP_fromPD") == 0) {
+	else if (newCommand.compare("testUDP_OK") == 0) {
+	else if (newCommand.compare("launch") == 0) {
+	else if (newCommand.compare("record_output") == 0) {
+	else if (newCommand.compare("scene_offset") == 0) {
+	else  if (newCommand.compare("TV_track_shuffle") == 0) {
+	else  if (newCommand.compare("TV_drone_mix") == 0) {
+	else  if (newCommand.compare("TV_drone_size") == 0) {
+	else  if (newCommand.compare("TV_swap_freq") == 0) {
+	else  if (newCommand.compare("TV_swap_dur") == 0) {
+	else  if (newCommand.compare("TV_blast") == 0) {
+	else if (newCommand.compare("loop_stop") == 0) {
+	else if (newCommand.compare("loop_recPlay") == 0) {
+	else if (newCommand.compare("loop_out_level") == 0) {
+	else if (newCommand.compare("loop_master_level") == 0) {
+	else  if (newCommand.compare("input_level") == 0) {
+	else  if (newCommand.compare("sensor_vol") == 0) {
+	else  if (newCommand.compare("BeatsPerMinute") == 0) {
+	else if (newCommand.compare("mix") == 0) {
+	else if (newCommand.compare("mix") == 0) {
+	else  if (newCommand.compare("dampingfreq") == 0) {
+	else if (newCommand.compare("density") == 0) {
+	else if (newCommand.compare("bandwidthfreq") == 0) {
+	else if (newCommand.compare("decay") == 0) {
+	else if (newCommand.compare("predelay") == 0) {
+	else if (newCommand.compare("size") == 0) {
+	else if (newCommand.compare("gain") == 0) {
+	else if (newCommand.compare( "earlymix") == 0) {
+	else if (newCommand.compare( "kMix") == 0) {
+	/* else if (newCommand.compare("kMix") == 0) {
+	else if (newCommand.compare( "kLDelay") == 0) {
+	else if (newCommand.compare( "kLRDelayRatio") == 0) {
+	else if (newCommand.compare( "kFeedBk") == 0) {
+	else if (newCommand.compare( "kTone") == 0) {
+	else if (newCommand.compare( "kLevel") == 0) {
+	//else if (newCommand.compare( "sampleFXMix") == 0) {
+	//else if (newCommand.compare( "lineInFXMix") == 0) {
+			if (newCommand.compare(AudioSequences[ind_sequences]->name + "_onOff") == 0) {
+			if (newCommand.compare(AudioSequences[ind_sequences]->name + "_level") == 0) {
+			if (newCommand.compare(filename + "_level") == 0) {
+			if (newCommand.compare(filename + "_onOff") == 0) {

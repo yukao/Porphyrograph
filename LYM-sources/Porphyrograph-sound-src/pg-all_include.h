@@ -21,10 +21,10 @@
 // 02111-1307, USA.
 ////////////////////////////////////////////////////////////////////
 
-#ifndef _VISUAL_STUDIO
+#ifndef _WIN32
 	#include "config.h"
 	#include <dirent.h>
-#endif // !_VISUAL_STUDIO
+#endif // !_WIN32
 
 // standard included files
 #include <stdio.h>
@@ -36,10 +36,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>    // math constants such as M_PI
 // define the round function for Visual Studio (not include in math.h)
-#ifdef _VISUAL_STUDIO
+#ifdef _WIN32
 	#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
 	//double round(double x) { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
-#endif // _VISUAL_STUDIO
+#endif // _WIN32
 
 #include <stdlib.h>
 #include <stdarg.h>     // Header File For Variable Argument Routines
@@ -68,11 +68,11 @@ using std::max;
 	#include <sys/socket.h>
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
-        #include <sys/resource.h>
+    #include <sys/resource.h>
 	#include <netdb.h>
 	#include <stdint.h>
-        #include<sys/stat.h>
-        #include<unistd.h>
+    #include<sys/stat.h>
+    #include<unistd.h>
 #else // !_WIN32
 	#include <winsock2.h>
 	#include <Ws2tcpip.h>
@@ -89,20 +89,16 @@ using std::max;
 	#include <time.h>
 	#include <Winbase.h>
 	#include <Windows.h>
-	#ifndef _VISUAL_STUDIO
-		#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
-			#define _TIMEVAL_DEFINED
-			struct timeval {
-			  unsigned long int tv_usec;
-			  unsigned long int tv_sec;
-			};
-		#endif /* !_TIMEVAL_DEFINED */
-	#endif /* !_VISUAL_STUDIO */
 #else // _WIN32
+	#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
+	#define _TIMEVAL_DEFINED
+	struct timeval {
+		unsigned long int tv_usec;
+		unsigned long int tv_sec;
+				};
+	#endif /* !_TIMEVAL_DEFINED */
 	#include <sys/time.h>
 	#include <pthread.h>
-        #include<sys/stat.h>
-        #include<unistd.h>
 #endif // _WIN32
 // \}
 
@@ -113,8 +109,10 @@ using std::max;
 #include "vstfxstore.h"
 
 // AQUILA FFT
-// #include "aquila/global.h"
-// #include "aquila/transform/FftFactory.h"
+#include "aquila/global.h"
+#include "aquila/transform/FftFactory.h"
+#include "aquila/tools/TextPlot.h"
+
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -122,6 +120,7 @@ using std::max;
 #include <list>
 #include <vector>
 #include <map>
+#include <unordered_map>
 using std::list;
 using std::vector;
 using std::map;
@@ -132,9 +131,18 @@ using std::ifstream;
 #include <fstream>
 #include <sstream>
 
+#ifdef CRITON
+#define TOUCHOSC
+#else
+#define PD
+#endif
+
+
 // #define PG_TERRAINS_VAGUES
 
 // #define STOPPABLE_SEQUENCES
+
+#include "pg-main.h"
 
 #include "audioeffectx.h"
 #include "Filter.h"
@@ -146,7 +154,6 @@ using std::ifstream;
 
 #include "pg-utils.h"
 #include "pg-udp.h"
-#include "pg-main.h"
 #include "pg-sample.h"
 #include "pg-terrains-vagues.h"
 #include "pg-conf.h"

@@ -37,7 +37,7 @@ float pg_Photo_weight[PG_PHOTO_NB_TEXTURES] = { 0.0f , 0.0f };
 ////////////////////////////////////////////////////////////////////
 // BLENDED MULTILAYER IMAGES FOR TVW
 ////////////////////////////////////////////////////////////////////
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW] = { PhotoSwapDataStruct() };
 #else
 PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES] = { PhotoSwapDataStruct() };
@@ -58,7 +58,7 @@ int pg_CurrentDiaporamaDir = -1;
 bool ascendingDiaporama = true;
 
 std::string pg_ImageDirectory;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 std::string pg_MaskDirectory;
 std::string pg_MessageDirectory;
 #endif
@@ -80,7 +80,7 @@ void remove_files_in_dir(std::string *dirpath) {
 		struct stat filestat;
 		if (stat(filepath.c_str(), &filestat)) continue; // colleccts file status and returns 0 on success
 		if (S_ISREG(filestat.st_mode)) { // the file is a normal file 
-			unsigned int fileNameLength = strlen(subdirp->d_name);
+			unsigned int fileNameLength = int(strlen(subdirp->d_name));
 			if (fileNameLength > 4
 				&& (strcmp(subdirp->d_name + fileNameLength - 4, ".jpg") == 0
 					|| strncmp(subdirp->d_name + fileNameLength - 4, ".png", 4) == 0)) {
@@ -99,7 +99,7 @@ void remove_files_in_dir(std::string *dirpath) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool pg_initTextures(void) {
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_displayMsg1Bitmap =
 		(GLubyte *)pg_generateTexture(&pg_Display_Message1_Bitmap_texID, pg_byte_tex_format,
 			message_pixel_length, 1);
@@ -176,8 +176,15 @@ bool pg_initTextures(void) {
 		2048, 2048, nb_pen_brushes);
 	printOglError(7);
 
-#ifdef GN
+#if defined (GN)
 	pg_loadTexture((char *)("Data/" + project_name + "-data/textures/LYMlogo.png").c_str(), &pg_LYMlogo_image,
+		&pg_LYMlogo_texID, true, false, GL_RGBA8, GL_RGBA,
+		GL_UNSIGNED_BYTE, GL_LINEAR,
+		1024, 768);
+	printOglError(8);
+#endif
+#if defined (INTERFERENCE)
+	pg_loadTexture((char *)("Data/" + project_name + "-data/textures/YNInterferenceMask.png").c_str(), &pg_LYMlogo_image,
 		&pg_LYMlogo_texID, true, false, GL_RGBA8, GL_RGBA,
 		GL_UNSIGNED_BYTE, GL_LINEAR,
 		1024, 768);
@@ -833,7 +840,7 @@ void loadCameraFrame(bool initial_capture) {
 			pg_camera_frame_width, pg_camera_frame_height,
 			pg_camera_frame.cols, pg_camera_frame.rows,
 			pg_camera_x_offset, pg_camera_y_offset, 
-			pg_camera_frame.channels(), pg_camera_frame.total() * pg_camera_frame.elemSize());
+			pg_camera_frame.channels(), int(pg_camera_frame.total() * pg_camera_frame.elemSize()));
 	}
 	
 
@@ -1235,12 +1242,12 @@ bool pg_update_diaporama(void) {
 	}
 
 	for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
-		float * photoWeight;
+		float * photoWeightPtr;
 		if (indPhoto == 0) {
-			photoWeight = pg_Photo_weight + 0;
+			photoWeightPtr = pg_Photo_weight + 0;
 		}
 		else {
-			photoWeight = pg_Photo_weight + 1;
+			photoWeightPtr = pg_Photo_weight + 1;
 		}
 
 		// if blendStart is negative, there is no ongoing blending for the current photo
@@ -1250,13 +1257,13 @@ bool pg_update_diaporama(void) {
 			// not blending
 			//printf("Photo %d blend start %.3f\n",
 			//	indPhoto, pg_Photo_buffer_data[indPhoto].blendStart);
-			*photoWeight = 0.0f;
+			*photoWeightPtr = 0.0f;
 			continue;
 		}
 
 		// ongoing blending
 		float playingTime = CurrentClockTime - pg_Photo_swap_buffer_data[indPhoto].blendStart;
-		*photoWeight = 0.0f;
+		*photoWeightPtr = 0.0f;
 		// incay and decay are 0 if is_capture_diaporama
 		float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
 		float decay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
@@ -1266,26 +1273,26 @@ bool pg_update_diaporama(void) {
 		if (playingTime < (incay + photo_diaporama_plateau + decay)) {
 			if (playingTime < incay) {
 				if (incay > 0.0f) {
-					*photoWeight = playingTime / incay;
+					*photoWeightPtr = playingTime / incay;
 				}
 				else {
-					*photoWeight = 1.0f;
+					*photoWeightPtr = 1.0f;
 				}
 			}
 			else if (playingTime < incay + photo_diaporama_plateau) {
-				*photoWeight = 1.0f;
+				*photoWeightPtr = 1.0f;
 			}
 			else {
 				if (decay > 0.0f) {
-					*photoWeight = 1.0f - (playingTime - incay - photo_diaporama_plateau)
+					*photoWeightPtr = 1.0f - (playingTime - incay - photo_diaporama_plateau)
 						/ decay;
 				}
 				else {
-					*photoWeight = 1.0f;
+					*photoWeightPtr = 1.0f;
 				}
 			}
 			//if( indPhoto == 1)
-				//printf("            "); 
+			//printf("            "); 
 			//char * ptr = strrchr(pg_Photo_buffer_data[indPhoto].fname, '/');
 			//printf("blend %d weight %.2f playing time %.1f [%s]\n",
 			//	indPhoto, *photoWeight, playingTime, ptr );
@@ -1309,10 +1316,10 @@ bool pg_update_diaporama(void) {
 
 		// it is time to stop the current photo because we reach
 		// the end of the blending duration (incay+plateau+decay) of the current one
-		if (playingTime >= (incay + photo_diaporama_plateau + decay) ) {
+		if (playingTime >= (incay + photo_diaporama_plateau + decay)) {
 			// stops blending
 			pg_Photo_swap_buffer_data[indPhoto].blendStart = -1.0f;
-			*photoWeight = 0.0f;
+			*photoWeightPtr = 0.0f;
 			// releases the image
 			//  std::cout << "load next file for layer " << indPhoto << std::endl;
 			//imgPhotoBuffer[indPhoto].release();
@@ -1347,7 +1354,7 @@ int pg_nbCompressedImageDirs = 0;
 int *pg_nbCompressedImagesPerFolder = NULL;
 int *pg_firstCompressedFileInFolder = NULL;
 int pg_nbCompressedImages = 0;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 PhotoDataStruct pg_Photo_mask_buffer_data[PG_PHOTO_NB_TEXTURES_TVW / 3] = { PhotoDataStruct() };
 // interpolation weight between image buffer swap buffer in each layer
 GLfloat pg_Photo_alphaSwap02[PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
@@ -1537,7 +1544,6 @@ std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
 
 		}
 	}
-	return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1569,7 +1575,6 @@ string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *cur
 			return NULL;
 		}
 	}
-	return NULL;
 }
 
 
@@ -1577,8 +1582,7 @@ string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *cur
 // 2D image loading
 bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
 	int height, bool verbose) {
-	bool valret = true;
-	int flieNameLenght = strlen(PhotoName);
+	int flieNameLenght = int(strlen(PhotoName));
 	char * extension;
 
 	h = height;
@@ -1627,23 +1631,23 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
 		/* get the surface desc */
 		fread(&header, 124, 1, fp);
 
-		unsigned int height = *(unsigned int*)&(header[8]);
-		unsigned int width = *(unsigned int*)&(header[12]);
+		unsigned int height_from_header = *(unsigned int*)&(header[8]);
+		unsigned int width_from_header = *(unsigned int*)&(header[12]);
 		unsigned int linearSize = *(unsigned int*)&(header[16]);
 		unsigned int mipMapCount = *(unsigned int*)&(header[24]);
 		unsigned int fourCC = *(unsigned int*)&(header[80]);
 
 		// Check for image size
-		if ((w > 0 && width != w)
-			|| (h > 0 && height != h)) {
+		if ((w > 0 && width_from_header != u_int(w))
+			|| (h > 0 && height_from_header != u_int(h))) {
 			sprintf(ErrorStr, "Unexpected dds diaporama image size %s %d/%d %d/%d!",
-				PhotoName, width, w, height,
+				PhotoName, width_from_header, w, height_from_header,
 				h); ReportError(ErrorStr);
 			*(PhotoName) = 0;
 			return false;
 		}
-		h = height;
-		w = width;
+		h = height_from_header;
+		w = width_from_header;
 		format = GL_RGB;
 
 		// Check for image size
@@ -1835,7 +1839,6 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle,
 		else {
 			unsigned int blockSize
 				= (compressedFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
-			unsigned int offset = 0;
 			unsigned int size = ((w + 3) / 4)*((h + 3) / 4)*blockSize;
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, texBuffID);
@@ -1867,7 +1870,7 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle,
 // TEXTURE BUFFER MANAGEMENT
 /////////////////////////////////////////////////////////////////
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 //////////////////////////////////////////////////////////////////
 // PROCESSES IMAGE SWAPPING
 
@@ -2043,7 +2046,6 @@ bool pg_swap_image(int indcomprImage) {
 		printf("Image swapping not possible (all layers currently swap)\n");
 		return false;
 	}
-	return false;
 }
 
 

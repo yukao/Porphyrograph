@@ -68,9 +68,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>Porphyrograph_song</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\song\</OutDir>
-    <IntDir>$(Configuration)\song\</IntDir>
+    <TargetName>Porphyrograph_core_TVW</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\core_TVW\</OutDir>
+    <IntDir>$(Configuration)\core_TVW\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

@@ -160,14 +160,14 @@ GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
 #endif
 
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 GLuint pg_LYMlogo_texID = NULL_ID;
 cv::Mat pg_LYMlogo_image;
 #endif
 
 GLuint Screen_Font_texture_Rectangle_texID = 0;
 cv::Mat Screen_Font_image;
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 GLuint Display_Font_texture_Rectangle_texID = 0;
 cv::Mat Display_Font_image;
 #endif
@@ -175,7 +175,7 @@ cv::Mat Display_Font_image;
 GLuint Pen_texture_3D_texID = 0;
 GLuint Noise_texture_3D = 0;
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 /////////////////////////////////////////////////////////////////
 // Image distribution
 float centralPhoto = 0;
@@ -850,9 +850,11 @@ void one_frame_variables_reset(void) {
 	pg_CAseed_trigger = false;
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// /////////////////////////
 	// particle initialization reset
 	part_initialization = -1;
+#endif
 }
 
 void camera_and_video_frame_updates(void) {
@@ -967,6 +969,9 @@ void pg_update_shader_uniforms(void) {
 #ifdef VOLUSPA
 #include "pg_update_body_voluspa.cpp"
 #endif
+#ifdef INTERFERENCE
+#include "pg_update_body_interference.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_update_body_Malaussena.cpp"
 #endif
@@ -979,8 +984,9 @@ void pg_update_shader_uniforms(void) {
 	printOglError(510);
 
 
-/////////////////////////////////////////////////////////////////////////
-// PARTICLE ANIMATION SHADER UNIFORM VARIABLES
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+	/////////////////////////////////////////////////////////////////////////
+	// PARTICLE ANIMATION SHADER UNIFORM VARIABLES
 	glUseProgram(shader_programme[pg_shader_ParticleAnimation]);
 
 	// scren size and repop channel
@@ -1017,7 +1023,7 @@ void pg_update_shader_uniforms(void) {
 
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 	// pen paths positions
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
 	// the center of the screen is the default position for this track
 	if (part_path_repulse_1 || part_path_follow_1) {
@@ -1125,6 +1131,8 @@ void pg_update_shader_uniforms(void) {
 		(GLfloat)pg_movie_frame_width, (GLfloat)pg_movie_frame_height);
 
 	printOglError(511);
+#endif
+
 
 	/////////////////////////////////////////////////////////////////////////
 	// UPDATE SHADER UNIFORM VARIABLES
@@ -1227,6 +1235,26 @@ void pg_update_shader_uniforms(void) {
 		paths_RadiusY[4], paths_RadiusY[5], paths_RadiusY[6], paths_RadiusY[7]);
 	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6] , paths_RadiusX[7] );
 #endif
+#ifdef CRITON
+	glUniform4f(uniform_Update_fs_4fv_fftLevels03,
+		fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3]);
+	glUniform4f(uniform_Update_fs_4fv_fftFrequencies03,
+		fftFrequencies[0], fftFrequencies[1], fftFrequencies[2], fftFrequencies[3]);
+	glUniform4f(uniform_Update_fs_4fv_fftPhases03,
+		fftPhases[0], fftPhases[1], fftPhases[2], fftPhases[3]);
+	glUniform4f(uniform_Update_fs_4fv_fftLevels47,
+		fftLevels[4], fftLevels[5], fftLevels[6], fftLevels[7]);
+	glUniform4f(uniform_Update_fs_4fv_fftFrequencies47,
+		fftFrequencies[4], fftFrequencies[5], fftFrequencies[6], fftFrequencies[7]);
+	glUniform4f(uniform_Update_fs_4fv_fftPhases47,
+		fftPhases[4], fftPhases[5], fftPhases[6], fftPhases[7]);
+	//printf("Freq %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftFrequencies[0], fftFrequencies[1], fftFrequencies[2], fftFrequencies[3], fftFrequencies[4], fftFrequencies[5], fftFrequencies[6], fftFrequencies[7]);
+	//printf("Levels %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3], fftLevels[4], fftLevels[5], fftLevels[6], fftLevels[7]);
+	//printf("Phases %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftPhases[0], fftPhases[1], fftPhases[2], fftPhases[3], fftPhases[4], fftPhases[5], fftPhases[6], fftPhases[7]);
+	//printf("Freq %.2f\n", fftFrequencies[0]);
+	//printf("Levels %.2f\n", fftLevels[0]);
+	//printf("Phase %.2f\n", fftPhases[0]);
+#endif
 
 #if PG_NB_TRACKS >= 4
 	// flash BG weights
@@ -1277,9 +1305,11 @@ void pg_update_shader_uniforms(void) {
 		0.f);
 #else
 #if PG_NB_TRACKS >= 1
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	// flash Trk -> BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght,
 		0.f, 0.f, 0.f, flashPartBG_weight);
+#endif
 	// flash Trk -> CA weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts,
 		flashTrkCA_weights[0], 0.f, 0.f, 0.f);
@@ -1320,7 +1350,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform3f(uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres,
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
 	// photo size 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	glUniform4f(uniform_Update_fs_4fv_photo01_wh,
 		(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
 		(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
@@ -1355,7 +1385,7 @@ void pg_update_shader_uniforms(void) {
 		(GLfloat)pg_camera_x_offset, (GLfloat)pg_camera_y_offset);
 	//printf("camera frame size %dx%d offset %dx%d\n", pg_camera_frame_width, pg_camera_frame_height, pg_camera_x_offset, pg_camera_y_offset);
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	// image buffer layer weights
 	centralPhoto += photoJitterAmpl * fabs(float((double)rand() / (double)RAND_MAX - 0.5));
 	while (centralPhoto < 0) centralPhoto += PG_PHOTO_NB_TEXTURES;
@@ -1476,7 +1506,7 @@ void pg_update_shader_uniforms(void) {
 	// sets the time of the 1st plane launch 
 	if (CAInterpolatedType == CA_NEUMANN_BINARY && firstPlaneFrameNo < 0) {
 		// printf("First plane frame no %d\n", firstPlaneFrameNo);
-		firstPlaneFrameNo = pg_FrameNo - 800;
+		firstPlaneFrameNo = pg_FrameNo - 400;
 	}
 	glUniform2f(uniform_Update_fs_2fv_initCA_1stPlaneFrameNo,
 		initCA, GLfloat(firstPlaneFrameNo));
@@ -1553,7 +1583,7 @@ void pg_update_shader_uniforms(void) {
 		}
 	}
 #endif
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
 	// the center of the screen is the default position for this track
 	if (part_path_repulse_1 || part_path_follow_1) {
@@ -1581,7 +1611,7 @@ void pg_update_shader_uniforms(void) {
 		 flashCameraTrk_weight);
 
 	// TEXT TRANSPARENCY
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha,
 		messageTransparency,
 		(GLfloat)DisplayText1Alpha, (GLfloat)DisplayText2Alpha);
@@ -1639,6 +1669,7 @@ void pg_update_shader_uniforms(void) {
 /////////////////////////////////////
 // PASS #0: PARTICLE ANIMATION PASS
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 void pg_ParticleAnimationPass(void) {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
 	// printf("FBO ANIMATION       %d\n", pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
@@ -1774,6 +1805,7 @@ void pg_ParticleAnimationPass(void) {
 
 	printOglError(52);
 }
+#endif
 
 //////////////////////////////////////////////////
 // PASS #1: UPDATE (CA, PIXELS, PARTICLES, DRAWING, PHOTOS & VIDEOS)
@@ -1804,12 +1836,14 @@ void pg_UpdatePass(void) {
 #endif
 	glUniform1i(uniform_Update_texture_fs_Movie_frame, pg_Movie_frame_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Noise, pg_Noise_FBO_Update_sampler);
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	glUniform1i(uniform_Update_texture_fs_Photo0, pg_Photo0_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Photo1, pg_Photo1_FBO_Update_sampler);
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	glUniform1i(uniform_Update_texture_fs_Part_render, pg_Part_render_FBO_Update_sampler);
-#if defined (TVW) || defined (CRITON)
+#endif
+#if defined (TVW)
 	glUniform1i(uniform_Update_texture_fs_TVWPixels0, pg_TVWPixels0);
 	glUniform1i(uniform_Update_texture_fs_TVWPixels1, pg_TVWPixels1);
 	glUniform1i(uniform_Update_texture_fs_TVWPixels2, pg_TVWPixels2);
@@ -1882,7 +1916,7 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Noise_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Noise_texture_3D);
 
-#if !defined (TVW) && !defined (CRITON)
+#if !defined (TVW)
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_FBO_Update_sampler);
 	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2 
@@ -1902,11 +1936,13 @@ void pg_UpdatePass(void) {
 	}
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// FBO capture of particle rendering used for flashing layers with particles
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
+#endif
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels0);
 	glBindTexture(GL_TEXTURE_2D, 
 		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID);
@@ -2030,6 +2066,7 @@ void pg_UpdatePass(void) {
 /////////////////////////////////////
 // PASS #2: PARTICLE RENDERING PASS
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 void pg_ParticleRenderingPass( void ) {
 	// printf("nb paticles %d\^n", nb_particles);
 	// draws the Bezier curve
@@ -2074,7 +2111,7 @@ void pg_ParticleRenderingPass( void ) {
 	glUniform1i(uniform_ParticleCurve_Comet_texture_fs_decal, 2);
 #endif
 
-#ifdef BLURRED_SPLAT_PARTICLES
+#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
 	// blurred disk texture
 	glUniform1i(uniform_ParticleSplat_BlurredDisk_texture_fs_decal, 2);
 #endif
@@ -2140,6 +2177,7 @@ void pg_ParticleRenderingPass( void ) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDisableVertexAttribArray(0);
 }
+#endif
 
 //////////////////////////////////////////////////
 // PASS #3: COMPOSITION + PING-PONG ECHO: ECHOED MIX OF LAYERS
@@ -2168,12 +2206,14 @@ void pg_MixingPass(void) {
 
 	// texture unit location
 	glUniform1i(uniform_Mixing_texture_fs_CA, pg_CA_FBO_Mixing_sampler);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	glUniform1i(uniform_Mixing_texture_fs_Part_render, pg_Part_render_FBO_Mixing_sampler);
+#endif
 	glUniform1i(uniform_Mixing_texture_fs_Render_prec, pg_Render_prec_FBO_Mixing_sampler);
 
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Font, pg_Screen_Font_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Message, pg_Screen_Message_FBO_Mixing_sampler);
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	glUniform1i(uniform_Mixing_texture_fs_Display_Font, pg_Display_Font_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Display_Message1, pg_Display_Message1_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Display_Message2, pg_Display_Message2_FBO_Mixing_sampler);
@@ -2195,9 +2235,11 @@ void pg_MixingPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// Particles step n
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
+#endif
 
 	// preceding snapshot for echo
 	glActiveTexture(GL_TEXTURE0 + pg_Render_prec_FBO_Mixing_sampler);
@@ -2211,7 +2253,7 @@ void pg_MixingPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Screen_Message_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_screenMessageBitmap_texID);
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	// display font texture
 	glActiveTexture(GL_TEXTURE0 + pg_Display_Font_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, Display_Font_texture_Rectangle_texID);
@@ -2303,7 +2345,9 @@ void pg_MasterPass(void) {
 	// texture unit locations
 	glUniform1i(uniform_Master_texture_fs_Render_curr, pg_Render_curr_FBO_Master_sampler);
 	glUniform1i(uniform_Master_texture_fs_CA, pg_CA_FBO_Master_sampler);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	glUniform1i(uniform_Master_texture_fs_Part_render, pg_Part_render_FBO_Master_sampler);
+#endif
 	glUniform1i(uniform_Master_texture_fs_Trk0, pg_Trk0_FBO_Master_sampler);
 #if PG_NB_TRACKS >= 2
 	glUniform1i(uniform_Master_texture_fs_Trk1, pg_Trk1_FBO_Master_sampler);
@@ -2314,7 +2358,7 @@ void pg_MasterPass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Master_texture_fs_Trk3, pg_Trk3_FBO_Master_sampler);
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 	glUniform1i(uniform_Master_texture_fs_LYMlogo, pg_LYMlogo_Master_sampler);
 #endif
 
@@ -2326,9 +2370,11 @@ void pg_MasterPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// Particles step n 
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
+#endif
 
 	// 2-cycle ping-pong track 0 step n (FBO attachment 3)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Master_sampler);
@@ -2351,7 +2397,7 @@ void pg_MasterPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
-#ifdef GN
+#if defined (GN) || defined (INTERFERENCE)
 	// LYM logo
 	glActiveTexture(GL_TEXTURE0 + pg_LYMlogo_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_LYMlogo_texID);
@@ -2651,12 +2697,15 @@ void pg_draw_scene( DrawingMode mode ) {
 
 	glDisable(GL_BLEND);
 
+#if defined(BLURRED_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	// particle pass #0
 	pg_ParticleAnimationPass();
+#endif
 
 	// update pass #1
 	pg_UpdatePass();
 
+#if defined(BLURRED_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	/* // particle rendering pass #2
 	glEnable(GL_BLEND);
 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -2665,6 +2714,7 @@ void pg_draw_scene( DrawingMode mode ) {
 	*/
 	pg_ParticleRenderingPass();
 	// glDisable(GL_BLEND);
+#endif
 
 	// layer compositing & echo pass #3
 	pg_MixingPass();

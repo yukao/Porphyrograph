@@ -70,9 +70,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>Porphyrograph_core_dasein</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\core_dasein\</OutDir>
-    <IntDir>$(Configuration)\core_dasein\</IntDir>
+    <TargetName>Porphyrograph_core_Bonnotte</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\core_Bonnotte\</OutDir>
+    <IntDir>$(Configuration)\core_Bonnotte\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

@@ -31,7 +31,7 @@ my $pad_len = 12;
 # command to regenerate cpp files + shaders: to be called after each change of variables in the scenario
 # perl song\cmd\PG_confGenerator_song-v1.prl song\configuration\LYM_song-head-single.csv song\scenarios\LYM_song-scenario-v1.csv song\shaders\LYM_Update_song.frag song\shaders\LYM_Update_song_full.frag song\shaders\LYM_Mixing_song.frag song\shaders\LYM_Mixing_song_full.frag song\shaders\LYM_ParticleRender_song.frag song\shaders\LYM_ParticleRender_song_full.frag song\shaders\LYM_Master_song.frag song\shaders\LYM_Master_song_full.frag ..\Porphyrograph\Porphyrograph-song-src\pg_script_header.h ..\Porphyrograph\Porphyrograph-song-src\pg_script_body.cpp  ..\Porphyrograph\Porphyrograph-song-src\pg_shader_header.h ..\Porphyrograph\Porphyrograph-song-src\pg_shader_body_decl.cpp ..\Porphyrograph\Porphyrograph-song-src\pg_shader_body_bind.cpp ..\Porphyrograph\Porphyrograph-song-src\pg_update_body.cpp
 
-if( @ARGV != 18 && @ARGV != 16 ) {
+if( @ARGV != 18 && @ARGV != 14 ) {
     printf "Incorrect number of arguments %d\n" , @ARGV + 0 ;
     print "Usage: perl song/cmd/PG_confGenerator_song-v1.prl song/configuration/LYM_song-head-single.csv song/scenarios/LYM_song-scenario-v1.csv song/shaders/LYM_ParticleAnimation_song.frag song/shaders/LYM_ParticleAnimation_song_full.frag song/shaders/LYM_Update_song.frag song/shaders/LYM_Update_song_full.frag song/shaders/LYM_Mixing_song.frag song/shaders/LYM_Mixing_song_full.frag song/shaders/LYM_ParticleRender_song.frag song/shaders/LYM_ParticleRender_song_full.frag song/shaders/LYM_Master_song.frag song/shaders/LYM_Master_song_full.frag ../Porphyrograph/Porphyrograph-song-src/pg_script_header.h ../Porphyrograph/Porphyrograph-song-src/pg_script_body.cpp  ../Porphyrograph/Porphyrograph-song-src/pg_shader_header.h ../Porphyrograph/Porphyrograph-song-src/pg_shader_body_decl.cpp ../Porphyrograph/Porphyrograph-song-src/pg_shader_body_bind.cpp ../Porphyrograph/Porphyrograph-song-src/pg_update_body.cpp\n";
     print "PG_confGenerator.prl: A program for generating shader file & C++ code for Porphyrograph\n";
@@ -39,7 +39,7 @@ if( @ARGV != 18 && @ARGV != 16 ) {
 }
 
 my $withParticleShaders = 1;
-if(  @ARGV == 16 ) {
+if(  @ARGV == 14 ) {
  $withParticleShaders = 0;
 }
 
@@ -59,37 +59,37 @@ my $NAMEInputfileSCENARIO = $ARGV[1];
 open( INPUT_SCENARIO_CSV , "<$NAMEInputfileSCENARIO" ) 
     || die "File $NAMEInputfileSCENARIO not found!";
 
-my $NAMEShaderParticleAnimationInputFile = $ARGV[2];
-open( INPUT_SHADERParticleAnimation_FILE , "<$NAMEShaderParticleAnimationInputFile" ) 
-    || die "File $NAMEShaderParticleAnimationInputFile not opened!";
-printf "Reading shader file $NAMEShaderParticleAnimationInputFile\n";
-
-my $NAMEShaderParticleAnimationOuptputFile = $ARGV[3];
-open( OUTPUT_SHADERParticleAnimation_FILE , ">$NAMEShaderParticleAnimationOuptputFile" ) 
-    || die "File $NAMEShaderParticleAnimationOuptputFile not opened!";
-printf "Writing shader file $NAMEShaderParticleAnimationOuptputFile\n";
-
-my $NAMEShaderUpdateInputFile = $ARGV[4];
-open( INPUT_SHADERUPDATE_FILE , "<$NAMEShaderUpdateInputFile" ) 
-    || die "File $NAMEShaderUpdateInputFile not opened!";
-printf "Reading shader file $NAMEShaderUpdateInputFile\n";
-
-my $NAMEShaderUpdateOuptputFile = $ARGV[5];
-open( OUTPUT_SHADERUPDATE_FILE , ">$NAMEShaderUpdateOuptputFile" ) 
-    || die "File $NAMEShaderUpdateOuptputFile not opened!";
-printf "Writing shader file $NAMEShaderUpdateOuptputFile\n";
-
-my $NAMEShaderMixingInputFile = $ARGV[6];
-open( INPUT_SHADERMIXING_FILE , "<$NAMEShaderMixingInputFile" ) 
-    || die "File $NAMEShaderMixingInputFile not opened!";
-printf "Reading shader file $NAMEShaderMixingInputFile\n";
-
-my $NAMEShaderMixingOuptputFile = $ARGV[7];
-open( OUTPUT_SHADERMIXING_FILE , ">$NAMEShaderMixingOuptputFile" ) 
-    || die "File $NAMEShaderMixingOuptputFile not opened!";
-printf "Writing shader file $NAMEShaderMixingOuptputFile\n";
-
 if(  $withParticleShaders ) {
+	my $NAMEShaderParticleAnimationInputFile = $ARGV[2];
+	open( INPUT_SHADERParticleAnimation_FILE , "<$NAMEShaderParticleAnimationInputFile" ) 
+	    || die "File $NAMEShaderParticleAnimationInputFile not opened!";
+	printf "Reading shader file $NAMEShaderParticleAnimationInputFile\n";
+
+	my $NAMEShaderParticleAnimationOuptputFile = $ARGV[3];
+	open( OUTPUT_SHADERParticleAnimation_FILE , ">$NAMEShaderParticleAnimationOuptputFile" ) 
+	    || die "File $NAMEShaderParticleAnimationOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderParticleAnimationOuptputFile\n";
+
+	my $NAMEShaderUpdateInputFile = $ARGV[4];
+	open( INPUT_SHADERUPDATE_FILE , "<$NAMEShaderUpdateInputFile" ) 
+	    || die "File $NAMEShaderUpdateInputFile not opened!";
+	printf "Reading shader file $NAMEShaderUpdateInputFile\n";
+
+	my $NAMEShaderUpdateOuptputFile = $ARGV[5];
+	open( OUTPUT_SHADERUPDATE_FILE , ">$NAMEShaderUpdateOuptputFile" ) 
+	    || die "File $NAMEShaderUpdateOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderUpdateOuptputFile\n";
+
+	my $NAMEShaderMixingInputFile = $ARGV[6];
+	open( INPUT_SHADERMIXING_FILE , "<$NAMEShaderMixingInputFile" ) 
+	    || die "File $NAMEShaderMixingInputFile not opened!";
+	printf "Reading shader file $NAMEShaderMixingInputFile\n";
+
+	my $NAMEShaderMixingOuptputFile = $ARGV[7];
+	open( OUTPUT_SHADERMIXING_FILE , ">$NAMEShaderMixingOuptputFile" ) 
+	    || die "File $NAMEShaderMixingOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderMixingOuptputFile\n";
+
 	my $NAMESHADERPARTICLEInputFile = $ARGV[8];
 	open( INPUT_SHADERPARTICLERENDER_FILE , "<$NAMESHADERPARTICLEInputFile" ) 
 	    || die "File $NAMESHADERPARTICLEInputFile not opened!";
@@ -141,42 +141,62 @@ if(  $withParticleShaders ) {
 	printf "Generating cpp file $NAMEDrawBodyfile\n";
 }
 else {
-	my $NAMEShaderMasterInputFile = $ARGV[8];
+	my $NAMEShaderUpdateInputFile = $ARGV[2];
+	open( INPUT_SHADERUPDATE_FILE , "<$NAMEShaderUpdateInputFile" ) 
+	    || die "File $NAMEShaderUpdateInputFile not opened!";
+	printf "Reading shader file $NAMEShaderUpdateInputFile\n";
+
+	my $NAMEShaderUpdateOuptputFile = $ARGV[3];
+	open( OUTPUT_SHADERUPDATE_FILE , ">$NAMEShaderUpdateOuptputFile" ) 
+	    || die "File $NAMEShaderUpdateOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderUpdateOuptputFile\n";
+
+	my $NAMEShaderMixingInputFile = $ARGV[4];
+	open( INPUT_SHADERMIXING_FILE , "<$NAMEShaderMixingInputFile" ) 
+	    || die "File $NAMEShaderMixingInputFile not opened!";
+	printf "Reading shader file $NAMEShaderMixingInputFile\n";
+
+	my $NAMEShaderMixingOuptputFile = $ARGV[5];
+	open( OUTPUT_SHADERMIXING_FILE , ">$NAMEShaderMixingOuptputFile" ) 
+	    || die "File $NAMEShaderMixingOuptputFile not opened!";
+	printf "Writing shader file $NAMEShaderMixingOuptputFile\n";
+
+	my $NAMEShaderMasterInputFile = $ARGV[6];
 	open( INPUT_SHADERMASTER_FILE , "<$NAMEShaderMasterInputFile" ) 
 	    || die "File $NAMEShaderMasterInputFile not opened!";
 	printf "Reading shader file $NAMEShaderMasterInputFile\n";
 
-	my $NAMEShaderMasterOuptputFile = $ARGV[9];
+	my $NAMEShaderMasterOuptputFile = $ARGV[7];
 	open( OUTPUT_SHADERMASTER_FILE , ">$NAMEShaderMasterOuptputFile" ) 
 	    || die "File $NAMEShaderMasterOuptputFile not opened!";
 	printf "Writing shader file $NAMEShaderMasterOuptputFile\n";
 
-	$NAMEScriptHeaderfile = $ARGV[10];
+	$NAMEScriptHeaderfile = $ARGV[8];
 	open( OUTPUT_SCRIPT_HEADER_FILE , ">$NAMEScriptHeaderfile" ) 
 	    || die "File $NAMEScriptHeaderfile not opened!";
 	printf "Generating header file $NAMEScriptHeaderfile\n";
 
-	$NAMEScriptBodyfile = $ARGV[11];
+	$NAMEScriptBodyfile = $ARGV[9];
 	open( OUTPUT_SCRIPT_BODY_FILE , ">$NAMEScriptBodyfile" ) 
 	    || die "File $NAMEScriptBodyfile not opened!";
 	printf "Generating cpp file $NAMEScriptBodyfile\n";
 
-	$NAMEShaderHeaderfile = $ARGV[12];
+	$NAMEShaderHeaderfile = $ARGV[10];
 	open( OUTPUT_SHADER_HEADER_FILE , ">$NAMEShaderHeaderfile" ) 
 	    || die "File $NAMEShaderHeaderfile not opened!";
 	printf "Generating header file $NAMEShaderHeaderfile\n";
 
-	$NAMEShaderBodyfile = $ARGV[13];
+	$NAMEShaderBodyfile = $ARGV[11];
 	open( OUTPUT_SHADER_BODY_DECL_FILE , ">$NAMEShaderBodyfile" ) 
 	    || die "File $NAMEShaderBodyfile not opened!";
 	printf "Generating cpp file $NAMEShaderBodyfile\n";
 
-	$NAMEShaderBodyfile = $ARGV[14];
+	$NAMEShaderBodyfile = $ARGV[12];
 	open( OUTPUT_SHADER_BODY_BIND_FILE , ">$NAMEShaderBodyfile" ) 
 	    || die "File $NAMEShaderBodyfile not opened!";
 	printf "Generating cpp file $NAMEShaderBodyfile\n";
 
-	$NAMEDrawBodyfile = $ARGV[15];
+	$NAMEDrawBodyfile = $ARGV[13];
 	open( OUTPUT_DRAW_BODY_FILE , ">$NAMEDrawBodyfile" ) 
 	    || die "File $NAMEShaderBodyfile not opened!";
 	printf "Generating cpp file $NAMEDrawBodyfile\n";
@@ -728,53 +748,55 @@ while (!eof(INPUT_SCENARIO_CSV)) {
 			if( $value eq "*" ) {
 				# nothing is done, the variable is not a shader parameter
 			}
-			if( $value =~ /ParticleAnimation_fs/ ) {
-				# ParticleAnimation_fs parameter
-				if(  $ParticleAnimation_fs_index == 3  ) {
-				 	$ParticleAnimation_fs_var_string = $ParticleAnimation_fs_var_string . $id;
-				}
-				else {
-				 	$ParticleAnimation_fs_var_string = $ParticleAnimation_fs_var_string . $id . "_";
-				}
-				$ParticleAnimation_fs_IDs[$ParticleAnimation_fs_index] = $id;
-				$ParticleAnimation_fs_types[$ParticleAnimation_fs_index] = $type;
-				if( $type eq "bool" || $type eq "path" ) {
-					$ParticleAnimation_head_glsl .= "bool      " . $id . ";\n";
-				}
-				elsif( $type eq "int" ) {
-					$ParticleAnimation_head_glsl .= "int       " . $id . ";\n";
-				}
-				else {
-					$ParticleAnimation_head_glsl .= "float     " . $id . ";\n";
-				}
+			if(  $withParticleShaders ) {
+				if( $value =~ /ParticleAnimation_fs/ ) {
+					# ParticleAnimation_fs parameter
+					if(  $ParticleAnimation_fs_index == 3  ) {
+					 	$ParticleAnimation_fs_var_string = $ParticleAnimation_fs_var_string . $id;
+					}
+					else {
+					 	$ParticleAnimation_fs_var_string = $ParticleAnimation_fs_var_string . $id . "_";
+					}
+					$ParticleAnimation_fs_IDs[$ParticleAnimation_fs_index] = $id;
+					$ParticleAnimation_fs_types[$ParticleAnimation_fs_index] = $type;
+					if( $type eq "bool" || $type eq "path" ) {
+						$ParticleAnimation_head_glsl .= "bool      " . $id . ";\n";
+					}
+					elsif( $type eq "int" ) {
+						$ParticleAnimation_head_glsl .= "int       " . $id . ";\n";
+					}
+					else {
+						$ParticleAnimation_head_glsl .= "float     " . $id . ";\n";
+					}
 
-				$ParticleAnimation_fs_index++;
-				if( $ParticleAnimation_fs_index == 4 ) {
-					my $varshader = "uniform_ParticleAnimation_fs_" . $ParticleAnimation_fs_index . "fv_" . $ParticleAnimation_fs_var_string;
-					$ParticleAnimation_head_glsl .= "uniform vec" . $ParticleAnimation_fs_index . " " . $varshader  . ";\n";
+					$ParticleAnimation_fs_index++;
+					if( $ParticleAnimation_fs_index == 4 ) {
+						my $varshader = "uniform_ParticleAnimation_fs_" . $ParticleAnimation_fs_index . "fv_" . $ParticleAnimation_fs_var_string;
+						$ParticleAnimation_head_glsl .= "uniform vec" . $ParticleAnimation_fs_index . " " . $varshader  . ";\n";
 
-					print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
-					print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
-					print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], \"$varshader\");\n";
-					print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform ParticleAnimation $varshader : %d\\n\" , $varshader );\n  }\n";
+						print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+						print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+						print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], \"$varshader\");\n";
+						print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform ParticleAnimation $varshader : %d\\n\" , $varshader );\n  }\n";
 
-					$ParticleAnimation_bindingString_cpp .= " glUniform" . $ParticleAnimation_fs_index . "f( $varshader ";
+						$ParticleAnimation_bindingString_cpp .= " glUniform" . $ParticleAnimation_fs_index . "f( $varshader ";
 
-				 	for( my $ind = 0 ; $ind < $ParticleAnimation_fs_index ; $ind++ ) {
-						if( $ParticleAnimation_fs_types[$ind] eq "bool" || $ParticleAnimation_fs_types[$ind] eq "path" ) {
-							$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
-						}
-						elsif( $ParticleAnimation_fs_types[$ind] eq "int" ) {
-							$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
-						}
-						else {
-							$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
-						}
-						$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind];
-				 	}
-					$ParticleAnimation_bindingString_cpp .= " );\n";
-				 	$ParticleAnimation_fs_index = 0;
-				 	$ParticleAnimation_fs_var_string = "";
+					 	for( my $ind = 0 ; $ind < $ParticleAnimation_fs_index ; $ind++ ) {
+							if( $ParticleAnimation_fs_types[$ind] eq "bool" || $ParticleAnimation_fs_types[$ind] eq "path" ) {
+								$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+							}
+							elsif( $ParticleAnimation_fs_types[$ind] eq "int" ) {
+								$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+							}
+							else {
+								$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+							}
+							$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind];
+					 	}
+						$ParticleAnimation_bindingString_cpp .= " );\n";
+					 	$ParticleAnimation_fs_index = 0;
+					 	$ParticleAnimation_fs_var_string = "";
+					}
 				}
 			}
 			if( $value =~ /Update_fs/ ) {
@@ -876,53 +898,55 @@ while (!eof(INPUT_SCENARIO_CSV)) {
 				}
 			}
 
-			if( $value =~ /ParticleRender_fs/ ) {
-				# ParticleRender_fs parameter
-				if(  $ParticleRender_fs_index == 3  ) {
-				 	$ParticleRender_fs_var_string = $ParticleRender_fs_var_string . $id;
-				}
-				else {
-				 	$ParticleRender_fs_var_string = $ParticleRender_fs_var_string . $id . "_";
-				}
-				$ParticleRender_fs_IDs[$ParticleRender_fs_index] = $id;
-				$ParticleRender_fs_types[$ParticleRender_fs_index] = $type;
-				if( $type eq "bool" || $type eq "path" ) {
-					$ParticleRender_head_glsl .= "bool      " . $id . ";\n";
-				}
-				elsif( $type eq "int" ) {
-					$ParticleRender_head_glsl .= "int       " . $id . ";\n";
-				}
-				else {
-					$ParticleRender_head_glsl .= "float     " . $id . ";\n";
-				}
+			if(  $withParticleShaders ) {
+				if( $value =~ /ParticleRender_fs/ ) {
+					# ParticleRender_fs parameter
+					if(  $ParticleRender_fs_index == 3  ) {
+					 	$ParticleRender_fs_var_string = $ParticleRender_fs_var_string . $id;
+					}
+					else {
+					 	$ParticleRender_fs_var_string = $ParticleRender_fs_var_string . $id . "_";
+					}
+					$ParticleRender_fs_IDs[$ParticleRender_fs_index] = $id;
+					$ParticleRender_fs_types[$ParticleRender_fs_index] = $type;
+					if( $type eq "bool" || $type eq "path" ) {
+						$ParticleRender_head_glsl .= "bool      " . $id . ";\n";
+					}
+					elsif( $type eq "int" ) {
+						$ParticleRender_head_glsl .= "int       " . $id . ";\n";
+					}
+					else {
+						$ParticleRender_head_glsl .= "float     " . $id . ";\n";
+					}
 
-				$ParticleRender_fs_index++;
-				if( $ParticleRender_fs_index == 4 ) {
-					my $varshader = "uniform_ParticleRender_fs_" . $ParticleRender_fs_index . "fv_" . $ParticleRender_fs_var_string;
-					$ParticleRender_head_glsl .= "uniform vec" . $ParticleRender_fs_index . " " . $varshader  . ";\n";
+					$ParticleRender_fs_index++;
+					if( $ParticleRender_fs_index == 4 ) {
+						my $varshader = "uniform_ParticleRender_fs_" . $ParticleRender_fs_index . "fv_" . $ParticleRender_fs_var_string;
+						$ParticleRender_head_glsl .= "uniform vec" . $ParticleRender_fs_index . " " . $varshader  . ";\n";
 
-					print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
-					print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
-					print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Particle], \"$varshader\");\n";
-					print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Particle $varshader : %d\\n\" , $varshader );\n  }\n";
+						print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+						print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+						print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_Particle], \"$varshader\");\n";
+						print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform Particle $varshader : %d\\n\" , $varshader );\n  }\n";
 
-					$ParticleRender_bindingString_cpp .= " glUniform" . $ParticleRender_fs_index . "f( $varshader ";
+						$ParticleRender_bindingString_cpp .= " glUniform" . $ParticleRender_fs_index . "f( $varshader ";
 
-				 	for( my $ind = 0 ; $ind < $ParticleRender_fs_index ; $ind++ ) {
-						if( $ParticleRender_fs_types[$ind] eq "bool" || $ParticleRender_fs_types[$ind] eq "path" ) {
-							$ParticleRender_body_glsl .= "  " . $ParticleRender_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
-						}
-						elsif( $ParticleRender_fs_types[$ind] eq "int" ) {
-							$ParticleRender_body_glsl .= "  " . $ParticleRender_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
-						}
-						else {
-							$ParticleRender_body_glsl .= "  " . $ParticleRender_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
-						}
-						$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind];
-				 	}
-					$ParticleRender_bindingString_cpp .= " );\n";
-				 	$ParticleRender_fs_index = 0;
-				 	$ParticleRender_fs_var_string = "";
+					 	for( my $ind = 0 ; $ind < $ParticleRender_fs_index ; $ind++ ) {
+							if( $ParticleRender_fs_types[$ind] eq "bool" || $ParticleRender_fs_types[$ind] eq "path" ) {
+								$ParticleRender_body_glsl .= "  " . $ParticleRender_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+							}
+							elsif( $ParticleRender_fs_types[$ind] eq "int" ) {
+								$ParticleRender_body_glsl .= "  " . $ParticleRender_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+							}
+							else {
+								$ParticleRender_body_glsl .= "  " . $ParticleRender_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+							}
+							$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind];
+					 	}
+						$ParticleRender_bindingString_cpp .= " );\n";
+					 	$ParticleRender_fs_index = 0;
+					 	$ParticleRender_fs_var_string = "";
+					}
 				}
 			}
 
@@ -978,53 +1002,56 @@ while (!eof(INPUT_SCENARIO_CSV)) {
 		}
 
 		# once the varaiabes have been scanned and grouped by 4, the remaining ones are transformed into variables
-		if( $ParticleAnimation_fs_index > 0 ) {
-			chop( $ParticleAnimation_fs_var_string );
-			my $varshader = "uniform_ParticleAnimation_fs_" . $ParticleAnimation_fs_index . "fv_" . $ParticleAnimation_fs_var_string;
-			if( $ParticleAnimation_fs_index > 1 ) {
-				$ParticleAnimation_head_glsl .= "uniform vec" . $ParticleAnimation_fs_index . " " . $varshader  . ";\n";
-			}
-			else {
-				$ParticleAnimation_head_glsl .= "uniform float " . $varshader  . ";\n";
-			}
-
-			print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
-			print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
-			print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], \"$varshader\");\n";
-			print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform ParticleAnimation $varshader : %d\\n\" , $varshader );\n  }\n";
-
-			$ParticleAnimation_bindingString_cpp .= " glUniform" . $ParticleAnimation_fs_index . "f( $varshader ";
-
-			if( $ParticleAnimation_fs_index > 1 ) {
-			 	for( my $ind = 0 ; $ind <  $ParticleAnimation_fs_index ; $ind++ ) {
-					if( $ParticleAnimation_fs_types[$ind] eq "bool" || $ParticleAnimation_fs_types[$ind] eq "path" ) {
-						$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
-					}
-					elsif( $ParticleAnimation_fs_types[$ind] eq "int" ) {
-						$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
-					}
-					else {
-						$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
-					}
-					$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind];
-			 	}
-			 }
-			 else {
-				if( $ParticleAnimation_fs_types[0] eq "bool" || $ParticleAnimation_fs_types[0] eq "path" ) {
-					$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[0] . " = (" . $varshader . " > 0 ? true : false);\n";
-				}
-				elsif( $ParticleAnimation_fs_types[0] eq "int" ) {
-					$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[0] . " = int(" . $varshader . ");\n";
+		if(  $withParticleShaders ) {
+			if( $ParticleAnimation_fs_index > 0 ) {
+				chop( $ParticleAnimation_fs_var_string );
+				my $varshader = "uniform_ParticleAnimation_fs_" . $ParticleAnimation_fs_index . "fv_" . $ParticleAnimation_fs_var_string;
+				if( $ParticleAnimation_fs_index > 1 ) {
+					$ParticleAnimation_head_glsl .= "uniform vec" . $ParticleAnimation_fs_index . " " . $varshader  . ";\n";
 				}
 				else {
-					$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[0] . " = " . $varshader . ";\n";
+					$ParticleAnimation_head_glsl .= "uniform float " . $varshader  . ";\n";
 				}
-				$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[0];
-			 }
-			$ParticleAnimation_bindingString_cpp .= " );\n";
-		 	$ParticleAnimation_fs_index = 0;
-		 	$ParticleAnimation_fs_var_string = "";
+
+				print OUTPUT_SHADER_HEADER_FILE "extern GLint " . $varshader  . ";\n";
+				print OUTPUT_SHADER_BODY_DECL_FILE "GLint " . $varshader  . ";\n";
+				print OUTPUT_SHADER_BODY_BIND_FILE "  $varshader \n    = glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], \"$varshader\");\n";
+				print OUTPUT_SHADER_BODY_BIND_FILE "  if ( $varshader == -1 ) {\n    fprintf(stderr, \"Could not bind uniform ParticleAnimation $varshader : %d\\n\" , $varshader );\n  }\n";
+
+				$ParticleAnimation_bindingString_cpp .= " glUniform" . $ParticleAnimation_fs_index . "f( $varshader ";
+
+				if( $ParticleAnimation_fs_index > 1 ) {
+				 	for( my $ind = 0 ; $ind <  $ParticleAnimation_fs_index ; $ind++ ) {
+						if( $ParticleAnimation_fs_types[$ind] eq "bool" || $ParticleAnimation_fs_types[$ind] eq "path" ) {
+							$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = (" . $varshader . "[" . $ind . "] > 0 ? true : false);\n";
+						}
+						elsif( $ParticleAnimation_fs_types[$ind] eq "int" ) {
+							$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = int(" . $varshader . "[" . $ind . "]);\n";
+						}
+						else {
+							$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[$ind] . " = " . $varshader . "[" . $ind . "];\n";
+						}
+						$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind];
+				 	}
+				 }
+				 else {
+					if( $ParticleAnimation_fs_types[0] eq "bool" || $ParticleAnimation_fs_types[0] eq "path" ) {
+						$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[0] . " = (" . $varshader . " > 0 ? true : false);\n";
+					}
+					elsif( $ParticleAnimation_fs_types[0] eq "int" ) {
+						$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[0] . " = int(" . $varshader . ");\n";
+					}
+					else {
+						$ParticleAnimation_body_glsl .= "  " . $ParticleAnimation_fs_IDs[0] . " = " . $varshader . ";\n";
+					}
+					$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[0];
+				 }
+				$ParticleAnimation_bindingString_cpp .= " );\n";
+			 	$ParticleAnimation_fs_index = 0;
+			 	$ParticleAnimation_fs_var_string = "";
+			}
 		}
+
 		if( $Update_fs_index > 0 ) {
 			chop( $Update_fs_var_string );
 			my $varshader = "uniform_Update_fs_" . $Update_fs_index . "fv_" . $Update_fs_var_string;
@@ -1196,7 +1223,9 @@ while (!eof(INPUT_SCENARIO_CSV)) {
 		}
 		# draws the bindings grouped by shader in the draw.cpp file
 
-		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_ParticleAnimation]);\n" , $ParticleAnimation_bindingString_cpp;
+		if(  $withParticleShaders ) {
+			print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_ParticleAnimation]);\n" , $ParticleAnimation_bindingString_cpp;
+		}
 		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Update]);\n" , $Update_bindingString_cpp;
 		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Mixing]);\n" , $Mixing_bindingString_cpp;
 		if(  $withParticleShaders ) {
@@ -1205,15 +1234,17 @@ while (!eof(INPUT_SCENARIO_CSV)) {
 		print OUTPUT_DRAW_BODY_FILE "\n glUseProgram(shader_programme[pg_shader_Master]);\n" , $Master_bindingString_cpp;
 
 		# manages the inclusions inside the shader files to generate the linearized shader files
-		while ($line = <INPUT_SHADERParticleAnimation_FILE>) {
-			if( $line =~ /#include_declarations/ ) {
-				print OUTPUT_SHADERParticleAnimation_FILE $ParticleAnimation_head_glsl;
-			}
-			elsif( $line =~ /#include_initializations/ ) {
-				print OUTPUT_SHADERParticleAnimation_FILE $ParticleAnimation_body_glsl;
-			}
-			else {
-				print OUTPUT_SHADERParticleAnimation_FILE $line;
+		if(  $withParticleShaders ) {
+			while ($line = <INPUT_SHADERParticleAnimation_FILE>) {
+				if( $line =~ /#include_declarations/ ) {
+					print OUTPUT_SHADERParticleAnimation_FILE $ParticleAnimation_head_glsl;
+				}
+				elsif( $line =~ /#include_initializations/ ) {
+					print OUTPUT_SHADERParticleAnimation_FILE $ParticleAnimation_body_glsl;
+				}
+				else {
+					print OUTPUT_SHADERParticleAnimation_FILE $line;
+				}
 			}
 		}
 		while ($line = <INPUT_SHADERUPDATE_FILE>) {
@@ -1355,9 +1386,11 @@ while (!eof(INPUT_SCENARIO_CSV)) {
 
 close( INPUT_HEAD_CSV );
 close( INPUT_SCENARIO_CSV );
-close( INPUT_SHADERParticleAnimation_FILE );
+if(  $withParticleShaders ) {
+	close( INPUT_SHADERParticleAnimation_FILE );
+	close( OUTPUT_SHADERParticleAnimation_FILE );
+}
 close( INPUT_SHADERUPDATE_FILE );
-close( OUTPUT_SHADERParticleAnimation_FILE );
 close( OUTPUT_SHADERUPDATE_FILE );
 close( INPUT_SHADERMIXING_FILE );
 close( OUTPUT_SHADERMIXING_FILE );

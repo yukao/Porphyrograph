@@ -83,7 +83,7 @@ public:
     MVerb(){
         DampingFreq = 18000.;
         BandwidthFreq = 18000.;
-        SampleRate = 44100.;
+        SampleRate = PG_AUDIO_SAMPLE_RATE;
         Decay = 0.5;
         Gain = 1.;
         Mix = 1.;
@@ -111,7 +111,7 @@ public:
 	  VST_reverb_samples.setParameter(MVerb<float>::GAIN, 1.f);
 	  VST_reverb_samples.setParameter(MVerb<float>::MIX, 0.15f);
 	  VST_reverb_samples.setParameter(MVerb<float>::EARLYMIX, 0.75f);
-	  VST_reverb_samples.setSampleRate(44100);
+	  VST_reverb_samples.setSampleRate(PG_AUDIO_SAMPLE_RATE);
 	}
 
     void processReplacing(T **inputs, T **outputs, int sampleFrames){
@@ -805,7 +805,7 @@ template<typename T, int OverSampleCount>
     public:
         StateVariable()
         {
-            SetSampleRate(44100.);
+            SetSampleRate(PG_AUDIO_SAMPLE_RATE);
             Frequency(1000.);
             Resonance(0);
             Type(LOWPASS);

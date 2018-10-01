@@ -40,12 +40,6 @@ vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
 // PG_NB_TRACKS TRACK COLOR FBO OUTPUT
  vec4 out_track_FBO[PG_NB_TRACKS];
 
-////////////////////////////////////
-// PARTICLE UPDATE
-
-// PARTICLE PASS OUTPUT
-vec4 out_particlesRendering;
-
 vec4 out4_CA; // RGB: CA color ALPHA: CA state (ALPHA negative 
               // when first time writing on CA for skipping the first frame for CA update)
 float CAdecay = 0.0;
@@ -173,20 +167,19 @@ layout (binding = 5) uniform samplerRect  uniform_Update_texture_fs_Movie_frame;
 layout (binding = 6) uniform sampler3D    uniform_Update_texture_fs_Noise;  // noise texture for pixel acceleration 
 layout (binding = 7) uniform sampler2D    uniform_Update_texture_fs_Photo0;  // photo_0 texture
 layout (binding = 8) uniform sampler2D    uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 9) uniform samplerRect  uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 10) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
+layout (binding = 9) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
 #if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 7)
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 // layout (binding = 8) uniform samplerRect  fs_lookupTable8;  // initial background video texture
-layout (binding = 11) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
-layout (binding = 12) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 10) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 11) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
 
 /////////////////////////////////////
 // CA & TRACK COLOR OUTPUT
@@ -353,7 +346,7 @@ float Line( float x1 , float y1 ,
 }
 
 
-void CA_out( vec2 decalCoords , vec4 currentCA ) {
+void CA_out( vec2 decalCoords , vec4 currentCAValue ) {
   // the ALPHA canal of uniform_Update_texture_fs_CA contains > 0 if it is a live cell
 
   noiseCA = texture( uniform_Update_texture_fs_Noise, 
@@ -439,7 +432,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed 
     // then alpha represents the state of the automaton
-    if( currentCA.a < 0 ) {
+    if( currentCAValue.a < 0 ) {
       /* out4_CA.a = noiseCA.r * (nbStates+1); // nbStates states randomly
       // out4_CA.rgb = averageSurrounding.rgb;
       
@@ -451,7 +444,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
       // }
     }
     else {
-      float state = clamp(currentCA.a,0,nbStatesGeneration);
+      float state = clamp(currentCAValue.a,0,nbStatesGeneration);
       float newState = 0;
       newState = texelFetch(uniform_Update_texture_fs_CATable, 
                        ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
@@ -509,9 +502,9 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
-    float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
+    float state = clamp(currentCAValue.a,0,nbStatesGeneralBinary);
     float newState = 0;
-    if( currentCA.a < 0 ) {
+    if( currentCAValue.a < 0 ) {
       newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
       out4_CA.a = nbStatesGeneralBinary;
     }
@@ -557,7 +550,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
 
     int nbSurroundingLives =
-      (int(currentCA.a)) +  // CENTER
+      (int(currentCAValue.a)) +  // CENTER
       (int(neighborValues[0].a) * 9) +  // E
       (int(neighborValues[1].a) * 81) +  // W
       (int(neighborValues[2].a) * 3) +  // N
@@ -566,9 +559,9 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
-    float state = clamp(currentCA.a,0,3);
+    float state = clamp(currentCAValue.a,0,3);
     float newState = 0;
-    if( currentCA.a < 0 ) {
+    if( currentCAValue.a < 0 ) {
       newState = clamp(noiseCA.r * (3+1),0,3); // nbStates states randomly
       // newState = 2;
       out4_CA.a = float(newState);
@@ -610,9 +603,9 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     // are not necessary to deal with such cells (surrounded by living cells)
 
     #define nbStatesTumorCell 21
-    uint state = int(clamp(currentCA.a,0,nbStatesTumorCell));
-    out4_CA = currentCA;
-    if( currentCA.a < 0 ) {
+    uint state = int(clamp(currentCAValue.a,0,nbStatesTumorCell));
+    out4_CA = currentCAValue;
+    if( currentCAValue.a < 0 ) {
       // free cell generated by pen
       if( noiseCA.r < 0.6 ) {
         out4_CA = vec4(0.0,0.0,0.0,0.0);
@@ -748,9 +741,9 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
-    uint state = int(clamp(currentCA.a,0,nbStates));
+    uint state = int(clamp(currentCAValue.a,0,nbStates));
     uint newState = 0;
-    if( currentCA.a < 0 ) {
+    if( currentCAValue.a < 0 ) {
       newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
       out4_CA.a = float(nbStates);
     }
@@ -791,7 +784,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
 
     int nbSurroundingFiring =
-      (currentCA.a > 0? 1:0) +
+      (currentCAValue.a > 0? 1:0) +
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
       (neighborValues[2].a > 0? 1:0) +
@@ -811,7 +804,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
     if( fired ) {
       if( previousGray == 0.0 ) {
         vec4 gatherSurroundingLives =
-      	  currentCA +
+      	  currentCAValue +
 	       (neighborValues[0]) +
 	       (neighborValues[1]) +
 	       (neighborValues[2]) +
@@ -857,7 +850,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
       if( (nbSurroundingFiring == 2 + int( noiseCA.x * 2) 
 	         || nbSurroundingFiring == 3 + int( noiseCA.y * 2) 
 	         || nbSurroundingFiring == 5 + int( noiseCA.z * 2) )
-	           && currentCA.a <= 0 ) {
+	           && currentCAValue.a <= 0 ) {
         vec4 gatherSurroundingLives =
           (neighborValues[0]) +
           (neighborValues[1]) +
@@ -870,7 +863,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
 	      out4_CA = clamp(gatherSurroundingLives/nbSurroundingFiring,0.0,1.0); // resets alarm
       }
       else {
-        out4_CA = currentCA - 100.0 * vec4(CAdecay);
+        out4_CA = currentCAValue - 100.0 * vec4(CAdecay);
         if( out4_CA.a < 0.0 ) {
           out4_CA = vec4(0.0);
         }
@@ -884,11 +877,11 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
       if( (nbSurroundingFiring == 2 + int( noise.x * 2) 
 	     || nbSurroundingFiring == 3 + int( noise.y * 2) 
 	     || nbSurroundingFiring == 5 + int( noise.z * 2) )
-	     && currentCA.a <= 0 ) {
+	     && currentCAValue.a <= 0 ) {
 	       out4_CA = vec4(1.0); // resets alarm
       }
       else {
-        out4_CA = currentCA - 100.0 * vec4(CAdecay);
+        out4_CA = currentCAValue - 100.0 * vec4(CAdecay);
         if( out4_CA.a < 0.0 ) {
           out4_CA = vec4(0.0);
         }
@@ -899,7 +892,7 @@ void CA_out( vec2 decalCoords , vec4 currentCA ) {
   //////////////////////////////////////////////////////
   // NO CA
   else {
-    out4_CA = currentCA; // ready
+    out4_CA = currentCAValue; // ready
   }
 }
 
@@ -1421,21 +1414,7 @@ void main() {
   }
 
   // flash CA opacity
-  flashToCACumul += flashCACoef * vec4(out_track_FBO[0].rgb,graylevel(out_track_FBO[0].rgb));
-
-  ///////////////////////////////////////////////////
-  // PARTICLE FLASHES ON CA & TRACKS
-  // copies particle rendering at preceding step (for particle flashes)
-  out_particlesRendering 
-    = texture( uniform_Update_texture_fs_Part_render , decalCoords );
-
-  // particle flash on CA
-  flashToCACumul += uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.w
-                  * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
-
-  // particle flash on BG track
-  flashToBGCumul += uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght.w 
-                      * out_particlesRendering.rgb;
+  flashToCACumul = flashCACoef * vec4(out_track_FBO[0].rgb,graylevel(out_track_FBO[0].rgb));
 
   //////////////////////////////////////
   //////////////////////////////////////
@@ -1451,21 +1430,24 @@ void main() {
     // The first CA value is negative so that it is not 
     // displayed (from the second step a lot of these pixels
     // will disappear through the updating rule of the automaton)
-    if( flashToCACumul.a > 0 ) { // gray level of copy color (in case of flash)
-      currentCA.a = -1;
-      currentCA.rgb = clamp( currentCA.rgb + out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 0.0 , 1.0 );
+    if(  flashToCACumul.a > 0 && decalCoords.x > 2 && height - decalCoords.y > 2) { // gray level of copy color (in case of flash)
+      // currentCA.a = -1;
+      // currentCA.rgb = clamp( currentCA.rgb + out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 0.0 , 1.0 );
+      out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(currentCA.rgb,-1);
+      // out_track_FBO[0] = vec4(0,0,0,1);
     }
-
-     // calculates the new state of the automaton
-    CA_out( decalCoords , currentCA );
+    else {
+       // calculates the new state of the automaton
+      CA_out( decalCoords , currentCA );
+     // outputs the color from CA (average surrounding color if birth)
+      out_attachment_FBO[pg_FBO_fs_CA_attacht] = out4_CA;
+    }
 
     // frontier through drawing to restrict CA expansion
     // if( track_0_opacity > 0.5 ) {
     //  out4_CA = vec4(0,0,0,1);
     // }
 
-   // outputs the color from CA (average surrounding color if birth)
-    out_attachment_FBO[pg_FBO_fs_CA_attacht] = out4_CA;
   }
 
   //////////////////////////////////////

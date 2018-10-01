@@ -38,6 +38,9 @@
 #ifdef VOLUSPA
 #include "pg_script_body_voluspa.cpp"
 #endif
+#ifdef INTERFERENCE
+#include "pg_script_body_interference.cpp"
+#endif
 #ifdef MALAUSSENA
 #include "pg_script_body_Malaussena.cpp"
 #endif
@@ -229,6 +232,13 @@ int pg_CAseed_size = 1;
 bool pg_CAseed_trigger = false;
 #endif
 
+// +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
+#ifdef CRITON
+float fftLevels[8];
+float fftFrequencies[8];
+float fftPhases[8];
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // HASH MAP FOR STRING COMMANDS
@@ -315,6 +325,14 @@ enum pg_stringCommands_IDs
 	_setup_plus,
 	_setup_minus,
 	_setup_plus_keep_total_dur,
+#ifdef CRITON
+	_sound_open,
+	_sound_play,
+	_sound_loop,
+	_sound_stop,
+	_sound_exit,
+	_fftLevel8,
+#endif
 };
 // Create an unordered_map of three strings (that map to strings)
 std::unordered_map<std::string, int> pg_stringCommands = {
@@ -399,6 +417,14 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "setup_plus", _setup_plus },
 	{ "setup_minus", _setup_minus },
 	{ "setup_plus_keep_total_dur", _setup_plus_keep_total_dur },
+#ifdef CRITON
+	{ "sound_open", _sound_open },
+	{ "sound_play", _sound_play },
+	{ "sound_loop", _sound_loop },
+	{ "sound_stop", _sound_stop },
+	{ "sound_exit", _sound_exit },
+	{ "fftLevel8", _fftLevel8 },
+#endif
 };
 // if (strcmp(newCommand, CmdString[indVar]
 
@@ -490,6 +516,7 @@ void pg_initializationScript(void) {
 	//glUniform2f(uniform_Camera_vp_2fv_width_height,
 	//	(GLfloat)leftWindowWidth, (GLfloat)window_height);
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// only assigned at initialization, does not change during the set
 	glUseProgram(shader_programme[pg_shader_ParticleAnimation]);
 
@@ -497,6 +524,7 @@ void pg_initializationScript(void) {
 	// VERTEX SHADER VARIABLE
 	glUniform2f(uniform_ParticleAnimation_vp_2fv_width_height,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height);
+#endif
 
 	// only assigned at initialization, does not change during the set
 	glUseProgram(shader_programme[pg_shader_Update]);
@@ -655,8 +683,10 @@ void pg_initializationScript(void) {
 	// background subraction
 	currentBGCapture = true;
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// particle initialization reset
 	part_initialization = -1;
+#endif
 
 	// clear
 	isClearCA = 0;
@@ -843,12 +873,15 @@ void pg_displaySceneVariables(void) {
 			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			InterfaceInitializations();
 
+#ifdef PG_WITH_PUREDATA
 			// resends the sound variables to PD (as in the callback)
 			sprintf(AuxString, "/sound_env_min %.2f", float(*((float *)ScenarioVarPointers[_sound_env_min])));
 			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
 			sprintf(AuxString, "/sound_env_max %.2f", float(*((float *)ScenarioVarPointers[_sound_env_max])));
 			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
+#endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 			for (int ind = 0; ind < 3; ind++) {
 				if (ind == *((int *)ScenarioVarPointers[_partColor_mode])) {
 					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -869,6 +902,7 @@ void pg_displaySceneVariables(void) {
 					sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 				}
 			}
+#endif
 
 			resend_all_variables = false;
 		}
@@ -985,6 +1019,7 @@ void hide_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_g
 		}
 	}
 }
+#ifdef PG_WITH_PUREDATA
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	lastBeatTime = CurrentClockTime;
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -1005,12 +1040,14 @@ void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type, float sce
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
 	}
 }
+#endif
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/pen_colorPreset -1.0");
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
+#ifdef PG_WITH_PUREDATA
 void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND) {
 		adc_onOff = !adc_onOff;
@@ -1018,6 +1055,7 @@ void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 	}
 }
+#endif
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 #ifdef PG_WITH_CAMERA_CAPTURE
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -1126,6 +1164,7 @@ void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 #endif
 }
+#ifdef PG_WITH_PUREDATA
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (playing_soundtrackNo != currentlyPlaying_trackNo
@@ -1141,6 +1180,7 @@ void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, flo
 		}
 	}
 }
+#endif
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (playing_movieNo != currentlyPlaying_movieNo
@@ -1255,6 +1295,7 @@ void clearLayer_callBack( pg_Parameter_Input_Type param_input_type , float scena
 		lastClearTime = CurrentClockTime;
 	}
 }
+#ifdef PG_WITH_PUREDATA
 void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/sound_env_min %.2f", scenario_or_gui_command_value);
@@ -1269,6 +1310,7 @@ void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scen
 	}
 	// printf("reset sound\n");
 }
+#endif
 void clearCA_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 		// pg_send_message_udp((char *)"s", (char *)"/message clear_CA", (char *)"udp_TouchOSC_send");
@@ -1454,6 +1496,7 @@ void path_record_7_callBack(pg_Parameter_Input_Type param_input_type, float scen
 	path_record_callBack(7, param_input_type, scenario_or_gui_command_value);
 }
 #endif
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 void part_move_init(void) {
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 	*((bool *)ScenarioVarPointers[_part_path_follow_0]) = false;
@@ -1691,6 +1734,7 @@ void part_initialization_callBack(pg_Parameter_Input_Type param_input_type, floa
 	pg_targetFrameNo = pg_FrameNo + int(part_timeToTargt);
 	// printf("part initialization call back %d\n", part_initialization);
 }
+#endif
 #ifdef PG_SENSORS
 void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	// copies the grid layout
@@ -1798,7 +1842,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 	}
 }
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 int SubScenesDiaporamaDir(int currentScene) {
 	switch (currentScene) {
 	case 0:
@@ -1923,6 +1967,7 @@ void StartNewScene(int ind_scene) {
 	sprintf(AuxString, "/setup _%s", Scenario[pg_CurrentScene].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/setup_1 _%s", Scenario[pg_CurrentScene].scene_Msg1.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/setup_2 _%s", Scenario[pg_CurrentScene].scene_Msg2.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+	std::cout << "Scene: " << Scenario[pg_CurrentScene].scene_IDs << std::endl;
 	// reinitialization of the interpolation control variables at the beginning of a new scene
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
 		BrokenInterpolationVar[indVar] = false;
@@ -1930,13 +1975,13 @@ void StartNewScene(int ind_scene) {
 	// stops ongoing flashes if there is one
 	flashCameraTrk_weight = 0.0f;
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	// updates image and text directories
 	pg_update_visual_and_text_chapters(true);
 #endif
 }
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 float starting_time(float elapsed_time_from_start) {
 	if (pg_NbScenes == 13) {
 		if (elapsed_time_from_start > Scenario[2].scene_initial_time ) {
@@ -1962,7 +2007,7 @@ float starting_time(float elapsed_time_from_start) {
 void pg_update_scenario(void) {
 	float elapsed_time_from_start = CurrentClockTime - InitialScenarioTime;
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 	pg_update_visual_and_text_chapters(false);
 #endif
 
@@ -2140,11 +2185,12 @@ void pg_process_key( int key ) {
 	  pg_send_message_udp((char *)"", (char *)"/QT_connected", (char *)"udp_TouchOSC_send");
 	  break;
 
+#ifdef PG_WITH_PUREDATA
 	  /* ------------------------------- check connection to PD */
   case 'p':
 	  pg_send_message_udp((char *)"", (char *)"/PD_connected", (char *)"udp_PD_send");
 	  break;
-
+#endif
 	  /* ------------------------------- frame per second */
   case 'f':
 	  DisplayFramePerSecond = !DisplayFramePerSecond;
@@ -2188,6 +2234,7 @@ void pg_process_special_key( int key ) {
   // }   
 }
 
+#ifdef PG_WITH_PUREDATA
 void PlayTrack(int indTrack) {
 	if (nb_soundtracks > 0) {
 		// std::cout << "cwd: " << cwd << std::endl;
@@ -2203,6 +2250,7 @@ void PlayTrack(int indTrack) {
 		currentlyPlaying_trackNo = indTrack;
 	}
 }
+#endif
 
 void pg_launch_performance(void) {
 	// sprintf(AuxString, "/message launching"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
@@ -2270,7 +2318,7 @@ void pg_keyStrokeScripts(int key) {
 	char * ptCh = CmdCharMinus;
 	while ((CmdChar = strchr(ptCh, key)) != NULL) {
 		CommandType = _PG_KEYSTROKE_MINUS;
-		indChar = CmdChar - CmdCharMinus;
+		indChar = int(CmdChar - CmdCharMinus);
 		if (indChar >= 0) {
 			pg_update_variable(_PG_KEYSTROKE, CommandType,
 				indChar, 0.0F);
@@ -2284,7 +2332,7 @@ void pg_keyStrokeScripts(int key) {
 	ptCh = CmdCharPlus;
 	if ((CmdChar = strchr(ptCh, key)) != NULL) {
 		CommandType = _PG_KEYSTROKE_PLUS;
-		indChar = CmdChar - CmdCharPlus;
+		indChar = int(CmdChar - CmdCharPlus);
 		// printf("indChar %d\n", indChar);
 		if (indChar >= 0) {
 			pg_update_variable(_PG_KEYSTROKE, CommandType,
@@ -2440,6 +2488,7 @@ void pg_continuous_flahes(void) {
 	}
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	if (flashTrkPart_freq_0 > PG_LOOP_SIZE) { // if flashTrkPart_freq_0 > PG_LOOP_SIZE -> update every frame
 		flashTrkPart_weights[0] = 1.0;
 		// printf( "flashTrkPart (%d)\n" , flashTrkPart_freq_0 );
@@ -2461,6 +2510,7 @@ void pg_continuous_flahes(void) {
 		flashTrkPart_weights[3] = 1.0;
 		// printf( "flashTrkPart (%d)\n" , flashTrkPart_freq_2 );
 	}
+#endif
 #endif
 
 #if PG_NB_TRACKS >= 2
@@ -2498,6 +2548,7 @@ void pg_continuous_flahes(void) {
 		flashCABG_weight = 1.0;
 		// printf( "flashCABG_freq (%d)\n" , flashCABG_freq );
 	}
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	if (flashCAPart_freq > PG_LOOP_SIZE) { // if flashCAPart_freq > PG_LOOP_SIZE -> update every frame
 		flashCAPart_weight = 1.0;
 		// printf( "flashCAPart_freq (%d)\n" , flashCAPart_freq );
@@ -2510,6 +2561,7 @@ void pg_continuous_flahes(void) {
 		flashPartCA_weight = 1.0;
 		// printf( "flashPartCA_freq (%d)\n" , flashPartCA_freq );
 	}
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -2573,7 +2625,8 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 
-	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#ifdef PG_WITH_PUREDATA
+				  // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SOUND RESET ++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _reset_sound: {
@@ -2589,6 +2642,7 @@ void pg_aliasScript(char *command_symbol,
 
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ QUITS +++++++++++++++++++++++++++++++++ 
@@ -2753,6 +2807,7 @@ void pg_aliasScript(char *command_symbol,
 		}
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 		if (flashTrkPart_freq_0 > 0
 			&& flashTrkPart_freq_0 <= PG_LOOP_SIZE // if flashTrkPart_freq_0 > PG_LOOP_SIZE -> update every frame
 			&& (pg_BeatNo % (PG_LOOP_SIZE / flashTrkPart_freq_0)) == 0) {
@@ -2783,6 +2838,7 @@ void pg_aliasScript(char *command_symbol,
 			// printf( "flashTrkPart 3 (%.2f)\n" , flashTrkPart_weights[3] );
 		}
 #endif
+#endif
 
 		if (flashCABG_freq > 0
 			&& flashCABG_freq <= PG_LOOP_SIZE // if flashCABG_freq > PG_LOOP_SIZE -> update every frame
@@ -2790,6 +2846,8 @@ void pg_aliasScript(char *command_symbol,
 			flashCABG_weight = 1.0;
 			// printf( "flashCABG_freq (%d)\n" , flashCABG_freq );
 		}
+
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 		if (flashCAPart_freq > 0
 			&& flashCAPart_freq <= PG_LOOP_SIZE // if flashCAPart_freq > PG_LOOP_SIZE -> update every frame
 			&& (pg_BeatNo % (PG_LOOP_SIZE / flashCAPart_freq)) == 0) {
@@ -2808,8 +2866,9 @@ void pg_aliasScript(char *command_symbol,
 			flashPartCA_weight = 1.0;
 			// printf( "flashPartCA_freq (%d)\n" , flashPartCA_freq );
 		}
+#endif
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 		// updates display messages according to text_swap_freq (4)
 		// for a swap duration of message_swap_duration
 		if (AbsoluteInitialScenarioTime != InitialRealTime - 1000000.f
@@ -2909,6 +2968,7 @@ void pg_aliasScript(char *command_symbol,
 		}
 		break;
 	}
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	case _flashTrkPart_onOff: {
 		switch (currentDrawingTrack) {
 		case 0:
@@ -2957,6 +3017,7 @@ void pg_aliasScript(char *command_symbol,
 
 		break;
 	}
+#endif
 
 	// ====================================== 
 	// keystroke s: Snapshot                  
@@ -3039,6 +3100,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PART EXIT/STROKE/COLOR MODE +++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -3159,6 +3221,7 @@ void pg_aliasScript(char *command_symbol,
 		}
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ BLUR +++++++++++++++++++++++++++ 
@@ -3291,8 +3354,9 @@ void pg_aliasScript(char *command_symbol,
 	}
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
+	// +++++++++++++++++ PARTICLE MODES ++++++++++++++++++++++++
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _partExit_mode_plus: {
 		partExit_mode = (partExit_mode + 1) % PG_NB_PARTEXIT_MODES;
@@ -3309,6 +3373,7 @@ void pg_aliasScript(char *command_symbol,
 		BrokenInterpolationVar[_partColor_mode] = true;
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ B/W SWITCH ++++++++++++++++++++++++++++ 
@@ -3459,6 +3524,7 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++ TRACK NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
+#ifdef PG_WITH_PUREDATA
 	case _soundtrack_plus: {
 		if (nb_soundtracks > 0) {
 			if (currentlyPlaying_trackNo >= 0) {
@@ -3481,6 +3547,7 @@ void pg_aliasScript(char *command_symbol,
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		break;
 	}
+#endif
 
 	case _movie_onOff: {
 		movie_on = !movie_on;
@@ -3640,6 +3707,56 @@ void pg_aliasScript(char *command_symbol,
 	}
 #endif
 
+#ifdef CRITON
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+	// +++++++++++++++++ SOUND CONTROL +++++++++++++++++++++++++
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
+	case _sound_open: {
+		pg_send_message_udp((char *)"", (char *)"/sound_open", (char *)"udp_SoundJUCE_send");
+		break;
+	}
+	case _sound_play: {
+		pg_send_message_udp((char *)"", (char *)"/sound_play", (char *)"udp_SoundJUCE_send");
+		break;
+	}
+	case _sound_loop: {
+		pg_send_message_udp((char *)"", (char *)"/sound_loop", (char *)"udp_SoundJUCE_send");
+		break;
+	}
+	case _sound_stop: {
+		pg_send_message_udp((char *)"", (char *)"/sound_stop", (char *)"udp_SoundJUCE_send");
+		break;
+	}
+	case _sound_exit: {
+		pg_send_message_udp((char *)"", (char *)"/sound_exit", (char *)"udp_SoundJUCE_send");
+		break;
+	}
+	case _fftLevel8: {
+		//printf("fft levels: ");
+		//for (int indArg = 0; indArg < 8; indArg++) {
+		//	printf("%.2f/%.2f ", arguments[2 * indArg], arguments[2 * indArg + 1]);
+		//}
+		//printf("\n");
+		float totFFTLevel = 0.f;
+		for (int indArg = 0; indArg < 8; indArg++) {
+			fftFrequencies[indArg] = arguments[3 * indArg];
+			fftLevels[indArg] = arguments[3 * indArg + 1];
+			fftPhases[indArg] = arguments[3 * indArg + 2];
+			totFFTLevel += fftLevels[indArg];
+		}
+		// normalization of the levels (sum = 0.5 (because cos + 1 used for color))
+		totFFTLevel *= 2.f;
+		if (totFFTLevel > 0.f) {
+			for (int indArg = 0; indArg < 8; indArg++) {
+				fftLevels[indArg] /= totFFTLevel;
+			}
+		}
+		break;
+	}
+#endif
+
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 	// +++++++++++++++++ MOVIE NO ++++++++++++++++++++++++++++++ 
@@ -3750,44 +3867,56 @@ void pg_aliasScript(char *command_symbol,
 void update_pulsed_colors(void) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// PEN PULSED COLOR
-	float lowPenPalette = floor(pen_color * nb_pen_palette_colors);
-	int indLowPenPalette
-		= int(lowPenPalette) % nb_pen_palette_colors;
-	int indUpperPenPalette
-		= (indLowPenPalette + 1) % nb_pen_palette_colors;
+	float lowPenPalette[3];
+	int indLowPenPalette[3];
+	int indUpperPenPalette[3];
 
-	// blending the two closest palettes
-	float percentage = pen_color * nb_pen_palette_colors - lowPenPalette;
+	// blending the two closest palettes of the pulsed pen color
+	float percentage[3];
+	if (pen_color_pulse > 0) {
+		for (int indColor = 0; indColor < 3; indColor++) {
+			float pulsed_pen_color = (pen_color + pulse[indColor] * pen_color_pulse);
+			lowPenPalette[indColor] = floor(pulsed_pen_color * nb_pen_palette_colors);
+			indLowPenPalette[indColor] = int(lowPenPalette[indColor]) % nb_pen_palette_colors;
+			indUpperPenPalette[indColor] = (indLowPenPalette[indColor] + 1) % nb_pen_palette_colors;
+			percentage[indColor] = pulsed_pen_color * nb_pen_palette_colors - lowPenPalette[indColor];
+		}
+	}
+	else {
+		for (int indColor = 0; indColor < 3; indColor++) {
+			lowPenPalette[indColor] = floor(pen_color * nb_pen_palette_colors);
+			indLowPenPalette[indColor] = int(lowPenPalette[indColor]) % nb_pen_palette_colors;
+			indUpperPenPalette[indColor] = (indLowPenPalette[indColor] + 1) % nb_pen_palette_colors;
+			percentage[indColor] = pen_color * nb_pen_palette_colors - lowPenPalette[indColor];
+		}
+	}
+
 	// the base palette is obtained by interpolating the two closest palettes according to pen_color
-	for (int ind = 0; ind < 9; ind++) {
-		pen_base_3color_palette[ind] = (1.f - percentage) * pen_palette_colors_values[indLowPenPalette][ind]
-			+ percentage * pen_palette_colors_values[indUpperPenPalette][ind];
-		pen_base_3color_palette[ind] = min(1.f, pen_base_3color_palette[ind]);
+	for (int indColor = 0; indColor < 3; indColor++) {
+		for (int indChannel = 0; indChannel < 3; indChannel++) {
+			pen_base_3color_palette[indColor * 3 + indChannel] 
+				= (1.f - percentage[indColor]) * pen_palette_colors_values[indLowPenPalette[indColor]][indColor * 3 + indChannel]
+				+ percentage[indColor] * pen_palette_colors_values[indUpperPenPalette[indColor]][indColor * 3 + indChannel];
+			pen_base_3color_palette[indColor * 3 + indChannel] = min(1.f, pen_base_3color_palette[indColor * 3 + indChannel]);
+		}
 	}
 	//printf("pen color %.2f palette low/upper/perc %d/%d/%.2f -> colors %.1f %.1f %.1f       %.1f %.1f %.1f        %.1f %.1f %.1f\n", 
 	//	pen_color, indLowPenPalette, indUpperPenPalette, percentage, pen_base_3color_palette[0]*255.f,
 	//	pen_base_3color_palette[1]*255.f, pen_base_3color_palette[2]*255.f, pen_base_3color_palette[3]*255.f, pen_base_3color_palette[4]*255.f, pen_base_3color_palette[5]*255.f,
 	//	pen_base_3color_palette[6]*255.f, pen_base_3color_palette[7]*255.f, pen_base_3color_palette[8]*255.f);
-	// calculating the pulsed color from base luminance + palette colors modulated by the three frequence ranges
+	// calculating the color from base luminance + palette colors modulated by the three frequence ranges
 	for (int indChannel = 0; indChannel < 3; indChannel++) {
 		// adding a base luminance
 		pulsed_pen_color[indChannel] = pen_grey;
-		for (int indPulse = 0; indPulse < 3; indPulse++) {
-			if (pen_color_pulse >= 0) {
-				pulsed_pen_color[indChannel]
-					+= pen_base_3color_palette[indPulse * 3 + indChannel] * pulse[indPulse] * pen_color_pulse;
-			}
-			else {
-				pulsed_pen_color[indChannel]
-					+= pen_base_3color_palette[indPulse * 3 + indChannel] * pulse[indPulse];
-			}
+		for (int indColor = 0; indColor < 3; indColor++) {
+			pulsed_pen_color[indChannel]
+				+= pen_base_3color_palette[indColor * 3 + indChannel] / 3.f;
 		}
 		pulsed_pen_color[indChannel] = min(1.f, pulsed_pen_color[indChannel]);
 	}
 	pulsed_pen_color[3] = 1.f;
 	float value = (pulsed_pen_color[0] < pulsed_pen_color[1]) ? pulsed_pen_color[1] : pulsed_pen_color[0];
 	value = (value < pulsed_pen_color[2]) ? pulsed_pen_color[2] : value;
-    //printf( "pulsed_pen_color: %.2f %.2f %.2f    pulse: %.2f %.2f %.2f\n" , pulsed_pen_color[0] , pulsed_pen_color[1] , pulsed_pen_color[2] , pulse[0], pulse[1], pulse[2]);
 
 	// pen_color_pulse == -1 => saturation of the pulsed color
 	if (pen_color_pulse < 0 && value > 0) {
@@ -3796,6 +3925,7 @@ void update_pulsed_colors(void) {
 			pulsed_pen_color[indChannel] /= value;
 		}
 	}
+	// printf( "pulsed_pen_color: %.2f %.2f %.2f    pulse: %.2f %.2f %.2f\n" , pulsed_pen_color[0] , pulsed_pen_color[1] , pulsed_pen_color[2] , pulse[0], pulse[1], pulse[2]);
 
 	// the colors for drawing are inverted in case of inverted rendering, so that the drawing colors are not seen inverted
 	if (invertAllLayers) {
@@ -3814,38 +3944,50 @@ void update_pulsed_colors(void) {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// REPOP PULSED COLOR
-	float lowRepopPalette = floor(repop_color * nb_pen_palette_colors);
-	int indLowRepopPalette
-		= int(lowRepopPalette) % nb_pen_palette_colors;
-	int indUpperRepopPalette
-		= (indLowRepopPalette + 1) % nb_pen_palette_colors;
+	float lowRepopPalette[3];
+	int indLowRepopPalette[3];
+	int indUpperRepopPalette[3];
 
-	// blending the two closest palettes
-	percentage = repop_color * nb_pen_palette_colors - lowRepopPalette;
-	// the base palette is obtained by interpolating the two closest palettes according to repop_color
-	for (int ind = 0; ind < 9; ind++) {
-		repop_base_3color_palette[ind] = (1.f - percentage) * pen_palette_colors_values[indLowRepopPalette][ind]
-			+ percentage * pen_palette_colors_values[indUpperRepopPalette][ind];
-		repop_base_3color_palette[ind] = min(1.f, repop_base_3color_palette[ind]);
+	// blending the two closest palettes of the pulsed Repop color
+	if (repop_color_pulse > 0) {
+		for (int indColor = 0; indColor < 3; indColor++) {
+			float pulsed_repop_color = (repop_color + pulse[indColor] * repop_color_pulse);
+			lowRepopPalette[indColor] = floor(pulsed_repop_color * nb_pen_palette_colors);
+			indLowRepopPalette[indColor] = int(lowRepopPalette[indColor]) % nb_pen_palette_colors;
+			indUpperRepopPalette[indColor] = (indLowRepopPalette[indColor] + 1) % nb_pen_palette_colors;
+			percentage[indColor] = pulsed_repop_color * nb_pen_palette_colors - lowRepopPalette[indColor];
+		}
+	}
+	else {
+		for (int indColor = 0; indColor < 3; indColor++) {
+			lowRepopPalette[indColor] = floor(repop_color * nb_pen_palette_colors);
+			indLowRepopPalette[indColor] = int(lowRepopPalette[indColor]) % nb_pen_palette_colors;
+			indUpperRepopPalette[indColor] = (indLowRepopPalette[indColor] + 1) % nb_pen_palette_colors;
+			percentage[indColor] = repop_color * nb_pen_palette_colors - lowRepopPalette[indColor];
+		}
 	}
 
-	// calculating the pulsed color from base luminance + palette colors modulated by the three frequence ranges
+	// the base palette is obtained by interpolating the two closest palettes according to repop_color
+	for (int indColor = 0; indColor < 3; indColor++) {
+		for (int indChannel = 0; indChannel < 3; indChannel++) {
+			repop_base_3color_palette[indColor * 3 + indChannel]
+				= (1.f - percentage[indColor]) * pen_palette_colors_values[indLowPenPalette[indColor]][indColor * 3 + indChannel]
+				+ percentage[indColor] * pen_palette_colors_values[indUpperPenPalette[indColor]][indColor * 3 + indChannel];
+			repop_base_3color_palette[indColor * 3 + indChannel] = min(1.f, repop_base_3color_palette[indColor * 3 + indChannel]);
+		}
+	}
+
+	// calculating the color from base luminance + palette colors modulated by the three frequence ranges
 	for (int indChannel = 0; indChannel < 3; indChannel++) {
 		// adding a base luminance
 		pulsed_repop_color[indChannel] = repop_grey;
-		// we use Low/Medium/high frequency levels to blend the three colors of the palette
-		for (int indPulse = 0; indPulse < 3; indPulse++) {
-			if (repop_color_pulse >= 0) {
-				pulsed_repop_color[indChannel]
-					+= repop_base_3color_palette[indPulse * 3 + indChannel] * pulse[indPulse] * repop_color_pulse;
-			}
-			else {
-				pulsed_repop_color[indChannel]
-					+= repop_base_3color_palette[indPulse * 3 + indChannel] * pulse[indPulse];
-			}
+		for (int indColor = 0; indColor < 3; indColor++) {
+			pulsed_repop_color[indChannel]
+				+= repop_base_3color_palette[indColor * 3 + indChannel] / 3.f;
 		}
 		pulsed_repop_color[indChannel] = min(1.f, pulsed_repop_color[indChannel]);
 	}
+	pulsed_repop_color[3] = 1.f;
 	value = (pulsed_repop_color[0] < pulsed_repop_color[1]) ? pulsed_repop_color[1] : pulsed_repop_color[0];
 	value = (value < pulsed_repop_color[2]) ? pulsed_repop_color[2] : value;
 	// printf( "pulsed_repop_color: %f %f %f\n" , pulsed_repop_color[0] , pulsed_repop_color[1] , pulsed_repop_color[2] );

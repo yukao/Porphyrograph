@@ -66,9 +66,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>Porphyrograph_core_demo</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\core_demo\</OutDir>
-    <IntDir>$(Configuration)\core_demo\</IntDir>
+    <TargetName>Porphyrograph_core_Malaussena</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\core_Malaussena\</OutDir>
+    <IntDir>$(Configuration)\core_Malaussena\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

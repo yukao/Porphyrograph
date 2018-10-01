@@ -21,10 +21,10 @@
  * 02111-1307, USA.
  */
 
-#ifndef _VISUAL_STUDIO
+#ifndef _WIN32
 #include "config.h"
 #include <dirent.h>
-#endif // !_VISUAL_STUDIO
+#endif // !_WIN32
 
 /// UNIX included files 
 #ifdef UNIX
@@ -52,10 +52,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>    // math constants such as M_PI
 // define the round function for Visual Studio (not include in math.h)
-#ifdef _VISUAL_STUDIO
+#ifdef _WIN32
 	#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
 	//double round(double x) { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
-#endif // _VISUAL_STUDIO
+#endif // _WIN32
 #include <stdlib.h>
 #include <stdarg.h>     // Header File For Variable Argument Routines
 #include <string.h>
@@ -105,7 +105,7 @@
 	// transparent windows
 	#include <dwmapi.h>
 	
-	#ifndef _VISUAL_STUDIO
+	#ifndef _WIN32
 		#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
 			#define _TIMEVAL_DEFINED
 			struct timeval {
@@ -113,7 +113,7 @@
 			  unsigned long int tv_sec;
 			};
 		#endif /* !_TIMEVAL_DEFINED */
-	#endif /* !_VISUAL_STUDIO */
+	#endif /* !_WIN32 */
 #else // _WIN32
 	#include <sys/time.h>
 	#include <pthread.h>
@@ -165,11 +165,11 @@ using std::ifstream;
 #ifndef PG_WACOM_TABLET
 #define PG_WACOM_TABLET
 #endif
-#endif // _VISUAL_STUDIO
+#endif // _WIN32
 
-#if defined (TVW) || defined (CRITON)
+#if defined (TVW)
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
-#elif defined (GN) || defined (MALAUSSENA)
+#elif defined (GN) || defined (MALAUSSENA) || defined (CRITON)
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #elif defined (BONNOTTE)
 #define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
@@ -201,6 +201,10 @@ using std::ifstream;
 // NB CAMERA IMAGE CUMUL MODES
 #ifndef MALAUSSENA
 #define PG_WITH_CAMERA_CAPTURE
+#endif
+
+#ifndef CRITON
+#define PG_WITH_PUREDATA
 #endif
 
 #define PG_NB_VIDEO_CUMUL_MODES 4
@@ -244,7 +248,7 @@ using std::ifstream;
 //#define CA_GAL_BIN_NEUMANN		3
 //#define CA_NEUMANN_BINARY         4
 #endif
-#if defined(TVW) || defined (CRITON)
+#if defined(TVW)
 #define PG_NB_CA_TYPES 5
 //#define CA_PREY                    0
 //#define CA_DISLOCATION             1
@@ -252,6 +256,10 @@ using std::ifstream;
 //#define CA_SOCIAL_PD               3
 //#define CA_PATHS                   4
 //#define CA_LETSGO                  5
+#endif
+#if defined(CRITON)
+#define PG_NB_CA_TYPES 1
+//#define CA_PROTOCELLS                    0
 #endif
 #if !defined(GN) && !defined(MALAUSSENA) && !defined(TVW) && !defined(CRITON)
 #define PG_NB_CA_TYPES 4
@@ -266,11 +274,12 @@ using std::ifstream;
 
 // CURVE VS SPLAT PARTICLES
 // #define BLURRED_SPLAT_PARTICLES
-#if defined(TVW) || defined (CRITON) || defined (BONNOTTE)
+#if defined(TVW) || defined (BONNOTTE)
 #define BLURRED_SPLAT_PARTICLES
+#undef BLURRED_SPLAT_PARTICLES_TEXTURED
 #elif defined (DASEIN)
 #define CURVE_PARTICLES
-#else
+#elif defined (effe) || defined (DEMO) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -304,30 +313,22 @@ using std::ifstream;
 #endif
 
 #ifdef _WIN32
-	#ifdef _VISUAL_STUDIO
 	//#ifdef PG_WACOM_TABLET
 		#include "../share/freeglut-wacom/include/GL/freeglut.h"
 	//#else // PG_WACOM_TABLET
 	//       #include "../share/freeglut-3.0.0/include/GL/freeglut.h"
-	//#endif // _VISUAL_STUDIO
-	#else // _VISUAL_STUDIO
-		#include <glut.h>
-	#endif // _VISUAL_STUDIO
-#else // LINUX
+	//#endif // _WIN32
+#endif
+#ifdef LINUX
+	#include <GL/freeglut.h>
+	#include <GL/freeglut_ext.h>
 
-	#include <GL/glu.h> 
-
-        #define   GLX_GLXEXT_LEGACY
+    #define   GLX_GLXEXT_LEGACY
 	#include <GL/glx.h>
-
-	#ifdef __APPLE_CC__
-		#include <GLUT/glut.h>
-	#else // __APPLE_CC__
-		#include <GL/freeglut.h>
-		#include <GL/freeglut_ext.h>
-	#endif // __APPLE_CC__
-
-#endif // _WIN32
+#endif
+#ifdef __APPLE_CC__
+	#include <GLUT/glut.h>
+#endif // __APPLE_CC__
 
 #ifdef GN
 #include "pg_script_header_GN.h"
@@ -346,6 +347,9 @@ using std::ifstream;
 #endif
 #ifdef VOLUSPA
 #include "pg_script_header_voluspa.h"
+#endif
+#ifdef INTERFERENCE
+#include "pg_script_header_interference.h"
 #endif
 #ifdef MALAUSSENA
 #include "pg_script_header_Malaussena.h"

@@ -14,13 +14,11 @@ bool      invertAllLayers;
 int       cursorSize;
 float     CAMasterWeight;
 uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
-float     PartMasterWeight;
 float     trackMasterWeight_0;
 bool      interfaceOnScreen;
 bool      hide;
-uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide;
 bool      mute_screen;
-uniform float uniform_Master_fs_1fv_mute_screen;
+uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen;
 
 // Main shader.
 
@@ -31,18 +29,17 @@ in vec2 decalCoords;  // coord text
 // INPUT
 layout (binding = 0) uniform samplerRect uniform_Master_texture_fs_Render_curr; // previous pass output
 layout (binding = 1) uniform samplerRect uniform_Master_texture_fs_CA;  // 2-cycle ping-pong Drawing pass CA step n (FBO attachment 3)
-layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Part_render;  // Particle step n
-layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Drawing pass BG track step n (FBO attachment 1)
+layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Drawing pass BG track step n (FBO attachment 1)
 #if PG_NB_TRACKS >= 2
-layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Drawing pass track 1 step n (FBO attachment 4)
+layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Drawing pass track 1 step n (FBO attachment 4)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Drawing pass track 2 step n (FBO attachment 5)
+layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Drawing pass track 2 step n (FBO attachment 5)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Drawing pass track 3 step n (FBO attachment 6)
+layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Drawing pass track 3 step n (FBO attachment 6)
 #endif
-layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // LYM logo
+layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // LYM logo
 
 /////////////////////////////////////
 // UNIFORMS
@@ -66,11 +63,10 @@ void main() {
   invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
   cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
   CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[0];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[1];
-  interfaceOnScreen = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[2] > 0 ? true : false);
-  hide = (uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_interfaceOnScreen_hide[3] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_1fv_mute_screen > 0 ? true : false);
+  trackMasterWeight_0 = uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[0];
+  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
+  hide = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
 
   vec2 coords = decalCoords;
   float leftWindowWidth = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
@@ -135,7 +131,6 @@ void main() {
   if( CA_color.a < 0 ) {
     CA_color = vec4(0.0);
   }
-  vec4 particle_color = texture(uniform_Master_texture_fs_Part_render, coords);
 #if PG_NB_TRACKS >= 2
   vec4 track1_color = texture(uniform_Master_texture_fs_Trk1, coords);
 #endif
@@ -160,7 +155,6 @@ void main() {
     + vec3(track3_color.rgb) * trackMasterWeight_3
 #endif
     +  CAMasterWeight * CA_color.rgb 
-    + particle_color.rgb * PartMasterWeight * particle_color.a
       , 0.0 , 1.0 );
     ;
 

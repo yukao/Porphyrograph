@@ -180,7 +180,7 @@ void udp_init( void ) {
   //for( int ind_IP_Client = 0 ; ind_IP_Client < nb_IP_Clients ; ind_IP_Client++ ) {
   //  IP_Clients[ ind_IP_Client ] = new pg_IPClient();
   //}
-  //IP_Clients[ 0 ]->id = "udp_QT_send";
+  //IP_Clients[ 0 ]->id = " udp_TouchOSC_send";
   //IP_Clients[ 0 ]->Remote_server_IP = "127.0.0.1";
   //IP_Clients[ 0 ]->Remote_server_port = 1979;
   //IP_Clients[ 0 ]->send_format = Plain;
@@ -190,10 +190,10 @@ void udp_init( void ) {
   for( int ind_IP_Client = 0 ; ind_IP_Client < nb_IP_Clients ; ind_IP_Client++ ) {
     IP_Clients[ ind_IP_Client ]->InitClient();
   }
+  printf("\n");
 }
 
 void pg_send_message_udp( char *pattern , char * message , char *targetHostid ) {
-	// sprintf( AuxString , "/particles_can %f" , particleMode ); pg_send_message_udp( (char *)"f" , AuxString , (char *)"udp_QT_send" );
 	pg_IPClient* targetHost = NULL;
 	for( int ind = 0 ; ind < nb_IP_Clients ; ind++ ) {
 		if( strcmp( targetHostid , IP_Clients[ ind ]->id.c_str() ) == 0 ) {
@@ -202,7 +202,7 @@ void pg_send_message_udp( char *pattern , char * message , char *targetHostid ) 
 		}
 	}
 	if( !targetHost ) {
-		printf( "UDP client unknown %s\n" , targetHostid );
+		printf( "UDP client unknown '%s'\n" , targetHostid );
 		return;
 	}
 	// printf("send_message_udp %s %s %d %d\n", message, pattern, nb_IP_Clients, targetHost);
@@ -335,8 +335,8 @@ void pg_IPClient::InitClient( void ) {
 	inet_pton(AF_INET, hname, &(remoteServAddr.sin_addr));
 	remoteServAddr.sin_port = htons(Remote_server_port);
 
-	printf("Network client: sending data to '%s' (%s) on port %d\n",
-		Remote_server_IP.c_str(), hname, Remote_server_port);
+	printf("Network client '%s': sending data to '%s' (%s) on port %d\n",
+		id.c_str(), Remote_server_IP.c_str(), hname, Remote_server_port);
 
 	/* socket creation */
 	//memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
@@ -356,7 +356,6 @@ void pg_IPClient::InitClient( void ) {
 	IP_OutputStackInitialization();
     }
   }
-  printf("\n");
 }
 
 void pg_IPClient::IP_OutputStackInitialization( void ) {
@@ -1294,9 +1293,9 @@ void pg_IPServer::ProcessFilteredInputMessages( void ) {
 
       float args[MAX_OSC_ARGUMENTS];
       for( int ind = 0 ; ind < MAX_OSC_ARGUMENTS ; ind++ ) {
-	  args[ind] = (float)atof( OSC_arguments[ind] );
+		args[ind] = (float)atof( OSC_arguments[ind] );
       }
-      pg_aliasScript( OSCTag , OSC_arguments[0] , args );
+      pg_aliasScript( OSCTag , args );
     }
     else {
       sprintf( ErrorStr , "Error: incorrect external message syntax %s!" , messString ); ReportError( ErrorStr ) ; break;

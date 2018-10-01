@@ -77,12 +77,16 @@ PaStream *pg_audio_stream;
 ////////////////////////////////////////////////////////////////////
 // LAUNCHED PERFORMANCE
 ////////////////////////////////////////////////////////////////////
-bool pg_Launched_Perfromance = false;
+bool  pg_Launched_Performance = false;
 
 ////////////////////////////////////////////////////////////////////
 // INPUT LEVEL
 ////////////////////////////////////////////////////////////////////
+#ifdef CRITON
+float input_level = 0.0f;
+#else
 float input_level = 1.0f;
+#endif
 
 ////////////////////////////////////////////////////////////////////
 // LOOP BUFFER
@@ -106,6 +110,67 @@ void* pg_threadedWriteRecordingOutput(void * lpParam) {
 		PG_RECORDINGBUFFER_SIZE );
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////
+// FFT PERSONAL FUNCTIONS
+////////////////////////////////////////////////////////////////////
+#ifndef JUCE_APP_VERSION
+typedef std::vector<std::vector<char>> PlotMatrixType;
+template <typename Iterator>
+void dotPlot(PlotMatrixType& plotData, Iterator begin, Iterator end)
+{
+	const double max = *std::max_element(begin, end);
+	const double min = *std::min_element(begin, end);
+	const double range = max - min;
+	size_t m_height = 16;
+
+	for (std::size_t xPos = 0; xPos < plotData.size(); ++xPos)
+	{
+		plotData[xPos].resize(m_height, ' ');
+		double normalizedValue = (*begin++ - min) / range;
+		std::size_t yPos = m_height - static_cast<std::size_t>(
+			std::ceil(m_height * normalizedValue));
+
+		// bound the value so it stays within vector dimension
+		if (yPos >= m_height)
+			yPos = m_height - 1;
+		plotData[xPos][yPos] = '*';
+	}
+
+	const std::size_t length = plotData.size();
+
+	std::cout << "\n" << "Title" << "\n";
+	// output the plot data, flushing only at the end
+	for (unsigned int y = 0; y < m_height; ++y)
+	{
+		for (unsigned int x = 0; x < length; ++x)
+		{
+			std::cout << plotData[x][y];
+		}
+		std::cout << "\n";
+	}
+	std::cout.flush();
+}
+void spectrumValuesByRows(Aquila::SpectrumType spectrum)
+{
+	std::size_t halfLength = spectrum.size() / 2;
+	if (traceFFT) {
+		printf("FFT: ");
+		// std::vector<double> absSpectrum(halfLength);
+		for (std::size_t i = 0; i < halfLength; ++i)
+		{
+			// absSpectrum[i] = std::abs(spectrum[i]);
+			// amplitude
+			printf("%.2f/", abs(spectrum[i]));
+			// phase 
+			printf("%.2f ", arg(spectrum[i]) / M_PI);
+		}
+		printf("\n");
+		// PlotMatrixType plotData(absSpectrum.size());
+		// dotPlot(plotData, absSpectrum.begin(), absSpectrum.end());
+	}
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////
 // AUDIO STREAM VST PLUGIN I/O PROCESSING
@@ -163,6 +228,33 @@ bool pg_VSTeffect_IO_processor(float *VSTinput, float *VSToutput, unsigned long 
 			}
 		}
 	}
+	// FFT analysis and plotting
+	// COPIES THE RIGHT AND LEFT SAMPLES IN TWO SEPARATE BUFFERS
+	for (long indCurFrame = 0; indCurFrame < long(framesPerBuffer); indCurFrame++) {
+		for (int indCh = 0; indCh < PG_AUDIO_NB_CHANNELS; indCh++) {
+			pg_FFT_InputBuffer[indCh][indCurFrame]
+				= double(VSTinput[indCurFrame * PG_AUDIO_NB_CHANNELS + indCh]);
+		}
+	}
+
+#ifndef JUCE_APP_VERSION
+	// aquila FFT
+	std::shared_ptr<Aquila::Fft> fft = Aquila::FftFactory::getFft(PG_FFT_SIZE);
+	std::shared_ptr<Aquila::Fft> lastFft = Aquila::FftFactory::getFft(framesPerBuffer % PG_FFT_SIZE);
+	Aquila::TextPlot plt("Input signal");
+	for (int indCh = 0; indCh < PG_AUDIO_NB_CHANNELS; indCh++) {
+		for (int ind = 0; ind < int(floor(PG_FFT_SIZE / framesPerBuffer)); ind++) {
+			Aquila::SpectrumType spectrum = fft->fft(pg_FFT_InputBuffer[indCh] + ind * PG_FFT_SIZE);
+			plt.setTitle("Spectrum");
+			spectrumValuesByRows(spectrum);
+		}
+		int lastInd = int(floor(PG_FFT_SIZE / framesPerBuffer));
+		Aquila::SpectrumType lastSpectrum = lastFft->fft(pg_FFT_InputBuffer[indCh] + lastInd * PG_FFT_SIZE);
+		plt.setTitle("Spectrum");
+		spectrumValuesByRows(lastSpectrum);
+	}
+
+	// FILTERING BASED ON FFT ANALYSIS --- to be reconsidered when it is clear that FFT analysis works
 	/*
 	else {
 		for (long indCurFrame = 0; indCurFrame < long(framesPerBuffer); indCurFrame++) {
@@ -256,6 +348,7 @@ bool pg_VSTeffect_IO_processor(float *VSTinput, float *VSToutput, unsigned long 
 		}
 	}
 	*/
+#endif
 
 	/////////////////////////////////////////////////////
 	// VST EFFECTS processing of the samples (by directly applying 
@@ -309,6 +402,9 @@ bool pg_VSTeffect_IO_processor(float *VSTinput, float *VSToutput, unsigned long 
 bool pg_loop_processor(float *loopInputBuffer, float *loopOutputBuffer, unsigned long framesPerBuffer) {
 	bool valret = true;
 	// printf("Frames per Output buffer %ld\n",framesPerBuffer);
+	// printf("Loop rec/play %d/%d %d/%d %d/%d \n", LoopBuffer[0]->loopRecording, LoopBuffer[0]->loopPlaying, 
+	//LoopBuffer[1]->loopRecording, LoopBuffer[1]->loopPlaying, 
+	//LoopBuffer[2]->loopRecording, LoopBuffer[2]->loopPlaying);
 
 	////////////////////////////////////////////////////
 	// the input buffers (from portaudio or from a wav file) are
@@ -810,7 +906,7 @@ static int pg_audio_paStreamCallback( const void *inputBuffer, void *outputBuffe
 	// live input processing (loop)
     if( inputBuffer == NULL )
     {
-		printf("NuLL input buffer\n");
+		printf("NULL input buffer\n");
 		// silent input
 		memset((void *)pg_InLine_InputBuffer, 0, (framesPerBuffer * PG_AUDIO_NB_CHANNELS) * sizeof(float));
     }
@@ -824,12 +920,23 @@ static int pg_audio_paStreamCallback( const void *inputBuffer, void *outputBuffe
 			}
 		}
 		*/
+		// input buffer cleaning
 		memset((void *)pg_InLine_InputBuffer, 0, (framesPerBuffer * PG_AUDIO_NB_CHANNELS) * sizeof(float));
-		if (!LoopBuffer[0]->loopEmpty || !LoopBuffer[1]->loopEmpty) {
+
+		// managing the loops if there are some active
+		bool oneNonEmptyLoop = false;
+		for (int indLoopTrack = 0; indLoopTrack < PG_NB_LOOP_BUFFERS; indLoopTrack++) {
+			if (!LoopBuffer[indLoopTrack]->loopEmpty) {
+				oneNonEmptyLoop = true;
+				break;
+			}
+		}
+		if(oneNonEmptyLoop) {
 			// if it records: plays the existing loop and stores the input inside the loop
 			// if it plays: plays the existing loop 
 			pg_loop_processor(floatInputBuffer, pg_InLine_InputBuffer, framesPerBuffer);
 		}
+
 		//if (input_level > 0.0f) {
 		// adds the current input to the possible loop output
 		// and transforms left and right mono into L+R stereo
