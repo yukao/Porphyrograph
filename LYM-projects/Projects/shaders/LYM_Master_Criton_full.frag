@@ -79,7 +79,7 @@ void main() {
 #endif
 
   // vertical mirror
-    coords.y = height - coords.y;
+  //  coords.y = height - coords.y;
   // ST OUEN horizontal mirror
   // coords.x = width - coords.x;
   // double mirror
@@ -166,9 +166,9 @@ void main() {
   float coordX = decalCoords.x;
 
   // comment for single cursor
-  if( coordX > width) {
-    coordX -= width;
-  }
+  // if( coordX > width) {
+  //   coordX -= width;
+  // }
   // comment for single cursor
 
 // vertical mirror

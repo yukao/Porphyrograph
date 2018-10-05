@@ -184,48 +184,14 @@ int main(int argcMain, char **argvMain) {
 	// glut parameters initialization 
 	glutInit(&argc, argv);
 	initGlutWindows();
-
-	// glut win activation
-	glutSetWindow(CurrentWindow->glutID);
 	printOglError(474);
 
-	/*
-	///////////////////////////////////////////////
-	// MEMORIZES THE OPENGL CONTEXT OF THE MAIN THREAD
-	// TO BE CHANGED AND MADE SIMILAR TO TVW
-	//MainOpenGLDeviceContext = wglGetCurrentDC();
-	//MainOpenGLRenderingContext = wglGetCurrentContext();
-	for (int indContext = 0; indContext < PG_MAX_NUMBER_OF_OPENGL_CONTEXTS; indContext++) {
-		//	SharedOpenGLRenderingContext[indContext] = wglCreateContext(MainOpenGLDeviceContext);
-		//	BOOL error = wglShareLists(SharedOpenGLRenderingContext[indContext], MainOpenGLRenderingContext);
-		//	if (error == FALSE) {
-		//		printOglError(234);
-		//		printf("Destruction of OpenGL context %d\n", indContext);
-		//		//Destroy the GL context and just use 1 GL context
-		//		wglDeleteContext(SharedOpenGLRenderingContext[indContext]);
-		//		SharedOpenGLRenderingContext[indContext] = NULL;
-		//	}
-		ThreadOpenGLTextureDataOld[indContext].is_free = true;
-		ThreadOpenGLTextureDataOld[indContext].loaderContext = NULL;
-	}
-	//wglMakeCurrent(MainOpenGLDeviceContext, MainOpenGLRenderingContext);
-	printOglError(405);
-	*/
-
-//#ifdef TVW
-//	///////////////////////////////////////////////
-//	// MEMORIZES THE OPENGL CONTEXT OF THE MAIN THREAD
-//	init_OpenGL_threading_contextsTVW();
-//#endif
-
-	// OpenGL initialization
+	// OpenGL initialization (clear buffer)
 	OpenGLInit();
 	// cursor shape selection
 	CursorInit();
 	printOglError(475);
 
-	// window resize
-	window_reshape(window_width, window_height);
 
 	// initializations before rendering
 
@@ -369,6 +335,11 @@ void initGlutWindows( void ) {
   glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_BORDERLESS ); // 
   
   CurrentWindow->glutID = glutCreateWindow(" ");
+
+  // window resize
+  printf("Window size %dx%d\n", window_width, window_height);
+  glutReshapeWindow(window_width, window_height);
+  // glutFullScreen();                      // Switch into full screen
 
   ///////////////////////////////////////////////
   // OpenGL extended
@@ -940,10 +911,11 @@ void window_reshape(GLsizei width, GLsizei height) {
 	// glutPositionWindow(window_x + doubleWindowWidth - width, window_y);
 	glutReshapeWindow(window_width, window_height);
 
-  //  printf("reshape main win %d %d %d\n" , window_width , window_height , width , height );
-  printf( "Resize Window %dx%d\n" , window_width , window_height );
+	//  printf("reshape main win %d %d %d\n" , window_width , window_height , width , height );
+	printf( "Resize Window %dx%d\n" , window_width , window_height );
 
-  setWindowDimensions();
+	setWindowDimensions();
+	pg_initRenderingMatrices();
 }
 
 

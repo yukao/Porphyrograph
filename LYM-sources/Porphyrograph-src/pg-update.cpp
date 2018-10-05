@@ -1363,8 +1363,12 @@ void pg_update_shader_uniforms(void) {
 		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
 			0.625f, 0.703125f, 0.625f, 0.703125f);
 	}
+	else if (leftWindowWidth == 1920 && window_height == 1080) {
+		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
+			0.9375f, 0.52734375f, 0.9375f, 0.52734375f );
+	}
 	else {
-		printf("unexpected window format for diaporama (known formats 1024x768 && 1280x720\n");
+		printf("Current images: unexpected window format for diaporama (known formats 1024x768 && 1280x720 (%dx%d)\n", leftWindowWidth, window_height);
 	}
 	//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
 	//	(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,

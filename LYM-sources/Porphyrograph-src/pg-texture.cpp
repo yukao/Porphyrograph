@@ -794,23 +794,23 @@ void loadCameraFrame(bool initial_capture) {
 		// tries to preserve ratio
 		float window_ratio = float(leftWindowWidth) / window_height;
 		if ( pg_camera_frame.rows * window_ratio < pg_camera_frame.cols) {
-			printf("camera size height leading\n");
+			// printf("camera size height leading\n");
 			pg_camera_frame_width = int(pg_camera_frame.rows * window_ratio);
 			pg_camera_frame_height = pg_camera_frame.rows;
 			pg_camera_x_offset = (pg_camera_frame.rows - pg_camera_frame_width) / 2;
 			pg_camera_y_offset = 0;
 		}
 		else {
-			printf("camera size width leading\n");
+			// printf("camera size width leading\n");
 			pg_camera_frame_width = pg_camera_frame.cols;
 			pg_camera_frame_height = pg_camera_frame.rows;
 			if (pg_camera_frame.cols / window_ratio < pg_camera_frame.rows) {
-				printf("horizontal offset\n");
+				// printf("horizontal offset\n");
 				pg_camera_x_offset = (int(pg_camera_frame.rows * window_ratio) - pg_camera_frame.cols) / 2;
 				pg_camera_y_offset = 0;
 			}
 			else {
-				printf("camera height respecting\n");
+				// printf("camera height respecting\n");
 				pg_camera_frame_height = pg_camera_frame.rows;
 				pg_camera_x_offset = 0;
 				pg_camera_y_offset = 0;
@@ -2286,7 +2286,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 						true, 2048, 1024, false);
 				}
 				else {
-					printf("unexpected window format for diaporama (known formats 1024x768 && 1280x720\n");
+					printf("Iniital images: unexpected window format for diaporama (known formats 1024x768 && 1280x720\n");
 				}
 				delete fileName;
 				fileName = NULL;
