@@ -259,6 +259,7 @@ VideoCapture  pg_camera_capture;
 char pg_camera_capture_name[256];
 VideoCapture  pg_movie_capture;
 int pg_movie_nbFrames = 0;
+float lastFrameCaptureTime = -1.f;
 bool is_movieLooping = false;
 bool is_movieLoading = false;
 bool secondCurrentBGCapture = false;
@@ -865,58 +866,65 @@ void camera_and_video_frame_updates(void) {
 	if (currentVideoTrack >= 0 && movieCaptFreq > 0
 		&& currentlyPlaying_movieNo >= 0
 		&& !is_movieLooping && !is_movieLoading
-		&& pg_FrameNo % int(60.0 / movieCaptFreq) == 0 // currentVideoTrack <=> video off
-													   // frame capture
 		) {
-
-		if (pg_movie_nbFrames < 10 || !pg_movie_capture.grab()) {
-			// loops unless a thread for looping has been launched
-			printf("movie loop %d\n", pg_movie_nbFrames);
-			is_movieLooping = true;
-#ifdef WIN32
-			DWORD rc;
-			HANDLE  hThread = CreateThread(
-				NULL,                   // default security attributes
-				0,                      // use default stack size  
-				pg_movieLoop,		    // thread function name
-				(void *)NULL,		    // argument to thread function 
-				0,                      // use default creation flags 
-				&rc);   // returns the thread identifier 
-			if (hThread == NULL) {
-				std::cout << "Error:unable to create thread pg_movieLoop" << std::endl;
-				exit(-1);
-			}
-			CloseHandle(hThread);
-#else
-			pthread_t drawing_thread;
-			int rc;
-			rc = pthread_create(&drawing_thread, NULL,
-				pg_movieLoop, (void *)NULL);
-			if (rc) {
-				std::cout << "Error:unable to create thread pg_movieLoop" << rc << std::endl;
-				exit(-1);
-			}
-			pthread_exit(NULL);
-#endif
+		if (lastFrameCaptureTime < 0.f) { // first capture
+			lastFrameCaptureTime = CurrentClockTime - (1.0f / movieCaptFreq);
 		}
-		else {
-			// non threaded
-			Mat pg_movie_frame;
-			pg_movie_capture >> pg_movie_frame;
-			pg_movie_nbFrames--;
-			if (pg_movie_frame.data) {
-				glEnable(GL_TEXTURE_RECTANGLE);
-				glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
-				glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
-					0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-					GL_RGB,            // Internal colour format to convert to
-					pg_movie_frame_width,          // Image width  i.e. 640 for Kinect in standard mode
-					pg_movie_frame_height,          // Image height i.e. 480 for Kinect in standard mode
-					0,                 // Border width in pixels (can either be 1 or 0)
-					GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-					GL_UNSIGNED_BYTE,  // Image data type
-					(char *)pg_movie_frame.data);        // The actual image data itself
+		float elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
+		// printf("\nCurrent time %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
+		while (elapsedTimeSinceLastCapture >= (1.0f / movieCaptFreq) ) { // frame capture
+			lastFrameCaptureTime = CurrentClockTime + (elapsedTimeSinceLastCapture - (1.0f / movieCaptFreq));
+			if (pg_movie_nbFrames < 10 || !pg_movie_capture.grab()) {
+				// loops unless a thread for looping has been launched
+				printf("movie loop %d\n", pg_movie_nbFrames);
+				is_movieLooping = true;
+#ifdef WIN32
+				DWORD rc;
+				HANDLE  hThread = CreateThread(
+					NULL,                   // default security attributes
+					0,                      // use default stack size  
+					pg_movieLoop,		    // thread function name
+					(void *)NULL,		    // argument to thread function 
+					0,                      // use default creation flags 
+					&rc);   // returns the thread identifier 
+				if (hThread == NULL) {
+					std::cout << "Error:unable to create thread pg_movieLoop" << std::endl;
+					exit(-1);
+				}
+				CloseHandle(hThread);
+#else
+				pthread_t drawing_thread;
+				int rc;
+				rc = pthread_create(&drawing_thread, NULL,
+					pg_movieLoop, (void *)NULL);
+				if (rc) {
+					std::cout << "Error:unable to create thread pg_movieLoop" << rc << std::endl;
+					exit(-1);
+				}
+				pthread_exit(NULL);
+#endif
 			}
+			else {
+				// non threaded
+				Mat pg_movie_frame;
+				pg_movie_capture >> pg_movie_frame;
+				pg_movie_nbFrames--;
+				if (pg_movie_frame.data) {
+					glEnable(GL_TEXTURE_RECTANGLE);
+					glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
+					glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
+						0,                 // Pyramid level (for mip-mapping) - 0 is the top level
+						GL_RGB,            // Internal colour format to convert to
+						pg_movie_frame_width,          // Image width  i.e. 640 for Kinect in standard mode
+						pg_movie_frame_height,          // Image height i.e. 480 for Kinect in standard mode
+						0,                 // Border width in pixels (can either be 1 or 0)
+						GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
+						GL_UNSIGNED_BYTE,  // Image data type
+						(char *)pg_movie_frame.data);        // The actual image data itself
+				}
+			}
+			elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
+			// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
 		}
 	}
 
@@ -959,6 +967,9 @@ void pg_update_shader_uniforms(void) {
 #endif
 #ifdef CRITON
 #include "pg_update_body_Criton.cpp"
+#endif
+#if defined (KOMPARTSD)
+#include "pg_update_body_KompartSD.cpp"
 #endif
 #ifdef effe
 #include "pg_update_body_effe.cpp"

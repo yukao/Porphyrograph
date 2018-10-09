@@ -33,6 +33,9 @@
 #ifdef CRITON
 #include "pg_shader_body_decl_Criton.cpp"
 #endif
+#if defined (KOMPARTSD)
+#include "pg_shader_body_decl_KompartSD.cpp"
+#endif
 #ifdef effe
 #include "pg_shader_body_decl_effe.cpp"
 #endif
@@ -496,6 +499,9 @@ void pg_loadAllShaders(void) {
 #endif
 #ifdef CRITON
 #include "pg_shader_body_bind_Criton.cpp"
+#endif
+#if defined (KOMPARTSD)
+#include "pg_shader_body_bind_KompartSD.cpp"
 #endif
 #ifdef effe
 #include "pg_shader_body_bind_effe.cpp"
@@ -988,7 +994,7 @@ void pg_loadAllShaders(void) {
 		) {
 		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift : %d, uniform_Update_fs_4fv_trkDecay : %d, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_flashTrkCAWghts : %d, uniform_Update_texture_fs_CA : %d, uniform_Update_texture_fs_Pixels : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_photo01_wh: %d, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H: %d, uniform_Update_fs_2fv_Camera_offSetsXY: %d, uniform_Update_fs_4fv_CAType_SubType_blurRadius: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift, uniform_Update_fs_4fv_trkDecay, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_flashTrkCAWghts, uniform_Update_texture_fs_CA, uniform_Update_texture_fs_Pixels, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_photo01_wh, uniform_Update_fs_4fv_photo01Wghts_Camera_W_H, uniform_Update_fs_2fv_Camera_offSetsXY, uniform_Update_fs_4fv_CAType_SubType_blurRadius, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
-		fprintf(stderr, "Could not bind uniforms Update uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d\n",, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght);
+		fprintf(stderr, "Could not bind uniforms Update uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d\n", uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght);
 #endif
 #ifdef MALAUSSENA
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_CAseed_type_size_loc : %d\n", uniform_Update_fs_4fv_CAseed_type_size_loc);

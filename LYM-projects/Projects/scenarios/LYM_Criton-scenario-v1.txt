@@ -79,14 +79,18 @@ ID	pen_brush	pen_radius	pen_radius_pulse	pen_color	pen_color_pulse	repop_color	r
 	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	l	s	l	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	k	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	k	k	k	s	s	s	s	s	s	k	k	s	s	s	s	s	s	s	s	s	s	s	s	k	k	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s	s
 /scene																																																																																																																																																																														
 /scenario																																																																																																																																																																														
-videos	0																																																																																																																																																																													
+videos	2																																																																																																																																																																													
+movie	demo/HOLD.mp4	HOLD																																																																																																																																																																												
+movie	demo/Erg_4_3.mp4	ERG																																																																																																																																																																												
 /videos																																																																																																																																																																														
 photos	0																																																																																																																																																																													
 /photos																																																																																																																																																																														
 brushes	3																																																																																																																																																																													
 ID	Pen_demo_3D																																																																																																																																																																													
 /brushes																																																																																																																																																																														
-soundtracks	0																																																																																																																																																																													
+soundtracks	2																																																																																																																																																																													
+track	Criton/20180513_WanderSteps_Prise4_MixV1.wav	WanderSteps_Full																																																																																																																																																																												
+track	Criton/20180513_WanderSteps_Prise4_MixV1_extracts.wav	WanderSteps_Extracts																																																																																																																																																																												
 /soundtracks																																																																																																																																																																														
 svg_paths	0	path_No	track_No	radius	color_r	color_g	color_b																																																																																																																																																																							
 /svg_paths																																																																																																																																																																														

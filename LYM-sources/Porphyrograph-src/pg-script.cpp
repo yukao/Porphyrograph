@@ -29,6 +29,9 @@
 #ifdef CRITON
 #include "pg_script_body_Criton.cpp"
 #endif
+#if defined (KOMPARTSD)
+#include "pg_script_body_KompartSD.cpp"
+#endif
 #ifdef effe
 #include "pg_script_body_effe.cpp"
 #endif
@@ -302,6 +305,7 @@ enum pg_stringCommands_IDs
 	_diaporama_plus,
 	_diaporama_minus,
 	_soundtrack_plus,
+	_soundtrack_minus,
 	_soundtrack_onOff,
 	_movie_onOff,
 	_pen_colorPreset_minus,
@@ -326,11 +330,8 @@ enum pg_stringCommands_IDs
 	_setup_minus,
 	_setup_plus_keep_total_dur,
 #ifdef CRITON
-	_sound_open,
-	_sound_play,
-	_sound_loop,
-	_sound_stop,
-	_sound_exit,
+	_JUCE_loop_track,
+	_JUCE_exit,
 	_fftLevel8,
 #endif
 };
@@ -394,6 +395,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "diaporama_plus", _diaporama_plus },
 	{ "diaporama_minus", _diaporama_minus },
 	{ "soundtrack_plus", _soundtrack_plus },
+	{ "soundtrack_minus", _soundtrack_minus },
 	{ "soundtrack_onOff", _soundtrack_onOff },
 	{ "movie_onOff", _movie_onOff },
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
@@ -418,11 +420,8 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "setup_minus", _setup_minus },
 	{ "setup_plus_keep_total_dur", _setup_plus_keep_total_dur },
 #ifdef CRITON
-	{ "sound_open", _sound_open },
-	{ "sound_play", _sound_play },
-	{ "sound_loop", _sound_loop },
-	{ "sound_stop", _sound_stop },
-	{ "sound_exit", _sound_exit },
+	{ "JUCE_loop_track", _JUCE_loop_track },
+	{ "JUCE_exit", _JUCE_exit },
 	{ "fftLevel8", _fftLevel8 },
 #endif
 };
@@ -1054,6 +1053,11 @@ void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		sprintf(AuxString, "/adc_onOff %d", int(adc_onOff));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 	}
+	else if (param_input_type == _PG_SCENARIO) {
+		adc_onOff = scenario_or_gui_command_value;
+		sprintf(AuxString, "/adc_onOff %d", int(adc_onOff));
+		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
+	}
 }
 #endif
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
@@ -1164,15 +1168,17 @@ void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 #endif
 }
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA)
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (playing_soundtrackNo != currentlyPlaying_trackNo
-			&& playing_soundtrackNo >= 0 
+			&& playing_soundtrackNo >= 0
 			&& playing_soundtrackNo < nb_soundtracks) {
 			soundTrack_on = true;
+#ifdef PG_WITH_PUREDATA
 			sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
+#endif
 			sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
 			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			currentlyPlaying_trackNo = playing_soundtrackNo;
@@ -2234,18 +2240,29 @@ void pg_process_special_key( int key ) {
   // }   
 }
 
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA)
 void PlayTrack(int indTrack) {
 	if (nb_soundtracks > 0) {
 		// std::cout << "cwd: " << cwd << std::endl;
 		currentlyPlaying_trackNo = indTrack % nb_soundtracks;
+		// std::cout << "name: " << (cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]) << std::endl;
+#ifdef PG_WITH_PUREDATA
 		sprintf(AuxString, "/soundtrack_fileName %s",
 			(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
+#endif
+#ifdef PG_WITH_JUCE
+		sprintf(AuxString, "/JUCE_open_track \"%s\"",
+			(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
+		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_SoundJUCE_send");
+		pg_send_message_udp((char *)"", (char *)"/JUCE_play_track", (char *)"udp_SoundJUCE_send");
+#endif
 		//sprintf(AuxString, "/soundtrack_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
 		//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-		printf("soundtrack #%d launching %s\n", currentlyPlaying_trackNo,
-			trackFileName[currentlyPlaying_trackNo].c_str());
+		sprintf(AuxString, "/track_shortName _%s", trackShortName[currentlyPlaying_trackNo].c_str());
+		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+
+		printf("soundtrack #%d %s\n", currentlyPlaying_trackNo, trackFileName[currentlyPlaying_trackNo].c_str());
 		BrokenInterpolationVar[_playing_soundtrackNo] = true;
 		currentlyPlaying_trackNo = indTrack;
 	}
@@ -2691,6 +2708,7 @@ void pg_aliasScript(char *command_symbol,
 
 		pulse_average_prec = pulse_average;
 		pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
+
 		sprintf(AuxString, "/pulse_enveloppe %.5f", pulse_attack);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
 		break;
@@ -3287,6 +3305,7 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#if PG_NB_CA_TYPES > 1
 	case _CA1Type_plus: {
 		CA1Type = (CA1Type + 1) % PG_NB_CA_TYPES;
 		BrokenInterpolationVar[_CA1Type] = true;
@@ -3294,17 +3313,18 @@ void pg_aliasScript(char *command_symbol,
 		*((int *)ScenarioVarPointers[_CA1Type]) = CA1Type;
 		break;
 	}
-	case _CA1SubType_plus: {
-		CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
-		BrokenInterpolationVar[_CA1SubType] = true;
-		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
-		break;
-	}
 	case _CA1Type_minus: {
 		CA1Type = (CA1Type - 1 + PG_NB_CA_TYPES) % PG_NB_CA_TYPES;
 		BrokenInterpolationVar[_CA1Type] = true;
 		// printf("CA1Type %d\n", CA1Type);
 		*((int *)ScenarioVarPointers[_CA1Type]) = CA1Type;
+		break;
+	}
+#endif
+	case _CA1SubType_plus: {
+		CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
+		BrokenInterpolationVar[_CA1SubType] = true;
+		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
 	}
 	case _CA1SubType_minus: {
@@ -3524,7 +3544,7 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++ TRACK NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA)
 	case _soundtrack_plus: {
 		if (nb_soundtracks > 0) {
 			if (currentlyPlaying_trackNo >= 0) {
@@ -3539,10 +3559,34 @@ void pg_aliasScript(char *command_symbol,
 		}
 		break;
 	}
+	case _soundtrack_minus: {
+		if (nb_soundtracks > 0) {
+			if (currentlyPlaying_trackNo >= 0) {
+				currentlyPlaying_trackNo = (currentlyPlaying_trackNo + nb_soundtracks - 1) % nb_soundtracks;
+			}
+			else {
+				currentlyPlaying_trackNo = 0;
+			}
+			PlayTrack(currentlyPlaying_trackNo);
+			BrokenInterpolationVar[_playing_soundtrackNo] = true;
+			*((int *)ScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
+		}
+		break;
+	}
 	case _soundtrack_onOff: {
 		soundTrack_on = !soundTrack_on;
+#ifdef PG_WITH_PUREDATA
 		sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
+#endif
+#ifdef PG_WITH_JUCE
+		if (soundTrack_on) {
+			pg_send_message_udp((char *)"", (char *)"/JUCE_play_track", (char *)"udp_SoundJUCE_send");
+		}
+		else {
+			pg_send_message_udp((char *)"", (char *)"/JUCE_stop_track", (char *)"udp_SoundJUCE_send");
+		}
+#endif
 		sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		break;
@@ -3713,24 +3757,12 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++ SOUND CONTROL +++++++++++++++++++++++++
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-	case _sound_open: {
-		pg_send_message_udp((char *)"", (char *)"/sound_open", (char *)"udp_SoundJUCE_send");
+	case _JUCE_loop_track: {
+		pg_send_message_udp((char *)"", (char *)"/JUCE_loop_track", (char *)"udp_SoundJUCE_send");
 		break;
 	}
-	case _sound_play: {
-		pg_send_message_udp((char *)"", (char *)"/sound_play", (char *)"udp_SoundJUCE_send");
-		break;
-	}
-	case _sound_loop: {
-		pg_send_message_udp((char *)"", (char *)"/sound_loop", (char *)"udp_SoundJUCE_send");
-		break;
-	}
-	case _sound_stop: {
-		pg_send_message_udp((char *)"", (char *)"/sound_stop", (char *)"udp_SoundJUCE_send");
-		break;
-	}
-	case _sound_exit: {
-		pg_send_message_udp((char *)"", (char *)"/sound_exit", (char *)"udp_SoundJUCE_send");
+	case _JUCE_exit: {
+		pg_send_message_udp((char *)"", (char *)"/JUCE_exit", (char *)"udp_SoundJUCE_send");
 		break;
 	}
 	case _fftLevel8: {
@@ -3951,11 +3983,11 @@ void update_pulsed_colors(void) {
 	// blending the two closest palettes of the pulsed Repop color
 	if (repop_color_pulse > 0) {
 		for (int indColor = 0; indColor < 3; indColor++) {
-			float pulsed_repop_color = (repop_color + pulse[indColor] * repop_color_pulse);
-			lowRepopPalette[indColor] = floor(pulsed_repop_color * nb_pen_palette_colors);
+			float pulsed_repop_channel = (repop_color + pulse[indColor] * repop_color_pulse);
+			lowRepopPalette[indColor] = floor(pulsed_repop_channel * nb_pen_palette_colors);
 			indLowRepopPalette[indColor] = int(lowRepopPalette[indColor]) % nb_pen_palette_colors;
 			indUpperRepopPalette[indColor] = (indLowRepopPalette[indColor] + 1) % nb_pen_palette_colors;
-			percentage[indColor] = pulsed_repop_color * nb_pen_palette_colors - lowRepopPalette[indColor];
+			percentage[indColor] = pulsed_repop_channel * nb_pen_palette_colors - lowRepopPalette[indColor];
 		}
 	}
 	else {
@@ -3987,7 +4019,6 @@ void update_pulsed_colors(void) {
 		}
 		pulsed_repop_color[indChannel] = min(1.f, pulsed_repop_color[indChannel]);
 	}
-	pulsed_repop_color[3] = 1.f;
 	value = (pulsed_repop_color[0] < pulsed_repop_color[1]) ? pulsed_repop_color[1] : pulsed_repop_color[0];
 	value = (value < pulsed_repop_color[2]) ? pulsed_repop_color[2] : value;
 	// printf( "pulsed_repop_color: %f %f %f\n" , pulsed_repop_color[0] , pulsed_repop_color[1] , pulsed_repop_color[2] );

@@ -35,6 +35,9 @@
 #ifdef CRITON
 #include "pg_shader_header_Criton.h"
 #endif
+#if defined (KOMPARTSD)
+#include "pg_shader_header_KompartSD.h"
+#endif
 #ifdef effe
 #include "pg_shader_header_effe.h"
 #endif

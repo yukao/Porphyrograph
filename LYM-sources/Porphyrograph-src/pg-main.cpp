@@ -577,6 +577,11 @@ void quit( void ) {
 	// soundtrack off
 	pg_send_message_udp((char *)"i", "/soundtrack_onOff 0", (char *)"udp_PD_send");
 #endif
+#ifdef PG_WITH_JUCE
+	// soundtrack off
+	pg_send_message_udp((char *)"", (char *)"/JUCE_stop_track", (char *)"udp_SoundJUCE_send");
+
+#endif
 
 	// lights out the LEDs
 	pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");

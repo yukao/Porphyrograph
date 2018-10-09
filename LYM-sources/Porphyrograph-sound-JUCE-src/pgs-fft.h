@@ -49,6 +49,8 @@
 
 #pragma once
 class Application;
+String trackFileName = String("");
+bool trackFileOpen = false;
 
 //==============================================================================
 class SpectrogramComponent   : public AudioAppComponent,
@@ -152,7 +154,7 @@ public:
 
 #ifdef PGS_WITHOUT_VISUAL
 		// audio file player interface update (not used currently)
-		if (transportSource.isPlaying())
+		if (transportSource.isStarted())
 		{
 			RelativeTime position(transportSource.getCurrentPosition());
 
@@ -172,68 +174,76 @@ public:
 	void oscMessageReceived(const OSCMessage& message) override
 	{
 		String str = message.getAddressPattern().toString();
-		if (message.size() == 1 && message[0].isString())
-		{
-			std::cout << "message: " << str.toStdString() << " ("
-				<< message[0].getString().toStdString() << ")" << std::endl;
-		}
+		// std::cout << "message size: " << message.size() << " address: " << str  << std::endl;
+		// if (message.size() == 1 && message[0].isString())
+		// {
+			// std::cout << "message: " << str.toStdString() << " ("
+			// 	<< message[0].getString().toStdString() << ")" << std::endl;
+		// }
 
-		if (str.compare("/sound_open") == 0) {
-			String fileName = String("");
+		if (str.compare("/JUCE_open_track") == 0) {
 			if (message.size() == 1 && message[0].isString())
 			{
-				fileName = message[0].getString();
+				trackFileName = message[0].getString();
 
-				if (fileName.endsWithChar('"')) {
-					fileName = fileName.substring(0, fileName.length() - 1);
+				if (trackFileName.endsWithChar('"')) {
+					trackFileName = trackFileName.substring(0, trackFileName.length() - 1);
 				}
-				if (fileName.startsWithChar('"')) {
-					fileName = fileName.substring(1, fileName.length());
+				if (trackFileName.startsWithChar('"')) {
+					trackFileName = trackFileName.substring(1, trackFileName.length());
 				}
 			}
 			else
 			{
-				fileName = String("D:/sync.com/Sync/LYM-projects/SoundData/soundYN-Criton-data/20180513_WanderSteps_Prise4_MixV1.wav");
+				std::cout << "Incorrect sound_open message, missing file name!" << std::endl;
 			}
-			std::cout << "File name: " << fileName << std::endl;
-			if(!fileName.isEmpty())
+			// std::cout << "File name: " << trackFileName << std::endl;
+			if(!trackFileName.isEmpty())
 			{
-				auto file = File(fileName);
-				if (file.existsAsFile())
+				auto trackFile = File(trackFileName);
+				if (trackFile.existsAsFile())
 				{
-					auto* reader = formatManager.createReaderFor(file);
+					auto* reader = formatManager.createReaderFor(trackFile);
 
 					if (reader != nullptr)
 					{
+						if (state == Started) {
+							changeState(Stopping);
+						}
 						std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true));
 						transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
+						transportSource.setPosition(0.0);
 						readerSource.reset(newSource.release());
-						std::cout << "Audio file opened: " << fileName.toStdString() << std::endl;
+						std::cout << "Audio file opened: " << trackFileName.toStdString() << std::endl;
+						trackFileOpen = true;
 					}
 					else {
-						std::cout << "Unknown audio file type: " << fileName.toStdString() << std::endl;
+						std::cout << "Unknown audio file type: " << trackFileName.toStdString() << std::endl;
 					}
 				}
 				else {
-					std::cout << "Unknown file: " << fileName.toStdString() << std::endl;
+					std::cout << "Unknown file: " << trackFileName.toStdString() << std::endl;
 				}
 			}
 			else {
 				std::cout << "Incorrect sound_open message!" << std::endl;
 			}
 		}
-		else if (str.compare("/sound_play") == 0) {
-			updateLoopState(looping);
-			changeState(Starting);
+		else if (str.compare("/JUCE_play_track") == 0) {
+			if (trackFileOpen) {
+				looping = true;
+				updateLoopState(looping);
+				changeState(Starting);
+			}
 		}
-		else if (str.compare("/sound_stop") == 0) {
+		else if (str.compare("/JUCE_stop_track") == 0) {
 			changeState(Stopping);
 		}
-		else if (str.compare("/sound_loop") == 0) {
+		else if (str.compare("/JUCE_loop_track") == 0) {
 			looping = !looping;
 			updateLoopState(looping);
 		}
-		else if (str.compare("/sound_exit") == 0) {
+		else if (str.compare("/JUCE_exit") == 0) {
 			// delete this;
 			// app.systemRequestedQuit();
 			// mainWindow = nullptr;
@@ -361,33 +371,39 @@ private:
 	//==============================================================================
 	enum TransportState
 	{
+		Starting = 0,
+		Started,
+		Stopping,
 		Stopped,
-		Starting,
-		Playing,
-		Stopping
 	};
 
 	void changeState(TransportState newState)
 	{
 		if (state != newState)
 		{
+			TransportState oldState = state;
 			state = newState;
 
 			switch (state)
 			{
-			case Stopped:
-				transportSource.setPosition(0.0);
-				break;
-
 			case Starting:
+				std::cout << "START" << std::endl;
 				transportSource.start();
+				changeState(Started);
 				break;
 
-			case Playing:
+			case Started:
 				break;
 
 			case Stopping:
-				transportSource.stop();
+				if (oldState == Started) {
+					std::cout << "STOP" << std::endl;
+					transportSource.stop();
+					changeState(Stopped);
+				}
+				break;
+
+			case Stopped:
 				break;
 			}
 		}

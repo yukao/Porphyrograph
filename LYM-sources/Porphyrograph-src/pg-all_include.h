@@ -167,7 +167,7 @@ using std::ifstream;
 #endif
 #endif // _WIN32
 
-#if defined (TVW)
+#if defined (TVW) || defined (KOMPARTSD)
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #elif defined (GN) || defined (MALAUSSENA) || defined (CRITON)
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
@@ -205,6 +205,8 @@ using std::ifstream;
 
 #ifndef CRITON
 #define PG_WITH_PUREDATA
+#else
+#define PG_WITH_JUCE
 #endif
 
 #define PG_NB_VIDEO_CUMUL_MODES 4
@@ -261,7 +263,10 @@ using std::ifstream;
 #define PG_NB_CA_TYPES 1
 //#define CA_PROTOCELLS                    0
 #endif
-#if !defined(GN) && !defined(MALAUSSENA) && !defined(TVW) && !defined(CRITON)
+#if defined(KOMPARTSD)
+#define PG_NB_CA_TYPES 0
+#endif
+#if !defined(GN) && !defined(MALAUSSENA) && !defined(TVW) && !defined(CRITON) && !defined(KOMPARTSD)
 #define PG_NB_CA_TYPES 4
 //const uint CA_CYCLIC = 0;
 //const uint CA_CYCLIC_1 = 1;
@@ -338,6 +343,9 @@ using std::ifstream;
 #endif
 #if defined (CRITON)
 #include "pg_script_header_Criton.h"
+#endif
+#if defined (KOMPARTSD)
+#include "pg_script_header_KompartSD.h"
 #endif
 #ifdef effe
 #include "pg_script_header_effe.h"

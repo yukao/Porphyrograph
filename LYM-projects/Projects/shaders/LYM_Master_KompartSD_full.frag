@@ -7,24 +7,20 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-#define PG_NB_TRACKS 3
-#define ATELIERS_PORTATIFS
+#define PG_NB_TRACKS 2
 
 float     blendTransp;
 bool      invertAllLayers;
 int       cursorSize;
 float     CAMasterWeight;
 uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
-float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
-float     trackMasterWeight_2;
-uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2;
-float     trackMasterWeight_3;
 bool      interfaceOnScreen;
 bool      hide;
+uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_0_trackMasterWeight_1_interfaceOnScreen_hide;
 bool      mute_screen;
-uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen;
+uniform float uniform_Master_fs_1fv_mute_screen;
 
 // Main shader.
 
@@ -68,14 +64,11 @@ void main() {
   invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
   cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
   CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
-  trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
-  trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
-  trackMasterWeight_3 = uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[0];
-  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
-  hide = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
+  trackMasterWeight_0 = uniform_Master_fs_4fv_trackMasterWeight_0_trackMasterWeight_1_interfaceOnScreen_hide[0];
+  trackMasterWeight_1 = uniform_Master_fs_4fv_trackMasterWeight_0_trackMasterWeight_1_interfaceOnScreen_hide[1];
+  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_0_trackMasterWeight_1_interfaceOnScreen_hide[2] > 0 ? true : false);
+  hide = (uniform_Master_fs_4fv_trackMasterWeight_0_trackMasterWeight_1_interfaceOnScreen_hide[3] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_1fv_mute_screen > 0 ? true : false);
 
   float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
   float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
@@ -89,7 +82,7 @@ void main() {
 #endif
 
   // vertical mirror
-    coords.y = height - coords.y;
+  //  coords.y = height - coords.y;
   // ST OUEN horizontal mirror
   // coords.x = width - coords.x;
   // double mirror
@@ -132,7 +125,6 @@ void main() {
   if( CA_color.a < 0 ) {
     CA_color = vec4(0.0);
   }
-  vec4 particle_color = texture(uniform_Master_texture_fs_Part_render, coords);
 
   vec4 track0_color = texture(uniform_Master_texture_fs_Trk0, coords);
 #if PG_NB_TRACKS >= 2
@@ -159,7 +151,6 @@ void main() {
     + vec3(track3_color.rgb) * trackMasterWeight_3
 #endif
     + CA_color.rgb * CAMasterWeight
-    + particle_color.rgb * PartMasterWeight * particle_color.a
     ;
 
   ////////////////////////////////////////////////////////////////////
