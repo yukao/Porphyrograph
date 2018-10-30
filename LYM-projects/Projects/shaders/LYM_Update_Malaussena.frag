@@ -144,8 +144,6 @@ vec2 out_speed_pixel = vec2(0,0);
 ////////////////////////////////////
 // VIDEO UPDATE
   vec3 cameraImage = vec3( 0.0 );
-  vec2 cameraCoord = vec2(0.0);
-  vec2 cameraWH;
   vec3 movieImage = vec3( 0.0 );
   vec2 movieCoord = vec2(0.0);
   vec2 movieWH;
@@ -225,7 +223,7 @@ uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
+uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 uniform vec4 uniform_Update_fs_4fv_CAseed_type_size_loc;
 
@@ -1015,16 +1013,16 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
+  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
+  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
   photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
@@ -1039,57 +1037,12 @@ void main() {
   // movie size
   movieWH = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   // camera size
-  cameraWH = uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw;
+  cameraWH = uniform_Update_fs_2fv_photo01Wghts.zw;
 
   // video texture used for drawing
-/*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
-               * cameraWH;
- */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
-               * cameraWH;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
-
-#ifdef PG_WITH_CAMERA_CAPTURE
-  // image reading
-  cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
-  // gamma correction
-  // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( BGSubtr ) {
-    cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
-  }
-  if( graylevel(cameraImage) < cameraThreshold ) {
-    cameraImage = vec3(0.0);
-  }
-
-  // cameraImage = vec3(1) - cameraImage;
-
-  // Sobel on camera
-  if( cameraSobel > 0 ) {
-      vec3 samplerSobel;
-      // sobel
-      vec3 sobelX = vec3(0.0);
-      vec3 sobelY = vec3(0.0);
-
-      // samples the center pixel and its Moore neighborhood
-      for( int i = 0 ; i < 4 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
-          sobelX += sobelMatrixX[i] * samplerSobel;
-          sobelY += sobelMatrixY[i] * samplerSobel;
-      }
-      for( int i = 5 ; i < 9 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
-          sobelX += sobelMatrixX[i] * samplerSobel;
-          sobelY += sobelMatrixY[i] * samplerSobel;
-      }
-
-      samplerSobel = cameraImage;
-      sobelX = mix( samplerSobel , sobelX , cameraSobel );
-      sobelY = mix( samplerSobel , sobelY , cameraSobel );
-
-      cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
-  }
-#endif
 
   // Sobel on movie
   if( movieSobel > 0 ) {
@@ -1252,7 +1205,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x + uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0 ) {
+      && uniform_Update_fs_2fv_photo01Wghts.x + uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
     }
 

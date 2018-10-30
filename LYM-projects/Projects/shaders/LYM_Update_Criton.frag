@@ -210,8 +210,8 @@ uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
-uniform vec2 uniform_Update_fs_2fv_Camera_offSetsXY;
+uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
+uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 uniform vec4 uniform_Update_fs_4fv_fftLevels03;
 uniform vec4 uniform_Update_fs_4fv_fftFrequencies03;
@@ -930,16 +930,16 @@ void main() {
 
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
-  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
+  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
     coordsImage = vec2(1.0 - decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
+  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
     coordsImage = vec2(1.0 - decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
   photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
@@ -954,7 +954,7 @@ void main() {
   // movie size
   movieWH = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   // camera size
-  cameraWH = uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw;
+  cameraWH = uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw;
 
   // video texture used for drawing
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
@@ -966,7 +966,7 @@ void main() {
   // CAMERA IMAGE
   cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
-               * (cameraWH + (2 * uniform_Update_fs_2fv_Camera_offSetsXY)) - uniform_Update_fs_2fv_Camera_offSetsXY;
+               * (cameraWH + (2 * uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy)) - uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
 
   // image reading
   if(cameraCoord.x >= 0 && cameraCoord.x  < cameraWH.x && cameraCoord.y >= 0 && cameraCoord.y  < cameraWH.y) {
@@ -1199,7 +1199,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x + uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0 ) {
+      && uniform_Update_fs_2fv_photo01Wghts.x + uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
       // only photo (but not drawing or whatever memory from preceding tracks)
       if(!videoOn) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );

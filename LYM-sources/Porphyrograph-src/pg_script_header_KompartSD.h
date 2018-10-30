@@ -41,8 +41,8 @@ extern int   nb_particles        ;
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };
 extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];
 extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
-// RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	53	54	57	59	60	61	62	63	64	65	66	67	68	69	70	73	74	77	78	78	79	80	80	81	82	83	84	85	86	87	88	89	90	91	92	93	94	95	96	97	98	99	100	101	102	103	104	105	106	107	108	109	110	111	112	113	114	115	116	117	118	119	120	121	122	123	124	125	126	127	128	129	130	131	132	133	134	135	136	137	138	139	140	141	142	143	144	145	146	147	148	149	150	151	152	153	154	155	156	157	158	159	160	161	162	163	164	165	166	167	168	169	170	171	172	173
-// VERBATIM	pen brush	pen radius	pen radius pulse	palette for pen	palette for pen	palette for repop	repop color pulse	Grey level for pen	Grey level for repop	A color	Blend Transparency	pixel mode	pixel acc	pixel acc pulse	noise scale	part noise line scale	part noise type	part noise angle scale	part noise center-x	part noise center-y	pixel acc center-x	pixel acc center-y	pixel radius 	pixel radius pulse	repopuplating BG (grid)	repopuplating CA	CA 1 type	CA 1 subtype	CA 2 type	CA 2 subtype	CA1/CA2 weight	CAParams1	CAParams2	CAParams3	CAParams4	CAParams5	CAParams6	CAParams7	CAParams8	clear CA	clear layer	clear all Layers	invert	snapshot onOff	cursor size	echo	echo neg	blur radius trk1	blur radius trk2	 Flash track0->CA freq	 Flash track1->CA freq	Flash CA->BG freq	 Flash track1->BG freq	Flash pixel freq	Flash pixel duration	camera flash length (in frames)	camera flash bright (in frames)	camera flash beat no	pen pressure coef	pen angleH coef	pen angleV coef	tracks sync on/off	current drawing track	current video track	current photo track	track0 decay sign	track 1 decay sign	track0 decay	track1 decay	CA mix weight	track0 mix weight	track0 mix weight	CA Master weight	track0 Master weight	track0 Master weight	path1 replay track	path2 replay track	path3 replay track	path4 replay track	path5 replay track	path6 replay track	path7 replay track	path1 record on/off	path2 record on/off	path3 record on/off	path4 record on/off	path5 record on/off	path3 record on/off	path7 record on/off	path0 repop on/off	path1 repop on/off	path2 repop on/off	path3 repop on/off	path4 repop on/off	path5 repop on/off	path6 repop on/off	path7 repop on/off	auto_beat	beat duration	CA decay sign	CA decay	CA decay pulse	invert movie	cumul video	camera threshold	camera gamma	camera exposure	camera gain	cameraBrightness	camera saturation	camera contrast	camera white balance red	camera white balance blue	video saturation 	video saturation pulse	camera capture frequency	movie capture frequency	camera Weight	movie weight	Sobel camera	Sobel movie	movie no	BG Subtraction on/off	CA update step	color interface display	fast vs slow CA color spreading	input volume	Min input volume	beat threshold	beat min duration (ms)	freeze on/off	photo weight	photo diaporama index	photo diaporama fade dur	photo diaporama plateau dur	sound enveloppe min	sound envelope max	current background capture	hide	soundtrack no	adc on/off	track0 x_transl	track1 x_transl	track0 y_transl	track1 y_transl	repopuplating Path	sample setUp	sensor spatial pattern	sensor activation	sensor volume	pen radius replay	pen radius replay pulse	pen color  replay pulse	echo layer shift pulse	particle motion shift pulse	tracks layers pulse	flash weights pulse	mask jitter amplitude	photo jitter amplitude	photo value	photo value pulse	photo satur	photo satur pulse	mask scale	photo scale	mask contrast	photo contrast	mute screen
+// RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	51	52	53	54	55	56	57	58	59	60	61	62	63	64	65	66	67	68	69	70	71	72	73	74	75	76	77	78	79	80	81	82	83	84	85	86	87	88	89	90	91	92	93	94	95	96	97	98	99	100	101	102	103	104	105	106	107	108	109	110	111	112	113	114	115	116	117	118	119	120	121	122	123	124	125	126	127	128	129	130	131	132	133	134	135	136	137	138
+// VERBATIM	pen brush	pen radius	pen radius pulse	palette for pen	palette for pen	palette for repop	repop color pulse	Grey level for pen	Grey level for repop	A color	Blend Transparency	pixel mode	pixel acc	pixel acc pulse	noise scale	part noise line scale	pixel acc center-x	pixel acc center-y	pixel radius 	pixel radius pulse	repopuplating BG (grid)	clear layer	clear all Layers	invert	snapshot onOff	cursor size	echo	echo neg	blur radius trk1	blur radius trk2	 Flash track0->CA freq	 Flash track1->CA freq	Flash CA->BG freq	 Flash track1->BG freq	Flash pixel freq	Flash pixel duration	camera flash length (in frames)	camera flash bright (in frames)	camera flash beat no	pen pressure coef	pen angleH coef	pen angleV coef	tracks sync on/off	current drawing track	current video track	current photo track	track0 decay sign	track 1 decay sign	track0 decay	track1 decay	CA mix weight	track0 mix weight	track0 mix weight	CA Master weight	track0 Master weight	track0 Master weight	path1 replay track	path2 replay track	path3 replay track	path4 replay track	path5 replay track	path6 replay track	path7 replay track	path1 record on/off	path2 record on/off	path3 record on/off	path4 record on/off	path5 record on/off	path3 record on/off	path7 record on/off	path0 repop on/off	path1 repop on/off	path2 repop on/off	path3 repop on/off	path4 repop on/off	path5 repop on/off	path6 repop on/off	path7 repop on/off	auto_beat	beat duration	CA decay sign	CA decay	CA decay pulse	invert movie	cumul video	camera threshold	camera gamma	camera exposure	camera gain	cameraBrightness	camera saturation	camera contrast	camera white balance red	camera white balance blue	video saturation 	video saturation pulse	camera capture frequency	movie capture frequency	camera Weight	movie weight	Sobel camera	Sobel movie	movie no	BG Subtraction on/off	CA update step	color interface display	fast vs slow CA color spreading	input volume	Min input volume	beat threshold	beat min duration (ms)	freeze on/off	photo weight	photo diaporama index	photo diaporama fade dur	photo diaporama plateau dur	sound enveloppe min	sound envelope max	current background capture	hide	soundtrack no	adc on/off	track0 x_transl	track1 x_transl	track0 y_transl	track1 y_transl	repopuplating Path	sample setUp	sensor spatial pattern	sensor activation	sensor volume	pen radius replay	pen radius replay pulse	pen color  replay pulse	echo layer shift pulse	particle motion shift pulse	tracks layers pulse	flash weights pulse	mute screen
 enum InterpVarIDs{ 
   _pen_brush = 0,
   _pen_radius,
@@ -60,30 +60,11 @@ enum InterpVarIDs{
   _pixel_acc_pulse,
   _noiseScale,
   _noiseLineScale,
-  _noiseType,
-  _noiseAngleScale,
-  _noiseCenter_0,
-  _noiseCenter_1,
   _pixel_acc_center_0,
   _pixel_acc_center_1,
   _pixel_radius,
   _pixel_radius_pulse,
   _repop_BG,
-  _repop_CA,
-  _CA1Type,
-  _CA1SubType,
-  _CA2Type,
-  _CA2SubType,
-  _CA1_CA2_weight,
-  _CAParams1,
-  _CAParams2,
-  _CAParams3,
-  _CAParams4,
-  _CAParams5,
-  _CAParams6,
-  _CAParams7,
-  _CAParams8,
-  _clearCA,
   _clearLayer,
   _clearAllLayers,
   _invertAllLayers,
@@ -201,16 +182,6 @@ enum InterpVarIDs{
   _part_Vshift_pulse,
   _tracks_Hshift_pulse,
   _flashWeight_pulse,
-  _maskJitterAmpl,
-  _photoJitterAmpl,
-  _photo_value,
-  _photo_value_pulse,
-  _photo_satur,
-  _photo_satur_pulse,
-  _mask_scale,
-  _photo_scale,
-  _mask_contrast,
-  _photo_contrast,
   _mute_screen,
   _MaxInterpVarIDs};
 extern int   pen_brush           ;
@@ -229,30 +200,11 @@ extern float pixel_acc_factor    ;
 extern float pixel_acc_pulse     ;
 extern float noiseScale          ;
 extern float noiseLineScale      ;
-extern int   noiseType           ;
-extern float noiseAngleScale     ;
-extern float noiseCenter_0       ;
-extern float noiseCenter_1       ;
 extern float pixel_acc_center_0  ;
 extern float pixel_acc_center_1  ;
 extern float pixel_radius        ;
 extern float pixel_radius_pulse  ;
 extern float repop_BG            ;
-extern float repop_CA            ;
-extern int   CA1Type             ;
-extern int   CA1SubType          ;
-extern int   CA2Type             ;
-extern int   CA2SubType          ;
-extern float CA1_CA2_weight      ;
-extern float CAParams1           ;
-extern float CAParams2           ;
-extern float CAParams3           ;
-extern float CAParams4           ;
-extern float CAParams5           ;
-extern float CAParams6           ;
-extern float CAParams7           ;
-extern float CAParams8           ;
-extern bool  clearCA             ;
 extern bool  clearLayer          ;
 extern bool  clearAllLayers      ;
 extern bool  invertAllLayers     ;
@@ -370,16 +322,6 @@ extern float echo_Hshift_pulse   ;
 extern float part_Vshift_pulse   ;
 extern float tracks_Hshift_pulse ;
 extern float flashWeight_pulse   ;
-extern float maskJitterAmpl      ;
-extern float photoJitterAmpl     ;
-extern float photo_value         ;
-extern float photo_value_pulse   ;
-extern float photo_satur         ;
-extern float photo_satur_pulse   ;
-extern float mask_scale          ;
-extern float photo_scale         ;
-extern float mask_contrast       ;
-extern float photo_contrast      ;
 extern bool  mute_screen         ;
 extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];
 extern void * ScenarioVarPointers[_MaxInterpVarIDs];

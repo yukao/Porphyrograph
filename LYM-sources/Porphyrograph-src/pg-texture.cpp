@@ -214,12 +214,14 @@ bool pg_initTextures(void) {
 		100, 100);
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	for (int ind = 0; ind < PG_NB_PARTICLE_INITIAL_IMAGES; ind++) {
 		string fileName = "Data/" + project_name + "-data/textures/PartInit_" + std::to_string(ind) + ".png";
 		// printf("Loading particles initial images %s\n", fileName.c_str()); 
 		generateParticleInitialPosColorRadiusfromImage(fileName,
 			pg_particle_initial_images_texID[ind]); // 2 texture IDs one for pos/speed, the other one for color/radius
 	}
+#endif
 
 #if defined (GN) || defined (MALAUSSENA)
 #define width_data_table 600

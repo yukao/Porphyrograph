@@ -154,8 +154,7 @@ uniform vec4 uniform_Update_fs_4fv_paths03_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths03_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
-uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
-uniform vec2 uniform_Update_fs_2fv_Camera_offSetsXY;
+uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_paths03_r;
 uniform vec4 uniform_Update_fs_4fv_paths03_g;
 uniform vec4 uniform_Update_fs_4fv_paths03_b;
@@ -1900,8 +1899,8 @@ void main() {
   {
     // video texture used for drawing
     cameraCoord = vec2(1.0-decalCoordsPOT.x , decalCoordsPOT.y )
-                 * uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw
-                 + uniform_Update_fs_2fv_Camera_offSetsXY;
+                 * uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw
+                 + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
     cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
     // gamma correction
     cameraImage = vec3( pow(cameraImage.r,cameraGamma) );

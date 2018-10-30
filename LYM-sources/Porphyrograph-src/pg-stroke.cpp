@@ -178,15 +178,13 @@ void pg_initStrokes( void ) {
 // LOADS A TRACK FROM A PATH STRING
 //////////////////////////////////////////////////////////////////
 void LoadPathFromXML(char *pathString, int indPath,
-	float *translation, float pathRadius, float path_r_color, float path_g_color, float path_b_color) {
+					float *translation, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+					int * indControlPoint, float precedingCurrentPoint[2], float  currentPoint[2]) {
 	float          interFrameDuration = .02F;
-	int            indSpline = 0;
 	int            curChar = ' ';
 	int            indChar = 0;
-	float          currentPoint[2] = { 0.0 , 0.0 };
 	float          curveInitialPoint[2] = { 0.0 , 0.0 };
-	float          polyCurveInitialPoint[2] = { 0.0 , 0.0 };
-
+	float		   polyCurveInitialPoint[2] = { 0.0 , 0.0 };
 	// printf("[%s]\n", pathString);
 
 	if (indPath < 1 || indPath > PG_NB_PATHS) {
@@ -229,8 +227,12 @@ void LoadPathFromXML(char *pathString, int indPath,
 			while (_SpaceChar(curChar)) {
 				curChar = pathString[indChar++];
 			}
+
+			precedingCurrentPoint[0] = currentPoint[0];
+			precedingCurrentPoint[1] = currentPoint[1];
+
 			while (_Num(curChar) || curChar == '-' || curChar == '+') {
-				if (relative  && indSpline != 0)
+				if (relative  && (*indControlPoint) != 0)
 					currentPoint[0] += pg_ScanFloatString(&curChar, true,
 						pathString, &indChar);
 				else
@@ -245,7 +247,7 @@ void LoadPathFromXML(char *pathString, int indPath,
 				else {
 					sprintf(ErrorStr, "Expected char [%c] not found!", ','); ReportError(ErrorStr); throw 17;
 				}
-				if (relative  && indSpline != 0)
+				if (relative  && (*indControlPoint) != 0)
 					currentPoint[1] += pg_ScanFloatString(&curChar, true,
 						pathString, &indChar);
 				else
@@ -255,21 +257,41 @@ void LoadPathFromXML(char *pathString, int indPath,
 					curChar = pathString[indChar++];
 				}
 				nbMovePoints++;
-				if (indSpline < max_mouse_recording_frames) {
-					pg_Path_Color_r[indPath][indSpline] = path_r_color;
-					pg_Path_Color_g[indPath][indSpline] = path_g_color;
-					pg_Path_Color_b[indPath][indSpline] = path_b_color;
-					pg_Path_Color_a[indPath][indSpline] = 1.0;
-					pg_Path_BrushID[indPath][indSpline] = 0;
-					pg_Path_RadiusX[indPath][indSpline] = pathRadius;
-					pg_Path_RadiusY[indPath][indSpline] = pathRadius;
-					pg_Path_Pos_x[indPath][indSpline] = currentPoint[0] + translation[0];
-					pg_Path_Pos_y[indPath][indSpline] = currentPoint[1] + translation[1];
-					pg_Path_Time[indPath][indSpline] = indSpline * interFrameDuration;
-					// printf("src move to %d %f %f\n" , indSpline ,
-					// 	     pg_Path_Pos_x[ indPath ][ indSpline ] , 
-					// 	     pg_Path_Pos_y[ indPath ][ indSpline ]);
-					indSpline++;
+				// if the move is to a point different from the preceding current point, an out of frame
+				// point is added so that the rendering in porphyrograph jumps to the new current point
+				if (precedingCurrentPoint[0] != currentPoint[0]
+					|| precedingCurrentPoint[1] != currentPoint[1]
+					&& (*indControlPoint) < max_mouse_recording_frames) {
+					pg_Path_Color_r[indPath][*indControlPoint] = path_r_color;
+					pg_Path_Color_g[indPath][*indControlPoint] = path_g_color;
+					pg_Path_Color_b[indPath][*indControlPoint] = path_b_color;
+					pg_Path_Color_a[indPath][*indControlPoint] = 1.0;
+					pg_Path_BrushID[indPath][*indControlPoint] = 0;
+					pg_Path_RadiusX[indPath][*indControlPoint] = pathRadius;
+					pg_Path_RadiusY[indPath][*indControlPoint] = pathRadius;
+					pg_Path_Pos_x[indPath][*indControlPoint] = PG_OUT_OF_SCREEN_CURSOR;
+					pg_Path_Pos_y[indPath][*indControlPoint] = PG_OUT_OF_SCREEN_CURSOR;
+					pg_Path_Time[indPath][*indControlPoint] = *indControlPoint * interFrameDuration;
+					// printf("src move to %d %f %f\n" , *indControlPoint ,
+					// 	     pg_Path_Pos_x[ indPath ][ *indControlPoint ] , 
+					// 	     pg_Path_Pos_y[ indPath ][ *indControlPoint ]);
+					(*indControlPoint)++;
+				}
+				if (*indControlPoint < max_mouse_recording_frames) {
+					pg_Path_Color_r[indPath][*indControlPoint] = path_r_color;
+					pg_Path_Color_g[indPath][*indControlPoint] = path_g_color;
+					pg_Path_Color_b[indPath][*indControlPoint] = path_b_color;
+					pg_Path_Color_a[indPath][*indControlPoint] = 1.0;
+					pg_Path_BrushID[indPath][*indControlPoint] = 0;
+					pg_Path_RadiusX[indPath][*indControlPoint] = pathRadius;
+					pg_Path_RadiusY[indPath][*indControlPoint] = pathRadius;
+					pg_Path_Pos_x[indPath][*indControlPoint] = currentPoint[0] + translation[0];
+					pg_Path_Pos_y[indPath][*indControlPoint] = currentPoint[1] + translation[1];
+					pg_Path_Time[indPath][*indControlPoint] = *indControlPoint * interFrameDuration;
+					// printf("src move to %d %f %f\n" , *indControlPoint ,
+					// 	     pg_Path_Pos_x[ indPath ][ *indControlPoint ] , 
+					// 	     pg_Path_Pos_y[ indPath ][ *indControlPoint ]);
+					(*indControlPoint)++;
 				}
 			}
 			polyCurveInitialPoint[0] = currentPoint[0];
@@ -326,35 +348,38 @@ void LoadPathFromXML(char *pathString, int indPath,
 				}
 				nbCurvePoints++;
 
-				if ((nbCurvePoints) % 3 == 0 && indSpline < max_mouse_recording_frames) {
-					pg_Path_Color_r[indPath][indSpline] = path_r_color;
-					pg_Path_Color_g[indPath][indSpline] = path_g_color;
-					pg_Path_Color_b[indPath][indSpline] = path_b_color;
-					pg_Path_Color_a[indPath][indSpline] = 1.0;
-					pg_Path_BrushID[indPath][indSpline] = 0;
-					pg_Path_RadiusX[indPath][indSpline] = pathRadius;
-					pg_Path_RadiusY[indPath][indSpline] = pathRadius;
-					pg_Path_Pos_x[indPath][indSpline] = currentPoint[0] + translation[0];
-					pg_Path_Pos_y[indPath][indSpline] = currentPoint[1] + translation[1];
-					pg_Path_Time[indPath][indSpline] = indSpline * interFrameDuration;
-					// if( indSpline < 5 ) {
-					// 	printf("src curve to %d %f %f\n" , indSpline ,
-					// 	       pg_Path_Pos_x[ indPath ][ indSpline ] , 
-					// 	       pg_Path_Pos_y[ indPath ][ indSpline ]);
+				if ((nbCurvePoints) % 3 == 0 && *indControlPoint < max_mouse_recording_frames) {
+					pg_Path_Color_r[indPath][*indControlPoint] = path_r_color;
+					pg_Path_Color_g[indPath][*indControlPoint] = path_g_color;
+					pg_Path_Color_b[indPath][*indControlPoint] = path_b_color;
+					pg_Path_Color_a[indPath][*indControlPoint] = 1.0;
+					pg_Path_BrushID[indPath][*indControlPoint] = 0;
+					pg_Path_RadiusX[indPath][*indControlPoint] = pathRadius;
+					pg_Path_RadiusY[indPath][*indControlPoint] = pathRadius;
+					pg_Path_Pos_x[indPath][*indControlPoint] = currentPoint[0] + translation[0];
+					pg_Path_Pos_y[indPath][*indControlPoint] = currentPoint[1] + translation[1];
+					pg_Path_Time[indPath][*indControlPoint] = *indControlPoint * interFrameDuration;
+					// if( *indControlPoint < 5 ) {
+					// 	printf("src curve to %d %f %f\n" , *indControlPoint ,
+					// 	       pg_Path_Pos_x[ indPath ][ *indControlPoint ] , 
+					// 	       pg_Path_Pos_y[ indPath ][ *indControlPoint ]);
 					// }
 					curveInitialPoint[0] = currentPoint[0];
 					curveInitialPoint[1] = currentPoint[1];
-					indSpline++;
+					(*indControlPoint)++;
+					printf("src curve to %d %f %f\n" , *indControlPoint - 1 ,
+					 	    pg_Path_Pos_x[ indPath ][ *indControlPoint - 1 ] , 
+					 	    pg_Path_Pos_y[ indPath ][ *indControlPoint - 1 ]);
 				}
 				// right tangent of the first (and current) point
-				else if ((nbCurvePoints) % 3 == 1 && indSpline > 0 && indSpline < max_mouse_recording_frames) {
-					pg_Path_Pos_xR[indPath][indSpline - 1] = currentPoint[0] + translation[0];
-					pg_Path_Pos_yR[indPath][indSpline - 1] = currentPoint[1] + translation[1];
+				else if ((nbCurvePoints) % 3 == 1 && *indControlPoint > 0 && *indControlPoint < max_mouse_recording_frames) {
+					pg_Path_Pos_xR[indPath][*indControlPoint - 1] = currentPoint[0] + translation[0];
+					pg_Path_Pos_yR[indPath][*indControlPoint - 1] = currentPoint[1] + translation[1];
 				}
 				// left tangent of the second (and next) point
-				else if ((nbCurvePoints) % 3 == 2 && indSpline < max_mouse_recording_frames) {
-					pg_Path_Pos_xL[indPath][indSpline] = currentPoint[0] + translation[0];
-					pg_Path_Pos_yL[indPath][indSpline] = currentPoint[1] + translation[1];
+				else if ((nbCurvePoints) % 3 == 2 && *indControlPoint < max_mouse_recording_frames) {
+					pg_Path_Pos_xL[indPath][*indControlPoint] = currentPoint[0] + translation[0];
+					pg_Path_Pos_yL[indPath][*indControlPoint] = currentPoint[1] + translation[1];
 				}
 			}
 			if (nbCurvePoints % 3 != 0) {
@@ -380,22 +405,22 @@ void LoadPathFromXML(char *pathString, int indPath,
 				curChar = pathString[indChar++];
 			}
 
-			if (indSpline < max_mouse_recording_frames) {
-				pg_Path_Color_r[indPath][indSpline] = path_r_color;
-				pg_Path_Color_g[indPath][indSpline] = path_g_color;
-				pg_Path_Color_b[indPath][indSpline] = path_b_color;
-				pg_Path_Color_a[indPath][indSpline] = 1.0;
-				pg_Path_BrushID[indPath][indSpline] = 0;
-				pg_Path_RadiusX[indPath][indSpline] = pathRadius;
-				pg_Path_RadiusY[indPath][indSpline] = pathRadius;
-				pg_Path_Pos_x[indPath][indSpline] = currentPoint[0] + translation[0];
-				pg_Path_Pos_y[indPath][indSpline] = currentPoint[1] + translation[1];
-				pg_Path_Time[indPath][indSpline] = indSpline * interFrameDuration;
-				// printf("line to %d %f %f\n" , indSpline ,
-				// 	 pg_Path_Pos_x[ indPath ][ indSpline ] , 
-				// 	 pg_Path_Pos_y[ indPath ][ indSpline ]);
+			if (*indControlPoint < max_mouse_recording_frames) {
+				pg_Path_Color_r[indPath][*indControlPoint] = path_r_color;
+				pg_Path_Color_g[indPath][*indControlPoint] = path_g_color;
+				pg_Path_Color_b[indPath][*indControlPoint] = path_b_color;
+				pg_Path_Color_a[indPath][*indControlPoint] = 1.0;
+				pg_Path_BrushID[indPath][*indControlPoint] = 0;
+				pg_Path_RadiusX[indPath][*indControlPoint] = pathRadius;
+				pg_Path_RadiusY[indPath][*indControlPoint] = pathRadius;
+				pg_Path_Pos_x[indPath][*indControlPoint] = currentPoint[0] + translation[0];
+				pg_Path_Pos_y[indPath][*indControlPoint] = currentPoint[1] + translation[1];
+				pg_Path_Time[indPath][*indControlPoint] = *indControlPoint * interFrameDuration;
+				// printf("line to %d %f %f\n" , *indControlPoint ,
+				// 	 pg_Path_Pos_x[ indPath ][ *indControlPoint ] , 
+				// 	 pg_Path_Pos_y[ indPath ][ *indControlPoint ]);
 
-				indSpline++;
+				(*indControlPoint)++;
 			}
 
 			while (_Num(curChar) || curChar == '-' || curChar == '+') {
@@ -425,33 +450,33 @@ void LoadPathFromXML(char *pathString, int indPath,
 					curChar = pathString[indChar++];
 				}
 
-				if (indSpline < max_mouse_recording_frames) {
-					pg_Path_Color_r[indPath][indSpline] = path_r_color;
-					pg_Path_Color_g[indPath][indSpline] = path_g_color;
-					pg_Path_Color_b[indPath][indSpline] = path_b_color;
-					pg_Path_Color_a[indPath][indSpline] = 1.0;
-					pg_Path_BrushID[indPath][indSpline] = 0;
-					pg_Path_RadiusX[indPath][indSpline] = pathRadius;
-					pg_Path_RadiusY[indPath][indSpline] = pathRadius;
-					pg_Path_Pos_x[indPath][indSpline] = currentPoint[0] + translation[0];
-					pg_Path_Pos_y[indPath][indSpline] = currentPoint[1] + translation[1];
-					pg_Path_Time[indPath][indSpline] = indSpline * interFrameDuration;
+				if (*indControlPoint < max_mouse_recording_frames) {
+					pg_Path_Color_r[indPath][*indControlPoint] = path_r_color;
+					pg_Path_Color_g[indPath][*indControlPoint] = path_g_color;
+					pg_Path_Color_b[indPath][*indControlPoint] = path_b_color;
+					pg_Path_Color_a[indPath][*indControlPoint] = 1.0;
+					pg_Path_BrushID[indPath][*indControlPoint] = 0;
+					pg_Path_RadiusX[indPath][*indControlPoint] = pathRadius;
+					pg_Path_RadiusY[indPath][*indControlPoint] = pathRadius;
+					pg_Path_Pos_x[indPath][*indControlPoint] = currentPoint[0] + translation[0];
+					pg_Path_Pos_y[indPath][*indControlPoint] = currentPoint[1] + translation[1];
+					pg_Path_Time[indPath][*indControlPoint] = *indControlPoint * interFrameDuration;
 
 					// left tangent of current point is preceding point
 					// and right tangent of preceding point is the current point
-					pg_Path_Pos_xL[indPath][indSpline]
-						= pg_Path_Pos_x[indPath][indSpline - 1];
-					pg_Path_Pos_yL[indPath][indSpline]
-						= pg_Path_Pos_y[indPath][indSpline - 1];
-					pg_Path_Pos_xR[indPath][indSpline - 1]
-						= pg_Path_Pos_x[indPath][indSpline];
-					pg_Path_Pos_yR[indPath][indSpline - 1]
-						= pg_Path_Pos_y[indPath][indSpline];
+					pg_Path_Pos_xL[indPath][*indControlPoint]
+						= pg_Path_Pos_x[indPath][*indControlPoint - 1];
+					pg_Path_Pos_yL[indPath][*indControlPoint]
+						= pg_Path_Pos_y[indPath][*indControlPoint - 1];
+					pg_Path_Pos_xR[indPath][*indControlPoint - 1]
+						= pg_Path_Pos_x[indPath][*indControlPoint];
+					pg_Path_Pos_yR[indPath][*indControlPoint - 1]
+						= pg_Path_Pos_y[indPath][*indControlPoint];
 
-					// printf("new line to %d %f %f\n" , indSpline ,
-					// 	   pg_Path_Pos_x[ indPath ][ indSpline ] , 
-					// 	   pg_Path_Pos_y[ indPath ][ indSpline ]);
-					indSpline++;
+					// printf("new line to %d %f %f\n" , *indControlPoint ,
+					// 	   pg_Path_Pos_x[ indPath ][ *indControlPoint ] , 
+					// 	   pg_Path_Pos_y[ indPath ][ *indControlPoint ]);
+					(*indControlPoint)++;
 				}
 			}
 		}
@@ -469,22 +494,22 @@ void LoadPathFromXML(char *pathString, int indPath,
 				curChar = pathString[indChar++];
 			}
 			// printf("cut\n");
-			if (indSpline < max_mouse_recording_frames) {
-				pg_Path_Color_r[indPath][indSpline] = path_r_color;
-				pg_Path_Color_g[indPath][indSpline] = path_g_color;
-				pg_Path_Color_b[indPath][indSpline] = path_b_color;
-				pg_Path_Color_a[indPath][indSpline] = 1.0;
-				pg_Path_BrushID[indPath][indSpline] = 0;
-				pg_Path_RadiusX[indPath][indSpline] = pathRadius;
-				pg_Path_RadiusY[indPath][indSpline] = pathRadius;
-				pg_Path_Pos_x[indPath][indSpline] = polyCurveInitialPoint[0] + translation[0];
-				pg_Path_Pos_y[indPath][indSpline] = polyCurveInitialPoint[1] + translation[1];
-				pg_Path_Time[indPath][indSpline] = indSpline * interFrameDuration;
+			if (*indControlPoint < max_mouse_recording_frames) {
+				pg_Path_Color_r[indPath][*indControlPoint] = path_r_color;
+				pg_Path_Color_g[indPath][*indControlPoint] = path_g_color;
+				pg_Path_Color_b[indPath][*indControlPoint] = path_b_color;
+				pg_Path_Color_a[indPath][*indControlPoint] = 1.0;
+				pg_Path_BrushID[indPath][*indControlPoint] = 0;
+				pg_Path_RadiusX[indPath][*indControlPoint] = pathRadius;
+				pg_Path_RadiusY[indPath][*indControlPoint] = pathRadius;
+				pg_Path_Pos_x[indPath][*indControlPoint] = polyCurveInitialPoint[0] + translation[0];
+				pg_Path_Pos_y[indPath][*indControlPoint] = polyCurveInitialPoint[1] + translation[1];
+				pg_Path_Time[indPath][*indControlPoint] = *indControlPoint * interFrameDuration;
 
-				// printf("close curve %d %f %f\n" , indSpline ,
-				// 	 pg_Path_Pos_x[ indPath ][ indSpline ] , 
-				// 	 pg_Path_Pos_y[ indPath ][ indSpline ]);
-				indSpline++;
+				// printf("close curve %d %f %f\n" , *indControlPoint ,
+				// 	 pg_Path_Pos_x[ indPath ][ *indControlPoint ] , 
+				// 	 pg_Path_Pos_y[ indPath ][ *indControlPoint ]);
+				(*indControlPoint)++;
 			}
 		}
 		break;
@@ -495,7 +520,82 @@ void LoadPathFromXML(char *pathString, int indPath,
 		break;
 		}
 	}
-	pg_Path_Status[indPath].nbRecordedFrames = indSpline;
+	pg_Path_Status[indPath].nbRecordedFrames = *indControlPoint;
+}
+
+//////////////////////////////////////////////////////////////////
+// CONVEX HULL 
+//////////////////////////////////////////////////////////////////
+// https://www.sanfoundry.com/cpp-program-implement-jarvis-march-find-convex-hull/
+// A C++ program to find convex hull of a set of points
+// Refer http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+// for explanation of orientation()
+
+// To find orientation of ordered triplet (p, q, r).
+// The function returns following values
+// 0 --> p, q and r are colinear
+// 1 --> Clockwise
+// 2 --> Counterclockwise
+
+int orientation(float p_x, float p_y, float q_x, float q_y, float r_x, float r_y)
+{
+	float val = (q_y - p_y) * (r_x - q_x) - (q_x - p_x) * (r_y - q_y);
+
+	if (val == 0)
+		return 0; // colinear
+	return (val > 0) ? 1 : 2; // clock or counterclock wise
+}
+
+// Prints convex hull of a set of 4 points.
+void convexHull(float points_x[4], float points_y[4], int next[4])
+{
+	// Result should be initialized when calling the function
+	for (int i = 0; i < 4; i++)
+		next[i] = -1;
+
+	// Find the leftmost point
+	int leftmost_point = 0;
+	for (int i = 1; i < 4; i++)
+		if (points_x[i] < points_x[leftmost_point])
+			leftmost_point = i;
+
+	// Start from leftmost point, keep moving counterclockwise
+	// until reach the start point again
+	int current_point = leftmost_point;
+	int n = 4;
+	do
+	{
+		int next_point;
+
+		// Search for a point 'next_point' such that orientation(current_point, i, next_point) is
+		// counterclockwise for all points 'i'
+		next_point = (current_point + 1) % 4;
+		for (int i = 0; i < 4; i++)
+			if (orientation(points_x[current_point], points_y[current_point], points_x[i], points_y[i], points_x[next_point], points_y[next_point]) == 2)
+				next_point = i;
+
+		next[current_point] = next_point; // Add next_point to result as a next point of current_point
+		current_point = next_point; // Set current_point as next_point for next iteration
+
+		n--;
+	}
+	while (current_point != leftmost_point && n >= 0);
+
+	// counts the number of next points
+	//*nb_next_points = 0;
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	if (next[i] != -1)
+	//		(*nb_next_points)++;
+	//}
+
+
+	// Print Result
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	if (next[i] != -1)
+	//		std::cout << "(" << points_x[i] << ", " << points_y[i] << ")\n";
+	//}
 }
 
 //////////////////////////////////////////////////////////////////
@@ -503,123 +603,8 @@ void LoadPathFromXML(char *pathString, int indPath,
 //////////////////////////////////////////////////////////////////
 // update of the tables that contain thecurrrentTrack stroke parameters
 void updateMouseEnvironmentVariablesAndTables(float theTime) {
-	// memory of current and preceding values
-	mouse_x = (float)CurrentMousePos_x;
-	mouse_y = (float)CurrentMousePos_y;
-
 	// change colors according to music pulse
 	update_pulsed_colors();
-
-	///////////////////////////////////////////////////////////////////////////
-	// PATH RECORDING
-	// no update if the mouse has not been moving
-	// no update if the mode is not a drawing mode
-	if ((mouse_x_prev != mouse_x)
-		|| (mouse_y_prev != mouse_y)) {
-		// printf("mouse pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
-
-		///////////////////////////////////////////////////////////////////////
-		// RECORDING PATH
-		///////////////////////////////////////////////////////////////////////
-		for (int indRecordingPath = 1; indRecordingPath <= PG_NB_PATHS; indRecordingPath++) {
-			if (pg_Path_Status[indRecordingPath].isActiveRecording
-				&& pg_Path_Status[indRecordingPath].nbRecordedFrames < max_mouse_recording_frames) {
-				int indFrameRec = pg_Path_Status[indRecordingPath].nbRecordedFrames;
-				// printf( "rec track %d frame %d\n",indRecordingPath,indFrameRec );
-
-				// records the initial time and the current time to play in synch
-				if (indFrameRec == 0) {
-					pg_Path_Status[indRecordingPath].initialTimeRecording = theTime;
-				}
-				pg_Path_Time[indRecordingPath][indFrameRec] = theTime;
-
-				pg_Path_Color_r[indRecordingPath][indFrameRec] = min(1.f, pulsed_pen_color[0]);
-				pg_Path_Color_g[indRecordingPath][indFrameRec] = min(1.f, pulsed_pen_color[1]);
-				pg_Path_Color_b[indRecordingPath][indFrameRec] = min(1.f, pulsed_pen_color[2]);
-				pg_Path_Color_a[indRecordingPath][indFrameRec] = min(1.f, pen_color_a);
-
-				// printf( "capture %.2f %.2f %.2f %.2f\n" , 
-				// 	      pg_Path_Color_r[ indRecordingPath ][ indFrameRec ] ,
-				// 	      pg_Path_Color_g[ indRecordingPath ][ indFrameRec ] ,
-				// 	      pg_Path_Color_b[ indRecordingPath ][ indFrameRec ] ,
-				// 	      TrackColor_a[ indRecordingPath ][ indFrameRec ] );
-
-				pg_Path_BrushID[indRecordingPath][indFrameRec]
-					= pen_brush;
-
-#ifdef PG_WACOM_TABLET
-				pg_Path_RadiusX[indRecordingPath][indFrameRec]
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
-					+ tabletPressureRadius * pen_radius_pressure_coef
-					+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef;
-				pg_Path_RadiusY[indRecordingPath][indFrameRec]
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
-					+ tabletPressureRadius * pen_radius_pressure_coef
-					+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
-#else
-				pg_Path_RadiusX[indRecordingPath][indFrameRec]
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
-				pg_Path_RadiusY[indRecordingPath][indFrameRec]
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
-#endif
-
-				pg_Path_Pos_x[indRecordingPath][indFrameRec] = (float)CurrentMousePos_x;
-				pg_Path_Pos_y[indRecordingPath][indFrameRec] = (float)CurrentMousePos_y;
-
-				// Catmull-Rom spline: computes right and left tangent of the preceding point from 
-				// position of current point and current point - 2
-				if (indFrameRec > 1) {
-					// sets tangent extremities to 0 in case of move for not redrawing the
-					// jump later & for inserting a move in the saved svg
-					float tan_x = Tension * (pg_Path_Pos_x[indRecordingPath][indFrameRec] - pg_Path_Pos_x[indRecordingPath][indFrameRec - 2]);
-					float tan_y = Tension * (pg_Path_Pos_y[indRecordingPath][indFrameRec] - pg_Path_Pos_y[indRecordingPath][indFrameRec - 2]);
-					// move second step: null left tangent of current point
-					if (indFrameRec >= 2) {
-						pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1]
-							= pg_Path_Pos_x[indRecordingPath][indFrameRec - 1] - tan_x;
-						pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1]
-							= pg_Path_Pos_y[indRecordingPath][indFrameRec - 1] - tan_y;
-					}
-					else {
-						pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1] = 0.0;
-						pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1] = 0.0;
-						// a null left tangent was givent at next frame
-					}
-					// move first step: null right tangent extremity of preceding point
-					// so that it is saved as a move
-					if (indFrameRec >= 1) {
-						pg_Path_Pos_xR[indRecordingPath][indFrameRec - 1]
-							= pg_Path_Pos_x[indRecordingPath][indFrameRec - 1] + tan_x;
-						pg_Path_Pos_yR[indRecordingPath][indFrameRec - 1]
-							= pg_Path_Pos_y[indRecordingPath][indFrameRec - 1] + tan_y;
-					}
-					else {
-						// assigns null values to right tangent extremity so that it is saved
-						// as a move
-						pg_Path_Pos_xR[indRecordingPath][indFrameRec - 1] = 0.0;
-						pg_Path_Pos_yR[indRecordingPath][indFrameRec - 1] = 0.0;
-						// a null left tangent extremity will be givent at next frame
-
-						// null left tangent at closing point before the move
-						pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1] = pg_Path_Pos_x[indRecordingPath][indFrameRec - 1];
-						pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1] = pg_Path_Pos_y[indRecordingPath][indFrameRec - 1];
-					}
-
-					// right tangent is half way between first point and left tangent extremity of second point
-					if (indFrameRec == 2) {
-						pg_Path_Pos_xR[indRecordingPath][0] = pg_Path_Pos_x[indRecordingPath][0]
-							+ 0.5F * (pg_Path_Pos_xL[indRecordingPath][1] - pg_Path_Pos_x[indRecordingPath][0]);
-						pg_Path_Pos_yR[indRecordingPath][0] = pg_Path_Pos_y[indRecordingPath][0]
-							+ 0.5F * (pg_Path_Pos_yL[indRecordingPath][1] - pg_Path_Pos_y[indRecordingPath][0]);
-					}
-				}
-				// printf( "Track src rec %d Ind %d tan %d %d / prev pos %d %d\n" , indRecordingPath + 1 , indFrameRec - 1 , (int)pg_Path_Pos_xL[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_yL[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_xR[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_yR[ indRecordingPath ][ indFrameRec - 1 ] );
-
-				pg_Path_Status[indRecordingPath].nbRecordedFrames++;
-			}
-			// RECORDING SOURCE TRACK
-		}
-	}
 
 	///////////////////////////////////////////////////////////////////////
 	// READING PATHS 
@@ -627,17 +612,17 @@ void updateMouseEnvironmentVariablesAndTables(float theTime) {
 	for (int indPath = 1; indPath < PG_NB_PATHS + 1; indPath++) {
 		// active reading
 		if (is_path_replay[indPath] && indPath >= 1) {
-				// printf("read track %d\n" , indPath );
-			// int indFrameReading = pg_Path_Status[ indPath ].indReading;
+			// printf("read track %d\n" , indPath );
+		// int indFrameReading = pg_Path_Status[ indPath ].indReading;
 
-			// records the initial time and uses the elapsed reading
-			// time and the elapsed recording time to play in synch
+		// records the initial time and uses the elapsed reading
+		// time and the elapsed recording time to play in synch
 			if (pg_Path_Status[indPath].isFirstFrame
 				|| pg_Path_Status[indPath].indReading == 0) {
-				pg_Path_Status[indPath].initialTimeReading 
+				pg_Path_Status[indPath].initialTimeReading
 					= theTime - pg_Path_Time[indPath][pg_Path_Status[indPath].indReading]
 					+ pg_Path_Status[indPath].initialTimeRecording;
-				pg_Path_Status[indPath].isFirstFrame = false; 
+				pg_Path_Status[indPath].isFirstFrame = false;
 			}
 
 			float theRecodingElapsedTime;
@@ -695,10 +680,15 @@ void updateMouseEnvironmentVariablesAndTables(float theTime) {
 			paths_x[indPath] = (float)pg_Path_Pos_x[indPath][indFrameReading];
 			paths_y[indPath] = (float)pg_Path_Pos_y[indPath][indFrameReading];
 
+			paths_xL[indPath] = (float)pg_Path_Pos_xL[indPath][indFrameReading];
+			paths_yL[indPath] = (float)pg_Path_Pos_yL[indPath][indFrameReading];
+			paths_xR[indPath] = (float)pg_Path_Pos_xR[indPath][indFrameReading];
+			paths_yR[indPath] = (float)pg_Path_Pos_yR[indPath][indFrameReading];
+
 			// negative values in case of curve break
 			if (isCurveBreak) {
-				paths_x[indPath] = -10000;
-				paths_y[indPath] = -10000;
+				paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+				paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 			}
 
 			// management of color (w/wo possible interpolation)
@@ -756,19 +746,99 @@ void updateMouseEnvironmentVariablesAndTables(float theTime) {
 	paths_Color_a[0] = min(1.f, pen_color_a);
 	//printf("PEN color a %.2f %.2f %.2f %.2f\n", paths_Color_r[0] ,
 	//	   paths_Color_g[1] , paths_Color_b[2] , paths_Color_a[3] );
-	
-	
+
+
 	///////////////////////////////////////////////////////////////////////
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++ pen path (#0) update   +++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-	if (mouse_x_prev != mouse_x
-		|| mouse_y_prev != mouse_y) {
-		paths_x[0] = mouse_x;
-		paths_y[0] = mouse_y;
+	//printf("previous/current %d,%d   %d,%d \n", PreviousMousePos_x, PreviousMousePos_y, CurrentMousePos_x, CurrentMousePos_y);
+	if (PreviousMousePos_x != paths_x_prev[0]
+		|| PreviousMousePos_y != paths_y_prev[0]
+		|| PreviousMousePos_x != CurrentMousePos_x
+		|| PreviousMousePos_y != CurrentMousePos_y
+		) {
+		paths_x_prev_prev_0 = paths_x_prev[0];
+		paths_y_prev_prev_0 = paths_y_prev[0];
 
-		paths_x_prev[0] = mouse_x_prev;
-		paths_y_prev[0] = mouse_y_prev;
+		paths_x_prev[0] = paths_x[0];
+		paths_y_prev[0] = paths_y[0];
+
+		paths_x[0] = (float)PreviousMousePos_x;
+		paths_y[0] = (float)PreviousMousePos_y;
+
+		paths_x_next_0 = (float)CurrentMousePos_x;
+		paths_y_next_0 = (float)CurrentMousePos_y;
+
+		// define the tangents
+		// in the future, keep the previous tangent memory so that it is not recomputed twice
+
+		// segments between two positions
+		float u_x = (paths_x_prev[0] - paths_x_prev_prev_0);
+		float u_y = (paths_y_prev[0] - paths_y_prev_prev_0);
+		float v_x = (paths_x[0] - paths_x_prev[0]);
+		float v_y = (paths_y[0] - paths_y_prev[0]);
+		float w_x = (paths_x_next_0 - paths_x[0]);
+		float w_y = (paths_y_next_0 - paths_y[0]);
+		// normalized segments
+		float norm_u = sqrt(u_x * u_x + u_y * u_y);
+		float norm_v = sqrt(v_x * v_x + v_y * v_y);
+		float norm_w = sqrt(w_x * w_x + w_y * w_y);
+		if (norm_u != 0) {
+			u_x /= norm_u;
+			u_y /= norm_u;
+		}
+		if (norm_v != 0) {
+			v_x /= norm_v;
+			v_y /= norm_v;
+		}
+		if (norm_w != 0) {
+			w_x /= norm_w;
+			w_y /= norm_w;
+		}
+
+		// tangents for current and preceding positions as othogonal vector to bissectrix
+		// their length is a third of the current segment
+		float tang_x_prev = (u_x + v_x) * norm_v / 3.f;
+		float tang_y_prev = (u_y + v_y) * norm_v / 3.f;
+		float tang_x = (v_x + w_x) * norm_v / 3.f;
+		float tang_y = (v_y + w_y) * norm_v / 3.f;
+
+		// control points from positions and tangents for current and preceding positions
+		paths_xL[0] = paths_x_prev[0] + tang_x_prev;
+		paths_yL[0] = paths_y_prev[0] + tang_y_prev;
+		paths_xR[0] = paths_x[0] - tang_x;
+		paths_yR[0] = paths_y[0] - tang_y;
+
+		// possible resize to avoid crossing
+		// non-crossing <=> both points prev and left on the same size of the line (right, current)
+		// if N is the normal to (right, current), (vec(curr prev).N) * (vec(curr L).N) >= 0
+		int n = 4;
+		while ((tang_y * (paths_x_prev[0] - paths_x[0]) - tang_x * (paths_y_prev[0] - paths_y[0])) // vec(curr prev).N
+			* (tang_y * (paths_xL[0] - paths_x[0]) - tang_x * (paths_yL[0] - paths_y[0])) // vec(curr L).N
+			< 0 && n > 0) {
+			// tangents are made shorter
+			tang_x_prev /= 2.f;
+			tang_y_prev /= 2.f;
+			tang_x /= 2.f;
+			tang_y /= 2.f;
+
+			// control points from positions and tangents for current and preceding positions
+			paths_xL[0] = paths_x_prev[0] + tang_x_prev;
+			paths_yL[0] = paths_y_prev[0] + tang_y_prev;
+			paths_xR[0] = paths_x[0] - tang_x;
+			paths_yR[0] = paths_y[0] - tang_y;
+
+			n--;
+		}
+
+#ifdef PG_BEZIER_CURVES
+		// convex hull shipped to the GPU
+		float points_x[4] = { paths_x_prev[0] , paths_xL[0] , paths_xR[0] , paths_x[0] };
+		float points_y[4] = { paths_y_prev[0] , paths_yL[0] , paths_yR[0] , paths_y[0] };
+		int nb_next_points = 0;
+		convexHull(points_x, points_y, path0_next_in_hull);
+#endif
 
 		// printf("PEN pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
 		paths_BrushID[0] = pen_brush;
@@ -791,13 +861,148 @@ void updateMouseEnvironmentVariablesAndTables(float theTime) {
 			+ pulse_average * pen_radius_pulse;
 #endif
 		// printf("PEN brush ID radius %d %.2f\n" , pen_brush, pen_radius );
-	}
 
-	///////////////////////////////////////////////////////////////////////
-	// saves mouse values 
-	mouse_x_prev = mouse_x;
-	mouse_y_prev = mouse_y;
+		///////////////////////////////////////////////////////////////////////
+		// saves mouse values 
+		PreviousMousePos_x = CurrentMousePos_x;
+		PreviousMousePos_y = CurrentMousePos_y;
+
+		// cursor reinitialization
+		// CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;
+		// CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
+
+
+		// printf("mouse pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
+
+		///////////////////////////////////////////////////////////////////////
+		// RECORDING PATH
+		///////////////////////////////////////////////////////////////////////
+		for (int indRecordingPath = 1; indRecordingPath <= PG_NB_PATHS; indRecordingPath++) {
+			if (pg_Path_Status[indRecordingPath].isActiveRecording
+				&& pg_Path_Status[indRecordingPath].nbRecordedFrames < max_mouse_recording_frames) {
+				int indFrameRec = pg_Path_Status[indRecordingPath].nbRecordedFrames;
+				// printf( "rec track %d frame %d\n",indRecordingPath,indFrameRec );
+
+				// records the initial time and the current time to play in synch
+				if (indFrameRec == 0) {
+					pg_Path_Status[indRecordingPath].initialTimeRecording = theTime;
+				}
+				pg_Path_Time[indRecordingPath][indFrameRec] = theTime;
+
+				pg_Path_Color_r[indRecordingPath][indFrameRec] = min(1.f, pulsed_pen_color[0]);
+				pg_Path_Color_g[indRecordingPath][indFrameRec] = min(1.f, pulsed_pen_color[1]);
+				pg_Path_Color_b[indRecordingPath][indFrameRec] = min(1.f, pulsed_pen_color[2]);
+				pg_Path_Color_a[indRecordingPath][indFrameRec] = min(1.f, pen_color_a);
+
+				// printf( "capture %.2f %.2f %.2f %.2f\n" , 
+				// 	      pg_Path_Color_r[ indRecordingPath ][ indFrameRec ] ,
+				// 	      pg_Path_Color_g[ indRecordingPath ][ indFrameRec ] ,
+				// 	      pg_Path_Color_b[ indRecordingPath ][ indFrameRec ] ,
+				// 	      TrackColor_a[ indRecordingPath ][ indFrameRec ] );
+
+				pg_Path_BrushID[indRecordingPath][indFrameRec]
+					= pen_brush;
+
+#ifdef PG_WACOM_TABLET
+				pg_Path_RadiusX[indRecordingPath][indFrameRec]
+					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+					+ tabletPressureRadius * pen_radius_pressure_coef
+					+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef;
+				pg_Path_RadiusY[indRecordingPath][indFrameRec]
+					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+					+ tabletPressureRadius * pen_radius_pressure_coef
+					+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
+#else
+				pg_Path_RadiusX[indRecordingPath][indFrameRec]
+					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
+				pg_Path_RadiusY[indRecordingPath][indFrameRec]
+					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
+#endif
+
+				/*
+				// Catmull-Rom spline: computes right and left tangent of the preceding point from
+				// position of current point and current point - 2
+				if (indFrameRec > 1) {
+					// sets tangent extremities to 0 in case of move for not redrawing the
+					// jump later & for inserting a move in the saved svg
+					float tan_x = Tension * (pg_Path_Pos_x[indRecordingPath][indFrameRec] - pg_Path_Pos_x[indRecordingPath][indFrameRec - 2]);
+					float tan_y = Tension * (pg_Path_Pos_y[indRecordingPath][indFrameRec] - pg_Path_Pos_y[indRecordingPath][indFrameRec - 2]);
+					// move second step: null left tangent of current point
+					if (indFrameRec >= 2) {
+						pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1]
+							= pg_Path_Pos_x[indRecordingPath][indFrameRec - 1] - tan_x;
+						pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1]
+							= pg_Path_Pos_y[indRecordingPath][indFrameRec - 1] - tan_y;
+					}
+					else {
+						pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1] = 0.0;
+						pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1] = 0.0;
+						// a null left tangent was givent at next frame
+					}
+					// move first step: null right tangent extremity of preceding point
+					// so that it is saved as a move
+					if (indFrameRec >= 1) {
+						pg_Path_Pos_xR[indRecordingPath][indFrameRec - 1]
+							= pg_Path_Pos_x[indRecordingPath][indFrameRec - 1] + tan_x;
+						pg_Path_Pos_yR[indRecordingPath][indFrameRec - 1]
+							= pg_Path_Pos_y[indRecordingPath][indFrameRec - 1] + tan_y;
+					}
+					else {
+						// assigns null values to right tangent extremity so that it is saved
+						// as a move
+						pg_Path_Pos_xR[indRecordingPath][indFrameRec - 1] = 0.0;
+						pg_Path_Pos_yR[indRecordingPath][indFrameRec - 1] = 0.0;
+						// a null left tangent extremity will be givent at next frame
+
+						// null left tangent at closing point before the move
+						pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1] = pg_Path_Pos_x[indRecordingPath][indFrameRec - 1];
+						pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1] = pg_Path_Pos_y[indRecordingPath][indFrameRec - 1];
+					}
+
+					// right tangent is half way between first point and left tangent extremity of second point
+					if (indFrameRec == 2) {
+						pg_Path_Pos_xR[indRecordingPath][0] = pg_Path_Pos_x[indRecordingPath][0]
+							+ 0.5F * (pg_Path_Pos_xL[indRecordingPath][1] - pg_Path_Pos_x[indRecordingPath][0]);
+						pg_Path_Pos_yR[indRecordingPath][0] = pg_Path_Pos_y[indRecordingPath][0]
+							+ 0.5F * (pg_Path_Pos_yL[indRecordingPath][1] - pg_Path_Pos_y[indRecordingPath][0]);
+					}
+				}
+				*/
+				// printf( "Track src rec %d Ind %d tan %d %d / prev pos %d %d\n" , indRecordingPath + 1 , indFrameRec - 1 , (int)pg_Path_Pos_xL[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_yL[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_xR[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_yR[ indRecordingPath ][ indFrameRec - 1 ] );
+
+				// first and second control points
+				if (indFrameRec >= 2) {
+					pg_Path_Pos_x[indRecordingPath][indFrameRec - 1] = paths_x_prev[0];
+					pg_Path_Pos_y[indRecordingPath][indFrameRec - 1] = paths_y_prev[0];
+
+					pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1] = paths_xL[0];
+					pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1] = paths_yL[0];
+				}
+				else {
+					// move first step: current point with negative coordinates and null second control points
+					pg_Path_Pos_x[indRecordingPath][indFrameRec - 1] = PG_OUT_OF_SCREEN_CURSOR;
+					pg_Path_Pos_y[indRecordingPath][indFrameRec - 1] = PG_OUT_OF_SCREEN_CURSOR;
+
+					pg_Path_Pos_xL[indRecordingPath][indFrameRec - 1] = 0.0;
+					pg_Path_Pos_yL[indRecordingPath][indFrameRec - 1] = 0.0;
+				}
+
+				// third control point
+				pg_Path_Pos_xR[indRecordingPath][indFrameRec - 1] = paths_xR[0];
+				pg_Path_Pos_yR[indRecordingPath][indFrameRec - 1] = paths_yR[0];
+
+				// next point
+				pg_Path_Pos_x[indRecordingPath][indFrameRec] = paths_x[0];
+				pg_Path_Pos_y[indRecordingPath][indFrameRec] = paths_y[0];
+
+				// moving forward in the recording
+				pg_Path_Status[indRecordingPath].nbRecordedFrames++;
+			}
+			// RECORDING SOURCE TRACK
+		}
+	}
 }
+
 
 
 //////////////////////////////////////////////////////////////////
@@ -844,10 +1049,14 @@ void load_svg_path(char *fileName, int indPath, int indTrack,
 		}
 		recorded_path[indPath] = true;
 
-		paths_x[indPath] = -1.0F;
-		paths_y[indPath] = -1.0F;
-		paths_x_prev[indPath] = -1.0F;
-		paths_y_prev[indPath] = -1.0F;
+		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_yR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_Color_r[indPath] = path_r_color;
 		paths_Color_g[indPath] = path_g_color;
 		paths_Color_b[indPath] = path_b_color;
@@ -866,6 +1075,9 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 	string         val;
 	float          translation[2] = { 0.0 , 0.0 };
 	string line;
+	int            indControlPoint = 0;
+	float          precedingCurrentPoint[2] = { 0.0 , 0.0 };
+	float          currentPoint[2] = { 0.0 , 0.0 };
 
 	std::ifstream fin(fileName);
 	if (!fin) {
@@ -914,16 +1126,24 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 					std::getline(fin, line);
 					found = line.find("z\"", found + 1);
 					std::size_t found2 = line.find("Z\"", found + 1);
-					while (found == std::string::npos && found2 == std::string::npos && !fin.eof()) {
+					std::size_t found3 = line.find("/>", found + 1);
+					while (found == std::string::npos && found2 == std::string::npos 
+							&& found3 == std::string::npos && !fin.eof()) {
 						val += line;
 
 						std::getline(fin, line);
 						found = line.find("z\"", found + 1);
-						// std::size_t found2 = line.find("Z\"",found+1);
+						found2 = line.find("Z\"",found + 1);
+						found3 = line.find("/>", found + 1);
 					}
 
 					// printf( "path values [%s]\n", (char *)val.c_str() );
-					LoadPathFromXML((char *)val.c_str(), indPath, translation, pathRadius, path_r_color, path_g_color, path_b_color);
+					currentPoint[0] = 0.0;
+					currentPoint[1] = 0.0;
+					precedingCurrentPoint[0] = 0.0;
+					precedingCurrentPoint[1] = 0.0;
+					LoadPathFromXML((char *)val.c_str(), indPath, translation, pathRadius, path_r_color, path_g_color, path_b_color,
+					                &indControlPoint, precedingCurrentPoint, currentPoint);
 					for (int i = 0; i < 100; i++) {
 						// printf("track %d %f %f\n" , i ,
 						// 	 pg_Path_Pos_x[ 0 ][ i ] , 
@@ -947,12 +1167,14 @@ DWORD WINAPI writesvg(LPVOID lpParam) {
 void* writesvg(void * lpParam) {
 #endif
 	FILE          *fileSVG;
-	threadData * pDataArray = (threadData *)lpParam;
+	threadData    *pDataArray = (threadData *)lpParam;
 
 	fileSVG = fopen(pDataArray->fname, "wb");
 	if (fileSVG == NULL) {
 		sprintf(ErrorStr, "File %s not opened!", pDataArray->fname); ReportError(ErrorStr); throw 152;
 	}
+	printf("Snapshot svg (%s)\n",
+		pDataArray->fname);
 
 	fprintf(fileSVG, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!-- Created with Inkscape (http://www.inkscape.org/) -->\n\n<svg\n   xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n   xmlns:cc=\"http://creativecommons.org/ns#\"\n   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n   xmlns:svg=\"http://www.w3.org/2000/svg\"\n   xmlns=\"http://www.w3.org/2000/svg\"\n   version=\"1.1\"\n   width=\"%d\"\n   height=\"%d\"\n   id=\"svg2\">\n  <defs\n     id=\"defs4\" />\n  <metadata\n     id=\"metadata7\">\n    <rdf:RDF>\n      <cc:Work\n         rdf:about=\"\">\n        <dc:format>image/svg+xml</dc:format>\n        <dc:type\n           rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" />\n        <dc:title></dc:title>\n      </cc:Work>\n    </rdf:RDF>\n  </metadata>\n  <g\n     transform=\"translate(0.0,0.0)\"\n     id=\"layer1\">\n", pDataArray->w, pDataArray->h);
 
@@ -960,12 +1182,21 @@ void* writesvg(void * lpParam) {
 	for (int indPath = 0; indPath < PG_NB_PATHS; indPath++) {
 		// main track
 		if (pg_Path_Status[indPath].nbRecordedFrames > 0) {
-			fprintf(fileSVG, "    <path\n       initial_time=\"%f\"\n       final_time=\"%f\"\n       d=\"M %f,%f ",
+			fprintf(fileSVG, "    <path\n       initial_time=\"%f\"\n       final_time=\"%f\"\n",
 				pg_Path_Status[indPath].initialTimeRecording,
-				pg_Path_Status[indPath].initialTimeReading,
-				pg_Path_Pos_x[indPath][0],
-				pg_Path_Pos_y[indPath][0]);
-			for (int indFrame = 1;
+				pg_Path_Status[indPath].initialTimeReading);
+			int indFrameIni = 0;
+			while (pg_Path_Pos_x[indPath][indFrameIni] < 0.0
+				&& pg_Path_Pos_y[indPath][indFrameIni] < 0.0
+				&& indFrameIni < pg_Path_Status[indPath].nbRecordedFrames) {
+				indFrameIni++;
+			}
+			if (indFrameIni < pg_Path_Status[indPath].nbRecordedFrames) {
+				fprintf(fileSVG, "       d=\"M %f,%f ",
+					pg_Path_Pos_x[indPath][indFrameIni],
+					pg_Path_Pos_y[indPath][indFrameIni]);
+			}
+			for (int indFrame = indFrameIni + 1;
 				indFrame < pg_Path_Status[indPath].nbRecordedFrames;
 				indFrame++) {
 				// skips identical frame
@@ -976,38 +1207,25 @@ void* writesvg(void * lpParam) {
 				//   continue;
 				// }
 				// move point with a new curve
-				if (pg_Path_Pos_xR[indPath][indFrame - 1] == 0.0
-					&& pg_Path_Pos_yR[indPath][indFrame - 1] == 0.0
-					&& pg_Path_Pos_xL[indPath][indFrame] == 0.0
-					&& pg_Path_Pos_yL[indPath][indFrame] == 0.0) {
+				if (pg_Path_Pos_x[indPath][indFrame - 1] < 0.0
+					&& pg_Path_Pos_y[indPath][indFrame - 1] < 0.0
+					&& pg_Path_Pos_x[indPath][indFrame] >= 0.0
+					&& pg_Path_Pos_y[indPath][indFrame] >= 0.0) {
 					fprintf(fileSVG, "M %f,%f ",
 						pg_Path_Pos_x[indPath][indFrame],
 						pg_Path_Pos_y[indPath][indFrame]);
 				}
 				// curve point
-				else {
+				else if (pg_Path_Pos_x[indPath][indFrame - 1] >= 0.0
+					&& pg_Path_Pos_y[indPath][indFrame - 1] >= 0.0
+					&&pg_Path_Pos_x[indPath][indFrame] >= 0.0
+					&& pg_Path_Pos_y[indPath][indFrame] >= 0.0) {
 					fprintf(fileSVG, "C %f,%f ",
 						pg_Path_Pos_xR[indPath][indFrame - 1],
 						pg_Path_Pos_yR[indPath][indFrame - 1]);
-					// the right tangent of the last point on curve should be computed
-					// as the half way between right control of preceding point and current point
-					if (indFrame == pg_Path_Status[indPath].nbRecordedFrames - 1) {
-						pg_Path_Pos_xR[indPath][indFrame] = pg_Path_Pos_x[indPath][indFrame]
-							+ 0.5F * (pg_Path_Pos_xR[indPath][indFrame - 1] - pg_Path_Pos_x[indPath][indFrame]);
-						pg_Path_Pos_yR[indPath][indFrame] = pg_Path_Pos_y[indPath][indFrame]
-							+ 0.5F * (pg_Path_Pos_yR[indPath][indFrame - 1] - pg_Path_Pos_y[indPath][indFrame]);
-					}
-					// the last point has a null left tangent
-					if (indFrame == pg_Path_Status[indPath].nbRecordedFrames - 1) {
-						fprintf(fileSVG, "%f,%f ",
-							pg_Path_Pos_x[indPath][indFrame],
-							pg_Path_Pos_y[indPath][indFrame]);
-					}
-					else {
-						fprintf(fileSVG, "%f,%f ",
-							pg_Path_Pos_xL[indPath][indFrame],
-							pg_Path_Pos_yL[indPath][indFrame]);
-					}
+					fprintf(fileSVG, "%f,%f ",
+						pg_Path_Pos_xL[indPath][indFrame - 1],
+						pg_Path_Pos_yL[indPath][indFrame - 1]);
 					fprintf(fileSVG, "%f,%f ",
 						pg_Path_Pos_x[indPath][indFrame],
 						pg_Path_Pos_y[indPath][indFrame]);

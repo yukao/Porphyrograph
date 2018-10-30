@@ -178,6 +178,14 @@ using std::ifstream;
 #define PG_NB_TRACKS 3   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #endif
 
+#if !defined (TVW) && !defined (KOMPARTSD)
+#define PG_WITH_PHOTO_DIAPORAMA
+#endif
+
+#if !defined (KOMPARTSD)
+#define PG_WITH_BLUR
+#endif
+
 #if defined (TVW) || defined (GN) || defined (CRITON)
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
@@ -185,8 +193,6 @@ using std::ifstream;
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 7   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #endif
-
-#define PG_NB_PARTICLE_INITIAL_IMAGES 6 // number of images used for particle initialization
 
 // REST DELAY FOR CAMERA AFTER CHANGE OF PARAMETERS
 #define PG_CAMERA_REST_DELAY 240
@@ -210,27 +216,20 @@ using std::ifstream;
 #endif
 
 #define PG_NB_VIDEO_CUMUL_MODES 4
-
 // no cumul
 // add
 // stamp
 // xor
 
 // NB PIXELS MODES
+#if defined(KOMPARTSD)
+#undef PG_NB_PIXEL_MODES
+#else
 #define PG_NB_PIXEL_MODES 3
 // no pixels
 // pixels
 // firework
-
-// NB PARTICLE MODES
-#define PG_NB_PARTMOVE_MODES 5
-
-#define PG_NB_PARTREPOP_MODES 2
-#define PARTREPOP_GRID 1
-
-#define PG_NB_PARTEXIT_MODES 3
-#define PG_NB_PARTSTROKE_MODES 4
-#define PG_NB_PARTCOLOR_MODES 3
+#endif
 
 // NB CA TYPES
 #if defined(GN)
@@ -264,7 +263,7 @@ using std::ifstream;
 //#define CA_PROTOCELLS                    0
 #endif
 #if defined(KOMPARTSD)
-#define PG_NB_CA_TYPES 0
+#undef PG_NB_CA_TYPES
 #endif
 #if !defined(GN) && !defined(MALAUSSENA) && !defined(TVW) && !defined(CRITON) && !defined(KOMPARTSD)
 #define PG_NB_CA_TYPES 4
@@ -292,6 +291,21 @@ using std::ifstream;
 #define PG_PARTICLE_CURVE_DEGREE 3
 #endif
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+// NB PARTICLE MODES
+#define PG_NB_PARTMOVE_MODES 5
+
+#define PG_NB_PARTREPOP_MODES 2
+#define PARTREPOP_GRID 1
+
+#define PG_NB_PARTEXIT_MODES 3
+#define PG_NB_PARTSTROKE_MODES 4
+#define PG_NB_PARTCOLOR_MODES 3
+
+#define PG_NB_PARTICLE_INITIAL_IMAGES 6 // number of images used for particle initialization
+#endif
+
+
 // SENSORS
 #if defined (MALAUSSENA)
 // #define PG_SENSORS
@@ -316,6 +330,12 @@ using std::ifstream;
 #ifdef SUPERCOLLIDER
 #define PG_NB_SENSOR_GROUPS 12
 #endif
+
+// BEZIER CURVES INSTEAD OF LINES FOR PEN
+#if defined(KOMPARTSD)
+#define PG_BEZIER_CURVES
+#endif
+
 
 #ifdef _WIN32
 	//#ifdef PG_WACOM_TABLET

@@ -64,9 +64,9 @@ void main() {
 #endif
 
   // vertical mirror
-    coords.y = height - coords.y;
+  // coords.y = height - coords.y;
   // ST OUEN horizontal mirror
-  // coords.x = width - coords.x;
+   coords.x = width - coords.x;
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
@@ -159,9 +159,9 @@ void main() {
   // comment for single cursor
 
 // vertical mirror
-//   coords.y = height - coords.y;
+//  coords.y = height - coords.y;
 // ST OUEN horizontal mirror
-// coordX = width - coordX;
+  coordX = width - coordX;
 // double mirror
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;

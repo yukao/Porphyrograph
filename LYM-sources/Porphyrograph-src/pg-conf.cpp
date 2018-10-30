@@ -185,6 +185,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.clear();
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
+	sstrem >> ID;
 	sstrem >> beginVideo_file;
 	sstrem >> endVideo_file;
 	sstrem >> stepVideo_file;
@@ -196,6 +197,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.clear();
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
+	sstrem >> ID;
 	sstrem >> beginSvg;
 	sstrem >> endSvg;
 	sstrem >> stepSvg;
@@ -208,6 +210,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.clear();
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
+	sstrem >> ID;
 	sstrem >> beginPng;
 	sstrem >> endPng;
 	sstrem >> stepPng;

@@ -19,17 +19,15 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // INPUT
 layout (binding = 0) uniform samplerRect uniform_Master_texture_fs_Render_curr; // Master pass output with possible echo
-layout (binding = 1) uniform samplerRect uniform_Master_texture_fs_CA;  // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Part_render;  // Particle step n
-layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Update pass BG track step n (FBO attachment 3)
+layout (binding = 1) uniform samplerRect uniform_Master_texture_fs_Trk0;  // 2-cycle ping-pong Update pass BG track step n (FBO attachment 3)
 #if PG_NB_TRACKS >= 2
-layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 4)
+layout (binding = 2) uniform samplerRect uniform_Master_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 4)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 5)
+layout (binding = 3) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 5)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
+layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
 #endif
 
 /////////////////////////////////////
@@ -102,11 +100,6 @@ void main() {
 
   ////////////////////////////////////////////////////////////////////
   // non-echoed layers
-  vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);
-  if( CA_color.a < 0 ) {
-    CA_color = vec4(0.0);
-  }
-
   vec4 track0_color = texture(uniform_Master_texture_fs_Trk0, coords);
 #if PG_NB_TRACKS >= 2
   vec4 track1_color = texture(uniform_Master_texture_fs_Trk1, coords);
@@ -131,7 +124,6 @@ void main() {
 #if PG_NB_TRACKS >= 4
     + vec3(track3_color.rgb) * trackMasterWeight_3
 #endif
-    + CA_color.rgb * CAMasterWeight
     ;
 
   ////////////////////////////////////////////////////////////////////

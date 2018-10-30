@@ -361,8 +361,12 @@ void pg_wacom_tabletInit(HWND hWnd)
 	  (struct PG_wacom_tablet * )calloc( sizeof(struct PG_wacom_tablet ), 1 );
 
       /* default initialization */
-      pg_wacom_tablet[ ident ]->hTab = NULL;
-      pg_wacom_tablet[ ident ]->aziFactor = 1;       /* Azimuth factor */
+	  pg_wacom_tablet[ident]->ptNew.x = (LONG)-10000;
+	  pg_wacom_tablet[ident]->ptNew.y = (LONG)-10000;
+	  pg_wacom_tablet[ident]->curNew = (UINT)100;
+	  pg_wacom_tablet[ident]->prsNew = (UINT)0;
+	  pg_wacom_tablet[ident]->hTab = NULL;
+	  pg_wacom_tablet[ ident ]->aziFactor = 1;       /* Azimuth factor */
       pg_wacom_tablet[ ident ]->altFactor = 1;       /* Altitude factor */
       pg_wacom_tablet[ ident ]->altAdjust = 1;       /* Altitude zero adjust */
       pg_wacom_tablet[ ident ]->tilt_support = TRUE; /* Is tilt supported */
@@ -444,101 +448,170 @@ void pg_wacom_tabletInit(HWND hWnd)
     }
 }
 
-void pg_wacom_tabletMsg(SFG_Window* window , WPARAM wParam, LPARAM lParam )
+void pg_wacom_tabletMsg(SFG_Window* window, WPARAM wParam, LPARAM lParam)
 {
-    POINT 		ptOld; 
-    UINT  		prsOld;
-    UINT  		curOld;
-    ORIENTATION		ortOld;
-    int			ident;
-    PACKET	        pkt;             /* the current packet */
-  
-    if( !pg_wacom_tabletActive ) 
-	return;
+	POINT 		ptOld;
+	UINT  		prsOld;
+	UINT  		curOld;
+	ORIENTATION		ortOld;
+	int			ident;
+	PACKET	        pkt;             /* the current packet */
 
-    if (gpWTPacket((HCTX)lParam, wParam, &pkt)) {
-       for( ident = 0 ; ident < MAX_NUM_TABLETS ; ident++ ) {
-  	    /* old co-ordinates used for comparisons */
-	    ptOld = pg_wacom_tablet[ ident ]->ptNew; 
-	    prsOld = pg_wacom_tablet[ ident ]->prsNew;
-	    curOld = pg_wacom_tablet[ ident ]->curNew;
-	    ortOld = pg_wacom_tablet[ ident ]->ortNew;
-				
-	    /* save new co-ordinates */
-	    pg_wacom_tablet[ ident ]->ptNew.x = (UINT)pkt.pkX;
-	    pg_wacom_tablet[ ident ]->ptNew.y = (UINT)pkt.pkY;
-	    pg_wacom_tablet[ ident ]->curNew = pkt.pkCursor;
-	    pg_wacom_tablet[ ident ]->prsNew = pkt.pkNormalPressure;
-	    if (pg_wacom_tablet[ ident ]->tilt_support) {                             
-		pg_wacom_tablet[ ident ]->ortNew = pkt.pkOrientation;
-	    }
-				
-	    /* If the data change, update */
-	    // pkCursor values
-	    // Index 0 – Puck-like device #1
-	    // Index 1 – Stylus-like device #1
-	    // Index 2 – Inverted stylus-like device #1
-	    // Index 3 – Puck-like device #2
-	    // Index 4 – Stylus-like device #2
-	    // Index 5 – Inverted stylus-like device #2
-	    if (pg_wacom_tablet[ ident ]->tilt_support) {                             
-  		if (pg_wacom_tablet[ ident ]->ptNew.x != ptOld.x ||
-		    pg_wacom_tablet[ ident ]->ptNew.y != ptOld.y ||
-		    pg_wacom_tablet[ ident ]->prsNew != prsOld ||
-		    pg_wacom_tablet[ ident ]->ortNew.orAzimuth != ortOld.orAzimuth ||
-		    pg_wacom_tablet[ ident ]->ortNew.orAltitude != ortOld.orAltitude ||
-		    pg_wacom_tablet[ ident ]->ortNew.orTwist != ortOld.orTwist) {   
-		    INVOKE_WCB( *window, WacomTablet,
-                        ( pg_wacom_tablet[ ident ]->ptNew.x ,
-			pg_wacom_tablet[ ident ]->ptNew.y ,
-			pg_wacom_tablet[ ident ]->prsNew / 1023.0F ,
-			pg_wacom_tablet[ ident ]->ortNew.orAzimuth / 3600.0F * 2.0F * (float)pi ,
-			1.0F - pg_wacom_tablet[ ident ]->ortNew.orAltitude /900.0F ,
-			pg_wacom_tablet[ ident ]->ortNew.orTwist ) );
-		    INVOKE_WCB( *window, WacomTabletCursor,
-                        ( pg_wacom_tablet[ ident ]->ptNew.x ,
-			pg_wacom_tablet[ ident ]->ptNew.y ,
-			pg_wacom_tablet[ ident ]->prsNew / 1023.0F ,
-			pg_wacom_tablet[ ident ]->ortNew.orAzimuth / 3600.0F * 2.0F * (float)pi ,
-			1.0F - pg_wacom_tablet[ ident ]->ortNew.orAltitude /900.0F ,
-			pg_wacom_tablet[ ident ]->ortNew.orTwist ,
-			pg_wacom_tablet[ ident ]->curNew ) );
+	if (!pg_wacom_tabletActive) {
+		for (ident = 0; ident < MAX_NUM_TABLETS; ident++) {
+			// old co-ordinates used for comparisons 
+			ptOld = pg_wacom_tablet[ident]->ptNew;
+			prsOld = pg_wacom_tablet[ident]->prsNew;
+			curOld = pg_wacom_tablet[ident]->curNew;
+			ortOld = pg_wacom_tablet[ident]->ortNew;
 
-		 //   printf("pt [%d,%d] press %.3f az %.3f alt %.3f twist %d\n" , 
-			//pg_wacom_tablet[ ident ]->ptNew.x ,
-			//pg_wacom_tablet[ ident ]->ptNew.y ,
-			//pg_wacom_tablet[ ident ]->prsNew / 1023.0 ,
-			//pg_wacom_tablet[ ident ]->ortNew.orAzimuth / 3600.0 ,
-			//1.0 - pg_wacom_tablet[ ident ]->ortNew.orAltitude /900.0 ,
-			//pg_wacom_tablet[ ident ]->ortNew.orTwist );
+			// save new co-ordinates 
+			pg_wacom_tablet[ident]->ptNew.x = (LONG)-10000;
+			pg_wacom_tablet[ident]->ptNew.y = (LONG)-10000;
+			pg_wacom_tablet[ident]->curNew = (UINT)100;
+			pg_wacom_tablet[ident]->prsNew = (UINT)0;
+
+			if (pg_wacom_tablet[ident]->ptNew.x != ptOld.x ||
+				pg_wacom_tablet[ident]->ptNew.y != ptOld.y ||
+				pg_wacom_tablet[ident]->prsNew != prsOld) {
+				INVOKE_WCB(*window, WacomTablet,
+					(pg_wacom_tablet[ident]->ptNew.x,
+						pg_wacom_tablet[ident]->ptNew.y,
+						pg_wacom_tablet[ident]->prsNew / 1023.0F, 0.0F, 0.0F, 0));
+				INVOKE_WCB(*window, WacomTabletCursor,
+					(pg_wacom_tablet[ident]->ptNew.x,
+						pg_wacom_tablet[ident]->ptNew.y,
+						pg_wacom_tablet[ident]->prsNew / 1023.0F, 0.0F, 0.0F, 0,
+						pg_wacom_tablet[ident]->curNew));
+
+				//   printf("pt [%d,%d] press %.3f\n" , 
+				//pg_wacom_tablet[ ident ]->ptNew.x ,
+				//pg_wacom_tablet[ ident ]->ptNew.y ,
+				//pg_wacom_tablet[ ident ]->prsNew / 1023.0 );
+			}
 		}
-	    }
-	    else {                             
-  		if (pg_wacom_tablet[ ident ]->ptNew.x != ptOld.x ||
-		    pg_wacom_tablet[ ident ]->ptNew.y != ptOld.y ||
-		    pg_wacom_tablet[ ident ]->prsNew != prsOld ) {                                     
-		    INVOKE_WCB( *window, WacomTablet,
-                        ( pg_wacom_tablet[ ident ]->ptNew.x ,
-			pg_wacom_tablet[ ident ]->ptNew.y ,
-			pg_wacom_tablet[ ident ]->prsNew / 1023.0F , 0.0F ,  0.0F , 0 ) );
-		    INVOKE_WCB( *window, WacomTabletCursor,
-                        ( pg_wacom_tablet[ ident ]->ptNew.x ,
-			pg_wacom_tablet[ ident ]->ptNew.y ,
-			pg_wacom_tablet[ ident ]->prsNew / 1023.0F , 0.0F , 0.0F , 0 ,
-			pg_wacom_tablet[ ident ]->curNew ) );
+		return;
+	}
 
-		 //   printf("pt [%d,%d] press %.3f\n" , 
-			//pg_wacom_tablet[ ident ]->ptNew.x ,
-			//pg_wacom_tablet[ ident ]->ptNew.y ,
-			//pg_wacom_tablet[ ident ]->prsNew / 1023.0 );
+	if (gpWTPacket((HCTX)lParam, wParam, &pkt)) {
+		for (ident = 0; ident < MAX_NUM_TABLETS; ident++) {
+			/* old co-ordinates used for comparisons */
+			ptOld = pg_wacom_tablet[ident]->ptNew;
+			prsOld = pg_wacom_tablet[ident]->prsNew;
+			curOld = pg_wacom_tablet[ident]->curNew;
+			ortOld = pg_wacom_tablet[ident]->ortNew;
+
+			/* save new co-ordinates */
+			pg_wacom_tablet[ident]->ptNew.x = (UINT)pkt.pkX;
+			pg_wacom_tablet[ident]->ptNew.y = (UINT)pkt.pkY;
+			pg_wacom_tablet[ident]->curNew = pkt.pkCursor;
+			pg_wacom_tablet[ident]->prsNew = pkt.pkNormalPressure;
+			if (pg_wacom_tablet[ident]->tilt_support) {
+				pg_wacom_tablet[ident]->ortNew = pkt.pkOrientation;
+			}
+
+			/* If the data change, update */
+			// pkCursor values
+			// Index 0 – Puck-like device #1
+			// Index 1 – Stylus-like device #1
+			// Index 2 – Inverted stylus-like device #1
+			// Index 3 – Puck-like device #2
+			// Index 4 – Stylus-like device #2
+			// Index 5 – Inverted stylus-like device #2
+			if (pg_wacom_tablet[ident]->tilt_support) {
+				if (pg_wacom_tablet[ident]->ptNew.x != ptOld.x ||
+					pg_wacom_tablet[ident]->ptNew.y != ptOld.y ||
+					pg_wacom_tablet[ident]->prsNew != prsOld ||
+					pg_wacom_tablet[ident]->ortNew.orAzimuth != ortOld.orAzimuth ||
+					pg_wacom_tablet[ident]->ortNew.orAltitude != ortOld.orAltitude ||
+					pg_wacom_tablet[ident]->ortNew.orTwist != ortOld.orTwist) {
+					INVOKE_WCB(*window, WacomTablet,
+						(pg_wacom_tablet[ident]->ptNew.x,
+							pg_wacom_tablet[ident]->ptNew.y,
+							pg_wacom_tablet[ident]->prsNew / 1023.0F,
+							pg_wacom_tablet[ident]->ortNew.orAzimuth / 3600.0F * 2.0F * (float)pi,
+							1.0F - pg_wacom_tablet[ident]->ortNew.orAltitude / 900.0F,
+							pg_wacom_tablet[ident]->ortNew.orTwist));
+					INVOKE_WCB(*window, WacomTabletCursor,
+						(pg_wacom_tablet[ident]->ptNew.x,
+							pg_wacom_tablet[ident]->ptNew.y,
+							pg_wacom_tablet[ident]->prsNew / 1023.0F,
+							pg_wacom_tablet[ident]->ortNew.orAzimuth / 3600.0F * 2.0F * (float)pi,
+							1.0F - pg_wacom_tablet[ident]->ortNew.orAltitude / 900.0F,
+							pg_wacom_tablet[ident]->ortNew.orTwist,
+							pg_wacom_tablet[ident]->curNew));
+
+					//   printf("pt [%d,%d] press %.3f az %.3f alt %.3f twist %d\n" , 
+					   //pg_wacom_tablet[ ident ]->ptNew.x ,
+					   //pg_wacom_tablet[ ident ]->ptNew.y ,
+					   //pg_wacom_tablet[ ident ]->prsNew / 1023.0 ,
+					   //pg_wacom_tablet[ ident ]->ortNew.orAzimuth / 3600.0 ,
+					   //1.0 - pg_wacom_tablet[ ident ]->ortNew.orAltitude /900.0 ,
+					   //pg_wacom_tablet[ ident ]->ortNew.orTwist );
+				}
+			}
+			else {
+				if (pg_wacom_tablet[ident]->ptNew.x != ptOld.x ||
+					pg_wacom_tablet[ident]->ptNew.y != ptOld.y ||
+					pg_wacom_tablet[ident]->prsNew != prsOld) {
+					INVOKE_WCB(*window, WacomTablet,
+						(pg_wacom_tablet[ident]->ptNew.x,
+							pg_wacom_tablet[ident]->ptNew.y,
+							pg_wacom_tablet[ident]->prsNew / 1023.0F, 0.0F, 0.0F, 0));
+					INVOKE_WCB(*window, WacomTabletCursor,
+						(pg_wacom_tablet[ident]->ptNew.x,
+							pg_wacom_tablet[ident]->ptNew.y,
+							pg_wacom_tablet[ident]->prsNew / 1023.0F, 0.0F, 0.0F, 0,
+							pg_wacom_tablet[ident]->curNew));
+
+					//   printf("pt [%d,%d] press %.3f\n" , 
+					   //pg_wacom_tablet[ ident ]->ptNew.x ,
+					   //pg_wacom_tablet[ ident ]->ptNew.y ,
+					   //pg_wacom_tablet[ ident ]->prsNew / 1023.0 );
+				}
+			}
+			/* if the cursor changes update the cursor name */
+			if (pg_wacom_tablet[ident]->curNew != curOld) {
+				printf("cursor [%d]\n", pg_wacom_tablet[ident]->curNew);
+			}
 		}
-	    }
-	    /* if the cursor changes update the cursor name */
-	    if (pg_wacom_tablet[ ident ]->curNew != curOld) {
-		 printf("cursor [%d]\n" , pg_wacom_tablet[ ident ]->curNew );
-	    }
-       }
-    }
+	}
+	/*
+	else {
+		for (ident = 0; ident < MAX_NUM_TABLETS; ident++) {
+			// old co-ordinates used for comparisons
+			ptOld = pg_wacom_tablet[ident]->ptNew;
+			prsOld = pg_wacom_tablet[ident]->prsNew;
+			curOld = pg_wacom_tablet[ident]->curNew;
+			ortOld = pg_wacom_tablet[ident]->ortNew;
+
+			// save new co-ordinates 
+			pg_wacom_tablet[ident]->ptNew.x = (LONG)-10000;
+			pg_wacom_tablet[ident]->ptNew.y = (LONG)-10000;
+			pg_wacom_tablet[ident]->curNew = (UINT)100;
+			pg_wacom_tablet[ident]->prsNew = (UINT)0;
+
+			if (pg_wacom_tablet[ident]->ptNew.x != ptOld.x ||
+				pg_wacom_tablet[ident]->ptNew.y != ptOld.y ||
+				pg_wacom_tablet[ident]->prsNew != prsOld) {
+				INVOKE_WCB(*window, WacomTablet,
+					(pg_wacom_tablet[ident]->ptNew.x,
+						pg_wacom_tablet[ident]->ptNew.y,
+						pg_wacom_tablet[ident]->prsNew / 1023.0F, 0.0F, 0.0F, 0));
+				INVOKE_WCB(*window, WacomTabletCursor,
+					(pg_wacom_tablet[ident]->ptNew.x,
+						pg_wacom_tablet[ident]->ptNew.y,
+						pg_wacom_tablet[ident]->prsNew / 1023.0F, 0.0F, 0.0F, 0,
+						pg_wacom_tablet[ident]->curNew));
+
+				//   printf("pt [%d,%d] press %.3f\n" , 
+				//pg_wacom_tablet[ ident ]->ptNew.x ,
+				//pg_wacom_tablet[ ident ]->ptNew.y ,
+				//pg_wacom_tablet[ ident ]->prsNew / 1023.0 );
+			}
+		}
+	}
+	*/
 }
 
 /*** END OF FILE ***/

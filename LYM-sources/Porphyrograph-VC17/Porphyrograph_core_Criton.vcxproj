@@ -32,8 +32,6 @@
     <ClInclude Include="..\Porphyrograph-src\pg-texture.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-udp.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-update.h" />
-    <ClInclude Include="..\Porphyrograph-src\pg_script_header_TVW.h" />
-    <ClInclude Include="..\Porphyrograph-src\pg_shader_header_TVW.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B351504D-E507-4CF9-B793-C4A87B73D894}</ProjectGuid>

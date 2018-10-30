@@ -46,7 +46,9 @@ extern cv::Mat Display_Font_image;
 extern GLuint Pen_texture_3D_texID;
 extern GLuint Noise_texture_3D;
 
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 extern GLuint pg_particle_initial_images_texID[PG_NB_PARTICLE_INITIAL_IMAGES][2];
+#endif
 
 #ifdef PG_SENSORS
 extern GLuint Sensor_texture_rectangle;
@@ -181,13 +183,19 @@ extern GLuint drawBuffers[16];
 /////////////////////////////////////////////////////////////////
 // config variables
 // current mouse location (also used for displaying the cursor)
-extern float mouse_x;
-extern float mouse_y;
-extern float mouse_x_prev;
-extern float mouse_y_prev;
-
 extern float paths_x[PG_NB_PATHS + 1];
 extern float paths_y[PG_NB_PATHS + 1];
+extern float paths_x_next_0;
+extern float paths_y_next_0;
+extern float paths_x_prev_prev_0;
+extern float paths_y_prev_prev_0;
+extern float paths_xL[PG_NB_PATHS + 1];
+extern float paths_yL[PG_NB_PATHS + 1];
+extern float paths_xR[PG_NB_PATHS + 1];
+extern float paths_yR[PG_NB_PATHS + 1];
+#ifdef PG_BEZIER_CURVES
+extern int path0_next_in_hull[4];
+#endif
 extern float paths_x_prev[PG_NB_PATHS + 1];
 extern float paths_y_prev[PG_NB_PATHS + 1];
 extern float paths_Color_r[PG_NB_PATHS + 1];

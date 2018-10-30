@@ -73,7 +73,8 @@ void CatmullRom_Evaluate(vec2* pOut_result, vec2* p0, vec2* p1, vec2* p2, vec2* 
 void pg_initStrokes( void );
 
 // loads a track from a path string
-void LoadPathFromXML( char *pathString , int indPath , float *translation , float pathRadius, float path_r_color, float path_g_color, float path_b_color);
+void LoadPathFromXML( char *pathString , int indPath , float *translation , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
+					  int &indControlPoint, float precedingCurrentPoint[2], float  currentPoint[2]);
 
 // loads a track from a svg file
 void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color);

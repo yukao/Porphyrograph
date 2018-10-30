@@ -86,7 +86,8 @@ int FramePerSecond = 0;
 bool DisplayFramePerSecond = false;
 
 /// current mouse location
-int CurrentMousePos_x = 0, CurrentMousePos_y = 0;
+int CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR, CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
+int PreviousMousePos_x = PG_OUT_OF_SCREEN_CURSOR, PreviousMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
 int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 int CurrentCursorStylusvsRubber = pg_Stylus;
 // current tablet pen pressure and orientation
@@ -377,6 +378,11 @@ void initGlutWindows( void ) {
   glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
   printf ("Max texture size %d geometry shader vertices %d max attach %d max draw buffs %d\n", 
 	  maxTextureSize, maxGeomVert, maxAttach, maxDrawBuf);
+  GLint maxFragUnif = 0;
+  glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragUnif);
+  printf("Max uniform components %d\n",
+	  maxFragUnif);
+  
   
   // window selection
   // glut win activation
@@ -667,21 +673,25 @@ void window_special_key_browse(int key, int x, int y)
 
 #ifdef PG_WACOM_TABLET
 void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
+	// drawing
 	if (press > 0) {
+		//printf("pen writing %d %d\n",x,y);
 		CurrentMousePos_x = x; //  int(x / 1024. * leftWindowWidth);
 		CurrentMousePos_y = y; // int(y / 768. * window_height);
 		if (CurrentCursorStylusvsRubber == pg_Stylus) {
-			CurrentCursorHooverPos_x = -10000;
-			CurrentCursorHooverPos_y = -10000;
+			CurrentCursorHooverPos_x = PG_OUT_OF_SCREEN_CURSOR;
+			CurrentCursorHooverPos_y = PG_OUT_OF_SCREEN_CURSOR;
 		}
 		else {
 			CurrentCursorHooverPos_x = x; // int(x / 1024. * leftWindowWidth);
 			CurrentCursorHooverPos_y = y; // int(y / 768. * window_height);
 		}
-	}
+	}	
+	// hoovering
 	else {
-		CurrentMousePos_x = -10000;
-		CurrentMousePos_y = -10000;
+		//printf("pen hoovering %d %d\n", x, y);
+		CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;
+		CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
 		CurrentCursorHooverPos_x = x; // int(x / 1024. * leftWindowWidth);
 		CurrentCursorHooverPos_y = y; // int(y / 768. * window_height);
 	}
@@ -727,8 +737,8 @@ void window_motionFunc_browse(int x, int y) {
 
 void window_passiveMotionFunc_browse(int x, int y) {
   // printf( "passive button (%d,%d)\n" , x , y );
-    CurrentMousePos_x = -10000;
-    CurrentMousePos_y = -10000;
+    CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;
+    CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
     CurrentCursorHooverPos_x = x;
     CurrentCursorHooverPos_y = y;
   // freeglut (PG): glutGetModifiers() called outside an input callback/int
@@ -882,7 +892,7 @@ void window_idle_browse(int step) {
 		// internal and external event processing
 
 		// sends the color IDS during the first frames
-		if (pg_FrameNo == 0) {
+		if (pg_FrameNo == first_frame_number) {
 			// sends color presets
 			InterfaceInitializations();
 		}

@@ -212,7 +212,7 @@ void main() {
   }
 
   // central circle
-  int  radiusCircle;
+  /* int  radiusCircle;
   if( coordX > width) {
     coordX -= width;
   }
@@ -228,6 +228,7 @@ void main() {
   else if( radiusCircle > 350 ) {
     outColor0.rgb *= ((384 - radiusCircle)/34.0);
   }
+  */
 
   // cursor
   if( !hide

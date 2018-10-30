@@ -109,11 +109,13 @@ extern int isClearCA;
 extern int isClearLayer;
 extern int isClearAllLayers;
 
+#ifdef PG_WITH_BLUR
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
 extern bool is_blur_1;
 extern bool is_blur_2;
 extern int nb_blur_frames_1;
 extern int nb_blur_frames_2;
+#endif
 
 // +++++++++++++++++++++ COPY LAYERS +++++++++++++++++++++++++++
 // copy to layer above (+1) or to layer below (-1)

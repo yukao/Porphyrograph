@@ -35,14 +35,27 @@ https://github.com/fcaruso/GLSLParametricCurve
 #if PG_NB_TRACKS == 1
 enum pg_FBO_Update_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_sampler = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
 	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_sampler = 0,
+	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#endif
 	pg_Camera_frame_FBO_Update_sampler,
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW)
+#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
@@ -75,18 +88,40 @@ enum pg_FBO_Update_samplers
 };
 enum pg_FBO_Update_attachments
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_attcht = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
 	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_attcht = 0,
+	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#endif
 	PG_FBO_UPDATE_NBATTACHTS
 };
 enum pg_FBO_Mixing_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Mixing_sampler = 0,
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
+#else
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+	pg_Part_render_FBO_Mixing_sampler = 0,
+	pg_Render_prec_FBO_Mixing_sampler,
+#else
+	pg_Render_prec_FBO_Mixing_sampler = 0,
+#endif
+#endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
 #if defined (TVW)
@@ -99,7 +134,9 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Master_sampler,
+#endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
 #endif
@@ -128,14 +165,27 @@ enum pg_FBO_ParticleAnimation_samplers
 #if PG_NB_TRACKS == 2
 enum pg_FBO_Update_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_sampler = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
 	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_sampler = 0,
+	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#endif
 	pg_Camera_frame_FBO_Update_sampler,
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW)
+#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
@@ -163,19 +213,41 @@ enum pg_FBO_Update_samplers
 };
 enum pg_FBO_Update_attachments
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_attcht = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
 	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_attcht = 0,
+	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#endif
 	pg_Trk1_FBO_Update_attcht,
 	PG_FBO_UPDATE_NBATTACHTS
 };
 enum pg_FBO_Mixing_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Mixing_sampler = 0,
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
+#else
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+	pg_Part_render_FBO_Mixing_sampler = 0,
+	pg_Render_prec_FBO_Mixing_sampler,
+#else
+	pg_Render_prec_FBO_Mixing_sampler = 0,
+#endif
+#endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
 #if defined (TVW)
@@ -189,7 +261,9 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Master_sampler,
+#endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
 #endif
@@ -220,14 +294,27 @@ enum pg_FBO_ParticleAnimation_samplers
 #if PG_NB_TRACKS == 3
 enum pg_FBO_Update_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_sampler = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
 	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_sampler = 0,
+	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#endif
 	pg_Camera_frame_FBO_Update_sampler,
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW)
+#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
@@ -240,20 +327,42 @@ enum pg_FBO_Update_samplers
 };
 enum pg_FBO_Update_attachments
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_attcht = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
 	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_attcht = 0,
+	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#endif
 	pg_Trk1_FBO_Update_attcht,
 	pg_Trk2_FBO_Update_attcht,
 	PG_FBO_UPDATE_NBATTACHTS
 };
 enum pg_FBO_Mixing_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Mixing_sampler = 0,
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
+#else
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+	pg_Part_render_FBO_Mixing_sampler = 0,
+	pg_Render_prec_FBO_Mixing_sampler,
+#else
+	pg_Render_prec_FBO_Mixing_sampler = 0,
+#endif
+#endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
 #if defined (TVW)
@@ -268,7 +377,9 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Master_sampler,
+#endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
 #endif
@@ -301,14 +412,27 @@ enum pg_FBO_ParticleAnimation_samplers
 #if PG_NB_TRACKS == 4
 enum pg_FBO_Update_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_sampler = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
 	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_sampler = 0,
+	pg_Brushes_FBO_Update_sampler,
+#else
+	pg_Brushes_FBO_Update_sampler = 0,
+#endif
+#endif
 	pg_Camera_frame_FBO_Update_sampler,
 	pg_Camera_BG_FBO_Update_sampler,
 	pg_Movie_frame_FBO_Update_sampler,
 	pg_Noise_FBO_Update_sampler,
-#if !defined (TVW)
+#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_FBO_Update_sampler,
 	pg_Photo1_FBO_Update_sampler,
 #endif
@@ -322,9 +446,22 @@ enum pg_FBO_Update_samplers
 };
 enum pg_FBO_Update_attachments
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Update_attcht = 0,
+#ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
 	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_attcht = 0,
+	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#endif
 	pg_Trk1_FBO_Update_attcht,
 	pg_Trk2_FBO_Update_attcht,
 	pg_Trk3_FBO_Update_attcht,
@@ -332,11 +469,20 @@ enum pg_FBO_Update_attachments
 };
 enum pg_FBO_Mixing_samplers
 {
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Mixing_sampler = 0,
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
+#else
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+	pg_Part_render_FBO_Mixing_sampler = 0,
+	pg_Render_prec_FBO_Mixing_sampler,
+#else
+	pg_Render_prec_FBO_Mixing_sampler = 0,
+#endif
+#endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
 #if defined (TVW)
@@ -352,7 +498,9 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
+#ifdef PG_NB_CA_TYPES
 	pg_CA_FBO_Master_sampler,
+#endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_Part_render_FBO_Master_sampler,
 #endif

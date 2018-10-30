@@ -190,11 +190,13 @@ int isClearCA;
 int isClearLayer;
 int isClearAllLayers;
 
+#ifdef PG_WITH_BLUR
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
 bool is_blur_1 = false;
 bool is_blur_2 = false;
 int nb_blur_frames_1 = 0;
 int nb_blur_frames_2 = 0;
+#endif
 
 // +++++++++++++++++++++ COPY LAYERS +++++++++++++++++++++++++++
 // copy to layer above (+1) or to layer below (-1)
@@ -280,18 +282,24 @@ enum pg_stringCommands_IDs
 	_partExit_mode_0,
 	_partExit_mode_1,
 	_partExit_mode_2,
+#ifdef PG_WITH_BLUR
 	_is_blur_1,
 	_is_blur_1_plus,
 	_is_blur_1_plus_plus,
 	_is_blur_2,
+#endif
 	_cameraCumul_plus,
 	_pen_brush_plus,
+#ifdef PG_NB_PIXEL_MODES
 	_pixel_mode_plus,
+#endif
+#ifdef PG_NB_CA_TYPES
 	_CA1Type_plus,
 	_CA1SubType_plus,
 	_CA1Type_minus,
 	_CA1SubType_minus,
 	_CAonOff,
+#endif
 	_sensor_layout_plus,
 	_sample_setUp_plus,
 	_sensor_activation_plus,
@@ -370,18 +378,24 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "partExit_mode_0", _partExit_mode_0 },
 	{ "partExit_mode_1", _partExit_mode_1 },
 	{ "partExit_mode_2", _partExit_mode_2 },
+#ifdef PG_WITH_BLUR
 	{ "is_blur_1", _is_blur_1 },
 	{ "is_blur_1_plus", _is_blur_1_plus },
 	{ "is_blur_1_plus_plus", _is_blur_1_plus_plus },
 	{ "is_blur_2", _is_blur_2 },
+#endif
 	{ "cameraCumul_plus", _cameraCumul_plus },
 	{ "pen_brush_plus", _pen_brush_plus },
+#ifdef PG_NB_PIXEL_MODES
 	{ "pixel_mode_plus", _pixel_mode_plus },
+#endif
+#ifdef PG_NB_CA_TYPES
 	{ "CA1Type_plus", _CA1Type_plus },
 	{ "CA1SubType_plus", _CA1SubType_plus },
 	{ "CA1Type_minus", _CA1Type_minus },
 	{ "CA1SubType_minus", _CA1SubType_minus },
 	{ "CAonOff", _CAonOff },
+#endif
 	{ "sensor_layout_plus", _sensor_layout_plus },
 	{ "sample_setUp_plus", _sample_setUp_plus },
 	{ "sensor_activation_plus", _sensor_activation_plus },
@@ -692,11 +706,13 @@ void pg_initializationScript(void) {
 	isClearLayer = 0;
 	isClearAllLayers = 0;
 
+#ifdef PG_WITH_BLUR
 	// blur
 	is_blur_1 = false;
 	is_blur_2 = false;
 	nb_blur_frames_1 = 0;
 	nb_blur_frames_2 = 0;
+#endif
 
 #ifdef MALAUSSENA
 	// CA seed
@@ -737,10 +753,17 @@ void pg_initializationScript(void) {
 	// DRAWING-CONTROLLED UNIFORM VARIABLES: dynamic values received from drawing or track display 
 	// pen position storage on the two quads 
 	for (int indPath = 0; indPath < PG_NB_PATHS + 1; indPath++) {
-		paths_x[indPath] = -1.0F;
-		paths_y[indPath] = -1.0F;
-		paths_x_prev[indPath] = -1.0F;
-		paths_y_prev[indPath] = -1.0F;
+		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+#ifdef PG_BEZIER_CURVES
+		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_yR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+#endif
+
 		// pen color
 		paths_Color_r[indPath] = 0.0F;
 		paths_Color_g[indPath] = 0.0F;
@@ -751,6 +774,11 @@ void pg_initializationScript(void) {
 		paths_RadiusX[indPath] = 0.0F;
 		paths_RadiusY[indPath] = 0.0F;
 	}
+#ifdef PG_BEZIER_CURVES
+	for (int ind = 0; ind < 4; ind++) {
+		path0_next_in_hull[ind] = -1;
+	}
+#endif
 
 	// particule color
 	repop_Color_r = 0.0f;
@@ -1793,6 +1821,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 	}
 	else if (ScenarioVarTypes[indParam] == _pg_int) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_NB_CA_TYPES
 			if (indParam == _CA1Type || indParam == _CA2Type ||
 				indParam == _CA1SubType || indParam == _CA2SubType) {
 				// for CAType we choose to alternate randomly between both types, according
@@ -1808,8 +1837,11 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 				}
 			}
 			else {
+#endif
 				*((int *)ScenarioVarPointers[indParam]) = (int)round(scenario_or_gui_command_value);
+#ifdef PG_NB_CA_TYPES
 			}
+#endif
 		}
 		else if (param_input_type == _PG_KEYSTROKE) {
 			*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
@@ -2385,6 +2417,7 @@ void pg_keyStrokeScripts(int key) {
 		pg_launch_performance();
 		break;
 
+#ifdef PG_WITH_BLUR
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		// +++++++++++++++++ BLUR TRACK 1 ++++++++++++++++++++++++++ 
 		// +++++++++++++++++   keystroke (b)  ++++++++++++++++++++++ 
@@ -2393,7 +2426,7 @@ void pg_keyStrokeScripts(int key) {
 		is_blur_1 = true;
 		break;
 	}
-
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 
@@ -3241,6 +3274,7 @@ void pg_aliasScript(char *command_symbol,
 	}
 #endif
 
+#ifdef PG_WITH_BLUR
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ BLUR +++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -3264,6 +3298,7 @@ void pg_aliasScript(char *command_symbol,
 		nb_blur_frames_2 = 1;
 		break;
 	}
+#endif
 
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -3296,16 +3331,18 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PIXEL MODE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#ifdef PG_NB_PIXEL_MODES
 	case _pixel_mode_plus: {
 		pixel_mode = (pixel_mode + 1) % PG_NB_PIXEL_MODES;
 		BrokenInterpolationVar[_pixel_mode] = true;
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if PG_NB_CA_TYPES > 1
+#ifdef PG_NB_CA_TYPES
 	case _CA1Type_plus: {
 		CA1Type = (CA1Type + 1) % PG_NB_CA_TYPES;
 		BrokenInterpolationVar[_CA1Type] = true;
@@ -3320,7 +3357,6 @@ void pg_aliasScript(char *command_symbol,
 		*((int *)ScenarioVarPointers[_CA1Type]) = CA1Type;
 		break;
 	}
-#endif
 	case _CA1SubType_plus: {
 		CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
 		BrokenInterpolationVar[_CA1SubType] = true;
@@ -3346,6 +3382,7 @@ void pg_aliasScript(char *command_symbol,
 		*((int *)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
@@ -4309,10 +4346,14 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		&& indPath <= PG_NB_PATHS
 		&& is_path_replay[indPath]) {
 		is_path_replay[indPath] = false;
-		paths_x[indPath] = -1.0F;
-		paths_y[indPath] = -1.0F;
-		paths_x_prev[indPath] = -1.0F;
-		paths_y_prev[indPath] = -1.0F;
+		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_yR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_Color_r[indPath] = 0.0F;
 		paths_Color_g[indPath] = 0.0F;
 		paths_Color_b[indPath] = 0.0F;
