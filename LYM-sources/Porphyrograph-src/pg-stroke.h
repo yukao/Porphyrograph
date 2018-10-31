@@ -25,6 +25,8 @@
 #define PG_STROKE_H
 
 /// mouse recording tracks management
+extern float **pg_Path_Pos_x_prev;
+extern float **pg_Path_Pos_y_prev;
 extern float **pg_Path_Pos_x;
 extern float **pg_Path_Pos_y;
 extern float **pg_Path_Pos_xL;
@@ -43,6 +45,7 @@ struct pg_Path_Status {
   float readSpeedScale;
 };
 extern struct pg_Path_Status *pg_Path_Status;
+extern int *pg_indPreviousFrameReading;
 
 // pen_radius multiplicative factor for large pen_brush
 extern float pen_radiusMultiplier;
@@ -74,7 +77,7 @@ void pg_initStrokes( void );
 
 // loads a track from a path string
 void LoadPathFromXML( char *pathString , int indPath , float *translation , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
-					  int &indControlPoint, float precedingCurrentPoint[2], float  currentPoint[2]);
+					  int * indCurve, float precedingCurrentPoint[2], float  currentPoint[2]);
 
 // loads a track from a svg file
 void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color);
@@ -83,7 +86,5 @@ void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, 
 // update of the tables that contain the stroke parameters
 void updateMouseEnvironmentVariablesAndTables( float theTime );
 
-// writes tracks to textures for drawing a line or a strip
-void pg_writeTrackTextures( int indPath );
 
 #endif

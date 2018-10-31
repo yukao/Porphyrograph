@@ -1243,10 +1243,10 @@ void pg_update_shader_uniforms(void) {
 	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[0] , paths_BrushID[1] , paths_BrushID[2] , paths_BrushID[3] );
 	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusX,
 		paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
+	//printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
 #ifndef PG_BEZIER_CURVES
 	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusY,
 		paths_RadiusY[0], paths_RadiusY[1], paths_RadiusY[2], paths_RadiusY[3]);
-	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
 #endif
 #endif
 	printOglError(521);
