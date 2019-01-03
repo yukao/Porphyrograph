@@ -24,11 +24,11 @@ udp_remote_client	3
 VERBATIM																		
 TYPE	string	string	int	string	bool	int	bool											
 ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal											
-client	udp_TouchOSC_send	192.168.43.99	8000	OSC	0	300	1											
+client	udp_TouchOSC_send	192.168.1.28	8000	OSC	0	300	1											
 client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
 client	udp_RN_send	127.0.0.1	8000	OSC	0	300	1											
 /udp_remote_client																		
-shader_files	6																	
+shader_files	7																	
 VERBATIM																		
 TYPE	string																	
 ID	id																	
@@ -38,5 +38,6 @@ filename	LYM_ParticleSplat_demo	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMEN
 filename	LYM_Mixing_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Sensor_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

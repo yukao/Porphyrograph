@@ -142,7 +142,7 @@ GLint uniform_Update_fs_4fv_paths03_xL;
 GLint uniform_Update_fs_4fv_paths03_yL;
 GLint uniform_Update_fs_4fv_paths03_xR;
 GLint uniform_Update_fs_4fv_paths03_yR;
-GLint uniform_Update_fs_4iv_path0_next_in_hull;
+GLint uniform_Update_fs_4iv_path03_beginOrEnd;
 #endif
 GLint uniform_Update_fs_4fv_paths03_r;
 GLint uniform_Update_fs_4fv_paths03_g;
@@ -165,6 +165,7 @@ GLint uniform_Update_fs_4fv_paths47_xL;
 GLint uniform_Update_fs_4fv_paths47_yL;
 GLint uniform_Update_fs_4fv_paths47_xR;
 GLint uniform_Update_fs_4fv_paths47_yR;
+GLint uniform_Update_fs_4iv_path47_beginOrEnd;
 #endif
 GLint uniform_Update_fs_4fv_paths47_r;
 GLint uniform_Update_fs_4fv_paths47_g;
@@ -772,8 +773,8 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_xR");
 	uniform_Update_fs_4fv_paths03_yR
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_yR");
-	uniform_Update_fs_4iv_path0_next_in_hull
-		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4iv_path0_next_in_hull");
+	uniform_Update_fs_4iv_path03_beginOrEnd
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4iv_path03_beginOrEnd");
 #endif
 	uniform_Update_fs_4fv_paths03_r
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_r");
@@ -811,6 +812,8 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_xR");
 	uniform_Update_fs_4fv_paths47_yR
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_yR");
+	uniform_Update_fs_4iv_path47_beginOrEnd
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4iv_path47_beginOrEnd");
 #endif
 	uniform_Update_fs_4fv_paths47_r
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_r");
@@ -1003,7 +1006,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths03_yL == -1)
 		|| (uniform_Update_fs_4fv_paths03_xR == -1)
 		|| (uniform_Update_fs_4fv_paths03_yR == -1)
-		|| (uniform_Update_fs_4iv_path0_next_in_hull == -1)
+		|| (uniform_Update_fs_4iv_path03_beginOrEnd == -1)
 #endif
 		|| (uniform_Update_fs_4fv_paths03_r == -1)
 		|| (uniform_Update_fs_4fv_paths03_g == -1)
@@ -1026,6 +1029,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths47_yL == -1)
 		|| (uniform_Update_fs_4fv_paths47_xR == -1)
 		|| (uniform_Update_fs_4fv_paths47_yR == -1)
+		|| (uniform_Update_fs_4iv_path47_beginOrEnd == -1)
 #endif
 		|| (uniform_Update_fs_4fv_paths47_r == -1)
 		|| (uniform_Update_fs_4fv_paths47_g == -1)
@@ -1136,7 +1140,7 @@ void pg_loadAllShaders(void) {
 #endif
 #ifdef PG_BEZIER_CURVES
 		// pen Bezier curve tangents
-		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths03_xL : %d, uniform_Update_fs_4fv_paths03_yL : %d, uniform_Update_fs_4fv_paths03_xR : %d, uniform_Update_fs_4fv_paths03_yR : %d, uniform_Update_fs_4iv_path0_next_in_hull : %d\n", uniform_Update_fs_4fv_paths03_xL, uniform_Update_fs_4fv_paths03_yL, uniform_Update_fs_4fv_paths03_xR, uniform_Update_fs_4fv_paths03_yR, uniform_Update_fs_4iv_path0_next_in_hull );
+		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths03_xL : %d, uniform_Update_fs_4fv_paths03_yL : %d, uniform_Update_fs_4fv_paths03_xR : %d, uniform_Update_fs_4fv_paths03_yR : %d, uniform_Update_fs_4iv_path03_beginOrEnd : %d\n", uniform_Update_fs_4fv_paths03_xL, uniform_Update_fs_4fv_paths03_yL, uniform_Update_fs_4fv_paths03_xR, uniform_Update_fs_4fv_paths03_yR, uniform_Update_fs_4iv_path03_beginOrEnd );
 #endif
 #endif
 #if PG_NB_PATHS == 7
@@ -1146,7 +1150,7 @@ void pg_loadAllShaders(void) {
 #endif
 #ifdef PG_BEZIER_CURVES
 		// pen Bezier curve tangents
-		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths47_xL : %d, uniform_Update_fs_4fv_paths47_yL : %d, uniform_Update_fs_4fv_paths47_xR : %d, uniform_Update_fs_4fv_paths47_yR : %d\n", uniform_Update_fs_4fv_paths47_xL, uniform_Update_fs_4fv_paths47_yL, uniform_Update_fs_4fv_paths47_xR, uniform_Update_fs_4fv_paths47_yR);
+		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths47_xL : %d, uniform_Update_fs_4fv_paths47_yL : %d, uniform_Update_fs_4fv_paths47_xR : %d, uniform_Update_fs_4fv_paths47_yR : %d, uniform_Update_fs_4iv_path47_beginOrEnd : %d\n", uniform_Update_fs_4fv_paths47_xL, uniform_Update_fs_4fv_paths47_yL, uniform_Update_fs_4fv_paths47_xR, uniform_Update_fs_4fv_paths47_yR, uniform_Update_fs_4iv_path47_beginOrEnd);
 #endif
 #endif
 #ifdef CRITON

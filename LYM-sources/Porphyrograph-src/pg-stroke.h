@@ -34,17 +34,18 @@ extern float **pg_Path_Pos_yL;
 extern float **pg_Path_Pos_xR;
 extern float **pg_Path_Pos_yR;
 extern float **pg_Path_Time;
-struct pg_Path_Status {
+struct pg_Path_Status_Struct {
   bool isFirstFrame;
   bool isActiveRecording;
   bool isNormalized;
   int nbRecordedFrames;
   int indReading;
   float initialTimeRecording;
+  float finalTimeRecording;
   float initialTimeReading;
   float readSpeedScale;
 };
-extern struct pg_Path_Status *pg_Path_Status;
+extern struct pg_Path_Status_Struct *pg_Path_Status;
 extern int *pg_indPreviousFrameReading;
 
 // pen_radius multiplicative factor for large pen_brush
@@ -80,11 +81,11 @@ void LoadPathFromXML( char *pathString , int indPath , float *translation , floa
 					  int * indCurve, float precedingCurrentPoint[2], float  currentPoint[2]);
 
 // loads a track from a svg file
-void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color);
-void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color);
+void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
+void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
 
 // update of the tables that contain the stroke parameters
-void updateMouseEnvironmentVariablesAndTables( float theTime );
+void pg_update_pulsed_colors_and_replay_paths( float theTime );
 
 
 #endif

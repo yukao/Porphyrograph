@@ -126,13 +126,7 @@ int   currentDrawingTrack ;
 int   currentVideoTrack   ;
 int   currentPhotoTrack   ;
 float trkDecay_sign_0     ;
-float trkDecay_sign_1     ;
-float trkDecay_sign_2     ;
-float trkDecay_sign_3     ;
 float trkDecay_0          ;
-float trkDecay_1          ;
-float trkDecay_2          ;
-float trkDecay_3          ;
 float CAMixingWeight      ;
 float trackMixingWeight_0 ;
 float CAMasterWeight      ;
@@ -202,7 +196,8 @@ float sound_env_max       ;
 bool  currentBGCapture    ;
 bool  hide                ;
 int   playing_soundtrackNo;
-bool  adc_onOff           ;
+float audioInput_weight   ;
+float soundtrack_weight   ;
 int   track_x_transl_0    ;
 int   track_x_transl_1    ;
 int   track_y_transl_0    ;
@@ -225,11 +220,11 @@ float photo_value         ;
 float photo_value_pulse   ;
 float photo_satur         ;
 float photo_satur_pulse   ;
-float mask_scale          ;
 float photo_scale         ;
 float mask_contrast       ;
 float photo_contrast      ;
 bool  mute_screen         ;
+float fft_scale           ;
 VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { 
     _pg_int ,
     _pg_float,
@@ -301,12 +296,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_int,
     _pg_int,
     _pg_sign,
-    _pg_sign,
-    _pg_sign,
-    _pg_sign,
-    _pg_float,
-    _pg_float,
-    _pg_float,
     _pg_float,
     _pg_float,
     _pg_float,
@@ -377,7 +366,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_bool,
     _pg_bool,
     _pg_int,
-    _pg_path,
+    _pg_float,
+    _pg_float,
     _pg_int,
     _pg_int,
     _pg_int,
@@ -403,8 +393,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_float,
-    _pg_float,
     _pg_bool,
+    _pg_float,
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
    (void *)&pen_brush,
@@ -477,13 +467,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&currentVideoTrack,
    (void *)&currentPhotoTrack,
    (void *)&trkDecay_sign_0,
-   (void *)&trkDecay_sign_1,
-   (void *)&trkDecay_sign_2,
-   (void *)&trkDecay_sign_3,
    (void *)&trkDecay_0,
-   (void *)&trkDecay_1,
-   (void *)&trkDecay_2,
-   (void *)&trkDecay_3,
    (void *)&CAMixingWeight,
    (void *)&trackMixingWeight_0,
    (void *)&CAMasterWeight,
@@ -553,7 +537,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&currentBGCapture,
    (void *)&hide,
    (void *)&playing_soundtrackNo,
-   (void *)&adc_onOff,
+   (void *)&audioInput_weight,
+   (void *)&soundtrack_weight,
    (void *)&track_x_transl_0,
    (void *)&track_x_transl_1,
    (void *)&track_y_transl_0,
@@ -576,11 +561,11 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&photo_value_pulse,
    (void *)&photo_satur,
    (void *)&photo_satur_pulse,
-   (void *)&mask_scale,
    (void *)&photo_scale,
    (void *)&mask_contrast,
    (void *)&photo_contrast,
    (void *)&mute_screen,
+   (void *)&fft_scale,
 };
 void pen_brush_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
@@ -605,6 +590,8 @@ void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type , float scenar
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void hide_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { 
    &pen_brush_callBack,
    NULL,
@@ -666,12 +653,6 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    &flashCameraTrkLength_callBack,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
    NULL,
    NULL,
    NULL,
@@ -752,7 +733,8 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    &hide_callBack,
    NULL,
-   NULL,
+   &audioInput_weight_callBack,
+   &soundtrack_weight_callBack,
    NULL,
    NULL,
    NULL,
@@ -852,13 +834,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
   (char *)"trkDecay_sign_0",
-  (char *)"trkDecay_sign_1",
-  (char *)"trkDecay_sign_2",
-  (char *)"trkDecay_sign_3",
   (char *)"trkDecay_0",
-  (char *)"trkDecay_1",
-  (char *)"trkDecay_2",
-  (char *)"trkDecay_3",
   (char *)"CAMixingWeight",
   (char *)"trackMixingWeight_0",
   (char *)"CAMasterWeight",
@@ -928,7 +904,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"",
   (char *)"hide",
   (char *)"playing_soundtrackNo",
-  (char *)"adc_onOff",
+  (char *)"audioInput_weight",
+  (char *)"soundtrack_weight",
   (char *)"",
   (char *)"",
   (char *)"",
@@ -954,8 +931,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"",
   (char *)"",
   (char *)"",
-  (char *)"",
   (char *)"mute_screen",
+  (char *)"fft_scale",
 };
 char *CmdString[_MaxInterpVarIDs] = { 
   (char *)"pen_brush",
@@ -1028,13 +1005,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
   (char *)"trkDecay_sign_0",
-  (char *)"trkDecay_sign_1",
-  (char *)"trkDecay_sign_2",
-  (char *)"trkDecay_sign_3",
   (char *)"trkDecay_0",
-  (char *)"trkDecay_1",
-  (char *)"trkDecay_2",
-  (char *)"trkDecay_3",
   (char *)"CAMixingWeight",
   (char *)"trackMixingWeight_0",
   (char *)"CAMasterWeight",
@@ -1104,7 +1075,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"currentBGCapture",
   (char *)"hide",
   (char *)"playing_soundtrackNo",
-  (char *)"adc_onOff",
+  (char *)"audioInput_weight",
+  (char *)"soundtrack_weight",
   (char *)"track_x_transl_0",
   (char *)"track_x_transl_1",
   (char *)"track_y_transl_0",
@@ -1127,14 +1099,14 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"photo_value_pulse",
   (char *)"photo_satur",
   (char *)"photo_satur_pulse",
-  (char *)"mask_scale",
   (char *)"photo_scale",
   (char *)"mask_contrast",
   (char *)"photo_contrast",
   (char *)"mute_screen",
+  (char *)"fft_scale",
 };
-char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*************k**Hh*************cII*?************p******:*******d********************************iiII****************************************************************";
-char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$P$*****K**Gg*****************!************Q*******000****D********************************II******************************************************************";
+char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*************k**Hh*************cII*?************p******:****d*****************************iiII*****************************************************************";
+char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$P$*****K**Gg*****************!************Q*******000*D*****************************II*******************************************************************";
 float StepMinus[_MaxInterpVarIDs] = { 
   -1.000000F,
   -1.000000F,
@@ -1206,12 +1178,6 @@ float StepMinus[_MaxInterpVarIDs] = {
   -1.000000F,
   -1.000000F,
   -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -0.001000F,
-  -0.001000F,
-  -0.001000F,
   -0.001000F,
   -1.000000F,
   -1.000000F,
@@ -1282,34 +1248,35 @@ float StepMinus[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   -1.000000F,
+  -0.100000F,
+  -0.100000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -0.100000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -1.000000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
+  -0.100000F,
   0.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -0.100000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  -0.100000F,
-  0.000000F,
+  -100.000000F,
 };
 float StepPlus[_MaxInterpVarIDs] = { 
   1.000000F,
@@ -1382,12 +1349,6 @@ float StepPlus[_MaxInterpVarIDs] = {
   1.000000F,
   1.000000F,
   1.000000F,
-  1.000000F,
-  1.000000F,
-  1.000000F,
-  0.001000F,
-  0.001000F,
-  0.001000F,
   0.001000F,
   1.000000F,
   1.000000F,
@@ -1458,7 +1419,8 @@ float StepPlus[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   1.000000F,
-  1.000000F,
+  0.100000F,
+  0.100000F,
   1.000000F,
   1.000000F,
   1.000000F,
@@ -1475,7 +1437,6 @@ float StepPlus[_MaxInterpVarIDs] = {
   1.000000F,
   1.000000F,
   1.000000F,
-  0.100000F,
   0.100000F,
   0.100000F,
   0.100000F,
@@ -1486,6 +1447,7 @@ float StepPlus[_MaxInterpVarIDs] = {
   0.100000F,
   0.100000F,
   0.000000F,
+  100.000000F,
 };
 float MinValues[_MaxInterpVarIDs] = { 
   0.000000F,
@@ -1558,12 +1520,6 @@ float MinValues[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -1.000000F,
-  -9999.000000F,
-  -9999.000000F,
-  -9999.000000F,
   -9999.000000F,
   0.000000F,
   0.000000F,
@@ -1662,6 +1618,7 @@ float MinValues[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   0.000000F,
+  10.000000F,
 };
 float MaxValues[_MaxInterpVarIDs] = { 
   7.000000F,
@@ -1734,12 +1691,6 @@ float MaxValues[_MaxInterpVarIDs] = {
   2.000000F,
   2.000000F,
   1.000000F,
-  1.000000F,
-  1.000000F,
-  1.000000F,
-  9999.000000F,
-  9999.000000F,
-  9999.000000F,
   9999.000000F,
   1.000000F,
   1.000000F,
@@ -1811,6 +1762,7 @@ float MaxValues[_MaxInterpVarIDs] = {
   1.000000F,
   10.000000F,
   1.000000F,
+  1.000000F,
   100.000000F,
   100.000000F,
   100.000000F,
@@ -1837,5 +1789,5 @@ float MaxValues[_MaxInterpVarIDs] = {
   1.000000F,
   1.000000F,
   1.000000F,
-  1.000000F,
+  10000.000000F,
 };

@@ -298,7 +298,6 @@ void pg_path_recording_stop( int indPath );
 // interpolation on off
 void pg_path_replay_trackNo_start( int indPath , int trackNo);
 void pg_path_replay_trackNo_stop( int indPath );
-void pg_path_replay_trackNo_speed_scale( int indPath , float speed );
 
 void pg_writeMessageOnScreen( char *text );
 void pg_snapshot( char * type );

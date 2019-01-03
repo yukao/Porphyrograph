@@ -1232,88 +1232,95 @@ void main() {
   // instantaneous circular rendering
   float dist = 0;
   float waveGrey = 0;
-  // circulaire
-  if(pg_CurrentScene == 0) {
-    dist = length(vec2(decalCoords.x-(width/2),decalCoords.y-(height/2)));
-    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / 1700 + uniform_Update_fs_4fv_fftPhases03.x) + 1)
-        + uniform_Update_fs_4fv_fftLevels03.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / 1700 + uniform_Update_fs_4fv_fftPhases03.y) + 1)
-        + uniform_Update_fs_4fv_fftLevels03.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / 1700 + uniform_Update_fs_4fv_fftPhases03.z) + 1)
-        + uniform_Update_fs_4fv_fftLevels03.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / 1700 + uniform_Update_fs_4fv_fftPhases03.w) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / 1700 + uniform_Update_fs_4fv_fftPhases47.x) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / 1700 + uniform_Update_fs_4fv_fftPhases47.y) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / 1700 + uniform_Update_fs_4fv_fftPhases47.z) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / 1700 + uniform_Update_fs_4fv_fftPhases47.w) + 1);
-    if(dist > height/2) {
-      waveGrey = 0;
+  // circulaire ou lineaire fixe
+  if(pg_CurrentScene == 0 || pg_CurrentScene == 9) {
+    if(pg_CurrentScene == 0) {
+      dist = length(vec2(decalCoords.x-(width/2),decalCoords.y-(height/2)));
     }
-    if(dist > (height/2 - 20)) {
-      waveGrey *= 1 - (dist - (height/2 - 20)) / 20.;
+    else {
+      dist = decalCoords.x;
+    }
+    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / fft_scale + uniform_Update_fs_4fv_fftPhases03.x) + 1)
+        + uniform_Update_fs_4fv_fftLevels03.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / fft_scale + uniform_Update_fs_4fv_fftPhases03.y) + 1)
+        + uniform_Update_fs_4fv_fftLevels03.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / fft_scale + uniform_Update_fs_4fv_fftPhases03.z) + 1)
+        + uniform_Update_fs_4fv_fftLevels03.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / fft_scale + uniform_Update_fs_4fv_fftPhases03.w) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / fft_scale + uniform_Update_fs_4fv_fftPhases47.x) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / fft_scale + uniform_Update_fs_4fv_fftPhases47.y) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / fft_scale + uniform_Update_fs_4fv_fftPhases47.z) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / fft_scale + uniform_Update_fs_4fv_fftPhases47.w) + 1);
+    if(pg_CurrentScene == 0) {
+      if(dist > height/2) {
+        waveGrey = 0;
+      }
+      if(dist > (height/2 - 20)) {
+        waveGrey *= 1 - (dist - (height/2 - 20)) / 20.;
+      }
     }
     out_track_FBO[0].rgb = vec3( waveGrey );
   }
-  // lineaire temporel
+  // lineaire temporel avec ou sans effacement
   else if((pg_CurrentScene == 1 || pg_CurrentScene == 2) && decalCoords.x < 1) {
     dist = decalCoords.y;
-    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / 1700 + uniform_Update_fs_4fv_fftPhases03.x) + 1)
-        + uniform_Update_fs_4fv_fftLevels03.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / 1700 + uniform_Update_fs_4fv_fftPhases03.y) + 1)
-        + uniform_Update_fs_4fv_fftLevels03.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / 1700 + uniform_Update_fs_4fv_fftPhases03.z) + 1)
-        + uniform_Update_fs_4fv_fftLevels03.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / 1700 + uniform_Update_fs_4fv_fftPhases03.w) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / 1700 + uniform_Update_fs_4fv_fftPhases47.x) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / 1700 + uniform_Update_fs_4fv_fftPhases47.y) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / 1700 + uniform_Update_fs_4fv_fftPhases47.z) + 1)
-        + uniform_Update_fs_4fv_fftLevels47.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / 1700 + uniform_Update_fs_4fv_fftPhases47.w) + 1);
+    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / fft_scale + uniform_Update_fs_4fv_fftPhases03.x) + 1)
+        + uniform_Update_fs_4fv_fftLevels03.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / fft_scale + uniform_Update_fs_4fv_fftPhases03.y) + 1)
+        + uniform_Update_fs_4fv_fftLevels03.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / fft_scale + uniform_Update_fs_4fv_fftPhases03.z) + 1)
+        + uniform_Update_fs_4fv_fftLevels03.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / fft_scale + uniform_Update_fs_4fv_fftPhases03.w) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.x * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / fft_scale + uniform_Update_fs_4fv_fftPhases47.x) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.y * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / fft_scale + uniform_Update_fs_4fv_fftPhases47.y) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.z * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / fft_scale + uniform_Update_fs_4fv_fftPhases47.z) + 1)
+        + uniform_Update_fs_4fv_fftLevels47.w * (cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / fft_scale + uniform_Update_fs_4fv_fftPhases47.w) + 1);
     out_track_FBO[0].rgb = vec3( waveGrey );
   }
-  // lineaire temporel avec decroissance
+  // lignes verticales avec déphasage
   else if(pg_CurrentScene == 3) {
     dist = decalCoords.x;
-    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / 1700 + uniform_Update_fs_4fv_fftPhases03.x)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels03.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / 1700 + uniform_Update_fs_4fv_fftPhases03.y)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels03.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / 1700 + uniform_Update_fs_4fv_fftPhases03.z)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels03.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / 1700 + uniform_Update_fs_4fv_fftPhases03.w)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / 1700 + uniform_Update_fs_4fv_fftPhases47.x)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / 1700 + uniform_Update_fs_4fv_fftPhases47.y)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / 1700 + uniform_Update_fs_4fv_fftPhases47.z)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / 1700 + uniform_Update_fs_4fv_fftPhases47.w)+ 0.01);
+    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / fft_scale + uniform_Update_fs_4fv_fftPhases03.x)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels03.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / fft_scale + uniform_Update_fs_4fv_fftPhases03.y)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels03.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / fft_scale + uniform_Update_fs_4fv_fftPhases03.z)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels03.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / fft_scale + uniform_Update_fs_4fv_fftPhases03.w)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / fft_scale + uniform_Update_fs_4fv_fftPhases47.x)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / fft_scale + uniform_Update_fs_4fv_fftPhases47.y)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / fft_scale + uniform_Update_fs_4fv_fftPhases47.z)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / fft_scale + uniform_Update_fs_4fv_fftPhases47.w)+ 0.01);
     out_track_FBO[0].rgb = clamp(vec3( 8 * waveGrey ), 0, 1);
   }
-  // lignes avec dephasage
+  // lignes verticales sans déphasage
   else if(pg_CurrentScene == 4) {
     dist = decalCoords.x;
-    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels03.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels03.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels03.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / 1700)+ 0.01)
-             + uniform_Update_fs_4fv_fftLevels47.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / 1700)+ 0.01);
+    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.x / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels03.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.y / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels03.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.z / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels03.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies03.w / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.x * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.x / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.y * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.y / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.z * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.z / fft_scale)+ 0.01)
+             + uniform_Update_fs_4fv_fftLevels47.w * floor(cos(dist * uniform_Update_fs_4fv_fftFrequencies47.w / fft_scale)+ 0.01);
     out_track_FBO[0].rgb = clamp(vec3( 8 * waveGrey ), 0, 1);
   }
-  // lignes sans dephasage
+  // moiré vertical et dephasage utilisé pour incliner les bandes (en mode rendu lineaire)
   else if(pg_CurrentScene == 5 || pg_CurrentScene == 6) {
     dist = decalCoords.x;
-    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.x/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.x / 1700))
-             + uniform_Update_fs_4fv_fftLevels03.y * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.y/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.y / 1700))
-             + uniform_Update_fs_4fv_fftLevels03.z * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.z/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.z / 1700))
-             + uniform_Update_fs_4fv_fftLevels03.w * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.w/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.w / 1700))
-             + uniform_Update_fs_4fv_fftLevels47.x * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.x/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.x / 1700))
-             + uniform_Update_fs_4fv_fftLevels47.y * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.y/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.y / 1700))
-             + uniform_Update_fs_4fv_fftLevels47.z * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.z/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.z / 1700))
-             + uniform_Update_fs_4fv_fftLevels47.w * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.w/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.w / 1700));
+    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.x/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.x / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels03.y * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.y/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.y / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels03.z * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.z/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.z / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels03.w * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.w/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.w / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels47.x * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.x/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.x / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels47.y * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.y/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.y / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels47.z * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.z/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.z / fft_scale))
+             + uniform_Update_fs_4fv_fftLevels47.w * (cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.w/20) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.w / fft_scale));
     out_track_FBO[0].rgb = clamp(vec3( 8 * waveGrey ), 0, 1);
   }
-  // dephasage utilisé pour incliner les bandes (en mode rendu lineaire)
+  // moiré horizontal et dephasage utilisé pour incliner les bandes (en mode rendu lineaire)
   else if(pg_CurrentScene == 7 || pg_CurrentScene == 8) {
     dist = decalCoords.x;
-    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.x/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.x / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels03.y * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.y/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.y / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels03.z * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.z/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.z / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels03.w * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.w/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.w / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels47.x * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.x/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.x / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels47.y * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.y/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.y / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels47.z * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.z/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.z / 500)),300)
-             + uniform_Update_fs_4fv_fftLevels47.w * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.w/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.w / 500)),300);
+    waveGrey = uniform_Update_fs_4fv_fftLevels03.x * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.x/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.x / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels03.y * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.y/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.y / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels03.z * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.z/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.z / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels03.w * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases03.w/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies03.w / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels47.x * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.x/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.x / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels47.y * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.y/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.y / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels47.z * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.z/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.z / fft_scale)),300)
+             + uniform_Update_fs_4fv_fftLevels47.w * pow(abs(cos((dist + tan(uniform_Update_fs_4fv_fftPhases47.w/100) * decalCoords.y) * uniform_Update_fs_4fv_fftFrequencies47.w / fft_scale)),300);
     out_track_FBO[0].rgb = clamp(vec3( 8 * waveGrey ), 0, 1);
   }
 

@@ -63,18 +63,18 @@
   if ( uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value == -1 ) {
     fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value : %d\n" , uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value );
   }
-  uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale");
-  if ( uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale : %d\n" , uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale );
+  uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_photo_scale 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_photo_scale");
+  if ( uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_photo_scale == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_photo_scale : %d\n" , uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_photo_scale );
   }
   uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen 
     = glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen");
   if ( uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen == -1 ) {
     fprintf(stderr, "Could not bind uniform Master uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen : %d\n" , uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen );
   }
-  uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast");
-  if ( uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast : %d\n" , uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast );
+  uniform_Update_fs_3fv_mask_contrast_photo_contrast_fft_scale 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_mask_contrast_photo_contrast_fft_scale");
+  if ( uniform_Update_fs_3fv_mask_contrast_photo_contrast_fft_scale == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_3fv_mask_contrast_photo_contrast_fft_scale : %d\n" , uniform_Update_fs_3fv_mask_contrast_photo_contrast_fft_scale );
   }

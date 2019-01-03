@@ -146,7 +146,7 @@ GLuint pg_FBO_Update[2]; // PG_FBO_UPDATE_NBATTACHTS
 GLuint pg_FBO_ParticleAnimation[2]; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
 GLuint pg_FBO_ParticleRendering = 0; // particle rendering
 GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
-GLuint pg_FBO_ParticleRendering_texID = 0; // particle rendering
+GLuint pg_FBO_ParticleRendering_texID = 0; // particle rendering + stencil
 #endif
 GLuint pg_FBO_Mixing_capturedFB_prec[2] = { 0,0 }; //  drawing memory on odd and even frames for echo
 // GLuint FBO_CameraFrame = 0; //  video preprocessing outcome
@@ -1247,7 +1247,7 @@ void sample_setUp_interpolation(void) {
 // FBO TEXTURES INITIALIZATION
 /////////////////////////////////////////////////////////////////
 
-bool pg_initFBOTextures(GLuint *textureID, int nb_attachments) {
+bool pg_initFBOTextures(GLuint *textureID, int nb_attachments, bool with_stencil_andOr_depth) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -1267,6 +1267,31 @@ bool pg_initFBOTextures(GLuint *textureID, int nb_attachments) {
 			== GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT) {
 			sprintf(ErrorStr, "Error: Binding RECT FBO texture No %d ID %d (error %d)!", indAtt, textureID[indAtt], glCheckFramebufferStatus(GL_FRAMEBUFFER)); ReportError(ErrorStr); throw 336;
 		}
+	}
+	if (with_stencil_andOr_depth) {
+		GLuint depthAndStencilBuffer;
+		glGenRenderbuffers(1, &depthAndStencilBuffer);
+		glBindRenderbuffer(GL_RENDERBUFFER, depthAndStencilBuffer);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, leftWindowWidth, window_height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthAndStencilBuffer);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthAndStencilBuffer);
+		/*
+		glBindTexture(GL_TEXTURE_2D, textureID[nb_attachments]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_UNSIGNED_INT_24_8,
+			leftWindowWidth, window_height);
+		// printf("FBO size %d %d \n" , leftWindowWidth , window_height );
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+			GL_DEPTH24_STENCIL8,
+			GL_TEXTURE_2D,
+			textureID[nb_attachments],
+			0);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER)
+			== GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT) {
+			sprintf(ErrorStr, "Error: Binding RECT FBO texture No %d ID %d (error %d)!", 1, textureID[1], glCheckFramebufferStatus(GL_FRAMEBUFFER)); ReportError(ErrorStr); throw 336;
+		}
+		*/
 	}
 
 	return true;
@@ -1295,7 +1320,7 @@ bool pg_initFBO(void) {
 		glGenTextures(1, &FBO_CameraFrame_texID);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO_CameraFrame);
-	pg_initFBOTextures(&FBO_CameraFrame_texID, 1);
+	pg_initFBOTextures(&FBO_CameraFrame_texID, 1, false);
 	glDrawBuffers(1, drawBuffers);
 	printOglError(343);
 	*/
@@ -1310,7 +1335,7 @@ bool pg_initFBO(void) {
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Update[indFB]);
 		pg_initFBOTextures(pg_FBO_Update_texID + indFB * PG_FBO_UPDATE_NBATTACHTS, 
-			PG_FBO_UPDATE_NBATTACHTS);
+			PG_FBO_UPDATE_NBATTACHTS, false);
 		glDrawBuffers(PG_FBO_UPDATE_NBATTACHTS, drawBuffers);
 	}
 	//printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
@@ -1327,7 +1352,7 @@ bool pg_initFBO(void) {
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_ParticleAnimation[indFB]);
 		pg_initFBOTextures(pg_FBO_ParticleAnimation_texID + indFB * PG_FBO_PARTICLEANIMATION_NBATTACHTS, 
-			PG_FBO_PARTICLEANIMATION_NBATTACHTS);
+			PG_FBO_PARTICLEANIMATION_NBATTACHTS, false);
 		glDrawBuffers(PG_FBO_PARTICLEANIMATION_NBATTACHTS, drawBuffers);
 	}
 	//printf("FBO ANIMATION       %d %d      %d %d %d   %d %d %d \n", pg_FBO_ParticleAnimation[0], pg_FBO_ParticleAnimation[1], pg_FBO_ParticleAnimation_texID[0], pg_FBO_ParticleAnimation_texID[1], pg_FBO_ParticleAnimation_texID[2], pg_FBO_ParticleAnimation_texID[3], pg_FBO_ParticleAnimation_texID[4], pg_FBO_ParticleAnimation_texID[5]);
@@ -1335,12 +1360,10 @@ bool pg_initFBO(void) {
 
 	// FBO: particle drawing output 
 	glGenFramebuffers(1, &pg_FBO_ParticleRendering);  // drawing memory on odd and even frames for echo 
-	if (!pg_FBO_ParticleRendering_texID) {
-		glGenTextures(1, &pg_FBO_ParticleRendering_texID);
-	}
+	glGenTextures(1, &pg_FBO_ParticleRendering_texID);
 	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_ParticleRendering);
-	// pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1);
-	pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1);
+	// pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1, false);
+	pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1, true);
 	glDrawBuffers(1, drawBuffers);
 	printOglError(344);
 #endif
@@ -1354,7 +1377,7 @@ bool pg_initFBO(void) {
 	glGenTextures(2, pg_FBO_Mixing_capturedFB_prec_texID);
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec[indFB]);
-		pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID + indFB, 1);
+		pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID + indFB, 1, false);
 		glDrawBuffers(1, drawBuffers);
 	}
 	printOglError(342);

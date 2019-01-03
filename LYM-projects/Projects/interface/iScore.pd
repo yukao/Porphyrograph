@@ -1,0 +1,47 @@
+#N canvas -1 461 331 424 10;
+#X obj -168 160 cnv 15 150 35 empty val1 13.89 0 18 1 36 -204800 -33289
+0;
+#X obj 0 156 cnv 15 150 35 empty val2 1.40 0 18 1 48 -4032 -33289 0
+;
+#X text -172 136 VAL1;
+#X text -150 6 OSC message processing from iScore;
+#X text -2 136 VAL2;
+#X obj -140 46 unpackOSC;
+#X obj -140 27 udpreceive 9996;
+#X msg 36 251 disconnect;
+#X text -8 200 CLOSE UDP CONNECTION;
+#X obj 13 299 r message;
+#X floatatom -40 384 5 0 0 0 - - -;
+#X obj 41 383 print send;
+#X msg -40 273 connect 127.0.0.1 9997;
+#X obj -39 234 bng 15 250 50 0 empty empty empty 17 7 0 10 -4034 -1
+-1;
+#X obj 37 232 bng 15 250 50 0 empty empty empty 17 7 0 10 -258113 -1
+-1;
+#X text 105 275 score;
+#X obj 10 327 packOSC;
+#X obj -37 366 udpsend;
+#X obj -141 67 route /level/val1 /level/val2;
+#X msg -145 281 /level/val1 10;
+#X msg -147 302 /level/val2 4.7;
+#X text -88 252;
+#X obj -141 91 makefilename %.2f;
+#X msg -141 108 \; val1 label \$1;
+#X obj -18 92 makefilename %.2f;
+#X msg -18 109 \; val2 label \$1;
+#X connect 5 0 18 0;
+#X connect 6 0 5 0;
+#X connect 7 0 17 0;
+#X connect 9 0 16 0;
+#X connect 9 0 11 0;
+#X connect 12 0 17 0;
+#X connect 13 0 12 0;
+#X connect 14 0 7 0;
+#X connect 16 0 17 0;
+#X connect 17 0 10 0;
+#X connect 18 0 22 0;
+#X connect 18 1 24 0;
+#X connect 19 0 16 0;
+#X connect 20 0 16 0;
+#X connect 22 0 23 0;
+#X connect 24 0 25 0;

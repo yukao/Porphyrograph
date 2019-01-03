@@ -32,15 +32,16 @@ void pg_CopyAndAllocString( char **target , const char *source ) {
   if( !source ) {
     return;
   }
-  if( *target && (strlen( *target ) < strlen( source ) ) ) {
+  int str_l = int(strlen(source));
+  if( *target && (int(strlen( *target )) < str_l ) ) {
     delete [] *target;
     *target = NULL;
   }
-  int str_l = int(strlen( source ) + 1);
   if( !(*target) ) {
-    *target = new char[ str_l ];
+    *target = new char[ str_l + 1 ];
   }
   memcpy( *target , source , str_l * sizeof( char ) );
+  (*target)[str_l] = 0;
 }
 
 long     pg_ScanIntegerString( int *p_c  ,
@@ -126,6 +127,27 @@ float    pg_ScanFloatString( int *p_c  ,
   return resul;
 }
 
+// string splitting into string vector by single char
+vector<string> split(string str, char token) {
+	vector<string>result;
+	while (str.size()) {
+		int index = str.find(token);
+		if (index != string::npos) {
+			result.push_back(str.substr(0, index));
+			str = str.substr(index + 1);
+			if (str.size() == 0)result.push_back(str);
+		}
+		else {
+			result.push_back(str);
+			str = "";
+		}
+	}
+	return result;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// UDP CLIENT
 
 pg_IPClient::pg_IPClient( void ) {
   id = "";
@@ -197,66 +219,75 @@ pg_IPClient::~pg_IPClient(void) {
 #endif
 }
 
-void pg_IPClient::InitClient( void ) {
+void pg_IPClient::InitClient(void) {
 
-  //////////////////////////////
-  // remote server opening
+	//////////////////////////////
+	// remote server opening
 
-  struct                  addrinfo *result;
-  struct                  addrinfo hints;
+	struct                  addrinfo *result;
+	struct                  addrinfo hints;
 
-  memset(&hints, 0, sizeof hints); // make sure the struct is empty
-  hints.ai_family = AF_INET;     // don't care IPv4 or IPv6
-  hints.ai_socktype = SOCK_DGRAM; // UDP stream sockets
-  char Remote_server_port_string[128];
-  sprintf(Remote_server_port_string, "%d", Remote_server_port);
-  int err = getaddrinfo(Remote_server_IP.c_str(), Remote_server_port_string, &hints, &result);
-  if (err != 0) {
-	  sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
-  }
-  else {
-    char                    hname[1024];
-    err = getnameinfo(
-	    result->ai_addr,             // Pointer to your struct sockaddr
-		socklen_t(result->ai_addrlen),          // Size of this struct
-		hname,                       // Pointer to hostname string
-	    sizeof hname,                // Size of this string
-	    NULL,                        // Pointer to service name string
-	    0,                           // Size of this string
-	    0                            // No flags given
-	    );
-    if (err != 0) {
-	sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
-    }
-    else {
-	/* get server IP address (no check if input is IP address or DNS name */
-	// deprecated Remote_server_host = gethostbyname(Remote_server_IP.c_str());
-	memset(&remoteServAddr, 0, sizeof(remoteServAddr));
-	remoteServAddr.sin_family = AF_INET;
-	inet_pton(AF_INET, hname, &(remoteServAddr.sin_addr));
-	remoteServAddr.sin_port = htons(u_short(Remote_server_port));
+	char Remote_server_port_string[128];
+	sprintf(Remote_server_port_string, "%d", Remote_server_port);
 
-	printf("Network client '%s': sending data to '%s' (%s) on port %d\n",
-		id.c_str(), Remote_server_IP.c_str(), hname, Remote_server_port);
+	// non liblo message handling
+	if (send_format != OSC) {
+		memset(&hints, 0, sizeof hints); // make sure the struct is empty
+		hints.ai_family = AF_INET;     // don't care IPv4 or IPv6
+		hints.ai_socktype = SOCK_DGRAM; // UDP stream sockets
+		int err = getaddrinfo(Remote_server_IP.c_str(), Remote_server_port_string, &hints, &result);
+		if (err != 0) {
+			sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
+		}
+		else {
+			char                    hname[1024];
+			err = getnameinfo(
+				result->ai_addr,             // Pointer to your struct sockaddr
+				socklen_t(result->ai_addrlen),          // Size of this struct
+				hname,                       // Pointer to hostname string
+				sizeof hname,                // Size of this string
+				NULL,                        // Pointer to service name string
+				0,                           // Size of this string
+				0                            // No flags given
+			);
+			if (err != 0) {
+				sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
+			}
+			else {
+				/* get server IP address (no check if input is IP address or DNS name */
+				// deprecated Remote_server_host = gethostbyname(Remote_server_IP.c_str());
+				memset(&remoteServAddr, 0, sizeof(remoteServAddr));
+				remoteServAddr.sin_family = AF_INET;
+				inet_pton(AF_INET, hname, &(remoteServAddr.sin_addr));
+				remoteServAddr.sin_port = htons(u_short(Remote_server_port));
 
-	/* socket creation */
-	//memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
-	//Remote_server_host->h_addr_list[0], Remote_server_host->h_length);
+				printf("Network client '%s': sending data to '%s' (%s) on port %d\n",
+					id.c_str(), Remote_server_IP.c_str(), hname, Remote_server_port);
 
-	SocketToRemoteServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (SocketToRemoteServer < 0) {
-		sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
+				/* socket creation */
+				//memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
+				//Remote_server_host->h_addr_list[0], Remote_server_host->h_length);
+
+				SocketToRemoteServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+				if (SocketToRemoteServer < 0) {
+					sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
+				}
+				err = connect(SocketToRemoteServer, result->ai_addr, int(result->ai_addrlen));
+				if (err == -1) {
+					sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
+				}
+				// listen(SocketToRemoteServer, 200);
+			}
+		}
 	}
-	err = connect(SocketToRemoteServer, result->ai_addr, int(result->ai_addrlen));
-	if (err == -1) {
-		sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
+	// liblo message handling
+	else {
+		// liblo client
+		lo_client = lo_address_new(Remote_server_IP.c_str(), Remote_server_port_string);
 	}
-	// listen(SocketToRemoteServer, 200);
 
 	// system initializing
 	IP_OutputStackInitialization();
-    }
-  }
 }
 
 void pg_IPClient::IP_OutputStackInitialization( void ) {
@@ -294,7 +325,7 @@ void pg_IPClient::sendIPmessages(void) {
 		if (message_received
 			|| current_IP_message_number == first_IP_message_number
 			|| ((current_time - last_IP_message_time) / 1000.0f)
-	> maximal_IP_message_delay) {
+				> maximal_IP_message_delay) {
 
 
 			// printf( "send message [%s]\n" , output_message_stack[ 0 ]);
@@ -302,230 +333,79 @@ void pg_IPClient::sendIPmessages(void) {
 			// copies the earliest message
 			int     indLocalCommandLine = 0;
 
+			// Plain format
 			if (send_format == Plain) {
 				strncpy(Output_Message_String, output_message_stack[0],
 					max_network_message_length - 1);
 			}
-			else if (send_format == OSC) {
+
+			// OSC bundle
+			else if (send_format == OSC && *(output_message_stack[0]) != '/') {
 				// sends bundle through OSC
 				// message that does not begin by an OSC address
-				if (*(output_message_stack[0]) != '/') {
-					strcpy(Output_Message_OSC, "#bundle");
-					for (int ind = int(strlen("#bundle")); ind < 20 - 1; ind++) {
-						Output_Message_OSC[ind] = 0;
-					}
-					strncpy(Output_Message_OSC + 20, output_message_stack[0],
-						2 * max_network_message_length - 21);
-					Output_Message_OSC[20 - 1] = (char)strlen(Output_Message_OSC + 20);
+				strcpy(Output_Message_OSC, "#bundle");
+				for (int ind = int(strlen("#bundle")); ind < 20 - 1; ind++) {
+					Output_Message_OSC[ind] = 0;
 				}
+				strncpy(Output_Message_OSC + 20, output_message_stack[0],
+					2 * max_network_message_length - 21);
+				Output_Message_OSC[20 - 1] = (char)strlen(Output_Message_OSC + 20);
+			}
+
+			// OSC message
+			else if (send_format == OSC && *(output_message_stack[0]) == '/') {
+				// splits the argument separated by space chars
+				std::vector<std::string> message_arguments;
+				message_arguments = split(String(output_message_stack[0]), ' ');
 
 				// sends OSC message through OSC
 				// message that begins by an OSC address /aaaa/aaa 
-				else {
 					// whether or not the pattern is provided with the command
-					bool hasPattern = false;
-					char *patternOut = NULL;
-					char next_char_pattern = 0;
-					int inChPattern = 0;
-					if (*(output_pattern_stack[0])) {
-						// printf( "Pattern %s\n" , output_pattern_stack[ 0 ] );
-						hasPattern = true;
-						patternOut = output_pattern_stack[0];
-						next_char_pattern = *patternOut;
-						inChPattern = 1;
+				if (*(output_pattern_stack[0])) {
+					int pattern_size = int(strlen(output_pattern_stack[0]));
 
-						// first pattern type
-						while (next_char_pattern && next_char_pattern == ' ') {
-							next_char_pattern = patternOut[inChPattern++];
-						}
-					}
-
-					// messageOut: message formatted as a string /xxx argi
-					// will be converted into the OSC format
-					// /xxxx000,f00argi0000
-					char *messageOut = output_message_stack[0];
-					// inChSource: the end of the message address
-					int inChSource = int(strlen(messageOut));
-					char *pch;
-					if ((pch = strchr(messageOut, ' '))) {
-						inChSource = int(pch - messageOut);
-					}
-
-					// copies message address
-					strncpy(Output_Message_OSC, messageOut, inChSource);
-
-					// pads with null chars
-					indLocalCommandLine = inChSource;
-					Output_Message_OSC[indLocalCommandLine++] = 0;
-					while (indLocalCommandLine % 4 != 0) {
-						Output_Message_OSC[indLocalCommandLine] = 0;
-						indLocalCommandLine++;
-					}
-					Output_Message_OSC[indLocalCommandLine++] = ',';
-
-					// the send_message_udp has a "pattern" attribute
-					if (hasPattern) {
-						// reads the arguments and builds two strings
-						// one with the types and one with the values
-						int p_c;
-						int nbArg = 0;
-						int indArgList = 0;
-						inChSource++;
-						p_c = messageOut[inChSource++];
-						while ((p_c != (int)EOF) && p_c) {
-							// printf( "next_char_pattern %c\n" , next_char_pattern );
-							// SpaceCommentsInclude(NULL,&p_c,messageOut,&inChSource);
-							while (_SpaceChar(p_c)) {
-								p_c = messageOut[inChSource++];
+					if (pattern_size == message_arguments.size() - 1) {
+						// single argument
+						if (pattern_size == 1) {
+							switch (*(output_pattern_stack[0])) {
+							case 's':
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], message_arguments[1].c_str()) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+								break;
+							case 'i':
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stoi(message_arguments[1])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+								break;
+							case 'f':
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stof(message_arguments[1])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+								break;
+							default:
+								sprintf(ErrorStr, "Error: unknown OSC pattern element %c!", *(output_pattern_stack[0])); ReportError(ErrorStr); throw(100);
+								break;
 							}
-							// printf( "p_c %c\n" , p_c );
-							// float: f type in pattern or number
-							if (next_char_pattern == 'f'
-								|| (!next_char_pattern
-									&& (isdigit(p_c) || p_c == '-'))) {
-								float f = (float)pg_ScanFloatString(&p_c, true,
-									messageOut, &inChSource);
-								Output_Message_Pattern[nbArg++] = 'f';
-								char *number = (char *)(&f);
-								if (OSC_endian_reversal) {
-									Output_Message_ArgList[indArgList + 0] = number[3];
-									Output_Message_ArgList[indArgList + 1] = number[2];
-									Output_Message_ArgList[indArgList + 2] = number[1];
-									Output_Message_ArgList[indArgList + 3] = number[0];
-								}
-								else {
-									Output_Message_ArgList[indArgList + 0] = number[0];
-									Output_Message_ArgList[indArgList + 1] = number[1];
-									Output_Message_ArgList[indArgList + 2] = number[2];
-									Output_Message_ArgList[indArgList + 3] = number[3];
-								}
-								indArgList += 4;
-
-								// printf( "argt #%d float %.4f char %c ind %d\n" , nbArg , f , p_c , indArgList);
-							}
-							// integer: i type in pattern
-							else if (next_char_pattern == 'i') {
-								int i = (int)pg_ScanIntegerString(&p_c, true,
-									messageOut, &inChSource);
-								Output_Message_Pattern[nbArg++] = 'i';
-								char *number = (char *)(&i);
-								if (OSC_endian_reversal) {
-									Output_Message_ArgList[indArgList + 0] = number[3];
-									Output_Message_ArgList[indArgList + 1] = number[2];
-									Output_Message_ArgList[indArgList + 2] = number[1];
-									Output_Message_ArgList[indArgList + 3] = number[0];
-								}
-								else {
-									Output_Message_ArgList[indArgList + 0] = number[0];
-									Output_Message_ArgList[indArgList + 1] = number[1];
-									Output_Message_ArgList[indArgList + 2] = number[2];
-									Output_Message_ArgList[indArgList + 3] = number[3];
-								}
-								indArgList += 4;
-
-								// printf( "argt #%d float %.4f char %c ind %d\n" , nbArg , f , p_c , indArgList);
-							}
-							// string: anything else
-							else {
-								// printf( "ReadStringWithFrontiers p_c %c\n" , p_c );
-								char temporaryValue[StringLength];
-								*temporaryValue = 0;
-								if (messageOut[inChSource] == '"') {
-									int i = 0;
-									p_c = messageOut[inChSource++];
-									while (p_c != '"' && i < StringLength - 1 && p_c != 0) {
-										temporaryValue[i++] = char(p_c);
-										p_c = messageOut[inChSource++];
-									}
-									if (i == StringLength - 1) {
-										sprintf(ErrorStr, "Error: max string size exceeded ReadStringWithFrontiers (max %d chars)!", StringLength); ReportError(ErrorStr); throw(100);
-									}
-									temporaryValue[i] = '\0';
-									p_c = messageOut[inChSource++];
-									while (_SpaceChar(p_c)) {
-										p_c = messageOut[inChSource++];
-									}
-								}
-								else {
-									int i = 0;
-									p_c = messageOut[inChSource++];
-									while (p_c != ' ' && i < StringLength - 1 && p_c != 0) {
-										temporaryValue[i++] = char(p_c);
-										p_c = messageOut[inChSource++];
-									}
-									if (i == StringLength - 1) {
-										sprintf(ErrorStr, "Error: max string size exceeded ReadStringWithFrontiers (max %d chars)!", StringLength); ReportError(ErrorStr); throw(100);
-									}
-									temporaryValue[i] = '\0';
-									p_c = messageOut[inChSource++];
-									while (_SpaceChar(p_c)) {
-										p_c = messageOut[inChSource++];
-									}
-								}
-
-								strcpy(Output_Message_ArgList + indArgList, temporaryValue);
-
-								Output_Message_Pattern[nbArg++] = 's';
-								// int indArgListIni = indArgList;
-								indArgList += int(strlen(Output_Message_ArgList + indArgList));
-								Output_Message_ArgList[indArgList++] = 0;
-								// pads with 0s 
-								while (indArgList % 4 != 0) {
-									Output_Message_ArgList[indArgList] = 0;
-									indArgList++;
-								}
-
-								// printf( "argt #%d str %s char %c ind %d\n" , nbArg , Output_Message_ArgList + indArgList , p_c , indArgList);
-
-							}
-
-							// next pattern type
-							if (patternOut && next_char_pattern) {
-								next_char_pattern = patternOut[inChPattern++];
-								while (next_char_pattern && next_char_pattern == ' ') {
-									next_char_pattern = patternOut[inChPattern++];
-								}
-							}
-						}
-
-						// copies argts types
-						if ((indLocalCommandLine + 4 + nbArg + indArgList)
-							< (2 * max_network_message_length - 1)) {
-							memcpy(Output_Message_OSC + indLocalCommandLine,
-								Output_Message_Pattern, nbArg);
-							indLocalCommandLine += nbArg;
-							Output_Message_OSC[indLocalCommandLine++] = 0;
-
-							// pads with null chars
-							while (indLocalCommandLine % 4 != 0) {
-								Output_Message_OSC[indLocalCommandLine] = 0;
-								indLocalCommandLine++;
-							}
-
-							// copies argts list
-							memcpy(Output_Message_OSC + indLocalCommandLine,
-								Output_Message_ArgList, indArgList);
-							indLocalCommandLine += indArgList;
 						}
 						else {
-							sprintf(ErrorStr, "Error: udp client: OSC message incompletely sent [%s]!", Output_Message_OSC); ReportError(ErrorStr); // close(SocketToRemoteServer);
+							// error: does not process message of more than one argument for the moment
+							sprintf(ErrorStr, "Error: OSC output message with more thant one argument %s!", output_message_stack[0]); ReportError(ErrorStr); throw(100);
 						}
-
-						// trace
-						// 	    printf("udp client: " );
-						// 	    	  for( int ind = 0 ; ind < indLocalCommandLine ; ind++ ) {
-						// 	    	    printf( "%c(%d) " ,Output_Message_OSC[ind] , (int)localCommandLine[ind] );
-						// 	    	  }
-						// 	    	  printf( "\n" );
 					}
-					// the send_message_udp does not have a "pattern" attribute
 					else {
-						// makes an OSC command with no arguments
-						// pads with null chars
-						while (indLocalCommandLine % 4 != 0) {
-							Output_Message_OSC[indLocalCommandLine] = 0;
-							indLocalCommandLine++;
-						}
+						// error : pattern and message size differ
+						sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s!", output_pattern_stack[0], output_message_stack[0]); ReportError(ErrorStr); throw(100);
+					}
+				}
+				// no pattern, just an address
+				else {
+					if (lo_send(lo_client, output_message_stack[0], NULL) == -1) {
+						sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+							lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
 					}
 				}
 			}
@@ -541,6 +421,10 @@ void pg_IPClient::sendIPmessages(void) {
 			}
 			current_depth_output_stack--;
 
+			// records the emission time
+			last_IP_message_time = RealTime();
+
+			// sends the message
 			// formats the command
 			// pads the length to a multiple of 4
 			int length;
@@ -561,7 +445,11 @@ void pg_IPClient::sendIPmessages(void) {
 				// MaxOutput_Message_String[ length + (12 - length % 4) - 1] = 0;
 			}
 			// OSC bundle
-			else if (send_format == OSC && *Output_Message_OSC == '#') {
+			else if (send_format == OSC && *(output_message_stack[0]) != '/') {
+				// the OSC bundle message is currently not sent through the OSC library liblo
+				sprintf(ErrorStr, "Error: udp client: OSC bundle emission not processed [%s]!", output_message_stack[0]); ReportError(ErrorStr);
+				continue;
+				/*
 				length = int(20 + strlen(Output_Message_OSC + 20));
 				int inchar;
 				for (inchar = length; inchar < length + (4 - length % 4) - 1;
@@ -571,15 +459,19 @@ void pg_IPClient::sendIPmessages(void) {
 				Output_Message_OSC[length + (4 - length % 4) - 1] = 0;
 				Output_Message_OSC[20 - 1] = (char)(strlen(Output_Message_OSC + 20) + 1);
 				localCommandLineLength = length + (4 - length % 4);
+				*/
 				//printf( "message size %d\n" , strlen(Output_Message_OSC + 20 )  + 1 );
 			}
 			// OSC message
-			else if (send_format == OSC && *Output_Message_OSC == '/') {
-				localCommandLineLength = indLocalCommandLine;
+			else if (send_format == OSC && *(output_message_stack[0]) == '/') {
+				// the message has been sent through the OSC library liblo
+				// localCommandLineLength = indLocalCommandLine;
+				continue;
 			}
 
-			// sends the command
+			// sends the command (except OSC messages)
 			int rc = 0;
+			// Plain format
 			if (send_format == Plain) {
 				rc = send(SocketToRemoteServer, Output_Message_String,
 					localCommandLineLength, 0);
@@ -594,7 +486,10 @@ void pg_IPClient::sendIPmessages(void) {
 				}
 			}
 			// OSC bundle
-			else if (send_format == OSC && *Output_Message_OSC == '#') {
+			// currently not sent through the liblo library, modify the code in the preceding loop to send bundle
+			// OSC messages through liblo
+			/*
+			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
 				rc = 0;
 				int len = int(20 + strlen(Output_Message_OSC + 20) + 1);
 				rc = send(SocketToRemoteServer, Output_Message_OSC, len, 0);
@@ -610,7 +505,10 @@ void pg_IPClient::sendIPmessages(void) {
 						(int)(20 + strlen(Output_Message_OSC + 20) + 1));
 				}
 			}
+			*/
 			// OSC message
+			// the message has been sent through the OSC library liblo
+			/*
 			else if (send_format == OSC && *Output_Message_OSC == '/') {
 				rc = 0;
 				rc = send(SocketToRemoteServer, Output_Message_OSC,
@@ -630,9 +528,7 @@ void pg_IPClient::sendIPmessages(void) {
 					printf("\n");
 				}
 			}
-
-			// records the emission time
-			last_IP_message_time = RealTime();
+			*/
 		}
 		else {
 			if (IP_message_trace) {
@@ -672,6 +568,14 @@ void pg_IPClient::storeIP_output_message(char *commandLine,
 	}
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// UDP SERVER
+
+// liblo OSC messages error handling
+void liblo_error_handling(int num, const char *msg, const char *path) {
+	sprintf(ErrorStr, "Error: liblo server error %d in path %s: %s\n", num, path, msg); ReportError(ErrorStr);
+}
+
 pg_IPServer::pg_IPServer( void ) {
   // local server ID
   id = "";
@@ -696,7 +600,7 @@ pg_IPServer::pg_IPServer( void ) {
   // received message format
   receive_format = Plain;
 
-  // acknowledgement of received message 
+  // acknowledgement of received message x
   last_received_IP_message_number = INT_MAX;
 
   // console trace
@@ -749,69 +653,82 @@ pg_IPServer::~pg_IPServer( void ) {
 #endif
 }
 
-void pg_IPServer::InitServer( void ) {
-  ///////////////////////////////
-  // local server creation
-  struct sockaddr_in localServAddr;
+void pg_IPServer::InitServer(void) {
+	///////////////////////////////
+	// local server creation
+	if (receive_format != OSC) {
+		struct sockaddr_in localServAddr;
 
 #ifndef _WIN32
-  /* socket creation */
-  SocketToLocalServer = socket(AF_INET,SOCK_DGRAM,0);
+		/* socket creation */
+		SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, 0);
 
-  if(SocketToLocalServer < 0) {
-    sprintf( ErrorStr , "Error: cannot open socket to local server!" ); ReportError( ErrorStr );
-  }
-  else {
-    int SocketToLocalServerFlags;
-    
-    // Read the socket's flags
-    SocketToLocalServerFlags = fcntl(SocketToLocalServer, F_GETFL, 0);
-    // Sets the socket's flags to non-blocking
-    SocketToLocalServerFlags |= O_NONBLOCK;
-    int ret = fcntl(SocketToLocalServer, F_SETFL, SocketToLocalServerFlags );
-    if(ret < 0) {
-      sprintf( ErrorStr , "Error: local server cannot set flag to non-blocking: %s!" , strerror(errno) ); ReportError( ErrorStr );
-    }
-  }
+		if (SocketToLocalServer < 0) {
+			sprintf(ErrorStr, "Error: cannot open socket to local server!"); ReportError(ErrorStr);
+		}
+		else {
+			int SocketToLocalServerFlags;
+
+			// Read the socket's flags
+			SocketToLocalServerFlags = fcntl(SocketToLocalServer, F_GETFL, 0);
+			// Sets the socket's flags to non-blocking
+			SocketToLocalServerFlags |= O_NONBLOCK;
+			int ret = fcntl(SocketToLocalServer, F_SETFL, SocketToLocalServerFlags);
+			if (ret < 0) {
+				sprintf(ErrorStr, "Error: local server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
+			}
+		}
 #else
-  /* socket creation */
-  SocketToLocalServer = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+		/* socket creation */
+		SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-  if(SocketToLocalServer < 0) {
-    sprintf( ErrorStr , "Error: udp server cannot open socket to local server!" ); ReportError( ErrorStr );
-  }
-  else {
-    // Read the socket's flags
-    unsigned long onoff=1;
-    
-    if (ioctlsocket(SocketToLocalServer, FIONBIO, &onoff) != 0){
-      sprintf( ErrorStr , "Error: udp server cannot set flag to non-blocking: %s!" , strerror(errno)); ReportError( ErrorStr );
-    }
-  }
+		if (SocketToLocalServer < 0) {
+			sprintf(ErrorStr, "Error: udp server cannot open socket to local server!"); ReportError(ErrorStr);
+		}
+		else {
+			// Read the socket's flags
+			unsigned long onoff = 1;
+
+			if (ioctlsocket(SocketToLocalServer, FIONBIO, &onoff) != 0) {
+				sprintf(ErrorStr, "Error: udp server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
+			}
+		}
 #endif
-    
-  /* bind local server port */
-  localServAddr.sin_family = AF_INET;
-  localServAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  localServAddr.sin_port = htons(u_short(Local_server_port));
 
-  int rc = bind( SocketToLocalServer, (struct sockaddr *) &localServAddr,
-		 sizeof(localServAddr) );
-  if(rc < 0) {
-    sprintf( ErrorStr , "Error: cannot bind local port number %d!" , Local_server_port ); ReportError( ErrorStr ); 
-    return;
-  }
-  // printf( "Network server: bound local port number %d\n" , Local_server_port );
+		/* bind local server port */
+		localServAddr.sin_family = AF_INET;
+		localServAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+		localServAddr.sin_port = htons(u_short(Local_server_port));
 
-  printf("Network server: listening on port %u\n", Local_server_port);
+		int rc = bind(SocketToLocalServer, (struct sockaddr *) &localServAddr,
+			sizeof(localServAddr));
+		if (rc < 0) {
+			sprintf(ErrorStr, "Error: cannot bind local port number %d!", Local_server_port); ReportError(ErrorStr);
+			return;
+		}
+	}
+	// liblo init server
+	else {
+		char Local_server_port_string[128];
+		sprintf(Local_server_port_string, "%d", Local_server_port);
 
-  IP_InputStackInitialization();
+		/* start a new server on port Local_server_port */
+		lo_local_server = lo_server_new(Local_server_port_string, liblo_error_handling);
 
-  for( int ind = 0 ; ind < MAX_OSC_ARGUMENTS ; ind++ ) {
-    OSC_arguments[ind] = new char[ StringLength ];
-    *(OSC_arguments[ind]) = 0;
-  }
-  OSCTag = new char[ StringLength ];
+		/* add method that will match any path and args */
+		lo_server_add_method(lo_local_server, NULL, NULL, processLibloReceivedOSC, this);
+	}
+
+	printf("Network server: listening on port %u\n", Local_server_port);
+
+	// message stack initialization
+	IP_InputStackInitialization();
+
+	for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
+		OSC_arguments[ind] = new char[StringLength];
+		*(OSC_arguments[ind]) = 0;
+	}
+	OSCTag = new char[StringLength];
 }
 
 void pg_IPServer::IP_InputStackInitialization(void) {
@@ -826,99 +743,50 @@ void pg_IPServer::IP_InputStackInitialization(void) {
 	current_depth_input_stack = 0;
 }
 
-void pg_IPServer::processReceivedOSC(char *localCommandLine,
-	char *message, int n) {
-	// printf("processReceivedOSC [%s] [%d]\n", message , n ); 
+// liblo catch any incoming messages and display them. returning 1 means that the
+// message has not been fully handled and the server should try other methods
+int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
+	int argc, void *data, void *user_data)
+{
+	pg_IPServer *classInstance = (pg_IPServer *)user_data;
+	char argument[StringLength];
 
-	// copies address pattern that terminates by a NULL char
-	strcpy(localCommandLine, message);
-	// first char after address pattern
-	int indChar = int(strlen(message));
-	// jumps over the null chars after the add pattern
-	while (indChar < n && message[indChar] == 0) {
-		indChar++;
-	}
-	if (indChar < n && message[indChar] == ',') {
-		// jumps over the comma
-		indChar++;
+	// string initialization to 0
+	memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
 
-		// counts the arguments and stores their types
-		int nbParam = 0;
-		char paramTypesId[StringLength];
-		char argument[StringLength];
-		while (indChar < n && message[indChar] != 0
-			&& nbParam < StringLength) {
-			// and counts and stores the parameters
-			paramTypesId[nbParam] = message[indChar];
-			// printf("param #%d [%c]\n", nbParam + 1 , message[indChar] ); 
-			nbParam++; indChar++;
+	strcpy(Input_Message_Local_Commande_String, path);
+	for (int indParam = 0; indParam < argc; indParam++) {
+		strcat(Input_Message_Local_Commande_String, " ");
+		if (types[indParam] == 'i') {
+			sprintf(argument, "%d", argv[indParam]->i);
+			strcat(Input_Message_Local_Commande_String, argument);
 		}
-		// ignores the closing null char
-		indChar++;
-
-		// stores the text form of the parameters in the
-		// local command line
-		for (int indParam = 0; indParam < nbParam; indParam++) {
-			// jumps over the null chars after the address pattern
-			while (indChar < n && message[indChar] == 0
-				&& indChar % 4 != 0) {
-				indChar++;
+		else if (types[indParam] == 'f') {
+			sprintf(argument, "%.5f", argv[indParam]->f);
+			// printf("f argument #%d [%s] at %d %d\n", indParam + 1 , argument , indChar , sizeof( float ) ); 
+			strcat(Input_Message_Local_Commande_String, argument);
+		}
+		else if (types[indParam] == 's') {
+			char *argtString = (char *)argv[indParam];
+			// printf("s argument #%d [%s] at %d\n", indParam + 1 , message + indChar , indChar );
+			if( (*argtString) != '\"') {
+				strcat(Input_Message_Local_Commande_String, "\"");
+				strcat(Input_Message_Local_Commande_String, argtString);
+				strcat(Input_Message_Local_Commande_String, "\"");
 			}
-			strcat(localCommandLine, " ");
-			char reversed_endian[4];
-			if (paramTypesId[indParam] == 'i') {
-				if (OSC_endian_reversal) {
-					reversed_endian[3] = message[indChar + 0];
-					reversed_endian[2] = message[indChar + 1];
-					reversed_endian[1] = message[indChar + 2];
-					reversed_endian[0] = message[indChar + 3];
-				}
-				else {
-					reversed_endian[0] = message[indChar + 0];
-					reversed_endian[1] = message[indChar + 1];
-					reversed_endian[2] = message[indChar + 2];
-					reversed_endian[3] = message[indChar + 3];
-				}
-				int *i = (int *)(reversed_endian);
-				sprintf(argument, "%d", *i);
-				// printf("i argument #%d [%s] at %d\n", indParam + 1 , argument , indChar ); 
-				strcat(localCommandLine, argument);
-				indChar += 4;
-			}
-			else if (paramTypesId[indParam] == 'f') {
-				if (OSC_endian_reversal) {
-					reversed_endian[3] = message[indChar + 0];
-					reversed_endian[2] = message[indChar + 1];
-					reversed_endian[1] = message[indChar + 2];
-					reversed_endian[0] = message[indChar + 3];
-				}
-				else {
-					reversed_endian[0] = message[indChar + 0];
-					reversed_endian[1] = message[indChar + 1];
-					reversed_endian[2] = message[indChar + 2];
-					reversed_endian[3] = message[indChar + 3];
-				}
-				float *f = (float *)(reversed_endian);
-				sprintf(argument, "%.5f", *f);
-				// printf("f argument #%d [%s] at %d %d\n", indParam + 1 , argument , indChar , sizeof( float ) ); 
-				strcat(localCommandLine, argument);
-				indChar += 4;
-			}
-			else if (paramTypesId[indParam] == 's') {
-				// printf("s argument #%d [%s] at %d\n", indParam + 1 , message + indChar , indChar );
-				if (*(message + indChar) != '\"') {
-					strcat(localCommandLine, "\"");
-					strcat(localCommandLine, message + indChar);
-					strcat(localCommandLine, "\"");
-				}
-				else {
-					strcat(localCommandLine, message + indChar);
-				}
-				indChar += int(strlen(message + indChar) + 1);
+			else {
+				strcat(Input_Message_Local_Commande_String, argtString);
 			}
 		}
 	}
-	//printf("local commandLine\n", indParam + 1 , argument , indCh
+
+	if (classInstance->IP_message_trace) {
+		printf("udp server: receive OSC message [%s]\n",
+			Input_Message_Local_Commande_String);
+	}
+	classInstance->storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String);
+
+	return 1;
 }
 
 int pg_IPServer::receiveOneMessage( char *message ) {
@@ -936,108 +804,42 @@ int pg_IPServer::receiveOneMessage( char *message ) {
 }
 
 void pg_IPServer::receiveIPMessages(void) {
-	if (SocketToLocalServer < 0) {
-		return;
-	}
-
-	// string initialization to 0
-	memset(Input_Message_String, 0x0, max_network_message_length);
-	memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
-
-	// receive message
-	int n = receiveOneMessage(Input_Message_String);
-
 	// initializes the stack in which message strings are stored
 	current_depth_input_stack = 0;
 
-	while (n > 0) {
-
-		///////////////////////////////////////////////////////
-		// Plain format (string)
-		if (receive_format == Plain) {
-			if (IP_message_trace) {
-				printf("udp server: receive plain message [%s]\n",
-					Input_Message_String);
-			}
-			storeIP_input_messages_and_removes_duplicates(Input_Message_String);
+	// non liblo message handling
+	if (receive_format != OSC) {
+		if (SocketToLocalServer < 0) {
+			return;
 		}
 
-		///////////////////////////////////////////////////////
-		// OSC format: bundle
-		else if (receive_format == OSC && *Input_Message_String == '#') {
-			int length;
-
-			if (n <= 20) {
-				sprintf(ErrorStr, "Error: incorrect OSC format of UDP message (incorrect initial length %d)! Check input format in configuration file!", n); ReportError(ErrorStr);
-				printf("udp server: [%s] \n", Input_Message_String);
-				for (int ind = 0; ind < n; ind++) {
-					printf("%c(%d) ", Input_Message_String[ind],
-						(int)Input_Message_String[ind]);
-				}
-				printf("\n");
-				return;
-			}
-
-			// jumps over "#bundle" (8 bytes) + time tag (8 bytes) + length  (4 bytes)
-			// and goes one byte backward to get the length of the string (its lowest byte)
-			int ind = 20;
-			length = (int) *((unsigned char *)(Input_Message_String + ind - 1));
-			// printf("\nudp server: message length total %d used %d\n", n , length);
-			// //print received message
-	  //       printf("udp server: " );
-	  //       for( int ind = 0 ; ind < n ; ind++ ) {
-	  // 	printf( "%d: [%c] (%d)\n" , ind , Input_Message_String[ind] , (int)Input_Message_String[ind] );
-	  //       }
-
-			while (length <= n - ind) {
-				//	sprintf(ErrorStr, "Error: incorrect OSC format of UDP message (incorrect message length)! Check input format in configuration file!"); ReportError(ErrorStr);
-				//	printf("udp server: [%s] \n", Input_Message_String);
-				//	for (int ind = 0; ind < n; ind++) {
-				//		printf("%d: [%c] (%d)\n", ind, Input_Message_String[ind], (int)Input_Message_String[ind]);
-				//	}
-				//	return;
-				//}
-
-				// *(Input_Message_String + 20 + length) = 0;
-				// standard IP message
-				if (*(Input_Message_String + ind) == '/') {
-					processReceivedOSC(Input_Message_Local_Commande_String,
-									   Input_Message_String + ind, length);
-
-					if (IP_message_trace) {
-						printf("store OSC message bundle [%s]\n", Input_Message_Local_Commande_String);
-					}
-					storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String);
-				}
-				else {
-					sprintf(ErrorStr, "Error: UDP input message expected in OSC format (%s)!", Input_Message_String + 20); ReportError(ErrorStr);
-				}
-				ind += length + 4;
-				if (ind < n) {
-					length = (int) *((unsigned char *)(Input_Message_String + ind - 1));
-				}
-				else {
-					break;
-				}
-			}
-		}
-
-		///////////////////////////////////////////////////////
-		// OSC format: message
-		else if (receive_format == OSC && *Input_Message_String == '/') {
-			// OSC to string conversion for uniform processing of messages
-			processReceivedOSC(Input_Message_Local_Commande_String,
-				Input_Message_String, n);
-
-			if (IP_message_trace) {
-				printf("store OSC message [%s]\n", Input_Message_Local_Commande_String);
-			}
-			storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String);
-		}
-
-
+		// string initialization to 0
 		memset(Input_Message_String, 0x0, max_network_message_length);
-		n = receiveOneMessage(Input_Message_String);
+		memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
+
+		// receive message
+		int n = receiveOneMessage(Input_Message_String);
+
+		while (n > 0) {
+
+			///////////////////////////////////////////////////////
+			// Plain format (string)
+			if (receive_format == Plain) {
+				if (IP_message_trace) {
+					printf("udp server: receive plain message [%s]\n",
+						Input_Message_String);
+				}
+				storeIP_input_messages_and_removes_duplicates(Input_Message_String);
+			}
+
+			memset(Input_Message_String, 0x0, max_network_message_length);
+			n = receiveOneMessage(Input_Message_String);
+		}
+	}
+	// liblo OSC message handling
+	else {
+		while (lo_server_recv_noblock(lo_local_server,0)) {
+		}
 	}
 
 	// forwards the non duplicated messages to the script manager
@@ -1046,7 +848,7 @@ void pg_IPServer::receiveIPMessages(void) {
 }
 
 void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message) {
-	if (SocketToLocalServer < 0) {
+	if (receive_format != OSC && SocketToLocalServer < 0) {
 		return;
 	}
 
@@ -1093,126 +895,126 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message) {
 	}
 }
 
-void pg_IPServer::ProcessFilteredInputMessages( void ) {
-  char *messString;
+void pg_IPServer::ProcessFilteredInputMessages(void) {
+	char *messString;
 
-  if( SocketToLocalServer < 0 ) {
-    return;
-  }
-
-  // processes all the non duplicated messages
-  for( int ind_mess = 0 ; ind_mess < current_depth_input_stack ; ind_mess++ ) {
-    messString = input_message_stack[ ind_mess ];
-
-    if( IP_message_trace ) {
-      printf( "process message [%s]\n" , messString );
-    }
-    
-    // general message just as in an ordinary script
-    int         indChar = 0;
-    int         p_c = ' ';
-	int         message_length = int(strlen(messString));
-
-    ////////////////////////
-    // parsing the associated command
-    // first skipping blank characters or comments
-    // SpaceCommentsInclude(NULL,&p_c,messString,&indChar);
-    while( _SpaceChar(p_c) ) {
-      p_c = messString[ indChar ];
-      indChar++;
-    }
-
-    ///////////////////////////////////////
-    // OSC message format
-    if( p_c == '/' ) {
-      // ignores leading /
-      messString += 1;
-      indChar += 1;
-
-      // int          tagLength = strlen( messString );
-      char         *pch;
-
-      // removes string termination: ; + \n
-      if( (pch = strchr( messString ,  ';' ) ) ) {
-	*pch = '\0';
-      }
-
-      // computes the length of the message tag
-      int tagLength = 0;
-	  if ((pch = strchr(messString, ' '))) {
-		  tagLength = int(pch - messString);
-		  p_c = ' ';
-	  }
-	  else {
-		  tagLength = int(strlen(messString));
-		  p_c = 0;
-	  }
-
-      strncpy( OSCTag , messString , tagLength );
-      OSCTag[ tagLength ] = 0;
-      messString += tagLength;
-      indChar += tagLength;
-      // printf( "message command [%s] length [%d]\n" , OSCTag , tagLength );
-
-      // printf( "OSC parameters %s\n" , pch );
-      int indOSCParam = 0;
-      // printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch ,  messString , p_c ,indChar );
-      while( p_c == ' ' ) {
-	messString += 1;
-	indChar += 1;
-	p_c = *messString;
-      }
-      // printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch , messString ,  p_c ,indChar );
-
-      while( indOSCParam < MAX_OSC_ARGUMENTS 
-	     && p_c
-	     && indChar < message_length + 1 ) {
-	// computes the length of the message tag
-	tagLength = 0;
-	if ((pch = strchr(messString, ' '))) {
-		tagLength = int(pch - messString);
-		p_c = ' ';
-	}
-	else {
-		tagLength = int(strlen(messString));
-		p_c = 0;
+	if (receive_format != OSC && SocketToLocalServer < 0) {
+		return;
 	}
 
-	strncpy( OSC_arguments[indOSCParam] , messString , tagLength );
-	OSC_arguments[indOSCParam][ tagLength ] = 0;
-	messString += tagLength;
-	indChar += tagLength;
-	// printf( "message command [%s] length [%d]\n" , OSC_arguments[indOSCParam] , tagLength );
+	// processes all the non duplicated messages
+	for (int ind_mess = 0; ind_mess < current_depth_input_stack; ind_mess++) {
+		messString = input_message_stack[ind_mess];
 
-	// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch  , messString ,  p_c ,indChar );
-	while( p_c == ' ' ) {
-	  messString += 1;
-	  indChar += 1;
-	  p_c = *messString;
+		if (IP_message_trace) {
+			printf("process message [%s]\n", messString);
+		}
+
+		// general message just as in an ordinary script
+		int         indChar = 0;
+		int         p_c = ' ';
+		int         message_length = int(strlen(messString));
+
+		////////////////////////
+		// parsing the associated command
+		// first skipping blank characters or comments
+		// SpaceCommentsInclude(NULL,&p_c,messString,&indChar);
+		while (_SpaceChar(p_c)) {
+			p_c = messString[indChar];
+			indChar++;
+		}
+
+		///////////////////////////////////////
+		// OSC message format
+		if (p_c == '/') {
+			// ignores leading /
+			messString += 1;
+			indChar += 1;
+
+			// int          tagLength = strlen( messString );
+			char         *pch;
+
+			// removes string termination: ; + \n
+			if ((pch = strchr(messString, ';'))) {
+				*pch = '\0';
+			}
+
+			// computes the length of the message tag
+			int tagLength = 0;
+			if ((pch = strchr(messString, ' '))) {
+				tagLength = int(pch - messString);
+				p_c = ' ';
+			}
+			else {
+				tagLength = int(strlen(messString));
+				p_c = 0;
+			}
+
+			strncpy(OSCTag, messString, tagLength);
+			OSCTag[tagLength] = 0;
+			messString += tagLength;
+			indChar += tagLength;
+			// printf( "message command [%s] length [%d]\n" , OSCTag , tagLength );
+
+			// printf( "OSC parameters %s\n" , pch );
+			int indOSCParam = 0;
+			// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch ,  messString , p_c ,indChar );
+			while (p_c == ' ') {
+				messString += 1;
+				indChar += 1;
+				p_c = *messString;
+			}
+			// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch , messString ,  p_c ,indChar );
+
+			while (indOSCParam < MAX_OSC_ARGUMENTS
+				&& p_c
+				&& indChar < message_length + 1) {
+				// computes the length of the message tag
+				tagLength = 0;
+				if ((pch = strchr(messString, ' '))) {
+					tagLength = int(pch - messString);
+					p_c = ' ';
+				}
+				else {
+					tagLength = int(strlen(messString));
+					p_c = 0;
+				}
+
+				strncpy(OSC_arguments[indOSCParam], messString, tagLength);
+				OSC_arguments[indOSCParam][tagLength] = 0;
+				messString += tagLength;
+				indChar += tagLength;
+				// printf( "message command [%s] length [%d]\n" , OSC_arguments[indOSCParam] , tagLength );
+
+				// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch  , messString ,  p_c ,indChar );
+				while (p_c == ' ') {
+					messString += 1;
+					indChar += 1;
+					p_c = *messString;
+				}
+				// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch , messString ,  p_c ,indChar );
+
+				indOSCParam++;
+			}
+
+			if (p_c) {
+				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d)!", MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
+			}
+
+			// printf("Alias command %s size %d :\n" , OSCTag , indOSCParam );
+			// for( int ind = 0 ; ind < indOSCParam ; ind++ ) {
+			// printf("%s \n" , OSC_arguments[ind] );
+			// }
+
+			float args[MAX_OSC_ARGUMENTS];
+			for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
+				args[ind] = (float)atof(OSC_arguments[ind]);
+			}
+			pg_aliasScript(OSCTag, OSC_arguments[0], args);
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect external message syntax %s!", messString); ReportError(ErrorStr); break;
+		}
 	}
-	// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch , messString ,  p_c ,indChar );
-
-	indOSCParam++;
-      }
-      
-      if( p_c ) {
-	sprintf( ErrorStr , "Error: OSC maximal parameter count too low (%d)!" , MAX_OSC_ARGUMENTS); ReportError( ErrorStr ); 
-      }
-
-      // printf("Alias command %s size %d :\n" , OSCTag , indOSCParam );
-      // for( int ind = 0 ; ind < indOSCParam ; ind++ ) {
-	// printf("%s \n" , OSC_arguments[ind] );
-      // }
-
-      float args[MAX_OSC_ARGUMENTS];
-      for( int ind = 0 ; ind < MAX_OSC_ARGUMENTS ; ind++ ) {
-	  args[ind] = (float)atof( OSC_arguments[ind] );
-      }
-      pg_aliasScript( OSCTag , OSC_arguments[0] , args );
-    }
-    else {
-      sprintf( ErrorStr , "Error: incorrect external message syntax %s!" , messString ); ReportError( ErrorStr ) ; break;
-    }
-  }    
-}  
+}
 

@@ -705,7 +705,7 @@ void MemoryUsage(void);
 void InterfaceInitializations(void);
 
 void pg_initGeometry_quads(void);
-bool pg_initFBOTextures(GLuint *textureID, int nb_attachments);
+bool pg_initFBOTextures(GLuint *textureID, int nb_attachments, bool with_stencil_andOr_depth);
 bool pg_initFBO(void);
 void pg_initRenderingMatrices(void);
 

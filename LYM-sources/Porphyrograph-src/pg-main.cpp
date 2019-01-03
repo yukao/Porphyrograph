@@ -197,7 +197,6 @@ int main(int argcMain, char **argvMain) {
 	// initializations before rendering
 
 	// sensor initialization
-
 #ifdef PG_SENSORS
 	SensorInitialization();
 #endif
@@ -285,7 +284,7 @@ int main(int argcMain, char **argvMain) {
 
 		is_movieLoading = true;
 		printf("Loading %s\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-		sprintf(AuxString, "/movie_shortName _%s", movieShortName[currentlyPlaying_movieNo].c_str());
+		sprintf(AuxString, "/movie_shortName %s", movieShortName[currentlyPlaying_movieNo].c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
 #ifdef WIN32
@@ -315,6 +314,17 @@ int main(int argcMain, char **argvMain) {
 #endif
 	}
 
+	/////////////////////////////////////////////////////////////////////////
+	// SVG GPU INITIALIZATION
+	const char	*SVG_GPU_programName = "nvpr_SVG_GPU";
+	initializeNVPathRender(SVG_GPU_programName);
+	SVG_path_baseID = glGenPathsNV(pg_nb_tot_gpu_paths);
+	SVG_path_fill_color = new GLint[pg_nb_tot_gpu_paths];
+	for (int indGPUFile = 0; indGPUFile < pg_nb_svg_gpus; indGPUFile++) {
+		LoadPathsToGPU("Data/" + project_name + "-data/SVG_GPUs/" + pg_svg_gpu_fileNames[indGPUFile], pg_ind_first_svg_gpu_path[indGPUFile], pg_nb_svg_gpu_paths[indGPUFile]);
+		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
+	}
+
 	printOglError(37);
 
 	// main loop for event processing and display
@@ -333,7 +343,7 @@ void initGlutWindows( void ) {
   glutInitWindowSize( window_width, window_height );
   glutInitWindowPosition( window_x, window_y );
   
-  glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_BORDERLESS ); // 
+  glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS ); // 
   
   CurrentWindow->glutID = glutCreateWindow(" ");
 
@@ -353,9 +363,13 @@ void initGlutWindows( void ) {
   GLenum err = glewInit();  
   if (GLEW_OK != err) {
     /* Problem: glewInit failed, something is seriously wrong. */
-    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+    fprintf(stderr, "Error: OpenGL Extension Wrangler (GLEW) failed to initialize %s\n", glewGetErrorString(err));
   }
   fprintf(stdout, "GLEW version %s\n", glewGetString(GLEW_VERSION));
+  boolean hasDSA = glewIsSupported("GL_EXT_direct_state_access");
+  if (!hasDSA) {
+	  fprintf(stderr, "Error: OpenGL implementation doesn't support GL_EXT_direct_state_access\n");
+  }
 #endif
 
   // get version info
@@ -460,107 +474,109 @@ void CursorInit( void ) {
   glutSetCursor(GLUT_CURSOR_NONE);
 }
 
-void pg_init_scene( void ) {
-  if( argc <= 1 ) {
-      sprintf( ErrorStr , "Porphyrograph: not enough arguments" ); ReportError( ErrorStr );
-      sprintf( ErrorStr , "Usage: Porphyrograph [configuration.conf]" ); ReportError( ErrorStr ); throw 100;
-  }
+void pg_init_scene(void) {
+	if (argc <= 1) {
+		sprintf(ErrorStr, "Porphyrograph: not enough arguments"); ReportError(ErrorStr);
+		sprintf(ErrorStr, "Usage: Porphyrograph [configuration.conf]"); ReportError(ErrorStr); throw 100;
+	}
 
-  // log file
-  if( !log_file_name.empty() ) {
-    printf( "Opening log file %s\n" , log_file_name.c_str() ); 
-    if ( ( fileLog = fopen(log_file_name.c_str() , "wb" )) == NULL ) {
-      sprintf( ErrorStr , "File %s not opened!" , log_file_name.c_str() ); ReportError( ErrorStr ); throw 152;
-    }
-  }
-  else {
-    fileLog = stdout;
-  }
+	// log file
+	if (!log_file_name.empty()) {
+		printf("Opening log file %s\n", log_file_name.c_str());
+		if ((fileLog = fopen(log_file_name.c_str(), "wb")) == NULL) {
+			sprintf(ErrorStr, "File %s not opened!", log_file_name.c_str()); ReportError(ErrorStr); throw 152;
+		}
+	}
+	else {
+		fileLog = stdout;
+	}
 
-  ///////////////////////////////////////////////
-  // ------ global variables initialization  ------------- //
-  // frame number initialization
-  pg_FrameNo = first_frame_number - 1;
-  pg_targetFrameNo = pg_FrameNo;
+	///////////////////////////////////////////////
+	// GLOBAL VARIABLES INITIALIZATION
+	// frame number initialization
+	pg_FrameNo = first_frame_number - 1;
+	pg_targetFrameNo = pg_FrameNo;
 
-  // last camera change initialization
-  pg_LastCameraParameterChange_Frame = pg_FrameNo;
+	// last camera change initialization
+	pg_LastCameraParameterChange_Frame = pg_FrameNo;
 
-  // intial real time
-  InitialRealTime = RealTime() + initial_time;
+	// intial real time
+	InitialRealTime = RealTime() + initial_time;
 
-  // initial scenario time: well before current time to be over
-  InitialScenarioTime = InitialRealTime - 1000000.f;
-  AbsoluteInitialScenarioTime = InitialRealTime - 1000000.f;
+	// initial scenario time: well before current time to be over
+	InitialScenarioTime = InitialRealTime - 1000000.f;
+	AbsoluteInitialScenarioTime = InitialRealTime - 1000000.f;
 
-  // current time initialization: internal time
-  CurrentClockTime = RealTime();
+	// current time initialization: internal time
+	CurrentClockTime = RealTime();
 
-  printf( "Initial time %.2f (real time %.5f)\n" , CurrentClockTime , InitialRealTime );
+	printf("Initial time %.2f (real time %.5f)\n", CurrentClockTime, InitialRealTime);
 
-  // random seed initialization
-  srand( clock() );
+	// random seed initialization
+	srand(clock());
 
-  // ------ screen message initialization  ------------- //
-  pg_init_screen_message();
+	// ------ screen message initialization  ------------- //
+	pg_init_screen_message();
 
 #if defined (TVW)
-  // reads the text messages in the text file
-  pg_ReadAllDisplayMessages(pg_MessageDirectory, "message_list.txt");
+	// reads the text messages in the text file
+	pg_ReadAllDisplayMessages(pg_MessageDirectory, "message_list.txt");
 
-  // ------ display message initialization  ------------- //
-  pg_init_display_message();
+	// ------ display message initialization  ------------- //
+	pg_init_display_message();
 #endif
 
 
 #ifdef PG_SENSORS
-  /////////////////////////////////////////////////////////////////////////
-  // SENSORS INITIALIZATION
-  // copies the grid layout
-  assignSensorPositions();
+	/////////////////////////////////////////////////////////////////////////
+	// SENSORS INITIALIZATION
+	// copies the grid layout
+	assignSensorPositions();
 
-  // copies the single central activation
-  assignSensorActivations();
+	// copies the single central activation
+	assignSensorActivations();
 #endif
 
+	/////////////////////////////////////////////////////////////////////////
+	// UDP INITIALIZATION
 #ifdef WIN32
-  WSADATA wsaData;
-  // Initialize Winsock
-  int err = WSAStartup(MAKEWORD(2,2), &wsaData);
-  if ( err != 0 ) {
-    /* Tell the user that we could not find a usable */
-    /* WinSock DLL.                                  */
-    sprintf( ErrorStr , "could not find a usable WinSock DLL!" ); ReportError( ErrorStr ); throw 207;
-  }
+	WSADATA wsaData;
+	// Initialize Winsock
+	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (err != 0) {
+		/* Tell the user that we could not find a usable */
+		/* WinSock DLL.                                  */
+		sprintf(ErrorStr, "could not find a usable WinSock DLL!"); ReportError(ErrorStr); throw 207;
+	}
 #endif
 
-  // server initialization
-  for( int ind = 0 ; ind < nb_IP_Servers ; ind++ ) {
-    IP_Servers[ ind ]->InitServer();
-  }
-  // client initialization
-  for( int ind = 0 ; ind < nb_IP_Clients ; ind++ ) {
-    // printf( "Client %d initialization\n" , ind );
-      //std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_IP: " << ind << " " << IP_Clients[ind]->Remote_server_IP << "\n";
-      //std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_port: " << IP_Clients[ind]->Remote_server_port << "\n";
-      IP_Clients[ ind ]->InitClient();
-      // printf( "Client name %s\n" , IP_Clients[ ind ]->id );
-  }
-  Input_Message_String 
-    = new char[ max_network_message_length ];
-  Input_Message_Local_Commande_String 
-    = new char[ max_network_message_length ];
-  Output_Message_String 
-    = new char[ max_network_message_length ];
-  // the OSC string is made 2 times longer because
-  // it contains both pattern and argts
-  Output_Message_OSC
-    = new char[ 2 * max_network_message_length ];
-  Output_Message_Pattern 
-    = new char[ max_network_message_length ];
-  Output_Message_ArgList
-    = new char[ max_network_message_length ];
-  // printf( "End of scene initialization\n" );
+	// server initialization
+	for (int ind = 0; ind < nb_IP_Servers; ind++) {
+		IP_Servers[ind]->InitServer();
+	}
+	// client initialization
+	for (int ind = 0; ind < nb_IP_Clients; ind++) {
+		// printf( "Client %d initialization\n" , ind );
+		  //std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_IP: " << ind << " " << IP_Clients[ind]->Remote_server_IP << "\n";
+		  //std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_port: " << IP_Clients[ind]->Remote_server_port << "\n";
+		IP_Clients[ind]->InitClient();
+		// printf( "Client name %s\n" , IP_Clients[ ind ]->id );
+	}
+	Input_Message_String
+		= new char[max_network_message_length];
+	Input_Message_Local_Commande_String
+		= new char[max_network_message_length];
+	Output_Message_String
+		= new char[max_network_message_length];
+	// the OSC string is made 2 times longer because
+	// it contains both pattern and argts
+	Output_Message_OSC
+		= new char[2 * max_network_message_length];
+	Output_Message_Pattern
+		= new char[max_network_message_length];
+	Output_Message_ArgList
+		= new char[max_network_message_length];
+	// printf( "End of scene initialization\n" );
 }
 
 bool pg_shutdown = false;

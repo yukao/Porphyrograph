@@ -118,6 +118,18 @@ extern GLenum ** pg_Shader_Types;
 extern int * pg_Shader_nbTypes;
 extern int nb_shader_files;
 
+// SVG GPU
+// number of files
+extern int pg_nb_svg_gpus;
+// number of paths for each file
+extern int *pg_nb_svg_gpu_paths;
+// index of the first path of the current file
+extern int *pg_ind_first_svg_gpu_path;
+// total number of paths
+extern int pg_nb_tot_gpu_paths;
+// file names
+extern string *pg_svg_gpu_fileNames;
+
 /// the params of the font file
 extern string                    font_file_encoding;
 extern TextureEncoding           font_texture_encoding;

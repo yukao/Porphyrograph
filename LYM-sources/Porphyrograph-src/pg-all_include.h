@@ -144,6 +144,9 @@
 #endif
 using namespace cv;
 
+// liblo OSC library
+#include "lo/lo.h"
+
 #include <list>
 #include <vector>
 #include <map>
@@ -396,9 +399,12 @@ using std::ifstream;
 
 #include "pg-shader.h"
 #include "pg-stroke.h"
+#include "pg-SVG_GPU.h"
 #include "pg-init.h"
 
 #include "pg-main.h"
 #include "pg-conf.h"
+
+
 // end of standard included files
 ///////////////////////////////////////////////////////

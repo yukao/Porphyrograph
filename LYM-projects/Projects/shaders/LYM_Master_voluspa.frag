@@ -10,7 +10,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 3
 #define ATELIERS_PORTATIFS
 // #define WHITE_CIRCLE
-
+#define MIRRORED_PROJECTION
 
 #include_declarations
 
@@ -68,8 +68,10 @@ void main() {
   // vertical mirror
   // TO UNCOMMENT FOR CHATEAU  
   //    coords.y = height - coords.y;
+#ifdef MIRRORED_PROJECTION
   // ST OUEN horizontal mirror
    coords.x = width - coords.x;
+#endif
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
@@ -162,9 +164,11 @@ void main() {
   // comment for single cursor
 
 // vertical mirror
-//   coords.y = height - coords.y;
+//   coords.y = height - coords.y
+#ifdef MIRRORED_PROJECTION
 // ST OUEN horizontal mirror
   coordX = width - coordX;
+#endif
 // double mirror
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;

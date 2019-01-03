@@ -170,9 +170,6 @@ extern bool initialBGCapture;
 /// _Svg : framebuffer output to svg file
 enum DrawingMode{ _Render=0 , _Svg , _Png , _Jpg , _Video };
 
-// on/off automatic image output in case of live performance
-extern bool is_automatic_snapshots;
-
 // projection and view matrices transmitted to the shader
 extern GLfloat projMatrix[16];
 extern GLfloat viewMatrix[16];
@@ -198,6 +195,8 @@ extern int path0_next_in_hull[4];
 #endif
 extern float paths_x_prev[PG_NB_PATHS + 1];
 extern float paths_y_prev[PG_NB_PATHS + 1];
+extern bool isBegin[PG_NB_PATHS + 1];
+extern bool isEnd[PG_NB_PATHS + 1];
 extern float paths_Color_r[PG_NB_PATHS + 1];
 extern float paths_Color_g[PG_NB_PATHS + 1];
 extern float paths_Color_b[PG_NB_PATHS + 1];
@@ -217,6 +216,14 @@ extern GLubyte *pg_CATable;
 extern GLuint pg_LYMlogo_texID;
 extern cv::Mat pg_LYMlogo_image;
 #endif
+
+// svg gpu translation
+extern float				svg_translate_x;
+extern float				svg_translate_y;
+extern float				svg_translate_z;
+// svg gpu scaling
+extern float				svg_scale;
+
 
 
 #ifdef PG_SENSORS
@@ -262,7 +269,7 @@ public:
 void window_display(void);
 void one_frame_variables_reset(void);
 void pg_update_shader_uniforms(void);
-void camera_and_video_frame_updates(void);
+void pg_update_camera_and_video_frame(void);
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #0: PARTICLE ANIMATION PASS
 void pg_ParticleAnimationPass(void);

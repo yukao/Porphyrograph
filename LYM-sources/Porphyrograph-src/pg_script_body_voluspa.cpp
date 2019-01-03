@@ -252,7 +252,8 @@ float part_damp_factor    ;
 float part_acc_pulse      ;
 bool  hide                ;
 int   playing_soundtrackNo;
-bool  adc_onOff           ;
+float audioInput_weight   ;
+float soundtrack_weight   ;
 int   track_x_transl_0    ;
 int   track_x_transl_1    ;
 int   track_y_transl_0    ;
@@ -478,7 +479,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_bool,
     _pg_int,
-    _pg_path,
+    _pg_float,
+    _pg_float,
     _pg_int,
     _pg_int,
     _pg_int,
@@ -705,7 +707,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&part_acc_pulse,
    (void *)&hide,
    (void *)&playing_soundtrackNo,
-   (void *)&adc_onOff,
+   (void *)&audioInput_weight,
+   (void *)&soundtrack_weight,
    (void *)&track_x_transl_0,
    (void *)&track_x_transl_1,
    (void *)&track_y_transl_0,
@@ -791,7 +794,8 @@ void partMove_target_callBack(pg_Parameter_Input_Type param_input_type , float s
 void partMove_rand_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void hide_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void adc_onOff_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { 
    &pen_brush_callBack,
    NULL,
@@ -989,7 +993,8 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    &hide_callBack,
    &playing_soundtrackNo_callBack,
-   &adc_onOff_callBack,
+   &audioInput_weight_callBack,
+   &soundtrack_weight_callBack,
    NULL,
    NULL,
    NULL,
@@ -1216,7 +1221,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"part_acc_pulse",
   (char *)"hide",
   (char *)"playing_soundtrackNo",
-  (char *)"adc_onOff",
+  (char *)"audioInput_weight",
+  (char *)"soundtrack_weight",
   (char *)"",
   (char *)"",
   (char *)"",
@@ -1443,7 +1449,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"part_acc_pulse",
   (char *)"hide",
   (char *)"playing_soundtrackNo",
-  (char *)"adc_onOff",
+  (char *)"audioInput_weight",
+  (char *)"soundtrack_weight",
   (char *)"track_x_transl_0",
   (char *)"track_x_transl_1",
   (char *)"track_y_transl_0",
@@ -1473,8 +1480,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"photo_contrast",
   (char *)"mute_screen",
 };
-char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*************k****Hh*************cII*?*******************p******:*******d********************************************************iiII***********************************iw*******rr************************************";
-char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$P$*****K****Gg*****************!*******************Q*******000****D********************************************************II*************************************IW*******RR************************************";
+char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*************k****Hh*************cII*?*******************p******:*******d********************************************************iiII***********************************iw*******rr*************************************";
+char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$P$*****K****Gg*****************!*******************Q*******000****D********************************************************II*************************************IW*******RR*************************************";
 float StepMinus[_MaxInterpVarIDs] = { 
   -1.000000F,
   -1.000000F,
@@ -1672,7 +1679,8 @@ float StepMinus[_MaxInterpVarIDs] = {
   -0.100000F,
   0.000000F,
   -1.000000F,
-  0.000000F,
+  -0.100000F,
+  -0.100000F,
   -1.000000F,
   -1.000000F,
   -1.000000F,
@@ -1899,7 +1907,8 @@ float StepPlus[_MaxInterpVarIDs] = {
   0.100000F,
   0.000000F,
   1.000000F,
-  1.000000F,
+  0.100000F,
+  0.100000F,
   1.000000F,
   1.000000F,
   1.000000F,
@@ -2155,6 +2164,7 @@ float MinValues[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   0.000000F,
+  0.000000F,
 };
 float MaxValues[_MaxInterpVarIDs] = { 
   7.000000F,
@@ -2353,6 +2363,7 @@ float MaxValues[_MaxInterpVarIDs] = {
   9999.000000F,
   1.000000F,
   10.000000F,
+  1.000000F,
   1.000000F,
   100.000000F,
   100.000000F,

@@ -65,8 +65,8 @@ void main() {
 
   // vertical mirror
   // coords.y = height - coords.y;
-  // ST OUEN horizontal mirror
-   coords.x = width - coords.x;
+  // BRON mirror
+  // coords.x = width - coords.x;
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
@@ -160,8 +160,8 @@ void main() {
 
 // vertical mirror
 //  coords.y = height - coords.y;
-// ST OUEN horizontal mirror
-  coordX = width - coordX;
+// BRON mirror
+//  coordX = width - coordX;
 // double mirror
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;

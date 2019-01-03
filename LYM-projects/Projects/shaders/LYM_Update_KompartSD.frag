@@ -57,6 +57,8 @@ float signed_ry;
 
 // Bezier control points 
 vec2 BezierControl[4];
+bool isBegin;
+bool isEnd;
 
 // cursor type (+1 for stylus , -1 for rubber )
 float Cursor = 1;
@@ -109,7 +111,8 @@ uniform vec4 uniform_Update_fs_4fv_paths03_xL;
 uniform vec4 uniform_Update_fs_4fv_paths03_yL;
 uniform vec4 uniform_Update_fs_4fv_paths03_xR;
 uniform vec4 uniform_Update_fs_4fv_paths03_yR;
-uniform ivec4 uniform_Update_fs_4iv_path0_next_in_hull;
+uniform ivec4 uniform_Update_fs_4iv_path03_beginOrEnd;
+// uniform ivec4 uniform_Update_fs_4iv_path0_next_in_hull;
 uniform vec4 uniform_Update_fs_4fv_paths03_r;
 uniform vec4 uniform_Update_fs_4fv_paths03_g;
 uniform vec4 uniform_Update_fs_4fv_paths03_b;
@@ -125,6 +128,7 @@ uniform vec4 uniform_Update_fs_4fv_paths47_xL;
 uniform vec4 uniform_Update_fs_4fv_paths47_yL;
 uniform vec4 uniform_Update_fs_4fv_paths47_xR;
 uniform vec4 uniform_Update_fs_4fv_paths47_yR;
+uniform ivec4 uniform_Update_fs_4iv_path47_beginOrEnd;
 uniform vec4 uniform_Update_fs_4fv_paths47_r;
 uniform vec4 uniform_Update_fs_4fv_paths47_g;
 uniform vec4 uniform_Update_fs_4fv_paths47_b;
@@ -348,7 +352,8 @@ float out_gray_drawing( float current_Brush_Radius ,
   // a segment made of 2 distinct real points 
   if( BezierControl[0].x >= 0 && BezierControl[0].y >= 0 
       && BezierControl[3].x >= 0 && BezierControl[3].y >= 0
-      && (BezierControl[0].x != BezierControl[3].x || BezierControl[0].y != BezierControl[3].y) ) {
+      && (BezierControl[0].x != BezierControl[3].x
+          || BezierControl[0].y != BezierControl[3].y) ) {
 
     // Bezier curve based rendering
     // checks whether the point is inside the convex hull of the control points
@@ -362,8 +367,8 @@ float out_gray_drawing( float current_Brush_Radius ,
     // inward normal: +90 from [Pi, Pnext]
     // [0, 1, -1, 0] * [Pnx - Pix, Pny - Piy] = [-Pny + Piy, Pnx - Pix]
 
-    bool inside = true;
     // TOREWRITE
+    /* bool inside = true;
     for(int i = 0; i < 4; i++) {
       int next = uniform_Update_fs_4iv_path0_next_in_hull[i];
       if(next != -1) {
@@ -379,6 +384,7 @@ float out_gray_drawing( float current_Brush_Radius ,
       // to reactivate later
       // return  0.f; 
     }
+    */
 
     // marching along the Bezier curve
     // 3-pixel steps
@@ -396,12 +402,34 @@ float out_gray_drawing( float current_Brush_Radius ,
     float param_prec = 0.;
     vec2 P_prec = BezierVal(param_prec); // is BezierControl[0] but has to be calculated to initialize the values for TangentVal
     float T_prec = dot(vec2(PixelLocation - P_prec),normalize(TangentVal(param_prec)));
+    vec2 P_cur;
+    float T_cur;
+
+    /////////////////////////////////////////////////
+    // a segment beginning
+    if( isBegin && T_prec < 0) {
+      /////////////////////////////////////////////////
+      // WRITING POSITION
+      // distance from pen center
+      signed_rx = PixelLocation.x - BezierControl[3].x;
+      signed_ry = PixelLocation.y - BezierControl[3].y;
+      float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+      if( // doesnt redraw on previously drawn place
+          distanceToCurve < current_Brush_Radius ) {
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
+        // to reactivate later
+        // return stroke_out( current_Brush_Radius , current_brushID );
+      }
+    }    
+
     // loop on all the ponts in the subdivision
     for(int ind_step = 1 ; ind_step <= nb_steps ; ind_step++) {
       // current point in the subdivision
       float param_cur = ind_step * step;
-      vec2 P_cur = BezierVal(param_cur);
-      float T_cur = dot(vec2(PixelLocation - P_cur) , normalize(TangentVal(param_cur)));
+      P_cur = BezierVal(param_cur);
+      T_cur = dot(vec2(PixelLocation - P_cur) , normalize(TangentVal(param_cur)));
       // inside the slab delimited by two points and their normals
       if(T_prec >= 0 && T_cur <= 0) {
         float interpolatedParam = (-T_cur * param_prec + T_prec * param_cur)/(T_prec - T_cur);
@@ -429,45 +457,26 @@ float out_gray_drawing( float current_Brush_Radius ,
       T_prec = T_cur;
       P_prec = P_cur;
     }
+
+    /////////////////////////////////////////////////
+    // a segment ending
+    if( isEnd && T_cur < 0) {
+      /////////////////////////////////////////////////
+      // WRITING POSITION
+      // distance from pen center
+      signed_rx = PixelLocation.x - BezierControl[0].x;
+      signed_ry = PixelLocation.y - BezierControl[0].y;
+      float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+      if( // doesnt redraw on previously drawn place
+          distanceToCurve < current_Brush_Radius ) {
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
+        // to reactivate later
+        // return stroke_out( current_Brush_Radius , current_brushID );
+      }
+    }    
   }
-  /////////////////////////////////////////////////
-  // a segment beginning
-  else if( BezierControl[0].x < 0 && BezierControl[0].y < 0 
-      && BezierControl[3].x >= 0 && BezierControl[3].y >= 0 ) {
-    /////////////////////////////////////////////////
-    // WRITING POSITION
-    // distance from pen center
-    signed_rx = PixelLocation.x - BezierControl[3].x;
-    signed_ry = PixelLocation.y - BezierControl[3].y;
-    float distanceToCurve = length( vec2(signed_rx , signed_ry) );
-
-    if( // doesnt redraw on previously drawn place
-        distanceToCurve < current_Brush_Radius ) {
-      // reads the gray level of the brush at this position
-      return 1.0f - distanceToCurve / current_Brush_Radius;
-      // to reactivate later
-      // return stroke_out( current_Brush_Radius , current_brushID );
-    }
-  }    
-  /////////////////////////////////////////////////
-  // a segment ending
-  else if( BezierControl[0].x >= 0 && BezierControl[0].y >= 0 
-      && BezierControl[3].x < 0 && BezierControl[3].y < 0 ) {
-    /////////////////////////////////////////////////
-    // WRITING POSITION
-    // distance from pen center
-    signed_rx = PixelLocation.x - BezierControl[0].x;
-    signed_ry = PixelLocation.y - BezierControl[0].y;
-    float distanceToCurve = length( vec2(signed_rx , signed_ry) );
-
-    if( // doesnt redraw on previously drawn place
-        distanceToCurve < current_Brush_Radius ) {
-      // reads the gray level of the brush at this position
-      return 1.0f - distanceToCurve / current_Brush_Radius;
-      // to reactivate later
-      // return stroke_out( current_Brush_Radius , current_brushID );
-    }
-  }    
 
   return 0.f;
 }
@@ -771,6 +780,8 @@ void main() {
               vec2(uniform_Update_fs_4fv_paths03_xR[indPath],uniform_Update_fs_4fv_paths03_yR[indPath]); 
             BezierControl[3] =
               vec2(uniform_Update_fs_4fv_paths03_x[indPath],uniform_Update_fs_4fv_paths03_y[indPath]);
+            isBegin = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] > 0);
+            isEnd = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] < 0);
             curTrack_grayLevel =  out_gray_drawing( 
                 uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
                 int(uniform_Update_fs_4fv_paths03_BrushID[indPath]) );
@@ -796,6 +807,8 @@ void main() {
               vec2(uniform_Update_fs_4fv_paths47_xR[indPathRel],uniform_Update_fs_4fv_paths47_yR[indPathRel]); 
             BezierControl[3] =
               vec2(uniform_Update_fs_4fv_paths47_x[indPathRel],uniform_Update_fs_4fv_paths47_y[indPathRel]);
+            isBegin = (uniform_Update_fs_4iv_path47_beginOrEnd[indPathRel] > 0);
+            isEnd = (uniform_Update_fs_4iv_path47_beginOrEnd[indPathRel] < 0);
             curTrack_grayLevel =  out_gray_drawing( 
                 uniform_Update_fs_4fv_paths47_RadiusX[indPathRel] ,
                 int(uniform_Update_fs_4fv_paths47_BrushID[indPathRel]) );

@@ -41,129 +41,142 @@ float    pg_ScanFloatString( int *p_c  ,
 		   int withTrailingSpaceChars , 
 		   char *charstring , int *ind );
 
+// string splitting into string vector by single char
+vector<string> split(string str, char token);
+
 // alternate plain/OSC message format
 enum pg_UDPMessageFormat{ Plain = 0, OSC , Emptypg_UDPMessageFormat };
 extern const char *pg_UDPMessageFormatString[Emptypg_UDPMessageFormat + 1];
 
 // IP client (remote server)
 class pg_IPClient {
- public:
-  // remote server ID
-  string id;
+public:
+	// remote server ID
+	string id;
 
-  // remote sever address
-  string              Remote_server_IP;
-  unsigned int        Remote_server_port;
-  struct hostent     *Remote_server_host;
+	// remote sever address
+	string              Remote_server_IP;
+	unsigned int        Remote_server_port;
+	struct hostent     *Remote_server_host;
 
-  // remote server socket
-  SOCKET SocketToRemoteServer;
-  struct sockaddr_in remoteServAddr;
+	// remote server socket
+	SOCKET SocketToRemoteServer;
+	struct sockaddr_in remoteServAddr;
 
-  // client stack: stores pending output messages
-  // OSC pattern
-  char  **output_pattern_stack;
-  // the message: string (Plain format), OSC encoding (OSC format)
-  char  **output_message_stack;
+	// liblo client
+	lo_address lo_client;
 
-  int     depth_output_stack;
-  int     current_depth_output_stack;
-  float   maximal_IP_message_delay;
-  float  last_IP_message_time;
+	// client stack: stores pending output messages
+	// OSC pattern
+	char  **output_pattern_stack;
+	// the message: string (Plain format), OSC encoding (OSC format)
+	char  **output_message_stack;
 
-  // emitted message format
-  pg_UDPMessageFormat   send_format;
+	int     depth_output_stack;
+	int     current_depth_output_stack;
+	float   maximal_IP_message_delay;
+	float  last_IP_message_time;
 
-  unsigned int first_IP_message_number;
-  unsigned int current_IP_message_number;
+	// emitted message format
+	pg_UDPMessageFormat   send_format;
 
-  // console trace
-  bool   IP_message_trace;
+	unsigned int first_IP_message_number;
+	unsigned int current_IP_message_number;
 
-  // byte order reversal
-  bool   OSC_endian_reversal;
+	// console trace
+	bool   IP_message_trace;
 
-  pg_IPClient( void );
-  ~pg_IPClient( void );
+	// byte order reversal
+	bool   OSC_endian_reversal;
 
-  void InitClient( void );
+	pg_IPClient(void);
+	~pg_IPClient(void);
 
-  void IP_OutputStackInitialization( void );
-  
-  // send IP messages to IP client (Plain or OSC formats)
-  void sendIPmessages( void );
+	void InitClient(void);
 
-  // message processing
-  void storeIP_output_message( char *commandLine ,
-				char *pattern );
+	void IP_OutputStackInitialization(void);
+
+	// send IP messages to IP client (Plain or OSC formats)
+	void sendIPmessages(void);
+
+	// message processing
+	void storeIP_output_message(char *commandLine,
+		char *pattern);
 };
 
 // IP server (local server)
+// liblo message processing 
+void liblo_error_handling(int num, const char *m, const char *path);
+int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
+	int argc, void *data, void *user_data);
 class pg_IPServer {
- public:
-  // local server ID
-  string       id;
+public:
+	// local server ID
+	string       id;
 
-  // OSC argument parsing
-  char *OSC_arguments[MAX_OSC_ARGUMENTS];
-  char *OSCTag;
+	// OSC argument parsing
+	char *OSC_arguments[MAX_OSC_ARGUMENTS];
+	char *OSCTag;
 
-  // local server socket
-  SOCKET              SocketToLocalServer;
-  struct sockaddr_in  localServerAddr;
+	// local server socket
+	SOCKET              SocketToLocalServer;
+	struct sockaddr_in  localServerAddr;
 
-  // remote server socket
-  SOCKET SocketToRemoteClient;
-  struct sockaddr_in remoteClientAddr;
+	// remote server socket
+	SOCKET SocketToRemoteClient;
+	struct sockaddr_in remoteClientAddr;
 
-  // server address
-  unsigned int        Local_server_port;
-  char               *Remote_client_IP;
-  unsigned int        Remote_client_port;
-  struct hostent     *Remote_client_host;
-  
-  // server reception stack
-  char          **input_message_stack;
-  int            *input_message_length_stack;
-  int             depth_input_stack;
-  int             current_depth_input_stack;
-  
-  // format: plain vs OSC
-  pg_UDPMessageFormat   receive_format;
+	// server address
+	unsigned int        Local_server_port;
+	char               *Remote_client_IP;
+	unsigned int        Remote_client_port;
+	struct hostent     *Remote_client_host;
 
-  unsigned int    last_received_IP_message_number;
+	// liblo server
+	lo_server           lo_local_server;
 
-  // console trace
-  bool            IP_message_trace;
+	// server reception stack
+	char          **input_message_stack;
+	int            *input_message_length_stack;
+	int             depth_input_stack;
+	int             current_depth_input_stack;
 
-  // byte order reversal
-  bool            OSC_endian_reversal;
+	// format: plain vs OSC
+	pg_UDPMessageFormat   receive_format;
 
-  // duplicate OSC message removal
-  bool            OSC_duplicate_removal;
+	unsigned int    last_received_IP_message_number;
 
-  pg_IPServer( void );
-  ~pg_IPServer( void );
+	// console trace
+	bool            IP_message_trace;
 
-  void InitServer( void );
+	// byte order reversal
+	bool            OSC_endian_reversal;
 
-  void IP_InputStackInitialization( void );
+	// duplicate OSC message removal
+	bool            OSC_duplicate_removal;
 
-  // message processing 
-  void processReceivedOSC( char *localCommandLine , char *message , int n );
+	pg_IPServer(void);
+	~pg_IPServer(void);
 
-  /// message processing
-  int receiveOneMessage( char *message );
-  void receiveIPMessages( void );
+	void InitServer(void);
 
-  // stores IP messages before duplicate removal 
-  // in case of duplicated messages (with possibly different 
-  // numerical values), only the latest message is kept
-  void storeIP_input_messages_and_removes_duplicates( char *message );
+	void IP_InputStackInitialization(void);
 
-  // message interpretation according to alias script (predefined commands
-  // or scenario variables assignment)
-  void ProcessFilteredInputMessages( void );
+	// message processing 
+	// void processReceivedOSC(char *localCommandLine, char *message, int n);
+
+	/// message processing
+	int receiveOneMessage(char *message);
+	void receiveIPMessages(void);
+
+	// stores IP messages before duplicate removal 
+	// in case of duplicated messages (with possibly different 
+	// numerical values), only the latest message is kept
+	void storeIP_input_messages_and_removes_duplicates(char *message);
+
+	// message interpretation according to alias script (predefined commands
+	// or scenario variables assignment)
+	void ProcessFilteredInputMessages(void);
 };
 
 #endif

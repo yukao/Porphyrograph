@@ -177,7 +177,8 @@ float sound_env_max       ;
 bool  currentBGCapture    ;
 bool  hide                ;
 int   playing_soundtrackNo;
-bool  adc_onOff           ;
+float audioInput_weight   ;
+float soundtrack_weight   ;
 int   track_x_transl_0    ;
 int   track_x_transl_1    ;
 int   track_y_transl_0    ;
@@ -317,7 +318,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_bool,
     _pg_bool,
     _pg_int,
-    _pg_path,
+    _pg_float,
+    _pg_float,
     _pg_int,
     _pg_int,
     _pg_int,
@@ -458,7 +460,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&currentBGCapture,
    (void *)&hide,
    (void *)&playing_soundtrackNo,
-   (void *)&adc_onOff,
+   (void *)&audioInput_weight,
+   (void *)&soundtrack_weight,
    (void *)&track_x_transl_0,
    (void *)&track_x_transl_1,
    (void *)&track_y_transl_0,
@@ -492,6 +495,10 @@ void path_replay_trackNo_7_callBack(pg_Parameter_Input_Type param_input_type , f
 void path_record_1_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void path_record_2_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void path_record_3_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void path_record_4_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void path_record_5_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void path_record_6_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void path_record_7_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void cameraGain_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
@@ -503,6 +510,8 @@ void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type , float scenar
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void hide_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { 
    &pen_brush_callBack,
    NULL,
@@ -570,10 +579,10 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    &path_record_1_callBack,
    &path_record_2_callBack,
    &path_record_3_callBack,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
+   &path_record_4_callBack,
+   &path_record_5_callBack,
+   &path_record_6_callBack,
+   &path_record_7_callBack,
    NULL,
    NULL,
    NULL,
@@ -625,7 +634,8 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    &hide_callBack,
    NULL,
-   NULL,
+   &audioInput_weight_callBack,
+   &soundtrack_weight_callBack,
    NULL,
    NULL,
    NULL,
@@ -766,7 +776,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"",
   (char *)"hide",
   (char *)"playing_soundtrackNo",
-  (char *)"adc_onOff",
+  (char *)"audioInput_weight",
+  (char *)"soundtrack_weight",
   (char *)"",
   (char *)"",
   (char *)"",
@@ -907,7 +918,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"currentBGCapture",
   (char *)"hide",
   (char *)"playing_soundtrackNo",
-  (char *)"adc_onOff",
+  (char *)"audioInput_weight",
+  (char *)"soundtrack_weight",
   (char *)"track_x_transl_0",
   (char *)"track_x_transl_1",
   (char *)"track_y_transl_0",
@@ -926,8 +938,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"flashWeight_pulse",
   (char *)"mute_screen",
 };
-char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*********k**cII*?********p******:*****d********************************iiII******************************************************";
-char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$***K******!********Q*******000**D********************************II********************************************************";
+char CmdCharMinus[_MaxInterpVarIDs+1] = "&rko******************cI**?***************:*****d********************************i**********************************************************";
+char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKO*******P**$***********!*********************D*******1234567******************I**********************************************************";
 float StepMinus[_MaxInterpVarIDs] = { 
   -1.000000F,
   -1.000000F,
@@ -1050,7 +1062,8 @@ float StepMinus[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   -1.000000F,
-  0.000000F,
+  -0.100000F,
+  -0.100000F,
   -1.000000F,
   -1.000000F,
   -1.000000F,
@@ -1191,7 +1204,8 @@ float StepPlus[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   1.000000F,
-  1.000000F,
+  0.100000F,
+  0.100000F,
   1.000000F,
   1.000000F,
   1.000000F,
@@ -1350,6 +1364,7 @@ float MinValues[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   0.000000F,
+  0.000000F,
 };
 float MaxValues[_MaxInterpVarIDs] = { 
   7.000000F,
@@ -1473,6 +1488,7 @@ float MaxValues[_MaxInterpVarIDs] = {
   1.000000F,
   1.000000F,
   10.000000F,
+  1.000000F,
   1.000000F,
   100.000000F,
   100.000000F,

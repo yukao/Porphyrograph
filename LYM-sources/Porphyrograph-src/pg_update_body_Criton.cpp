@@ -55,15 +55,15 @@
 	      (GLfloat)CAcolorSpread,
 	      (GLfloat)freeze,
 	      (GLfloat)photo_value );
- glUniform4f( uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale ,
+ glUniform4f( uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_photo_scale ,
 	      (GLfloat)photo_value_pulse,
 	      (GLfloat)photo_satur,
 	      (GLfloat)photo_satur_pulse,
-	      (GLfloat)mask_scale );
- glUniform3f( uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast ,
-	      (GLfloat)photo_scale,
+	      (GLfloat)photo_scale );
+ glUniform3f( uniform_Update_fs_3fv_mask_contrast_photo_contrast_fft_scale ,
 	      (GLfloat)mask_contrast,
-	      (GLfloat)photo_contrast );
+	      (GLfloat)photo_contrast,
+	      (GLfloat)fft_scale );
 
  glUseProgram(shader_programme[pg_shader_Mixing]);
  glUniform4f( uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0 ,

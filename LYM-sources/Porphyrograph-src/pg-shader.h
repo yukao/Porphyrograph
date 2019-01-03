@@ -85,6 +85,7 @@ enum ShaderFileTypes {
 #ifdef PG_SENSORS
 	pg_shader_Sensor,
 #endif
+	pg_SvgGpu,
 	pg_NbShaderTotal
 };
 extern unsigned int shader_programme[pg_NbShaderTotal];
@@ -185,7 +186,7 @@ extern GLint uniform_Update_fs_4fv_paths03_xL;
 extern GLint uniform_Update_fs_4fv_paths03_yL;
 extern GLint uniform_Update_fs_4fv_paths03_xR;
 extern GLint uniform_Update_fs_4fv_paths03_yR;
-extern GLint uniform_Update_fs_4iv_path0_next_in_hull;
+extern GLint uniform_Update_fs_4iv_path03_beginOrEnd;
 #endif
 extern GLint uniform_Update_fs_4fv_paths03_r;
 extern GLint uniform_Update_fs_4fv_paths03_g;
@@ -208,6 +209,7 @@ extern GLint uniform_Update_fs_4fv_paths47_xL;
 extern GLint uniform_Update_fs_4fv_paths47_yL;
 extern GLint uniform_Update_fs_4fv_paths47_xR;
 extern GLint uniform_Update_fs_4fv_paths47_yR;
+extern GLint uniform_Update_fs_4iv_path47_beginOrEnd;
 #endif
 extern GLint uniform_Update_fs_4fv_paths47_r;
 extern GLint uniform_Update_fs_4fv_paths47_g;

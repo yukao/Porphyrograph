@@ -40,6 +40,8 @@ float paths_x[PG_NB_PATHS + 1];
 float paths_y[PG_NB_PATHS + 1];
 float paths_x_prev[PG_NB_PATHS + 1];
 float paths_y_prev[PG_NB_PATHS + 1];
+bool isBegin[PG_NB_PATHS + 1];
+bool isEnd[PG_NB_PATHS + 1];
 float paths_Color_r[PG_NB_PATHS + 1];
 float paths_Color_g[PG_NB_PATHS + 1];
 float paths_Color_b[PG_NB_PATHS + 1];
@@ -51,15 +53,18 @@ int paths_BrushID[PG_NB_PATHS + 1];
 float paths_RadiusX[PG_NB_PATHS + 1];
 float paths_RadiusY[PG_NB_PATHS + 1];
 
-// on/off automatic image output in case of live performance
-bool is_automatic_snapshots = true;
-
 // interpolated CA
 int CAInterpolatedType;
 int CAInterpolatedSubType;
 int CAInterpolatedType_prev = -1;
 int CAInterpolatedSubType_prev = -1;
 
+// svg gpu translation
+float				svg_translate_x = 0.f;
+float				svg_translate_y = 500.f;
+float				svg_translate_z = 0.f;
+// svg gpu scaling
+float				svg_scale = 0.026f;
 
 #ifdef PG_SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -301,16 +306,15 @@ void window_display( void ) {
   printOglError(466);
   pg_update_scenario();
 
-  // records the current mouse position in the variable
-  // and in the tracks is recording is active
-  updateMouseEnvironmentVariablesAndTables(CurrentClockTime);
+  // recalculates pulsed colors and reads current paths
+  pg_update_pulsed_colors_and_replay_paths(CurrentClockTime);
 
   // ships uniform variables
   pg_update_shader_uniforms();
   printOglError(51);
   
   // loads movie and/or camera frames
-  camera_and_video_frame_updates();
+  pg_update_camera_and_video_frame();
 
 
   //////////////////////////////////////////////////
@@ -343,7 +347,7 @@ void window_display( void ) {
   // ---------------- frame by frame output --------------------- //
   // Svg screen shots
   // printf("Draw Svg\n" );
-  if( outputSvg && is_automatic_snapshots
+  if(take_snapshots && outputSvg
 	&& pg_FrameNo % stepSvg == 0
 	&& pg_FrameNo / stepSvg >= beginSvg && 
 	pg_FrameNo / stepSvg <= endSvg ) {
@@ -354,7 +358,7 @@ void window_display( void ) {
   // ---------------- frame by frame output --------------------- //
   // Png screen shots
   // printf("Draw Png\n" );
-  if( outputPng && is_automatic_snapshots
+  if(take_snapshots && outputPng
 	&& pg_FrameNo % stepPng == 0
 	&& pg_FrameNo / stepPng >= beginPng && 
 	pg_FrameNo / stepPng <= endPng ) {
@@ -364,7 +368,7 @@ void window_display( void ) {
   // ---------------- frame by frame output --------------------- //
   // Jpg screen shots
   // printf("Draw Jpg\n"  );
-  if( outputJpg && is_automatic_snapshots
+  if(take_snapshots && outputJpg
 	&& pg_FrameNo % stepJpg == 0
 	&& pg_FrameNo / stepJpg >= beginJpg && 
 	pg_FrameNo / stepJpg <= endJpg ) {
@@ -869,7 +873,7 @@ void one_frame_variables_reset(void) {
 #endif
 }
 
-void camera_and_video_frame_updates(void) {
+void pg_update_camera_and_video_frame(void) {
 	//////////////////////////////////////////////////////////////////////
 	// CAMERA AND VIDEO FRAME UPDATES BEFORE RENDERING
 	// /////////////////////////
@@ -1197,7 +1201,15 @@ void pg_update_shader_uniforms(void) {
 	// pen paths positions
 	glUniform4f(uniform_Update_fs_4fv_paths03_x, paths_x[0], paths_x[1], paths_x[2], paths_x[3]);
 	glUniform4f(uniform_Update_fs_4fv_paths03_y, paths_y[0], paths_y[1], paths_y[2], paths_y[3]);
-	//printf("Current position %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x[0], paths_y[0]);
+	//  checks the information shipped to GPU at beginning or ending of a stroke
+	// begin
+	//if (isBegin[0]) {
+	//	printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x[0], paths_y[0]);
+	//}
+	//// end
+	//if (isEnd[0]) {
+	//	printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x[0], paths_y[0]);
+	//}
 	//if ((paths_x_prev[0] < 0 || paths_y_prev[0] < 0) && (paths_x[0] >= 0 && paths_y[0] >= 0)) {
 	//	printf("Current position BEGIN\n");
 	//}
@@ -1208,7 +1220,12 @@ void pg_update_shader_uniforms(void) {
 		paths_x_prev[0], paths_x_prev[1], paths_x_prev[2], paths_x_prev[3]);
 	glUniform4f(uniform_Update_fs_4fv_paths03_y_prev,
 		paths_y_prev[0], paths_y_prev[1], paths_y_prev[2], paths_y_prev[3]);
+
 #ifdef PG_BEZIER_CURVES
+	glUniform4i(uniform_Update_fs_4iv_path03_beginOrEnd,
+		(isBegin[0] ? 1 : (isEnd[0] ? -1 : 0)), (isBegin[1] ? 1 : (isEnd[1] ? -1 : 0)),
+		(isBegin[2] ? 1 : (isEnd[2] ? -1 : 0)), (isBegin[3] ? 1 : (isEnd[3] ? -1 : 0)));
+
 	// pen Bezier curve tangents
 	glUniform4f(uniform_Update_fs_4fv_paths03_xL,
 		paths_xL[0], paths_xL[1], paths_xL[2], paths_xL[3]);
@@ -1218,8 +1235,8 @@ void pg_update_shader_uniforms(void) {
 		paths_xR[0], paths_xR[1], paths_xR[2], paths_xR[3]);
 	glUniform4f(uniform_Update_fs_4fv_paths03_yR,
 		paths_yR[0], paths_yR[1], paths_yR[2], paths_yR[3]);
-	glUniform4i(uniform_Update_fs_4iv_path0_next_in_hull,
-		path0_next_in_hull[0], path0_next_in_hull[1], path0_next_in_hull[2], path0_next_in_hull[3]);
+	//glUniform4i(uniform_Update_fs_4iv_path0_next_in_hull,
+	//	path0_next_in_hull[0], path0_next_in_hull[1], path0_next_in_hull[2], path0_next_in_hull[3]);
 #endif
 
 
@@ -1261,8 +1278,10 @@ void pg_update_shader_uniforms(void) {
 		paths_x_prev[4], paths_x_prev[5], paths_x_prev[6], paths_x_prev[7]);
 	glUniform4f(uniform_Update_fs_4fv_paths47_y_prev,
 		paths_y_prev[4], paths_y_prev[5], paths_y_prev[6], paths_y_prev[7]);
-
 #ifdef PG_BEZIER_CURVES
+	glUniform4i(uniform_Update_fs_4iv_path47_beginOrEnd,
+		(isBegin[4] ? 1 : (isEnd[4] ? -1 : 0)), (isBegin[5] ? 1 : (isEnd[5] ? -1 : 0)),
+		(isBegin[6] ? 1 : (isEnd[6] ? -1 : 0)), (isBegin[7] ? 1 : (isEnd[7] ? -1 : 0)));
 	// pen Bezier curve tangents
 	glUniform4f(uniform_Update_fs_4fv_paths47_xL,
 		paths_xL[4], paths_xL[5], paths_xL[6], paths_xL[7]);
@@ -2177,6 +2196,9 @@ void pg_ParticleRenderingPass( void ) {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	pg_Display_SVG_image(currentSvgGpuLayers);
+	printOglError(5256);
+
 	////////////////////////////////////////
 	// activate shaders and sets uniform variable values    
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
@@ -2268,12 +2290,10 @@ void pg_ParticleRenderingPass( void ) {
 	);
 #endif
 
-	printOglError(5256);
-
 	// unbinds VBO
 	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDisableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 #endif
 
@@ -2667,7 +2687,7 @@ void pg_draw_scene( DrawingMode mode ) {
   }
 
   // ******************** Png output ********************
-  else if(take_snapshots && mode == _Png ) {
+  else if(mode == _Png ) {
     threadData *pData = new threadData;
     pData->fname = new char[512];
     pData->w = leftWindowWidth;
@@ -2731,7 +2751,7 @@ void pg_draw_scene( DrawingMode mode ) {
   }
 
   // ******************** Jpg output ********************
-  else if(take_snapshots && mode == _Jpg ) {
+  else if(mode == _Jpg ) {
     threadData *pData = new threadData;
     pData->fname = new char[512];
     pData->w = leftWindowWidth;
@@ -2814,13 +2834,14 @@ void pg_draw_scene( DrawingMode mode ) {
 	pg_UpdatePass();
 
 #if defined(BLURRED_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
-	/* // particle rendering pass #2
-	glEnable(GL_BLEND);
+	// particle rendering pass #2
+	// glEnable(GL_BLEND);
 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	*/
+	// glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+	// glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
 	pg_ParticleRenderingPass();
+
 	// glDisable(GL_BLEND);
 #endif
 
@@ -2854,7 +2875,6 @@ void pg_draw_scene( DrawingMode mode ) {
 #endif
 #endif
 #endif
-
   }
 
 

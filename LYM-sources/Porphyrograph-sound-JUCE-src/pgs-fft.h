@@ -103,21 +103,62 @@ public:
 
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override
 	{
+		auto* device = deviceManager.getCurrentAudioDevice();
+		auto activeInputChannels = device->getActiveInputChannels();
+		auto activeOutputChannels = device->getActiveOutputChannels();
+		auto maxInputChannels = activeInputChannels.getHighestBit() + 1;
+		auto maxOutputChannels = activeOutputChannels.getHighestBit() + 1;
 
-		if (readerSource.get() == nullptr)
+		// temporary buffer for storing the soundtrack samples before mixing with audio input
+		AudioSampleBuffer tmpBuffer(bufferToFill.buffer->getNumChannels(), 
+									bufferToFill.buffer->getNumSamples());
+		AudioSourceChannelInfo tmpBufferSource(tmpBuffer);
+			
+		// tests if there is a valid soundtrack to read or audio input
+		for (auto outputChannel = 0; outputChannel < maxOutputChannels; ++outputChannel)
 		{
-			// std::cout << "Null audio source"  << std::endl;
+			if (readerSource.get() == nullptr
+				&& ((!activeOutputChannels[outputChannel]) || maxInputChannels == 0))
+			{
+				// std::cout << "Null audio source"  << std::endl;
 
-			bufferToFill.clearActiveBufferRegion();
-			return;
+				bufferToFill.buffer->clear(outputChannel, 
+											bufferToFill.startSample, bufferToFill.numSamples);
+				return;
+			}
 		}
 
-		// outputs the block
-		transportSource.getNextAudioBlock(bufferToFill);
+		// gets the next block from the soundtrack
+		transportSource.getNextAudioBlock(tmpBufferSource);
 
-		// ships the samples to the spectrogram
-		for (auto i = 0; i < bufferToFill.numSamples; ++i)
-			pushNextSampleIntoFifo(bufferToFill.buffer->getSample(0,i));
+		for (auto outputChannel = 0; outputChannel < maxOutputChannels; ++outputChannel)
+		{
+			auto actualInputChannel = outputChannel % maxInputChannels; // [1]
+
+		    // mixes the output according to the weights of soundtrack and audio input
+			if (outputChannel < bufferToFill.buffer->getNumChannels())
+			{
+				auto* inBuffer = bufferToFill.buffer->getReadPointer(actualInputChannel,
+					bufferToFill.startSample);
+				auto* inTmpBuffer = tmpBufferSource.buffer->getReadPointer(actualInputChannel,
+					tmpBufferSource.startSample);
+				auto* outBuffer = bufferToFill.buffer->getWritePointer(outputChannel,
+					bufferToFill.startSample);
+
+				for (auto sample = 0; sample < bufferToFill.numSamples; ++sample)
+				{
+					outBuffer[sample] = audioInput_weight * inBuffer[sample]
+						+ soundtrack_weight * inTmpBuffer[sample];
+				}
+			}
+
+			// ships the samples of the soundtrack and audioInput to the spectrogram
+			if (outputChannel == 0) {
+				for (auto i = 0; i < bufferToFill.numSamples; ++i) {
+					pushNextSampleIntoFifo(bufferToFill.buffer->getSample(0, i));
+				}
+			}
+		}
 	}
 
 	void releaseResources() override
@@ -177,10 +218,9 @@ public:
 		// std::cout << "message size: " << message.size() << " address: " << str  << std::endl;
 		// if (message.size() == 1 && message[0].isString())
 		// {
-			// std::cout << "message: " << str.toStdString() << " ("
-			// 	<< message[0].getString().toStdString() << ")" << std::endl;
+		// std::cout << "message: " << str.toStdString() << " ("
+		// 	<< message[0].getString().toStdString() << ")" << std::endl;
 		// }
-
 		if (str.compare("/JUCE_open_track") == 0) {
 			if (message.size() == 1 && message[0].isString())
 			{
@@ -195,7 +235,24 @@ public:
 			}
 			else
 			{
-				std::cout << "Incorrect sound_open message, missing file name!" << std::endl;
+				std::cout << "Incorrect " << str.toStdString() << " message size " << message.size() << "!" << std::endl;
+				for (int ind = 0; ind < message.size(); ind++) {
+					if (message[ind].isString())
+					{
+						std::cout << "message str: " << ind << " ("
+							<< message[ind].getString().toStdString() << ")" << std::endl;
+					}
+					else if (message[ind].isInt32())
+					{
+						std::cout << "message int: " << ind << " ("
+							<< message[ind].getInt32() << ")" << std::endl;
+					}
+					else if (message[ind].isFloat32())
+					{
+						std::cout << "message float: " << ind << " ("
+							<< message[ind].getFloat32() << ")" << std::endl;
+					}
+				}
 			}
 			// std::cout << "File name: " << trackFileName << std::endl;
 			if(!trackFileName.isEmpty())
@@ -242,6 +299,16 @@ public:
 		else if (str.compare("/JUCE_loop_track") == 0) {
 			looping = !looping;
 			updateLoopState(looping);
+		}
+		else if (str.compare("/JUCE_soundtrack_weight") == 0) {
+			if (message.size() == 1 && message[0].isFloat32()) {
+				soundtrack_weight = message[0].getFloat32();
+			}
+		}
+		else if (str.compare("/JUCE_audioInput_weight") == 0) {
+			if (message.size() == 1 && message[0].isFloat32()) {
+				audioInput_weight = message[0].getFloat32();
+			}
 		}
 		else if (str.compare("/JUCE_exit") == 0) {
 			// delete this;
@@ -414,6 +481,9 @@ private:
 	AudioFormatManager formatManager;
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
 	AudioTransportSource transportSource;
+
+	float soundtrack_weight = 1.f;
+	float audioInput_weight = 0.f;
 
 	dsp::FFT forwardFFT;
 #ifdef PGS_WITHOUT_VISUAL

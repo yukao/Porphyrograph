@@ -95,6 +95,18 @@ GLenum ** pg_Shader_Types;
 int * pg_Shader_nbTypes;
 int nb_shader_files;
 
+// SVG GPU
+// number of files
+int pg_nb_svg_gpus = 0;
+// number of paths for each file
+int *pg_nb_svg_gpu_paths = NULL;
+// index of the first path of the current file
+int * pg_ind_first_svg_gpu_path = NULL;
+// total number of paths
+int pg_nb_tot_gpu_paths = 0;
+// file names
+string *pg_svg_gpu_fileNames = NULL;
+
 /////////////////////////////////////////////////////
 // Default values for global variables
 /////////////////////////////////////////////////////
@@ -853,6 +865,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string videos
+	if (ID.compare("videos") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"videos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstrem >> nb_movies;
 
 	for (int indVideo = 0; indVideo < nb_movies; indVideo++) {
@@ -887,6 +902,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string videos
+	if (ID.compare("photos") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"photos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstrem >> nb_photo_albums;
 
 	for (int indAlbum = 0; indAlbum < nb_photo_albums; indAlbum++) {
@@ -951,6 +969,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string brushes
+	if (ID.compare("brushes") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"brushes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstrem >> nb_pen_brushes;
 
 	std::getline(scenarioFin, line);
@@ -981,6 +1002,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string soundtracks
+	if (ID.compare("soundtracks") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"soundtracks\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstrem >> nb_soundtracks;
 
 	for (int indTrack = 0; indTrack < nb_soundtracks; indTrack++) {
@@ -1019,16 +1043,18 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string svg_paths
+	if (ID.compare("svg_paths") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	int nb_svg_paths = 0;
 	sstrem >> nb_svg_paths;
 
 	for (int indPrerecPath = 0; indPrerecPath < nb_svg_paths; indPrerecPath++) {
 		std::getline(scenarioFin, line);
-		// std::cout << "scene: " << line << "\n";
 		sstrem.clear();
 		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string track
+
+		sstrem >> ID; // string svg_path
 		sstrem >> temp;
 		sstrem >> temp2;
 		int indPath = std::stoi(temp2);
@@ -1042,22 +1068,70 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		float path_g_color = std::stof(temp2);
 		sstrem >> temp2;
 		float path_b_color = std::stof(temp2);
+		sstrem >> temp2;
+		float path_readSpeedScale = std::stof(temp2);
+		//printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
+		//	indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (indTrack >= 0 && indTrack < PG_NB_TRACKS && indPath >= 1 && indPath <= PG_NB_PATHS) {
 			load_svg_path((char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(),
-				indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color);
+				indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		}
 		else {
-			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path %d number (\"%s\")", 
+			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path %d number (\"%s\")",
 				indTrack, indPath, temp2.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
 	}
-	// /soundtracks
+	// /svg_paths
 	std::getline(scenarioFin, line);
 	sstrem.clear();
 	sstrem.str(line);
-	sstrem >> ID; // string /soundtracks
+	sstrem >> ID; // string /svg_paths
 	if (ID.compare("/svg_paths") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+
+
+	////////////////////////////
+	////// SVG GPU PATHS
+	// the paths are loaded inside the GPU and diplayed path by path
+
+	// Number of SVG GPU paths
+	std::getline(scenarioFin, line);
+	sstrem.clear();
+	sstrem.str(line);
+	// sstrem = std::stringstream(line);
+	sstrem >> ID; // string svg_gpus
+	if (ID.compare("svg_gpus") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_gpus\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+
+	sstrem >> pg_nb_svg_gpus;
+	pg_nb_svg_gpu_paths = new int[pg_nb_svg_gpus];
+	pg_ind_first_svg_gpu_path = new int[pg_nb_svg_gpus];
+	pg_svg_gpu_fileNames = new string[pg_nb_svg_gpus];
+	pg_nb_tot_gpu_paths = 0;
+
+	for (int indGPUFile = 0; indGPUFile < pg_nb_svg_gpus; indGPUFile++) {
+		pg_ind_first_svg_gpu_path[indGPUFile] = pg_nb_tot_gpu_paths;
+			
+		std::getline(scenarioFin, line);
+		sstrem.clear();
+		sstrem.str(line);
+
+		sstrem >> ID; // string svg_gpu
+		sstrem >> pg_svg_gpu_fileNames[indGPUFile]; // file name
+		sstrem >> pg_nb_svg_gpu_paths[indGPUFile]; // number of paths in the file
+		pg_nb_tot_gpu_paths += pg_nb_svg_gpu_paths[indGPUFile];
+		//printf("ind path file %d name %s nb paths %d\n", indGPUFile, pg_svg_gpu_fileNames[indGPUFile].c_str(), pg_nb_svg_gpu_paths[indGPUFile]);
+	}
+
+	// /svg_gpus
+	std::getline(scenarioFin, line);
+	sstrem.clear();
+	sstrem.str(line);
+	sstrem >> ID; // string /svg_gpus
+	if (ID.compare("/svg_gpus") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
@@ -1071,6 +1145,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string palette_colors
+	if (ID.compare("palette_colors") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"palette_colors\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstrem >> nb_pen_palette_colors;
 
 	// std::cout << "line: " << line << "\n";
@@ -1099,7 +1176,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	sstrem >> ID; // string /palette_colors
 	if (ID.compare("/palette_colors") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/palettes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/palette_colors\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
 	////////////////////////////
@@ -1111,6 +1188,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
 	sstrem >> ID; // string color_presets
+	if (ID.compare("color_presets") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"color_presets\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstrem >> nb_pen_colorPresets;
 
 	// std::cout << "line: " << line << "\n";
@@ -1134,7 +1214,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	sstrem >> ID; // string /palettes
 	if (ID.compare("/color_presets") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/palettes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/color_presets\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
 	// saves the original durations
