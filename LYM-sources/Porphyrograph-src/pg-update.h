@@ -217,14 +217,6 @@ extern GLuint pg_LYMlogo_texID;
 extern cv::Mat pg_LYMlogo_image;
 #endif
 
-// svg gpu translation
-extern float				svg_translate_x;
-extern float				svg_translate_y;
-extern float				svg_translate_z;
-// svg gpu scaling
-extern float				svg_scale;
-
-
 
 #ifdef PG_SENSORS
 //////////////////////////////////////////////////////////////////////

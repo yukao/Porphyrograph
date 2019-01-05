@@ -48,10 +48,10 @@
   if ( uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2 == -1 ) {
     fprintf(stderr, "Could not bind uniform Master uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2 : %d\n" , uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2 );
   }
-  uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuLayers_path_replay_trackNo_1_path_replay_trackNo_2 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuLayers_path_replay_trackNo_1_path_replay_trackNo_2");
-  if ( uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuLayers_path_replay_trackNo_1_path_replay_trackNo_2 == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuLayers_path_replay_trackNo_1_path_replay_trackNo_2 : %d\n" , uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuLayers_path_replay_trackNo_1_path_replay_trackNo_2 );
+  uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2");
+  if ( uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2 == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2 : %d\n" , uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2 );
   }
   uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6 
     = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6");

@@ -120,15 +120,28 @@ extern int nb_shader_files;
 
 // SVG GPU
 // number of files
-extern int pg_nb_svg_gpus;
+extern int pg_nb_SvgGpu;
 // number of paths for each file
-extern int *pg_nb_svg_gpu_paths;
+extern int *pg_nb_SvgGpu_paths;
 // index of the first path of the current file
-extern int *pg_ind_first_svg_gpu_path;
+extern int *pg_ind_first_SvgGpu_path;
 // total number of paths
-extern int pg_nb_tot_gpu_paths;
+extern int pg_nb_tot_SvgGpu_paths;
 // file names
-extern string *pg_svg_gpu_fileNames;
+extern string *pg_SvgGpu_fileNames;
+// geometrical transformations
+extern float *pg_SvgGpu_Scale;
+extern float *pg_SvgGpu_Rotation;
+extern float *pg_SvgGpu_Translation_X;
+extern float *pg_SvgGpu_Translation_Y;
+// last activated SvgGpu
+extern int pg_last_activated_SvgGpu;
+// color
+enum pg_SvgGpuColors_Types { SvgGpu_nat = 0, SvgGpu_white, SvgGpu_red, SvgGpu_green };
+extern pg_SvgGpuColors_Types *pg_SvgGpu_Colors;
+// subpath display
+extern bool *pg_SvgGpu_SubPath;
+
 
 /// the params of the font file
 extern string                    font_file_encoding;

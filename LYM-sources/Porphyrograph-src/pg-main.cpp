@@ -318,10 +318,10 @@ int main(int argcMain, char **argvMain) {
 	// SVG GPU INITIALIZATION
 	const char	*SVG_GPU_programName = "nvpr_SVG_GPU";
 	initializeNVPathRender(SVG_GPU_programName);
-	SVG_path_baseID = glGenPathsNV(pg_nb_tot_gpu_paths);
-	SVG_path_fill_color = new GLint[pg_nb_tot_gpu_paths];
-	for (int indGPUFile = 0; indGPUFile < pg_nb_svg_gpus; indGPUFile++) {
-		LoadPathsToGPU("Data/" + project_name + "-data/SVG_GPUs/" + pg_svg_gpu_fileNames[indGPUFile], pg_ind_first_svg_gpu_path[indGPUFile], pg_nb_svg_gpu_paths[indGPUFile]);
+	SVG_path_baseID = glGenPathsNV(pg_nb_tot_SvgGpu_paths);
+	SVG_path_fill_color = new GLint[pg_nb_tot_SvgGpu_paths];
+	for (int indGPUFile = 0; indGPUFile < pg_nb_SvgGpu; indGPUFile++) {
+		LoadPathsToGPU("Data/" + project_name + "-data/SVG_GPUs/" + pg_SvgGpu_fileNames[indGPUFile], pg_ind_first_SvgGpu_path[indGPUFile], pg_nb_SvgGpu_paths[indGPUFile]);
 		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
 	}
 

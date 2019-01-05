@@ -70,9 +70,9 @@
 	      (GLfloat)CAParams8,
 	      (GLfloat)currentDrawingTrack,
 	      (GLfloat)currentVideoTrack );
- glUniform4f( uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuLayers_path_replay_trackNo_1_path_replay_trackNo_2 ,
+ glUniform4f( uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2 ,
 	      (GLfloat)currentPhotoTrack,
-	      (GLfloat)currentSvgGpuLayers,
+	      (GLfloat)currentSvgGpuImages,
 	      (GLfloat)path_replay_trackNo_1,
 	      (GLfloat)path_replay_trackNo_2 );
  glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6 ,

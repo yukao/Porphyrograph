@@ -342,6 +342,37 @@ enum pg_stringCommands_IDs
 	_JUCE_exit,
 	_fftLevel8,
 #endif
+	_SvgGpu_1_onOff,
+	_SvgGpu_2_onOff,
+	_SvgGpu_3_onOff,
+	_SvgGpu_4_onOff,
+	_SvgGpu_5_onOff,
+	_SvgGpu_6_onOff,
+	_SvgGpu_7_onOff,
+	_SvgGpu_8_onOff,
+	_SvgGpu_9_onOff,
+	_SvgGpu_10_onOff,
+	_SvgGpu_11_onOff,
+	_SvgGpu_12_onOff,
+	_SvgGpu_13_onOff,
+	_SvgGpu_14_onOff,
+	_SvgGpu_15_onOff,
+	_SvgGpu_16_onOff,
+	_SvgGpu_17_onOff,
+	_SvgGpu_18_onOff,
+	_SvgGpu_19_onOff,
+	_SvgGpu_20_onOff,
+	_SvgGpu_SubPath_1_onOff,
+	_SvgGpu_SubPath_2_onOff,
+	_SvgGpu_SubPath_3_onOff,
+	_SvgGpu_SubPath_4_onOff,
+	_SvgGpu_scale,
+	_SvgGpu_rotate,
+	_SvgGpu_xy,
+	_SvgGpu_nat_color,
+	_SvgGpu_white_color,
+	_SvgGpu_red_color,
+	_SvgGpu_green_color,
 };
 // Create an unordered_map of three strings (that map to strings)
 std::unordered_map<std::string, int> pg_stringCommands = {
@@ -438,6 +469,37 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "JUCE_exit", _JUCE_exit },
 	{ "fftLevel8", _fftLevel8 },
 #endif
+	{ "SvgGpu_1_onOff", _SvgGpu_1_onOff },
+	{ "SvgGpu_2_onOff", _SvgGpu_2_onOff },
+	{ "SvgGpu_3_onOff", _SvgGpu_3_onOff },
+	{ "SvgGpu_4_onOff", _SvgGpu_4_onOff },
+	{ "SvgGpu_5_onOff", _SvgGpu_5_onOff },
+	{ "SvgGpu_6_onOff", _SvgGpu_6_onOff },
+	{ "SvgGpu_7_onOff", _SvgGpu_7_onOff },
+	{ "SvgGpu_8_onOff", _SvgGpu_8_onOff },
+	{ "SvgGpu_9_onOff", _SvgGpu_9_onOff },
+	{ "SvgGpu_10_onOff", _SvgGpu_10_onOff },
+	{ "SvgGpu_11_onOff", _SvgGpu_11_onOff },
+	{ "SvgGpu_12_onOff", _SvgGpu_12_onOff },
+	{ "SvgGpu_13_onOff", _SvgGpu_13_onOff },
+	{ "SvgGpu_14_onOff", _SvgGpu_14_onOff },
+	{ "SvgGpu_15_onOff", _SvgGpu_15_onOff },
+	{ "SvgGpu_16_onOff", _SvgGpu_16_onOff },
+	{ "SvgGpu_17_onOff", _SvgGpu_17_onOff },
+	{ "SvgGpu_18_onOff", _SvgGpu_18_onOff },
+	{ "SvgGpu_19_onOff", _SvgGpu_19_onOff },
+	{ "SvgGpu_20_onOff", _SvgGpu_20_onOff },
+	{ "SvgGpu_SubPath_1_onOff", _SvgGpu_SubPath_1_onOff },
+	{ "SvgGpu_SubPath_2_onOff", _SvgGpu_SubPath_2_onOff },
+	{ "SvgGpu_SubPath_3_onOff", _SvgGpu_SubPath_3_onOff },
+	{ "SvgGpu_SubPath_4_onOff", _SvgGpu_SubPath_4_onOff },
+	{ "SvgGpu_scale", _SvgGpu_scale },
+	{ "SvgGpu_rotate", _SvgGpu_rotate },
+	{ "SvgGpu_xy", _SvgGpu_xy },
+	{ "SvgGpu_nat_color", _SvgGpu_nat_color },
+	{ "SvgGpu_white_color", _SvgGpu_white_color },
+	{ "SvgGpu_red_color", _SvgGpu_red_color },
+	{ "SvgGpu_green_color", _SvgGpu_green_color },
 };
 // if (strcmp(newCommand, CmdString[indVar]
 
@@ -2273,41 +2335,6 @@ void pg_process_key(int key) {
 		currentBGCapture = true;
 		break;
 
-		/* ------------------------------- svg gpu translation */
-	case 'x':
-		svg_translate_x -= 100.f;
-		std::cout << "svg_translate_x: " << svg_translate_x << std::endl;
-		break;
-	case 'X':
-		svg_translate_x += 100.f;
-		std::cout << "svg_translate_x: " << svg_translate_x << std::endl;
-		break;
-	case 'y':
-		svg_translate_y -= 100.f;
-		std::cout << "svg_translate_y: " << svg_translate_y << std::endl;
-		break;
-	case 'Y':
-		svg_translate_y += 100.f;
-		std::cout << "svg_translate_y: " << svg_translate_y << std::endl;
-		break;
-	case 'w':
-		svg_translate_z -= 1.f;
-		std::cout << "svg_translate_z: " << svg_translate_z << std::endl;
-		break;
-	case 'W':
-		svg_translate_z += 1.f;
-		std::cout << "svg_translate_z: " << svg_translate_z << std::endl;
-		break;
-
-		/* ------------------------------- svg gpu scale */
-	case 'u':
-		svg_scale /= 1.1f;
-		std::cout << "svg_scale: " << svg_scale << std::endl;
-		break;
-	case 'U':
-		svg_scale *= 1.1f;
-		std::cout << "svg_scale: " << svg_scale << std::endl;
-		break;
 
 	default:
 		printf("key %d is not active.\n", key);
@@ -3693,7 +3720,7 @@ void pg_aliasScript(char *command_symbol,
 		break;
 	}
 
-							// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PALETTE NO ++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
@@ -3978,10 +4005,75 @@ void pg_aliasScript(char *command_symbol,
 		}
 		break;
 	}
+
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++ SVG GPU +++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ====================================== 
+	case _SvgGpu_1_onOff: SvgGpuOnOff(1); break;
+	case _SvgGpu_2_onOff: SvgGpuOnOff(2); break;
+	case _SvgGpu_3_onOff: SvgGpuOnOff(3); break;
+	case _SvgGpu_4_onOff: SvgGpuOnOff(4); break;
+	case _SvgGpu_5_onOff: SvgGpuOnOff(5); break;
+	case _SvgGpu_6_onOff: SvgGpuOnOff(6); break;
+	case _SvgGpu_7_onOff: SvgGpuOnOff(7); break;
+	case _SvgGpu_8_onOff: SvgGpuOnOff(8); break;
+	case _SvgGpu_9_onOff: SvgGpuOnOff(9); break;
+	case _SvgGpu_10_onOff: SvgGpuOnOff(10); break;
+	case _SvgGpu_11_onOff: SvgGpuOnOff(11); break;
+	case _SvgGpu_12_onOff: SvgGpuOnOff(12); break;
+	case _SvgGpu_13_onOff: SvgGpuOnOff(13); break;
+	case _SvgGpu_14_onOff: SvgGpuOnOff(14); break;
+	case _SvgGpu_15_onOff: SvgGpuOnOff(15); break;
+	case _SvgGpu_16_onOff: SvgGpuOnOff(16); break;
+	case _SvgGpu_17_onOff: SvgGpuOnOff(17); break;
+	case _SvgGpu_18_onOff: SvgGpuOnOff(18); break;
+	case _SvgGpu_19_onOff: SvgGpuOnOff(19); break;
+	case _SvgGpu_20_onOff: SvgGpuOnOff(20); break;
+
+	case _SvgGpu_SubPath_1_onOff: SvgGpuSubPathOnOff(1); break;
+	case _SvgGpu_SubPath_2_onOff: SvgGpuSubPathOnOff(2); break;
+	case _SvgGpu_SubPath_3_onOff: SvgGpuSubPathOnOff(3); break;
+	case _SvgGpu_SubPath_4_onOff: SvgGpuSubPathOnOff(4); break;
+
+	case _SvgGpu_scale: pg_SvgGpu_Scale[pg_last_activated_SvgGpu] = arguments[0]; break;
+	case _SvgGpu_rotate: pg_SvgGpu_Rotation[pg_last_activated_SvgGpu] = arguments[0]; break;
+	case _SvgGpu_xy: 
+		pg_SvgGpu_Translation_X[pg_last_activated_SvgGpu] = arguments[0];
+		pg_SvgGpu_Translation_Y[pg_last_activated_SvgGpu] = arguments[1] * 9.0f / 16.0f;
+		break;
+	case _SvgGpu_nat_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_nat; break;
+	case _SvgGpu_white_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_white; break;
+	case _SvgGpu_red_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_red; break;
+	case _SvgGpu_green_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_green; break;
+
 	default: {
 		sprintf(ErrorStr, "Command not found (%s)!", command_symbol); ReportError(ErrorStr);
 		break;
 	}
+	}
+}
+
+void SvgGpuOnOff(int indImage) {
+	if (indImage < pg_nb_SvgGpu) {
+		bool isImageOn = currentSvgGpuImages & (1 << (indImage - 1));
+		if (isImageOn) {
+			currentSvgGpuImages = currentSvgGpuImages & ~(1 << (indImage - 1));
+		}
+		else {
+			currentSvgGpuImages |= (1 << (indImage - 1));
+			pg_last_activated_SvgGpu = indImage - 1;
+		}
+		BrokenInterpolationVar[_currentSvgGpuImages] = true;
+		*((int *)ScenarioVarPointers[_currentSvgGpuImages]) = currentSvgGpuImages;
+		sprintf(AuxString, "/SvgGpu_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	}
+}
+
+void SvgGpuSubPathOnOff(int indPath) {
+	if (indPath - 1 < 4) {
+		pg_SvgGpu_SubPath[pg_last_activated_SvgGpu * 4 + indPath - 1] 
+			= !pg_SvgGpu_SubPath[pg_last_activated_SvgGpu * 4 + indPath - 1];
 	}
 }
 

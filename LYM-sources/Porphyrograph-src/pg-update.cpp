@@ -61,10 +61,10 @@ int CAInterpolatedSubType_prev = -1;
 
 // svg gpu translation
 float				svg_translate_x = 0.f;
-float				svg_translate_y = 500.f;
+float				svg_translate_y = 0.f;
 float				svg_translate_z = 0.f;
 // svg gpu scaling
-float				svg_scale = 0.026f;
+float				svg_scale = 1.f;
 
 #ifdef PG_SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -2196,7 +2196,7 @@ void pg_ParticleRenderingPass( void ) {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	pg_Display_SVG_image(currentSvgGpuLayers);
+	pg_Display_SVG_Images(currentSvgGpuImages);
 	printOglError(5256);
 
 	////////////////////////////////////////

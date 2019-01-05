@@ -400,7 +400,7 @@ extern float				interframe_delay;
 
 void initializeNVPathRender(const char *programName);
 void LoadPathsToGPU(string fileName, int ind_first_gpu_path, int nb_gpu_paths);
-void pg_Display_SVG_image(int activeLayers);
+void pg_Display_SVG_Images(int activeFiles);
 
 #endif /* __PG_SVG_GPU_H__ */
 

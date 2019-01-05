@@ -97,15 +97,26 @@ int nb_shader_files;
 
 // SVG GPU
 // number of files
-int pg_nb_svg_gpus = 0;
+int pg_nb_SvgGpu = 0;
 // number of paths for each file
-int *pg_nb_svg_gpu_paths = NULL;
+int *pg_nb_SvgGpu_paths = NULL;
 // index of the first path of the current file
-int * pg_ind_first_svg_gpu_path = NULL;
+int * pg_ind_first_SvgGpu_path = NULL;
 // total number of paths
-int pg_nb_tot_gpu_paths = 0;
+int pg_nb_tot_SvgGpu_paths = 0;
 // file names
-string *pg_svg_gpu_fileNames = NULL;
+string *pg_SvgGpu_fileNames = NULL;
+// geometrical transformations
+float *pg_SvgGpu_Scale = NULL;
+float *pg_SvgGpu_Rotation = NULL;
+float *pg_SvgGpu_Translation_X = NULL;
+float *pg_SvgGpu_Translation_Y = NULL;
+// last activated SvgGpu
+int pg_last_activated_SvgGpu = 0;
+// color
+pg_SvgGpuColors_Types *pg_SvgGpu_Colors = NULL;
+// subpath display
+bool *pg_SvgGpu_SubPath = NULL;
 
 /////////////////////////////////////////////////////
 // Default values for global variables
@@ -1106,24 +1117,67 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_gpus\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-	sstrem >> pg_nb_svg_gpus;
-	pg_nb_svg_gpu_paths = new int[pg_nb_svg_gpus];
-	pg_ind_first_svg_gpu_path = new int[pg_nb_svg_gpus];
-	pg_svg_gpu_fileNames = new string[pg_nb_svg_gpus];
-	pg_nb_tot_gpu_paths = 0;
+	sstrem >> pg_nb_SvgGpu;
+	pg_nb_SvgGpu_paths = new int[pg_nb_SvgGpu];
+	pg_ind_first_SvgGpu_path = new int[pg_nb_SvgGpu];
+	pg_SvgGpu_fileNames = new string[pg_nb_SvgGpu];
 
-	for (int indGPUFile = 0; indGPUFile < pg_nb_svg_gpus; indGPUFile++) {
-		pg_ind_first_svg_gpu_path[indGPUFile] = pg_nb_tot_gpu_paths;
+	pg_SvgGpu_Scale = new float[pg_nb_SvgGpu];
+	for (int indFile = 0; indFile < pg_nb_SvgGpu; indFile++) {
+		pg_SvgGpu_Scale[indFile] = 0.1f;
+	}
+	pg_SvgGpu_Rotation = new float[pg_nb_SvgGpu];
+	memset((char *)pg_SvgGpu_Rotation, 0, pg_nb_SvgGpu * sizeof(float));
+	pg_SvgGpu_Translation_X = new float[pg_nb_SvgGpu];
+	memset((char *)pg_SvgGpu_Translation_X, 0, pg_nb_SvgGpu * sizeof(float));
+	pg_SvgGpu_Translation_Y = new float[pg_nb_SvgGpu];
+	memset((char *)pg_SvgGpu_Translation_Y, 0, pg_nb_SvgGpu * sizeof(float));
+	pg_SvgGpu_Colors = new pg_SvgGpuColors_Types[pg_nb_SvgGpu];
+	for (int indFile = 0; indFile < pg_nb_SvgGpu; indFile++) {
+		pg_SvgGpu_Colors[indFile] = SvgGpu_nat;
+	}
+	pg_SvgGpu_SubPath = new bool[pg_nb_SvgGpu * 4];
+	for (int indFile = 0; indFile < pg_nb_SvgGpu; indFile++) {
+		for (int indPath = 0; indPath < 4; indPath++) {
+			pg_SvgGpu_SubPath[indFile * 4 + indPath] = true;
+		}
+	}
+
+	pg_nb_tot_SvgGpu_paths = 0;
+	for (int indGPUFile = 0; indGPUFile < pg_nb_SvgGpu; indGPUFile++) {
+		pg_ind_first_SvgGpu_path[indGPUFile] = pg_nb_tot_SvgGpu_paths;
 			
 		std::getline(scenarioFin, line);
 		sstrem.clear();
 		sstrem.str(line);
 
 		sstrem >> ID; // string svg_gpu
-		sstrem >> pg_svg_gpu_fileNames[indGPUFile]; // file name
-		sstrem >> pg_nb_svg_gpu_paths[indGPUFile]; // number of paths in the file
-		pg_nb_tot_gpu_paths += pg_nb_svg_gpu_paths[indGPUFile];
-		//printf("ind path file %d name %s nb paths %d\n", indGPUFile, pg_svg_gpu_fileNames[indGPUFile].c_str(), pg_nb_svg_gpu_paths[indGPUFile]);
+		sstrem >> pg_SvgGpu_fileNames[indGPUFile]; // file name
+		sstrem >> pg_nb_SvgGpu_paths[indGPUFile]; // number of paths in the file
+		pg_nb_tot_SvgGpu_paths += pg_nb_SvgGpu_paths[indGPUFile];
+		//printf("ind path file %d name %s nb paths %d\n", indGPUFile, pg_SvgGpu_fileNames[indGPUFile].c_str(), pg_nb_SvgGpu_paths[indGPUFile]);
+		
+		// image initial geometry
+		sstrem >> pg_SvgGpu_Scale[indGPUFile];
+		sstrem >> pg_SvgGpu_Translation_X[indGPUFile];
+		sstrem >> pg_SvgGpu_Translation_Y[indGPUFile];
+		sstrem >> pg_SvgGpu_Rotation[indGPUFile];
+		sstrem >> ID;
+		if (ID.compare("nat") == 0) {
+			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_nat;
+		}
+		else if (ID.compare("white") == 0) {
+			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_white;
+		}
+		else if (ID.compare("red") == 0) {
+			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_red;
+		}
+		else if (ID.compare("green") == 0) {
+			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_green;
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect configuration file SVG GPU color \"%s\" (nat, white, red, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
 	}
 
 	// /svg_gpus

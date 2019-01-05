@@ -568,9 +568,14 @@ int stb__arial_50_usascii_a[95] = { 199,199,254,398,398,637,478,137,
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 void InterfaceInitializations(void) {
+	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
 	for (int ind = 0; ind < nb_pen_colorPresets; ind++) {
 		sprintf(AuxString, "/pen_colorPreset_name%d %s",
 			ind, pen_colorPresets_names[ind].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	}
+	// SVG GPU INTERFACE VARIABLE INITIALIZATION
+	for (int indImage = 0; indImage < pg_nb_SvgGpu; indImage++) {
+		sprintf(AuxString, "/SvgGpu_%d_onOff %d", indImage, (currentSvgGpuImages & (1 << (indImage - 1)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
 

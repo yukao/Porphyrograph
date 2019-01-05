@@ -182,11 +182,11 @@ void LoadPathsToGPU(string fileName, int ind_first_gpu_path, int nb_gpu_paths) {
 	// coiunts the number of non empty lines -> the number of paths
 	while (std::getline(pathFin, line))
 	{
-		if (!line.empty())
+		if (!line.empty() && (line.find("<path") != std::string::npos))
 			ind_gpu_path++;
 	}
 	if (ind_gpu_path != nb_gpu_paths) {
-		std::cout << "Error: " << nb_gpu_paths << " layers expected in file [" << fileName << "] !\n";
+		std::cout << "Error: " << nb_gpu_paths << " layers expected in file [" << fileName << "] (" << ind_gpu_path << ")!\n";
 		exit(0);
 	}
 
@@ -197,20 +197,28 @@ void LoadPathsToGPU(string fileName, int ind_first_gpu_path, int nb_gpu_paths) {
 	// loads the paths
 	ind_gpu_path = 0;
 	while (std::getline(pathFin, line)) {
-		if (!line.empty() && ind_gpu_path < nb_gpu_paths) {
+		if (!line.empty() && ind_gpu_path <= nb_gpu_paths) {
 			std::size_t found = std::string::npos;
-			// looks for a fill
-			found = line.find(" fill=\"#");
+			found = line.find("<path");
+			if (found != std::string::npos) {
+				pg_SVG_nb_loaded_paths++;
+				ind_gpu_path++;
+			}
+			// looks for a fill (inside a css style attribute)
+			found = line.find("fill:#");
 			if (found != std::string::npos) {
 				// copies the the fill
-				std::string lineAux = line.substr(found + strlen(" fill=\"#"));
+				std::string lineAux = line.substr(found + strlen("fill:#"));
 				// loooks for string endingx
-				found = lineAux.find("\"");
+				found = lineAux.find(";");
+				if (found == std::string::npos) {
+					found = lineAux.find("\"");
+				}
 				if (found != std::string::npos) {
 					lineAux = lineAux.substr(0, found);
 					lineAux = std::string("0x") + lineAux;
-					// printf("Fill color of path #%d: %s\n", ind_first_gpu_path + pg_SVG_nb_loaded_paths, lineAux.c_str());
-					SVG_path_fill_color[ind_first_gpu_path + pg_SVG_nb_loaded_paths] = std::stoi(lineAux, nullptr, 16);
+					//printf("Fill color of path #%d: %s\n", ind_first_gpu_path + pg_SVG_nb_loaded_paths - 1, lineAux.c_str());
+					SVG_path_fill_color[ind_first_gpu_path + pg_SVG_nb_loaded_paths - 1] = std::stoi(lineAux, nullptr, 16);
 				}
 			}
 			// looks for a path
@@ -234,17 +242,15 @@ void LoadPathsToGPU(string fileName, int ind_first_gpu_path, int nb_gpu_paths) {
 						line = line + lineAux;
 					}
 				}
-				if (pg_SVG_nb_loaded_paths == 1) {
-					// std::cout << "path: [" << line << "]\n";
-				}
+				//if (pg_SVG_nb_loaded_paths == 1) {
+					 //std::cout << "path: [" << line << "]\n";
+				//}
 
 				// const char *svg_str = "M-122.304 84.285C-122.304 84.285 -122.203 86.179 -123.027 86.16C-123.851 86.141 -140.305 38.066 -160.833 40.309C-160.833 40.309 -143.05 32.956 -122.304 84.285z";
 				size_t svg_len = line.size();
 				const char *svg_str = line.c_str();
-				glPathStringNV(SVG_path_baseID + ind_first_gpu_path + pg_SVG_nb_loaded_paths, GL_PATH_FORMAT_SVG_NV,
+				glPathStringNV(SVG_path_baseID + ind_first_gpu_path + pg_SVG_nb_loaded_paths - 1, GL_PATH_FORMAT_SVG_NV,
 					(GLsizei)svg_len, svg_str);
-				pg_SVG_nb_loaded_paths++;
-				ind_gpu_path++;
 			}
 		}
 	}
@@ -304,10 +310,23 @@ static void OpenGLBasicColors(int color) {
 	}
 }
 
-static void SVG_Display_Path(int path_layer) {
+static void SVG_Display_Path(pg_SvgGpuColors_Types color, int path_layer) {
 	// Should this path be stroked?
 	if (SVG_fill_onOff) {
-		OpenGLAnyColor(SVG_path_fill_color[(path_layer + SVG_fill_color_swap) % (pg_nb_tot_gpu_paths)]);
+		switch (color) {
+		case SvgGpu_nat:
+			OpenGLAnyColor(SVG_path_fill_color[(path_layer + SVG_fill_color_swap) % (pg_nb_tot_SvgGpu_paths)]);
+			break;
+		case SvgGpu_white:
+			glColor3ub(255, 255, 255);
+			break;
+		case SvgGpu_red:
+			glColor3ub(255, 0, 0);
+			break;
+		case SvgGpu_green:
+			glColor3ub(0, 255, 0);
+			break;
+		}
 		glStencilFillPathNV(SVG_path_baseID + path_layer, GL_COUNT_UP_NV, 0x1F);
 		glCoverFillPathNV(SVG_path_baseID + path_layer, GL_BOUNDING_BOX_NV);
 	}
@@ -326,8 +345,8 @@ static void SVG_Display_Path(int path_layer) {
 
 //////////////////////////////////////////////////
 // RENDERING GPU SVG IF SOME LAYERS ARE ACTIVE
-void pg_Display_SVG_image(int activeLayers) {
-	if (activeLayers != 0) {
+void pg_Display_SVG_Images(int activeFiles) {
+	if (activeFiles != 0) {
 		glUseProgram(shader_programme[pg_SvgGpu]);
 		//glDisable(GL_DEPTH_TEST);
 
@@ -339,25 +358,30 @@ void pg_Display_SVG_image(int activeLayers) {
 		glStencilFunc(GL_NOTEQUAL, 0, 0x1F);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
-		//glClear(GL_STENCIL_BUFFER_BIT);
 		glClear(GL_STENCIL_BUFFER_BIT);
 		glMatrixPushEXT(GL_PROJECTION); {
 			glMatrixLoadIdentityEXT(GL_PROJECTION);
 			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
-			glMatrixPushEXT(GL_MODELVIEW); {
-				glMatrixLoadIdentityEXT(GL_MODELVIEW);
-				//glClearColor(1.f, 1.f, 1.f, 1.f);
-				// glRotatef(90, 0, 1, 0);
-				glTranslatef(svg_translate_x, svg_translate_y, svg_translate_z);
-				glScalef(svg_scale, -svg_scale, 1);
-				for (int i = 0; i <= 32 - 1; i++) {
-					if (activeLayers & (1 << i)) {
-						// printf("%d ", i);
-						SVG_Display_Path(i);
+			for (int indImage = 0; indImage < std::min(pg_nb_SvgGpu, 32); indImage++) {
+				if (activeFiles & (1 << indImage)) {
+					glMatrixPushEXT(GL_MODELVIEW); {
+						glMatrixLoadIdentityEXT(GL_MODELVIEW);
+						glTranslatef(pg_SvgGpu_Translation_X[indImage], pg_SvgGpu_Translation_Y[indImage], 0);
+						glRotatef(pg_SvgGpu_Rotation[indImage], 0, 0, 1);
+						glScalef(pg_SvgGpu_Scale[indImage], pg_SvgGpu_Scale[indImage], 1);
+						for (int indPath = pg_ind_first_SvgGpu_path[indImage];
+							indPath < pg_ind_first_SvgGpu_path[indImage] + pg_nb_SvgGpu_paths[indImage];
+							indPath++) {
+							int indLocalPath = indPath - pg_ind_first_SvgGpu_path[indImage];
+							if (indLocalPath >= 4
+								|| (indLocalPath < 4 && pg_SvgGpu_SubPath[indImage * 4 + indLocalPath] == true)) {
+								SVG_Display_Path(pg_SvgGpu_Colors[indImage], indPath);
+							}
+						} 
 					}
+					glMatrixPopEXT(GL_MODELVIEW);
 				}
-				// printf("\n");
-			} glMatrixPopEXT(GL_MODELVIEW);
+			}
 		} glMatrixPopEXT(GL_PROJECTION);
 		glDisable(GL_STENCIL_TEST);
 	}

@@ -286,6 +286,8 @@ void pg_continuous_flahes( void );
 void pg_aliasScript( char * command_pattern , 
 		     char * string_argument_0 ,
 		     float arguments[MAX_OSC_ARGUMENTS] );
+void SvgGpuOnOff(int indImage);
+void SvgGpuSubPathOnOff(int indPath);
 void update_pulsed_colors(void);
 void pg_path_recording_onOff( int indPath );
 // playing track onoff
