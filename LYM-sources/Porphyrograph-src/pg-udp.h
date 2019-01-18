@@ -27,6 +27,11 @@
 #ifndef PG_UDP_H
 #define PG_UDP_H
 
+#ifndef _WIN32
+typedef int SOCKET;
+#endif // !_WIN32
+
+
 #define MAX_OSC_ARGUMENTS 24
 
 #define _SpaceChar(c) (c == ' ' || c == '\n' || c == 13 || c == '\t')

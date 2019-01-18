@@ -38,6 +38,12 @@
 #if defined (KOMPARTSD)
 #include "pg_shader_header_KompartSD.h"
 #endif
+#if defined (REUTLINGEN)
+#include "pg_shader_header_Reutlingen.h"
+#endif
+#if defined (BICHES)
+#include "pg_shader_header_Biches.h"
+#endif
 #ifdef effe
 #include "pg_shader_header_effe.h"
 #endif

@@ -32,6 +32,12 @@
 #if defined (KOMPARTSD)
 #include "pg_script_body_KompartSD.cpp"
 #endif
+#if defined (REUTLINGEN)
+#include "pg_script_body_Reutlingen.cpp"
+#endif
+#if defined (BICHES)
+#include "pg_script_body_Biches.cpp"
+#endif
 #ifdef effe
 #include "pg_script_body_effe.cpp"
 #endif
@@ -1331,7 +1337,8 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float sc
 			pthread_t drawing_thread;
 			int rc;
 			rc = pthread_create(&drawing_thread, NULL,
-				pg_initVideoMoviePlayback, (void *)movieFileName[currentlyPlaying_movieNo]);
+					    pg_initVideoMoviePlayback,
+					    (void *)(&movieFileName[currentlyPlaying_movieNo]));
 			if (rc) {
 				std::cout << "Error:unable to create thread pg_initVideoMoviePlayback" << rc << std::endl;
 				exit(-1);
@@ -3715,8 +3722,9 @@ void pg_aliasScript(char *command_symbol,
 
 	case _movie_onOff: {
 		movie_on = !movie_on;
-		sprintf(AuxString, "/movie_onOff %d", !movie_on);
+		sprintf(AuxString, "/movie_onOff %d", int(movie_on));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+		printf("Movie On/Off %d\n", int(movie_on));
 		break;
 	}
 
@@ -3951,7 +3959,8 @@ void pg_aliasScript(char *command_symbol,
 				pthread_t drawing_thread;
 				int rc;
 				rc = pthread_create(&drawing_thread, NULL,
-					pg_initVideoMoviePlayback, (void *)movieFileName[currentlyPlaying_movieNo]);
+						    pg_initVideoMoviePlayback,
+						    (void *)(&movieFileName[currentlyPlaying_movieNo]));
 				if (rc) {
 					std::cout << "Error:unable to create thread pg_initVideoMoviePlayback" << rc << std::endl;
 					exit(-1);
@@ -4036,16 +4045,31 @@ void pg_aliasScript(char *command_symbol,
 	case _SvgGpu_SubPath_3_onOff: SvgGpuSubPathOnOff(3); break;
 	case _SvgGpu_SubPath_4_onOff: SvgGpuSubPathOnOff(4); break;
 
-	case _SvgGpu_scale: pg_SvgGpu_Scale[pg_last_activated_SvgGpu] = arguments[0]; break;
-	case _SvgGpu_rotate: pg_SvgGpu_Rotation[pg_last_activated_SvgGpu] = arguments[0]; break;
+	case _SvgGpu_scale: 
+		pg_SvgGpu_Scale[pg_last_activated_SvgGpu] = arguments[0]; 
+		printf("SVG GPU scale %.2f\n", arguments[0]);
+		break;
+	case _SvgGpu_rotate: 
+		pg_SvgGpu_Rotation[pg_last_activated_SvgGpu] = arguments[0]; 
+		printf("SVG GPU rotate %.2f\n", arguments[0]);
+		break;
 	case _SvgGpu_xy: 
 		pg_SvgGpu_Translation_X[pg_last_activated_SvgGpu] = arguments[0];
 		pg_SvgGpu_Translation_Y[pg_last_activated_SvgGpu] = arguments[1] * 9.0f / 16.0f;
+		printf("SVG GPU translate %.2fx%.2f\n", arguments[0], arguments[1] * 9.0f / 16.0f);
 		break;
-	case _SvgGpu_nat_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_nat; break;
-	case _SvgGpu_white_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_white; break;
-	case _SvgGpu_red_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_red; break;
-	case _SvgGpu_green_color: pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_green; break;
+	case _SvgGpu_nat_color: 
+		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_nat; 
+		break;
+	case _SvgGpu_white_color: 
+		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_white; 
+		break;
+	case _SvgGpu_red_color: 
+		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_red; 
+		break;
+	case _SvgGpu_green_color: 
+		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_green; 
+		break;
 
 	default: {
 		sprintf(ErrorStr, "Command not found (%s)!", command_symbol); ReportError(ErrorStr);

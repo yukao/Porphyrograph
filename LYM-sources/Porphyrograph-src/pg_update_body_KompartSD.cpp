@@ -10,35 +10,37 @@
 	      (GLfloat)pixel_acc_center_1,
 	      (GLfloat)repop_BG,
 	      (GLfloat)currentDrawingTrack );
- glUniform4f( uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2 ,
+ glUniform4f( uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1 ,
 	      (GLfloat)currentVideoTrack,
 	      (GLfloat)currentPhotoTrack,
-	      (GLfloat)path_replay_trackNo_1,
-	      (GLfloat)path_replay_trackNo_2 );
- glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6 ,
+	      (GLfloat)currentSvgGpuImages,
+	      (GLfloat)path_replay_trackNo_1 );
+ glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5 ,
+	      (GLfloat)path_replay_trackNo_2,
 	      (GLfloat)path_replay_trackNo_3,
 	      (GLfloat)path_replay_trackNo_4,
-	      (GLfloat)path_replay_trackNo_5,
-	      (GLfloat)path_replay_trackNo_6 );
- glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_7_CAdecay_pulse_invertMovie_cameraCumul ,
+	      (GLfloat)path_replay_trackNo_5 );
+ glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_CAdecay_pulse_invertMovie ,
+	      (GLfloat)path_replay_trackNo_6,
 	      (GLfloat)path_replay_trackNo_7,
 	      (GLfloat)CAdecay_pulse,
-	      (GLfloat)invertMovie,
-	      (GLfloat)cameraCumul );
- glUniform4f( uniform_Update_fs_4fv_cameraThreshold_cameraGamma_video_satur_video_satur_pulse ,
+	      (GLfloat)invertMovie );
+ glUniform4f( uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur ,
+	      (GLfloat)cameraCumul,
 	      (GLfloat)cameraThreshold,
 	      (GLfloat)cameraGamma,
-	      (GLfloat)video_satur,
-	      (GLfloat)video_satur_pulse );
- glUniform4f( uniform_Update_fs_4fv_cameraWeight_movieWeight_cameraSobel_movieSobel ,
+	      (GLfloat)video_satur );
+ glUniform4f( uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel ,
+	      (GLfloat)video_satur_pulse,
 	      (GLfloat)cameraWeight,
 	      (GLfloat)movieWeight,
-	      (GLfloat)cameraSobel,
-	      (GLfloat)movieSobel );
- glUniform4f( uniform_Update_fs_4fv_BGSubtr_CAstep_CAcolorSpread_freeze ,
+	      (GLfloat)cameraSobel );
+ glUniform4f( uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread ,
+	      (GLfloat)movieSobel,
 	      (GLfloat)BGSubtr,
 	      (GLfloat)CAstep,
-	      (GLfloat)CAcolorSpread,
+	      (GLfloat)CAcolorSpread );
+ glUniform1f( uniform_Update_fs_1fv_freeze ,
 	      (GLfloat)freeze );
 
  glUseProgram(shader_programme[pg_shader_Mixing]);

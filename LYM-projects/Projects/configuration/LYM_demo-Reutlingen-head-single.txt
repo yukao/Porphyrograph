@@ -33,10 +33,10 @@ VERBATIM
 TYPE	string																	
 ID	id																	
 filename	LYM_ParticleAnimation_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_Update_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_ParticleSplat_demo	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
-filename	LYM_Mixing_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_Master_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_Update_Reutlingen	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ParticleSplat_Reutlingen	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
+filename	LYM_Mixing_Reutlingen	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_Master_Reutlingen	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Sensor_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		

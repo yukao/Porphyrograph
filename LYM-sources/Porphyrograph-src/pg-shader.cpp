@@ -36,6 +36,12 @@
 #if defined (KOMPARTSD)
 #include "pg_shader_body_decl_KompartSD.cpp"
 #endif
+#if defined (REUTLINGEN)
+#include "pg_shader_body_decl_Reutlingen.cpp"
+#endif
+#if defined (BICHES)
+#include "pg_shader_body_decl_Biches.cpp"
+#endif
 #ifdef effe
 #include "pg_shader_body_decl_effe.cpp"
 #endif
@@ -538,6 +544,12 @@ void pg_loadAllShaders(void) {
 #endif
 #if defined (KOMPARTSD)
 #include "pg_shader_body_bind_KompartSD.cpp"
+#endif
+#if defined (REUTLINGEN)
+#include "pg_shader_body_bind_Reutlingen.cpp"
+#endif
+#if defined (BICHES)
+#include "pg_shader_body_bind_Biches.cpp"
 #endif
 #ifdef effe
 #include "pg_shader_body_bind_effe.cpp"

@@ -125,6 +125,7 @@ bool  tracksSync          ;
 int   currentDrawingTrack ;
 int   currentVideoTrack   ;
 int   currentPhotoTrack   ;
+int   currentSvgGpuImages ;
 float trkDecay_sign_0     ;
 float trkDecay_0          ;
 float CAMixingWeight      ;
@@ -292,6 +293,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_bool,
+    _pg_int,
     _pg_int,
     _pg_int,
     _pg_int,
@@ -466,6 +468,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&currentDrawingTrack,
    (void *)&currentVideoTrack,
    (void *)&currentPhotoTrack,
+   (void *)&currentSvgGpuImages,
    (void *)&trkDecay_sign_0,
    (void *)&trkDecay_0,
    (void *)&CAMixingWeight,
@@ -668,6 +671,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
+   NULL,
    &path_replay_trackNo_1_callBack,
    &path_replay_trackNo_2_callBack,
    &path_replay_trackNo_3_callBack,
@@ -833,6 +837,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
+  (char *)"currentSvgGpuImages",
   (char *)"trkDecay_sign_0",
   (char *)"trkDecay_0",
   (char *)"CAMixingWeight",
@@ -1004,6 +1009,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
+  (char *)"currentSvgGpuImages",
   (char *)"trkDecay_sign_0",
   (char *)"trkDecay_0",
   (char *)"CAMixingWeight",
@@ -1105,8 +1111,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"mute_screen",
   (char *)"fft_scale",
 };
-char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*************k**Hh*************cII*?************p******:****d*****************************iiII*****************************************************************";
-char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$P$*****K**Gg*****************!************Q*******000*D*****************************II*******************************************************************";
+char CmdCharMinus[_MaxInterpVarIDs+1] = "&rkoo****a*************k**Hh*************cII*?************p******:*****d*****************************iiII*****************************************************************";
+char CmdCharPlus[_MaxInterpVarIDs+1] = "mRKOO****A*P**$$P$*****K**Gg*****************!************Q*******0000*D*****************************II*******************************************************************";
 float StepMinus[_MaxInterpVarIDs] = { 
   -1.000000F,
   -1.000000F,
@@ -1174,6 +1180,7 @@ float StepMinus[_MaxInterpVarIDs] = {
   -1.000000F,
   -1.000000F,
   0.000000F,
+  -1.000000F,
   -1.000000F,
   -1.000000F,
   -1.000000F,
@@ -1326,6 +1333,7 @@ float StepPlus[_MaxInterpVarIDs] = {
   1.000000F,
   0.100000F,
   0.100000F,
+  1.000000F,
   1.000000F,
   1.000000F,
   1.000000F,
@@ -1519,6 +1527,7 @@ float MinValues[_MaxInterpVarIDs] = {
   0.000000F,
   0.000000F,
   0.000000F,
+  0.000000F,
   -1.000000F,
   -9999.000000F,
   0.000000F,
@@ -1687,6 +1696,7 @@ float MaxValues[_MaxInterpVarIDs] = {
   9999.000000F,
   9999.000000F,
   1.000000F,
+  2.000000F,
   2.000000F,
   2.000000F,
   2.000000F,

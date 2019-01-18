@@ -128,6 +128,7 @@
 #else
 #include <unistd.h>
 #define GetCurrentDir getcwd
+#include <sys/stat.h>
 #endif
 
 #define OPENCV_3
@@ -160,7 +161,9 @@ using std::cerr;
 using std::ifstream;
 #include <fstream>
 #include <GL/glew.h>
+#ifdef _WIN32
 #include <GL/wglew.h>
+#endif
 
 #define  GL_GLEXT_LEGACY
 
@@ -170,7 +173,7 @@ using std::ifstream;
 #endif
 #endif // _WIN32
 
-#if defined (TVW) || defined (KOMPARTSD)
+#if defined (TVW) || defined (KOMPARTSD) // || defined (REUTLINGEN)
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #elif defined (GN) || defined (MALAUSSENA) || defined (CRITON)
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
@@ -181,11 +184,11 @@ using std::ifstream;
 #define PG_NB_TRACKS 3   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #endif
 
-#if !defined (TVW) && !defined (KOMPARTSD)
+#if !defined (TVW) && !defined (KOMPARTSD) && !defined (REUTLINGEN) && !defined (BICHES)
 #define PG_WITH_PHOTO_DIAPORAMA
 #endif
 
-#if !defined (KOMPARTSD)
+#if !defined (KOMPARTSD) && !defined(REUTLINGEN) && !defined(BICHES)
 #define PG_WITH_BLUR
 #endif
 
@@ -286,7 +289,7 @@ using std::ifstream;
 #undef BLURRED_SPLAT_PARTICLES_TEXTURED
 #elif defined (DASEIN)
 #define CURVE_PARTICLES
-#elif defined (effe) || defined (DEMO) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA)
+#elif defined (effe) || defined (DEMO) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA) || defined (REUTLINGEN) || defined (BICHES)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -317,7 +320,7 @@ using std::ifstream;
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined (DEMO) || defined (GN)
+#if defined (DEMO) || defined (GN) || defined (REUTLINGEN) || defined (BICHES)
 #define PG_SENSORS
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
@@ -369,6 +372,12 @@ using std::ifstream;
 #endif
 #if defined (KOMPARTSD)
 #include "pg_script_header_KompartSD.h"
+#endif
+#if defined (REUTLINGEN)
+#include "pg_script_header_Reutlingen.h"
+#endif
+#if defined (BICHES)
+#include "pg_script_header_Biches.h"
 #endif
 #ifdef effe
 #include "pg_script_header_effe.h"

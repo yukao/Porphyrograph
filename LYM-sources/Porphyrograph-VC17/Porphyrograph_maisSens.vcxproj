@@ -11,33 +11,33 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-all_include.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-conf.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-draw.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-main.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-mesh.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-script.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-shader.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-stroke.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-udp.h" />
-    <ClInclude Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg_script_header.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-all_include.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-conf.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-draw.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-main.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-mesh.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-script.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-shader.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-stroke.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-udp.h" />
+    <ClInclude Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg_script_header.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-conf.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-draw.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-main.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-mesh.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-script.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-shader.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-stroke.cpp" />
-    <ClCompile Include="..\..\LYM\MaisonSensible\Porphyrograph-maisSens-src\pg-udp.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-conf.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-draw.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-main.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-mesh.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-script.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-shader.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-stroke.cpp" />
+    <ClCompile Include="..\SourcesBerfore18\Porphyrograph-maisSens-src\pg-udp.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{55B59A95-21FD-40D2-9F6F-AE7200A9E3A3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Porphyrograph</RootNamespace>
     <ProjectName>Porphyrograph_maisSens</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -83,7 +83,7 @@
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;VC_HAVE_CG;VC_HAVE_FFMPEG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>G:\Program Files\opencv\build\include;G:\Program Files\glew-1.10.0-win32\glew-1.10.0\include;G:\Program Files\glfw-3.0.4\include;G:\Program Files\glm\glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;G:\Program Files\glfw-3.0.4\include;G:\Program Files\glm\glm</AdditionalIncludeDirectories>
       <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core320.lib;opencv_imgproc320.lib;opencv_imgcodecs320.lib;opencv_highgui320.lib;opencv_video320.lib;opencv_videoio320.lib;opencv_calib3d320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core341.lib;opencv_imgproc341.lib;opencv_calib3d341.lib;opencv_imgcodecs341.lib;opencv_highgui341.lib;opencv_video341.lib;opencv_videoio341.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\share\freeglut-wacom\VC17\lib\Release;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Release;..\share\freeglut-3.0.0\VC15\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>

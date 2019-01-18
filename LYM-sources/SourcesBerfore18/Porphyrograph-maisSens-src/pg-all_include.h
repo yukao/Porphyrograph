@@ -145,16 +145,20 @@
 // \}
 
 
-// #define OPENCV_3
+#define OPENCV_3
+
 #ifndef OPENCV_3
 // opencv include files
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #else
 // opencv include files
+#include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/calib3d.hpp>
 #endif
+using namespace cv;
 
 #include <list>
 #include <vector>
@@ -174,8 +178,8 @@ using std::ifstream;
 
 #ifdef _WIN32
 	#ifdef _VISUAL_STUDIO
-	     #include "G:/home-win/Porphyrograph/share/freeglut-2.8.1/include/GL/freeglut.h"
-		 // #include "C:/Users/christian/Desktop/MaisonSensibleLogiciels/maisonSensible-libraries/freeglut-2.8.1/include/GL/freeglut.h"
+#include "../../share/freeglut-3.0.0/include/GL/freeglut.h"
+ // #include "C:/Users/christian/Desktop/MaisonSensibleLogiciels/maisonSensible-libraries/freeglut-2.8.1/include/GL/freeglut.h"
 	#endif // _VISUAL_STUDIO
 #else // LINUX
 

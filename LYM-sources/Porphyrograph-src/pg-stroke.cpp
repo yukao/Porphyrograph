@@ -263,8 +263,8 @@ void LoadPathFromXML(char *pathString, int indPath,
 				nbMovePoints++;
 				// if the move is to a point different from the preceding current point, an out of frame
 				// point is added so that the rendering in porphyrograph jumps to the new current point
-				if (precedingCurrentPoint[0] != currentPoint[0]
-					|| precedingCurrentPoint[1] != currentPoint[1]
+				if ((precedingCurrentPoint[0] != currentPoint[0]
+				     || precedingCurrentPoint[1] != currentPoint[1])
 					&& (*indCurve) < max_mouse_recording_frames) {
 					pg_Path_Color_r[indPath][*indCurve] = path_r_color;
 					pg_Path_Color_g[indPath][*indCurve] = path_g_color;

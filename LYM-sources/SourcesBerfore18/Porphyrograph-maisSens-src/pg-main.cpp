@@ -222,6 +222,7 @@ void initGlutWindows( void ) {
 		      window_height );
   glutInitWindowPosition( window_x,
 			  window_y );
+  printf("window %dx%d offset %dx%d\n", window_width, window_height, window_x, window_y);
   
   glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_BORDERLESS ); // 
   // glutInitDisplayString("rgb stencil~4 double samples~8");

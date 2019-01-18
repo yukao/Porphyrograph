@@ -595,7 +595,7 @@ void particle_out( void ) {
                     - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+      part_acceleration += dvec2((pixelTextureCoordinatesXY) - pixel_acc_center);
     }
 #endif
 #if PG_NB_PATHS == 7
@@ -607,7 +607,7 @@ void particle_out( void ) {
                     - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+      part_acceleration += dvec2((pixelTextureCoordinatesXY) - pixel_acc_center);
    }
 #endif
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
@@ -621,7 +621,6 @@ void particle_out( void ) {
 #endif
 #if PG_NB_PATHS == 7
     else if( indPath >= 4 && path_repulse47[indPath - 4] ) {
-      // reaches for pen position
       // escapes from pen position
       part_acceleration 
         = dvec2(out_position_speed_particle.xy 

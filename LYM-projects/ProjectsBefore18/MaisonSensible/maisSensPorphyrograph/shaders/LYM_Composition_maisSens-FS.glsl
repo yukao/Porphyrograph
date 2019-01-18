@@ -113,5 +113,5 @@ void main() {
       && abs(height - decalCoords.y - mouse_y) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
-  // outColor0.rgb = outColor0.rgb *0.01 + 0.9 * bg_color.rgb;
+
 }

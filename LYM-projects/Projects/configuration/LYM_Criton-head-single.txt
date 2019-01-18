@@ -13,12 +13,13 @@ SVG	1000000	90000	600	pic-LYM-Criton	snapshots/pic_Criton/
 PNG	1000000	90000	600	pic-LYM-Criton	snapshots/pic_Criton/													
 JPG	1	90000	600	pic-LYM-Criton	snapshots/pic_Criton/													
 /rendering_files																		
-udp_local_server	2																	
+udp_local_server	3																	
 VERBATIM																		
 TYPE	string	int	string	bool	int	bool	bool											
 ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal											
-server	udp_SoundJUCE_receive	9001	OSC	0	300	1	1											
-server	udp_TouchOSC_receive	9000	OSC	0	300	0	1											
+server	udp_SoundJUCE_receive	9001	OSC	1	300	1	1											
+server	udp_TouchOSC_receive	9000	OSC	1	300	0	1											
+server	udd_Score_receive	9996	OSC	1	300	0	1											
 /udp_local_server																		
 udp_remote_client	2																	
 VERBATIM																		
@@ -27,12 +28,13 @@ ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_dep
 client	udp_SoundJUCE_send	127.0.0.1	8001	OSC	0	300	1											
 client	udp_TouchOSC_send	192.168.43.1	8000	OSC	0	300	1											
 /udp_remote_client																		
-shader_files	3																	
+shader_files	4																	
 VERBATIM																		
 TYPE	string																	
 ID	udp_remote_client																	
 filename	LYM_Update_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Mixing_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

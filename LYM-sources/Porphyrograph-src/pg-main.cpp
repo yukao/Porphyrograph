@@ -305,7 +305,8 @@ int main(int argcMain, char **argvMain) {
 		pthread_t drawing_thread;
 		int rc;
 		rc = pthread_create(&drawing_thread, NULL,
-			pg_initVideoMoviePlayback, (void *)movieFileName[currentlyPlaying_movieNo]);
+				    pg_initVideoMoviePlayback,
+				    (void *)(&movieFileName[currentlyPlaying_movieNo]));
 		if (rc) {
 			std::cout << "Error:unable to create thread pg_initVideoMoviePlayback" << rc << std::endl;
 			exit(-1);
@@ -366,7 +367,7 @@ void initGlutWindows( void ) {
     fprintf(stderr, "Error: OpenGL Extension Wrangler (GLEW) failed to initialize %s\n", glewGetErrorString(err));
   }
   fprintf(stdout, "GLEW version %s\n", glewGetString(GLEW_VERSION));
-  boolean hasDSA = glewIsSupported("GL_EXT_direct_state_access");
+  bool hasDSA = glewIsSupported("GL_EXT_direct_state_access");
   if (!hasDSA) {
 	  fprintf(stderr, "Error: OpenGL implementation doesn't support GL_EXT_direct_state_access\n");
   }

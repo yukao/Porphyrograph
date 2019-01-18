@@ -141,6 +141,7 @@ extern int currentlyPlaying_trackNo;
 
 // movie playing
 extern int currentlyPlaying_movieNo;
+extern bool movie_on;
 
 // pen preset
 extern int current_pen_colorPreset;

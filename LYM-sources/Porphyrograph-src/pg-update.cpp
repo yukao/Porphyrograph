@@ -881,6 +881,7 @@ void pg_update_camera_and_video_frame(void) {
 	if (currentVideoTrack >= 0 && movieCaptFreq > 0
 		&& currentlyPlaying_movieNo >= 0
 		&& !is_movieLooping && !is_movieLoading
+		&& movie_on
 		) {
 		if (lastFrameCaptureTime < 0.f) { // first capture
 			lastFrameCaptureTime = CurrentClockTime - (1.0f / movieCaptFreq);
@@ -985,6 +986,12 @@ void pg_update_shader_uniforms(void) {
 #endif
 #if defined (KOMPARTSD)
 #include "pg_update_body_KompartSD.cpp"
+#endif
+#if defined (REUTLINGEN)
+#include "pg_update_body_Reutlingen.cpp"
+#endif
+#if defined (BICHES)
+#include "pg_update_body_Biches.cpp"
 #endif
 #ifdef effe
 #include "pg_update_body_effe.cpp"
@@ -1597,12 +1604,16 @@ void pg_update_shader_uniforms(void) {
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 	glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius,
 #ifdef PG_NB_CA_TYPES
-		GLfloat(CAInterpolatedType),GLfloat(CAInterpolatedSubType),
+		GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 #else
 		0.f, 0.f,
 #endif
+#if defined (PG_WITH_BLUR)
 		(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
-	// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
+#else
+		0.f, 0.f);
+#endif
+		// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 	// printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 #endif
 

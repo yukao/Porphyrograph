@@ -176,7 +176,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 #ifdef _WIN32
 	nError = CreateDirectoryA(snapshots_dir_path_name.c_str(), NULL); // can be used on Windows
 #else 
-	nError = mkdir(snapshots_dir_path_name.c_str(), nMode); // can be used on non-Windows
+	nError = mkdir(snapshots_dir_path_name.c_str(),  S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // can be used on non-Windows
 #endif
 	if (nError != 0) {
 		// handle your error here
