@@ -348,37 +348,37 @@ enum pg_stringCommands_IDs
 	_JUCE_exit,
 	_fftLevel8,
 #endif
-	_SvgGpu_1_onOff,
-	_SvgGpu_2_onOff,
-	_SvgGpu_3_onOff,
-	_SvgGpu_4_onOff,
-	_SvgGpu_5_onOff,
-	_SvgGpu_6_onOff,
-	_SvgGpu_7_onOff,
-	_SvgGpu_8_onOff,
-	_SvgGpu_9_onOff,
-	_SvgGpu_10_onOff,
-	_SvgGpu_11_onOff,
-	_SvgGpu_12_onOff,
-	_SvgGpu_13_onOff,
-	_SvgGpu_14_onOff,
-	_SvgGpu_15_onOff,
-	_SvgGpu_16_onOff,
-	_SvgGpu_17_onOff,
-	_SvgGpu_18_onOff,
-	_SvgGpu_19_onOff,
-	_SvgGpu_20_onOff,
-	_SvgGpu_SubPath_1_onOff,
-	_SvgGpu_SubPath_2_onOff,
-	_SvgGpu_SubPath_3_onOff,
-	_SvgGpu_SubPath_4_onOff,
-	_SvgGpu_scale,
-	_SvgGpu_rotate,
-	_SvgGpu_xy,
-	_SvgGpu_nat_color,
-	_SvgGpu_white_color,
-	_SvgGpu_red_color,
-	_SvgGpu_green_color,
+	_ClipArt_1_onOff,
+	_ClipArt_2_onOff,
+	_ClipArt_3_onOff,
+	_ClipArt_4_onOff,
+	_ClipArt_5_onOff,
+	_ClipArt_6_onOff,
+	_ClipArt_7_onOff,
+	_ClipArt_8_onOff,
+	_ClipArt_9_onOff,
+	_ClipArt_10_onOff,
+	_ClipArt_11_onOff,
+	_ClipArt_12_onOff,
+	_ClipArt_13_onOff,
+	_ClipArt_14_onOff,
+	_ClipArt_15_onOff,
+	_ClipArt_16_onOff,
+	_ClipArt_17_onOff,
+	_ClipArt_18_onOff,
+	_ClipArt_19_onOff,
+	_ClipArt_20_onOff,
+	_ClipArt_SubPath_1_onOff,
+	_ClipArt_SubPath_2_onOff,
+	_ClipArt_SubPath_3_onOff,
+	_ClipArt_SubPath_4_onOff,
+	_ClipArt_scale,
+	_ClipArt_rotate,
+	_ClipArt_xy,
+	_ClipArt_nat_color,
+	_ClipArt_white_color,
+	_ClipArt_red_color,
+	_ClipArt_green_color,
 };
 // Create an unordered_map of three strings (that map to strings)
 std::unordered_map<std::string, int> pg_stringCommands = {
@@ -475,37 +475,37 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "JUCE_exit", _JUCE_exit },
 	{ "fftLevel8", _fftLevel8 },
 #endif
-	{ "SvgGpu_1_onOff", _SvgGpu_1_onOff },
-	{ "SvgGpu_2_onOff", _SvgGpu_2_onOff },
-	{ "SvgGpu_3_onOff", _SvgGpu_3_onOff },
-	{ "SvgGpu_4_onOff", _SvgGpu_4_onOff },
-	{ "SvgGpu_5_onOff", _SvgGpu_5_onOff },
-	{ "SvgGpu_6_onOff", _SvgGpu_6_onOff },
-	{ "SvgGpu_7_onOff", _SvgGpu_7_onOff },
-	{ "SvgGpu_8_onOff", _SvgGpu_8_onOff },
-	{ "SvgGpu_9_onOff", _SvgGpu_9_onOff },
-	{ "SvgGpu_10_onOff", _SvgGpu_10_onOff },
-	{ "SvgGpu_11_onOff", _SvgGpu_11_onOff },
-	{ "SvgGpu_12_onOff", _SvgGpu_12_onOff },
-	{ "SvgGpu_13_onOff", _SvgGpu_13_onOff },
-	{ "SvgGpu_14_onOff", _SvgGpu_14_onOff },
-	{ "SvgGpu_15_onOff", _SvgGpu_15_onOff },
-	{ "SvgGpu_16_onOff", _SvgGpu_16_onOff },
-	{ "SvgGpu_17_onOff", _SvgGpu_17_onOff },
-	{ "SvgGpu_18_onOff", _SvgGpu_18_onOff },
-	{ "SvgGpu_19_onOff", _SvgGpu_19_onOff },
-	{ "SvgGpu_20_onOff", _SvgGpu_20_onOff },
-	{ "SvgGpu_SubPath_1_onOff", _SvgGpu_SubPath_1_onOff },
-	{ "SvgGpu_SubPath_2_onOff", _SvgGpu_SubPath_2_onOff },
-	{ "SvgGpu_SubPath_3_onOff", _SvgGpu_SubPath_3_onOff },
-	{ "SvgGpu_SubPath_4_onOff", _SvgGpu_SubPath_4_onOff },
-	{ "SvgGpu_scale", _SvgGpu_scale },
-	{ "SvgGpu_rotate", _SvgGpu_rotate },
-	{ "SvgGpu_xy", _SvgGpu_xy },
-	{ "SvgGpu_nat_color", _SvgGpu_nat_color },
-	{ "SvgGpu_white_color", _SvgGpu_white_color },
-	{ "SvgGpu_red_color", _SvgGpu_red_color },
-	{ "SvgGpu_green_color", _SvgGpu_green_color },
+	{ "ClipArt_1_onOff", _ClipArt_1_onOff },
+	{ "ClipArt_2_onOff", _ClipArt_2_onOff },
+	{ "ClipArt_3_onOff", _ClipArt_3_onOff },
+	{ "ClipArt_4_onOff", _ClipArt_4_onOff },
+	{ "ClipArt_5_onOff", _ClipArt_5_onOff },
+	{ "ClipArt_6_onOff", _ClipArt_6_onOff },
+	{ "ClipArt_7_onOff", _ClipArt_7_onOff },
+	{ "ClipArt_8_onOff", _ClipArt_8_onOff },
+	{ "ClipArt_9_onOff", _ClipArt_9_onOff },
+	{ "ClipArt_10_onOff", _ClipArt_10_onOff },
+	{ "ClipArt_11_onOff", _ClipArt_11_onOff },
+	{ "ClipArt_12_onOff", _ClipArt_12_onOff },
+	{ "ClipArt_13_onOff", _ClipArt_13_onOff },
+	{ "ClipArt_14_onOff", _ClipArt_14_onOff },
+	{ "ClipArt_15_onOff", _ClipArt_15_onOff },
+	{ "ClipArt_16_onOff", _ClipArt_16_onOff },
+	{ "ClipArt_17_onOff", _ClipArt_17_onOff },
+	{ "ClipArt_18_onOff", _ClipArt_18_onOff },
+	{ "ClipArt_19_onOff", _ClipArt_19_onOff },
+	{ "ClipArt_20_onOff", _ClipArt_20_onOff },
+	{ "ClipArt_SubPath_1_onOff", _ClipArt_SubPath_1_onOff },
+	{ "ClipArt_SubPath_2_onOff", _ClipArt_SubPath_2_onOff },
+	{ "ClipArt_SubPath_3_onOff", _ClipArt_SubPath_3_onOff },
+	{ "ClipArt_SubPath_4_onOff", _ClipArt_SubPath_4_onOff },
+	{ "ClipArt_scale", _ClipArt_scale },
+	{ "ClipArt_rotate", _ClipArt_rotate },
+	{ "ClipArt_xy", _ClipArt_xy },
+	{ "ClipArt_nat_color", _ClipArt_nat_color },
+	{ "ClipArt_white_color", _ClipArt_white_color },
+	{ "ClipArt_red_color", _ClipArt_red_color },
+	{ "ClipArt_green_color", _ClipArt_green_color },
 };
 // if (strcmp(newCommand, CmdString[indVar]
 
@@ -827,7 +827,7 @@ void pg_initializationScript(void) {
 		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		isBegin[indPath] = false;
 		isEnd[indPath] = false;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
@@ -844,7 +844,7 @@ void pg_initializationScript(void) {
 		paths_RadiusX[indPath] = 0.0F;
 		paths_RadiusY[indPath] = 0.0F;
 	}
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 	for (int ind = 0; ind < 4; ind++) {
 		path0_next_in_hull[ind] = -1;
 	}
@@ -2140,8 +2140,20 @@ void pg_update_scenario(void) {
 	for (int ind_scene = 0; ind_scene < pg_NbScenes; ind_scene++) {
 		// printf( "time %.2f beg %.2f end %.2f\n" , elapsed_time_from_start ,  Scenario[ind_scene].scene_initial_time ,  Scenario[ind_scene].scene_final_time );
 		// current scene found
-		if (elapsed_time_from_start >= Scenario[ind_scene].scene_initial_time
-			&& elapsed_time_from_start < Scenario[ind_scene].scene_final_time) {
+		if( (elapsed_time_from_start >= Scenario[ind_scene].scene_initial_time
+			&& elapsed_time_from_start < Scenario[ind_scene].scene_final_time) 
+			|| (pg_CurrentScene == pg_NbScenes - 1 && ind_scene == pg_NbScenes - 1
+				&& elapsed_time_from_start > Scenario[pg_NbScenes - 1].scene_final_time) ) {
+			// loop at the end of the scenario
+			if (pg_CurrentScene == pg_NbScenes - 1 && ind_scene == pg_NbScenes - 1
+				&& elapsed_time_from_start > Scenario[pg_NbScenes - 1].scene_final_time) {
+				ind_scene = 0;
+
+				// restarts scenarios
+				restoreInitialTimesAndDurations();
+				InitialScenarioTime = CurrentClockTime - Scenario[0].scene_initial_time;
+				AbsoluteInitialScenarioTime = CurrentClockTime - Scenario[0].scene_initial_time;
+			}
 			// the current scene is finished 
 			if (ind_scene != pg_CurrentScene) {
 				// a new scene is launched only if Scenario[pg_CurrentScene].scene_change_when_ends
@@ -2331,10 +2343,10 @@ void pg_process_key(int key) {
 
 		/* ------------------------------- snapshot */
 	case 's':
-		pg_draw_scene(_Jpg);
+		pg_draw_scene(_Jpg, false);
 		break;
 	case 'S':
-		pg_draw_scene(_Svg);
+		pg_draw_scene(_Svg, false);
 		break;
 
 		/* ------------------------------- current video background capture */
@@ -4019,56 +4031,56 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++ SVG GPU +++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-	case _SvgGpu_1_onOff: SvgGpuOnOff(1); break;
-	case _SvgGpu_2_onOff: SvgGpuOnOff(2); break;
-	case _SvgGpu_3_onOff: SvgGpuOnOff(3); break;
-	case _SvgGpu_4_onOff: SvgGpuOnOff(4); break;
-	case _SvgGpu_5_onOff: SvgGpuOnOff(5); break;
-	case _SvgGpu_6_onOff: SvgGpuOnOff(6); break;
-	case _SvgGpu_7_onOff: SvgGpuOnOff(7); break;
-	case _SvgGpu_8_onOff: SvgGpuOnOff(8); break;
-	case _SvgGpu_9_onOff: SvgGpuOnOff(9); break;
-	case _SvgGpu_10_onOff: SvgGpuOnOff(10); break;
-	case _SvgGpu_11_onOff: SvgGpuOnOff(11); break;
-	case _SvgGpu_12_onOff: SvgGpuOnOff(12); break;
-	case _SvgGpu_13_onOff: SvgGpuOnOff(13); break;
-	case _SvgGpu_14_onOff: SvgGpuOnOff(14); break;
-	case _SvgGpu_15_onOff: SvgGpuOnOff(15); break;
-	case _SvgGpu_16_onOff: SvgGpuOnOff(16); break;
-	case _SvgGpu_17_onOff: SvgGpuOnOff(17); break;
-	case _SvgGpu_18_onOff: SvgGpuOnOff(18); break;
-	case _SvgGpu_19_onOff: SvgGpuOnOff(19); break;
-	case _SvgGpu_20_onOff: SvgGpuOnOff(20); break;
+	case _ClipArt_1_onOff: ClipArt_OnOff(1); break;
+	case _ClipArt_2_onOff: ClipArt_OnOff(2); break;
+	case _ClipArt_3_onOff: ClipArt_OnOff(3); break;
+	case _ClipArt_4_onOff: ClipArt_OnOff(4); break;
+	case _ClipArt_5_onOff: ClipArt_OnOff(5); break;
+	case _ClipArt_6_onOff: ClipArt_OnOff(6); break;
+	case _ClipArt_7_onOff: ClipArt_OnOff(7); break;
+	case _ClipArt_8_onOff: ClipArt_OnOff(8); break;
+	case _ClipArt_9_onOff: ClipArt_OnOff(9); break;
+	case _ClipArt_10_onOff: ClipArt_OnOff(10); break;
+	case _ClipArt_11_onOff: ClipArt_OnOff(11); break;
+	case _ClipArt_12_onOff: ClipArt_OnOff(12); break;
+	case _ClipArt_13_onOff: ClipArt_OnOff(13); break;
+	case _ClipArt_14_onOff: ClipArt_OnOff(14); break;
+	case _ClipArt_15_onOff: ClipArt_OnOff(15); break;
+	case _ClipArt_16_onOff: ClipArt_OnOff(16); break;
+	case _ClipArt_17_onOff: ClipArt_OnOff(17); break;
+	case _ClipArt_18_onOff: ClipArt_OnOff(18); break;
+	case _ClipArt_19_onOff: ClipArt_OnOff(19); break;
+	case _ClipArt_20_onOff: ClipArt_OnOff(20); break;
 
-	case _SvgGpu_SubPath_1_onOff: SvgGpuSubPathOnOff(1); break;
-	case _SvgGpu_SubPath_2_onOff: SvgGpuSubPathOnOff(2); break;
-	case _SvgGpu_SubPath_3_onOff: SvgGpuSubPathOnOff(3); break;
-	case _SvgGpu_SubPath_4_onOff: SvgGpuSubPathOnOff(4); break;
+	case _ClipArt_SubPath_1_onOff: ClipArt_SubPathOnOff(1); break;
+	case _ClipArt_SubPath_2_onOff: ClipArt_SubPathOnOff(2); break;
+	case _ClipArt_SubPath_3_onOff: ClipArt_SubPathOnOff(3); break;
+	case _ClipArt_SubPath_4_onOff: ClipArt_SubPathOnOff(4); break;
 
-	case _SvgGpu_scale: 
-		pg_SvgGpu_Scale[pg_last_activated_SvgGpu] = arguments[0]; 
+	case _ClipArt_scale: 
+		pg_ClipArt_Scale[pg_last_activated_ClipArt] = arguments[0]; 
 		printf("SVG GPU scale %.2f\n", arguments[0]);
 		break;
-	case _SvgGpu_rotate: 
-		pg_SvgGpu_Rotation[pg_last_activated_SvgGpu] = arguments[0]; 
+	case _ClipArt_rotate: 
+		pg_ClipArt_Rotation[pg_last_activated_ClipArt] = arguments[0]; 
 		printf("SVG GPU rotate %.2f\n", arguments[0]);
 		break;
-	case _SvgGpu_xy: 
-		pg_SvgGpu_Translation_X[pg_last_activated_SvgGpu] = arguments[0];
-		pg_SvgGpu_Translation_Y[pg_last_activated_SvgGpu] = arguments[1] * 9.0f / 16.0f;
+	case _ClipArt_xy: 
+		pg_ClipArt_Translation_X[pg_last_activated_ClipArt] = arguments[0];
+		pg_ClipArt_Translation_Y[pg_last_activated_ClipArt] = arguments[1] * 9.0f / 16.0f;
 		printf("SVG GPU translate %.2fx%.2f\n", arguments[0], arguments[1] * 9.0f / 16.0f);
 		break;
-	case _SvgGpu_nat_color: 
-		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_nat; 
+	case _ClipArt_nat_color: 
+		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_nat; 
 		break;
-	case _SvgGpu_white_color: 
-		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_white; 
+	case _ClipArt_white_color: 
+		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_white; 
 		break;
-	case _SvgGpu_red_color: 
-		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_red; 
+	case _ClipArt_red_color: 
+		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_red; 
 		break;
-	case _SvgGpu_green_color: 
-		pg_SvgGpu_Colors[pg_last_activated_SvgGpu] = SvgGpu_green; 
+	case _ClipArt_green_color: 
+		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_green; 
 		break;
 
 	default: {
@@ -4078,26 +4090,26 @@ void pg_aliasScript(char *command_symbol,
 	}
 }
 
-void SvgGpuOnOff(int indImage) {
-	if (indImage < pg_nb_SvgGpu) {
-		bool isImageOn = currentSvgGpuImages & (1 << (indImage - 1));
+void ClipArt_OnOff(int indImage) {
+	if (indImage < pg_nb_ClipArt) {
+		bool isImageOn = activeClipArts & (1 << (indImage - 1));
 		if (isImageOn) {
-			currentSvgGpuImages = currentSvgGpuImages & ~(1 << (indImage - 1));
+			activeClipArts = activeClipArts & ~(1 << (indImage - 1));
 		}
 		else {
-			currentSvgGpuImages |= (1 << (indImage - 1));
-			pg_last_activated_SvgGpu = indImage - 1;
+			activeClipArts |= (1 << (indImage - 1));
+			pg_last_activated_ClipArt = indImage - 1;
 		}
-		BrokenInterpolationVar[_currentSvgGpuImages] = true;
-		*((int *)ScenarioVarPointers[_currentSvgGpuImages]) = currentSvgGpuImages;
-		sprintf(AuxString, "/SvgGpu_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		BrokenInterpolationVar[_activeClipArts] = true;
+		*((int *)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
+		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
 
-void SvgGpuSubPathOnOff(int indPath) {
+void ClipArt_SubPathOnOff(int indPath) {
 	if (indPath - 1 < 4) {
-		pg_SvgGpu_SubPath[pg_last_activated_SvgGpu * 4 + indPath - 1] 
-			= !pg_SvgGpu_SubPath[pg_last_activated_SvgGpu * 4 + indPath - 1];
+		pg_ClipArt_SubPath[pg_last_activated_ClipArt * 4 + indPath - 1] 
+			= !pg_ClipArt_SubPath[pg_last_activated_ClipArt * 4 + indPath - 1];
 	}
 }
 
@@ -4519,7 +4531,7 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		is_path_replay[indPath] = false;
 		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
@@ -4583,13 +4595,13 @@ void pg_writeMessageOnScreen( char *text ) {
 
 void pg_snapshot( char * type ) {
   if( strcmp( type , "svg" ) == 0 ) {
-	pg_draw_scene( _Svg );
+	pg_draw_scene( _Svg, true );
   }
   else if( strcmp( type , "png" ) == 0 ) {
-	pg_draw_scene( _Png );
+	pg_draw_scene( _Png, true);
   }
   else if( strcmp( type , "jpg" ) == 0 ) {
-	pg_draw_scene( _Jpg );
+	pg_draw_scene( _Jpg, true);
   }
   else {
 	sprintf( ErrorStr , "Incorrect screenshot type (%s): expected svg or png or jpg!" , type ); ReportError( ErrorStr );

@@ -33,7 +33,7 @@ float paths_xL[PG_NB_PATHS + 1];
 float paths_yL[PG_NB_PATHS + 1];
 float paths_xR[PG_NB_PATHS + 1];
 float paths_yR[PG_NB_PATHS + 1];
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 int path0_next_in_hull[4];
 #endif
 float paths_x[PG_NB_PATHS + 1];
@@ -326,7 +326,7 @@ void window_display( void ) {
   // printOglError(509);
 
   // proper scene redrawing
-  pg_draw_scene( _Render );
+  pg_draw_scene( _Render, false );
 
   //////////////////////////////////////////////////
   //////////////////////////////////////////////////
@@ -352,7 +352,7 @@ void window_display( void ) {
 	&& pg_FrameNo / stepSvg >= beginSvg && 
 	pg_FrameNo / stepSvg <= endSvg ) {
     // printf("Draw Svg %d\n" , pg_FrameNo  );
-    pg_draw_scene( _Svg );
+    pg_draw_scene( _Svg, true);
   }
     
   // ---------------- frame by frame output --------------------- //
@@ -362,7 +362,7 @@ void window_display( void ) {
 	&& pg_FrameNo % stepPng == 0
 	&& pg_FrameNo / stepPng >= beginPng && 
 	pg_FrameNo / stepPng <= endPng ) {
-    pg_draw_scene( _Png );
+    pg_draw_scene( _Png, true);
   }
     
   // ---------------- frame by frame output --------------------- //
@@ -372,7 +372,7 @@ void window_display( void ) {
 	&& pg_FrameNo % stepJpg == 0
 	&& pg_FrameNo / stepJpg >= beginJpg && 
 	pg_FrameNo / stepJpg <= endJpg ) {
-    pg_draw_scene( _Jpg );
+    pg_draw_scene( _Jpg, true);
   }
 }
 
@@ -1228,7 +1228,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_paths03_y_prev,
 		paths_y_prev[0], paths_y_prev[1], paths_y_prev[2], paths_y_prev[3]);
 
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 	glUniform4i(uniform_Update_fs_4iv_path03_beginOrEnd,
 		(isBegin[0] ? 1 : (isEnd[0] ? -1 : 0)), (isBegin[1] ? 1 : (isEnd[1] ? -1 : 0)),
 		(isBegin[2] ? 1 : (isEnd[2] ? -1 : 0)), (isBegin[3] ? 1 : (isEnd[3] ? -1 : 0)));
@@ -1268,7 +1268,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusX,
 		paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
 	//printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusY,
 		paths_RadiusY[0], paths_RadiusY[1], paths_RadiusY[2], paths_RadiusY[3]);
 #endif
@@ -1285,7 +1285,7 @@ void pg_update_shader_uniforms(void) {
 		paths_x_prev[4], paths_x_prev[5], paths_x_prev[6], paths_x_prev[7]);
 	glUniform4f(uniform_Update_fs_4fv_paths47_y_prev,
 		paths_y_prev[4], paths_y_prev[5], paths_y_prev[6], paths_y_prev[7]);
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 	glUniform4i(uniform_Update_fs_4iv_path47_beginOrEnd,
 		(isBegin[4] ? 1 : (isEnd[4] ? -1 : 0)), (isBegin[5] ? 1 : (isEnd[5] ? -1 : 0)),
 		(isBegin[6] ? 1 : (isEnd[6] ? -1 : 0)), (isBegin[7] ? 1 : (isEnd[7] ? -1 : 0)));
@@ -1316,7 +1316,7 @@ void pg_update_shader_uniforms(void) {
 	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[4] , paths_BrushID[5] , paths_BrushID[6] , paths_BrushID[7] );
 	glUniform4f(uniform_Update_fs_4fv_paths47_RadiusX,
 		paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6], paths_RadiusX[7]);
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 	glUniform4f(uniform_Update_fs_4fv_paths47_RadiusY,
 		paths_RadiusY[4], paths_RadiusY[5], paths_RadiusY[6], paths_RadiusY[7]);
 #endif
@@ -1621,7 +1621,7 @@ void pg_update_shader_uniforms(void) {
 	// sets the time of the 1st plane launch 
 	if (CAInterpolatedType == CA_NEUMANN_BINARY && firstPlaneFrameNo < 0) {
 		// printf("First plane frame no %d\n", firstPlaneFrameNo);
-		firstPlaneFrameNo = pg_FrameNo - 400;
+		firstPlaneFrameNo = pg_FrameNo - 200;
 	}
 	glUniform2f(uniform_Update_fs_2fv_initCA_1stPlaneFrameNo,
 		initCA, GLfloat(firstPlaneFrameNo));
@@ -2207,7 +2207,7 @@ void pg_ParticleRenderingPass( void ) {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	pg_Display_SVG_Images(currentSvgGpuImages);
+	pg_Display_All_SVG_ClipArt(activeClipArts);
 	printOglError(5256);
 
 	////////////////////////////////////////
@@ -2655,7 +2655,7 @@ void pg_SensorPass(void) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
 //////////////////////////////////////////////////////////////////////////////////////////////
-void pg_draw_scene( DrawingMode mode ) {
+void pg_draw_scene( DrawingMode mode, bool threaded ) {
   // ******************** Svg output ********************
   if( mode == _Svg ) {
     threadData *pData = new threadData;
@@ -2670,31 +2670,36 @@ void pg_draw_scene( DrawingMode mode ) {
 		(stepSvg > 0 ? pg_FrameNo / stepSvg : pg_FrameNo));
 	pg_logCurrentLineSceneVariables(pData->fname);
 
+	if (!threaded) {
+		writesvg((void *)pData);
+	}
+	else {
 #ifdef WIN32
-   DWORD rc;
-   HANDLE  hThread = CreateThread(
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-            writesvg,		    // thread function name
-            (void *)pData,		    // argument to thread function 
-            0,                      // use default creation flags 
-            &rc);   // returns the thread identifier 
-   if (hThread == NULL){
-         std::cout << "Error:unable to create thread writesvg" << std::endl;
-         exit(-1);
-   }
-   CloseHandle(hThread);
+		DWORD rc;
+		HANDLE  hThread = CreateThread(
+			NULL,                   // default security attributes
+			0,                      // use default stack size  
+			writesvg,		    // thread function name
+			(void *)pData,		    // argument to thread function 
+			0,                      // use default creation flags 
+			&rc);   // returns the thread identifier 
+		if (hThread == NULL) {
+			std::cout << "Error:unable to create thread writesvg" << std::endl;
+			exit(-1);
+		}
+		CloseHandle(hThread);
 #else
-   pthread_t drawing_thread;
-   int rc;
-   rc = pthread_create(&drawing_thread, NULL, 
-                          writesvg, (void *)pData);
-   if (rc){
-         std::cout << "Error:unable to create thread writesvg" << rc << std::endl;
-         exit(-1);
-   }
-   pthread_exit(NULL);
+		pthread_t drawing_thread;
+		int rc;
+		rc = pthread_create(&drawing_thread, NULL,
+			writesvg, (void *)pData);
+		if (rc) {
+			std::cout << "Error:unable to create thread writesvg" << rc << std::endl;
+			exit(-1);
+		}
+		pthread_exit(NULL);
 #endif
+	}
   }
 
   // ******************** Png output ********************
@@ -2734,31 +2739,36 @@ void pg_draw_scene( DrawingMode mode ) {
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(0, 0, pData->w, pData->h, GL_RGB, GL_UNSIGNED_BYTE, pData->imgThreadData->data);
 
+	if (!threaded) {
+		writepng((void *)pData);
+	}
+	else {
 #ifdef WIN32
-   DWORD rc;
-   HANDLE  hThread = CreateThread(
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-            writepng,		    // thread function name
-            (void *)pData,		    // argument to thread function 
-            0,                      // use default creation flags 
-            &rc);   // returns the thread identifier 
-   if (hThread == NULL){
-         std::cout << "Error:unable to create thread writepng" << std::endl;
-         exit(-1);
-   }
-   CloseHandle(hThread);
+		DWORD rc;
+		HANDLE  hThread = CreateThread(
+			NULL,                   // default security attributes
+			0,                      // use default stack size  
+			writepng,		    // thread function name
+			(void *)pData,		    // argument to thread function 
+			0,                      // use default creation flags 
+			&rc);   // returns the thread identifier 
+		if (hThread == NULL) {
+			std::cout << "Error:unable to create thread writepng" << std::endl;
+			exit(-1);
+		}
+		CloseHandle(hThread);
 #else
-   pthread_t drawing_thread;
-   int rc;
-   rc = pthread_create(&drawing_thread, NULL, 
-                          writepng, (void *)pData);
-   if (rc){
-         std::cout << "Error:unable to create thread writepng" << rc << std::endl;
-         exit(-1);
-   }
-   pthread_exit(NULL);
+		pthread_t drawing_thread;
+		int rc;
+		rc = pthread_create(&drawing_thread, NULL,
+			writepng, (void *)pData);
+		if (rc) {
+			std::cout << "Error:unable to create thread writepng" << rc << std::endl;
+			exit(-1);
+		}
+		pthread_exit(NULL);
 #endif
+	}
   }
 
   // ******************** Jpg output ********************
@@ -2801,31 +2811,36 @@ void pg_draw_scene( DrawingMode mode ) {
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(0, 0, pData->w, pData->h, GL_RGB, GL_UNSIGNED_BYTE, pData->imgThreadData->data);
 
+	if (!threaded) {
+		writejpg((void *)pData);
+	}
+	else {
 #ifdef WIN32
-   DWORD rc;
-   HANDLE  hThread = CreateThread(
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-            writejpg,		    // thread function name
-            (void *)pData,		    // argument to thread function 
-            0,                      // use default creation flags 
-            &rc);   // returns the thread identifier 
-   if (hThread == NULL){
-         std::cout << "Error:unable to create thread writejpg" << std::endl;
-         exit(-1);
-   }
-   CloseHandle(hThread);
+		DWORD rc;
+		HANDLE  hThread = CreateThread(
+			NULL,                   // default security attributes
+			0,                      // use default stack size  
+			writejpg,		    // thread function name
+			(void *)pData,		    // argument to thread function 
+			0,                      // use default creation flags 
+			&rc);   // returns the thread identifier 
+		if (hThread == NULL) {
+			std::cout << "Error:unable to create thread writejpg" << std::endl;
+			exit(-1);
+		}
+		CloseHandle(hThread);
 #else
-   pthread_t drawing_thread;
-   int rc;
-   rc = pthread_create(&drawing_thread, NULL, 
-                          writejpg, (void *)pData);
-   if (rc){
-         std::cout << "Error:unable to create thread writejpg" << rc << std::endl;
-         exit(-1);
-   }
-   pthread_exit(NULL);
+		pthread_t drawing_thread;
+		int rc;
+		rc = pthread_create(&drawing_thread, NULL,
+			writejpg, (void *)pData);
+		if (rc) {
+			std::cout << "Error:unable to create thread writejpg" << rc << std::endl;
+			exit(-1);
+		}
+		pthread_exit(NULL);
 #endif
+	}
   }
 
   // ******************** interactive output ********************

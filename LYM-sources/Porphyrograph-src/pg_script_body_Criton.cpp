@@ -125,7 +125,7 @@ bool  tracksSync          ;
 int   currentDrawingTrack ;
 int   currentVideoTrack   ;
 int   currentPhotoTrack   ;
-int   currentSvgGpuImages ;
+int   activeClipArts      ;
 float trkDecay_sign_0     ;
 float trkDecay_0          ;
 float CAMixingWeight      ;
@@ -468,7 +468,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&currentDrawingTrack,
    (void *)&currentVideoTrack,
    (void *)&currentPhotoTrack,
-   (void *)&currentSvgGpuImages,
+   (void *)&activeClipArts,
    (void *)&trkDecay_sign_0,
    (void *)&trkDecay_0,
    (void *)&CAMixingWeight,
@@ -837,7 +837,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
-  (char *)"currentSvgGpuImages",
+  (char *)"activeClipArts",
   (char *)"trkDecay_sign_0",
   (char *)"trkDecay_0",
   (char *)"CAMixingWeight",
@@ -1009,7 +1009,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
-  (char *)"currentSvgGpuImages",
+  (char *)"activeClipArts",
   (char *)"trkDecay_sign_0",
   (char *)"trkDecay_0",
   (char *)"CAMixingWeight",

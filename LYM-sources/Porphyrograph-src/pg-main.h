@@ -129,7 +129,7 @@ void OpenGLInit( void );
 /// scene initialization
 void pg_init_scene( void );
 
-void pg_draw_scene( DrawingMode mode );
+void pg_draw_scene( DrawingMode mode, bool threaded );
 
 /// main window initialization
 void initGlutWindows( void );

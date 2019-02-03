@@ -190,7 +190,7 @@ extern float paths_xL[PG_NB_PATHS + 1];
 extern float paths_yL[PG_NB_PATHS + 1];
 extern float paths_xR[PG_NB_PATHS + 1];
 extern float paths_yR[PG_NB_PATHS + 1];
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 extern int path0_next_in_hull[4];
 #endif
 extern float paths_x_prev[PG_NB_PATHS + 1];
@@ -281,6 +281,6 @@ void pg_MasterPass(void);
 void pg_SensorPass(void);
 #endif
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
-void pg_draw_scene(DrawingMode mode);
+void pg_draw_scene(DrawingMode mode, bool threaded);
 
 #endif

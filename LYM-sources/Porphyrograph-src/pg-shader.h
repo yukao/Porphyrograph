@@ -186,7 +186,7 @@ extern GLint uniform_Update_fs_4fv_paths03_x;
 extern GLint uniform_Update_fs_4fv_paths03_y;
 extern GLint uniform_Update_fs_4fv_paths03_x_prev;
 extern GLint uniform_Update_fs_4fv_paths03_y_prev;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 // pen Bezier curve tangents
 extern GLint uniform_Update_fs_4fv_paths03_xL;
 extern GLint uniform_Update_fs_4fv_paths03_yL;
@@ -200,7 +200,7 @@ extern GLint uniform_Update_fs_4fv_paths03_b;
 extern GLint uniform_Update_fs_4fv_paths03_a;
 extern GLint uniform_Update_fs_4fv_paths03_BrushID;
 extern GLint uniform_Update_fs_4fv_paths03_RadiusX;
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_fs_4fv_paths03_RadiusY;
 #endif
 #endif
@@ -209,7 +209,7 @@ extern GLint uniform_Update_fs_4fv_paths47_x;
 extern GLint uniform_Update_fs_4fv_paths47_y;
 extern GLint uniform_Update_fs_4fv_paths47_x_prev;
 extern GLint uniform_Update_fs_4fv_paths47_y_prev;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 // pen Bezier curve tangents
 extern GLint uniform_Update_fs_4fv_paths47_xL;
 extern GLint uniform_Update_fs_4fv_paths47_yL;
@@ -223,7 +223,7 @@ extern GLint uniform_Update_fs_4fv_paths47_b;
 extern GLint uniform_Update_fs_4fv_paths47_a;
 extern GLint uniform_Update_fs_4fv_paths47_BrushID;
 extern GLint uniform_Update_fs_4fv_paths47_RadiusX;
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_fs_4fv_paths47_RadiusY;
 #endif
 #endif

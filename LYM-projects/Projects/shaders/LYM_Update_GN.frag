@@ -1608,8 +1608,8 @@ void main() {
 
   // launching airstrike 
   if( CAType == CA_NEUMANN_BINARY
-     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 2200
-     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 2200 < 10
+     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 1800
+     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 1800 < 10
      && abs(decalCoords.x - width + 10) < 3.2  
      && abs(decalCoords.y - height/2) < 3.2 ) {
     out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);

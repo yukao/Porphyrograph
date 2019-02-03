@@ -281,7 +281,7 @@ void initGlutWindows( void ) {
   glClearColor(0.0,0.0,0.0,1.0);
   
   // callback procedures for window reshape
-  glutReshapeFunc(&window_reshape);
+  glutReshapeFunc(NULL);
   // keyboard events handling
   glutKeyboardFunc(&window_key_browse);
   // special keys handling

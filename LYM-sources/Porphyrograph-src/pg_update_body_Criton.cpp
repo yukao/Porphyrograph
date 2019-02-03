@@ -30,9 +30,9 @@
 	      (GLfloat)CAParams8,
 	      (GLfloat)currentDrawingTrack,
 	      (GLfloat)currentVideoTrack );
- glUniform4f( uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2 ,
+ glUniform4f( uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2 ,
 	      (GLfloat)currentPhotoTrack,
-	      (GLfloat)currentSvgGpuImages,
+	      (GLfloat)activeClipArts,
 	      (GLfloat)path_replay_trackNo_1,
 	      (GLfloat)path_replay_trackNo_2 );
  glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_3_CAdecay_pulse_invertMovie_cameraCumul ,

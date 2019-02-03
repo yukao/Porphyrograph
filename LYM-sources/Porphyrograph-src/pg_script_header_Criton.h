@@ -113,7 +113,7 @@ enum InterpVarIDs{
   _currentDrawingTrack,
   _currentVideoTrack,
   _currentPhotoTrack,
-  _currentSvgGpuImages,
+  _activeClipArts,
   _trkDecay_sign_0,
   _trkDecay_0,
   _CAMixingWeight,
@@ -284,7 +284,7 @@ extern bool  tracksSync          ;
 extern int   currentDrawingTrack ;
 extern int   currentVideoTrack   ;
 extern int   currentPhotoTrack   ;
-extern int   currentSvgGpuImages ;
+extern int   activeClipArts      ;
 extern float trkDecay_sign_0     ;
 extern float trkDecay_0          ;
 extern float CAMixingWeight      ;

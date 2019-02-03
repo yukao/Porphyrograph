@@ -184,7 +184,7 @@ using std::ifstream;
 #define PG_NB_TRACKS 3   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #endif
 
-#if !defined (TVW) && !defined (KOMPARTSD) && !defined (REUTLINGEN) && !defined (BICHES)
+#if !defined (TVW) && !defined (REUTLINGEN) && !defined (BICHES)
 #define PG_WITH_PHOTO_DIAPORAMA
 #endif
 
@@ -339,7 +339,7 @@ using std::ifstream;
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
 #if defined(KOMPARTSD)
-#define PG_BEZIER_CURVES
+#define PG_BEZIER_PATHS
 #endif
 
 
@@ -408,7 +408,7 @@ using std::ifstream;
 
 #include "pg-shader.h"
 #include "pg-stroke.h"
-#include "pg-SVG_GPU.h"
+#include "pg-svg-clip-art.h"
 #include "pg-init.h"
 
 #include "pg-main.h"

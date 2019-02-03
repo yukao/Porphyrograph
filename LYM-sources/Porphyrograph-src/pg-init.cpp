@@ -574,8 +574,8 @@ void InterfaceInitializations(void) {
 			ind, pen_colorPresets_names[ind].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	}
 	// SVG GPU INTERFACE VARIABLE INITIALIZATION
-	for (int indImage = 0; indImage < pg_nb_SvgGpu; indImage++) {
-		sprintf(AuxString, "/SvgGpu_%d_onOff %d", indImage, (currentSvgGpuImages & (1 << (indImage - 1)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	for (int indImage = 0; indImage < pg_nb_ClipArt; indImage++) {
+		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (activeClipArts & (1 << (indImage - 1)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
 
@@ -1829,9 +1829,9 @@ void pg_initParticlePosition_Texture( void ) {
 		pg_Particle_control_points[ind_point + 2] = 0.f;
 
 		//// u 
-		//curve_texCoords[ind_point + 0] = 0.f;
+		//pg_Particle_texCoords[ind_point + 0] = 0.f;
 		//// v
-		//curve_texCoords[ind_point + 1] = 0.f;
+		//pg_Particle_texCoords[ind_point + 1] = 0.f;
 
 		// radius
 		pg_Particle_radius[ind_radius + 0] = 1.f;
@@ -1854,13 +1854,13 @@ void pg_initParticlePosition_Texture( void ) {
 
 			//// u 
 			//if (indControlPoint == 0) {
-			//	curve_texCoords[ind_point + 0] = 0.f;
+			//	pg_Particle_texCoords[ind_point + 0] = 0.f;
 			//}
 			//else {
-			//	curve_texCoords[ind_point + 0] = 1.f;
+			//	pg_Particle_texCoords[ind_point + 0] = 1.f;
 			//}
 			//// v
-			//curve_texCoords[ind_point + 1] = 0.f;
+			//pg_Particle_texCoords[ind_point + 1] = 0.f;
 
 			pg_Particle_indices[ind_index] = ind_index;
 

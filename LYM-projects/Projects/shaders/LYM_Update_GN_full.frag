@@ -30,33 +30,35 @@ uniform vec4 uniform_Update_fs_4fv_repop_CA_CAParams1_CAParams2_CAParams3;
 int       currentDrawingTrack;
 int       currentVideoTrack;
 int       currentPhotoTrack;
+int       currentSvgGpuImages;
+uniform vec4 uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages;
 int       path_replay_trackNo_1;
-uniform vec4 uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1;
 int       path_replay_trackNo_2;
 int       path_replay_trackNo_3;
 float     CAdecay_pulse;
+uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse;
 bool      invertMovie;
-uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse_invertMovie;
 int       cameraCumul;
 float     cameraThreshold;
 float     cameraGamma;
+uniform vec4 uniform_Update_fs_4fv_invertMovie_cameraCumul_cameraThreshold_cameraGamma;
 float     video_satur;
-uniform vec4 uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur;
 float     video_satur_pulse;
 float     cameraWeight;
 float     movieWeight;
+uniform vec4 uniform_Update_fs_4fv_video_satur_video_satur_pulse_cameraWeight_movieWeight;
 float     cameraSobel;
-uniform vec4 uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel;
 float     movieSobel;
 bool      BGSubtr;
 int       CAstep;
+uniform vec4 uniform_Update_fs_4fv_cameraSobel_movieSobel_BGSubtr_CAstep;
 bool      CAcolorSpread;
-uniform vec4 uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread;
 bool      freeze;
 float     photo_value;
 float     photo_value_pulse;
+uniform vec4 uniform_Update_fs_4fv_CAcolorSpread_freeze_photo_value_photo_value_pulse;
 float     photo_scale;
-uniform vec4 uniform_Update_fs_4fv_freeze_photo_value_photo_value_pulse_photo_scale;
+uniform float uniform_Update_fs_1fv_photo_scale;
 
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS 3
@@ -1217,30 +1219,31 @@ void main() {
   CAParams1 = uniform_Update_fs_4fv_repop_CA_CAParams1_CAParams2_CAParams3[1];
   CAParams2 = uniform_Update_fs_4fv_repop_CA_CAParams1_CAParams2_CAParams3[2];
   CAParams3 = uniform_Update_fs_4fv_repop_CA_CAParams1_CAParams2_CAParams3[3];
-  currentDrawingTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[0]);
-  currentVideoTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[1]);
-  currentPhotoTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[2]);
-  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[3]);
-  path_replay_trackNo_2 = int(uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse_invertMovie[0]);
-  path_replay_trackNo_3 = int(uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse_invertMovie[1]);
-  CAdecay_pulse = uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse_invertMovie[2];
-  invertMovie = (uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse_invertMovie[3] > 0 ? true : false);
-  cameraCumul = int(uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[0]);
-  cameraThreshold = uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[1];
-  cameraGamma = uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[2];
-  video_satur = uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[3];
-  video_satur_pulse = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[0];
-  cameraWeight = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[1];
-  movieWeight = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[2];
-  cameraSobel = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[3];
-  movieSobel = uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[0];
-  BGSubtr = (uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[1] > 0 ? true : false);
-  CAstep = int(uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[2]);
-  CAcolorSpread = (uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[3] > 0 ? true : false);
-  freeze = (uniform_Update_fs_4fv_freeze_photo_value_photo_value_pulse_photo_scale[0] > 0 ? true : false);
-  photo_value = uniform_Update_fs_4fv_freeze_photo_value_photo_value_pulse_photo_scale[1];
-  photo_value_pulse = uniform_Update_fs_4fv_freeze_photo_value_photo_value_pulse_photo_scale[2];
-  photo_scale = uniform_Update_fs_4fv_freeze_photo_value_photo_value_pulse_photo_scale[3];
+  currentDrawingTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages[0]);
+  currentVideoTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages[1]);
+  currentPhotoTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages[2]);
+  currentSvgGpuImages = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages[3]);
+  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse[0]);
+  path_replay_trackNo_2 = int(uniform_Update_fs_4fv_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse[1]);
+  path_replay_trackNo_3 = int(uniform_Update_fs_4fv_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse[2]);
+  CAdecay_pulse = uniform_Update_fs_4fv_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse[3];
+  invertMovie = (uniform_Update_fs_4fv_invertMovie_cameraCumul_cameraThreshold_cameraGamma[0] > 0 ? true : false);
+  cameraCumul = int(uniform_Update_fs_4fv_invertMovie_cameraCumul_cameraThreshold_cameraGamma[1]);
+  cameraThreshold = uniform_Update_fs_4fv_invertMovie_cameraCumul_cameraThreshold_cameraGamma[2];
+  cameraGamma = uniform_Update_fs_4fv_invertMovie_cameraCumul_cameraThreshold_cameraGamma[3];
+  video_satur = uniform_Update_fs_4fv_video_satur_video_satur_pulse_cameraWeight_movieWeight[0];
+  video_satur_pulse = uniform_Update_fs_4fv_video_satur_video_satur_pulse_cameraWeight_movieWeight[1];
+  cameraWeight = uniform_Update_fs_4fv_video_satur_video_satur_pulse_cameraWeight_movieWeight[2];
+  movieWeight = uniform_Update_fs_4fv_video_satur_video_satur_pulse_cameraWeight_movieWeight[3];
+  cameraSobel = uniform_Update_fs_4fv_cameraSobel_movieSobel_BGSubtr_CAstep[0];
+  movieSobel = uniform_Update_fs_4fv_cameraSobel_movieSobel_BGSubtr_CAstep[1];
+  BGSubtr = (uniform_Update_fs_4fv_cameraSobel_movieSobel_BGSubtr_CAstep[2] > 0 ? true : false);
+  CAstep = int(uniform_Update_fs_4fv_cameraSobel_movieSobel_BGSubtr_CAstep[3]);
+  CAcolorSpread = (uniform_Update_fs_4fv_CAcolorSpread_freeze_photo_value_photo_value_pulse[0] > 0 ? true : false);
+  freeze = (uniform_Update_fs_4fv_CAcolorSpread_freeze_photo_value_photo_value_pulse[1] > 0 ? true : false);
+  photo_value = uniform_Update_fs_4fv_CAcolorSpread_freeze_photo_value_photo_value_pulse[2];
+  photo_value_pulse = uniform_Update_fs_4fv_CAcolorSpread_freeze_photo_value_photo_value_pulse[3];
+  photo_scale = uniform_Update_fs_1fv_photo_scale;
 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
@@ -1696,8 +1699,8 @@ void main() {
 
   // launching airstrike 
   if( CAType == CA_NEUMANN_BINARY
-     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 2200
-     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 2200 < 10
+     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 1800
+     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 1800 < 10
      && abs(decalCoords.x - width + 10) < 3.2  
      && abs(decalCoords.y - height/2) < 3.2 ) {
     out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);

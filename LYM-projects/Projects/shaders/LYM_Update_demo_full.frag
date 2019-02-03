@@ -38,10 +38,10 @@ int       currentDrawingTrack;
 int       currentVideoTrack;
 uniform vec4 uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack;
 int       currentPhotoTrack;
-int       currentSvgGpuImages;
+int       activeClipArts;
 int       path_replay_trackNo_1;
 int       path_replay_trackNo_2;
-uniform vec4 uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2;
+uniform vec4 uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2;
 int       path_replay_trackNo_3;
 int       path_replay_trackNo_4;
 int       path_replay_trackNo_5;
@@ -87,6 +87,7 @@ uniform vec4 uniform_Update_fs_4fv_mask_scale_photo_scale_mask_contrast_photo_co
 const float PI = 3.1415926535897932384626433832795;
 
 // Gaussian blur
+/*
 const float weights[8][10] = {
   { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
   { 0.160943513523684, 0.0976171754339892, 0.0217813359878234, 0.00178792093458716, 0, 0, 0, 0, 0, 0, },
@@ -97,6 +98,7 @@ const float weights[8][10] = {
   { 0.022659246945633, 0.0211207405530146, 0.0171040969458123, 0.0120342352127056, 0.00735638042938192, 0.00390694415457561, 0.00180275855491957, 0.000722711999073055, 0.000251721495878215, 0, },
   { 0.0178892106047989, 0.0169224681628769, 0.0143245600399185, 0.0108503547098669, 0.00735447434710435, 0.00446071417758884, 0.00242104138407988, 0.00117583149116467, 0.000511014259566371, 0.000198731178680599, },
 };
+*/
 
 #define SPLAT_PARTICLES
 
@@ -1354,10 +1356,10 @@ void main() {
   CAParams8 = uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[1];
   currentDrawingTrack = int(uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[2]);
   currentVideoTrack = int(uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[3]);
-  currentPhotoTrack = int(uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2[0]);
-  currentSvgGpuImages = int(uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2[1]);
-  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2[2]);
-  path_replay_trackNo_2 = int(uniform_Update_fs_4fv_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1_path_replay_trackNo_2[3]);
+  currentPhotoTrack = int(uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2[0]);
+  activeClipArts = int(uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2[1]);
+  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2[2]);
+  path_replay_trackNo_2 = int(uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2[3]);
   path_replay_trackNo_3 = int(uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6[0]);
   path_replay_trackNo_4 = int(uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6[1]);
   path_replay_trackNo_5 = int(uniform_Update_fs_4fv_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6[2]);
@@ -1487,6 +1489,7 @@ void main() {
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
     // BLUR
+  /*
     if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
       int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
       vec3 valPixel = vec3(0);
@@ -1499,6 +1502,7 @@ void main() {
       }
       out_track_FBO[1] = vec4(valPixel, out_track_FBO[1].a);
     }
+    */
   }
 #endif
 
@@ -1507,6 +1511,7 @@ void main() {
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
   // BLUR
+  /*
   if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
     int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
     vec3 valPixel = vec3(0);
@@ -1519,6 +1524,7 @@ void main() {
     }
     out_track_FBO[2] = vec4(valPixel, out_track_FBO[2].a);
   }
+  */
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 

@@ -142,7 +142,7 @@ GLint uniform_Update_fs_4fv_paths03_x;
 GLint uniform_Update_fs_4fv_paths03_y;
 GLint uniform_Update_fs_4fv_paths03_x_prev;
 GLint uniform_Update_fs_4fv_paths03_y_prev;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 // pen Bezier curve tangents
 GLint uniform_Update_fs_4fv_paths03_xL;
 GLint uniform_Update_fs_4fv_paths03_yL;
@@ -156,7 +156,7 @@ GLint uniform_Update_fs_4fv_paths03_b;
 GLint uniform_Update_fs_4fv_paths03_a;
 GLint uniform_Update_fs_4fv_paths03_BrushID;
 GLint uniform_Update_fs_4fv_paths03_RadiusX;
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 GLint uniform_Update_fs_4fv_paths03_RadiusY;
 #endif
 #endif
@@ -165,7 +165,7 @@ GLint uniform_Update_fs_4fv_paths47_x;
 GLint uniform_Update_fs_4fv_paths47_y;
 GLint uniform_Update_fs_4fv_paths47_x_prev;
 GLint uniform_Update_fs_4fv_paths47_y_prev;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 // pen Bezier curve tangents
 GLint uniform_Update_fs_4fv_paths47_xL;
 GLint uniform_Update_fs_4fv_paths47_yL;
@@ -179,7 +179,7 @@ GLint uniform_Update_fs_4fv_paths47_b;
 GLint uniform_Update_fs_4fv_paths47_a;
 GLint uniform_Update_fs_4fv_paths47_BrushID;
 GLint uniform_Update_fs_4fv_paths47_RadiusX;
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 GLint uniform_Update_fs_4fv_paths47_RadiusY;
 #endif
 #endif
@@ -775,7 +775,7 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_x_prev");
 	uniform_Update_fs_4fv_paths03_y_prev
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_y_prev");
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 	// pen Bezier curve tangents
 	uniform_Update_fs_4fv_paths03_xL
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_xL");
@@ -800,7 +800,7 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_BrushID");
 	uniform_Update_fs_4fv_paths03_RadiusX
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_RadiusX");
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 	uniform_Update_fs_4fv_paths03_RadiusY
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths03_RadiusY");
 #endif
@@ -814,7 +814,7 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_x_prev");
 	uniform_Update_fs_4fv_paths47_y_prev
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_y_prev");
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 	// pen Bezier curve tangents
 	uniform_Update_fs_4fv_paths47_xL
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_xL");
@@ -839,7 +839,7 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_BrushID");
 	uniform_Update_fs_4fv_paths47_RadiusX
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_RadiusX");
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 	uniform_Update_fs_4fv_paths47_RadiusY
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_paths47_RadiusY");
 #endif
@@ -1012,7 +1012,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths03_y == -1)
 		|| (uniform_Update_fs_4fv_paths03_x_prev == -1)
 		|| (uniform_Update_fs_4fv_paths03_y_prev == -1)
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 // pen Bezier curve tangents
 		|| (uniform_Update_fs_4fv_paths03_xL == -1)
 		|| (uniform_Update_fs_4fv_paths03_yL == -1)
@@ -1026,7 +1026,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths03_a == -1)
 		|| (uniform_Update_fs_4fv_paths03_BrushID == -1)
 		|| (uniform_Update_fs_4fv_paths03_RadiusX == -1)
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 		|| (uniform_Update_fs_4fv_paths03_RadiusY == -1)
 #endif
 #endif
@@ -1035,7 +1035,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths47_y == -1)
 		|| (uniform_Update_fs_4fv_paths47_x_prev == -1)
 		|| (uniform_Update_fs_4fv_paths47_y_prev == -1)
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		// pen Bezier curve tangents
 		|| (uniform_Update_fs_4fv_paths47_xL == -1)
 		|| (uniform_Update_fs_4fv_paths47_yL == -1)
@@ -1049,7 +1049,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_fs_4fv_paths47_a == -1)
 		|| (uniform_Update_fs_4fv_paths47_BrushID == -1)
 		|| (uniform_Update_fs_4fv_paths47_RadiusX == -1)
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 		|| (uniform_Update_fs_4fv_paths47_RadiusY == -1)
 #endif
 #endif
@@ -1147,20 +1147,20 @@ void pg_loadAllShaders(void) {
 #endif
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths03_x : %d, uniform_Update_fs_4fv_paths03_y : %d, uniform_Update_fs_4fv_paths03_x_prev : %d, uniform_Update_fs_4fv_paths03_y_prev : %d, uniform_Update_fs_4fv_paths03_r : %d, uniform_Update_fs_4fv_paths03_g : %d, uniform_Update_fs_4fv_paths03_b : %d, uniform_Update_fs_4fv_paths03_a : %d, uniform_Update_fs_4fv_paths03_BrushID : %d, uniform_Update_fs_4fv_paths03_RadiusX : %d\n", uniform_Update_fs_4fv_paths03_x, uniform_Update_fs_4fv_paths03_y, uniform_Update_fs_4fv_paths03_x_prev, uniform_Update_fs_4fv_paths03_y_prev, uniform_Update_fs_4fv_paths03_r, uniform_Update_fs_4fv_paths03_g, uniform_Update_fs_4fv_paths03_b, uniform_Update_fs_4fv_paths03_a, uniform_Update_fs_4fv_paths03_BrushID, uniform_Update_fs_4fv_paths03_RadiusX);
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths03_RadiusY : %d\n", uniform_Update_fs_4fv_paths03_RadiusY);
 #endif
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		// pen Bezier curve tangents
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths03_xL : %d, uniform_Update_fs_4fv_paths03_yL : %d, uniform_Update_fs_4fv_paths03_xR : %d, uniform_Update_fs_4fv_paths03_yR : %d, uniform_Update_fs_4iv_path03_beginOrEnd : %d\n", uniform_Update_fs_4fv_paths03_xL, uniform_Update_fs_4fv_paths03_yL, uniform_Update_fs_4fv_paths03_xR, uniform_Update_fs_4fv_paths03_yR, uniform_Update_fs_4iv_path03_beginOrEnd );
 #endif
 #endif
 #if PG_NB_PATHS == 7
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths47_x : %d, uniform_Update_fs_4fv_paths47_y : %d, uniform_Update_fs_4fv_paths47_x_prev : %d, uniform_Update_fs_4fv_paths47_y_prev : %d, uniform_Update_fs_4fv_paths47_r : %d, uniform_Update_fs_4fv_paths47_g : %d, uniform_Update_fs_4fv_paths47_b : %d, uniform_Update_fs_4fv_paths47_a : %d, uniform_Update_fs_4fv_paths47_BrushID : %d, uniform_Update_fs_4fv_paths47_RadiusX : %d\n", uniform_Update_fs_4fv_paths47_x, uniform_Update_fs_4fv_paths47_y, uniform_Update_fs_4fv_paths47_x_prev, uniform_Update_fs_4fv_paths47_y_prev, uniform_Update_fs_4fv_paths47_r, uniform_Update_fs_4fv_paths47_g, uniform_Update_fs_4fv_paths47_b, uniform_Update_fs_4fv_paths47_a, uniform_Update_fs_4fv_paths47_BrushID, uniform_Update_fs_4fv_paths47_RadiusX);
-#ifndef PG_BEZIER_CURVES
+#ifndef PG_BEZIER_PATHS
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths47_RadiusY : %d\n", uniform_Update_fs_4fv_paths47_RadiusY);
 #endif
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		// pen Bezier curve tangents
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_paths47_xL : %d, uniform_Update_fs_4fv_paths47_yL : %d, uniform_Update_fs_4fv_paths47_xR : %d, uniform_Update_fs_4fv_paths47_yR : %d, uniform_Update_fs_4iv_path47_beginOrEnd : %d\n", uniform_Update_fs_4fv_paths47_xL, uniform_Update_fs_4fv_paths47_yL, uniform_Update_fs_4fv_paths47_xR, uniform_Update_fs_4fv_paths47_yR, uniform_Update_fs_4iv_path47_beginOrEnd);
 #endif

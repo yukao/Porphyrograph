@@ -120,27 +120,27 @@ extern int nb_shader_files;
 
 // SVG GPU
 // number of files
-extern int pg_nb_SvgGpu;
+extern int pg_nb_ClipArt;
 // number of paths for each file
-extern int *pg_nb_SvgGpu_paths;
+extern int *pg_nb_paths_in_ClipArt;
 // index of the first path of the current file
-extern int *pg_ind_first_SvgGpu_path;
+extern int *pg_ind_first_SvgGpu_path_in_ClipArt;
 // total number of paths
 extern int pg_nb_tot_SvgGpu_paths;
 // file names
-extern string *pg_SvgGpu_fileNames;
+extern string *pg_ClipArt_fileNames;
 // geometrical transformations
-extern float *pg_SvgGpu_Scale;
-extern float *pg_SvgGpu_Rotation;
-extern float *pg_SvgGpu_Translation_X;
-extern float *pg_SvgGpu_Translation_Y;
+extern float *pg_ClipArt_Scale;
+extern float *pg_ClipArt_Rotation;
+extern float *pg_ClipArt_Translation_X;
+extern float *pg_ClipArt_Translation_Y;
 // last activated SvgGpu
-extern int pg_last_activated_SvgGpu;
+extern int pg_last_activated_ClipArt;
 // color
-enum pg_SvgGpuColors_Types { SvgGpu_nat = 0, SvgGpu_white, SvgGpu_red, SvgGpu_green };
-extern pg_SvgGpuColors_Types *pg_SvgGpu_Colors;
+enum pg_ClipArt_Colors_Types { ClipArt_nat = 0, ClipArt_white, ClipArt_red, ClipArt_green };
+extern pg_ClipArt_Colors_Types *pg_ClipArt_Colors;
 // subpath display
-extern bool *pg_SvgGpu_SubPath;
+extern bool *pg_ClipArt_SubPath;
 
 
 /// the params of the font file

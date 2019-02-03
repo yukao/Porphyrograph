@@ -10,10 +10,10 @@
 	      (GLfloat)pixel_acc_center_1,
 	      (GLfloat)repop_BG,
 	      (GLfloat)currentDrawingTrack );
- glUniform4f( uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages_path_replay_trackNo_1 ,
+ glUniform4f( uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_activeClipArts_path_replay_trackNo_1 ,
 	      (GLfloat)currentVideoTrack,
 	      (GLfloat)currentPhotoTrack,
-	      (GLfloat)currentSvgGpuImages,
+	      (GLfloat)activeClipArts,
 	      (GLfloat)path_replay_trackNo_1 );
  glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5 ,
 	      (GLfloat)path_replay_trackNo_2,

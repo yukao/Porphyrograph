@@ -953,7 +953,7 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 			n--;
 		}
 
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		// convex hull shipped to the GPU
 		float points_x[4] = { paths_x_prev[0] , paths_xL[0] , paths_xR[0] , paths_x[0] };
 		float points_y[4] = { paths_y_prev[0] , paths_yL[0] , paths_yR[0] , paths_y[0] };
@@ -1194,7 +1194,7 @@ void load_svg_path(char *fileName, int indPath, int indTrack,
 		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		isBegin[indPath] = false;
 		isEnd[indPath] = false;
-#ifdef PG_BEZIER_CURVES
+#ifdef PG_BEZIER_PATHS
 		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
@@ -1403,7 +1403,7 @@ void* writesvg(void * lpParam) {
 						pg_Path_Pos_y[indPath][indFrame]);
 				}
 			}
-			fprintf(fileSVG, "\"\n       id=\"path000%d\"\n       style=\"fill:none;stroke:#000000;stroke-opacity:1\" />\n", indPath);
+			fprintf(fileSVG, "\"\n       id=\"path000%d\"\n       style=\"fill:none;stroke:#000000;stroke-opacity:1;stroke-width:%dpx\" />\n", indPath, int(pen_radius));
 		}
 	}
 	fprintf(fileSVG, "  </g>\n</svg>\n");

@@ -17,7 +17,7 @@
     <ClCompile Include="..\Porphyrograph-src\pg-script.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-shader.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-stroke.cpp" />
-    <ClCompile Include="..\Porphyrograph-src\pg-SVG_GPU.cpp" />
+    <ClCompile Include="..\Porphyrograph-src\pg-svg-clip-art.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-texture.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-udp.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-update.cpp" />
@@ -30,7 +30,7 @@
     <ClInclude Include="..\Porphyrograph-src\pg-script.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-shader.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-stroke.h" />
-    <ClInclude Include="..\Porphyrograph-src\pg-SVG_GPU.h" />
+    <ClInclude Include="..\Porphyrograph-src\pg-svg-clip-art.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-texture.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-udp.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-update.h" />

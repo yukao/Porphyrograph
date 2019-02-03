@@ -20,35 +20,37 @@
 	      (GLfloat)CAParams1,
 	      (GLfloat)CAParams2,
 	      (GLfloat)CAParams3 );
- glUniform4f( uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1 ,
+ glUniform4f( uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_currentSvgGpuImages ,
 	      (GLfloat)currentDrawingTrack,
 	      (GLfloat)currentVideoTrack,
 	      (GLfloat)currentPhotoTrack,
-	      (GLfloat)path_replay_trackNo_1 );
- glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse_invertMovie ,
+	      (GLfloat)currentSvgGpuImages );
+ glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3_CAdecay_pulse ,
+	      (GLfloat)path_replay_trackNo_1,
 	      (GLfloat)path_replay_trackNo_2,
 	      (GLfloat)path_replay_trackNo_3,
-	      (GLfloat)CAdecay_pulse,
-	      (GLfloat)invertMovie );
- glUniform4f( uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur ,
+	      (GLfloat)CAdecay_pulse );
+ glUniform4f( uniform_Update_fs_4fv_invertMovie_cameraCumul_cameraThreshold_cameraGamma ,
+	      (GLfloat)invertMovie,
 	      (GLfloat)cameraCumul,
 	      (GLfloat)cameraThreshold,
-	      (GLfloat)cameraGamma,
-	      (GLfloat)video_satur );
- glUniform4f( uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel ,
+	      (GLfloat)cameraGamma );
+ glUniform4f( uniform_Update_fs_4fv_video_satur_video_satur_pulse_cameraWeight_movieWeight ,
+	      (GLfloat)video_satur,
 	      (GLfloat)video_satur_pulse,
 	      (GLfloat)cameraWeight,
-	      (GLfloat)movieWeight,
-	      (GLfloat)cameraSobel );
- glUniform4f( uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread ,
+	      (GLfloat)movieWeight );
+ glUniform4f( uniform_Update_fs_4fv_cameraSobel_movieSobel_BGSubtr_CAstep ,
+	      (GLfloat)cameraSobel,
 	      (GLfloat)movieSobel,
 	      (GLfloat)BGSubtr,
-	      (GLfloat)CAstep,
-	      (GLfloat)CAcolorSpread );
- glUniform4f( uniform_Update_fs_4fv_freeze_photo_value_photo_value_pulse_photo_scale ,
+	      (GLfloat)CAstep );
+ glUniform4f( uniform_Update_fs_4fv_CAcolorSpread_freeze_photo_value_photo_value_pulse ,
+	      (GLfloat)CAcolorSpread,
 	      (GLfloat)freeze,
 	      (GLfloat)photo_value,
-	      (GLfloat)photo_value_pulse,
+	      (GLfloat)photo_value_pulse );
+ glUniform1f( uniform_Update_fs_1fv_photo_scale ,
 	      (GLfloat)photo_scale );
 
  glUseProgram(shader_programme[pg_shader_Mixing]);

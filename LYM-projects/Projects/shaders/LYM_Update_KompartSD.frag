@@ -145,6 +145,8 @@ uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
+uniform vec4 uniform_Update_fs_4fv_photo01_wh;
+uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 
 /////////////////////////////////////
@@ -155,14 +157,16 @@ layout (binding = 2) uniform samplerRect uniform_Update_texture_fs_Camera_BG;   
 layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
 layout (binding = 4) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
 layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 6) uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 7) uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
 #if PG_NB_TRACKS >= 2
-layout (binding = 6) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 7) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 
 /////////////////////////////////////
@@ -602,6 +606,21 @@ void main() {
   ///////////////////////////////////////////////////
   // each track possibly covers the previous color
 
+  vec3 photocolor = vec3( 0.0 );
+  vec2 coordsImage = vec2( 0.0 );
+  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+    coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
+    vec2 coordsImageScaled = coordsImage;
+    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+        coordsImageScaled ).rgb;
+  }
+  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+    coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
+    vec2 coordsImageScaled = coordsImage;
+    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+        coordsImageScaled ).rgb;
+  }
+
   vec3 videocolor = vec3( 0.0 );
 
   float flashCameraTrkWght = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.z;
@@ -617,12 +636,12 @@ void main() {
   // video texture used for drawing
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
                * cameraWH;
-     cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+     cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
                * cameraWH;
  */
-  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
-               * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+               * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 
@@ -861,6 +880,23 @@ void main() {
         out_track_FBO[indCurTrack].rgb *= (1.0 - flashCameraTrkWght);
       }
     }
+
+    /////////////////
+    // TRACK photo
+    videoOn = false;
+    if(currentPhotoTrack == indCurTrack 
+      && uniform_Update_fs_2fv_photo01Wghts.x + uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      // only photo (but not drawing or whatever memory from preceding tracks)
+      if(!videoOn) {
+       out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
+      }
+      // cumul video + photo
+      else {
+       out_track_FBO[indCurTrack].rgb
+       = clamp( out_track_FBO[indCurTrack].rgb + photocolor , 0.0 , 1.0 );
+      }
+    }
+
 
     // non BG track flash on BG track (only concerns tracks >= 1)
     if( indCurTrack != 0 ) {

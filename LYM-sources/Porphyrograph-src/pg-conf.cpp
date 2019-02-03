@@ -97,26 +97,26 @@ int nb_shader_files;
 
 // SVG GPU
 // number of files
-int pg_nb_SvgGpu = 0;
+int pg_nb_ClipArt = 0;
 // number of paths for each file
-int *pg_nb_SvgGpu_paths = NULL;
+int *pg_nb_paths_in_ClipArt = NULL;
 // index of the first path of the current file
-int * pg_ind_first_SvgGpu_path = NULL;
+int * pg_ind_first_SvgGpu_path_in_ClipArt = NULL;
 // total number of paths
 int pg_nb_tot_SvgGpu_paths = 0;
 // file names
-string *pg_SvgGpu_fileNames = NULL;
+string *pg_ClipArt_fileNames = NULL;
 // geometrical transformations
-float *pg_SvgGpu_Scale = NULL;
-float *pg_SvgGpu_Rotation = NULL;
-float *pg_SvgGpu_Translation_X = NULL;
-float *pg_SvgGpu_Translation_Y = NULL;
+float *pg_ClipArt_Scale = NULL;
+float *pg_ClipArt_Rotation = NULL;
+float *pg_ClipArt_Translation_X = NULL;
+float *pg_ClipArt_Translation_Y = NULL;
 // last activated SvgGpu
-int pg_last_activated_SvgGpu = 0;
+int pg_last_activated_ClipArt = 0;
 // color
-pg_SvgGpuColors_Types *pg_SvgGpu_Colors = NULL;
+pg_ClipArt_Colors_Types *pg_ClipArt_Colors = NULL;
 // subpath display
-bool *pg_SvgGpu_SubPath = NULL;
+bool *pg_ClipArt_SubPath = NULL;
 
 /////////////////////////////////////////////////////
 // Default values for global variables
@@ -938,7 +938,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else {
 			pg_ImageDirectory += "images/";
 		}
-		std::cout << "Loading images from " << pg_ImageDirectory << std::endl;
+		std::cout << "Photo album directory " << pg_ImageDirectory << std::endl;
 	}
 	else {
 		pg_ImageDirectory = "captures";
@@ -1112,80 +1112,80 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.clear();
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string svg_gpus
-	if (ID.compare("svg_gpus") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_gpus\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	sstrem >> ID; // string svg_clip_arts
+	if (ID.compare("svg_clip_arts") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_clip_arts\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-	sstrem >> pg_nb_SvgGpu;
-	pg_nb_SvgGpu_paths = new int[pg_nb_SvgGpu];
-	pg_ind_first_SvgGpu_path = new int[pg_nb_SvgGpu];
-	pg_SvgGpu_fileNames = new string[pg_nb_SvgGpu];
+	sstrem >> pg_nb_ClipArt;
+	pg_nb_paths_in_ClipArt = new int[pg_nb_ClipArt];
+	pg_ind_first_SvgGpu_path_in_ClipArt = new int[pg_nb_ClipArt];
+	pg_ClipArt_fileNames = new string[pg_nb_ClipArt];
 
-	pg_SvgGpu_Scale = new float[pg_nb_SvgGpu];
-	for (int indFile = 0; indFile < pg_nb_SvgGpu; indFile++) {
-		pg_SvgGpu_Scale[indFile] = 0.1f;
+	pg_ClipArt_Scale = new float[pg_nb_ClipArt];
+	for (int indFile = 0; indFile < pg_nb_ClipArt; indFile++) {
+		pg_ClipArt_Scale[indFile] = 0.1f;
 	}
-	pg_SvgGpu_Rotation = new float[pg_nb_SvgGpu];
-	memset((char *)pg_SvgGpu_Rotation, 0, pg_nb_SvgGpu * sizeof(float));
-	pg_SvgGpu_Translation_X = new float[pg_nb_SvgGpu];
-	memset((char *)pg_SvgGpu_Translation_X, 0, pg_nb_SvgGpu * sizeof(float));
-	pg_SvgGpu_Translation_Y = new float[pg_nb_SvgGpu];
-	memset((char *)pg_SvgGpu_Translation_Y, 0, pg_nb_SvgGpu * sizeof(float));
-	pg_SvgGpu_Colors = new pg_SvgGpuColors_Types[pg_nb_SvgGpu];
-	for (int indFile = 0; indFile < pg_nb_SvgGpu; indFile++) {
-		pg_SvgGpu_Colors[indFile] = SvgGpu_nat;
+	pg_ClipArt_Rotation = new float[pg_nb_ClipArt];
+	memset((char *)pg_ClipArt_Rotation, 0, pg_nb_ClipArt * sizeof(float));
+	pg_ClipArt_Translation_X = new float[pg_nb_ClipArt];
+	memset((char *)pg_ClipArt_Translation_X, 0, pg_nb_ClipArt * sizeof(float));
+	pg_ClipArt_Translation_Y = new float[pg_nb_ClipArt];
+	memset((char *)pg_ClipArt_Translation_Y, 0, pg_nb_ClipArt * sizeof(float));
+	pg_ClipArt_Colors = new pg_ClipArt_Colors_Types[pg_nb_ClipArt];
+	for (int indFile = 0; indFile < pg_nb_ClipArt; indFile++) {
+		pg_ClipArt_Colors[indFile] = ClipArt_nat;
 	}
-	pg_SvgGpu_SubPath = new bool[pg_nb_SvgGpu * 4];
-	for (int indFile = 0; indFile < pg_nb_SvgGpu; indFile++) {
+	pg_ClipArt_SubPath = new bool[pg_nb_ClipArt * 4];
+	for (int indFile = 0; indFile < pg_nb_ClipArt; indFile++) {
 		for (int indPath = 0; indPath < 4; indPath++) {
-			pg_SvgGpu_SubPath[indFile * 4 + indPath] = true;
+			pg_ClipArt_SubPath[indFile * 4 + indPath] = true;
 		}
 	}
 
 	pg_nb_tot_SvgGpu_paths = 0;
-	for (int indGPUFile = 0; indGPUFile < pg_nb_SvgGpu; indGPUFile++) {
-		pg_ind_first_SvgGpu_path[indGPUFile] = pg_nb_tot_SvgGpu_paths;
+	for (int indClipArtFile = 0; indClipArtFile < pg_nb_ClipArt; indClipArtFile++) {
+		pg_ind_first_SvgGpu_path_in_ClipArt[indClipArtFile] = pg_nb_tot_SvgGpu_paths;
 			
 		std::getline(scenarioFin, line);
 		sstrem.clear();
 		sstrem.str(line);
 
-		sstrem >> ID; // string svg_gpu
-		sstrem >> pg_SvgGpu_fileNames[indGPUFile]; // file name
-		sstrem >> pg_nb_SvgGpu_paths[indGPUFile]; // number of paths in the file
-		pg_nb_tot_SvgGpu_paths += pg_nb_SvgGpu_paths[indGPUFile];
-		//printf("ind path file %d name %s nb paths %d\n", indGPUFile, pg_SvgGpu_fileNames[indGPUFile].c_str(), pg_nb_SvgGpu_paths[indGPUFile]);
+		sstrem >> ID; // string svg_clip_art
+		sstrem >> pg_ClipArt_fileNames[indClipArtFile]; // file name
+		sstrem >> pg_nb_paths_in_ClipArt[indClipArtFile]; // number of paths in the file
+		pg_nb_tot_SvgGpu_paths += pg_nb_paths_in_ClipArt[indClipArtFile];
+		//printf("ind path file %d name %s nb paths %d\n", indClipArtFile, pg_ClipArt_fileNames[indClipArtFile].c_str(), pg_nb_paths_in_ClipArt[indClipArtFile]);
 		
 		// image initial geometry
-		sstrem >> pg_SvgGpu_Scale[indGPUFile];
-		sstrem >> pg_SvgGpu_Translation_X[indGPUFile];
-		sstrem >> pg_SvgGpu_Translation_Y[indGPUFile];
-		sstrem >> pg_SvgGpu_Rotation[indGPUFile];
+		sstrem >> pg_ClipArt_Scale[indClipArtFile];
+		sstrem >> pg_ClipArt_Translation_X[indClipArtFile];
+		sstrem >> pg_ClipArt_Translation_Y[indClipArtFile];
+		sstrem >> pg_ClipArt_Rotation[indClipArtFile];
 		sstrem >> ID;
 		if (ID.compare("nat") == 0) {
-			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_nat;
+			pg_ClipArt_Colors[indClipArtFile] = ClipArt_nat;
 		}
 		else if (ID.compare("white") == 0) {
-			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_white;
+			pg_ClipArt_Colors[indClipArtFile] = ClipArt_white;
 		}
 		else if (ID.compare("red") == 0) {
-			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_red;
+			pg_ClipArt_Colors[indClipArtFile] = ClipArt_red;
 		}
 		else if (ID.compare("green") == 0) {
-			pg_SvgGpu_Colors[indGPUFile] = SvgGpu_green;
+			pg_ClipArt_Colors[indClipArtFile] = ClipArt_green;
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect configuration file SVG GPU color \"%s\" (nat, white, red, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
 	}
 
-	// /svg_gpus
+	// /svg_clip_arts
 	std::getline(scenarioFin, line);
 	sstrem.clear();
 	sstrem.str(line);
-	sstrem >> ID; // string /svg_gpus
-	if (ID.compare("/svg_gpus") != 0) {
+	sstrem >> ID; // string /svg_clip_arts
+	if (ID.compare("/svg_clip_arts") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 

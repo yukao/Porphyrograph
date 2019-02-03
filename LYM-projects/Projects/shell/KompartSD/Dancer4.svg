@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   id="svg907"
+   version="1.1"
+   height="1080"
+   width="1920">
+  <defs
+     id="defs901" />
+  <metadata
+     id="metadata904">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,0)"
+     id="layer1">
+    <image
+       xlink:href="DancerC.png"
+       width="961"
+       height="541"
+       preserveAspectRatio="none"
+       id="image917"
+       x="0"
+       y="0" />
+    <image
+       xlink:href="DancerD.png"
+       width="961"
+       height="541"
+       preserveAspectRatio="none"
+       id="image928"
+       x="960"
+       y="0" />
+    <image
+       xlink:href="DancerS.png"
+       width="961"
+       height="541"
+       preserveAspectRatio="none"
+       id="image939"
+       x="0"
+       y="540" />
+    <image
+       xlink:href="DancerG.png"
+       width="961"
+       height="541"
+       preserveAspectRatio="none"
+       id="image950"
+       x="960"
+       y="540" />
+  </g>
+</svg>

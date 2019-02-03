@@ -29,7 +29,7 @@ client	udp_Usine_send	192.168.43.189	9000	OSC	0	300	1
 client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
 client	udp_RN_send	127.0.0.1	8000	OSC	0	300	1											
 /udp_remote_client																		
-shader_files	5																	
+shader_files	6																	
 VERBATIM																		
 TYPE	string																	
 ID	id																	
@@ -38,6 +38,7 @@ filename	LYM_Update_voluspa	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER
 filename	LYM_ParticleSplat_voluspa	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
 filename	LYM_Mixing_voluspa	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_voluspa	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		
 /head																		

@@ -321,8 +321,8 @@ int main(int argcMain, char **argvMain) {
 	initializeNVPathRender(SVG_GPU_programName);
 	SVG_path_baseID = glGenPathsNV(pg_nb_tot_SvgGpu_paths);
 	SVG_path_fill_color = new GLint[pg_nb_tot_SvgGpu_paths];
-	for (int indGPUFile = 0; indGPUFile < pg_nb_SvgGpu; indGPUFile++) {
-		LoadPathsToGPU("Data/" + project_name + "-data/SVG_GPUs/" + pg_SvgGpu_fileNames[indGPUFile], pg_ind_first_SvgGpu_path[indGPUFile], pg_nb_SvgGpu_paths[indGPUFile]);
+	for (int indClipArtFile = 0; indClipArtFile < pg_nb_ClipArt; indClipArtFile++) {
+		LoadSVGPathsToGPU("Data/" + project_name + "-data/SVG_GPUs/" + pg_ClipArt_fileNames[indClipArtFile], pg_ind_first_SvgGpu_path_in_ClipArt[indClipArtFile], pg_nb_paths_in_ClipArt[indClipArtFile]);
 		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
 	}
 
@@ -583,6 +583,11 @@ void pg_init_scene(void) {
 bool pg_shutdown = false;
 
 void quit( void ) {
+	// for Annika performance: save the svg paths before quitting (could perhaps be generalized)
+#ifdef KOMPARTSD
+	pg_draw_scene(_Svg, false);
+#endif
+	
 	// lights off the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 #ifdef VOLUSPA

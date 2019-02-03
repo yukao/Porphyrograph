@@ -778,6 +778,9 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName,
 /// NON THREADED LOAD CAMERA FRAME
 #ifdef PG_WITH_CAMERA_CAPTURE
 void loadCameraFrame(bool initial_capture) {
+#ifdef KOMPARTSD
+	return;
+#endif
 	//Grabs and returns a frame from camera
 	Mat pg_camera_frame;
 	pg_camera_capture >> pg_camera_frame;
@@ -1390,21 +1393,29 @@ bool is_substring_index(char * char_string_subdir, int ind) {
 }
 
 bool is_subdir_index(struct dirent *dirp, std::string *dirpath, int inddir) {
-	string filepath = *dirpath + "/" + dirp->d_name;
+	string filepath = *dirpath + dirp->d_name;
 	struct stat filestat;
+	// std::cout << "subdir path: " + filepath << std::endl;
 
 	// If the file is a directory and the name contains the integer 
-	if (stat(filepath.c_str(), &filestat)) return false; // colleccts file status and returns 0 on success
-	if (S_ISDIR(filestat.st_mode) && is_substring_index(dirp->d_name, inddir)) { // the file is a directory 
-																				 // and contains the integer substring
+	if (stat(filepath.c_str(), &filestat)) {
+		std::cout << "subdir error: " + filepath << std::endl;
+		return false; // colleccts file status and returns 0 on success
+	}
+	if (S_ISDIR(filestat.st_mode) 
+		&& is_substring_index(dirp->d_name, inddir)) { // the file is a directory 
+													   // and contains the integer substring
+		// std::cout << "subdir found: " + filepath << std::endl;
 		return true;
 	}
+	// std::cout << "subdir not found: " + filepath << std::endl;
 	return false;
 }
 
 bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile) {
 	string filepath = *dirpath + "/" + dirp->d_name;
 	struct stat filestat;
+	// std::cout << "file path looking for: " + filepath << std::endl;
 
 	// If the file is a directory (or is in some way invalid) we'll skip it 
 	if (stat(filepath.c_str(), &filestat)) return false; // colleccts file status and returns 0 on success
@@ -1426,16 +1437,18 @@ bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile) {
 
 string * is_subdir_subfile_index(std::string *dirpath, int inddir, int indfile) {
 	DIR *dp = opendir(dirpath->c_str());
+	// std::cout << "opening dir : (" << *dirpath << ")" << std::endl;
 	if (dp == NULL)
 	{
 		std::cout << "is_subdir_subfile_index 1 Error(" << errno << ") opening " << *dirpath << std::endl;
 		return NULL;
 	}
-	// std::cout << std::endl << "dir to get files of: " + dirpath << std::endl;
+	// std::cout << std::endl << "dir to get files of: " + *dirpath << std::endl;
 	struct dirent *dirp;
 	while ((dirp = readdir(dp))) {
 		if (is_subdir_index(dirp, dirpath, inddir)) {
-			string subdirpath(*dirpath + "/" + dirp->d_name);
+			string subdirpath(*dirpath + dirp->d_name);
+			// std::cout << std::endl << "reading files number " << indfile << " from subdir: " + subdirpath << std::endl;
 			DIR *subdp = opendir(subdirpath.c_str());
 			if (subdp == NULL)
 			{
@@ -1556,7 +1569,7 @@ std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
 // SUBDIRECTORY AND FILE NAMES SHOULD END WITH 000, 001, 002...
 string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex,
 	int maxFilesPerFolder) {
-	// printf("dir path %s cur dir index %d cur file index %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex);
+	// printf("dir path %s cur dir index %d cur file index %d maxFilesPerFolder %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex, maxFilesPerFolder);
 	string * returnedString;
 	// next file in the same dir
 	if ((*currentFileIndex) < maxFilesPerFolder
@@ -2264,7 +2277,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
 		&& indCompressedImage < pg_nbCompressedImages
 		&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
-		// std::cout << "file " << *fileName << std::endl;
+		std::cout << "file " << *fileName << std::endl;
 		// counts files in dir
 		pg_nbCompressedImagesPerFolder[pg_CurrentDiaporamaDir] = pg_CurrentDiaporamaFile;
 		// if first file, stores the pointer to the file index, so that ID can be retrived 
@@ -2287,8 +2300,12 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
 						true, 2048, 1024, false);
 				}
+				else if (leftWindowWidth == 1920 && window_height == 1080) {
+					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
+						true, 2048, 2048, false);
+				}
 				else {
-					printf("Iniital images: unexpected window format for diaporama (known formats 1024x768 && 1280x720\n");
+					printf("Initial images: unexpected window format for diaporama (known formats 1024x768 && 1280x720\n");
 				}
 				delete fileName;
 				fileName = NULL;
