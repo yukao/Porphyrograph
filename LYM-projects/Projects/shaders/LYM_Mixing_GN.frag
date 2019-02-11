@@ -19,7 +19,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec3 uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
+uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -50,7 +50,7 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float height = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.y;
+  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
 
   vec4 track0_color = texture(uniform_Mixing_texture_fs_Trk0, decalCoords);
   vec4 CA_color = texture(uniform_Mixing_texture_fs_CA, decalCoords);

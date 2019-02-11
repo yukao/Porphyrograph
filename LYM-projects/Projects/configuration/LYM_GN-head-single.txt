@@ -36,6 +36,6 @@ filename	LYM_Update_GN	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER
 filename	LYM_Mixing_GN	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_GN	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Sensor_GN	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ClipArt_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

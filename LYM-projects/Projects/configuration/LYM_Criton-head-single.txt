@@ -35,6 +35,6 @@ ID	udp_remote_client
 filename	LYM_Update_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Mixing_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_Criton	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ClipArt_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

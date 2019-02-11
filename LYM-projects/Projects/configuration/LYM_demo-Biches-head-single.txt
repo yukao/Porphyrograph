@@ -38,6 +38,6 @@ filename	LYM_ParticleSplat_Biches	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGM
 filename	LYM_Mixing_Biches	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_Biches	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Sensor_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ClipArt_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

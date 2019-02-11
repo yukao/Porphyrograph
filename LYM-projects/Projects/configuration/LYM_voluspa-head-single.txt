@@ -38,7 +38,7 @@ filename	LYM_Update_voluspa	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER
 filename	LYM_ParticleSplat_voluspa	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
 filename	LYM_Mixing_voluspa	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_voluspa	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
-filename	LYM_SvgGpu_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ClipArt_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		
 /head																		

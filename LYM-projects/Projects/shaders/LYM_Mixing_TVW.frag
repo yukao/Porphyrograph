@@ -22,7 +22,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec3 uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
+uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 // uniform vec4 uniform_Composition_fs_4fv_height_screenMsgTransp_Text1_2_Alpha;
@@ -64,7 +64,7 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float height = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.y;
+  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
 
   vec4 bg_color = texture(uniform_Mixing_texture_fs_Trk0, decalCoords);
 #ifdef PG_WITH_CA
@@ -134,7 +134,7 @@ void main() {
 
 #ifdef PG_WITH_CA
       // brigher CA at the beginning of a flash
-      float flashCameraTrkWght = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.z;
+      float flashCameraTrkWght = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.y;
       // float flashVideoThreshold = uniform_Composition_fs_2fv_flashCameraTrkWght_flashVideoThreshold.y;
       // if( flashCameraTrkWght > flashVideoThreshold / 2 && flashCameraTrkWght < flashVideoThreshold ) { // flash video
       //   CAMixingWeight += (1.0 - CAMixingWeight) * (flashCameraTrkWght - flashVideoThreshold / 2) / (flashVideoThreshold / 2);
