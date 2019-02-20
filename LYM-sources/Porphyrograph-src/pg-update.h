@@ -43,7 +43,14 @@ extern GLuint Display_Font_texture_Rectangle_texID;
 extern cv::Mat Screen_Font_image;
 extern cv::Mat Display_Font_image;
 
+#ifdef PG_WITH_MASTER_MASK
+extern GLuint Master_Mask_texID;
+extern cv::Mat Master_Mask_image;
+#endif
+
+#ifndef PG_BEZIER_PATHS
 extern GLuint Pen_texture_3D_texID;
+#endif
 extern GLuint Noise_texture_3D;
 
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 

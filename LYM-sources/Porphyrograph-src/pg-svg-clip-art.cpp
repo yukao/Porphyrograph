@@ -347,7 +347,7 @@ static void pg_Display_One_SVG_ClipArt(pg_ClipArt_Colors_Types color, int path_l
 // RENDERING GPU SVG IF SOME LAYERS ARE ACTIVE
 void pg_Display_All_SVG_ClipArt(int activeFiles) {
 	if (activeFiles != 0) {
-		glUseProgram(shader_programme[pg_SvgGpu]);
+		glUseProgram(shader_programme[pg_ClipArt]);
 		//glDisable(GL_DEPTH_TEST);
 
 		//glClearStencil(0);

@@ -169,12 +169,14 @@ bool pg_initTextures(void) {
 		}
 	}
 
+#ifndef PG_BEZIER_PATHS
 	pg_loadTexture3D((char *)("Data/" + project_name + "-data/brushes/" + pen_brushes_fileName).c_str(),
 		".png", nb_pen_brushes, 4, true,
 		&Pen_texture_3D_texID, GL_RGBA8, GL_RGBA,
 		GL_LINEAR,
 		2048, 2048, nb_pen_brushes);
 	printOglError(7);
+#endif
 
 #if defined (GN)
 	pg_loadTexture((char *)("Data/" + project_name + "-data/textures/LYMlogo.png").c_str(), &pg_LYMlogo_image,
@@ -230,7 +232,7 @@ bool pg_initTextures(void) {
 		(GLubyte *)pg_generateTexture(&pg_CATable_ID, pg_byte_tex_format,
 			width_data_table, height_data_table);
 	pg_CATable_values(pg_CATable_ID, pg_CATable,
-			width_data_table, height_data_table);
+		width_data_table, height_data_table);
 	if (!pg_CATable_ID) {
 		sprintf(ErrorStr, "Error: data tables for the CA bitmap not allocated (%s)!", ScreenMessage); ReportError(ErrorStr); throw 336;
 	}
@@ -256,7 +258,7 @@ bool pg_initTextures(void) {
 	*/
 
 #ifdef CURVE_PARTICLES
-// loads the curve comet texture
+	// loads the curve comet texture
 	string fileNameCurveText = "Data/" + project_name + "-data/textures/comet.png";
 	printf("Loading %s\n", fileNameCurveText.c_str());
 	pg_loadTexture(fileNameCurveText, &comet_image,
@@ -273,6 +275,16 @@ bool pg_initTextures(void) {
 		GL_UNSIGNED_BYTE, GL_LINEAR,
 		256, 256);
 #endif
+
+#ifdef PG_WITH_MASTER_MASK
+	glGenTextures(1, &Master_Mask_texID);
+
+	pg_loadTexture((char *)("Data/" + project_name + "-data/textures/master_mask.png").c_str(), &Master_Mask_image,
+		&Master_Mask_texID, true, false, GL_RGB8, GL_RGBA,
+		GL_UNSIGNED_BYTE, GL_LINEAR,
+		leftWindowWidth, window_height);
+#endif
+
 	printOglError(6);
 
 	return true;
@@ -1179,7 +1191,7 @@ void* pg_movieLoop(void * lpParam) {
 	pg_movie_capture >> new_movie_frame;
 
 	pg_movie_nbFrames = int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT));
-	printf("movie restarted\n");
+	// printf("movie restarted\n");
 	is_movieLooping = false;
 	return NULL;
 }
@@ -2194,11 +2206,11 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 		indCompressedImage++;
 	}
 	std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages << " files." << std::endl;
-	std::cout << "Folders index/nbFiles/1stFileIndex";
-	for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
-		std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
-	}
-	std::cout << std::endl;
+	//std::cout << "Folders index/nbFiles/1stFileIndex";
+	//for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
+	//	std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
+	//}
+	//std::cout << std::endl;
 
 	// INITIALIZES SWAP
 	for (int indBuffer = 0; indBuffer < PG_PHOTO_NB_TEXTURES_TVW;
@@ -2277,7 +2289,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
 		&& indCompressedImage < pg_nbCompressedImages
 		&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
-		std::cout << "file " << *fileName << std::endl;
+		// std::cout << "file " << *fileName << std::endl;
 		// counts files in dir
 		pg_nbCompressedImagesPerFolder[pg_CurrentDiaporamaDir] = pg_CurrentDiaporamaFile;
 		// if first file, stores the pointer to the file index, so that ID can be retrived 
@@ -2312,7 +2324,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 
 				pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false,
 					GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
-				printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
+				// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
 
 				printOglError(8);
 			}
@@ -2320,11 +2332,11 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 		indCompressedImage++;
 	}
 	std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages << " files." << std::endl;
-	std::cout << "Folders index/nbFiles/1stFileIndex";
-	for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
-		std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
-	}
-	std::cout << std::endl;
+	//std::cout << "Folders index/nbFiles/1stFileIndex";
+	//for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
+	//	std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
+	//}
+	//std::cout << std::endl;
 
 	// INITIALIZES SWAP
 	for (int indBuffer = 0; indBuffer < PG_PHOTO_NB_TEXTURES;

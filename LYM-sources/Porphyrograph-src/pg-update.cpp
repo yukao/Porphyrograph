@@ -186,8 +186,15 @@ GLuint Display_Font_texture_Rectangle_texID = 0;
 cv::Mat Display_Font_image;
 #endif
 
+#ifndef PG_BEZIER_PATHS
 GLuint Pen_texture_3D_texID = 0;
+#endif
 GLuint Noise_texture_3D = 0;
+
+#ifdef PG_WITH_MASTER_MASK
+GLuint Master_Mask_texID = 0;
+cv::Mat Master_Mask_image;
+#endif
 
 #if defined (TVW)
 /////////////////////////////////////////////////////////////////
@@ -814,16 +821,28 @@ void one_frame_variables_reset(void) {
 
 
 	////////////////////////////
-	// flash video reset
+	// flash camera reset
 	if (flashCameraTrk_weight > 0.0f) {
 		if (flashCameraTrk_weight - flashCameraTrk_decay > 0) {
 			flashCameraTrk_weight -= flashCameraTrk_decay;
 		}
 		else {
 			flashCameraTrk_weight = 0.0f;
+			// printf("end of flash camera weight %.3f\n", flashCameraTrk_weight);
 		}
-		// printf("coef %.3f\n", flashCameraTrk_weight);
 	}
+#ifdef PG_WITH_PHOTO_FLASH
+	// flash photo reset
+	if (flashPhotoTrk_weight > 0.0f) {
+		if (flashPhotoTrk_weight - flashPhotoTrk_decay > 0) {
+			flashPhotoTrk_weight -= flashPhotoTrk_decay;
+		}
+		else {
+			flashPhotoTrk_weight = 0.0f;
+			// printf("end of flash photo weight %.3f\n", flashPhotoTrk_weight);
+		}
+	}
+#endif
 
 	// /////////////////////////
 	// clear layer reset
@@ -892,7 +911,7 @@ void pg_update_camera_and_video_frame(void) {
 			lastFrameCaptureTime = CurrentClockTime + (elapsedTimeSinceLastCapture - (1.0f / movieCaptFreq));
 			if (pg_movie_nbFrames < 10 || !pg_movie_capture.grab()) {
 				// loops unless a thread for looping has been launched
-				printf("movie loop %d\n", pg_movie_nbFrames);
+				// printf("movie loop %d\n", pg_movie_nbFrames);
 				is_movieLooping = true;
 #ifdef WIN32
 				DWORD rc;
@@ -992,6 +1011,12 @@ void pg_update_shader_uniforms(void) {
 #endif
 #if defined (BICHES)
 #include "pg_update_body_Biches.cpp"
+#endif
+#if defined (CAVERNEPLATON)
+#include "pg_update_body_CavernePlaton.cpp"
+#endif
+#if defined (ULM)
+#include "pg_update_body_Ulm.cpp"
 #endif
 #ifdef effe
 #include "pg_update_body_effe.cpp"
@@ -1206,23 +1231,29 @@ void pg_update_shader_uniforms(void) {
 
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 	// pen paths positions
-	glUniform4f(uniform_Update_fs_4fv_paths03_x, paths_x[0], paths_x[1], paths_x[2], paths_x[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_y, paths_y[0], paths_y[1], paths_y[2], paths_y[3]);
+	glUniform4f(uniform_Update_fs_4fv_paths03_x, paths_x_0_forGPU, paths_x[1], paths_x[2], paths_x[3]);
+	glUniform4f(uniform_Update_fs_4fv_paths03_y, paths_y_0_forGPU, paths_y[1], paths_y[2], paths_y[3]);
 	//  checks the information shipped to GPU at beginning or ending of a stroke
 	// begin
-	//if (isBegin[0]) {
-	//	printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x[0], paths_y[0]);
-	//}
-	//// end
-	//if (isEnd[0]) {
-	//	printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x[0], paths_y[0]);
-	//}
-	//if ((paths_x_prev[0] < 0 || paths_y_prev[0] < 0) && (paths_x[0] >= 0 && paths_y[0] >= 0)) {
-	//	printf("Current position BEGIN\n");
-	//}
-	//if ((paths_x[0] < 0 || paths_y[0] < 0) && (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
-	//	printf("Current position END\n");
-	//}
+	if (isBegin[0]) {
+		printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+	}
+	// end
+	if (isEnd[0]) {
+		printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+	}
+	if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR) 
+		&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
+		printf("Current position BEGIN\n");
+	}
+	if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR) 
+		&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
+		printf("Current position END\n");
+	}
+	if (paths_x_0_forGPU >= 0 && paths_y_0_forGPU >= 0) {
+		// printf("Position %.1f %.1f\n\n", paths_x_0_forGPU, paths_y_0_forGPU);
+	}
+
 	glUniform4f(uniform_Update_fs_4fv_paths03_x_prev,
 		paths_x_prev[0], paths_x_prev[1], paths_x_prev[2], paths_x_prev[3]);
 	glUniform4f(uniform_Update_fs_4fv_paths03_y_prev,
@@ -1262,9 +1293,11 @@ void pg_update_shader_uniforms(void) {
 	//printf("Track#3 color %.2f %.2f %.2f %.2f\n", paths_Color_r[3], paths_Color_g[3], paths_Color_b[3], paths_Color_a[3]);
 
 	// pen paths brush & size
+#ifndef PG_BEZIER_PATHS
 	glUniform4f(uniform_Update_fs_4fv_paths03_BrushID,
 		(GLfloat)paths_BrushID[0], (GLfloat)paths_BrushID[1], (GLfloat)paths_BrushID[2], (GLfloat)paths_BrushID[3]);
 	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[0] , paths_BrushID[1] , paths_BrushID[2] , paths_BrushID[3] );
+#endif
 	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusX,
 		paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
 	//printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
@@ -1311,9 +1344,11 @@ void pg_update_shader_uniforms(void) {
 		paths_Color_a[4], paths_Color_a[5], paths_Color_a[6], paths_Color_a[7]);
 
 	// pen paths brush & size
+#ifndef PG_BEZIER_PATHS
 	glUniform4f(uniform_Update_fs_4fv_paths47_BrushID,
 		(GLfloat)paths_BrushID[4], (GLfloat)paths_BrushID[5], (GLfloat)paths_BrushID[6], (GLfloat)paths_BrushID[7]);
 	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[4] , paths_BrushID[5] , paths_BrushID[6] , paths_BrushID[7] );
+#endif
 	glUniform4f(uniform_Update_fs_4fv_paths47_RadiusX,
 		paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6], paths_RadiusX[7]);
 #ifndef PG_BEZIER_PATHS
@@ -1437,6 +1472,12 @@ void pg_update_shader_uniforms(void) {
 	// printf("Flash camera coef %.1f\n", flashCameraTrk_weight);
 	if (copyToNextTrack != 0)
 		printf("copyToNextTrack %d\n", copyToNextTrack);
+
+#ifdef PG_WITH_PHOTO_FLASH
+	// photo flash
+	glUniform2f(uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres,
+		flashPhotoTrk_weight, flashPhotoTrk_threshold);
+#endif
 
 	// flash CA -> BG & repop color (BG & CA)
 	glUniform4f(uniform_Update_fs_4fv_repop_Color_flashCABGWght,
@@ -1721,9 +1762,13 @@ void pg_update_shader_uniforms(void) {
 	glUseProgram(shader_programme[pg_shader_Mixing]);
 
 	// CA weight
-	glUniform3f(uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght,
-		(pulse_average - pulse_average_prec) * echo_Hshift_pulse, (GLfloat)window_height,
-		 flashCameraTrk_weight);
+#ifdef PG_WITH_PHOTO_FLASH
+	glUniform3f(uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght,
+		(GLfloat)window_height, flashCameraTrk_weight, flashPhotoTrk_weight);
+#else
+	glUniform2f(uniform_Mixing_fs_2fv_height_flashCameraTrkWght,
+		(GLfloat)window_height, flashCameraTrk_weight);
+#endif
 
 	// TEXT TRANSPARENCY
 #if defined (TVW)
@@ -1953,7 +1998,9 @@ void pg_UpdatePass(void) {
 #ifdef PG_NB_PIXEL_MODES
 	glUniform1i(uniform_Update_texture_fs_Pixels, pg_Pixels_FBO_Update_sampler);
 #endif
+#ifndef PG_BEZIER_PATHS
 	glUniform1i(uniform_Update_texture_fs_Brushes, pg_Brushes_FBO_Update_sampler);
+#endif
 #ifdef PG_WITH_CAMERA_CAPTURE
 	glUniform1i(uniform_Update_texture_fs_Camera_frame, pg_Camera_frame_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Camera_BG, pg_Camera_BG_FBO_Update_sampler);
@@ -2017,8 +2064,10 @@ void pg_UpdatePass(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// pen patterns
+#ifndef PG_BEZIER_PATHS
 	glActiveTexture(GL_TEXTURE0 + pg_Brushes_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Pen_texture_3D_texID);
+#endif
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -2495,6 +2544,10 @@ void pg_MasterPass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Master_texture_fs_Trk3, pg_Trk3_FBO_Master_sampler);
 #endif
+#ifdef PG_WITH_MASTER_MASK
+	glUniform1i(uniform_Master_texture_fs_Mask, pg_Mask_FBO_Master_sampler);
+#endif
+
 #if defined (GN) || defined (INTERFERENCE)
 	glUniform1i(uniform_Master_texture_fs_LYMlogo, pg_LYMlogo_Master_sampler);
 #endif
@@ -2535,6 +2588,11 @@ void pg_MasterPass(void) {
 	// 2-cycle ping-pong track 3 step n (FBO attachment 6)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
+#endif
+#ifdef PG_WITH_MASTER_MASK
+	// Master mask texture
+	glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
+	glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID);
 #endif
 #if defined (GN) || defined (INTERFERENCE)
 	// LYM logo

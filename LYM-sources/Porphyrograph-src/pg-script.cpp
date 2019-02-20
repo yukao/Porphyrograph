@@ -38,6 +38,12 @@
 #if defined (BICHES)
 #include "pg_script_body_Biches.cpp"
 #endif
+#if defined (CAVERNEPLATON)
+#include "pg_script_body_CavernePlaton.cpp"
+#endif
+#if defined (ULM)
+#include "pg_script_body_Ulm.cpp"
+#endif
 #ifdef effe
 #include "pg_script_body_effe.cpp"
 #endif
@@ -187,6 +193,12 @@ bool is_flashCameraTrk = false;
 float flashCameraTrk_weight = 0.0f;
 float flashCameraTrk_decay = 1.0f;
 float flashCameraTrk_threshold = 0.5f;
+#ifdef PG_WITH_PHOTO_FLASH
+bool is_flashPhotoTrk = false;
+float flashPhotoTrk_weight = 0.0f;
+float flashPhotoTrk_decay = 1.0f;
+float flashPhotoTrk_threshold = 0.5f;
+#endif
 
 // +++++++++++++++++++++ VIDEO BACKGROUND SUBTRACTION +++++
 bool is_firstVideoOn = true;
@@ -264,6 +276,7 @@ enum pg_stringCommands_IDs
 	_connect_PD,
 	_quit,
 	_flashCamera,
+	_flashPhoto,
 	_pulse_average,
 	_pulse_spectrum,
 	_beat,
@@ -391,6 +404,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "connect_PD", _connect_PD },
 	{ "quit", _quit },
 	{ "flashCamera", _flashCamera },
+	{ "flashPhoto", _flashPhoto },
 	{ "pulse_average", _pulse_average },
 	{ "pulse_spectrum", _pulse_spectrum },
 	{ "beat", _beat },
@@ -840,7 +854,9 @@ void pg_initializationScript(void) {
 		paths_Color_b[indPath] = 0.0F;
 		paths_Color_a[indPath] = 1.0F;
 		// pen brush & size
+#ifndef PG_BEZIER_PATHS
 		paths_BrushID[indPath] = 0;
+#endif
 		paths_RadiusX[indPath] = 0.0F;
 		paths_RadiusY[indPath] = 0.0F;
 	}
@@ -1351,8 +1367,10 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, float sc
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value >= 0 && scenario_or_gui_command_value != pg_CurrentDiaporamaDir) {
-			pg_CurrentDiaporamaDir = int(scenario_or_gui_command_value);
-			printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+			pg_CurrentDiaporamaDir = int(scenario_or_gui_command_value) % pg_nbCompressedImageDirs;
+			//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			pg_launch_diaporama();
 		}
 	}
@@ -1367,6 +1385,18 @@ void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, flo
 		}
 	}
 }
+#ifdef PG_WITH_PHOTO_FLASH
+void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
+		if (scenario_or_gui_command_value > 0.) {
+			flashPhotoTrk_decay = 1.f / scenario_or_gui_command_value;
+		}
+		else {
+			flashPhotoTrk_decay = 0.001f;
+		}
+	}
+}
+#endif
 void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value >= 1) { // large radius for the image brushes
@@ -2099,6 +2129,9 @@ void StartNewScene(int ind_scene) {
 	}
 	// stops ongoing flashes if there is one
 	flashCameraTrk_weight = 0.0f;
+#ifdef PG_WITH_PHOTO_FLASH
+	flashPhotoTrk_weight = 0.0f;
+#endif
 
 #if defined (TVW)
 	// updates image and text directories
@@ -2725,7 +2758,12 @@ void pg_aliasScript(char *command_symbol,
 
 	// unregistered command
 	if (pg_stringCommands.find(newCommand) == pg_stringCommands.end()) {
-		sprintf(ErrorStr, "Unknown command (%s)!", command_symbol); ReportError(ErrorStr);
+		// touch OSC sends OSC commands for each tab change, we have decided to name them _DISPLAY
+		string ending("_DISPLAY");
+		if (newCommand.length() < ending.length()
+			|| !(0 == newCommand.compare(newCommand.length() - ending.length(), ending.length(), ending))) {
+			sprintf(ErrorStr, "Unknown command (%s)!", command_symbol); ReportError(ErrorStr);
+		}
 		return;
 	}
 
@@ -2805,11 +2843,18 @@ void pg_aliasScript(char *command_symbol,
 	}
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-	// +++++++++++++++++ VIDEO FLASH ++++++++++++++++++++++++ 
+	// +++++++++++++++++ VIDEO & PHOTO FLASH +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _flashCamera: {
 		is_flashCameraTrk = true;
 		flashCameraTrk_weight = 0.0f;
+		// printf("start flash\n");
+		//    break;
+		break;
+	}
+	case _flashPhoto: {
+		is_flashPhotoTrk = true;
+		flashPhotoTrk_weight = 0.0f;
 		// printf("start flash\n");
 		//    break;
 		break;
@@ -2887,15 +2932,26 @@ void pg_aliasScript(char *command_symbol,
 		}
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-		// video flash
+		// camera flash
 		if (is_flashCameraTrk
 			&& ((pg_BeatNo % PG_LOOP_SIZE) == flashCameraTrkBeat || flashCameraTrkBeat == 9)) {
 			is_flashCameraTrk = false;
 			flashCameraTrk_weight = 1.0f;
 			flashCameraTrk_threshold = std::min(std::max(0.0f, 1.0f - flashCameraTrk_decay * flashCameraTrkBright), 1.0f);
-			//printf("flashCameraTrk_weight %.3f decay %.2f\n", 
-			//	flashCameraTrk_weight , flashCameraTrk_decay );
+			//printf("flashCameraTrk_weight %.3f decay %.2f threshold %.3f\n", 
+			//	flashCameraTrk_weight , flashCameraTrk_decay, flashPhotoTrk_threshold);
 		}
+#ifdef PG_WITH_PHOTO_FLASH
+		// photo flash
+		if (is_flashPhotoTrk
+			&& ((pg_BeatNo % PG_LOOP_SIZE) == flashPhotoTrkBeat || flashPhotoTrkBeat == 9)) {
+			is_flashPhotoTrk = false;
+			flashPhotoTrk_weight = 1.0f;
+			flashPhotoTrk_threshold = std::min(std::max(0.0f, 1.0f - flashPhotoTrk_decay * flashPhotoTrkBright), 1.0f);
+			//printf("flashPhotoTrk_weight %.3f decay %.2f threshold %.3f\n", 
+			//	flashPhotoTrk_weight, flashPhotoTrk_decay, flashPhotoTrk_threshold);
+		}
+#endif
 
 		if (flashPixel_freq > 0
 			&& flashPixel_freq <= PG_LOOP_SIZE // if flashPixel_freq > PG_LOOP_SIZE -> update every frame
@@ -3635,47 +3691,59 @@ void pg_aliasScript(char *command_symbol,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _diaporama_plus: {
-		string fileName = "";
-		for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
-			// incay and decay are 0 if is_capture_diaporama
-			float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
-			float decay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
-			// blended photo is terminated to switch to the next one
-			if (pg_Photo_swap_buffer_data[indPhoto].blendStart > 0.0f) {
-				printf("load diaporama_minus stops blending layer #%d\n", indPhoto);
-				int nextCompressedImage
-					= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
-						&pg_CurrentDiaporamaFile, ascendingDiaporama);
-				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
-					= nextCompressedImage;
-				pg_Photo_swap_buffer_data[indPhoto].blendStart
-					= CurrentClockTime - (incay + photo_diaporama_plateau + decay);
-				return;
-			}
-		}
+		//for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
+		//	// incay and decay are 0 if is_capture_diaporama
+		//	float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
+		//	float decay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
+		//	// blended photo is terminated to switch to the next one
+		//	if (pg_Photo_swap_buffer_data[indPhoto].blendStart > 0.0f) {
+		//		printf("load diaporama #%d\n", indPhoto);
+		//		sprintf(AuxString, "/diaporama_shortName %03d", indPhoto);
+		//		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+		//		int nextCompressedImage
+		//			= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
+		//				&pg_CurrentDiaporamaFile, ascendingDiaporama);
+		//		pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
+		//			= nextCompressedImage;
+		//		pg_Photo_swap_buffer_data[indPhoto].blendStart
+		//			= CurrentClockTime - (incay + photo_diaporama_plateau + decay);
+		//		return;
+		//	}
+		//}
+		pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir + 1) % pg_nbCompressedImageDirs;
+		//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+		sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+		pg_launch_diaporama();
 		break;
 	}
 	case _diaporama_minus: {
-		string fileName = "";
-		for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
-			// incay and decay are 0 if is_capture_diaporama
-			float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
-			float decay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
-			// blended photo is terminated to switch to the next one
-			if (pg_Photo_swap_buffer_data[indPhoto].blendStart > 0.0f) {
-				// change order (was decreasing before)
-				// stops blending
-				printf("load diaporama_minus stops blending layer #%d\n", indPhoto);
-				int nextCompressedImage
-					= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
-						&pg_CurrentDiaporamaFile, !ascendingDiaporama);
-				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
-					= nextCompressedImage;
-				pg_Photo_swap_buffer_data[indPhoto].blendStart
-					= CurrentClockTime - (incay + photo_diaporama_plateau + decay);
-				return;
-			}
-		}
+		//for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
+		//	// incay and decay are 0 if is_capture_diaporama
+		//	float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
+		//	float decay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
+		//	// blended photo is terminated to switch to the next one
+		//	if (pg_Photo_swap_buffer_data[indPhoto].blendStart > 0.0f) {
+		//		// change order (was decreasing before)
+		//		// stops blending
+		//		printf("load diaporama #%d\n", indPhoto);
+		//		sprintf(AuxString, "/diaporama_shortName %03d", indPhoto);
+		//		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+		//		int nextCompressedImage
+		//			= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
+		//				&pg_CurrentDiaporamaFile, !ascendingDiaporama);
+		//		pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
+		//			= nextCompressedImage;
+		//		pg_Photo_swap_buffer_data[indPhoto].blendStart
+		//			= CurrentClockTime - (incay + photo_diaporama_plateau + decay);
+		//		return;
+		//	}
+		//}
+		pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir - 1 + pg_nbCompressedImageDirs) % pg_nbCompressedImageDirs;
+		//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+		sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+		pg_launch_diaporama();
 		break;
 	}
 

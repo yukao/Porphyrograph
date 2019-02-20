@@ -44,6 +44,12 @@
 #if defined (BICHES)
 #include "pg_shader_header_Biches.h"
 #endif
+#if defined (CAVERNEPLATON)
+#include "pg_shader_header_CavernePlaton.h"
+#endif
+#if defined (ULM)
+#include "pg_shader_header_Ulm.h"
+#endif
 #ifdef effe
 #include "pg_shader_header_effe.h"
 #endif
@@ -91,7 +97,7 @@ enum ShaderFileTypes {
 #ifdef PG_SENSORS
 	pg_shader_Sensor,
 #endif
-	pg_SvgGpu,
+	pg_ClipArt,
 	pg_NbShaderTotal
 };
 extern unsigned int shader_programme[pg_NbShaderTotal];
@@ -198,7 +204,9 @@ extern GLint uniform_Update_fs_4fv_paths03_r;
 extern GLint uniform_Update_fs_4fv_paths03_g;
 extern GLint uniform_Update_fs_4fv_paths03_b;
 extern GLint uniform_Update_fs_4fv_paths03_a;
+#ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_fs_4fv_paths03_BrushID;
+#endif
 extern GLint uniform_Update_fs_4fv_paths03_RadiusX;
 #ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_fs_4fv_paths03_RadiusY;
@@ -221,7 +229,9 @@ extern GLint uniform_Update_fs_4fv_paths47_r;
 extern GLint uniform_Update_fs_4fv_paths47_g;
 extern GLint uniform_Update_fs_4fv_paths47_b;
 extern GLint uniform_Update_fs_4fv_paths47_a;
+#ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_fs_4fv_paths47_BrushID;
+#endif
 extern GLint uniform_Update_fs_4fv_paths47_RadiusX;
 #ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_fs_4fv_paths47_RadiusY;
@@ -239,6 +249,9 @@ extern GLint uniform_Update_fs_4fv_pulse;
 extern GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 extern GLint uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
+#ifdef PG_WITH_PHOTO_FLASH
+extern GLint uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres;
+#endif
 #if defined (PG_WITH_PHOTO_DIAPORAMA) || defined (TVW)
 extern GLint uniform_Update_fs_4fv_photo01_wh;
 #endif
@@ -275,7 +288,9 @@ extern GLint uniform_Update_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Update_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
+#ifndef PG_BEZIER_PATHS
 extern GLint uniform_Update_texture_fs_Brushes;  // pen patterns
+#endif
 extern GLint uniform_Update_texture_fs_Camera_frame;  // camera frame
 extern GLint uniform_Update_texture_fs_Camera_BG;  // camera BG capture
 extern GLint uniform_Update_texture_fs_Movie_frame;  // movie frame
@@ -330,7 +345,11 @@ extern GLint uniform_ParticleSplat_BlurredDisk_texture_fs_decal;  // blurred dis
 extern GLint uniform_Mixing_vp_model;
 extern GLint uniform_Mixing_vp_view;
 extern GLint uniform_Mixing_vp_proj;
-extern GLint uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
+#ifdef PG_WITH_PHOTO_FLASH
+extern GLint uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght;
+#else
+extern GLint uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
+#endif
 extern GLint uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 // MIXING SHADER TEXTURE IDS
@@ -412,6 +431,9 @@ extern GLint uniform_Master_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #endif
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Master_texture_fs_Trk3;  // ping-pong track 3 (FBO)
+#endif
+#ifdef PG_WITH_MASTER_MASK
+extern GLint uniform_Master_texture_fs_Mask;  // mask for master output
 #endif
 #if defined (GN) || defined (INTERFERENCE)
 extern GLint uniform_Master_texture_fs_LYMlogo;  // LYM logo (texture)

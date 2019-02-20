@@ -39,16 +39,24 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #endif
 	pg_Camera_frame_FBO_Update_sampler,
@@ -141,6 +149,9 @@ enum pg_FBO_Master_samplers
 	pg_Part_render_FBO_Master_sampler,
 #endif
 	pg_Trk0_FBO_Master_sampler,
+#if defined (PG_WITH_MASTER_MASK)
+	pg_Mask_FBO_Master_sampler,
+#endif
 #if defined (GN) || defined (INTERFERENCE)
 	pg_LYMlogo_Master_sampler,
 #endif
@@ -169,16 +180,24 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #endif
 	pg_Camera_frame_FBO_Update_sampler,
@@ -269,6 +288,9 @@ enum pg_FBO_Master_samplers
 #endif
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
+#if defined (PG_WITH_MASTER_MASK)
+	pg_Mask_FBO_Master_sampler,
+#endif
 #if defined (GN) || defined (INTERFERENCE)
 	pg_LYMlogo_Master_sampler,
 #endif
@@ -298,16 +320,24 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #endif
 	pg_Camera_frame_FBO_Update_sampler,
@@ -386,6 +416,9 @@ enum pg_FBO_Master_samplers
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
 	pg_Trk2_FBO_Master_sampler,
+#if defined (PG_WITH_MASTER_MASK)
+	pg_Mask_FBO_Master_sampler,
+#endif
 #if defined (GN) || defined (INTERFERENCE)
 	pg_LYMlogo_Master_sampler,
 #endif
@@ -416,16 +449,24 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler,
+#endif
 #else
+#ifndef PG_BEZIER_PATHS
 	pg_Brushes_FBO_Update_sampler = 0,
+#endif
 #endif
 #endif
 	pg_Camera_frame_FBO_Update_sampler,
@@ -508,6 +549,9 @@ enum pg_FBO_Master_samplers
 	pg_Trk1_FBO_Master_sampler,
 	pg_Trk2_FBO_Master_sampler,
 	pg_Trk3_FBO_Master_sampler,
+#if defined (PG_WITH_MASTER_MASK)
+	pg_Mask_FBO_Master_sampler,
+#endif
 };
 #if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
 enum pg_FBO_ParticleAnimation_samplers

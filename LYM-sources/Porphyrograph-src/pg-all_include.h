@@ -188,7 +188,7 @@ using std::ifstream;
 #define PG_WITH_PHOTO_DIAPORAMA
 #endif
 
-#if !defined (KOMPARTSD) && !defined(REUTLINGEN) && !defined(BICHES)
+#if !defined (KOMPARTSD) && !defined(REUTLINGEN) && !defined(BICHES) && !defined(CAVERNEPLATON) && !defined(ULM)
 #define PG_WITH_BLUR
 #endif
 
@@ -289,7 +289,7 @@ using std::ifstream;
 #undef BLURRED_SPLAT_PARTICLES_TEXTURED
 #elif defined (DASEIN)
 #define CURVE_PARTICLES
-#elif defined (effe) || defined (DEMO) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA) || defined (REUTLINGEN) || defined (BICHES)
+#elif defined (effe) || defined (DEMO) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (ULM)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -311,6 +311,11 @@ using std::ifstream;
 #define PG_NB_PARTICLE_INITIAL_IMAGES 6 // number of images used for particle initialization
 #endif
 
+// MASTER's MASK
+#if defined (CAVERNEPLATON) 
+#define PG_WITH_MASTER_MASK
+#endif
+
 
 // SENSORS
 #if defined (MALAUSSENA)
@@ -320,7 +325,7 @@ using std::ifstream;
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined (DEMO) || defined (GN) || defined (REUTLINGEN) || defined (BICHES)
+#if defined (DEMO) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON)
 #define PG_SENSORS
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
@@ -338,8 +343,13 @@ using std::ifstream;
 #endif
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD)
+#if defined(KOMPARTSD) || defined (DEMO) || defined (CAVERNEPLATON) || defined (ULM)
 #define PG_BEZIER_PATHS
+#endif
+
+// PHOTO FLASH ON CA IN ADDITION TO CAMERA FLASH
+#if defined (CAVERNEPLATON) || defined (ULM)
+#define PG_WITH_PHOTO_FLASH
 #endif
 
 
@@ -378,6 +388,12 @@ using std::ifstream;
 #endif
 #if defined (BICHES)
 #include "pg_script_header_Biches.h"
+#endif
+#if defined (CAVERNEPLATON)
+#include "pg_script_header_CavernePlaton.h"
+#endif
+#if defined (ULM)
+#include "pg_script_header_Ulm.h"
 #endif
 #ifdef effe
 #include "pg_script_header_effe.h"

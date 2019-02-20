@@ -92,12 +92,14 @@ extern char *Output_Message_OSC;
 
 /// current mouse location
 extern int CurrentMousePos_x, CurrentMousePos_y;
+extern float paths_x_0_forGPU, paths_y_0_forGPU;
 extern int PreviousMousePos_x, PreviousMousePos_y;
 extern int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 extern int CurrentCursorStylusvsRubber;
 #define pg_Stylus  1
 #define pg_Rubber -1
-#define PG_OUT_OF_SCREEN_CURSOR -10000
+#define PG_OUT_OF_SCREEN_CURSOR -10
+#define PG_IDLE_CURSOR -5
 // current tablet pen pressure and orientation
 extern float tabletPressureRadius;
 extern float tabletAzimutRadius;

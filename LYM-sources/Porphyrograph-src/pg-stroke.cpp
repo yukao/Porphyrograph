@@ -858,24 +858,62 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 	//printf("PEN color a %.2f %.2f %.2f %.2f\n", paths_Color_r[0] ,
 	//	   paths_Color_g[1] , paths_Color_b[2] , paths_Color_a[3] );
 
+	paths_BrushID[0] = pen_brush;
+#ifdef PG_WACOM_TABLET
+	paths_RadiusX[0]
+		= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+		+ tabletPressureRadius * pen_radius_pressure_coef
+		+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef;
+	paths_RadiusY[0]
+		= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+		+ tabletPressureRadius * pen_radius_pressure_coef
+		+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
+	//printf("PEN pen_radius pulse_average pen_radius_pulse %.2f %.2f %.2f\n" ,
+	//  pen_radius * pen_radiusMultiplier, pulse_average , pen_radius_pulse );
+#else
+	paths_RadiusX[0] = pen_radius * pen_radiusMultiplier
+		+ pulse_average * pen_radius_pulse;
+	paths_RadiusY[0] = pen_radius * pen_radiusMultiplier
+		+ pulse_average * pen_radius_pulse;
+#endif
+	// printf("PEN brush ID radius %d %.2f\n" , pen_brush, pen_radius );
+
 
 	///////////////////////////////////////////////////////////////////////
 	// PEN PATH UPDATE AND TANGENT CALCULATION
 	///////////////////////////////////////////////////////////////////////
 	//printf("previous/current %d,%d   %d,%d \n", PreviousMousePos_x, PreviousMousePos_y, CurrentMousePos_x, CurrentMousePos_y);
-	if (PreviousMousePos_x != paths_x_prev[0]
-		|| PreviousMousePos_y != paths_y_prev[0]
-		|| PreviousMousePos_x != CurrentMousePos_x
-		|| PreviousMousePos_y != CurrentMousePos_y
-		) {
+	// a new drawing step has to be made from a new pen positions: 
+	// a the next pen position (different from the preceding next one)
+	// The next pen position is the current mouse position.
+	// From the previous step:
+	// previous previous pen positin: paths_x_prev[0]
+	// previous pen position: paths_x[0]
+	// current pen position: paths_x_next_0
+	// 
+	// calculates the distance wrt the preceding position and 
+	// only updates if it is greater than a minimal value
+	// printf("PEN pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
+	float motionVector_x = CurrentMousePos_x - paths_x_next_0;
+	float motionVector_y = CurrentMousePos_y - paths_y_next_0;
+	float distanceFromPrecedingPoint = sqrt(motionVector_x * motionVector_x + motionVector_y * motionVector_y);
+	if (distanceFromPrecedingPoint < std::max(2.f,(paths_RadiusX[0]/5.f))
+		&& CurrentMousePos_x != PG_OUT_OF_SCREEN_CURSOR
+		&& CurrentMousePos_y != PG_OUT_OF_SCREEN_CURSOR) {
+		paths_x_0_forGPU = PG_IDLE_CURSOR;
+		paths_y_0_forGPU = PG_IDLE_CURSOR;
+	}
+	else {
 		paths_x_prev_prev_0 = paths_x_prev[0];
 		paths_y_prev_prev_0 = paths_y_prev[0];
 
 		paths_x_prev[0] = paths_x[0];
 		paths_y_prev[0] = paths_y[0];
 
-		paths_x[0] = (float)PreviousMousePos_x;
-		paths_y[0] = (float)PreviousMousePos_y;
+		paths_x[0] = paths_x_next_0;
+		paths_y[0] = paths_y_next_0;
+		paths_x_0_forGPU = paths_x[0];
+		paths_y_0_forGPU = paths_y[0];
 
 		paths_x_next_0 = (float)CurrentMousePos_x;
 		paths_y_next_0 = (float)CurrentMousePos_y;
@@ -954,56 +992,32 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 		}
 
 #ifdef PG_BEZIER_PATHS
+		/* NOT USED CURRENTLY 
 		// convex hull shipped to the GPU
 		float points_x[4] = { paths_x_prev[0] , paths_xL[0] , paths_xR[0] , paths_x[0] };
 		float points_y[4] = { paths_y_prev[0] , paths_yL[0] , paths_yR[0] , paths_y[0] };
 		int nb_next_points = 0;
 		convexHull(points_x, points_y, path0_next_in_hull);
+		*/
 #endif
 
 		// line begin or line end
 		// begin
-		if (paths_x_prev_prev_0 < 0 && paths_y_prev_prev_0 < 0 && paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0 && paths_x[0] >= 0 && paths_y[0] >= 0) {
+		if (paths_x_prev_prev_0 == PG_OUT_OF_SCREEN_CURSOR && paths_y_prev_prev_0 == PG_OUT_OF_SCREEN_CURSOR 
+			&& paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0 && paths_x[0] >= 0 && paths_y[0] >= 0) {
 			isBegin[0] = true;
 		}
 		else {
 			isBegin[0] = false;
 		}
 		// end
-		if (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0 && paths_x[0] >= 0 && paths_y[0] >= 0 && paths_x_next_0 < 0 && paths_y_next_0 < 0) {
+		if (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0 && paths_x[0] >= 0 && paths_y[0] >= 0 
+			&& paths_x_next_0 == PG_OUT_OF_SCREEN_CURSOR && paths_y_next_0 == PG_OUT_OF_SCREEN_CURSOR) {
 			isEnd[0] = true;
 		}
 		else {
 			isEnd[0] = false;
 		}
-
-
-		// printf("PEN pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
-		paths_BrushID[0] = pen_brush;
-#ifdef PG_WACOM_TABLET
-		paths_RadiusX[0]
-			= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
-			+ tabletPressureRadius * pen_radius_pressure_coef
-			+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef;
-		paths_RadiusY[0]
-			= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
-			+ tabletPressureRadius * pen_radius_pressure_coef
-			+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
-		//printf("PEN pen_radius pulse_average pen_radius_pulse %.2f %.2f %.2f\n" ,
-		//  pen_radius * pen_radiusMultiplier, pulse_average , pen_radius_pulse );
-#else
-		paths_RadiusX[0] = pen_radius * pen_radiusMultiplier
-			+ pulse_average * pen_radius_pulse;
-		paths_RadiusY[0] = pen_radius * pen_radiusMultiplier
-			+ pulse_average * pen_radius_pulse;
-#endif
-		// printf("PEN brush ID radius %d %.2f\n" , pen_brush, pen_radius );
-
-		///////////////////////////////////////////////////////////////////////
-		// saves mouse values 
-		PreviousMousePos_x = CurrentMousePos_x;
-		PreviousMousePos_y = CurrentMousePos_y;
-		// printf("mouse pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
 
 		// cursor reinitialization
 		// CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;

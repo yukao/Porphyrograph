@@ -88,6 +88,8 @@ const float PI = 3.1415926535897932384626433832795;
 
 #define SPLAT_PARTICLES
 
+#define PG_BEZIER_PATHS
+
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
 #define PG_NB_TRACKS 3
@@ -268,7 +270,9 @@ uniform vec4 uniform_Update_fs_4fv_paths03_r;
 uniform vec4 uniform_Update_fs_4fv_paths03_g;
 uniform vec4 uniform_Update_fs_4fv_paths03_b;
 uniform vec4 uniform_Update_fs_4fv_paths03_a;
+#ifndef PG_BEZIER_PATHS
 uniform vec4 uniform_Update_fs_4fv_paths03_BrushID;
+#endif
 uniform vec4 uniform_Update_fs_4fv_paths03_RadiusX;
 
 uniform vec4 uniform_Update_fs_4fv_paths47_x;
@@ -285,7 +289,9 @@ uniform vec4 uniform_Update_fs_4fv_paths47_r;
 uniform vec4 uniform_Update_fs_4fv_paths47_g;
 uniform vec4 uniform_Update_fs_4fv_paths47_b;
 uniform vec4 uniform_Update_fs_4fv_paths47_a;
+#ifndef PG_BEZIER_PATHS
 uniform vec4 uniform_Update_fs_4fv_paths47_BrushID;
+#endif
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
@@ -308,7 +314,26 @@ uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 // INPUT
 layout (binding = 0) uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
 layout (binding = 1) uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
-layout (binding = 2) uniform sampler3D   uniform_Update_texture_fs_Brushes;  // pen patterns
+#ifdef PG_BEZIER_PATHS
+layout (binding = 2) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
+layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
+layout (binding = 5) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 6) uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 7) uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+#if PG_NB_TRACKS >= 2
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+#endif
+#if PG_NB_TRACKS >= 3
+layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+#endif
+#if PG_NB_TRACKS >= 4
+layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+#endif
+#else
+layout (binding = 2) uniform sampler3D uniform_Update_texture_fs_Brushes; // pen patterns
 layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
 layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
 layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
@@ -325,6 +350,7 @@ layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-
 #endif
 #if PG_NB_TRACKS >= 4
 layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+#endif
 #endif
 
 /////////////////////////////////////
@@ -1241,36 +1267,10 @@ vec2 TangentVal(float T )
     return d0*(BezierControl[1] - BezierControl[0]) + d1*(BezierControl[2] - BezierControl[1]) + d2*(BezierControl[3] - BezierControl[2]);
 }
 
-float stroke_out( float current_Brush_Radius , int current_brushID ) {
-
-  // drawing mode: writes under the cursor
-  // tries to avoid artefacts at the junction between two segments
-  // vector from the pen center to the current position
-  vec2 vector_to_mousePosition = vec2(signed_rx,signed_ry);
-  vec2 normalized_vector_to_mousePosition 
-    = vector_to_mousePosition/current_Brush_Radius;
-
-  // it is blended with preceding pen color at this position
-  // gray level 
-  // horizontal texture coordinate shift according to pen number
-  float penOutGrayLevel = 0.0;
-  if( current_brushID >= 0 ) {
-    penOutGrayLevel
-      = texture(uniform_Update_texture_fs_Brushes,
-            		vec3( normalized_vector_to_mousePosition.x/2.0 + 0.5,
-            		      0.5 - normalized_vector_to_mousePosition.y/2.0,
-                      (current_brushID / 3) * 0.33333 + 0.16667))[current_brushID % 3];
-  }
-
-  // pen gray level
-  return penOutGrayLevel;
-}
-
 // BezierControl the coordinates of the four control points
 // uniform_Update_fs_4iv_path0_next_in_hull the next index for the convex hull
 // grey color return value (a mask)
-float out_gray_drawing( float current_Brush_Radius , 
-                  			int current_brushID ) {
+float out_gray_drawing( float current_Brush_Radius ) {
 
   /////////////////////////////////////////////////
   // point in screen coordinates
@@ -1812,8 +1812,7 @@ void main() {
             isBegin = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] > 0);
             isEnd = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] < 0);
             curTrack_grayLevel =  out_gray_drawing( 
-                uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                int(uniform_Update_fs_4fv_paths03_BrushID[indPath]) );
+                uniform_Update_fs_4fv_paths03_RadiusX[indPath] );
             if(indPath == 0 && // rubber stylus
                                Cursor < 0) {
                 out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
@@ -1839,8 +1838,7 @@ void main() {
             isBegin = (uniform_Update_fs_4iv_path47_beginOrEnd[indPathRel] > 0);
             isEnd = (uniform_Update_fs_4iv_path47_beginOrEnd[indPathRel] < 0);
             curTrack_grayLevel =  out_gray_drawing( 
-                uniform_Update_fs_4fv_paths47_RadiusX[indPathRel] ,
-                int(uniform_Update_fs_4fv_paths47_BrushID[indPathRel]) );
+                uniform_Update_fs_4fv_paths47_RadiusX[indPathRel] );
             curTrack_color.rgb
             += curTrack_grayLevel
                 * uniform_Update_fs_4fv_paths47_a[indPathRel]

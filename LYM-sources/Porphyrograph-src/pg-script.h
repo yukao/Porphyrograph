@@ -173,6 +173,14 @@ extern float flashCameraTrk_weight;
 extern float flashCameraTrk_decay;
 extern float flashCameraTrk_threshold;
 
+// +++++++++++++++++++++ PHOTO FLASH +++++++++++++++++++++
+#ifdef PG_WITH_PHOTO_FLASH
+extern bool is_flashPhotoTrk;
+extern float flashPhotoTrk_weight;
+extern float flashPhotoTrk_decay;
+extern float flashPhotoTrk_threshold;
+#endif
+
 // ++++++++++++++++++++++ CA and TACKS WOKING VARIABLE ++++
 // CA and track working variable
 // memory of current track in case of temporary background track control 
