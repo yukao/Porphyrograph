@@ -37,7 +37,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_mute_second_screen_rightWindowVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -52,8 +52,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.x;
-  float height = uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.y;
+  float width = uniform_Master_fs_4fv_width_height_mute_second_screen_rightWindowVMargin.x;
+  float height = uniform_Master_fs_4fv_width_height_mute_second_screen_rightWindowVMargin.y;
 #ifdef ATELIERS_PORTATIFS
   float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
@@ -62,7 +62,7 @@ void main() {
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
 #endif
-  if(uniform_Master_fs_4fv_width_height_mute_screen_rightWindowVMargin.z != 0 && decalCoords.x > width) {
+  if(uniform_Master_fs_4fv_width_height_mute_second_screen_rightWindowVMargin.z != 0 && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -138,8 +138,7 @@ void main() {
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
   float mouse_y = uniform_Master_fs_4fv_xy_frameno_pulsedShift.y;
   float frameno = uniform_Master_fs_4fv_xy_frameno_pulsedShift.z;
-  if( !hide
-      && mouse_x < width && mouse_x > 0 
+  if( mouse_x < width && mouse_x > 0 
       && length(vec2(decalCoords.x - mouse_x , height - decalCoords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
@@ -148,5 +147,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

@@ -9,11 +9,11 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 1
 
-float     echo;
-float     echoNeg;
 float     CAMixingWeight;
 float     trackMixingWeight_0;
-uniform vec4 uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0;
+float     echo;
+float     echoNeg;
+uniform vec4 uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_echo_echoNeg;
 
 // Main shader.
 
@@ -23,7 +23,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec3 uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
+uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -52,12 +52,12 @@ layout (binding = 7) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  echo = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0[0];
-  echoNeg = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0[1];
-  CAMixingWeight = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0[2];
-  trackMixingWeight_0 = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0[3];
+  CAMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_echo_echoNeg[0];
+  trackMixingWeight_0 = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_echo_echoNeg[1];
+  echo = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_echo_echoNeg[2];
+  echoNeg = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_echo_echoNeg[3];
 
-  float height = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.y;
+  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
 
   vec4 track0_color = texture(uniform_Mixing_texture_fs_Trk0, decalCoords);
   vec4 CA_color = texture(uniform_Mixing_texture_fs_CA, decalCoords);

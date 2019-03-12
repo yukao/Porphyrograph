@@ -297,7 +297,7 @@ void pg_aliasScript( char * command_pattern ,
 		     float arguments[MAX_OSC_ARGUMENTS] );
 void ClipArt_OnOff(int indImage);
 void ClipArt_SubPathOnOff(int indPath);
-void update_pulsed_colors(void);
+void pg_update_pulsed_colors(void);
 void pg_path_recording_onOff( int indPath );
 // playing track onoff
 void pg_path_replay_trackNo_onOff( int indPath, int trackNo);

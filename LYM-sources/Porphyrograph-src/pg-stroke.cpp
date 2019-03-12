@@ -619,9 +619,8 @@ void convexHull(float points_x[4], float points_y[4], int next[4])
 }
 
 //////////////////////////////////////////////////////////////////
-// MEMORY STORAGE OF THE CURRENT STROKE  
+// REPLAY PATHS  
 //////////////////////////////////////////////////////////////////
-// update of the tables that contain thecurrrentTrack stroke parameters
 
 // replays a path with the same duration
 // however since the time stamps are not saved in the SVG file, the 
@@ -633,13 +632,7 @@ void convexHull(float points_x[4], float points_y[4], int next[4])
 // indicates whether replay loops in the end (the default behavior)
 #define PG_LOOP_REPLAY
 
-void pg_update_pulsed_colors_and_replay_paths(float theTime) {
-	// change colors according to music pulse
-	update_pulsed_colors();
-
-	///////////////////////////////////////////////////////////////////////
-	// READING PATHS 
-	///////////////////////////////////////////////////////////////////////
+void pg_replay_paths(float theTime) {
 	for (int indPath = 1; indPath < PG_NB_PATHS + 1; indPath++) {
 		// active reading
 		if (is_path_replay[indPath] && indPath >= 1) {
@@ -725,7 +718,7 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 				pg_Path_Status[indPath].indReading = 0;
 				isCurveBreakEnd = true;
 				break;
-		}
+			}
 #else
 			// stops at the end
 			if (pg_Path_Status[indPath].indReading
@@ -735,102 +728,113 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 				break;
 			}
 #endif
-			}
-			pg_Path_Status[indPath].indReading++;
+		}
+		pg_Path_Status[indPath].indReading++;
 #endif
 
-			///////////////////////////////////////////////////////////
-			// previous frame for tangent and position
-			// management of previous mouse position with
-			// consideration for looping
-			int indFrameReading = pg_Path_Status[indPath].indReading;
-			if (isCurveBreakBegin) {
-				//pg_indPreviousFrameReading[indPath] = 0;
-				//indFrameReading = pg_indPreviousFrameReading[indPath] + 1;
-				paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-				paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-				paths_xL[indPath] = 0.f;
-				paths_yL[indPath] = 0.f;
-			}
-			else {
-				paths_x_prev[indPath] = (float)pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath]];
-				paths_y_prev[indPath] = (float)pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath]];
-				paths_xL[indPath] = 2 * (float)pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath]] - (float)pg_Path_Pos_xR[indPath][pg_indPreviousFrameReading[indPath]];
-				paths_yL[indPath] = 2 * (float)pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath]] - (float)pg_Path_Pos_yR[indPath][pg_indPreviousFrameReading[indPath]];
-			}
-			//printf("prev frame %d curr frame %d\n", pg_indPreviousFrameReading[indPath], indFrameReading);
-
-			///////////////////////////////////////////////////////////
-			// next frame for tangent and position
-			// negative values in case of curve break
-			if (isCurveBreakEnd) {
-				paths_xR[indPath] = 0.f;
-				paths_yR[indPath] = 0.f;
-				paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-				paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-			}
-			else {
-				paths_xR[indPath] = (float)pg_Path_Pos_xR[indPath][indFrameReading];
-				paths_yR[indPath] = (float)pg_Path_Pos_yR[indPath][indFrameReading];
-				paths_x[indPath] = (float)pg_Path_Pos_x[indPath][indFrameReading];
-				paths_y[indPath] = (float)pg_Path_Pos_y[indPath][indFrameReading];
-			}
-
-			///////////////////////////////////////////////////////////
-			// line begin or line end
-			// begin
-			if ((pg_indPreviousFrameReading[indPath] > 0
-				&& pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath] - 1] < 0 
-				&& pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath] - 1] < 0)
-				&& paths_x_prev[indPath] >= 0 && paths_y_prev[indPath] >= 0 && paths_x[indPath] >= 0 && paths_y[indPath] >= 0) {
-				isBegin[indPath] = true;
-			}
-			else {
-				isBegin[indPath] = false;
-			}
-			// end
-			if (paths_x_prev[indPath] >= 0 && paths_y_prev[indPath] >= 0 && paths_x[indPath] >= 0 && paths_y[indPath] >= 0 
-				&& pg_Path_Pos_x[indPath][(indFrameReading + 1) % pg_Path_Status[indPath].nbRecordedFrames] < 0
-				&& pg_Path_Pos_y[indPath][(indFrameReading + 1) % pg_Path_Status[indPath].nbRecordedFrames] < 0) {
-				isEnd[indPath] = true;
-			}
-			else {
-				isEnd[indPath] = false;
-			}
-
-			//printf("B0 %.2f %.2f  B1 %.2f %.2f  B2 %.2f %.2f B3 %.2f %.2f \n\n", paths_x_prev[indPath], paths_y_prev[indPath], paths_xL[indPath], paths_yL[indPath], 
-			//	paths_xR[indPath], paths_yR[indPath], paths_x[indPath], paths_y[indPath]);
-
-			// management of color (w/wo possible interpolation)
-			paths_Color_r[indPath] = (float)pg_Path_Color_r[indPath][indFrameReading];
-			paths_Color_g[indPath] = (float)pg_Path_Color_g[indPath][indFrameReading];
-			paths_Color_b[indPath] = (float)pg_Path_Color_b[indPath][indFrameReading];
-			paths_Color_a[indPath] = (float)pg_Path_Color_a[indPath][indFrameReading];
-
-			//if (pg_indPreviousFrameReading[indPath] < indFrameReading - 1) {
-			//	paths_Color_r[indPath] = 1.f;
-			//	paths_Color_g[indPath] = 0.f;
-			//	paths_Color_b[indPath] = 0.f;
-			//}
-
-
-			// printf( "replay %d %.2f %.2f %.2f\n" , indPath ,
-			// 	      is_path_replay[ indPath ] ,
-			// 	      paths_x[ indPath -1 ] ,
-			// 	      paths_y[ indPath ] );
-
-			// management of brush ID (w/wo possible interpolation)
-			paths_BrushID[indPath] = pg_Path_BrushID[indPath][indFrameReading];
-
-			// management of brush radius (w/wo possible interpolation)
-			paths_RadiusX[indPath] = (float)pg_Path_RadiusX[indPath][indFrameReading] * pen_radius_replay
-				+ pulse_average * pen_radius_replay_pulse;
-			paths_RadiusY[indPath] = (float)pg_Path_RadiusY[indPath][indFrameReading] * pen_radius_replay
-				+ pulse_average * pen_radius_replay_pulse;
-
-			pg_indPreviousFrameReading[indPath] = indFrameReading;
+		///////////////////////////////////////////////////////////
+		// previous frame for tangent and position
+		// management of previous mouse position with
+		// consideration for looping
+		int indFrameReading = pg_Path_Status[indPath].indReading;
+		if (isCurveBreakBegin) {
+			//pg_indPreviousFrameReading[indPath] = 0;
+			//indFrameReading = pg_indPreviousFrameReading[indPath] + 1;
+			paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+			paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+			paths_xL[indPath] = 0.f;
+			paths_yL[indPath] = 0.f;
 		}
+		else {
+			paths_x_prev[indPath] = (float)pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath]];
+			paths_y_prev[indPath] = (float)pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath]];
+			paths_xL[indPath] = 2 * (float)pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath]] - (float)pg_Path_Pos_xR[indPath][pg_indPreviousFrameReading[indPath]];
+			paths_yL[indPath] = 2 * (float)pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath]] - (float)pg_Path_Pos_yR[indPath][pg_indPreviousFrameReading[indPath]];
+		}
+		//printf("prev frame %d curr frame %d\n", pg_indPreviousFrameReading[indPath], indFrameReading);
+
+		///////////////////////////////////////////////////////////
+		// next frame for tangent and position
+		// negative values in case of curve break
+		if (isCurveBreakEnd) {
+			paths_xR[indPath] = 0.f;
+			paths_yR[indPath] = 0.f;
+			paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+			paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		}
+		else {
+			paths_xR[indPath] = (float)pg_Path_Pos_xR[indPath][indFrameReading];
+			paths_yR[indPath] = (float)pg_Path_Pos_yR[indPath][indFrameReading];
+			paths_x[indPath] = (float)pg_Path_Pos_x[indPath][indFrameReading];
+			paths_y[indPath] = (float)pg_Path_Pos_y[indPath][indFrameReading];
+		}
+
+		///////////////////////////////////////////////////////////
+		// line begin or line end
+		// begin
+		if ((pg_indPreviousFrameReading[indPath] > 0
+			&& pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath] - 1] < 0
+			&& pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath] - 1] < 0)
+			&& paths_x_prev[indPath] >= 0 && paths_y_prev[indPath] >= 0 && paths_x[indPath] >= 0 && paths_y[indPath] >= 0) {
+			isBegin[indPath] = true;
+		}
+		else {
+			isBegin[indPath] = false;
+		}
+		// end
+		if (paths_x_prev[indPath] >= 0 && paths_y_prev[indPath] >= 0 && paths_x[indPath] >= 0 && paths_y[indPath] >= 0
+			&& pg_Path_Pos_x[indPath][(indFrameReading + 1) % pg_Path_Status[indPath].nbRecordedFrames] < 0
+			&& pg_Path_Pos_y[indPath][(indFrameReading + 1) % pg_Path_Status[indPath].nbRecordedFrames] < 0) {
+			isEnd[indPath] = true;
+		}
+		else {
+			isEnd[indPath] = false;
+		}
+
+		//printf("B0 %.2f %.2f  B1 %.2f %.2f  B2 %.2f %.2f B3 %.2f %.2f \n\n", paths_x_prev[indPath], paths_y_prev[indPath], paths_xL[indPath], paths_yL[indPath], 
+		//	paths_xR[indPath], paths_yR[indPath], paths_x[indPath], paths_y[indPath]);
+
+		// management of color (w/wo possible interpolation)
+		paths_Color_r[indPath] = (float)pg_Path_Color_r[indPath][indFrameReading];
+		paths_Color_g[indPath] = (float)pg_Path_Color_g[indPath][indFrameReading];
+		paths_Color_b[indPath] = (float)pg_Path_Color_b[indPath][indFrameReading];
+		paths_Color_a[indPath] = (float)pg_Path_Color_a[indPath][indFrameReading];
+
+		//if (pg_indPreviousFrameReading[indPath] < indFrameReading - 1) {
+		//	paths_Color_r[indPath] = 1.f;
+		//	paths_Color_g[indPath] = 0.f;
+		//	paths_Color_b[indPath] = 0.f;
+		//}
+
+
+		// printf( "replay %d %.2f %.2f %.2f\n" , indPath ,
+		// 	      is_path_replay[ indPath ] ,
+		// 	      paths_x[ indPath -1 ] ,
+		// 	      paths_y[ indPath ] );
+
+		// management of brush ID (w/wo possible interpolation)
+		paths_BrushID[indPath] = pg_Path_BrushID[indPath][indFrameReading];
+
+		// management of brush radius (w/wo possible interpolation)
+		paths_RadiusX[indPath] = (float)pg_Path_RadiusX[indPath][indFrameReading] * pen_radius_replay
+			+ pulse_average * pen_radius_replay_pulse;
+		paths_RadiusY[indPath] = (float)pg_Path_RadiusY[indPath][indFrameReading] * pen_radius_replay
+			+ pulse_average * pen_radius_replay_pulse;
+
+		pg_indPreviousFrameReading[indPath] = indFrameReading;
 	}
+}
+}
+
+//////////////////////////////////////////////////////////////////
+// PEN STROKE AND PATH REPLAY  
+//////////////////////////////////////////////////////////////////
+void pg_update_pulsed_colors_and_replay_paths(float theTime) {
+	// change colors according to music pulse
+	pg_update_pulsed_colors();
+
+	// replays recoded paths
+	pg_replay_paths(theTime);
 
 	///////////////////////////////////////////////////////////////////////
 	// PARTICLE COLOR UPDATING INDEPENDENTLY OF TRACK READING OR WRITING
@@ -1018,6 +1022,32 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 		else {
 			isEnd[0] = false;
 		}
+
+		// POINT STROKE MANAGEMENT
+		if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR)
+			&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
+			printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
+			paths_x_0_begin_position = paths_x_0_forGPU;
+			paths_y_0_begin_position = paths_y_0_forGPU;
+		}
+		if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR)
+			&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
+			printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
+			if(paths_x_prev[0] == paths_x_0_begin_position && paths_x_prev[0] == paths_x_0_begin_position) {
+				printf("Point at %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
+				//paths_x_0_forGPU = paths_x_prev[0];
+				//paths_y_0_forGPU = paths_y_prev[0];
+				//paths_xL[0] = paths_x_prev[0];
+				//paths_yL[0] = paths_y_prev[0];
+				//paths_xR[0] = paths_x_prev[0];
+				//paths_yR[0] = paths_y_prev[0];
+				//paths_x[0] = paths_x_prev[0];
+				//paths_y[0] = paths_y_prev[0];
+				//isBegin[0] = true;
+				//isEnd[0] = true;
+			}
+		}
+
 
 		// cursor reinitialization
 		// CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;

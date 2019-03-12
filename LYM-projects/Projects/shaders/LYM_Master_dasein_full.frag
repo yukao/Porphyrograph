@@ -10,11 +10,11 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 4
 #define ATELIERS_PORTATIFS
 
-float     blendTransp;
+float     master;
 bool      invertAllLayers;
 int       cursorSize;
 float     CAMasterWeight;
-uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
+uniform vec4 uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
@@ -23,8 +23,8 @@ uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMas
 float     trackMasterWeight_3;
 bool      interfaceOnScreen;
 bool      hide;
-bool      mute_screen;
-uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen;
+bool      mute_second_screen;
+uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_second_screen;
 
 // Main shader.
 
@@ -64,18 +64,18 @@ out vec4 outColor0;
 
 
 void main() {
-  blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
-  invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
-  CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
+  master = uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[0];
+  invertAllLayers = (uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[2]);
+  CAMasterWeight = uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[3];
   PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
   trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
   trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
   trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
-  trackMasterWeight_3 = uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[0];
-  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
-  hide = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
+  trackMasterWeight_3 = uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_second_screen[0];
+  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_second_screen[1] > 0 ? true : false);
+  hide = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_second_screen[2] > 0 ? true : false);
+  mute_second_screen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_second_screen[3] > 0 ? true : false);
 
   float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
   float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
@@ -96,7 +96,7 @@ void main() {
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
 
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -200,5 +200,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

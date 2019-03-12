@@ -169,7 +169,7 @@ int nbParticles = 0;
 
 // part acc & damp
 float part_acc_factor;
-float part_damp_factor;
+float part_damp;
 
 
 ////////////////////////////////////
@@ -889,15 +889,15 @@ void pixel_out( void ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc_factor > 0 ) {
+        if( pixel_acc > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc_factor * acceleration;
+            += pixel_acc * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc_factor * surrpixel_speed;
+            += pixel_acc * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -964,15 +964,15 @@ void pixel_out( void ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc_factor > 0 ) {
+        if( pixel_acc > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc_factor * acceleration;
+            += pixel_acc * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc_factor * surrpixel_speed;
+            += pixel_acc * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -1053,12 +1053,12 @@ void particle_out( void ) {
                     = texture( fs_lookupTable16 , decalCoords ).xy;
               out_target_position_color_radius_particle.z
                 = target_color_radius.r * 255. + target_color_radius.g * 65025. + target_color_radius.b * 16581375.;
-              out_target_position_color_radius_particle.w = partRepopRadius;
+              out_target_position_color_radius_particle.w = part_size;
           }
           else { // instant positioning on the target
               out_position_speed_particle
                     = texture( fs_lookupTable16 , decalCoords );
-              out_color_radius_particle = vec4(target_color_radius.rgb, partRepopRadius);
+              out_color_radius_particle = vec4(target_color_radius.rgb, part_size);
           }
       }
       // camera
@@ -1070,12 +1070,12 @@ void particle_out( void ) {
                     = texture( fs_lookupTable16 , decalCoords ).xy;
               out_target_position_color_radius_particle.z
                 = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
-              out_target_position_color_radius_particle.w = partRepopRadius;
+              out_target_position_color_radius_particle.w = part_size;
           }
           else { // instant positioning on the target
               out_position_speed_particle
                     = texture( fs_lookupTable16 , decalCoords );
-              out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
+              out_color_radius_particle = vec4(target_color.rgb, part_size);
           }
       }
       // movie
@@ -1087,12 +1087,12 @@ void particle_out( void ) {
                     = texture( fs_lookupTable16 , decalCoords ).xy;
               out_target_position_color_radius_particle.z
                 = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
-              out_target_position_color_radius_particle.w = partRepopRadius;
+              out_target_position_color_radius_particle.w = part_size;
           }
           else { // instant positioning on the target
               out_position_speed_particle
                     = texture( fs_lookupTable16 , decalCoords );
-              out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
+              out_color_radius_particle = vec4(target_color.rgb, part_size);
           }
       }
       return;
@@ -1122,7 +1122,7 @@ void particle_out( void ) {
             = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
           out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
           out_color_radius_particle 
-            = vec4(uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz,partRepopRadius);
+            = vec4(uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz,part_size);
           return;
         }
 
@@ -1153,7 +1153,7 @@ void particle_out( void ) {
           out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
           out_color_radius_particle 
               = vec4( uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz , 
-                      partRepopRadius);
+                      part_size);
         }
 #endif
 #if PG_NB_PATHS == 7
@@ -1180,7 +1180,7 @@ void particle_out( void ) {
               = vec4( vec3( uniform_Update_fs_4fv_paths47_r[indPath - 4] , 
                             uniform_Update_fs_4fv_paths47_g[indPath - 4] , 
                             uniform_Update_fs_4fv_paths47_b[indPath - 4] ) , 
-                      partRepopRadius);
+                      part_size);
         }
 #endif
       }
@@ -1373,7 +1373,7 @@ void particle_out( void ) {
       += part_acc_factor * part_acceleration;
     // damping
     out_position_speed_particle.zw 
-      -= part_damp_factor * out_position_speed_particle.zw;
+      -= part_damp * out_position_speed_particle.zw;
 
 
     //////////////////////////////////////////////////////////////////
@@ -1636,7 +1636,7 @@ void main() {
   Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
+  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
   radiuspixel = uniform_Update_fs_3fv_clearAllLayers_clearCA_pixelRadius.z;
 
   // working variables for screen dimension
@@ -1660,7 +1660,7 @@ void main() {
 
   // part acc and dâmp
   part_acc_factor = uniform_Update_fs_2fv_part_acc_damp_factor.x;
-  part_damp_factor = uniform_Update_fs_2fv_part_acc_damp_factor.y;
+  part_damp = uniform_Update_fs_2fv_part_acc_damp_factor.y;
 
 
   ///////////////////////////////////////////////////
@@ -1785,7 +1785,7 @@ void main() {
   cameraImage = texture(fs_lookupTable9, cameraCoord ).rgb;
   // gamma correction
   cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( BGSubtr ) {
+  if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(fs_lookupTable10, cameraCoord ).rgb); // initial background subtraction
   }
   if( graylevel(cameraImage) < cameraThreshold ) {
@@ -2153,8 +2153,8 @@ void main() {
       // }
       // // SUN RAYS
       // else if(noiseType == 1 ) {
-      //   vec2 pos = vec2( atan((noiseCenter_0-pixelTextureCoordinatesXY.x)/(noiseCenter_1-pixelTextureCoordinatesXY.y)) * (noiseAngleScale * 10),
-      //                    length(vec2(noiseCenter_0,noiseCenter_1) - pixelTextureCoordinatesXY) / (noiseLineScale) );
+      //   vec2 pos = vec2( atan((noiseCenterX-pixelTextureCoordinatesXY.x)/(noiseCenterY-pixelTextureCoordinatesXY.y)) * (noiseAngleScale * 10),
+      //                    length(vec2(noiseCenterX,noiseCenterY) - pixelTextureCoordinatesXY) / (noiseLineScale) );
       //   pixel_acceleration = vec2(snoise( pos , noiseScale * 10 ) ,
       //                           snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
       // }
@@ -2169,15 +2169,15 @@ void main() {
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
-      if( pixel_acc_factor > 0 ) {
+      if( pixel_acc > 0 ) {
       	// acceleration
       	out_attachment_FBO[pg_Pixel_FBO_attcht].xy 
-          += pixel_acc_factor * acceleration;
+          += pixel_acc * acceleration;
       }
       else {
       	// damping
       	out_attachment_FBO[pg_Pixel_FBO_attcht].xy 
-          += pixel_acc_factor * out_attachment_FBO[pg_Pixel_FBO_attcht].xy;
+          += pixel_acc * out_attachment_FBO[pg_Pixel_FBO_attcht].xy;
       }
       // updates the position of the current pixel
       out_attachment_FBO[pg_Pixel_FBO_attcht].zw += out_attachment_FBO[pg_Pixel_FBO_attcht].xy; 

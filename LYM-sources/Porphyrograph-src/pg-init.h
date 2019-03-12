@@ -683,7 +683,7 @@ extern bool sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 // current sample choice
 extern int sample_choice[PG_NB_SENSORS];
 // all possible sensor layouts
-extern int sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
+extern int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
 // sample start playing time for muting after 1 cycle
 extern float sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 #endif
@@ -764,7 +764,7 @@ void pg_initParticlePosition_Texture(void);
 void SensorInitialization(void);
 void assignSensorPositions(void);
 void assignSensorActivations(void);
-void sample_setUp_interpolation(void);
+void sensor_sample_setUp_interpolation(void);
 #endif
 
 #endif

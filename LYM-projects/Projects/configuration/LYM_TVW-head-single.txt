@@ -17,18 +17,18 @@ udp_local_server	2
 VERBATIM																		
 TYPE	string	int	string	bool	int	bool	bool											
 ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal											
-server	udp_PD_receive	1978	Plain	0	300	1	1											
-server	udp_BITWIG_receive	9000	OSC	0	300	0	1											
+server	udp_PD_receive	1978	Plain	0	500	1	1											
+server	udp_TouchOSC_receive	9000	OSC	0	500	0	1											
 /udp_local_server																		
 udp_remote_client	3																	
 VERBATIM																		
 TYPE	string	string	int	string	bool	int	bool											
 ID	id	remote_ip	local_port	send_format	UDP_message_trace	input_message_stack_depth	OSC_endian_reversal											
-client	udp_QT_send	100.108.128.60	8000	OSC	0	300	1											
-client	udp_PD_send	127.0.0.1	1980	Plain	0	300	1											
-client	udp_BITWIG_send	127.0.0.1	8000	OSC	0	300	1											
+client	udp_TouchOSC_send	192.168.43.1	8000	OSC	0	500	1											
+client	udp_PD_send	127.0.0.1	1980	Plain	0	500	1											
+client	udp_RN_send	127.0.0.1	8000	OSC	0	500	1											
 /udp_remote_client																		
-shader_files	5																	
+shader_files	6																	
 VERBATIM																		
 TYPE	string																	
 ID	id																	
@@ -37,5 +37,6 @@ filename	LYM_Update_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER
 filename	LYM_ParticleSplat_TVW	3	GL_VERTEX_SHADER	GL_GEOMETRY_SHADER	GL_FRAGMENT_SHADER													
 filename	LYM_Mixing_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 filename	LYM_Master_TVW	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
+filename	LYM_ClipArt_demo	2	GL_VERTEX_SHADER	GL_FRAGMENT_SHADER														
 /shader_files																		
 /head																		

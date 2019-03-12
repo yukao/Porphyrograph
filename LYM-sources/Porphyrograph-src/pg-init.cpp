@@ -1022,11 +1022,11 @@ void pg_initGeometry_quads(void) {
 	// sample setup
 	///////////////////////////////////////////////////////////////////////////////////////
 	// sample choice
-	sample_setUp_interpolation();
+	sensor_sample_setUp_interpolation();
 
 	// float sample_choice[ PG_NB_SENSORS];
 	// // all possible sensor layouts
-	//int sample_setUps[ PG_NB_MAX_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
+	//int sensor_sample_setUps[ PG_NB_MAX_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
 	//  {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
 	//   {16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31},
 	//   {32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47}};
@@ -1189,22 +1189,22 @@ void assignSensorActivations(void) {
 	}
 }
 
-void sample_setUp_interpolation(void) {
-	float indSetUp = std::max(0.0f, std::min(sample_setUp, (float)(PG_NB_MAX_SAMPLE_SETUPS - 1)));
+void sensor_sample_setUp_interpolation(void) {
+	float indSetUp = std::max(0.0f, std::min(sensor_sample_setUp, (float)(PG_NB_MAX_SAMPLE_SETUPS - 1)));
 
-	float sample_setUp_integerPart = floor(indSetUp);
-	float sample_setUp_floatPart = indSetUp - sample_setUp_integerPart;
-	int intIndSetup = (int)(sample_setUp_integerPart);
+	float sensor_sample_setUp_integerPart = floor(indSetUp);
+	float sensor_sample_setUp_floatPart = indSetUp - sensor_sample_setUp_integerPart;
+	int intIndSetup = (int)(sensor_sample_setUp_integerPart);
 
 	// copies the setup that corresponds to the integer part
 	for (int ind = 0; ind < PG_NB_SENSORS; ind++) {
-		sample_choice[ind] = sample_setUps[intIndSetup][ind];
+		sample_choice[ind] = sensor_sample_setUps[intIndSetup][ind];
 	}
 
 	// for the decimal part, copies hybrid sensors of upper level with a ratio
 	// proportional to the ratio between floor and current value 
-	if (sample_setUp_floatPart > 0.0f) {
-		int nbhybridSensors = (int)round(sample_setUp_floatPart * PG_NB_SENSORS);
+	if (sensor_sample_setUp_floatPart > 0.0f) {
+		int nbhybridSensors = (int)round(sensor_sample_setUp_floatPart * PG_NB_SENSORS);
 
 		// book keeping of hybridized sensors
 		bool hybridized[PG_NB_SENSORS];
@@ -1217,7 +1217,7 @@ void sample_setUp_interpolation(void) {
 			for (int ind = 0; ind < PG_NB_SENSORS; ind++) {
 				int translatedIndex = (count + PG_NB_SENSORS) % PG_NB_SENSORS;
 				if (!hybridized[translatedIndex]) {
-					sample_choice[translatedIndex] = sample_setUps[intIndSetup + 1][translatedIndex];
+					sample_choice[translatedIndex] = sensor_sample_setUps[intIndSetup + 1][translatedIndex];
 					hybridized[translatedIndex] = true;
 				}
 			}
@@ -1225,7 +1225,7 @@ void sample_setUp_interpolation(void) {
 	}
 
 #ifdef PG_SUPERCOLLIDER
-	std::string message = "/sample_setUp";
+	std::string message = "/sensor_sample_setUp";
 	std::string format = "";
 	for (int indSensor = 0; indSensor < PG_NB_SENSORS - 1; indSensor++) {
 		format += "i ";

@@ -20,6 +20,10 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 2
 #define PG_NB_PATHS 7
 
+//////////////////////////
+// TRACK DECAY
+vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+
 ////////////////////////////////////////////////////////////////////
 // drawing modes
 const uint DRAWING_VOID = 0;
@@ -136,9 +140,9 @@ uniform vec4 uniform_Update_fs_4fv_paths47_a;
 uniform vec4 uniform_Update_fs_4fv_paths47_BrushID;
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
-uniform vec4 uniform_Update_fs_4fv_trkDecay;
-uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
-uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+
+uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -498,13 +502,13 @@ void main() {
   // variables 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  float average_pulse = uniform_Update_fs_4fv_pulse.a;
+  
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
+  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
+  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -531,7 +535,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
 #if PG_NB_TRACKS >= 2
     out_Update_FBO_fs_Trk1 = vec4(0,0,0,1);
@@ -608,16 +612,16 @@ void main() {
 
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
-  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
 
@@ -649,7 +653,7 @@ void main() {
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   // gamma correction
   // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( BGSubtr ) {
+  if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
   if( graylevel(cameraImage) < cameraThreshold ) {
@@ -885,7 +889,7 @@ void main() {
     // TRACK photo
     videoOn = false;
     if(currentPhotoTrack == indCurTrack 
-      && uniform_Update_fs_2fv_photo01Wghts.x + uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
       // only photo (but not drawing or whatever memory from preceding tracks)
       if(!videoOn) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
@@ -933,7 +937,7 @@ void main() {
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
           out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(uniform_Update_fs_4fv_trkDecay[indTrack]);
+               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
       }
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );

@@ -875,9 +875,9 @@ void loadCameraFrame(bool initial_capture) {
 			pg_camera_frame.data);        // The actual image data itself
 												// /////////////////////////
 												// reads BG camera frame for image subtraction
-		if (currentBGCapture || secondCurrentBGCapture) { // currentVideoTrack <=> video off
+		if (reset_camera || secondCurrentBGCapture) { // currentVideoTrack <=> video off
 			printf("*** non threaded current BG video capture frame %d\n", pg_FrameNo);
-			currentBGCapture = false;
+			reset_camera = false;
 
 			// makes a second video capture 
 			secondCurrentBGCapture = !secondCurrentBGCapture;
@@ -1312,7 +1312,7 @@ bool pg_update_diaporama(void) {
 			//printf("            "); 
 			//char * ptr = strrchr(pg_Photo_buffer_data[indPhoto].fname, '/');
 			//printf("blend %d weight %.2f playing time %.1f [%s]\n",
-			//	indPhoto, *photoWeight, playingTime, ptr );
+			//	indPhoto, photoWeight, playingTime, ptr );
 		}
 
 		// it is time to start the other photo because we reach

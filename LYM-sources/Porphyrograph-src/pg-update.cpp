@@ -91,7 +91,7 @@ bool sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 int sample_choice[PG_NB_SENSORS];
 #ifndef MALAUSSENA
 // all possible sensor layouts
-int sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
+int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 },
 { 16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 },
 { 32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47 } };
@@ -106,7 +106,7 @@ float sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 #else
 // all possible sensor layouts
-int sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
+int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0 }, { 1 }, { 2 } };
 // sample start playing time for muting after 1 cycle
 float sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
@@ -394,7 +394,7 @@ void window_display( void ) {
 //// current sample choice
 //int sample_choice[ PG_NB_SENSORS];
 //// all possible sensor layouts
-//int sample_setUps[ PG_NB_MAX_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
+//int sensor_sample_setUps[ PG_NB_MAX_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
 //  {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25},
 //   {26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50},
 //   {51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75}};
@@ -609,7 +609,7 @@ void readSensors(void) {
 	// MANAGING THE SAMPLE SEVEL
 	for (int indSetup = 0; indSetup < PG_NB_MAX_SAMPLE_SETUPS; indSetup++) {
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-			int indSample = sample_setUps[indSetup][indSens];
+			int indSample = sensor_sample_setUps[indSetup][indSens];
 			if (sample_play_start[indSample] > 0
 				&& CurrentClockTime - sample_play_start[indSample] > BEAT_DURATION) {
 #ifdef PG_RENOISE
@@ -672,7 +672,6 @@ void playChord() {
 	std::string int_string;
 	std::string message;
 	// message format
-	std::string format = "f f f f f f f f f f f f f f f f f f f f";
 	int nbGrey = 0;
 	for (int indPixel = 0; indPixel < 1024; indPixel++) {
 		GLubyte r, g, b;
@@ -695,6 +694,11 @@ void playChord() {
 
 	// less than 10 notes play them all
 	if (nbGrey < 10) {
+		std::string format = "";
+		for (int ind = 0; ind < nbGrey; ind++) {
+			format += "f";
+		}
+
 		message = "/chord ";
 		// non null notes
 		for (int indGreyNote = 0; indGreyNote < nbGrey; indGreyNote++) {
@@ -786,6 +790,10 @@ void playChord() {
 				message += float_string;
 			}
 		}
+		std::string format = "";
+		for (int ind = 0; ind < 20; ind++) {
+			format += "f";
+		}
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
 	}
@@ -847,7 +855,7 @@ void one_frame_variables_reset(void) {
 	// /////////////////////////
 	// clear layer reset
 	// does not reset if camera capture is still ongoing
-	if ((!currentBGCapture && !secondCurrentBGCapture)
+	if ((!reset_camera && !secondCurrentBGCapture)
 #ifdef GN
 		|| (!initialBGCapture && !secondInitialBGCapture)
 #endif
@@ -1021,7 +1029,7 @@ void pg_update_shader_uniforms(void) {
 #ifdef effe
 #include "pg_update_body_effe.cpp"
 #endif
-#ifdef DEMO
+#if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_update_body_demo.cpp"
 #endif
 #ifdef VOLUSPA
@@ -1052,18 +1060,18 @@ void pg_update_shader_uniforms(void) {
 	bool repop_channels[PG_NB_PATHS + 1];
 	int nb_repop_channels = 0;
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-	nb_repop_channels += int(path_repop_0) + int(path_repop_1) + int(path_repop_2) + int(path_repop_3);
-	repop_channels[0] = path_repop_0;
-	repop_channels[1] = path_repop_1;
-	repop_channels[2] = path_repop_2;
-	repop_channels[3] = path_repop_3;
+	nb_repop_channels += int(part_path_repop_0) + int(part_path_repop_1) + int(part_path_repop_2) + int(part_path_repop_3);
+	repop_channels[0] = part_path_repop_0;
+	repop_channels[1] = part_path_repop_1;
+	repop_channels[2] = part_path_repop_2;
+	repop_channels[3] = part_path_repop_3;
 #endif
 #if PG_NB_PATHS == 7
-	nb_repop_channels += int(path_repop_4) + int(path_repop_5) + int(path_repop_6) + int(path_repop_7);
-	repop_channels[4] = path_repop_4;
-	repop_channels[5] = path_repop_5;
-	repop_channels[6] = path_repop_6;
-	repop_channels[7] = path_repop_7;
+	nb_repop_channels += int(part_path_repop_4) + int(part_path_repop_5) + int(part_path_repop_6) + int(part_path_repop_7);
+	repop_channels[4] = part_path_repop_4;
+	repop_channels[5] = part_path_repop_5;
+	repop_channels[6] = part_path_repop_6;
+	repop_channels[7] = part_path_repop_7;
 #endif
 	int selected_channel = int(floor(randomValue * (nb_repop_channels - 0.00001)));
 	int nbActChannels = 0;
@@ -1090,7 +1098,7 @@ void pg_update_shader_uniforms(void) {
 	}
 	// special case for army radar: track 2 is assigned as repop path but is not replayed
 	// the center of the top left screen is the default position for this track
-	else if (path_repop_2 || part_path_repulse_2) {
+	else if (part_path_repop_2 || part_path_repulse_2) {
 		paths_x[2] = float(leftWindowWidth / 4);
 		paths_y[2] = float(window_height / 4);
 		float randval = float(randomValue * 2 * PI);
@@ -1128,10 +1136,6 @@ void pg_update_shader_uniforms(void) {
 	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6] , paths_RadiusX[7] );
 #endif
 
-	// particle decay
-	glUniform1f(uniform_ParticleAnimation_fs_1fv_partDecay, partDecay_sign*partDecay*0.1f);
-
-
 #if PG_NB_TRACKS >= 4
 	// flash Trk -> Part weights
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts,
@@ -1168,19 +1172,8 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo,
 		repop_Color_r, repop_Color_g, repop_Color_b, (GLfloat)pg_FrameNo);
 	// clear layer, flash pixel, flash CA -> Part
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius,
-		(GLfloat)flashCAPart_weight, (GLfloat)nb_particles, (GLfloat)isClearAllLayers,
-		(part_radius + pulse_average * part_radius_pulse * part_radius));
-	// printf("part radius ANIM %.2f\n", (part_radius + pulse_average * part_radius_pulse * part_radius));
-
-	// repop values 
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor,
-		min(.9f, repop_part + pulse_average * repop_part_pulse),
-		min(.9f, repop_path + pulse_average * repop_part_pulse),
-		part_acc + pulse_average * part_acc_pulse, part_damp_factor);
-	//printf("repop part path %.2f %.2f\n",
-	//	min(.9f, repop_part + pulse_average * repop_part_pulse),
-	//	min(.9f, repop_path + pulse_average * repop_part_pulse));
+	glUniform3f(uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear,
+		(GLfloat)flashCAPart_weight, (GLfloat)nb_particles, (GLfloat)isClearAllLayers);
 
 	// movie size, flash camera and copy tracks
 	// copy to layer above (+1) or to layer below (-1)
@@ -1203,10 +1196,13 @@ void pg_update_shader_uniforms(void) {
 	//printf("scene %d\n", pg_CurrentScene);
 
 	// pixels acceleration
-	glUniform4f(uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift,
+	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift,
 		(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
-		pixel_radius + pulse_average * pixel_radius_pulse,
-		fabs(pulse_average - pulse_average_prec) * part_Vshift_pulse);
+#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+		fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
+#else
+		0.f);
+#endif
 
 #ifdef MALAUSSENA
 	if (pg_CAseed_trigger) {
@@ -1240,15 +1236,15 @@ void pg_update_shader_uniforms(void) {
 	}
 	// end
 	if (isEnd[0]) {
-		printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+		printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
 	}
 	if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR) 
 		&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
-		printf("Current position BEGIN\n");
+		printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
 	}
 	if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR) 
 		&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
-		printf("Current position END\n");
+		printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
 	}
 	if (paths_x_0_forGPU >= 0 && paths_y_0_forGPU >= 0) {
 		// printf("Position %.1f %.1f\n\n", paths_x_0_forGPU, paths_y_0_forGPU);
@@ -1263,6 +1259,10 @@ void pg_update_shader_uniforms(void) {
 	glUniform4i(uniform_Update_fs_4iv_path03_beginOrEnd,
 		(isBegin[0] ? 1 : (isEnd[0] ? -1 : 0)), (isBegin[1] ? 1 : (isEnd[1] ? -1 : 0)),
 		(isBegin[2] ? 1 : (isEnd[2] ? -1 : 0)), (isBegin[3] ? 1 : (isEnd[3] ? -1 : 0)));
+	if (isBegin[0] && isEnd[0]) {
+		printf("Point: %.1f %.1f (%.1f %.1f %.1f %.1f) % .1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+
+	}
 
 	// pen Bezier curve tangents
 	glUniform4f(uniform_Update_fs_4fv_paths03_xL,
@@ -1388,13 +1388,6 @@ void pg_update_shader_uniforms(void) {
 		flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
 	// printf("flashTrkCA_weights %.2f %.2f %.2f %.2f \n", flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
 #endif
-
-	// track decay
-	glUniform4f(uniform_Update_fs_4fv_trkDecay,
-		trkDecay_0*trkDecay_sign_0,
-		trkDecay_1*trkDecay_sign_1,
-		trkDecay_2*trkDecay_sign_2,
-		trkDecay_3*trkDecay_sign_3);
 #else
 #if PG_NB_TRACKS >= 3
 	// flash Trk -> BG weights
@@ -1406,13 +1399,6 @@ void pg_update_shader_uniforms(void) {
 		flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], 0.f);
 	// printf("flashTrkCA_weights %.2f %.2f %.2f \n", flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2]);
 #endif
-
-	// track decay
-	glUniform4f(uniform_Update_fs_4fv_trkDecay,
-		trkDecay_0*trkDecay_sign_0,
-		trkDecay_1*trkDecay_sign_1,
-		trkDecay_2*trkDecay_sign_2,
-		partDecay_sign*partDecay*0.1f);
 #else
 #if PG_NB_TRACKS >= 2
 	// flash Trk -> BG weights
@@ -1424,13 +1410,6 @@ void pg_update_shader_uniforms(void) {
 		flashTrkCA_weights[0], flashTrkCA_weights[1], 0.f, 0.f);
 	// printf("flashTrkCA_weights %.2f %.2f \n", flashTrkCA_weights[0],  flashTrkCA_weights[1]);
 #endif
-
-	// track decay
-	glUniform4f(uniform_Update_fs_4fv_trkDecay,
-		trkDecay_0*trkDecay_sign_0,
-		trkDecay_1*trkDecay_sign_1,
-		0.f,
-		0.f);
 #else
 #if PG_NB_TRACKS >= 1
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
@@ -1444,13 +1423,6 @@ void pg_update_shader_uniforms(void) {
 		flashTrkCA_weights[0], 0.f, 0.f, 0.f);
 	// printf("flashTrkCA_weights %.2f %.2f \n", flashTrkCA_weights[0],  flashTrkCA_weights[1]);
 #endif
-
-	// track decay
-	glUniform4f(uniform_Update_fs_4fv_trkDecay,
-		trkDecay_0*trkDecay_sign_0,
-		0.f,
-		0.f,
-		0.f);
 #endif
 #endif
 #endif
@@ -1459,8 +1431,8 @@ void pg_update_shader_uniforms(void) {
 	//printf("Signs %d \n", currentDrawingTrack);
 
 	// CA type, frame no, flashback and current track
-	glUniform4f(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght,
-		CAdecay*CAdecay_sign, (GLfloat)pg_FrameNo,
+	glUniform3f(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght,
+		(GLfloat)pg_FrameNo,
 		(GLfloat)CurrentCursorStylusvsRubber, flashPartCA_weight);
 
 	// movie size, flash camera and copy tracks
@@ -1515,19 +1487,21 @@ void pg_update_shader_uniforms(void) {
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 	// photo weights 
 	glUniform2f(uniform_Update_fs_2fv_photo01Wghts,
-		pg_Photo_weight[0] * photoWeight, pg_Photo_weight[1] * photoWeight);
+		pg_Photo_weight[0], pg_Photo_weight[1]);
 	//printf("photo weight %.2f %.2f\n",
-	//	pg_Photo_weight[0] * photoWeight, pg_Photo_weight[1] * photoWeight);
+	//	pg_Photo_weight[0], pg_Photo_weight[1]);
 #endif
 
 	//printf("camera movie weight %.2f %.2f\n",
 	//	*((float *)ScenarioVarPointers[_cameraWeight]), *((float *)ScenarioVarPointers[_movieWeight]));
 
+#ifdef PG_WITH_CAMERA_CAPTURE
 	// camera texture offset 
 	glUniform4f(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H,
 		(GLfloat)pg_camera_x_offset, (GLfloat)pg_camera_y_offset,
 		(GLfloat)pg_camera_frame_width, (GLfloat)pg_camera_frame_height);
 	//printf("camera frame size %dx%d offset %dx%d\n", pg_camera_frame_width, pg_camera_frame_height, pg_camera_x_offset, pg_camera_y_offset);
+#endif
 
 #if defined (TVW)
 	// image buffer layer weights
@@ -1598,16 +1572,16 @@ void pg_update_shader_uniforms(void) {
 	// track x & y translations
 	float translation_x[2] = { 0.f, 0.f };
 	float translation_y[2] = { 0.f, 0.f };
-	if (track_x_transl_0 && pg_FrameNo % abs(track_x_transl_0) == 0) {
+	if (track_x_transl_0 && pg_FrameNo % int(abs(track_x_transl_0)) == 0) {
 		translation_x[0] = (track_x_transl_0 > 0 ? 1.f : -1.f);
 	}
-	if (track_y_transl_0 && pg_FrameNo % abs(track_y_transl_0) == 0) {
+	if (track_y_transl_0 && pg_FrameNo % int(abs(track_y_transl_0)) == 0) {
 		translation_y[0] = (track_y_transl_0 > 0 ? 1.f : -1.f);
 	}
-	if (track_x_transl_1 && pg_FrameNo % abs(track_x_transl_1) == 0) {
+	if (track_x_transl_1 && pg_FrameNo % int(abs(track_x_transl_1)) == 0) {
 		translation_x[1] = (track_x_transl_1 > 0 ? 1.f : -1.f);
 	}
-	if (track_y_transl_1 && pg_FrameNo % abs(track_y_transl_1) == 0) {
+	if (track_y_transl_1 && pg_FrameNo % int(abs(track_y_transl_1)) == 0) {
 		translation_y[1] = (track_y_transl_1 > 0 ? 1.f : -1.f);
 	}
 	glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1,
@@ -1689,8 +1663,8 @@ void pg_update_shader_uniforms(void) {
 
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
-	glUniform3f(uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse,
-		(part_radius + pulse_average * part_radius_pulse * part_radius) / 512.f,
+	glUniform3f(uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse,
+		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
 		(GLfloat)particle_type,
 		pulse[2]);
 
@@ -1716,9 +1690,9 @@ void pg_update_shader_uniforms(void) {
 #if defined (CURVE_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 	glUniform3f(uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse,
-		(part_radius + pulse_average * part_radius_pulse * part_radius) / 512.f,
+		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
 		(GLfloat)particle_type, pulse[2]);
-	// printf("part radius GS %.2f\n", (part_radius + pulse_average * part_radius_pulse * part_radius));
+	// printf("part radius GS %.2f\n", (part_size + pulse_average * part_size_pulse * part_size));
 
 	///////////////////////////////////////////////////////////////////////
 	bool assigned = false;
@@ -1747,14 +1721,14 @@ void pg_update_shader_uniforms(void) {
 	}
 	// special case for army radar: track 2 is assigned as repop path but is not replayed
 	// the center of the top left screen is the default position for this track
-	else if (path_repop_2 || part_path_repulse_2) {
+	else if (part_path_repop_2 || part_path_repulse_2) {
 		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(leftWindowWidth / 4), float(window_height / 4));
 	}
 #endif
 
 	//printf("pulsed particle radius %.4f rad %.4f pulse %.4f coef %.4f\n", 
-	//	(part_radius + pulse_average * part_radius_pulse * part_radius) / 512.f,
-	//	part_radius / 512.f, pulse_average, part_radius_pulse);
+	//	(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
+	//	part_size / 512.f, pulse_average, part_size_pulse);
 
 	/////////////////////////////////////////////////////////////////////////
 	// MIXING SHADER UNIFORM VARIABLES
@@ -1789,7 +1763,7 @@ void pg_update_shader_uniforms(void) {
 	// hoover cursor
 	glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
 		(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
-		(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * tracks_Hshift_pulse);
+		(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
 	// screen size
 	glUniform4f(uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(rightWindowVMargin),

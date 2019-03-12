@@ -20,7 +20,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec3 uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
+uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -50,7 +50,7 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float height = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.y;
+  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
 
 
   ////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ void main() {
   }
 
   // brigher CA at the beginning of a flash
-  float flashCameraCoef = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.z;
+  float flashCameraCoef = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.y;
   if( flashCameraCoef > 0 ) { // flash video
     if(flashCameraCoef < 0.3) {
       CAMixingWeight += (1.0 - CAMixingWeight) * flashCameraCoef / 0.3;          
@@ -106,12 +106,7 @@ void main() {
   
   ////////////////////////////////////////////////////////////////////
   // accumulation: mix of current layers and echo
-#ifdef ATELIERS_PORTATIFS
-  float pulsed_shift = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.x;
-  vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords + vec2(pulsed_shift,0));
-#else
   vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords);
-#endif
 
   if( echo + echoNeg > 0.0 ) {
     combined_color = clamp( combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb , 

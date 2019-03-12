@@ -1,3 +1,4 @@
+/***********************************************************************
 File: song/shaders/LYM_Mixing_song-FS.glsl
 
 LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima

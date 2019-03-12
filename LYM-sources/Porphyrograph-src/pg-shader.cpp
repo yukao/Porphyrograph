@@ -51,7 +51,7 @@
 #ifdef effe
 #include "pg_shader_body_decl_effe.cpp"
 #endif
-#ifdef DEMO
+#if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_shader_body_decl_demo.cpp"
 #endif
 #ifdef VOLUSPA
@@ -81,7 +81,6 @@ GLint uniform_ParticleAnimation_vp_view;
 GLint uniform_ParticleAnimation_vp_proj;
 GLint uniform_ParticleAnimation_vp_2fv_width_height;
 GLint uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo;
-GLint uniform_ParticleAnimation_fs_1fv_partDecay;
 GLint uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 GLint uniform_ParticleAnimation_fs_4fv_paths03_x;
@@ -98,8 +97,7 @@ GLint uniform_ParticleAnimation_fs_4fv_paths47_y_prev;
 GLint uniform_ParticleAnimation_fs_4fv_paths47_RadiusX;
 #endif
 GLint uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo;
-GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius;
-GLint uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor;
+GLint uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear;
 GLint uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH;
 
 // UPDATE SHADER TEXTURE IDS
@@ -131,15 +129,14 @@ GLint uniform_Update_vp_view;
 GLint uniform_Update_vp_proj;
 GLint uniform_Update_vp_2fv_width_height;
 GLint uniform_Update_fs_4fv_W_H_time_currentScene;
-GLint uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 #ifdef MALAUSSENA
 GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
 #endif
-GLint uniform_Update_fs_4fv_trkDecay;
-GLint uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
+GLint uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 #ifdef PG_NB_CA_TYPES
 GLint uniform_Update_fs_4fv_flashTrkCAWghts;
 #endif
@@ -214,7 +211,9 @@ GLint uniform_Update_fs_4fv_photo01_wh;
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 GLint uniform_Update_fs_2fv_photo01Wghts;
 #endif
+#ifdef PG_WITH_CAMERA_CAPTURE
 GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
+#endif
 GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
@@ -289,7 +288,7 @@ GLint uniform_Update_texture_fs_TVWPixelsSwap5;  // buffer swap image #5
 GLint uniform_ParticleSplat_vp_model;
 GLint uniform_ParticleSplat_vp_view;
 GLint uniform_ParticleSplat_vp_proj;
-GLint uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse;
+GLint uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse;
 GLint uniform_ParticleSplat_vp_3fv_trackReplay_xy_height;
 
 // PARTICLE SHADER TEXTURE IDS
@@ -582,7 +581,7 @@ void pg_loadAllShaders(void) {
 #ifdef effe
 #include "pg_shader_body_bind_effe.cpp"
 #endif
-#ifdef DEMO
+#if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_shader_body_bind_demo.cpp"
 #endif
 #ifdef VOLUSPA
@@ -615,8 +614,6 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_vp_2fv_width_height");
 	uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo");
-	uniform_ParticleAnimation_fs_1fv_partDecay
-		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_1fv_partDecay");
 	uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts");
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
@@ -645,10 +642,8 @@ void pg_loadAllShaders(void) {
 #endif
 	uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo");
-	uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius
-		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius");
-	uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor
-		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor");
+	uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear
+		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear");
 	uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH");
 
@@ -699,7 +694,6 @@ void pg_loadAllShaders(void) {
 		|| (uniform_ParticleAnimation_vp_2fv_width_height == -1)
 
 		|| (uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo == -1)
-		|| (uniform_ParticleAnimation_fs_1fv_partDecay == -1)
 		|| (uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts == -1)
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 		|| (uniform_ParticleAnimation_fs_4fv_paths03_x == -1)
@@ -716,8 +710,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_ParticleAnimation_fs_4fv_paths47_RadiusX == -1)
 #endif
 		|| (uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo == -1)
-		|| (uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius == -1)
-		|| (uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor == -1)
+		|| (uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear == -1)
 		|| (uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH == -1)
 		|| (uniform_ParticleAnimation_texture_fs_CA == -1)
 		|| (uniform_ParticleAnimation_texture_fs_Part_pos_speed == -1)
@@ -739,7 +732,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_ParticleAnimation_texture_fs_Part_init_pos_speed == -1)
 		|| (uniform_ParticleAnimation_texture_fs_Part_init_col_rad == -1)
 		) {
-		fprintf(stderr, "Could not bind uniforms ParticleAnimation uniform_ParticleAnimation_vp_model : %d, uniform_ParticleAnimation_vp_view : %d, uniform_ParticleAnimation_vp_proj : %d, uniform_ParticleAnimation_vp_2fv_width_height : %d, uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo : %d, uniform_ParticleAnimation_fs_1fv_partDecay : %d, uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts : %d, uniform_ParticleAnimation_texture_fs_Part_pos_speed : %d, uniform_ParticleAnimation_texture_fs_Camera_frame : %d, uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo: %d, uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius: %d, uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH: %d, uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor: %d\n", uniform_ParticleAnimation_vp_model, uniform_ParticleAnimation_vp_view, uniform_ParticleAnimation_vp_proj, uniform_ParticleAnimation_vp_2fv_width_height, uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo, uniform_ParticleAnimation_fs_1fv_partDecay, uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts, uniform_ParticleAnimation_texture_fs_Part_pos_speed, uniform_ParticleAnimation_texture_fs_Camera_frame, uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo, uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partRadius, uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH, uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor);
+		fprintf(stderr, "Could not bind uniforms ParticleAnimation uniform_ParticleAnimation_vp_model : %d, uniform_ParticleAnimation_vp_view : %d, uniform_ParticleAnimation_vp_proj : %d, uniform_ParticleAnimation_vp_2fv_width_height : %d, uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo : %d, uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts : %d, uniform_ParticleAnimation_texture_fs_Part_pos_speed : %d, uniform_ParticleAnimation_texture_fs_Camera_frame : %d, uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo: %d, uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear: %d, uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH: %d\n", uniform_ParticleAnimation_vp_model, uniform_ParticleAnimation_vp_view, uniform_ParticleAnimation_vp_proj, uniform_ParticleAnimation_vp_2fv_width_height, uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo, uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts, uniform_ParticleAnimation_texture_fs_Part_pos_speed, uniform_ParticleAnimation_texture_fs_Camera_frame, uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo, uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear, uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH);
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 		fprintf(stderr, "Could not bind uniforms uniform_ParticleAnimation_fs_4fv_paths03_x : %d, uniform_ParticleAnimation_fs_4fv_paths03_y : %d, uniform_ParticleAnimation_fs_4fv_paths03_x_prev : %d, uniform_ParticleAnimation_fs_4fv_paths03_y_prev : %d, uniform_ParticleAnimation_fs_4fv_paths03_RadiusX : %d\n", uniform_ParticleAnimation_fs_4fv_paths03_x, uniform_ParticleAnimation_fs_4fv_paths03_y, uniform_ParticleAnimation_fs_4fv_paths03_x_prev, uniform_ParticleAnimation_fs_4fv_paths03_y_prev, uniform_ParticleAnimation_fs_4fv_paths03_RadiusX);
 #endif
@@ -776,8 +769,8 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_vp_2fv_width_height");
 	uniform_Update_fs_4fv_W_H_time_currentScene
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_W_H_time_currentScene");
-	uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift
-		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift");
+	uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift");
 #ifdef MALAUSSENA
 	uniform_Update_fs_4fv_CAseed_type_size_loc
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAseed_type_size_loc");
@@ -786,10 +779,8 @@ void pg_loadAllShaders(void) {
 	uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght");
 #endif
-	uniform_Update_fs_4fv_trkDecay
-		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_trkDecay");
-	uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght
-		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght");
+	uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght
+		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght");
 #ifdef PG_NB_CA_TYPES
 	uniform_Update_fs_4fv_flashTrkCAWghts
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_flashTrkCAWghts");
@@ -910,8 +901,10 @@ void pg_loadAllShaders(void) {
 	uniform_Update_fs_2fv_photo01Wghts
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_2fv_photo01Wghts");
 #endif
+#ifdef PG_WITH_CAMERA_CAPTURE
 	uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H");
+#endif
 	uniform_Update_fs_4fv_xy_transl_tracks_0_1
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_xy_transl_tracks_0_1");
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
@@ -1032,7 +1025,7 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_vp_2fv_width_height == -1)
 
 		|| (uniform_Update_fs_4fv_W_H_time_currentScene == -1)
-		|| (uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift == -1)
+		|| (uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift == -1)
 #ifdef MALAUSSENA
 		|| (uniform_Update_fs_4fv_CAseed_type_size_loc == -1)
 #endif
@@ -1040,8 +1033,7 @@ void pg_loadAllShaders(void) {
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 		|| (uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght == -1)
 #endif
-		|| (uniform_Update_fs_4fv_trkDecay == -1)
-		|| (uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght == -1)
+		|| (uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght == -1)
 #ifdef PG_NB_CA_TYPES
 		|| (uniform_Update_fs_4fv_flashTrkCAWghts == -1)
 #endif
@@ -1116,7 +1108,9 @@ void pg_loadAllShaders(void) {
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 		|| (uniform_Update_fs_2fv_photo01Wghts == -1)
 #endif
+#ifdef PG_WITH_CAMERA_CAPTURE
 		|| (uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H == -1)
+#endif
 #ifdef PG_NB_CA_TYPES
 		|| (uniform_Update_texture_fs_CA == -1)
 #endif
@@ -1161,7 +1155,10 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Update_texture_fs_Part_render == -1)
 #endif
 		) {
-		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift : %d, uniform_Update_fs_4fv_trkDecay : %d, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift, uniform_Update_fs_4fv_trkDecay, uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
+		fprintf(stderr, "Could not bind uniforms Update uniform_Update_vp_model : %d, uniform_Update_vp_view : %d, uniform_Update_vp_proj : %d, uniform_Update_vp_2fv_width_height : %d, uniform_Update_fs_4fv_W_H_time_currentScene : %d, uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift : %d, uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght : %d, uniform_Update_fs_4fv_pulse: %d, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack: %d, uniform_Update_fs_4fv_repop_Color_flashCABGWght: %d, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres: %d, uniform_Update_fs_4fv_xy_transl_tracks_0_1 %d\n", uniform_Update_vp_model, uniform_Update_vp_view, uniform_Update_vp_proj, uniform_Update_vp_2fv_width_height, uniform_Update_fs_4fv_W_H_time_currentScene, uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift, uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght, uniform_Update_fs_4fv_pulse, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, uniform_Update_fs_4fv_repop_Color_flashCABGWght, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, uniform_Update_fs_4fv_xy_transl_tracks_0_1);
+#ifdef PG_WITH_CAMERA_CAPTURE
+		fprintf(stderr, "Could not bind uniforms Update uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H: %d\n", uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H);
+#endif
 #ifdef PG_WITH_PHOTO_FLASH
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres : %d\n", uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres);
 #endif
@@ -1251,8 +1248,8 @@ void pg_loadAllShaders(void) {
 	uniform_ParticleSplat_vp_proj
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleRender], "vp_projMatrix");
 
-	uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse
-		= glGetUniformLocation(shader_programme[pg_shader_ParticleRender], "uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse");
+	uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse
+		= glGetUniformLocation(shader_programme[pg_shader_ParticleRender], "uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse");
 	uniform_ParticleSplat_vp_3fv_trackReplay_xy_height
 		= glGetUniformLocation(shader_programme[pg_shader_ParticleRender], "uniform_ParticleSplat_vp_3fv_trackReplay_xy_height");
 
@@ -1301,7 +1298,7 @@ void pg_loadAllShaders(void) {
 		(uniform_ParticleSplat_vp_model == -1)
 		|| (uniform_ParticleSplat_vp_view == -1)
 		|| (uniform_ParticleSplat_vp_proj == -1)
-		|| (uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse == -1)
+		|| (uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse == -1)
 		|| (uniform_ParticleSplat_vp_3fv_trackReplay_xy_height == -1)
 		|| (uniform_ParticleSplat_texture_vp_Part_pos_speed == -1)
 		|| (uniform_ParticleSplat_texture_vp_Part_col_rad == -1)
@@ -1323,13 +1320,13 @@ void pg_loadAllShaders(void) {
 #endif
 		) {
 #ifdef LINE_SPLAT_PARTICLES
-		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleSplat_vp_model : %d, uniform_ParticleSplat_vp_view : %d, uniform_ParticleSplat_vp_proj : %d, uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse : %d, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleSplat_texture_vp_Part_pos_speed : %d, uniform_ParticleSplat_texture_vp_Part_col_rad : %d\n", uniform_ParticleSplat_vp_model, uniform_ParticleSplat_vp_view, uniform_ParticleSplat_vp_proj, uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, uniform_ParticleSplat_texture_vp_Part_pos_speed, uniform_ParticleSplat_texture_vp_Part_col_rad); 
+		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleSplat_vp_model : %d, uniform_ParticleSplat_vp_view : %d, uniform_ParticleSplat_vp_proj : %d, uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse : %d, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleSplat_texture_vp_Part_pos_speed : %d, uniform_ParticleSplat_texture_vp_Part_col_rad : %d\n", uniform_ParticleSplat_vp_model, uniform_ParticleSplat_vp_view, uniform_ParticleSplat_vp_proj, uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, uniform_ParticleSplat_texture_vp_Part_pos_speed, uniform_ParticleSplat_texture_vp_Part_col_rad); 
 #endif
 #ifdef CURVE_PARTICLES
 		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleCurve_vp_model : %d, uniform_ParticleCurve_vp_view : %d, uniform_ParticleCurve_vp_proj : %d, uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse : %d, uniform_ParticleCurve_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleCurve_texture_vp_Part_pos_speed : %d, uniform_ParticleCurve_texture_vp_Part_col_rad : %d, uniform_ParticleCurve_Comet_texture_fs_decal : %d\n", uniform_ParticleCurve_vp_model, uniform_ParticleCurve_vp_view, uniform_ParticleCurve_vp_proj, uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse, uniform_ParticleCurve_vp_3fv_trackReplay_xy_height, uniform_ParticleCurve_texture_vp_Part_pos_speed, uniform_ParticleCurve_texture_vp_Part_col_rad, uniform_ParticleCurve_Comet_texture_fs_decal);
 #endif
 #ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
-		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleSplat_vp_model : %d, uniform_ParticleSplat_vp_view : %d, uniform_ParticleSplat_vp_proj : %d, uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse : %d, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleSplat_texture_vp_Part_pos_speed : %d, uniform_ParticleSplat_texture_vp_Part_col_rad : %d, uniform_ParticleSplat_BlurredDisk_texture_fs_decal : %d\n", uniform_ParticleSplat_vp_model, uniform_ParticleSplat_vp_view, uniform_ParticleSplat_vp_proj, uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, uniform_ParticleSplat_texture_vp_Part_pos_speed, uniform_ParticleSplat_texture_vp_Part_col_rad, uniform_ParticleSplat_BlurredDisk_texture_fs_decal);
+		fprintf(stderr, "Could not bind uniforms Particle uniform_ParticleSplat_vp_model : %d, uniform_ParticleSplat_vp_view : %d, uniform_ParticleSplat_vp_proj : %d, uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse : %d, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height : %d, uniform_ParticleSplat_texture_vp_Part_pos_speed : %d, uniform_ParticleSplat_texture_vp_Part_col_rad : %d, uniform_ParticleSplat_BlurredDisk_texture_fs_decal : %d\n", uniform_ParticleSplat_vp_model, uniform_ParticleSplat_vp_view, uniform_ParticleSplat_vp_proj, uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse, uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, uniform_ParticleSplat_texture_vp_Part_pos_speed, uniform_ParticleSplat_texture_vp_Part_col_rad, uniform_ParticleSplat_BlurredDisk_texture_fs_decal);
 #endif
 	}
 #endif

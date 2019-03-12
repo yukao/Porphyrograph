@@ -39,60 +39,172 @@ extern int   max_mouse_recording_frames;
 extern int   max_network_message_length;
 extern int   nb_particles        ;
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };
+enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];
 extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
-// RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	51	52	53	54	55	56	57	58	59	60	61	62	63	64	65	66	67	68	78	69	73	77	78	79	80	81	82	83	84	85	86	87	88	89	90	91	92	93	94	95	96	97	98	99	100	101	102	103	104	105	106	107	108	109	110	111	112	113	114	115	116	117	118	119	120	121	122	123	124	125	126	127	128	129	130	131	132	133	134	135	136	137	138	139	140	141	142	143	144	145	146	146	147	148	149	150	151	152	153	154	155	156	157	158	159	160	161	162	163	164	165	166	167	168	170	171	172	173	169
-// VERBATIM	pen brush	pen radius	pen radius pulse	palette for pen	palette for pen	palette for repop	repop color pulse	Grey level for pen	Grey level for repop	A color	Blend Transparency	pixel mode	pixel acc	pixel acc pulse	noise scale	part noise line scale	part noise type	part noise angle scale	part noise center-x	part noise center-y	pixel acc center-x	pixel acc center-y	pixel radius 	pixel radius pulse	repopuplating BG (grid)	repopuplating CA	CA 1 type	CA 1 subtype	CA 2 type	CA 2 subtype	CA1/CA2 weight	CAParams1	CAParams2	CAParams3	CAParams4	CAParams5	CAParams6	CAParams7	CAParams8	clear CA	clear layer	clear all Layers	invert	snapshot onOff	cursor size	echo	echo neg	blur radius trk1	blur radius trk2	 Flash track0->CA freq	 Flash track1->CA freq	 Flash track2->CA freq	 Flash track3->CA freq	Flash CA->BG freq	 Flash track1->BG freq	 Flash track2->BG freq	 Flash track3->BG freq	Flash pixel freq	Flash pixel duration	camera flash length (in frames)	camera flash bright (in frames)	camera flash beat no	pen pressure coef	pen angleH coef	pen angleV coef	tracks sync on/off	current drawing track	current video track	current photo track	current SvgGpu images	track0 decay sign	track0 decay	CA mix weight	track0 mix weight	CA Master weight	track0 Master weight	path1 replay track	path2 replay track	path3 replay track	path4 replay track	path5 replay track	path6 replay track	path7 replay track	path1 record on/off	path2 record on/off	path3 record on/off	path4 record on/off	path5 record on/off	path3 record on/off	path7 record on/off	path0 repop on/off	path1 repop on/off	path2 repop on/off	path3 repop on/off	path4 repop on/off	path5 repop on/off	path6 repop on/off	path7 repop on/off	auto_beat	beat duration	CA decay sign	CA decay	CA decay pulse	invert movie	cumul video	camera threshold	camera gamma	camera exposure	camera gain	cameraBrightness	camera saturation	camera contrast	camera white balance red	camera white balance blue	video saturation 	video saturation pulse	camera capture frequency	movie capture frequency	camera Weight	movie weight	Sobel camera	Sobel movie	movie no	BG Subtraction on/off	CA update step	color interface display	fast vs slow CA color spreading	input volume	Min input volume	beat threshold	beat min duration (ms)	freeze on/off	photo weight	photo diaporama index	photo diaporama fade dur	photo diaporama plateau dur	sound enveloppe min	sound envelope max	current background capture	hide	soundtrack no	adc weight (eg microphone)	soundtrack weight	track0 x_transl	track1 x_transl	track0 y_transl	track1 y_transl	repopuplating Path	sample setUp	sensor spatial pattern	sensor activation	sensor volume	pen radius replay	pen radius replay pulse	pen color  replay pulse	echo layer shift pulse	particle motion shift pulse	tracks layers pulse	flash weights pulse	mask jitter amplitude	photo jitter amplitude	photo value	photo value pulse	photo satur	photo satur pulse	photo scale	mask contrast	photo contrast	mute screen	FFT scale
+// RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	51	52	53	54	55	56	57	58	59	60	61	62	63	64	65	66	67	68	69	70	71	72	73	74	75	76	77	78	79	80	81	82	83	84	85	86	87	88	89	90	91	92	93	94	95	96	97	98	99	100	101	102	103	104	105	106	107	108	109	110	111	112	113	114	115	116	117	118	119	120	121	122	123	124	125	126	127	128	129	130	131	132	133	134	135	136	137	138	139	140	141	142	143	144	145	146	147	148	149	150	151	152	153	154	155	156	157	158	159	160	161	162	163	164	165	166	167	168	169	170	171	172	173	174	175	176	177	178	179	180	181	182	183	184	185	186	187	188	189	190	191	192	193	194
+// VERBATIM	auto_beat	clear all Layers	clear CA	clear layer	current background capture	BG Subtraction on/off	mute screen	invert	snapshot onOff	cursor size	beat duration	Blend Transparency	CA mix weight	ID comment	track0 mix weight	ID comment	CA Master weight	ID comment	track0 Master weight	ID comment	echo	ID comment	echo neg	ID comment	CA decay	CA decay pulse	track0 decay	ID comment	pen radius	pen radius pulse	palette for pen	palette for pen	Grey level for pen	ID comment	A color	ID comment	pen brush	pen radius replay	pen radius replay pulse	ID comment	ID comment	current drawing track	current video track	current photo track	track0 x_transl	ID comment	track0 y_transl	ID comment	track1 x_transl	ID comment	track1 y_transl	ID comment	path1 record on/off	path2 record on/off	path3 record on/off	path4 record on/off	path5 record on/off	path3 record on/off	path7 record on/off	path1 replay track	path2 replay track	path3 replay track	path4 replay track	path5 replay track	path6 replay track	path7 replay track	noise scale	ID comment	part noise type	part noise line scale	part noise angle scale	part noise center-x	part noise center-y	pixel acc	pixel acc pulse	pixel acc center-x	ID comment	pixel acc center-y	ID comment	pixel radius 	pixel radius pulse	pixel mode	repopuplating CA	ID comment	repopuplating BG (grid)	ID comment	repopuplating Path	ID comment	palette for repop	repop color pulse	Grey level for repop	ID comment	camera white balance red	camera white balance blue	camera exposure	camera gain	cameraBrightness	camera saturation	camera contrast	camera gamma	camera capture frequency	movie no	movie capture frequency	photo diaporama index	photo diaporama fade dur	photo diaporama plateau dur	current SvgGpu images	soundtrack no	camera threshold	ID comment	camera Weight	ID comment	Sobel camera	ID comment	movie weight	ID comment	Sobel movie	ID comment	invert movie	ID comment	ID comment	ID comment	video saturation 	video saturation pulse	ID comment	ID comment	photo weight	ID comment	ID comment	ID comment	photo satur	photo satur pulse	photo value	photo value pulse	photo jitter amplitude	mask jitter amplitude	photo scale	photo contrast	mask contrast	CAParams1	ID comment	CAParams2	ID comment	CAParams3	ID comment	CAParams4	ID comment	CAParams5	ID comment	CAParams6	ID comment	CAParams7	ID comment	CAParams8	ID comment	CA 1 type	CA 1 subtype	CA 2 type	CA 2 subtype	CA1/CA2 weight	 Flash track0->CA freq	 Flash track1->CA freq	 Flash track2->CA freq	 Flash track3->CA freq	Flash CA->BG freq	 Flash track1->BG freq	 Flash track2->BG freq	 Flash track3->BG freq	Flash pixel freq	Flash pixel duration	camera flash length (in frames)	camera flash bright (in frames)	camera flash beat no	beat threshold	beat min duration (ms)	input volume	Min input volume	pen pressure coef	pen angleH coef	pen angleV coef	tracks sync on/off	cumul video	CA update step	color interface display	fast vs slow CA color spreading	freeze on/off	sound enveloppe min	sound envelope max	adc weight (eg microphone)	soundtrack weight	sample setUp	sensor spatial pattern	sensor activation	sensor volume	FFT scale
 enum InterpVarIDs{ 
-  _pen_brush = 0,
+  _auto_beat = 0,
+  _clearAllLayers,
+  _clearCA,
+  _clearLayer,
+  _reset_camera,
+  _camera_BG_subtr,
+  _mute_second_screen,
+  _invertAllLayers,
+  _take_snapshots,
+  _cursorSize,
+  _auto_beat_duration,
+  _master,
+  _CAMixingWeight,
+  _CAMixingWeight_pulse,
+  _trackMixingWeight_0,
+  _trackMixingWeight_0_pulse,
+  _CAMasterWeight,
+  _CAMasterWeight_pulse,
+  _trackMasterWeight_0,
+  _trackMasterWeight_0_pulse,
+  _echo,
+  _echo_pulse,
+  _echoNeg,
+  _echoNeg_pulse,
+  _CAdecay,
+  _CAdecay_pulse,
+  _trkDecay_0,
+  _trkDecay_0_pulse,
   _pen_radius,
   _pen_radius_pulse,
   _pen_color,
   _pen_color_pulse,
-  _repop_color,
-  _repop_color_pulse,
   _pen_grey,
-  _repop_grey,
+  _pen_grey_pulse,
   _pen_color_a,
-  _blendTransp,
-  _pixel_mode,
-  _pixel_acc_factor,
-  _pixel_acc_pulse,
+  _pen_color_a_pulse,
+  _pen_brush,
+  _pen_radius_replay,
+  _pen_radius_replay_pulse,
+  _pen_color_replay,
+  _pen_color_replay_pulse,
+  _currentDrawingTrack,
+  _currentVideoTrack,
+  _currentPhotoTrack,
+  _track_x_transl_0,
+  _track_x_transl_0_pulse,
+  _track_y_transl_0,
+  _track_y_transl_0_pulse,
+  _track_x_transl_1,
+  _track_x_transl_1_pulse,
+  _track_y_transl_1,
+  _track_y_transl_1_pulse,
+  _path_record_1,
+  _path_record_2,
+  _path_record_3,
+  _path_record_4,
+  _path_record_5,
+  _path_record_6,
+  _path_record_7,
+  _path_replay_trackNo_1,
+  _path_replay_trackNo_2,
+  _path_replay_trackNo_3,
+  _path_replay_trackNo_4,
+  _path_replay_trackNo_5,
+  _path_replay_trackNo_6,
+  _path_replay_trackNo_7,
   _noiseScale,
-  _noiseLineScale,
+  _noiseScale_pulse,
   _noiseType,
+  _noiseLineScale,
   _noiseAngleScale,
-  _noiseCenter_0,
-  _noiseCenter_1,
-  _pixel_acc_center_0,
-  _pixel_acc_center_1,
+  _noiseCenterX,
+  _noiseCenterY,
+  _pixel_acc,
+  _pixel_acc_pulse,
+  _pixel_acc_shiftX,
+  _pixel_acc_shiftX_pulse,
+  _pixel_acc_shiftY,
+  _pixel_acc_shiftY_pulse,
   _pixel_radius,
   _pixel_radius_pulse,
-  _repop_BG,
+  _pixel_mode,
   _repop_CA,
+  _repop_CA_pulse,
+  _repop_BG,
+  _repop_BG_pulse,
+  _repop_path,
+  _repop_path_pulse,
+  _repop_color,
+  _repop_color_pulse,
+  _repop_grey,
+  _repop_grey_pulse,
+  _cameraWB_R,
+  _cameraWB_B,
+  _cameraExposure,
+  _cameraGain,
+  _cameraBrightness,
+  _cameraSaturation,
+  _cameraContrast,
+  _cameraGamma,
+  _cameraCaptFreq,
+  _playing_movieNo,
+  _movieCaptFreq,
+  _photo_diaporama,
+  _photo_diaporama_fade,
+  _photo_diaporama_plateau,
+  _activeClipArts,
+  _playing_soundtrackNo,
+  _cameraThreshold,
+  _cameraThreshold_pulse,
+  _cameraWeight,
+  _cameraWeight_pulse,
+  _cameraSobel,
+  _cameraSobel_pulse,
+  _movieWeight,
+  _movieWeight_pulse,
+  _movieSobel,
+  _movieSobel_pulse,
+  _invertMovie,
+  _invertCamera,
+  _video_hue,
+  _video_hue_pulse,
+  _video_satur,
+  _video_satur_pulse,
+  _video_value,
+  _video_value_pulse,
+  _photoWeight,
+  _photoWeight_pulse,
+  _photo_hue,
+  _photo_hue_pulse,
+  _photo_satur,
+  _photo_satur_pulse,
+  _photo_value,
+  _photo_value_pulse,
+  _photoJitterAmpl,
+  _maskJitterAmpl,
+  _photo_scale,
+  _photo_contrast,
+  _mask_contrast,
+  _CAParams1,
+  _CAParams1_pulse,
+  _CAParams2,
+  _CAParams2_pulse,
+  _CAParams3,
+  _CAParams3_pulse,
+  _CAParams4,
+  _CAParams4_pulse,
+  _CAParams5,
+  _CAParams5_pulse,
+  _CAParams6,
+  _CAParams6_pulse,
+  _CAParams7,
+  _CAParams7_pulse,
+  _CAParams8,
+  _CAParams8_pulse,
   _CA1Type,
   _CA1SubType,
   _CA2Type,
   _CA2SubType,
   _CA1_CA2_weight,
-  _CAParams1,
-  _CAParams2,
-  _CAParams3,
-  _CAParams4,
-  _CAParams5,
-  _CAParams6,
-  _CAParams7,
-  _CAParams8,
-  _clearCA,
-  _clearLayer,
-  _clearAllLayers,
-  _invertAllLayers,
-  _take_snapshots,
-  _cursorSize,
-  _echo,
-  _echoNeg,
-  _blurRadius_1,
-  _blurRadius_2,
   _flashTrkCA_freq_0,
   _flashTrkCA_freq_1,
   _flashTrkCA_freq_2,
@@ -106,164 +218,189 @@ enum InterpVarIDs{
   _flashCameraTrkLength,
   _flashCameraTrkBright,
   _flashCameraTrkBeat,
+  _beat_threshold,
+  _beat_delay,
+  _sound_volume,
+  _sound_min,
   _pen_radius_pressure_coef,
   _pen_radius_angleHor_coef,
   _pen_radius_angleVer_coef,
   _tracksSync,
-  _currentDrawingTrack,
-  _currentVideoTrack,
-  _currentPhotoTrack,
-  _activeClipArts,
-  _trkDecay_sign_0,
-  _trkDecay_0,
-  _CAMixingWeight,
-  _trackMixingWeight_0,
-  _CAMasterWeight,
-  _trackMasterWeight_0,
-  _path_replay_trackNo_1,
-  _path_replay_trackNo_2,
-  _path_replay_trackNo_3,
-  _path_replay_trackNo_4,
-  _path_replay_trackNo_5,
-  _path_replay_trackNo_6,
-  _path_replay_trackNo_7,
-  _path_record_1,
-  _path_record_2,
-  _path_record_3,
-  _path_record_4,
-  _path_record_5,
-  _path_record_6,
-  _path_record_7,
-  _path_repop_0,
-  _path_repop_1,
-  _path_repop_2,
-  _path_repop_3,
-  _path_repop_4,
-  _path_repop_5,
-  _path_repop_6,
-  _path_repop_7,
-  _auto_beat,
-  _auto_beat_duration,
-  _CAdecay_sign,
-  _CAdecay,
-  _CAdecay_pulse,
-  _invertMovie,
   _cameraCumul,
-  _cameraThreshold,
-  _cameraGamma,
-  _cameraExposure,
-  _cameraGain,
-  _cameraBrightness,
-  _cameraSaturation,
-  _cameraContrast,
-  _cameraWB_R,
-  _cameraWB_B,
-  _video_satur,
-  _video_satur_pulse,
-  _cameraCaptFreq,
-  _movieCaptFreq,
-  _cameraWeight,
-  _movieWeight,
-  _cameraSobel,
-  _movieSobel,
-  _playing_movieNo,
-  _BGSubtr,
   _CAstep,
   _interfaceOnScreen,
   _CAcolorSpread,
-  _sound_volume,
-  _sound_min,
-  _beat_threshold,
-  _beat_delay,
   _freeze,
-  _photoWeight,
-  _photo_diaporama,
-  _photo_diaporama_fade,
-  _photo_diaporama_plateau,
   _sound_env_min,
   _sound_env_max,
-  _currentBGCapture,
-  _hide,
-  _playing_soundtrackNo,
   _audioInput_weight,
   _soundtrack_weight,
-  _track_x_transl_0,
-  _track_x_transl_1,
-  _track_y_transl_0,
-  _track_y_transl_1,
-  _repop_path,
-  _sample_setUp,
+  _sensor_sample_setUp,
   _sensor_layout,
   _sensor_activation,
   _sensor_vol,
-  _pen_radius_replay,
-  _pen_radius_replay_pulse,
-  _pen_color_replay_pulse,
-  _echo_Hshift_pulse,
-  _part_Vshift_pulse,
-  _tracks_Hshift_pulse,
-  _flashWeight_pulse,
-  _maskJitterAmpl,
-  _photoJitterAmpl,
-  _photo_value,
-  _photo_value_pulse,
-  _photo_satur,
-  _photo_satur_pulse,
-  _photo_scale,
-  _mask_contrast,
-  _photo_contrast,
-  _mute_screen,
   _fft_scale,
   _MaxInterpVarIDs};
-extern int   pen_brush           ;
+extern bool  auto_beat           ;
+extern bool  clearAllLayers      ;
+extern bool  clearCA             ;
+extern bool  clearLayer          ;
+extern bool  reset_camera        ;
+extern bool  camera_BG_subtr     ;
+extern bool  mute_second_screen  ;
+extern bool  invertAllLayers     ;
+extern bool  take_snapshots      ;
+extern int   cursorSize          ;
+extern float auto_beat_duration  ;
+extern float master              ;
+extern float CAMixingWeight      ;
+extern float CAMixingWeight_pulse;
+extern float trackMixingWeight_0 ;
+extern float trackMixingWeight_0_pulse;
+extern float CAMasterWeight      ;
+extern float CAMasterWeight_pulse;
+extern float trackMasterWeight_0 ;
+extern float trackMasterWeight_0_pulse;
+extern float echo                ;
+extern float echo_pulse          ;
+extern float echoNeg             ;
+extern float echoNeg_pulse       ;
+extern float CAdecay             ;
+extern float CAdecay_pulse       ;
+extern float trkDecay_0          ;
+extern float trkDecay_0_pulse    ;
 extern float pen_radius          ;
 extern float pen_radius_pulse    ;
 extern float pen_color           ;
 extern float pen_color_pulse     ;
-extern float repop_color         ;
-extern float repop_color_pulse   ;
 extern float pen_grey            ;
-extern float repop_grey          ;
+extern float pen_grey_pulse      ;
 extern float pen_color_a         ;
-extern float blendTransp         ;
-extern int   pixel_mode          ;
-extern float pixel_acc_factor    ;
-extern float pixel_acc_pulse     ;
+extern float pen_color_a_pulse   ;
+extern int   pen_brush           ;
+extern float pen_radius_replay   ;
+extern float pen_radius_replay_pulse;
+extern float pen_color_replay    ;
+extern float pen_color_replay_pulse;
+extern int   currentDrawingTrack ;
+extern int   currentVideoTrack   ;
+extern int   currentPhotoTrack   ;
+extern int   track_x_transl_0    ;
+extern float track_x_transl_0_pulse;
+extern int   track_y_transl_0    ;
+extern float track_y_transl_0_pulse;
+extern int   track_x_transl_1    ;
+extern float track_x_transl_1_pulse;
+extern int   track_y_transl_1    ;
+extern float track_y_transl_1_pulse;
+extern bool  path_record_1       ;
+extern bool  path_record_2       ;
+extern bool  path_record_3       ;
+extern bool  path_record_4       ;
+extern bool  path_record_5       ;
+extern bool  path_record_6       ;
+extern bool  path_record_7       ;
+extern int   path_replay_trackNo_1;
+extern int   path_replay_trackNo_2;
+extern int   path_replay_trackNo_3;
+extern int   path_replay_trackNo_4;
+extern int   path_replay_trackNo_5;
+extern int   path_replay_trackNo_6;
+extern int   path_replay_trackNo_7;
 extern float noiseScale          ;
-extern float noiseLineScale      ;
+extern float noiseScale_pulse    ;
 extern int   noiseType           ;
+extern float noiseLineScale      ;
 extern float noiseAngleScale     ;
-extern float noiseCenter_0       ;
-extern float noiseCenter_1       ;
-extern float pixel_acc_center_0  ;
-extern float pixel_acc_center_1  ;
+extern float noiseCenterX        ;
+extern float noiseCenterY        ;
+extern float pixel_acc           ;
+extern float pixel_acc_pulse     ;
+extern float pixel_acc_shiftX    ;
+extern float pixel_acc_shiftX_pulse;
+extern float pixel_acc_shiftY    ;
+extern float pixel_acc_shiftY_pulse;
 extern float pixel_radius        ;
 extern float pixel_radius_pulse  ;
-extern float repop_BG            ;
+extern int   pixel_mode          ;
 extern float repop_CA            ;
+extern float repop_CA_pulse      ;
+extern float repop_BG            ;
+extern float repop_BG_pulse      ;
+extern float repop_path          ;
+extern float repop_path_pulse    ;
+extern float repop_color         ;
+extern float repop_color_pulse   ;
+extern float repop_grey          ;
+extern float repop_grey_pulse    ;
+extern float cameraWB_R          ;
+extern float cameraWB_B          ;
+extern float cameraExposure      ;
+extern float cameraGain          ;
+extern float cameraBrightness    ;
+extern float cameraSaturation    ;
+extern float cameraContrast      ;
+extern float cameraGamma         ;
+extern float cameraCaptFreq      ;
+extern int   playing_movieNo     ;
+extern float movieCaptFreq       ;
+extern int   photo_diaporama     ;
+extern float photo_diaporama_fade;
+extern float photo_diaporama_plateau;
+extern int   activeClipArts      ;
+extern int   playing_soundtrackNo;
+extern float cameraThreshold     ;
+extern float cameraThreshold_pulse;
+extern float cameraWeight        ;
+extern float cameraWeight_pulse  ;
+extern float cameraSobel         ;
+extern float cameraSobel_pulse   ;
+extern float movieWeight         ;
+extern float movieWeight_pulse   ;
+extern float movieSobel          ;
+extern float movieSobel_pulse    ;
+extern bool  invertMovie         ;
+extern bool  invertCamera        ;
+extern float video_hue           ;
+extern float video_hue_pulse     ;
+extern float video_satur         ;
+extern float video_satur_pulse   ;
+extern float video_value         ;
+extern float video_value_pulse   ;
+extern float photoWeight         ;
+extern float photoWeight_pulse   ;
+extern float photo_hue           ;
+extern float photo_hue_pulse     ;
+extern float photo_satur         ;
+extern float photo_satur_pulse   ;
+extern float photo_value         ;
+extern float photo_value_pulse   ;
+extern float photoJitterAmpl     ;
+extern float maskJitterAmpl      ;
+extern float photo_scale         ;
+extern float photo_contrast      ;
+extern float mask_contrast       ;
+extern float CAParams1           ;
+extern float CAParams1_pulse     ;
+extern float CAParams2           ;
+extern float CAParams2_pulse     ;
+extern float CAParams3           ;
+extern float CAParams3_pulse     ;
+extern float CAParams4           ;
+extern float CAParams4_pulse     ;
+extern float CAParams5           ;
+extern float CAParams5_pulse     ;
+extern float CAParams6           ;
+extern float CAParams6_pulse     ;
+extern float CAParams7           ;
+extern float CAParams7_pulse     ;
+extern float CAParams8           ;
+extern float CAParams8_pulse     ;
 extern int   CA1Type             ;
 extern int   CA1SubType          ;
 extern int   CA2Type             ;
 extern int   CA2SubType          ;
 extern float CA1_CA2_weight      ;
-extern float CAParams1           ;
-extern float CAParams2           ;
-extern float CAParams3           ;
-extern float CAParams4           ;
-extern float CAParams5           ;
-extern float CAParams6           ;
-extern float CAParams7           ;
-extern float CAParams8           ;
-extern bool  clearCA             ;
-extern bool  clearLayer          ;
-extern bool  clearAllLayers      ;
-extern bool  invertAllLayers     ;
-extern bool  take_snapshots      ;
-extern int   cursorSize          ;
-extern float echo                ;
-extern float echoNeg             ;
-extern int   blurRadius_1        ;
-extern int   blurRadius_2        ;
 extern int   flashTrkCA_freq_0   ;
 extern int   flashTrkCA_freq_1   ;
 extern int   flashTrkCA_freq_2   ;
@@ -277,113 +414,27 @@ extern int   flashPixel_duration ;
 extern float flashCameraTrkLength;
 extern float flashCameraTrkBright;
 extern int   flashCameraTrkBeat  ;
+extern float beat_threshold      ;
+extern float beat_delay          ;
+extern float sound_volume        ;
+extern float sound_min           ;
 extern float pen_radius_pressure_coef;
 extern float pen_radius_angleHor_coef;
 extern float pen_radius_angleVer_coef;
 extern bool  tracksSync          ;
-extern int   currentDrawingTrack ;
-extern int   currentVideoTrack   ;
-extern int   currentPhotoTrack   ;
-extern int   activeClipArts      ;
-extern float trkDecay_sign_0     ;
-extern float trkDecay_0          ;
-extern float CAMixingWeight      ;
-extern float trackMixingWeight_0 ;
-extern float CAMasterWeight      ;
-extern float trackMasterWeight_0 ;
-extern int   path_replay_trackNo_1;
-extern int   path_replay_trackNo_2;
-extern int   path_replay_trackNo_3;
-extern int   path_replay_trackNo_4;
-extern int   path_replay_trackNo_5;
-extern int   path_replay_trackNo_6;
-extern int   path_replay_trackNo_7;
-extern bool  path_record_1       ;
-extern bool  path_record_2       ;
-extern bool  path_record_3       ;
-extern bool  path_record_4       ;
-extern bool  path_record_5       ;
-extern bool  path_record_6       ;
-extern bool  path_record_7       ;
-extern bool  path_repop_0        ;
-extern bool  path_repop_1        ;
-extern bool  path_repop_2        ;
-extern bool  path_repop_3        ;
-extern bool  path_repop_4        ;
-extern bool  path_repop_5        ;
-extern bool  path_repop_6        ;
-extern bool  path_repop_7        ;
-extern bool  auto_beat           ;
-extern float auto_beat_duration  ;
-extern float CAdecay_sign        ;
-extern float CAdecay             ;
-extern float CAdecay_pulse       ;
-extern bool  invertMovie         ;
 extern int   cameraCumul         ;
-extern float cameraThreshold     ;
-extern float cameraGamma         ;
-extern float cameraExposure      ;
-extern float cameraGain          ;
-extern float cameraBrightness    ;
-extern float cameraSaturation    ;
-extern float cameraContrast      ;
-extern float cameraWB_R          ;
-extern float cameraWB_B          ;
-extern float video_satur         ;
-extern float video_satur_pulse   ;
-extern float cameraCaptFreq      ;
-extern float movieCaptFreq       ;
-extern float cameraWeight        ;
-extern float movieWeight         ;
-extern float cameraSobel         ;
-extern float movieSobel          ;
-extern int   playing_movieNo     ;
-extern bool  BGSubtr             ;
 extern int   CAstep              ;
 extern bool  interfaceOnScreen   ;
 extern bool  CAcolorSpread       ;
-extern float sound_volume        ;
-extern float sound_min           ;
-extern float beat_threshold      ;
-extern float beat_delay          ;
 extern bool  freeze              ;
-extern float photoWeight         ;
-extern int   photo_diaporama     ;
-extern float photo_diaporama_fade;
-extern float photo_diaporama_plateau;
 extern float sound_env_min       ;
 extern float sound_env_max       ;
-extern bool  currentBGCapture    ;
-extern bool  hide                ;
-extern int   playing_soundtrackNo;
 extern float audioInput_weight   ;
 extern float soundtrack_weight   ;
-extern int   track_x_transl_0    ;
-extern int   track_x_transl_1    ;
-extern int   track_y_transl_0    ;
-extern int   track_y_transl_1    ;
-extern float repop_path          ;
-extern float sample_setUp        ;
+extern float sensor_sample_setUp ;
 extern int   sensor_layout       ;
 extern int   sensor_activation   ;
 extern float sensor_vol          ;
-extern float pen_radius_replay   ;
-extern float pen_radius_replay_pulse;
-extern float pen_color_replay_pulse;
-extern float echo_Hshift_pulse   ;
-extern float part_Vshift_pulse   ;
-extern float tracks_Hshift_pulse ;
-extern float flashWeight_pulse   ;
-extern float maskJitterAmpl      ;
-extern float photoJitterAmpl     ;
-extern float photo_value         ;
-extern float photo_value_pulse   ;
-extern float photo_satur         ;
-extern float photo_satur_pulse   ;
-extern float photo_scale         ;
-extern float mask_contrast       ;
-extern float photo_contrast      ;
-extern bool  mute_screen         ;
 extern float fft_scale           ;
 extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];
 extern void * ScenarioVarPointers[_MaxInterpVarIDs];

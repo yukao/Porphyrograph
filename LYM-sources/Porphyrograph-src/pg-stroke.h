@@ -84,6 +84,8 @@ void LoadPathFromXML( char *pathString , int indPath , float *translation , floa
 void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
 void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
 
+// REPLAY PATHS  
+void pg_replay_paths(float theTime);
 // update of the tables that contain the stroke parameters
 void pg_update_pulsed_colors_and_replay_paths( float theTime );
 

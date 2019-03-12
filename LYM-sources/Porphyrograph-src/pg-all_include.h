@@ -177,7 +177,7 @@ using std::ifstream;
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #elif defined (GN) || defined (MALAUSSENA) || defined (CRITON)
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
-#elif defined (BONNOTTE)
+#elif defined (BONNOTTE) || defined (effe)
 #define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #else
 // NB TRACKS -> ***** ALSO TO BE CHANGED IN DRAWING AND COMPOSITION FRAGMENT SHADERS ****
@@ -188,7 +188,7 @@ using std::ifstream;
 #define PG_WITH_PHOTO_DIAPORAMA
 #endif
 
-#if !defined (KOMPARTSD) && !defined(REUTLINGEN) && !defined(BICHES) && !defined(CAVERNEPLATON) && !defined(ULM)
+#if defined (VOLUSPA)
 #define PG_WITH_BLUR
 #endif
 
@@ -289,7 +289,7 @@ using std::ifstream;
 #undef BLURRED_SPLAT_PARTICLES_TEXTURED
 #elif defined (DASEIN)
 #define CURVE_PARTICLES
-#elif defined (effe) || defined (DEMO) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (ULM)
+#elif defined (effe) || defined (DEMO) || defined (DEMO_BEZIER) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (ULM)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -325,7 +325,7 @@ using std::ifstream;
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined (DEMO) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON)
+#if defined (DEMO) || defined (DEMO_BEZIER) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON)
 #define PG_SENSORS
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
@@ -343,7 +343,7 @@ using std::ifstream;
 #endif
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined (DEMO) || defined (CAVERNEPLATON) || defined (ULM)
+#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (ULM)
 #define PG_BEZIER_PATHS
 #endif
 
@@ -398,7 +398,7 @@ using std::ifstream;
 #ifdef effe
 #include "pg_script_header_effe.h"
 #endif
-#ifdef DEMO
+#if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_script_header_demo.h"
 #endif
 #ifdef VOLUSPA

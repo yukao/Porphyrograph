@@ -88,6 +88,7 @@ bool DisplayFramePerSecond = false;
 /// current mouse location
 int CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR, CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
 float paths_x_0_forGPU = PG_OUT_OF_SCREEN_CURSOR, paths_y_0_forGPU = PG_OUT_OF_SCREEN_CURSOR;
+float paths_x_0_begin_position = PG_OUT_OF_SCREEN_CURSOR, paths_y_0_begin_position = PG_OUT_OF_SCREEN_CURSOR;
 int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 int CurrentCursorStylusvsRubber = pg_Stylus;
 // current tablet pen pressure and orientation

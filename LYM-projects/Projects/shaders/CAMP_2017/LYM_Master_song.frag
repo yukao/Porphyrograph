@@ -102,8 +102,7 @@ void main() {
   float mouse_x = uniform_Master_fs_3fv_xy_frameno.x;
   float mouse_y = uniform_Master_fs_3fv_xy_frameno.y;
   float frameno = uniform_Master_fs_3fv_xy_frameno.z;
-  if( !hide
-      && mouse_x < width && mouse_x > 0 
+  if( mouse_x < width && mouse_x > 0 
       && length(vec2(decalCoords.x - mouse_x , height - decalCoords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
@@ -112,5 +111,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

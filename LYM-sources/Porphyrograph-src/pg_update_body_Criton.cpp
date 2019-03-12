@@ -1,86 +1,90 @@
 
  glUseProgram(shader_programme[pg_shader_Update]);
- glUniform4f( uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale ,
-	      (GLfloat)pixel_mode,
-	      (GLfloat)pixel_acc_factor,
-	      (GLfloat)noiseScale,
-	      (GLfloat)noiseLineScale );
- glUniform4f( uniform_Update_fs_4fv_noiseType_noiseAngleScale_noiseCenter_0_noiseCenter_1 ,
-	      (GLfloat)noiseType,
-	      (GLfloat)noiseAngleScale,
-	      (GLfloat)noiseCenter_0,
-	      (GLfloat)noiseCenter_1 );
- glUniform4f( uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_repop_CA ,
-	      (GLfloat)pixel_acc_center_0,
-	      (GLfloat)pixel_acc_center_1,
-	      (GLfloat)repop_BG,
-	      (GLfloat)repop_CA );
- glUniform4f( uniform_Update_fs_4fv_CA1Type_CA1SubType_CAParams1_CAParams2 ,
-	      (GLfloat)CA1Type,
-	      (GLfloat)CA1SubType,
-	      (GLfloat)CAParams1,
-	      (GLfloat)CAParams2 );
- glUniform4f( uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6 ,
-	      (GLfloat)CAParams3,
-	      (GLfloat)CAParams4,
-	      (GLfloat)CAParams5,
-	      (GLfloat)CAParams6 );
- glUniform4f( uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack ,
-	      (GLfloat)CAParams7,
-	      (GLfloat)CAParams8,
-	      (GLfloat)currentDrawingTrack,
-	      (GLfloat)currentVideoTrack );
- glUniform4f( uniform_Update_fs_4fv_currentPhotoTrack_activeClipArts_path_replay_trackNo_1_path_replay_trackNo_2 ,
+ glUniform4f( uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_currentDrawingTrack ,
+	      (GLfloat)camera_BG_subtr,
+	      (GLfloat)CAdecay * (1.f + pulse_average * CAdecay_pulse),
+	      (GLfloat)trkDecay_0 * (1.f + pulse_average * trkDecay_0_pulse),
+	      (GLfloat)currentDrawingTrack );
+ glUniform4f( uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2 ,
+	      (GLfloat)currentVideoTrack,
 	      (GLfloat)currentPhotoTrack,
-	      (GLfloat)activeClipArts,
 	      (GLfloat)path_replay_trackNo_1,
 	      (GLfloat)path_replay_trackNo_2 );
- glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_3_CAdecay_pulse_invertMovie_cameraCumul ,
+ glUniform4f( uniform_Update_fs_4fv_path_replay_trackNo_3_noiseScale_noiseType_noiseLineScale ,
 	      (GLfloat)path_replay_trackNo_3,
-	      (GLfloat)CAdecay_pulse,
-	      (GLfloat)invertMovie,
-	      (GLfloat)cameraCumul );
- glUniform4f( uniform_Update_fs_4fv_cameraThreshold_cameraGamma_video_satur_video_satur_pulse ,
-	      (GLfloat)cameraThreshold,
+	      (GLfloat)noiseScale * (1.f + pulse_average * noiseScale_pulse),
+	      (GLfloat)noiseType,
+	      (GLfloat)noiseLineScale );
+ glUniform4f( uniform_Update_fs_4fv_noiseAngleScale_noiseCenterX_noiseCenterY_pixel_acc ,
+	      (GLfloat)noiseAngleScale,
+	      (GLfloat)noiseCenterX,
+	      (GLfloat)noiseCenterY,
+	      (GLfloat)pixel_acc * (1.f + pulse_average * pixel_acc_pulse) );
+ glUniform4f( uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode ,
+	      (GLfloat)pixel_acc_shiftX * (pulse_average - pulse_average_prec) * pixel_acc_shiftX_pulse,
+	      (GLfloat)pixel_acc_shiftY * (pulse_average - pulse_average_prec) * pixel_acc_shiftY_pulse,
+	      (GLfloat)pixel_radius * (1.f + pulse_average * pixel_radius_pulse),
+	      (GLfloat)pixel_mode );
+ glUniform4f( uniform_Update_fs_4fv_repop_CA_repop_BG_cameraGamma_activeClipArts ,
+	      (GLfloat)repop_CA * (1.f + pulse_average * repop_CA_pulse),
+	      (GLfloat)repop_BG * (1.f + pulse_average * repop_BG_pulse),
 	      (GLfloat)cameraGamma,
-	      (GLfloat)video_satur,
-	      (GLfloat)video_satur_pulse );
- glUniform4f( uniform_Update_fs_4fv_cameraWeight_movieWeight_cameraSobel_movieSobel ,
-	      (GLfloat)cameraWeight,
-	      (GLfloat)movieWeight,
-	      (GLfloat)cameraSobel,
-	      (GLfloat)movieSobel );
- glUniform4f( uniform_Update_fs_4fv_BGSubtr_CAstep_CAcolorSpread_freeze ,
-	      (GLfloat)BGSubtr,
+	      (GLfloat)activeClipArts );
+ glUniform4f( uniform_Update_fs_4fv_cameraThreshold_cameraWeight_cameraSobel_movieWeight ,
+	      (GLfloat)cameraThreshold * (1.f + pulse_average * cameraThreshold_pulse),
+	      (GLfloat)cameraWeight * (1.f + pulse_average * cameraWeight_pulse),
+	      (GLfloat)cameraSobel * (1.f + pulse_average * cameraSobel_pulse),
+	      (GLfloat)movieWeight * (1.f + pulse_average * movieWeight_pulse) );
+ glUniform4f( uniform_Update_fs_4fv_movieSobel_invertMovie_video_hue_video_satur ,
+	      (GLfloat)movieSobel * (1.f + pulse_average * movieSobel_pulse),
+	      (GLfloat)invertMovie,
+	      (GLfloat)video_hue * (1.f + pulse_average * video_hue_pulse),
+	      (GLfloat)video_satur * (1.f + pulse_average * video_satur_pulse) );
+ glUniform4f( uniform_Update_fs_4fv_video_satur_pulse_video_value_photoWeight_photo_hue ,
+	      (GLfloat)video_satur_pulse,
+	      (GLfloat)video_value * (1.f + pulse_average * video_value_pulse),
+	      (GLfloat)photoWeight * (1.f + pulse_average * photoWeight_pulse),
+	      (GLfloat)photo_hue * (1.f + pulse_average * photo_hue_pulse) );
+ glUniform4f( uniform_Update_fs_4fv_photo_satur_photo_satur_pulse_photo_value_photo_value_pulse ,
+	      (GLfloat)photo_satur * (1.f + pulse_average * photo_satur_pulse),
+	      (GLfloat)photo_satur_pulse,
+	      (GLfloat)photo_value * (1.f + pulse_average * photo_value_pulse),
+	      (GLfloat)photo_value_pulse );
+ glUniform4f( uniform_Update_fs_4fv_photo_scale_photo_contrast_mask_contrast_CAParams1 ,
+	      (GLfloat)photo_scale,
+	      (GLfloat)photo_contrast,
+	      (GLfloat)mask_contrast,
+	      (GLfloat)CAParams1 * (1.f + pulse_average * CAParams1_pulse) );
+ glUniform4f( uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5 ,
+	      (GLfloat)CAParams2 * (1.f + pulse_average * CAParams2_pulse),
+	      (GLfloat)CAParams3 * (1.f + pulse_average * CAParams3_pulse),
+	      (GLfloat)CAParams4 * (1.f + pulse_average * CAParams4_pulse),
+	      (GLfloat)CAParams5 * (1.f + pulse_average * CAParams5_pulse) );
+ glUniform4f( uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul ,
+	      (GLfloat)CAParams6 * (1.f + pulse_average * CAParams6_pulse),
+	      (GLfloat)CAParams7 * (1.f + pulse_average * CAParams7_pulse),
+	      (GLfloat)CAParams8 * (1.f + pulse_average * CAParams8_pulse),
+	      (GLfloat)cameraCumul );
+ glUniform4f( uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_fft_scale ,
 	      (GLfloat)CAstep,
 	      (GLfloat)CAcolorSpread,
-	      (GLfloat)freeze );
- glUniform4f( uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_satur_photo_satur_pulse ,
-	      (GLfloat)photo_value,
-	      (GLfloat)photo_value_pulse,
-	      (GLfloat)photo_satur,
-	      (GLfloat)photo_satur_pulse );
- glUniform4f( uniform_Update_fs_4fv_photo_scale_mask_contrast_photo_contrast_fft_scale ,
-	      (GLfloat)photo_scale,
-	      (GLfloat)mask_contrast,
-	      (GLfloat)photo_contrast,
+	      (GLfloat)freeze,
 	      (GLfloat)fft_scale );
 
  glUseProgram(shader_programme[pg_shader_Mixing]);
- glUniform4f( uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_trackMixingWeight_0 ,
-	      (GLfloat)echo,
-	      (GLfloat)echoNeg,
-	      (GLfloat)CAMixingWeight,
-	      (GLfloat)trackMixingWeight_0 );
+ glUniform4f( uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_echo_echoNeg ,
+	      (GLfloat)CAMixingWeight * (1.f + pulse_average * CAMixingWeight_pulse),
+	      (GLfloat)trackMixingWeight_0 * (1.f + pulse_average * trackMixingWeight_0_pulse),
+	      (GLfloat)echo * (1.f + pulse_average * echo_pulse),
+	      (GLfloat)echoNeg * (1.f + pulse_average * echoNeg_pulse) );
 
  glUseProgram(shader_programme[pg_shader_Master]);
- glUniform4f( uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight ,
-	      (GLfloat)blendTransp,
+ glUniform4f( uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master ,
+	      (GLfloat)mute_second_screen,
 	      (GLfloat)invertAllLayers,
 	      (GLfloat)cursorSize,
-	      (GLfloat)CAMasterWeight );
- glUniform4f( uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen ,
-	      (GLfloat)trackMasterWeight_0,
-	      (GLfloat)interfaceOnScreen,
-	      (GLfloat)hide,
-	      (GLfloat)mute_screen );
+	      (GLfloat)master );
+ glUniform3f( uniform_Master_fs_3fv_CAMasterWeight_trackMasterWeight_0_interfaceOnScreen ,
+	      (GLfloat)CAMasterWeight * (1.f + pulse_average * CAMasterWeight_pulse),
+	      (GLfloat)trackMasterWeight_0 * (1.f + pulse_average * trackMasterWeight_0_pulse),
+	      (GLfloat)interfaceOnScreen );

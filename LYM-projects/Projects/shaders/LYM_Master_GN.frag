@@ -78,7 +78,7 @@ void main() {
   // scaled_decalCoords = float(nbPixels) * vec2(ivec2(scaled_decalCoords) / nbPixels);
 
   // mute screen
-  if(mute_screen && decalCoords.x > leftWindowWidth) {
+  if(mute_second_screen && decalCoords.x > leftWindowWidth) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -165,5 +165,5 @@ void main() {
 
   // logo in the end
   outColor0.rgb = mix( texture(uniform_Master_texture_fs_LYMlogo, coords ).rgb , outColor0.rgb , 
-           blendTransp );
+           master );
 }

@@ -93,6 +93,7 @@ extern char *Output_Message_OSC;
 /// current mouse location
 extern int CurrentMousePos_x, CurrentMousePos_y;
 extern float paths_x_0_forGPU, paths_y_0_forGPU;
+extern float paths_x_0_begin_position, paths_y_0_begin_position;
 extern int PreviousMousePos_x, PreviousMousePos_y;
 extern int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 extern int CurrentCursorStylusvsRubber;

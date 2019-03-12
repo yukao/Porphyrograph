@@ -9,11 +9,11 @@ LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 3
 
-float     blendTransp;
+float     master;
 bool      invertAllLayers;
 int       cursorSize;
 float     CAFinalWeight;
-uniform vec4 uniform_Final_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAFinalWeight;
+uniform vec4 uniform_Final_fs_4fv_master_invertAllLayers_cursorSize_CAFinalWeight;
 float     trackFinalWeight_0;
 float     trackFinalWeight_1;
 float     trackFinalWeight_2;
@@ -51,10 +51,10 @@ out vec4 outColor0;
 
 
 void main() {
-  blendTransp = uniform_Final_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAFinalWeight[0];
-  invertAllLayers = (uniform_Final_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAFinalWeight[1] > 0 ? true : false);
-  cursorSize = int(uniform_Final_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAFinalWeight[2]);
-  CAFinalWeight = uniform_Final_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAFinalWeight[3];
+  master = uniform_Final_fs_4fv_master_invertAllLayers_cursorSize_CAFinalWeight[0];
+  invertAllLayers = (uniform_Final_fs_4fv_master_invertAllLayers_cursorSize_CAFinalWeight[1] > 0 ? true : false);
+  cursorSize = int(uniform_Final_fs_4fv_master_invertAllLayers_cursorSize_CAFinalWeight[2]);
+  CAFinalWeight = uniform_Final_fs_4fv_master_invertAllLayers_cursorSize_CAFinalWeight[3];
   trackFinalWeight_0 = uniform_Final_fs_3fv_trackFinalWeight_0_trackFinalWeight_1_trackFinalWeight_2[0];
   trackFinalWeight_1 = uniform_Final_fs_3fv_trackFinalWeight_0_trackFinalWeight_1_trackFinalWeight_2[1];
   trackFinalWeight_2 = uniform_Final_fs_3fv_trackFinalWeight_0_trackFinalWeight_1_trackFinalWeight_2[2];
@@ -121,5 +121,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

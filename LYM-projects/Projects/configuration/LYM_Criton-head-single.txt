@@ -17,9 +17,9 @@ udp_local_server	3
 VERBATIM																		
 TYPE	string	int	string	bool	int	bool	bool											
 ID	id	local_port	receive_format	UDP_message_trace	input_message_stack_depth	OSC_duplicate_removal	OSC_endian_reversal											
-server	udp_SoundJUCE_receive	9001	OSC	1	300	1	1											
-server	udp_TouchOSC_receive	9000	OSC	1	300	0	1											
-server	udd_Score_receive	9996	OSC	1	300	0	1											
+server	udp_SoundJUCE_receive	9001	OSC	0	300	1	1											
+server	udp_TouchOSC_receive	9000	OSC	0	300	0	1											
+server	udd_Score_receive	9996	OSC	0	300	0	1											
 /udp_local_server																		
 udp_remote_client	2																	
 VERBATIM																		

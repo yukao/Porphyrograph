@@ -51,6 +51,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_CaverneP
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Ulm", "Porphyrograph_core_Ulm.vcxproj", "{69438D14-6AE2-4DC2-9C5C-AD7EE47ABBBD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_demo_Bezier", "Porphyrograph_core_demo_Bezier.vcxproj", "{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug DLL|Win32 = Debug DLL|Win32
@@ -387,6 +389,20 @@ Global
 		{69438D14-6AE2-4DC2-9C5C-AD7EE47ABBBD}.Release|Win32.ActiveCfg = Release|Win32
 		{69438D14-6AE2-4DC2-9C5C-AD7EE47ABBBD}.Release|Win32.Build.0 = Release|Win32
 		{69438D14-6AE2-4DC2-9C5C-AD7EE47ABBBD}.Release|x64.ActiveCfg = Release|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug DLL|x64.ActiveCfg = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug DLL|x64.Build.0 = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug|Win32.ActiveCfg = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug|Win32.Build.0 = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Debug|x64.ActiveCfg = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release DLL|Win32.Build.0 = Release|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release DLL|x64.ActiveCfg = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release DLL|x64.Build.0 = Debug|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release|Win32.ActiveCfg = Release|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release|Win32.Build.0 = Release|Win32
+		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

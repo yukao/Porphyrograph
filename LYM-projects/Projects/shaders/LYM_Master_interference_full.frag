@@ -11,23 +11,20 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 const float PI_4 = 0.785398163397448309616;
 
-float     blendTransp;
+bool      mute_second_screen;
 bool      invertAllLayers;
 int       cursorSize;
+float     master;
+uniform vec4 uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master;
 float     CAMasterWeight;
-uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
+uniform vec4 uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1;
 float     trackMasterWeight_2;
-uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2;
 float     trackMasterWeight_3;
 bool      interfaceOnScreen;
-bool      hide;
-bool      mute_screen;
-uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen;
-bool      kaleidoscope;
-uniform float uniform_Master_fs_1fv_kaleidoscope;
+uniform vec3 uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen;
 
 // Main shader.
 
@@ -75,19 +72,17 @@ mat3 PerspMatrix;
 const vec2 center = vec2(512 , 384);
 
 void main() {
-  blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
-  invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
-  CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
-  trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
-  trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
-  trackMasterWeight_3 = uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[0];
-  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
-  hide = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
-  kaleidoscope = (uniform_Master_fs_1fv_kaleidoscope > 0 ? true : false);
+  mute_second_screen = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[0] > 0 ? true : false);
+  invertAllLayers = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[2]);
+  master = uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[3];
+  CAMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[0];
+  PartMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[1];
+  trackMasterWeight_0 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[2];
+  trackMasterWeight_1 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[3];
+  trackMasterWeight_2 = uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[0];
+  trackMasterWeight_3 = uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[1];
+  interfaceOnScreen = (uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[2] > 0 ? true : false);
 
   float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
   float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
@@ -153,26 +148,28 @@ void main() {
   coords = transfCoords.xy*uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.xy;
 */
   // kaleidoscope
+  /*
   if(kaleidoscope) {
-	float  radius;
-	float  angle;
-	if( coords.x > width) {
-		coords.x -= width;
-	}
-	vec2 polCoords = vec2(coords - center);
-	radius = length(polCoords);
-	if( polCoords.x == 0 ) {
-		angle = 0;
-	}
-	else {
-		angle = abs(atan(polCoords.y , polCoords.x));
-		int quadrant = int(angle / PI_4);
-		if(quadrant > 0) {
-			angle = angle / quadrant;
-		}
-	}
-	coords = radius * vec2(cos(angle),sin(angle)) + center;
+  	float  radius;
+  	float  angle;
+  	if( coords.x > width) {
+  		coords.x -= width;
+  	}
+  	vec2 polCoords = vec2(coords - center);
+  	radius = length(polCoords);
+  	if( polCoords.x == 0 ) {
+  		angle = 0;
+  	}
+  	else {
+  		angle = abs(atan(polCoords.y , polCoords.x));
+  		int quadrant = int(angle / PI_4);
+  		if(quadrant > 0) {
+  			angle = angle / quadrant;
+  		}
+  	}
+  	coords = radius * vec2(cos(angle),sin(angle)) + center;
   }
+  */
 
   // vertical mirror
   // TO UNCOMMENT FOR DAR LASRAM  
@@ -184,7 +181,7 @@ void main() {
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -291,12 +288,11 @@ void main() {
   //   coords.x = width - coords.x;
 
   // cursor
-  if( !hide
-      && mouse_x < width && mouse_x > 0 
+  if( mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

@@ -125,26 +125,28 @@ void main() {
   coords = transfCoords.xy*uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.xy;
 */
   // kaleidoscope
+  /*
   if(kaleidoscope) {
-	float  radius;
-	float  angle;
-	if( coords.x > width) {
-		coords.x -= width;
-	}
-	vec2 polCoords = vec2(coords - center);
-	radius = length(polCoords);
-	if( polCoords.x == 0 ) {
-		angle = 0;
-	}
-	else {
-		angle = abs(atan(polCoords.y , polCoords.x));
-		int quadrant = int(angle / PI_4);
-		if(quadrant > 0) {
-			angle = angle / quadrant;
-		}
-	}
-	coords = radius * vec2(cos(angle),sin(angle)) + center;
+  	float  radius;
+  	float  angle;
+  	if( coords.x > width) {
+  		coords.x -= width;
+  	}
+  	vec2 polCoords = vec2(coords - center);
+  	radius = length(polCoords);
+  	if( polCoords.x == 0 ) {
+  		angle = 0;
+  	}
+  	else {
+  		angle = abs(atan(polCoords.y , polCoords.x));
+  		int quadrant = int(angle / PI_4);
+  		if(quadrant > 0) {
+  			angle = angle / quadrant;
+  		}
+  	}
+  	coords = radius * vec2(cos(angle),sin(angle)) + center;
   }
+  */
 
   // vertical mirror
   // TO UNCOMMENT FOR DAR LASRAM  
@@ -156,7 +158,7 @@ void main() {
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -263,12 +265,11 @@ void main() {
   //   coords.x = width - coords.x;
 
   // cursor
-  if( !hide
-      && mouse_x < width && mouse_x > 0 
+  if( mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

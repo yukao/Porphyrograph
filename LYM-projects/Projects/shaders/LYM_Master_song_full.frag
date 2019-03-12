@@ -10,11 +10,11 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 4
 #define ATELIERS_PORTATIFS
 
-float     blendTransp;
+float     master;
 bool      invertAllLayers;
 int       cursorSize;
 float     CAMasterWeight;
-uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
+uniform vec4 uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
@@ -49,7 +49,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_mute_screen;
+uniform vec3 uniform_Master_fs_3fv_width_height_mute_second_screen;
 
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
@@ -57,10 +57,10 @@ out vec4 outColor0;
 
 
 void main() {
-  blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
-  invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
-  CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
+  master = uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[0];
+  invertAllLayers = (uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[2]);
+  CAMasterWeight = uniform_Master_fs_4fv_master_invertAllLayers_cursorSize_CAMasterWeight[3];
   PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
   trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
   trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
@@ -68,8 +68,8 @@ void main() {
   trackMasterWeight_3 = uniform_Master_fs_2fv_trackMasterWeight_3_hide[0];
   hide = (uniform_Master_fs_2fv_trackMasterWeight_3_hide[1] > 0 ? true : false);
 
-  float width = uniform_Master_fs_3fv_width_height_mute_screen.x;
-  float height = uniform_Master_fs_3fv_width_height_mute_screen.y;
+  float width = uniform_Master_fs_3fv_width_height_mute_second_screen.x;
+  float height = uniform_Master_fs_3fv_width_height_mute_second_screen.y;
 #ifdef ATELIERS_PORTATIFS
   float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
@@ -78,7 +78,7 @@ void main() {
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
 #endif
-if(uniform_Master_fs_3fv_width_height_mute_screen.z != 0 && decalCoords.x > width) {
+if(uniform_Master_fs_3fv_width_height_mute_second_screen.z != 0 && decalCoords.x > width) {
   outColor0 = vec4(0, 0, 0, 1);
   return;
 }
@@ -144,5 +144,5 @@ if(uniform_Master_fs_3fv_width_height_mute_screen.z != 0 && decalCoords.x > widt
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

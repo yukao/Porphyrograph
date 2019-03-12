@@ -9,6 +9,10 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #include_declarations
 
+//////////////////////////
+// TRACK DECAY
+vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS 3
 
@@ -42,7 +46,7 @@ vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
 
 vec4 out4_CA; // RGB: CA color ALPHA: CA state (ALPHA negative 
               // when first time writing on CA for skipping the first frame for CA update)
-float CAdecay = 0.0;
+
 vec4 noiseCA = vec4(0);
 
 // indicates whether this area is impacted
@@ -141,9 +145,9 @@ uniform vec4 uniform_Update_fs_4fv_paths03_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths03_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  // *
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
-uniform vec4 uniform_Update_fs_4fv_trkDecay;
-uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
-uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+
+uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -324,8 +328,8 @@ vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   }
   // SUN RAYS
   else if(noiseType == 1 ) {
-    vec2 pos = vec2( atan((noiseCenter_0-texCoordLoc.x)/(noiseCenter_1-texCoordLoc.y)) * (noiseAngleScale * 10),
-                     length(vec2(noiseCenter_0,noiseCenter_1) - texCoordLoc) / (noiseLineScale) );
+    vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
+                     length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
     return vec2(snoise( pos , noiseScale * 10 ) ,
                             snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
   }
@@ -938,13 +942,13 @@ void pixel_out( vec2 decalCoords ) {
 
       	vec2 acceleration;
       	acceleration = pixel_acceleration - pixel_acc_center;
-      	if( pixel_acc_factor > 0 ) {
+      	if( pixel_acc > 0 ) {
       	  // acceleration
-      	  surrpixel_speed += pixel_acc_factor * acceleration;
+      	  surrpixel_speed += pixel_acc * acceleration;
       	}
       	else {
       	  // damping
-      	  surrpixel_speed += pixel_acc_factor * surrpixel_speed;
+      	  surrpixel_speed += pixel_acc * surrpixel_speed;
       	}
       	surrpixel_nextPosition 
       			     = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -999,13 +1003,13 @@ void pixel_out( vec2 decalCoords ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-      	if( pixel_acc_factor > 0 ) {
+      	if( pixel_acc > 0 ) {
       	  // acceleration
-      	  surrpixel_speed += pixel_acc_factor * acceleration;
+      	  surrpixel_speed += pixel_acc * acceleration;
       	}
       	else {
       	  // damping
-      	  surrpixel_speed += pixel_acc_factor * surrpixel_speed;
+      	  surrpixel_speed += pixel_acc * surrpixel_speed;
       	}
       	surrpixel_nextPosition 
       			     = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -1156,16 +1160,13 @@ void main() {
 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  float average_pulse = uniform_Update_fs_4fv_pulse.a;
+  
 
   //////////////////////////
   // variables 
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
-  
-  // decay of drawing and CA layers
-  CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x;
+  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
   
   // CAType
   CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
@@ -1173,7 +1174,7 @@ void main() {
   CA_on_off = (CASubType > 0);
   
   // pixels
-  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
+  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -1203,7 +1204,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
     out_Update_FBO_fs_CA = vec4(0);  // CA
     out_Update_FBO_fs_Pixels = vec4(0);  // pixel speed / position
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
@@ -1307,16 +1308,16 @@ void main() {
 
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y);
-  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
     coordsImage *= uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
     coordsImage *= uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
   photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
@@ -1331,7 +1332,7 @@ void main() {
              * uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
 
-  if( BGSubtr ) {
+  if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage 
                      - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // current background subtraction
   }
@@ -1489,13 +1490,13 @@ void main() {
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
-      if( pixel_acc_factor > 0 ) {
+      if( pixel_acc > 0 ) {
       	// acceleration
-      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy += pixel_acc_factor * acceleration;
+      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy += pixel_acc * acceleration;
       }
       else {
 	// damping
-      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy += pixel_acc_factor * out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy;
+      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy += pixel_acc * out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy;
       }
       // updates the position of the current pixel
       out_attachment_FBO[pg_FBO_fs_Pixels_attacht].zw += out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy; 
@@ -1523,9 +1524,9 @@ void main() {
   // incay or decay does not make sense on a black color
   if( graylevel(out_track_FBO[0].rgb) > 0 ) {
     out_track_FBO[0].rgb = out_track_FBO[0].rgb 
-      - vec3(uniform_Update_fs_4fv_trkDecay.x,
-             uniform_Update_fs_4fv_trkDecay.x,
-	           uniform_Update_fs_4fv_trkDecay.x);
+      - vec3(trkDecay.x,
+             trkDecay.x,
+	           trkDecay.x);
   }
   out_track_FBO[0].rgb 
     = clamp( out_track_FBO[0].rgb , 0.0 , 1.0 );
@@ -1589,7 +1590,7 @@ void main() {
   }
 
   // clear CA
-  if( uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.y > 0 ) {
+  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
   }
 

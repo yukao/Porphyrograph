@@ -8,15 +8,15 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 int       pixel_mode;
-float     pixel_acc_factor;
+float     pixel_acc;
 float     noiseScale;
-float     pixel_acc_center_0;
-uniform vec4 uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_pixel_acc_center_0;
-float     pixel_acc_center_1;
+float     pixel_acc_shiftX;
+uniform vec4 uniform_Update_fs_4fv_pixel_mode_pixel_acc_noiseScale_pixel_acc_shiftX;
+float     pixel_acc_shiftY;
 float     repop_BG;
 float     repop_CA;
 float     repop_part;
-uniform vec4 uniform_Update_fs_4fv_pixel_acc_center_1_repop_BG_repop_CA_repop_part;
+uniform vec4 uniform_Update_fs_4fv_pixel_acc_shiftY_repop_BG_repop_CA_repop_part;
 int       CAType;
 int       CASubType;
 int       currentDrawingTrack;
@@ -63,10 +63,10 @@ float     movieWeight;
 float     cameraSobel;
 uniform vec4 uniform_Update_fs_4fv_cameraGamma_cameraWeight_movieWeight_cameraSobel;
 float     movieSobel;
-bool      BGSubtr;
+bool      camera_BG_subtr;
 int       CAstep;
 bool      CAcolorSpread;
-uniform vec4 uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread;
+uniform vec4 uniform_Update_fs_4fv_movieSobel_camera_BG_subtr_CAstep_CAcolorSpread;
 bool      freeze;
 int       part_initialization;
 bool      partMove_target;
@@ -79,8 +79,8 @@ float     part_damp_targtRad;
 uniform vec4 uniform_Update_fs_4fv_partExit_mode_partStroke_mode_partColor_mode_part_damp_targtRad;
 float     part_timeToTargt;
 float     part_field_weight;
-float     partRepopRadius;
-uniform vec3 uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_partRepopRadius;
+float     part_size;
+uniform vec3 uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_part_size;
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ int nbParticles = 0;
 
 // part acc & damp
 float part_acc_factor;
-float part_damp_factor;
+float part_damp;
 
 
 ////////////////////////////////////
@@ -962,15 +962,15 @@ void pixel_out( void ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc_factor > 0 ) {
+        if( pixel_acc > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc_factor * acceleration;
+            += pixel_acc * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc_factor * surrpixel_speed;
+            += pixel_acc * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -1037,15 +1037,15 @@ void pixel_out( void ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc_factor > 0 ) {
+        if( pixel_acc > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc_factor * acceleration;
+            += pixel_acc * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc_factor * surrpixel_speed;
+            += pixel_acc * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -1126,12 +1126,12 @@ void particle_out( void ) {
                     = texture( fs_lookupTable16 , decalCoords ).xy;
               out_target_position_color_radius_particle.z
                 = target_color_radius.r * 255. + target_color_radius.g * 65025. + target_color_radius.b * 16581375.;
-              out_target_position_color_radius_particle.w = partRepopRadius;
+              out_target_position_color_radius_particle.w = part_size;
           }
           else { // instant positioning on the target
               out_position_speed_particle
                     = texture( fs_lookupTable16 , decalCoords );
-              out_color_radius_particle = vec4(target_color_radius.rgb, partRepopRadius);
+              out_color_radius_particle = vec4(target_color_radius.rgb, part_size);
           }
       }
       // camera
@@ -1143,12 +1143,12 @@ void particle_out( void ) {
                     = texture( fs_lookupTable16 , decalCoords ).xy;
               out_target_position_color_radius_particle.z
                 = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
-              out_target_position_color_radius_particle.w = partRepopRadius;
+              out_target_position_color_radius_particle.w = part_size;
           }
           else { // instant positioning on the target
               out_position_speed_particle
                     = texture( fs_lookupTable16 , decalCoords );
-              out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
+              out_color_radius_particle = vec4(target_color.rgb, part_size);
           }
       }
       // movie
@@ -1160,12 +1160,12 @@ void particle_out( void ) {
                     = texture( fs_lookupTable16 , decalCoords ).xy;
               out_target_position_color_radius_particle.z
                 = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
-              out_target_position_color_radius_particle.w = partRepopRadius;
+              out_target_position_color_radius_particle.w = part_size;
           }
           else { // instant positioning on the target
               out_position_speed_particle
                     = texture( fs_lookupTable16 , decalCoords );
-              out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
+              out_color_radius_particle = vec4(target_color.rgb, part_size);
           }
       }
       return;
@@ -1195,7 +1195,7 @@ void particle_out( void ) {
             = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
           out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
           out_color_radius_particle 
-            = vec4(uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz,partRepopRadius);
+            = vec4(uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz,part_size);
           return;
         }
 
@@ -1226,7 +1226,7 @@ void particle_out( void ) {
           out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
           out_color_radius_particle 
               = vec4( uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz , 
-                      partRepopRadius);
+                      part_size);
         }
 #endif
 #if PG_NB_PATHS == 7
@@ -1253,7 +1253,7 @@ void particle_out( void ) {
               = vec4( vec3( uniform_Update_fs_4fv_paths47_r[indPath - 4] , 
                             uniform_Update_fs_4fv_paths47_g[indPath - 4] , 
                             uniform_Update_fs_4fv_paths47_b[indPath - 4] ) , 
-                      partRepopRadius);
+                      part_size);
         }
 #endif
       }
@@ -1446,7 +1446,7 @@ void particle_out( void ) {
       += part_acc_factor * part_acceleration;
     // damping
     out_position_speed_particle.zw 
-      -= part_damp_factor * out_position_speed_particle.zw;
+      -= part_damp * out_position_speed_particle.zw;
 
 
     //////////////////////////////////////////////////////////////////
@@ -1685,14 +1685,14 @@ float out_gray_drawing( float current_mouse_x , float current_mouse_y ,
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  pixel_mode = int(uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_pixel_acc_center_0[0]);
-  pixel_acc_factor = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_pixel_acc_center_0[1];
-  noiseScale = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_pixel_acc_center_0[2];
-  pixel_acc_center_0 = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_pixel_acc_center_0[3];
-  pixel_acc_center_1 = uniform_Update_fs_4fv_pixel_acc_center_1_repop_BG_repop_CA_repop_part[0];
-  repop_BG = uniform_Update_fs_4fv_pixel_acc_center_1_repop_BG_repop_CA_repop_part[1];
-  repop_CA = uniform_Update_fs_4fv_pixel_acc_center_1_repop_BG_repop_CA_repop_part[2];
-  repop_part = uniform_Update_fs_4fv_pixel_acc_center_1_repop_BG_repop_CA_repop_part[3];
+  pixel_mode = int(uniform_Update_fs_4fv_pixel_mode_pixel_acc_noiseScale_pixel_acc_shiftX[0]);
+  pixel_acc = uniform_Update_fs_4fv_pixel_mode_pixel_acc_noiseScale_pixel_acc_shiftX[1];
+  noiseScale = uniform_Update_fs_4fv_pixel_mode_pixel_acc_noiseScale_pixel_acc_shiftX[2];
+  pixel_acc_shiftX = uniform_Update_fs_4fv_pixel_mode_pixel_acc_noiseScale_pixel_acc_shiftX[3];
+  pixel_acc_shiftY = uniform_Update_fs_4fv_pixel_acc_shiftY_repop_BG_repop_CA_repop_part[0];
+  repop_BG = uniform_Update_fs_4fv_pixel_acc_shiftY_repop_BG_repop_CA_repop_part[1];
+  repop_CA = uniform_Update_fs_4fv_pixel_acc_shiftY_repop_BG_repop_CA_repop_part[2];
+  repop_part = uniform_Update_fs_4fv_pixel_acc_shiftY_repop_BG_repop_CA_repop_part[3];
   CAType = int(uniform_Update_fs_4fv_CAType_CASubType_currentDrawingTrack_currentVideoTrack[0]);
   CASubType = int(uniform_Update_fs_4fv_CAType_CASubType_currentDrawingTrack_currentVideoTrack[1]);
   currentDrawingTrack = int(uniform_Update_fs_4fv_CAType_CASubType_currentDrawingTrack_currentVideoTrack[2]);
@@ -1729,10 +1729,10 @@ void main() {
   cameraWeight = uniform_Update_fs_4fv_cameraGamma_cameraWeight_movieWeight_cameraSobel[1];
   movieWeight = uniform_Update_fs_4fv_cameraGamma_cameraWeight_movieWeight_cameraSobel[2];
   cameraSobel = uniform_Update_fs_4fv_cameraGamma_cameraWeight_movieWeight_cameraSobel[3];
-  movieSobel = uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[0];
-  BGSubtr = (uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[1] > 0 ? true : false);
-  CAstep = int(uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[2]);
-  CAcolorSpread = (uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[3] > 0 ? true : false);
+  movieSobel = uniform_Update_fs_4fv_movieSobel_camera_BG_subtr_CAstep_CAcolorSpread[0];
+  camera_BG_subtr = (uniform_Update_fs_4fv_movieSobel_camera_BG_subtr_CAstep_CAcolorSpread[1] > 0 ? true : false);
+  CAstep = int(uniform_Update_fs_4fv_movieSobel_camera_BG_subtr_CAstep_CAcolorSpread[2]);
+  CAcolorSpread = (uniform_Update_fs_4fv_movieSobel_camera_BG_subtr_CAstep_CAcolorSpread[3] > 0 ? true : false);
   freeze = (uniform_Update_fs_4fv_freeze_part_initialization_partMove_target_partMove_rand[0] > 0 ? true : false);
   part_initialization = int(uniform_Update_fs_4fv_freeze_part_initialization_partMove_target_partMove_rand[1]);
   partMove_target = (uniform_Update_fs_4fv_freeze_part_initialization_partMove_target_partMove_rand[2] > 0 ? true : false);
@@ -1741,9 +1741,9 @@ void main() {
   partStroke_mode = int(uniform_Update_fs_4fv_partExit_mode_partStroke_mode_partColor_mode_part_damp_targtRad[1]);
   partColor_mode = int(uniform_Update_fs_4fv_partExit_mode_partStroke_mode_partColor_mode_part_damp_targtRad[2]);
   part_damp_targtRad = uniform_Update_fs_4fv_partExit_mode_partStroke_mode_partColor_mode_part_damp_targtRad[3];
-  part_timeToTargt = uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_partRepopRadius[0];
-  part_field_weight = uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_partRepopRadius[1];
-  partRepopRadius = uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_partRepopRadius[2];
+  part_timeToTargt = uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_part_size[0];
+  part_field_weight = uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_part_size[1];
+  part_size = uniform_Update_fs_3fv_part_timeToTargt_part_field_weight_part_size[2];
 
   //////////////////////////
   // variables 
@@ -1767,7 +1767,7 @@ void main() {
   Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
+  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
   radiuspixel = uniform_Update_fs_3fv_clearAllLayers_clearCA_pixelRadius.z;
 
   // working variables for screen dimension
@@ -1791,7 +1791,7 @@ void main() {
 
   // part acc and dâmp
   part_acc_factor = uniform_Update_fs_2fv_part_acc_damp_factor.x;
-  part_damp_factor = uniform_Update_fs_2fv_part_acc_damp_factor.y;
+  part_damp = uniform_Update_fs_2fv_part_acc_damp_factor.y;
 
 
   ///////////////////////////////////////////////////
@@ -1916,7 +1916,7 @@ void main() {
   cameraImage = texture(fs_lookupTable9, cameraCoord ).rgb;
   // gamma correction
   cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( BGSubtr ) {
+  if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(fs_lookupTable10, cameraCoord ).rgb); // initial background subtraction
   }
   if( graylevel(cameraImage) < cameraThreshold ) {
@@ -2284,8 +2284,8 @@ void main() {
       // }
       // // SUN RAYS
       // else if(noiseType == 1 ) {
-      //   vec2 pos = vec2( atan((noiseCenter_0-pixelTextureCoordinatesXY.x)/(noiseCenter_1-pixelTextureCoordinatesXY.y)) * (noiseAngleScale * 10),
-      //                    length(vec2(noiseCenter_0,noiseCenter_1) - pixelTextureCoordinatesXY) / (noiseLineScale) );
+      //   vec2 pos = vec2( atan((noiseCenterX-pixelTextureCoordinatesXY.x)/(noiseCenterY-pixelTextureCoordinatesXY.y)) * (noiseAngleScale * 10),
+      //                    length(vec2(noiseCenterX,noiseCenterY) - pixelTextureCoordinatesXY) / (noiseLineScale) );
       //   pixel_acceleration = vec2(snoise( pos , noiseScale * 10 ) ,
       //                           snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
       // }
@@ -2300,15 +2300,15 @@ void main() {
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
-      if( pixel_acc_factor > 0 ) {
+      if( pixel_acc > 0 ) {
       	// acceleration
       	out_attachment_FBO[pg_Pixel_FBO_attcht].xy 
-          += pixel_acc_factor * acceleration;
+          += pixel_acc * acceleration;
       }
       else {
       	// damping
       	out_attachment_FBO[pg_Pixel_FBO_attcht].xy 
-          += pixel_acc_factor * out_attachment_FBO[pg_Pixel_FBO_attcht].xy;
+          += pixel_acc * out_attachment_FBO[pg_Pixel_FBO_attcht].xy;
       }
       // updates the position of the current pixel
       out_attachment_FBO[pg_Pixel_FBO_attcht].zw += out_attachment_FBO[pg_Pixel_FBO_attcht].xy; 

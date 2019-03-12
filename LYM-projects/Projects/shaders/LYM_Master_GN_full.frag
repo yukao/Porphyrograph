@@ -9,16 +9,15 @@ LYM alKemi & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 1
 
-float     blendTransp;
+bool      mute_second_screen;
 bool      invertAllLayers;
 int       cursorSize;
+float     master;
+uniform vec4 uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master;
 float     CAMasterWeight;
-uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
 float     trackMasterWeight_0;
 bool      interfaceOnScreen;
-bool      hide;
-bool      mute_screen;
-uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen;
+uniform vec3 uniform_Master_fs_3fv_CAMasterWeight_trackMasterWeight_0_interfaceOnScreen;
 
 // Main shader.
 
@@ -59,14 +58,13 @@ uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 out vec4 outColor0;
 
 void main() {
-  blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
-  invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
-  CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[0];
-  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
-  hide = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_0_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
+  mute_second_screen = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[0] > 0 ? true : false);
+  invertAllLayers = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[2]);
+  master = uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[3];
+  CAMasterWeight = uniform_Master_fs_3fv_CAMasterWeight_trackMasterWeight_0_interfaceOnScreen[0];
+  trackMasterWeight_0 = uniform_Master_fs_3fv_CAMasterWeight_trackMasterWeight_0_interfaceOnScreen[1];
+  interfaceOnScreen = (uniform_Master_fs_3fv_CAMasterWeight_trackMasterWeight_0_interfaceOnScreen[2] > 0 ? true : false);
 
   vec2 coords = decalCoords;
   float leftWindowWidth = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
@@ -94,7 +92,7 @@ void main() {
   // scaled_decalCoords = float(nbPixels) * vec2(ivec2(scaled_decalCoords) / nbPixels);
 
   // mute screen
-  if(mute_screen && decalCoords.x > leftWindowWidth) {
+  if(mute_second_screen && decalCoords.x > leftWindowWidth) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -181,5 +179,5 @@ void main() {
 
   // logo in the end
   outColor0.rgb = mix( texture(uniform_Master_texture_fs_LYMlogo, coords ).rgb , outColor0.rgb , 
-           blendTransp );
+           master );
 }

@@ -7,21 +7,16 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 430
 
-int       pixel_mode;
-float     pixel_acc_factor;
-float     noiseScale;
-float     noiseLineScale;
-uniform vec4 uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale;
-float     pixel_acc_center_0;
-float     pixel_acc_center_1;
-float     repop_BG;
+bool      camera_BG_subtr;
+float     CAdecay;
+float     trkDecay_0;
+float     trkDecay_1;
+uniform vec4 uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1;
 int       currentDrawingTrack;
-uniform vec4 uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_currentDrawingTrack;
 int       currentVideoTrack;
 int       currentPhotoTrack;
-int       activeClipArts;
 int       path_replay_trackNo_1;
-uniform vec4 uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_activeClipArts_path_replay_trackNo_1;
+uniform vec4 uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1;
 int       path_replay_trackNo_2;
 int       path_replay_trackNo_3;
 int       path_replay_trackNo_4;
@@ -29,26 +24,38 @@ int       path_replay_trackNo_5;
 uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5;
 int       path_replay_trackNo_6;
 int       path_replay_trackNo_7;
-float     CAdecay_pulse;
-bool      invertMovie;
-uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_CAdecay_pulse_invertMovie;
-int       cameraCumul;
-float     cameraThreshold;
+float     noiseScale;
+float     pixel_acc;
+uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_noiseScale_pixel_acc;
+float     pixel_acc_shiftX;
+float     pixel_acc_shiftY;
+float     pixel_radius;
+int       pixel_mode;
+uniform vec4 uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode;
+float     repop_BG;
 float     cameraGamma;
-float     video_satur;
-uniform vec4 uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur;
-float     video_satur_pulse;
+int       activeClipArts;
+float     cameraThreshold;
+uniform vec4 uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold;
 float     cameraWeight;
-float     movieWeight;
 float     cameraSobel;
-uniform vec4 uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel;
+float     movieWeight;
 float     movieSobel;
-bool      BGSubtr;
+uniform vec4 uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel;
+bool      invertMovie;
+float     video_hue;
+float     video_satur;
+float     video_satur_pulse;
+uniform vec4 uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse;
+float     video_value;
+float     photoWeight;
+float     photo_hue;
+int       cameraCumul;
+uniform vec4 uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_cameraCumul;
 int       CAstep;
 bool      CAcolorSpread;
-uniform vec4 uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread;
 bool      freeze;
-uniform float uniform_Update_fs_1fv_freeze;
+uniform vec3 uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze;
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -60,6 +67,10 @@ uniform float uniform_Update_fs_1fv_freeze;
 // TRACK CONST
 #define PG_NB_TRACKS 2
 #define PG_NB_PATHS 7
+
+//////////////////////////
+// TRACK DECAY
+vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,0,0);
 
 ////////////////////////////////////////////////////////////////////
 // drawing modes
@@ -177,9 +188,9 @@ uniform vec4 uniform_Update_fs_4fv_paths47_a;
 uniform vec4 uniform_Update_fs_4fv_paths47_BrushID;
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
-uniform vec4 uniform_Update_fs_4fv_trkDecay;
-uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
-uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+
+uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -533,51 +544,57 @@ float out_gray_drawing( float current_Brush_Radius ,
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  pixel_mode = int(uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[0]);
-  pixel_acc_factor = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[1];
-  noiseScale = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[2];
-  noiseLineScale = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[3];
-  pixel_acc_center_0 = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_currentDrawingTrack[0];
-  pixel_acc_center_1 = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_currentDrawingTrack[1];
-  repop_BG = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_currentDrawingTrack[2];
-  currentDrawingTrack = int(uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_currentDrawingTrack[3]);
-  currentVideoTrack = int(uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_activeClipArts_path_replay_trackNo_1[0]);
-  currentPhotoTrack = int(uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_activeClipArts_path_replay_trackNo_1[1]);
-  activeClipArts = int(uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_activeClipArts_path_replay_trackNo_1[2]);
-  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentVideoTrack_currentPhotoTrack_activeClipArts_path_replay_trackNo_1[3]);
+  camera_BG_subtr = (uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[0] > 0 ? true : false);
+  CAdecay = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[1];
+  trkDecay_0 = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[2];
+  trkDecay_1 = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[3];
+  currentDrawingTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[0]);
+  currentVideoTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[1]);
+  currentPhotoTrack = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[2]);
+  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentDrawingTrack_currentVideoTrack_currentPhotoTrack_path_replay_trackNo_1[3]);
   path_replay_trackNo_2 = int(uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5[0]);
   path_replay_trackNo_3 = int(uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5[1]);
   path_replay_trackNo_4 = int(uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5[2]);
   path_replay_trackNo_5 = int(uniform_Update_fs_4fv_path_replay_trackNo_2_path_replay_trackNo_3_path_replay_trackNo_4_path_replay_trackNo_5[3]);
-  path_replay_trackNo_6 = int(uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_CAdecay_pulse_invertMovie[0]);
-  path_replay_trackNo_7 = int(uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_CAdecay_pulse_invertMovie[1]);
-  CAdecay_pulse = uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_CAdecay_pulse_invertMovie[2];
-  invertMovie = (uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_CAdecay_pulse_invertMovie[3] > 0 ? true : false);
-  cameraCumul = int(uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[0]);
-  cameraThreshold = uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[1];
-  cameraGamma = uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[2];
-  video_satur = uniform_Update_fs_4fv_cameraCumul_cameraThreshold_cameraGamma_video_satur[3];
-  video_satur_pulse = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[0];
-  cameraWeight = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[1];
-  movieWeight = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[2];
-  cameraSobel = uniform_Update_fs_4fv_video_satur_pulse_cameraWeight_movieWeight_cameraSobel[3];
-  movieSobel = uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[0];
-  BGSubtr = (uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[1] > 0 ? true : false);
-  CAstep = int(uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[2]);
-  CAcolorSpread = (uniform_Update_fs_4fv_movieSobel_BGSubtr_CAstep_CAcolorSpread[3] > 0 ? true : false);
-  freeze = (uniform_Update_fs_1fv_freeze > 0 ? true : false);
+  path_replay_trackNo_6 = int(uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_noiseScale_pixel_acc[0]);
+  path_replay_trackNo_7 = int(uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_noiseScale_pixel_acc[1]);
+  noiseScale = uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_noiseScale_pixel_acc[2];
+  pixel_acc = uniform_Update_fs_4fv_path_replay_trackNo_6_path_replay_trackNo_7_noiseScale_pixel_acc[3];
+  pixel_acc_shiftX = uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode[0];
+  pixel_acc_shiftY = uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode[1];
+  pixel_radius = uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode[2];
+  pixel_mode = int(uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode[3]);
+  repop_BG = uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[0];
+  cameraGamma = uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[1];
+  activeClipArts = int(uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[2]);
+  cameraThreshold = uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[3];
+  cameraWeight = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[0];
+  cameraSobel = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[1];
+  movieWeight = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[2];
+  movieSobel = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[3];
+  invertMovie = (uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[0] > 0 ? true : false);
+  video_hue = uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[1];
+  video_satur = uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[2];
+  video_satur_pulse = uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[3];
+  video_value = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_cameraCumul[0];
+  photoWeight = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_cameraCumul[1];
+  photo_hue = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_cameraCumul[2];
+  cameraCumul = int(uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_cameraCumul[3]);
+  CAstep = int(uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze[0]);
+  CAcolorSpread = (uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze[1] > 0 ? true : false);
+  freeze = (uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze[2] > 0 ? true : false);
 
   //////////////////////////
   // variables 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  float average_pulse = uniform_Update_fs_4fv_pulse.a;
+  
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
+  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
+  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -604,7 +621,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
 #if PG_NB_TRACKS >= 2
     out_Update_FBO_fs_Trk1 = vec4(0,0,0,1);
@@ -681,16 +698,16 @@ void main() {
 
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
-  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
 
@@ -722,7 +739,7 @@ void main() {
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   // gamma correction
   // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( BGSubtr ) {
+  if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
   if( graylevel(cameraImage) < cameraThreshold ) {
@@ -958,7 +975,7 @@ void main() {
     // TRACK photo
     videoOn = false;
     if(currentPhotoTrack == indCurTrack 
-      && uniform_Update_fs_2fv_photo01Wghts.x + uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
       // only photo (but not drawing or whatever memory from preceding tracks)
       if(!videoOn) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
@@ -1006,7 +1023,7 @@ void main() {
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
           out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(uniform_Update_fs_4fv_trkDecay[indTrack]);
+               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
       }
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );

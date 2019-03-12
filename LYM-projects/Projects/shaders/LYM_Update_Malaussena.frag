@@ -24,6 +24,10 @@ const float PI = 3.1415926535897932384626433832795;
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS  7
 
+//////////////////////////
+// TRACK DECAY
+vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
 const uint pg_FBO_fs_Pixels_attacht = 1;
@@ -158,7 +162,7 @@ float sobelMatrixY[9] = {1,2,1,0,0,0,-1,-2,-1};
 ////////////////////////////////////
 // CA UPDATE
 vec4 out4_CA;
-float CAdecay = 0.0;
+
 vec4 noiseCA = vec4(0);
 bool CA_on_off;
 
@@ -169,7 +173,7 @@ vec4 neighborValuesDiag[16]=vec4[16](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec
 vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
 // pixel texture + z offset according to the chosen texture
 vec2 noisepixels;
-float radiuspixel;
+
 vec4 randomCA;
 vec4 randomCA2;
 
@@ -213,9 +217,9 @@ uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
-uniform vec4 uniform_Update_fs_4fv_trkDecay;
-uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
-uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+
+uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -875,20 +879,17 @@ void main() {
   // variables 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  float average_pulse = uniform_Update_fs_4fv_pulse.a;
+  
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
+  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
-  // decay of drawing and CA layers
-  CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x - CAdecay_pulse * average_pulse;
-  
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
+  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
-  radiuspixel = uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.z;
+  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
+  
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -922,7 +923,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
     out_Update_FBO_fs_CA = vec4(0);  // CA
     out_Update_FBO_fs_Pixels = vec4(0);  // pixel speed / position
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
@@ -1013,16 +1014,16 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  if(uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
   photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
@@ -1037,7 +1038,7 @@ void main() {
   // movie size
   movieWH = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   // camera size
-  cameraWH = uniform_Update_fs_2fv_photo01Wghts.zw;
+  // cameraWH = uniform_Update_fs_2fv_photo01Wghts.zw;
 
   // video texture used for drawing
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
@@ -1205,7 +1206,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && uniform_Update_fs_2fv_photo01Wghts.x + uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
     }
 
@@ -1257,7 +1258,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.w
+  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track
@@ -1400,7 +1401,7 @@ void main() {
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
           out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(uniform_Update_fs_4fv_trkDecay[indTrack]);
+               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
       }
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
@@ -1472,7 +1473,7 @@ void main() {
 
   //////////////////////////////////////////////
   // CA LAYER CLEAR
-  if( uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.y > 0 ) {
+  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
   }
 

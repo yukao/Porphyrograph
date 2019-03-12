@@ -55,7 +55,7 @@ void main() {
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
 
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -140,5 +140,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

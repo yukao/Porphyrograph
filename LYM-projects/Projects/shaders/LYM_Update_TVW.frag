@@ -11,6 +11,10 @@ LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 2
 
+//////////////////////////
+// TRACK DECAY
+vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+
 const float PI = 3.1415926535897932384626433832795;
 
 float dist_to_mousePos = 0;
@@ -27,12 +31,12 @@ vec2 out_position_pixel = vec2(0,0);
 vec2 out_speed_pixel = vec2(0,0);
 
 vec4 out4_CA;
-float CAdecay = 0.0;
+
 bool CA_on_off;
 
 int currentScene;
 
-float radiuspixel;
+
 
 // CA types
 #define CA_PREY                    0
@@ -160,9 +164,9 @@ uniform vec4 uniform_Update_fs_4fv_paths03_g;
 uniform vec4 uniform_Update_fs_4fv_paths03_b;
 uniform vec4 uniform_Update_fs_4fv_paths03_a;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
-uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
-uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
-uniform vec4 uniform_Update_fs_4fv_trkDecay;
+uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
+uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+
 uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
@@ -343,8 +347,8 @@ vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   }
   // SUN RAYS
   else if(noiseType == 1 ) {
-    vec2 pos = vec2( atan((noiseCenter_0-texCoordLoc.x)/(noiseCenter_1-texCoordLoc.y)) * (noiseAngleScale * 10),
-                     length(vec2(noiseCenter_0,noiseCenter_1) - texCoordLoc) / (noiseLineScale) );
+    vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
+                     length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
     return vec2(snoise( pos , noiseScale * 10 ) ,
                             snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
   }
@@ -1453,7 +1457,7 @@ const float neighborSouthBias[8] = {1.,-0.5,-1.,-0.5,      // E NE N NW
 
 void pixel_out( void ) {
   // fills by cumulating the neighboring pixels that
-  // can reach the pixel at this frame (come into a circle of radius radiuspixel)
+  // can reach the pixel at this frame (come into a circle of radius pixel_radius)
   // with the pixel seen as length unit.
   out_color_pixel = vec3(0,0,0);
   int nb_cumultated_pixels = 0;
@@ -1475,7 +1479,7 @@ void pixel_out( void ) {
       // the acceleration found in the continuous texture
       // and the position corresponding to the loclation of the
       // pixel in the coordinates system of the current pixel
-      // expected to be in [-radiuspixel,+radiuspixel]x[-radiuspixel,+radiuspixel]
+      // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
       if( graylevel(surrPixel_localColor) >  0 ) {
         vec2 surrPixel_speed;
         vec2 surrPixel_position;
@@ -1493,13 +1497,13 @@ void pixel_out( void ) {
 
       	vec2 acceleration;
       	acceleration = pixel_acceleration - pixel_acc_center;
-      	if( pixel_acc_factor > 0 ) {
+      	if( pixel_acc > 0 ) {
       	  // acceleration
-      	  surrPixel_speed += pixel_acc_factor * acceleration;
+      	  surrPixel_speed += pixel_acc * acceleration;
       	}
       	else {
       	  // damping
-      	  surrPixel_speed += pixel_acc_factor * surrPixel_speed;
+      	  surrPixel_speed += pixel_acc * surrPixel_speed;
       	}
       	surrPixel_nextPosition 
       			     = usedNeighborOffset + surrPixel_position + surrPixel_speed; 
@@ -1513,9 +1517,9 @@ void pixel_out( void ) {
           out_position_pixel += surrPixel_nextPosition;
           nb_cumultated_pixels++;
         }
-        else if( abs(surrPixel_nextPosition.x) <= radiuspixel
-                  && abs(surrPixel_nextPosition.y) <= radiuspixel ) {
-          float dist = radiuspixel - length(surrPixel_nextPosition);
+        else if( abs(surrPixel_nextPosition.x) <= pixel_radius
+                  && abs(surrPixel_nextPosition.y) <= pixel_radius ) {
+          float dist = pixel_radius - length(surrPixel_nextPosition);
           out_color_pixel += surrPixel_localColor.rgb;
           out_speed_pixel += dist * (randomCA.zy - vec2(0.5));
           // computes the position of the pixel
@@ -1543,7 +1547,7 @@ void pixel_out( void ) {
       // the acceleration found in the continuous texture
       // and the position corresponding to the location of the
       // pixel in the coordinates system of the current pixel
-      // expected to be in [-radiuspixel,+radiuspixel]x[-radiuspixel,+radiuspixel]
+      // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
       if( graylevel(surrPixel_localColor) >  0 ) {
         vec2 surrPixel_speed;
         vec2 surrPixel_position;
@@ -1563,20 +1567,20 @@ void pixel_out( void ) {
 
       	vec2 acceleration;
       	acceleration = pixel_acceleration - pixel_acc_center;
-      	if( pixel_acc_factor > 0 ) {
+      	if( pixel_acc > 0 ) {
       	  // acceleration
-      	  surrPixel_speed += pixel_acc_factor * acceleration;
+      	  surrPixel_speed += pixel_acc * acceleration;
       	}
       	else {
       	  // damping
-      	  surrPixel_speed += pixel_acc_factor * surrPixel_speed;
+      	  surrPixel_speed += pixel_acc * surrPixel_speed;
       	}
       	surrPixel_nextPosition 
       			     = usedNeighborOffset + surrPixel_position + surrPixel_speed; 
       	// the current step is added to the position
 
-      	if( abs(surrPixel_nextPosition.x) <= radiuspixel 
-                  && abs(surrPixel_nextPosition.y) <= radiuspixel ) {
+      	if( abs(surrPixel_nextPosition.x) <= pixel_radius 
+                  && abs(surrPixel_nextPosition.y) <= pixel_radius ) {
       	  out_color_pixel += surrPixel_localColor.rgb;
                 out_speed_pixel += surrPixel_speed;
       	  // computes the position of the pixel
@@ -1744,10 +1748,10 @@ void main() {
   // variables 
 
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  float average_pulse = uniform_Update_fs_4fv_pulse.a;
+  
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
+  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
   // current scene
   currentScene = int(uniform_Update_fs_4fv_W_H_time_currentScene.w);
@@ -1765,11 +1769,11 @@ void main() {
   drawingStroke = DRAWING_LINE;
 
   // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
+  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
 
   // pixels
-  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
-  radiuspixel = uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.z;
+  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
+  
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -1779,8 +1783,6 @@ void main() {
   CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
   CASubType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.y);
 
-  // decay of drawing and CA layers
-  CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x;
   /////////////////////////////////////////////////////////////////////////////
   // CAdecay pulsation for the scene of gbagbo (like flames on the drawing)
   if(currentScene == 7 || currentScene == 8) {
@@ -1819,7 +1821,7 @@ void main() {
 #if PG_NB_TRACKS >= 2
   out_track1_FBO = vec4( 0, 0, 0, 0 );
 #endif
-  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);
     out_Update_FBO_fs_Pixels = vec4(0,0,0,1);
     out_Update_FBO_fs_CA = vec4(0,0,0,0);
@@ -1905,7 +1907,7 @@ void main() {
     // gamma correction
     cameraImage = vec3( pow(cameraImage.r,cameraGamma) );
 
-    if( BGSubtr ) {
+    if( camera_BG_subtr ) {
       videocolor = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
     }
 
@@ -2123,7 +2125,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  trackCACopy += uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.w
+  trackCACopy += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
   // particle flash on BG track
   trackColorCopy += uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght.w 
@@ -2224,7 +2226,7 @@ void main() {
     //////////////////////////////////////
     //////////////////////////////////////
     if( uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.y > 0 ) {
-      radiuspixel = 1;
+      pixel_radius = 1;
     }
 
     pixel_out();
@@ -2246,13 +2248,13 @@ void main() {
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
-      if( pixel_acc_factor > 0 ) {
+      if( pixel_acc > 0 ) {
       	// acceleration
-      	out_speed_position_FBO.xy += pixel_acc_factor * acceleration;
+      	out_speed_position_FBO.xy += pixel_acc * acceleration;
       }
       else {
       	// damping
-      	out_speed_position_FBO.xy += pixel_acc_factor * out_speed_position_FBO.xy;
+      	out_speed_position_FBO.xy += pixel_acc * out_speed_position_FBO.xy;
       }
       // updates the position of the current pixel
       out_speed_position_FBO.zw += out_speed_position_FBO.xy; 
@@ -2291,7 +2293,7 @@ void main() {
   // incay or decay does not make sense on a black color
   if( graylevel(out_localColor_FBO.rgb) > 0 ) {
     out_localColor_FBO.rgb = out_localColor_FBO.rgb 
-      - vec3(uniform_Update_fs_4fv_trkDecay[0]);
+      - vec3(trkDecay[0]);
   }
   out_localColor_FBO.rgb 
     = clamp( out_localColor_FBO.rgb , 0.0 , 1.0 );
@@ -2324,7 +2326,7 @@ void main() {
 #endif
 
   // CA LAYER CLEAR
-  if( uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.y > 0 ) {
+  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
       out_CA_FBO = vec4(0);
   }
 

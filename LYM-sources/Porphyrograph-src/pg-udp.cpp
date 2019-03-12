@@ -392,13 +392,188 @@ void pg_IPClient::sendIPmessages(void) {
 							}
 						}
 						else {
-							// error: does not process message of more than one argument for the moment
-							sprintf(ErrorStr, "Error: OSC output message with more thant one argument %s!", output_message_stack[0]); ReportError(ErrorStr); throw(100);
+							if (strcmp(output_pattern_stack[0], "ff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
+									stof(message_arguments[5])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
+									stof(message_arguments[5]), stof(message_arguments[6])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]), 
+									stof(message_arguments[9])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]), 
+									stof(message_arguments[13])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]), 
+									stof(message_arguments[13]), stof(message_arguments[14])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
+									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
+									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
+									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
+									stof(message_arguments[17])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
+									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
+									stof(message_arguments[17]), stof(message_arguments[18])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "fffffffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
+									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
+									stof(message_arguments[17]), stof(message_arguments[18]), stof(message_arguments[19])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "ffffffffffffffffffff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
+									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
+									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
+									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
+									stof(message_arguments[17]), stof(message_arguments[18]), stof(message_arguments[19]), stof(message_arguments[20])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else {
+								// error: does not process message of more than one argument for the moment
+								sprintf(ErrorStr, "Error: OSC output message with more thant one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[0], pattern_size); ReportError(ErrorStr); throw(100);
+							}
 						}
 					}
 					else {
 						// error : pattern and message size differ
-						sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s!", output_pattern_stack[0], output_message_stack[0]); ReportError(ErrorStr); throw(100);
+						sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %d)!", output_pattern_stack[0], output_message_stack[0], pattern_size, message_arguments.size() - 1); ReportError(ErrorStr); throw(100);
 					}
 				}
 				// no pattern, just an address

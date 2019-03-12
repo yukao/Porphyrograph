@@ -77,7 +77,7 @@ void main() {
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -209,12 +209,11 @@ void main() {
   }
 
   // cursor
-  if( !hide
-      && mouse_x < width && mouse_x > 0 
+  if( mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 }

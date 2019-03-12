@@ -474,17 +474,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::getline(scenarioFin, line);
 	// SHADER
 	std::getline(scenarioFin, line);
-	// CHAR-
-	std::getline(scenarioFin, line);
-	// CHAR+
-	std::getline(scenarioFin, line);
-	// STEP-
-	std::getline(scenarioFin, line);
-	// STEP+
-	std::getline(scenarioFin, line);
-	// MIN_OR_EQUAL
-	std::getline(scenarioFin, line);
-	// MAX_OR_EQUAL
+	// PULSE
 	std::getline(scenarioFin, line);
 
 	// initial_values
@@ -494,7 +484,6 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.clear();
 	sstrem.str(line);
 	// sstrem = std::stringstream(line);
-	//std::cout << "line :" << line;
 	//std::cout << "\nvalues :\n";
 	for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 		sstrem >> InitialValuesInterpVar[indP];

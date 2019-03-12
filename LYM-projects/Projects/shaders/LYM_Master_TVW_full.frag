@@ -7,19 +7,19 @@ LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-float     blendTransp;
+bool      mute_second_screen;
 bool      invertAllLayers;
 int       cursorSize;
+float     master;
+uniform vec4 uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master;
 float     CAMasterWeight;
-uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
+uniform vec4 uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1;
 float     trackMasterWeight_2;
-uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2;
 bool      interfaceOnScreen;
-bool      mute_screen;
-uniform vec2 uniform_Master_fs_2fv_interfaceOnScreen_mute_screen;
+uniform vec2 uniform_Master_fs_2fv_trackMasterWeight_2_interfaceOnScreen;
 
 #define PG_NB_TRACKS 2
 #define PG_WITH_CA
@@ -49,7 +49,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
+uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -61,26 +61,26 @@ uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 out vec4 outColor0;
 
 void main() {
-  blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
-  invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
-  CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
-  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
-  trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
-  trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
-  interfaceOnScreen = (uniform_Master_fs_2fv_interfaceOnScreen_mute_screen[0] > 0 ? true : false);
-  mute_screen = (uniform_Master_fs_2fv_interfaceOnScreen_mute_screen[1] > 0 ? true : false);
+  mute_second_screen = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[0] > 0 ? true : false);
+  invertAllLayers = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[2]);
+  master = uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[3];
+  CAMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[0];
+  PartMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[1];
+  trackMasterWeight_0 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[2];
+  trackMasterWeight_1 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[3];
+  trackMasterWeight_2 = uniform_Master_fs_2fv_trackMasterWeight_2_interfaceOnScreen[0];
+  interfaceOnScreen = (uniform_Master_fs_2fv_trackMasterWeight_2_interfaceOnScreen[1] > 0 ? true : false);
 
-  float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
-  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
-  float margin = uniform_Master_fs_3fv_width_height_rightWindowVMargin.z;
+  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
+  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float margin = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.z;
   vec2 coords = vec2( (decalCoords.x >= width + margin ? decalCoords.x - width - margin : decalCoords.x) , 
                       decalCoords.y);
   vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
 
   // mute
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -163,7 +163,7 @@ void main() {
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 /*  if( decalCoords.x > 100 || decalCoords.y < 660) {
     outColor0.rgb = mix( outColor0.rgb , vec3(0),0.99);
   }

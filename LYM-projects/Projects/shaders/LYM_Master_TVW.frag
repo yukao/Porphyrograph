@@ -59,7 +59,7 @@ void main() {
   vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
 
   // mute
-  if(mute_screen && decalCoords.x > width) {
+  if(mute_second_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -142,7 +142,7 @@ void main() {
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
-  outColor0.rgb *= blendTransp;
+  outColor0.rgb *= master;
 /*  if( decalCoords.x > 100 || decalCoords.y < 660) {
     outColor0.rgb = mix( outColor0.rgb , vec3(0),0.99);
   }
