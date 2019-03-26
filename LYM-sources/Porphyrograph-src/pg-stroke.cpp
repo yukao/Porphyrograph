@@ -817,9 +817,9 @@ void pg_replay_paths(float theTime) {
 
 		// management of brush radius (w/wo possible interpolation)
 		paths_RadiusX[indPath] = (float)pg_Path_RadiusX[indPath][indFrameReading] * pen_radius_replay
-			+ pulse_average * pen_radius_replay_pulse;
+			* (1.f + pulse_average * pen_radius_replay_pulse);
 		paths_RadiusY[indPath] = (float)pg_Path_RadiusY[indPath][indFrameReading] * pen_radius_replay
-			+ pulse_average * pen_radius_replay_pulse;
+			* (1.f + pulse_average * pen_radius_replay_pulse);
 
 		pg_indPreviousFrameReading[indPath] = indFrameReading;
 	}
@@ -1026,15 +1026,15 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 		// POINT STROKE MANAGEMENT
 		if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR)
 			&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
-			printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
+			//printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
 			paths_x_0_begin_position = paths_x_0_forGPU;
 			paths_y_0_begin_position = paths_y_0_forGPU;
 		}
 		if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR)
 			&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
-			printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
+			//printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
 			if(paths_x_prev[0] == paths_x_0_begin_position && paths_x_prev[0] == paths_x_0_begin_position) {
-				printf("Point at %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
+				//printf("Point at %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
 				//paths_x_0_forGPU = paths_x_prev[0];
 				//paths_y_0_forGPU = paths_y_prev[0];
 				//paths_xL[0] = paths_x_prev[0];

@@ -93,55 +93,55 @@
   if ( uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA == -1 ) {
     fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA : %d\n" , uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA );
   }
-  uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight");
-  if ( uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight : %d\n" , uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight );
+  uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold");
+  if ( uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold : %d\n" , uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold );
   }
-  uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie");
-  if ( uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie : %d\n" , uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie );
+  uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel");
+  if ( uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel : %d\n" , uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel );
   }
-  uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value");
-  if ( uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value : %d\n" , uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value );
+  uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse");
+  if ( uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse : %d\n" , uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse );
   }
-  uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse");
-  if ( uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse : %d\n" , uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse );
+  uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur");
+  if ( uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur : %d\n" , uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur );
   }
-  uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale");
-  if ( uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale : %d\n" , uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale );
+  uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale");
+  if ( uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale : %d\n" , uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale );
   }
-  uniform_Update_fs_4fv_photo_contrast_mask_contrast_CAParams1_CAParams2 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_photo_contrast_mask_contrast_CAParams1_CAParams2");
-  if ( uniform_Update_fs_4fv_photo_contrast_mask_contrast_CAParams1_CAParams2 == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_photo_contrast_mask_contrast_CAParams1_CAParams2 : %d\n" , uniform_Update_fs_4fv_photo_contrast_mask_contrast_CAParams1_CAParams2 );
+  uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1");
+  if ( uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1 == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1 : %d\n" , uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1 );
   }
-  uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6");
-  if ( uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6 == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6 : %d\n" , uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6 );
+  uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5");
+  if ( uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5 == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5 : %d\n" , uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5 );
   }
-  uniform_Update_fs_4fv_CAParams7_CAParams8_cameraCumul_CAstep 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAParams7_CAParams8_cameraCumul_CAstep");
-  if ( uniform_Update_fs_4fv_CAParams7_CAParams8_cameraCumul_CAstep == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_CAParams7_CAParams8_cameraCumul_CAstep : %d\n" , uniform_Update_fs_4fv_CAParams7_CAParams8_cameraCumul_CAstep );
+  uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul");
+  if ( uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul : %d\n" , uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul );
   }
   uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze 
     = glGetUniformLocation(shader_programme[pg_shader_ParticleAnimation], "uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze");
   if ( uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze == -1 ) {
     fprintf(stderr, "Could not bind uniform ParticleAnimation uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze : %d\n" , uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze );
   }
-  uniform_Update_fs_2fv_CAcolorSpread_freeze 
-    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_2fv_CAcolorSpread_freeze");
-  if ( uniform_Update_fs_2fv_CAcolorSpread_freeze == -1 ) {
-    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_2fv_CAcolorSpread_freeze : %d\n" , uniform_Update_fs_2fv_CAcolorSpread_freeze );
+  uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze 
+    = glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze");
+  if ( uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze == -1 ) {
+    fprintf(stderr, "Could not bind uniform Update uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze : %d\n" , uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze );
   }
   uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen 
     = glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen");

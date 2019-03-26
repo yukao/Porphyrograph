@@ -20,10 +20,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 2
 #define PG_NB_PATHS 7
 
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,0,0);
-
 ////////////////////////////////////////////////////////////////////
 // drawing modes
 const uint DRAWING_VOID = 0;
@@ -497,6 +493,10 @@ float out_gray_drawing( float current_Brush_Radius ,
 
 void main() {
 #include_initializations
+
+  //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,0,0);
 
   //////////////////////////
   // variables 

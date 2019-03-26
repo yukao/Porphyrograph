@@ -9,10 +9,6 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #include_declarations
 
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
-
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS 3
 
@@ -1157,6 +1153,10 @@ float out_gray_drawing( float current_mouse_x , float current_mouse_y ,
 
 void main() {
 #include_initializations
+
+  //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;

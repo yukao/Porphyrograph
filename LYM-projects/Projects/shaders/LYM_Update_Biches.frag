@@ -38,10 +38,6 @@ const float weights[8][10] = {
 #define PG_NB_TRACKS 3
 #define PG_NB_PATHS 7
 
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
-
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
 const uint pg_FBO_fs_Pixels_attacht = 1;
@@ -1268,6 +1264,10 @@ float out_gray_drawing( float current_mouse_x , float current_mouse_y ,
 
 void main() {
 #include_initializations
+
+  //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
 
   //////////////////////////
   // variables 

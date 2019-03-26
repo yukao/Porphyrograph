@@ -9,10 +9,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #include_declarations
 
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
-
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // CONST
@@ -1268,6 +1264,10 @@ float out_gray_drawing( float current_mouse_x , float current_mouse_y ,
 
 void main() {
 #include_initializations
+
+  //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
 
   //////////////////////////
   // variables 

@@ -1231,21 +1231,21 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_paths03_y, paths_y_0_forGPU, paths_y[1], paths_y[2], paths_y[3]);
 	//  checks the information shipped to GPU at beginning or ending of a stroke
 	// begin
-	if (isBegin[0]) {
-		printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
-	}
-	// end
-	if (isEnd[0]) {
-		printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
-	}
-	if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR) 
-		&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
-		printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
-	}
-	if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR) 
-		&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
-		printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
-	}
+	//if (isBegin[0]) {
+	//	printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+	//}
+	//// end
+	//if (isEnd[0]) {
+	//	printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+	//}
+	//if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR) 
+	//	&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
+	//	printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
+	//}
+	//if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR) 
+	//	&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
+	//	printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
+	//}
 	if (paths_x_0_forGPU >= 0 && paths_y_0_forGPU >= 0) {
 		// printf("Position %.1f %.1f\n\n", paths_x_0_forGPU, paths_y_0_forGPU);
 	}
@@ -1259,10 +1259,10 @@ void pg_update_shader_uniforms(void) {
 	glUniform4i(uniform_Update_fs_4iv_path03_beginOrEnd,
 		(isBegin[0] ? 1 : (isEnd[0] ? -1 : 0)), (isBegin[1] ? 1 : (isEnd[1] ? -1 : 0)),
 		(isBegin[2] ? 1 : (isEnd[2] ? -1 : 0)), (isBegin[3] ? 1 : (isEnd[3] ? -1 : 0)));
-	if (isBegin[0] && isEnd[0]) {
-		printf("Point: %.1f %.1f (%.1f %.1f %.1f %.1f) % .1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
+	//if (isBegin[0] && isEnd[0]) {
+	//	printf("Point: %.1f %.1f (%.1f %.1f %.1f %.1f) % .1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
 
-	}
+	//}
 
 	// pen Bezier curve tangents
 	glUniform4f(uniform_Update_fs_4fv_paths03_xL,
@@ -1572,16 +1572,16 @@ void pg_update_shader_uniforms(void) {
 	// track x & y translations
 	float translation_x[2] = { 0.f, 0.f };
 	float translation_y[2] = { 0.f, 0.f };
-	if (track_x_transl_0 && pg_FrameNo % int(abs(track_x_transl_0)) == 0) {
+	if (int(abs(track_x_transl_0)) != 0 && pg_FrameNo % int(abs(track_x_transl_0)) == 0) {
 		translation_x[0] = (track_x_transl_0 > 0 ? 1.f : -1.f);
 	}
-	if (track_y_transl_0 && pg_FrameNo % int(abs(track_y_transl_0)) == 0) {
+	if (int(abs(track_y_transl_0)) != 0 && pg_FrameNo % int(abs(track_y_transl_0)) == 0) {
 		translation_y[0] = (track_y_transl_0 > 0 ? 1.f : -1.f);
 	}
-	if (track_x_transl_1 && pg_FrameNo % int(abs(track_x_transl_1)) == 0) {
+	if (int(abs(track_x_transl_1)) != 0 && pg_FrameNo % int(abs(track_x_transl_1)) == 0) {
 		translation_x[1] = (track_x_transl_1 > 0 ? 1.f : -1.f);
 	}
-	if (track_y_transl_1 && pg_FrameNo % int(abs(track_y_transl_1)) == 0) {
+	if (int(abs(track_y_transl_1)) != 0 && pg_FrameNo % int(abs(track_y_transl_1)) == 0) {
 		translation_y[1] = (track_y_transl_1 > 0 ? 1.f : -1.f);
 	}
 	glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1,

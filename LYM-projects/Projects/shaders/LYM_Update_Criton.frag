@@ -36,10 +36,6 @@ const float weights_GaussianBlur[8][10] = {
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS 3
 
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,0,0,0);
-
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
 const uint pg_FBO_fs_Pixels_attacht = 1;
@@ -832,6 +828,10 @@ float out_gray_drawing( float current_mouse_x , float current_mouse_y ,
 
 void main() {
 #include_initializations
+
+  //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,0,0,0);
 
   //////////////////////////
   // variables 

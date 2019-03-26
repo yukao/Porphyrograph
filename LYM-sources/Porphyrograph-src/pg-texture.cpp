@@ -1215,23 +1215,25 @@ void pg_launch_diaporama(void) {
 	pg_CurrentDiaporamaFile = 0;
 	for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
 		// printf("load diaporama initial files #%d\n", indPhoto);
-		if (photo_diaporama < nb_photo_albums
-			&& photoAlbumDirName[photo_diaporama].compare("captures") == 0) {
-			printf("The scanning of captures should be reimplemented to take into consideration the preloading of images (vs dynamic as in the previous versions)\n");
-			ascendingDiaporama = false;
-			int nextCompressedImage
-				= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
-					&pg_CurrentDiaporamaFile, ascendingDiaporama);
-			pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
-				= nextCompressedImage;
-		}
-		else {
-			ascendingDiaporama = true;
-			int nextCompressedImage
-				= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
-					&pg_CurrentDiaporamaFile, ascendingDiaporama);
-			pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
-				= nextCompressedImage;
+		if (photo_diaporama >= 0
+			&& photo_diaporama < nb_photo_albums) {
+			if (photoAlbumDirName[photo_diaporama].compare("captures") == 0) {
+				printf("The scanning of captures should be reimplemented to take into consideration the preloading of images (vs dynamic as in the previous versions)\n");
+				ascendingDiaporama = false;
+				int nextCompressedImage
+					= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
+						&pg_CurrentDiaporamaFile, ascendingDiaporama);
+				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
+					= nextCompressedImage;
+			}
+			else {
+				ascendingDiaporama = true;
+				int nextCompressedImage
+					= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
+						&pg_CurrentDiaporamaFile, ascendingDiaporama);
+				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].indSwappedPhoto
+					= nextCompressedImage;
+			}
 		}
 		// printf("ama initial files #%d\n", indPhoto);
 	}
@@ -1663,6 +1665,8 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
 		unsigned int linearSize = *(unsigned int*)&(header[16]);
 		unsigned int mipMapCount = *(unsigned int*)&(header[24]);
 		unsigned int fourCC = *(unsigned int*)&(header[80]);
+		unsigned int ratio_h = 1;
+		unsigned int ratio_v = 1;
 
 		// Check for image size
 		if ((w > 0 && width_from_header != u_int(w))
@@ -1670,8 +1674,10 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
 			sprintf(ErrorStr, "Unexpected dds diaporama image size %s %d/%d %d/%d!",
 				PhotoName, width_from_header, w, height_from_header,
 				h); ReportError(ErrorStr);
-			*(PhotoName) = 0;
-			return false;
+			//ratio_h = u_int(w) / width_from_header;
+			//ratio_v = u_int(h) / height_from_header;
+			//*(PhotoName) = 0;
+			//return false;
 		}
 		h = height_from_header;
 		w = width_from_header;
@@ -2317,7 +2323,14 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 						true, 2048, 2048, false);
 				}
 				else {
-					printf("Initial images: unexpected window format for diaporama (known formats 1024x768 && 1280x720\n");
+					int powerw = 1;
+					while (powerw < leftWindowWidth)
+						powerw *= 2;
+					int powerh = 1;
+					while (powerh < window_height)
+						powerh *= 2;
+					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
+						true, powerw, powerh, false);
 				}
 				delete fileName;
 				fileName = NULL;

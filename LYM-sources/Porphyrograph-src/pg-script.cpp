@@ -3683,6 +3683,10 @@ void pg_aliasScript(char *command_symbol,
 		//		return;
 		//	}
 		//}
+		// goes to the first photo diaporama if it is not already selected and if there is one 
+		if (photo_diaporama < 0 && nb_photo_albums > 0) {
+			photo_diaporama = 0;
+		}
 		pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir + 1) % pg_nbCompressedImageDirs;
 		//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
 		sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
@@ -4107,9 +4111,9 @@ void pg_aliasScript(char *command_symbol,
 		printf("SVG GPU rotate %.2f\n", arguments[0]);
 		break;
 	case _ClipArt_xy: 
-		pg_ClipArt_Translation_X[pg_last_activated_ClipArt] = arguments[0];
-		pg_ClipArt_Translation_Y[pg_last_activated_ClipArt] = arguments[1] * 9.0f / 16.0f;
-		printf("SVG GPU translate %.2fx%.2f\n", arguments[0], arguments[1] * 9.0f / 16.0f);
+		pg_ClipArt_Translation_X[pg_last_activated_ClipArt] = arguments[0] * leftWindowWidth;
+		pg_ClipArt_Translation_Y[pg_last_activated_ClipArt] = arguments[1] * window_height;
+		printf("SVG GPU translate %.2fx%.2f\n", arguments[0] * leftWindowWidth, arguments[1] * window_height);
 		break;
 	case _ClipArt_nat_color: 
 		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_nat; 
@@ -4201,7 +4205,7 @@ void pg_update_pulsed_colors(void) {
 	// calculating the color from base luminance + palette colors modulated by the three frequence ranges
 	for (int indChannel = 0; indChannel < 3; indChannel++) {
 		// adding a base luminance
-		pulsed_pen_color[indChannel] = pen_grey;
+		pulsed_pen_color[indChannel] = pen_grey * (1.f + pulse_average * pen_grey_pulse);
 		for (int indColor = 0; indColor < 3; indColor++) {
 			pulsed_pen_color[indChannel]
 				+= pen_base_3color_palette[indColor * 3 + indChannel] / 3.f;
@@ -4276,7 +4280,7 @@ void pg_update_pulsed_colors(void) {
 	// calculating the color from base luminance + palette colors modulated by the three frequence ranges
 	for (int indChannel = 0; indChannel < 3; indChannel++) {
 		// adding a base luminance
-		pulsed_repop_color[indChannel] = repop_grey;
+		pulsed_repop_color[indChannel] = repop_grey * (1.f + pulse_average * repop_grey_pulse);
 		for (int indColor = 0; indColor < 3; indColor++) {
 			pulsed_repop_color[indChannel]
 				+= repop_base_3color_palette[indColor * 3 + indChannel] / 3.f;
