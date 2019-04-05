@@ -1,1 +1,0 @@
-"D:\Program Files (x86)\pd\bin\pd.exe" -noprefs -open C:/Users/yukao/Desktop/Porphyrograph/interface/LYM_core.pd
