@@ -49,6 +49,11 @@ int leftWindowWidth = 1024;
 int rightWindowWidth = 1024;
 int rightWindowVMargin = 0;
 int doubleWindowWidth = 2048;
+// the smallest powers of 2 for width and height
+int leftWindowWidth_powerOf2 = 1024;
+int window_height_powerOf2 = 1024;
+float leftWindowWidth_powerOf2_ratio = 1.f;
+float window_height_powerOf2_ratio = 1.f;
 
 /// screen message drawing
 char ScreenMessage[StringLength];

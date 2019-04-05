@@ -242,7 +242,7 @@ vec4 neighborValues[8]=vec4[8](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),v
 vec4 neighborValuesDiamond[4]=vec4[4](vec4(0),vec4(0),vec4(0),vec4(0));
 vec4 neighborValuesDiag[16]=vec4[16](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),
                                     vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0));
-vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
+vec2 pixelTextureCoordinatesPOT_XY; // the POT coordinates of the
 // pixel texture + z offset according to the chosen texture
 vec2 noisepixels;
 
@@ -1123,10 +1123,10 @@ void pixel_out( void ) {
         surrpixel_speed = surrpixel_speed_position.xy;
         surrpixel_position = surrpixel_speed_position.zw;
         vec2 pixel_acceleration;
-        vec2 pixelTexCoordLoc = pixelTextureCoordinatesXY
+        vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
 
-        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLoc, usedNeighborOffset);
+        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset);
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
@@ -1198,10 +1198,10 @@ void pixel_out( void ) {
               surrpixel_position = surrpixel_speed_position.zw;
 
         vec2 pixel_acceleration;
-        vec2 pixelTexCoordLoc = pixelTextureCoordinatesXY
+        vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
 
-        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLoc, usedNeighborOffset);
+        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset);
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
@@ -1532,12 +1532,12 @@ void main() {
                         1.0 + cos(frameNo/37000.0));
   vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
-  pixelTextureCoordinatesXY = decalCoordsPOT 
+  pixelTextureCoordinatesPOT_XY = decalCoordsPOT 
                   + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
   
   // noise for CA: random value
-  randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
-  randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.5 ) );
+  randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.0 ) );
+  randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.5 ) );
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -2037,8 +2037,8 @@ void main() {
       //  modifies speed according to acceleration
       vec2 pixel_acceleration;
       // FLAT
-        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesXY , noiseScale * 100 ),
-                                snoise( pixelTextureCoordinatesXY + vec2(2.0937,9.4872) , noiseScale * 100 ));
+      pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
+                                snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
       // }
 
       vec2 acceleration;

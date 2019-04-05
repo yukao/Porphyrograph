@@ -1282,6 +1282,17 @@ void setWindowDimensions(void) {
 		rightWindowVMargin = 0;
 		doubleWindowWidth = window_width;
 	}
+	// looks for the smallest powers of 2 for width and height
+	leftWindowWidth_powerOf2 = 1;
+	while (leftWindowWidth_powerOf2 < leftWindowWidth)
+		leftWindowWidth_powerOf2 *= 2;
+	window_height_powerOf2 = 1;
+	while (window_height_powerOf2 < window_height)
+		window_height_powerOf2 *= 2;
+	leftWindowWidth_powerOf2_ratio =
+		float(leftWindowWidth) / float(leftWindowWidth_powerOf2);
+	window_height_powerOf2_ratio =
+		float(window_height) / float(window_height_powerOf2);
 }
 
 // to be called once after parsing

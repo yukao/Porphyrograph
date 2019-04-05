@@ -371,23 +371,23 @@ void pg_IPClient::sendIPmessages(void) {
 							case 's':
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], message_arguments[1].c_str()) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 								}
 								break;
 							case 'i':
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stoi(message_arguments[1])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 								}
 								break;
 							case 'f':
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stof(message_arguments[1])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 								}
 								break;
 							default:
-								sprintf(ErrorStr, "Error: unknown OSC pattern element %c!", *(output_pattern_stack[0])); ReportError(ErrorStr); throw(100);
+								sprintf(ErrorStr, "Error: unknown OSC pattern element %c!", *(output_pattern_stack[0])); ReportError(ErrorStr); 
 								break;
 							}
 						}

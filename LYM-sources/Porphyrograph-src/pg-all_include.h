@@ -343,7 +343,7 @@ using std::ifstream;
 #endif
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (ULM)
+#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (ULM) || defined (BICHES) || defined (VOLUSPA)
 #define PG_BEZIER_PATHS
 #endif
 

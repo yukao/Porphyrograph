@@ -1193,7 +1193,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_W_H_time_currentScene,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)CurrentClockTime, (GLfloat)pg_CurrentScene);
 	// printf("time %.2f\n", (GLfloat)CurrentClockTime);
-	//printf("scene %d\n", pg_CurrentScene);
+	// printf("scene %d\n", pg_CurrentScene);
 
 	// pixels acceleration
 	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift,
@@ -1464,21 +1464,9 @@ void pg_update_shader_uniforms(void) {
 		(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
 #endif
 #if defined (PG_WITH_PHOTO_DIAPORAMA)
-	if (leftWindowWidth == 1024 && window_height == 768) {
-		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
-			1.f, .75f, 1.f, .75f);
-	}
-	else if (leftWindowWidth == 1280 && window_height == 720) {
-		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
-			0.625f, 0.703125f, 0.625f, 0.703125f);
-	}
-	else if (leftWindowWidth == 1920 && window_height == 1080) {
-		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
-			0.9375f, 0.52734375f, 0.9375f, 0.52734375f );
-	}
-	else {
-		printf("Current images: unexpected window format for diaporama (known formats 1024x768 && 1280x720 (%dx%d)\n", leftWindowWidth, window_height);
-	}
+	glUniform4f(uniform_Update_fs_4fv_photo01_wh,
+		leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio,
+		leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio);
 	//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
 	//	(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
 	//	(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);

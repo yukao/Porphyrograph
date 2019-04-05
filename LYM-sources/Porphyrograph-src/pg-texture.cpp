@@ -2308,30 +2308,15 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 				glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
 				pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
 
+				// stores the photo file name
 				strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName,
 					fileName->c_str());
-				if (leftWindowWidth == 1024 && window_height == 768) {
-					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-						true, leftWindowWidth, leftWindowWidth, false);
-				}
-				else if (leftWindowWidth == 1280 && window_height == 720) {
-					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-						true, 2048, 1024, false);
-				}
-				else if (leftWindowWidth == 1920 && window_height == 1080) {
-					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-						true, 2048, 2048, false);
-				}
-				else {
-					int powerw = 1;
-					while (powerw < leftWindowWidth)
-						powerw *= 2;
-					int powerh = 1;
-					while (powerh < window_height)
-						powerh *= 2;
-					valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-						true, powerw, powerh, false);
-				}
+
+				// loads the images with a size that corresponds to the screen size
+				valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
+					true, leftWindowWidth_powerOf2, window_height_powerOf2, false);
+
+				// frees file name string memory
 				delete fileName;
 				fileName = NULL;
 

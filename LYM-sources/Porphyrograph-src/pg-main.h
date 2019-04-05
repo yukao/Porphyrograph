@@ -75,6 +75,11 @@ extern int leftWindowWidth;
 extern int rightWindowWidth;
 extern int rightWindowVMargin;
 extern int doubleWindowWidth;
+// the smallest powers of 2 for width and height
+extern int leftWindowWidth_powerOf2;
+extern int window_height_powerOf2;
+extern float leftWindowWidth_powerOf2_ratio;
+extern float window_height_powerOf2_ratio;
 
 /// trace
 extern FILE    *fileLog;

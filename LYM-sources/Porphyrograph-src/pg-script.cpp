@@ -1064,10 +1064,10 @@ void pg_displaySceneVariables(void) {
 		else {
 			int remTime = (int)remainingTimeInScene;
 			if (remTime > -60) {
-				sprintf(AuxString, "/time _%d:%d", remTime / 60, remTime % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time %d:%d", remTime / 60, remTime % 60); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			else {
-				sprintf(AuxString, "/time _%d:%d", remTime / 60, -(remTime % 60)); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/time %d:%d", remTime / 60, -(remTime % 60)); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			sprintf(AuxString, "/time_color 3"); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		}
