@@ -2462,7 +2462,7 @@ void pg_launch_performance(void) {
 
 	// lights up the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_TouchOSC_send");
-#ifdef VOLUSPA
+#ifdef USINE
 	// starts the backtrack
 	pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_Usine_send");
 #endif

@@ -237,7 +237,7 @@ int main(int argcMain, char **argvMain) {
 
 	// lights off the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
-#ifdef VOLUSPA
+#ifdef USINE
 	// tells Usine that it is not launched
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_Usine_send");
 #endif
@@ -596,7 +596,7 @@ void quit( void ) {
 	
 	// lights off the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
-#ifdef VOLUSPA
+#ifdef USINE
 	// starts the backtrack
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_Usine_send");
 #endif
