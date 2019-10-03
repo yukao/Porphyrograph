@@ -870,15 +870,15 @@
 #X connect 18 0 20 5;
 #X connect 19 0 20 4;
 #X restore 200 113 pd CameraCAParams;
-#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 34.3 0 18 1 36
+#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 25.7 0 18 1 36
 -204800 -33289 0;
-#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 91.9 0 18 1 36
+#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 93.3 0 18 1 36
 -262130 -33289 0;
 #X obj 23 322 cnv 15 150 35 empty sound_env_min_can 25 0 18 1 48 -4032
 -33289 0;
 #X obj 186 319 cnv 15 150 35 empty sound_env_max_can 91 0 18 1 48 -257985
 -33289 0;
-#X obj 24 188 cnv 15 150 35 empty beat_threshold_can 0.58 0 18 1 48
+#X obj 24 188 cnv 15 150 35 empty beat_threshold_can 0.55 0 18 1 48
 -232576 -33289 0;
 #X text 18 234 OBSERVED SOUND MIN AND MAX;
 #X text 21 302 DEFINED SOUND MIN AND MAX;

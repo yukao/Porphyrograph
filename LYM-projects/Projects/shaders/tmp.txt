@@ -1,0 +1,13 @@
+cp LYM_Master_CavernePlaton.frag LYM_Master_Tempete.frag
+cp LYM_Master_CavernePlaton.vert LYM_Master_Tempete.vert
+cp LYM_Master_CavernePlaton_full.frag LYM_Master_Tempete_full.frag
+cp LYM_Mixing_CavernePlaton.frag LYM_Mixing_Tempete.frag
+cp LYM_Mixing_CavernePlaton.vert LYM_Mixing_Tempete.vert
+cp LYM_Mixing_CavernePlaton_full.frag LYM_Mixing_Tempete_full.frag
+cp LYM_ParticleSplat_CavernePlaton.frag LYM_ParticleSplat_Tempete.frag
+cp LYM_ParticleSplat_CavernePlaton.geom LYM_ParticleSplat_Tempete.geom
+cp LYM_ParticleSplat_CavernePlaton.vert LYM_ParticleSplat_Tempete.vert
+cp LYM_ParticleSplat_CavernePlaton_full.frag LYM_ParticleSplat_Tempete_full.frag
+cp LYM_Update_CavernePlaton.frag LYM_Update_Tempete.frag
+cp LYM_Update_CavernePlaton.vert LYM_Update_Tempete.vert
+cp LYM_Update_CavernePlaton_full.frag LYM_Update_Tempete_full.frag

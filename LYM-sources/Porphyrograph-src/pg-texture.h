@@ -290,7 +290,7 @@ void* pg_movieLoop(void * lpParam);
 void pg_launch_diaporama(void);
 bool pg_update_diaporama(void);
 
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);
 #endif
 

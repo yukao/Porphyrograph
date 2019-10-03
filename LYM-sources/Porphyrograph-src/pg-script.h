@@ -77,7 +77,7 @@ extern float repop_base_3color_palette[9];
 #define CA_NEUMANN_BINARY         5
 #endif
 
-#if defined (MALAUSSENA)
+#if defined (CAAUDIO)
 #define CA_TOTALISTIC             0
 #define CA_GENERATION             1
 #define CA_GAL_BIN_MOORE          2
@@ -219,7 +219,7 @@ extern int BeatNo;
 extern float lastBeatTime;
 
 // +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 enum pg_CAseed_types
 {
 	_pg_CAseed_dot_center = 0,

@@ -142,6 +142,24 @@ extern pg_ClipArt_Colors_Types *pg_ClipArt_Colors;
 // subpath display
 extern bool *pg_ClipArt_SubPath;
 
+#ifdef PG_MESHES
+// MESHES
+// number of meshe files
+extern int pg_nb_Mesh_files;
+// file names
+extern string *pg_Mesh_fileNames;
+// geometrical transformations
+extern float *pg_Mesh_Scale;
+extern float *pg_Mesh_Rotation_angle;
+extern float *pg_Mesh_Rotation_X;
+extern float *pg_Mesh_Rotation_Y;
+extern float *pg_Mesh_Rotation_Z;
+extern float *pg_Mesh_Translation_X;
+extern float *pg_Mesh_Translation_Y;
+extern float *pg_Mesh_Translation_Z;
+// color
+extern pg_ClipArt_Colors_Types *pg_Mesh_Colors;
+#endif
 
 /// the params of the font file
 extern string                    font_file_encoding;

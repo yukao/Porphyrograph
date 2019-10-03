@@ -190,11 +190,13 @@ void main() {
 //   coords.x = width - coords.x;
 
   // blur on side
+  /*
   float  distToEdge;
   distToEdge = min(min(coordX , width - coordX), min(decalCoords.y , height - decalCoords.y));
   if( distToEdge < 34  ) {
     outColor0.rgb *= (abs(distToEdge)/34.0);
   }
+  */
 
   if( mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 

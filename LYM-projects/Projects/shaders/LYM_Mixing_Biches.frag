@@ -14,6 +14,13 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 // Main shader.
 
+////////////////////////////////////////////////////////////////////
+// MACROS
+#define graylevel(col) ((col.r+col.g+col.b)/3.0)
+#define maxCol(col) (max(col.r,max(col.g,col.b)))
+#define minCol(col) (min(col.r,min(col.g,col.b)))
+#define delta(gray) (gray>0.5?1:0)
+
 // obtained from Vertex Program
 in vec2 decalCoords;  // coord text
 
@@ -108,10 +115,20 @@ void main() {
   // accumulation: mix of current layers and echo
   vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords);
 
-  if( echo + echoNeg > 0.0 ) {
+/*  if( echo + echoNeg > 0.0 ) {
     combined_color = clamp( combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb , 
-		                        0.0 , 1.0 );
+                            0.0 , 1.0 );
   }
+*/
+  if( echo + echoNeg > 0.0 ) {
+    vec3 echoedColor = combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb;
+    float maxEchoedColor = maxCol( echoedColor );
+    if( maxEchoedColor <= 1.0 ) {
+      combined_color = clamp( echoedColor , 0.0 , 1.0 );
+    }
+  }
+
+  // a new version of echo that only saturates the color and does not change brightness
      
   ////////////////////////////////////
   // MESSAGE

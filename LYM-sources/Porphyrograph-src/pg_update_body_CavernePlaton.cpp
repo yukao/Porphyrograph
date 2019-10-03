@@ -38,8 +38,8 @@
  glUniform4f( uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_pixel_acc_shiftX_pixel_acc_shiftY ,
 	      (GLfloat)partStroke_mode,
 	      (GLfloat)partColor_mode,
-	      (GLfloat)pixel_acc_shiftX * (pulse_average - pulse_average_prec) * pixel_acc_shiftX_pulse,
-	      (GLfloat)pixel_acc_shiftY * (pulse_average - pulse_average_prec) * pixel_acc_shiftY_pulse );
+	      (GLfloat)pixel_acc_shiftX * (1.f + pulse_average * pixel_acc_shiftX_pulse),
+	      (GLfloat)pixel_acc_shiftY * (1.f + pulse_average * pixel_acc_shiftY_pulse) );
  glUniform3f( uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze ,
 	      (GLfloat)repop_part * (1.f + pulse_average * repop_part_pulse),
 	      (GLfloat)repop_path * (1.f + pulse_average * repop_path_pulse),
@@ -75,9 +75,9 @@
 	      (GLfloat)noiseCenterX,
 	      (GLfloat)noiseCenterY,
 	      (GLfloat)pixel_acc * (1.f + pulse_average * pixel_acc_pulse),
-	      (GLfloat)pixel_acc_shiftX * (pulse_average - pulse_average_prec) * pixel_acc_shiftX_pulse );
+	      (GLfloat)pixel_acc_shiftX * (1.f + pulse_average * pixel_acc_shiftX_pulse) );
  glUniform4f( uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA ,
-	      (GLfloat)pixel_acc_shiftY * (pulse_average - pulse_average_prec) * pixel_acc_shiftY_pulse,
+	      (GLfloat)pixel_acc_shiftY * (1.f + pulse_average * pixel_acc_shiftY_pulse),
 	      (GLfloat)pixel_radius * (1.f + pulse_average * pixel_radius_pulse),
 	      (GLfloat)pixel_mode,
 	      (GLfloat)repop_CA * (1.f + pulse_average * repop_CA_pulse) );

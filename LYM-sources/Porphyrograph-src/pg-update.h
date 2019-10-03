@@ -62,6 +62,11 @@ extern GLuint Sensor_texture_rectangle;
 extern cv::Mat Sensor_image;
 #endif
 
+#ifdef PG_MESHES
+extern GLuint Mesh_texture_rectangle;
+extern cv::Mat Mesh_image;
+#endif
+
 #if defined (TVW)
 #define   PG_NB_DISPLAY_MESSAGES 3500
 
@@ -178,9 +183,9 @@ extern bool initialBGCapture;
 enum DrawingMode{ _Render=0 , _Svg , _Png , _Jpg , _Video };
 
 // projection and view matrices transmitted to the shader
-extern GLfloat projMatrix[16];
-extern GLfloat viewMatrix[16];
-extern GLfloat modelMatrix[16];
+extern GLfloat pg_orthoWindowProjMatrix[16];
+extern GLfloat pg_identityViewMatrix[16];
+extern GLfloat pg_identityModelMatrix[16];
 
 extern GLuint drawBuffers[16];
 
@@ -215,7 +220,7 @@ extern int paths_BrushID[PG_NB_PATHS + 1];
 extern float paths_RadiusX[PG_NB_PATHS + 1];
 extern float paths_RadiusY[PG_NB_PATHS + 1];
 
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 extern GLuint pg_CATable_ID;
 extern GLubyte *pg_CATable;
 #endif
@@ -286,6 +291,10 @@ void pg_MasterPass(void);
 #ifdef PG_SENSORS
 // PASS #5: SENSOR PASS
 void pg_SensorPass(void);
+#endif
+#ifdef PG_MESHES
+// PASS #6: MESH PASS
+void pg_MeshPass(void);
 #endif
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
 void pg_draw_scene(DrawingMode mode, bool threaded);

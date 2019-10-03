@@ -21,8 +21,8 @@
 	      (GLfloat)noiseCenterY,
 	      (GLfloat)pixel_acc * (1.f + pulse_average * pixel_acc_pulse) );
  glUniform4f( uniform_Update_fs_4fv_pixel_acc_shiftX_pixel_acc_shiftY_pixel_radius_pixel_mode ,
-	      (GLfloat)pixel_acc_shiftX * (pulse_average - pulse_average_prec) * pixel_acc_shiftX_pulse,
-	      (GLfloat)pixel_acc_shiftY * (pulse_average - pulse_average_prec) * pixel_acc_shiftY_pulse,
+	      (GLfloat)pixel_acc_shiftX * (1.f + pulse_average * pixel_acc_shiftX_pulse),
+	      (GLfloat)pixel_acc_shiftY * (1.f + pulse_average * pixel_acc_shiftY_pulse),
 	      (GLfloat)pixel_radius * (1.f + pulse_average * pixel_radius_pulse),
 	      (GLfloat)pixel_mode );
  glUniform4f( uniform_Update_fs_4fv_repop_CA_repop_BG_cameraGamma_activeClipArts ,

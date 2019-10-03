@@ -31,8 +31,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_DM_dcONT", "P
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_dasein", "Porphyrograph_core_dasein.vcxproj", "{71709017-B1D0-4805-9F5E-8ECEDB858B62}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Malaussena", "Porphyrograph_core_Malaussena.vcxproj", "{0FA29698-0D88-403D-ACF0-8C1EF13294EC}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Criton", "Porphyrograph_core_Criton.vcxproj", "{B351504D-E507-4CF9-B793-C4A87B73D894}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_voluspa", "Porphyrograph_core_voluspa.vcxproj", "{986E4103-B9ED-4705-B9CE-4F0FC593D138}"
@@ -52,6 +50,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Ulm", "Porphyrograph_core_Ulm.vcxproj", "{69438D14-6AE2-4DC2-9C5C-AD7EE47ABBBD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_demo_Bezier", "Porphyrograph_core_demo_Bezier.vcxproj", "{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_CAaudio", "Porphyrograph_core_CAaudio.vcxproj", "{0FA29698-0D88-403D-ACF0-8C1EF13294EC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Tempete", "Porphyrograph_core_Tempete.vcxproj", "{DC85237C-386C-4E5B-919E-83D2C4F35AA7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -249,20 +251,6 @@ Global
 		{71709017-B1D0-4805-9F5E-8ECEDB858B62}.Release|Win32.ActiveCfg = Release|Win32
 		{71709017-B1D0-4805-9F5E-8ECEDB858B62}.Release|Win32.Build.0 = Release|Win32
 		{71709017-B1D0-4805-9F5E-8ECEDB858B62}.Release|x64.ActiveCfg = Release|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|Win32.ActiveCfg = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|Win32.Build.0 = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|x64.ActiveCfg = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|x64.Build.0 = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug|Win32.ActiveCfg = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug|Win32.Build.0 = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug|x64.ActiveCfg = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|Win32.ActiveCfg = Release|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|Win32.Build.0 = Release|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|x64.ActiveCfg = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|x64.Build.0 = Debug|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release|Win32.ActiveCfg = Release|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release|Win32.Build.0 = Release|Win32
-		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release|x64.ActiveCfg = Release|Win32
 		{B351504D-E507-4CF9-B793-C4A87B73D894}.Debug DLL|Win32.ActiveCfg = Debug|Win32
 		{B351504D-E507-4CF9-B793-C4A87B73D894}.Debug DLL|Win32.Build.0 = Debug|Win32
 		{B351504D-E507-4CF9-B793-C4A87B73D894}.Debug DLL|x64.ActiveCfg = Debug|Win32
@@ -403,6 +391,34 @@ Global
 		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release|Win32.ActiveCfg = Release|Win32
 		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release|Win32.Build.0 = Release|Win32
 		{92C8FE61-4AB4-4F27-9135-F2EC4B4FA177}.Release|x64.ActiveCfg = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|x64.ActiveCfg = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug DLL|x64.Build.0 = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug|Win32.Build.0 = Debug|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Debug|x64.ActiveCfg = Debug|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|Win32.Build.0 = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|x64.ActiveCfg = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release DLL|x64.Build.0 = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release|Win32.ActiveCfg = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release|Win32.Build.0 = Release|Win32
+		{0FA29698-0D88-403D-ACF0-8C1EF13294EC}.Release|x64.ActiveCfg = Release|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug DLL|Win32.ActiveCfg = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug DLL|Win32.Build.0 = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug DLL|x64.ActiveCfg = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug DLL|x64.Build.0 = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug|Win32.Build.0 = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Debug|x64.ActiveCfg = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release DLL|Win32.ActiveCfg = Release|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release DLL|Win32.Build.0 = Release|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release DLL|x64.ActiveCfg = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release DLL|x64.Build.0 = Debug|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release|Win32.ActiveCfg = Release|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release|Win32.Build.0 = Release|Win32
+		{DC85237C-386C-4E5B-919E-83D2C4F35AA7}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

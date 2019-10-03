@@ -28,7 +28,6 @@ https://github.com/fcaruso/GLSLParametricCurve
 #ifndef PG_INIT_H
 #define PG_INIT_H
 
-#define randomValue ((float)rand()/(float)RAND_MAX)
 
 #define PG_SIZE_QUAD_ARRAY 4  // quads made of a 4-point triangle strip
 
@@ -87,7 +86,7 @@ enum pg_FBO_Update_samplers
 	pg_TVWPixelsSwap5,
 #endif
 	pg_Trk0_FBO_Update_sampler,
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 	pg_CATable_Update_sampler,
 #endif
 #ifdef GN
@@ -619,10 +618,10 @@ enum eVertexBufferObject
 /////////////////////////////////////////////////////////////////
 // Projection and view matrices for the shaders
 //////////////////////////////////////////////////////////////////////
-extern GLfloat projMatrix[16];
+extern GLfloat pg_orthoWindowProjMatrix[16];
 extern GLfloat doubleProjMatrix[16];
-extern GLfloat viewMatrix[16];
-extern GLfloat modelMatrix[16];
+extern GLfloat pg_identityViewMatrix[16];
+extern GLfloat pg_identityModelMatrix[16];
 #ifdef PG_SENSORS
 extern GLfloat modelMatrixSensor[16];
 #endif
@@ -634,6 +633,13 @@ extern GLuint pg_vaoID[pg_VAOCount];
 extern GLuint pg_vboID[pg_VBOCount];
 #ifdef PG_SENSORS
 extern unsigned int quadSensor_vao;
+#endif
+#ifdef PG_MESHES
+extern unsigned int **mesh_vao;
+extern string **mesh_IDs;
+extern int *nbMeshesPerMeshFile;
+extern int **nbFacesPerMesh;
+extern unsigned int **mesh_index_vbo;
 #endif
 
 // geometrical data
@@ -760,11 +766,16 @@ int pg_displayMessage_update(int indMesg);
 #endif
 
 void pg_initParticlePosition_Texture(void);
+
 #ifdef PG_SENSORS
 void SensorInitialization(void);
 void assignSensorPositions(void);
 void assignSensorActivations(void);
 void sensor_sample_setUp_interpolation(void);
+#endif
+
+#ifdef PG_MESHES
+void MeshInitialization(void);
 #endif
 
 #endif

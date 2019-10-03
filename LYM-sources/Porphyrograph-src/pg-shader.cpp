@@ -45,6 +45,9 @@
 #if defined (CAVERNEPLATON)
 #include "pg_shader_body_decl_CavernePlaton.cpp"
 #endif
+#if defined (TEMPETE)
+#include "pg_shader_body_decl_Tempete.cpp"
+#endif
 #if defined (ULM)
 #include "pg_shader_body_decl_Ulm.cpp"
 #endif
@@ -60,8 +63,8 @@
 #ifdef INTERFERENCE
 #include "pg_shader_body_decl_interference.cpp"
 #endif
-#ifdef MALAUSSENA
-#include "pg_shader_body_decl_Malaussena.cpp"
+#ifdef CAAUDIO
+#include "pg_shader_body_decl_CAaudio.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_shader_body_decl_dasein.cpp"
@@ -130,7 +133,7 @@ GLint uniform_Update_vp_proj;
 GLint uniform_Update_vp_2fv_width_height;
 GLint uniform_Update_fs_4fv_W_H_time_currentScene;
 GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
@@ -218,7 +221,7 @@ GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 #endif
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 GLint uniform_Update_texture_fs_CATable;
 #endif
 #ifdef GN
@@ -406,6 +409,18 @@ GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency;
 // GLint uniform_Sensor_fs_2fv_frameno_invert;
 #endif
 
+#ifdef PG_MESHES
+/////////////////////////////////////////////////////////////////////////
+// MESH SHADER
+// MESH SHADER UNIFORM VARIABLES
+GLint uniform_Mesh_vp_model;
+GLint uniform_Mesh_vp_view;
+GLint uniform_Mesh_vp_proj;
+
+// Mesh SHADER TEXTURE IDS
+GLint uniform_Mesh_texture_fs_decal;         // Mesh texture
+#endif
+
 
 //////////////////////////////////////////////////////////////
 // UTILITIES
@@ -575,6 +590,9 @@ void pg_loadAllShaders(void) {
 #if defined (CAVERNEPLATON)
 #include "pg_shader_body_bind_CavernePlaton.cpp"
 #endif
+#if defined (TEMPETE)
+#include "pg_shader_body_bind_Tempete.cpp"
+#endif
 #if defined (ULM)
 #include "pg_shader_body_bind_Ulm.cpp"
 #endif
@@ -590,8 +608,8 @@ void pg_loadAllShaders(void) {
 #ifdef INTERFERENCE
 #include "pg_shader_body_bind_interference.cpp"
 #endif
-#ifdef MALAUSSENA
-#include "pg_shader_body_bind_Malaussena.cpp"
+#ifdef CAAUDIO
+#include "pg_shader_body_bind_CAaudio.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_shader_body_bind_dasein.cpp"
@@ -771,7 +789,7 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_W_H_time_currentScene");
 	uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift");
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	uniform_Update_fs_4fv_CAseed_type_size_loc
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAseed_type_size_loc");
 #endif
@@ -911,7 +929,7 @@ void pg_loadAllShaders(void) {
 	uniform_Update_fs_4fv_CAType_SubType_blurRadius
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_fs_4fv_CAType_SubType_blurRadius");
 #endif
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 	uniform_Update_texture_fs_CATable
 		= glGetUniformLocation(shader_programme[pg_shader_Update], "uniform_Update_texture_fs_CATable");
 #endif
@@ -1026,7 +1044,7 @@ void pg_loadAllShaders(void) {
 
 		|| (uniform_Update_fs_4fv_W_H_time_currentScene == -1)
 		|| (uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift == -1)
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 		|| (uniform_Update_fs_4fv_CAseed_type_size_loc == -1)
 #endif
 
@@ -1118,7 +1136,7 @@ void pg_loadAllShaders(void) {
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 		|| (uniform_Update_fs_4fv_CAType_SubType_blurRadius == -1)
 #endif
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 		|| (uniform_Update_texture_fs_CATable == -1)
 #endif
 #ifdef GN
@@ -1174,7 +1192,7 @@ void pg_loadAllShaders(void) {
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 		fprintf(stderr, "Could not bind uniforms Update uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght : %d\n", uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght);
 #endif
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 		fprintf(stderr, "Could not bind uniforms uniform_Update_fs_4fv_CAseed_type_size_loc : %d\n", uniform_Update_fs_4fv_CAseed_type_size_loc);
 #endif
 #ifdef PG_NB_PIXEL_MODES
@@ -1186,7 +1204,7 @@ void pg_loadAllShaders(void) {
 #ifdef PG_WITH_CAMERA_CAPTURE
 		fprintf(stderr, "Could not bind uniforms Update uniform_Update_texture_fs_Camera_frame : %d, uniform_Update_texture_fs_Camera_BG : %d\n", uniform_Update_texture_fs_Camera_frame, uniform_Update_texture_fs_Camera_BG);
 #endif
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 		fprintf(stderr, "Could not bind uniforms uniform_Update_texture_fs_CATable : %d\n",  uniform_Update_texture_fs_CATable );
 #endif
 #ifdef GN
@@ -1592,7 +1610,7 @@ void pg_loadAllShaders(void) {
 
 #ifdef PG_SENSORS
 	////////////////////////////////////////
-	// shader parameeter bindings
+	// shader parameter bindings
 	uniform_Sensor_vp_model
 		= glGetUniformLocation(shader_programme[pg_shader_Sensor], "vp_modelMatrix");
 	uniform_Sensor_vp_view
@@ -1615,6 +1633,29 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Sensor_texture_fs_decal == -1)
 		) {
 		fprintf(stderr, "Could not bind uniforms Sensor uniform_Sensor_vp_proj : %d, uniform_Sensor_vp_view : %d, uniform_Sensor_vp_model : %d, uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency : %d , uniform_Sensor_texture_fs_decal : %d\n", uniform_Sensor_vp_proj, uniform_Sensor_vp_view, uniform_Sensor_vp_model, uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency, uniform_Sensor_texture_fs_decal);
+		// return 0;
+	}
+#endif
+
+#ifdef PG_MESHES
+	////////////////////////////////////////
+	// shader parameter bindings
+	uniform_Mesh_vp_model
+		= glGetUniformLocation(shader_programme[pg_shader_Mesh], "vp_modelMatrix");
+	uniform_Mesh_vp_view
+		= glGetUniformLocation(shader_programme[pg_shader_Mesh], "vp_viewMatrix");
+	uniform_Mesh_vp_proj
+		= glGetUniformLocation(shader_programme[pg_shader_Mesh], "vp_projMatrix");
+
+	uniform_Mesh_texture_fs_decal
+		= glGetUniformLocation(shader_programme[pg_shader_Mesh], "fs_decal"); // previous pass output
+
+	if ((uniform_Mesh_vp_proj == -1)
+		|| (uniform_Mesh_vp_view == -1)
+		|| (uniform_Mesh_vp_model == -1)
+		|| (uniform_Mesh_texture_fs_decal == -1)
+		) {
+		fprintf(stderr, "Could not bind uniforms Mesh uniform_Mesh_vp_proj : %d, uniform_Mesh_vp_view : %d, uniform_Mesh_vp_model : %d, uniform_Mesh_texture_fs_decal : %d\n", uniform_Mesh_vp_proj, uniform_Mesh_vp_view, uniform_Mesh_vp_model, uniform_Mesh_texture_fs_decal);
 		// return 0;
 	}
 #endif

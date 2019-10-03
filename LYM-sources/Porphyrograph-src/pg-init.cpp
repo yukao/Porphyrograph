@@ -29,12 +29,15 @@ float damping = 0.f;
 /////////////////////////////////////////////////////////////////
 // Projection and view matrices for the shaders
 //////////////////////////////////////////////////////////////////////
-GLfloat projMatrix[16];
+GLfloat pg_orthoWindowProjMatrix[16];
 GLfloat doubleProjMatrix[16];
-GLfloat viewMatrix[16];
-GLfloat modelMatrix[16];
+GLfloat pg_identityViewMatrix[16];
+GLfloat pg_identityModelMatrix[16];
 #ifdef PG_SENSORS
 GLfloat modelMatrixSensor[16];
+#endif
+#ifdef PG_MESHES
+GLfloat **modelMatrixMeshes;
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -93,6 +96,14 @@ float quadSensor_texCoords[] = {
 	0.0f,         0.0f,
 	0.0f,         0.0f
 };
+#endif
+
+#ifdef PG_MESHES
+unsigned int **mesh_vao = NULL;
+string **mesh_IDs = NULL;
+int *nbMeshesPerMeshFile = NULL;
+int **nbFacesPerMesh = NULL;
+unsigned int **mesh_index_vbo = NULL;
 #endif
 
 // particle curves
@@ -861,8 +872,8 @@ void pg_initGeometry_quads(void) {
 	// sensor layouts
 	///////////////////////////////////////////////////////////////////////////////////////
 	int indLayout;
-	
-#ifndef MALAUSSENA
+
+#ifndef CAAUDIO
 	int indSens;
 
 	// square grid
@@ -955,7 +966,7 @@ void pg_initGeometry_quads(void) {
 	///////////////////////////////////////////////////////////////////////////////////////
 	int indActivation;
 
-#ifndef MALAUSSENA
+#ifndef CAAUDIO
 	// no activation
 	indActivation = 0;
 	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
@@ -1030,6 +1041,17 @@ void pg_initGeometry_quads(void) {
 	//  {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
 	//   {16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31},
 	//   {32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47}};
+#endif
+
+
+#ifdef PG_MESHES
+	/////////////////////////////////////////////////////////////////////
+	// LOADS MESHES FROM BLENDER FILES
+	// point positions and texture coordinates
+
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		load_mesh_obj(pg_Mesh_fileNames[indMeshFile], indMeshFile);
+	}
 #endif
 
 
@@ -1117,8 +1139,8 @@ void pg_initGeometry_quads(void) {
 // SENSOR INITIALIZATION
 /////////////////////////////////////////////////////////////////
 
-void SensorInitialization(void) {
 #ifdef PG_SENSORS
+void SensorInitialization(void) {
 #ifdef PG_RENOISE
 	sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
 #endif
@@ -1153,10 +1175,8 @@ void SensorInitialization(void) {
 		// resets the clock for replaying the sample if sensor triggered again
 		sample_play_start[indSample] = -1.0f;
 	}
-#endif
 }
 
-#ifdef PG_SENSORS
 void assignSensorPositions(void) {
 	int indLayout = max(0, min(sensor_layout, PG_NB_MAX_SENSOR_LAYOUTS - 1));
 	// non random layout: copy
@@ -1170,8 +1190,8 @@ void assignSensorPositions(void) {
 	// random layout: regenerate
 	else {
 		for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
-			sensorPositions[3 * indSensor] = leftWindowWidth / 2.0f + leftWindowWidth / 2.0f * (2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
-			sensorPositions[3 * indSensor + 1] = window_height / 2.0f + window_height / 2.0f * (2.0f * ((float)rand() / (float)RAND_MAX) - 1.0f);
+			sensorPositions[3 * indSensor] = leftWindowWidth / 2.0f + leftWindowWidth / 2.0f * (2.0f * rand_0_1 - 1.0f);
+			sensorPositions[3 * indSensor + 1] = window_height / 2.0f + window_height / 2.0f * (2.0f * rand_0_1 - 1.0f);
 			sensorPositions[3 * indSensor + 2] = 0.1f;
 		}
 	}
@@ -1213,7 +1233,7 @@ void sensor_sample_setUp_interpolation(void) {
 		}
 
 		for (int indSensor = 0; indSensor < min(PG_NB_SENSORS, nbhybridSensors); indSensor++) {
-			int count = (int)round(((float)rand() / (float)RAND_MAX) * PG_NB_SENSORS);
+			int count = (int)round(rand_0_1 * PG_NB_SENSORS);
 			for (int ind = 0; ind < PG_NB_SENSORS; ind++) {
 				int translatedIndex = (count + PG_NB_SENSORS) % PG_NB_SENSORS;
 				if (!hybridized[translatedIndex]) {
@@ -1245,6 +1265,36 @@ void sensor_sample_setUp_interpolation(void) {
 	// std::cout << "format: " << format << "\n";
 	// std::cout << "msg: " << message << "\n";
 }
+#endif
+
+
+#ifdef PG_MESHES
+void MeshInitialization(void) {
+	mesh_vao = new unsigned int *[pg_nb_Mesh_files];
+	mesh_index_vbo = new unsigned int *[pg_nb_Mesh_files];
+	mesh_IDs = new string *[pg_nb_Mesh_files];
+	nbMeshesPerMeshFile = new int[pg_nb_Mesh_files];
+	nbFacesPerMesh = new int *[pg_nb_Mesh_files];
+
+	// mesh data
+	pointBuffer = new GLfloat *[pg_nb_Mesh_files];
+	texCoordBuffer = new GLfloat *[pg_nb_Mesh_files];
+	normalBuffer = new GLfloat *[pg_nb_Mesh_files];
+	indexBuffer = new GLuint *[pg_nb_Mesh_files];
+	for (int indMeshInFile = 0; indMeshInFile < pg_nb_Mesh_files; indMeshInFile++) {
+		pointBuffer[indMeshInFile] = NULL;
+		texCoordBuffer[indMeshInFile] = NULL;
+		normalBuffer[indMeshInFile] = NULL;
+		indexBuffer[indMeshInFile] = NULL;
+	}
+
+	// shader variable pointers
+	uniform_mesh_model = new GLint[pg_nb_Mesh_files];
+	uniform_mesh_view = new GLint[pg_nb_Mesh_files];
+	uniform_mesh_proj = new GLint[pg_nb_Mesh_files];
+	uniform_mesh_light = new GLint[pg_nb_Mesh_files];
+}
+
 #endif
 
 
@@ -1395,20 +1445,19 @@ bool pg_initFBO(void) {
 // MATRIX INITIALIZATION
 /////////////////////////////////////////////////////////////////
 void pg_initRenderingMatrices(void) {
-	memset((char *)viewMatrix, 0, 16 * sizeof(float));
-	memset((char *)modelMatrix, 0, 16 * sizeof(float));
+	memset((char *)pg_identityViewMatrix, 0, 16 * sizeof(float));
+	memset((char *)pg_identityModelMatrix, 0, 16 * sizeof(float));
 #ifdef PG_SENSORS
 	memset((char *)modelMatrixSensor, 0, 16 * sizeof(float));
 #endif
-
-	viewMatrix[0] = 1.0f;
-	viewMatrix[5] = 1.0f;
-	viewMatrix[10] = 1.0f;
-	viewMatrix[15] = 1.0f;
-	modelMatrix[0] = 1.0f;
-	modelMatrix[5] = 1.0f;
-	modelMatrix[10] = 1.0f;
-	modelMatrix[15] = 1.0f;
+	pg_identityViewMatrix[0] = 1.0f;
+	pg_identityViewMatrix[5] = 1.0f;
+	pg_identityViewMatrix[10] = 1.0f;
+	pg_identityViewMatrix[15] = 1.0f;
+	pg_identityModelMatrix[0] = 1.0f;
+	pg_identityModelMatrix[5] = 1.0f;
+	pg_identityModelMatrix[10] = 1.0f;
+	pg_identityModelMatrix[15] = 1.0f;
 #ifdef PG_SENSORS
 	modelMatrixSensor[0] = 1.0f;
 	modelMatrixSensor[5] = 1.0f;
@@ -1428,7 +1477,7 @@ void pg_initRenderingMatrices(void) {
 		0.0, (GLfloat)(2.0 / (t - b)), 0.0, 0.0,
 		0.0, 0.0, (GLfloat)(2.0 / (f - n)), 0.0,
 		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0 };
-	memcpy((char *)projMatrix, mat, 16 * sizeof(float));
+	memcpy((char *)pg_orthoWindowProjMatrix, mat, 16 * sizeof(float));
 	// printf("Orthographic projection l %.2f r %.2f b %.2f t %.2f n %.2f f %.2f\n" , l,r,b,t,n,f);
 
 	r = (float)doubleWindowWidth;

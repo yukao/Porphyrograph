@@ -89,7 +89,7 @@ bool sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 // sample choice
 // current sample choice
 int sample_choice[PG_NB_SENSORS];
-#ifndef MALAUSSENA
+#ifndef CAAUDIO
 // all possible sensor layouts
 int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 },
@@ -169,7 +169,7 @@ GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
 GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
 GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
 
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
 #endif
@@ -234,6 +234,11 @@ int NbTextChapters = 0;
 #ifdef PG_SENSORS
 GLuint Sensor_texture_rectangle = NULL_ID;
 cv::Mat Sensor_image;
+#endif
+
+#ifdef PG_MESHES
+GLuint Mesh_texture_rectangle = NULL_ID;
+cv::Mat Mesh_image;
 #endif
 
 // video texture ID, image and camera
@@ -654,7 +659,7 @@ void readSensors(void) {
 }
 #endif
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 class GreyNote {
 public:
 	float grey;
@@ -664,30 +669,36 @@ void playChord() {
 	// line reading
 	GLubyte *rowColor = new GLubyte[3 * 1024];
 	GreyNote *rowGrey = new GreyNote[1024];
-	glReadPixels(0, 10,
-		1024, 1,
-		GL_RGB, GL_UNSIGNED_BYTE, rowColor);
+	// reads the 2nd horizontal line (from the top)
+	glReadPixels(0, 766, 1024, 1,
+				 GL_RGB, GL_UNSIGNED_BYTE, rowColor);
 	GLubyte *ptr = rowColor;
 	std::string float_string;
 	std::string int_string;
 	std::string message;
 	// message format
 	int nbGrey = 0;
+	//printf("Colors\n");
 	for (int indPixel = 0; indPixel < 1024; indPixel++) {
 		GLubyte r, g, b;
 		r = *(ptr++);
 		g = *(ptr++);
 		b = *(ptr++);
-		float greyVal = (r + g + b) / (255.f * 3.f);
+		//if (indPixel < 100) {
+		//	printf("(%d,%d,%d) ", int(r), int(g), int(b));
+		//}
+		float greyVal = (float(r) + float(g) + float(b)) / (255.f * 3.f);
 		if (greyVal > 0) {
 			rowGrey[nbGrey].note = indPixel;
 			rowGrey[nbGrey].grey = greyVal;
 			nbGrey++;
 		}
 	}
+	//printf("\n");
 
 	// no non null note
 	if (nbGrey <= 0) {
+		//printf("No note\n");
 		delete rowColor;
 		return;
 	}
@@ -695,9 +706,14 @@ void playChord() {
 	// less than 10 notes play them all
 	if (nbGrey < 10) {
 		std::string format = "";
-		for (int ind = 0; ind < nbGrey; ind++) {
+		for (int ind = 0; ind < 20; ind++) {
 			format += "f";
 		}
+		//printf("Less than 10 notes\n");
+		//for (int indGreyNote = 0; indGreyNote < nbGrey; indGreyNote++) {
+		//	printf("%d %.2f / ", rowGrey[nbGrey].note, rowGrey[nbGrey].grey);
+		//}
+		//printf("\n");
 
 		message = "/chord ";
 		// non null notes
@@ -712,6 +728,12 @@ void playChord() {
 			float_string = std::to_string(static_cast<long double>(rowGrey[indGreyNote].grey * 100.f));
 			// float_str.resize(4);
 			message += float_string;
+			if (indGreyNote < 10 - 1) {
+				message += float_string + " ";
+			}
+			else {
+				message += float_string;
+			}
 		}
 		// remaining nul notes to fill up to 10 notes in a chord
 		for (int indGreyNote = nbGrey; indGreyNote < 10; indGreyNote++) {
@@ -722,7 +744,12 @@ void playChord() {
 			// the intensity is null
 			float_string = std::to_string(static_cast<long double>(0.f));
 			// float_str.resize(4);
-			message += float_string;
+			if (indGreyNote < 10 - 1) {
+				message += float_string + " ";
+			}
+			else {
+				message += float_string;
+			}
 		}
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
@@ -732,18 +759,22 @@ void playChord() {
 		// notes are grouped by package of same size into metaNotes with a metaIntensity
 		// number minimal of notes per metanote
 		int nbNotesMinPerMetaNote = nbGrey / 10; // integer part
-												 // some metaNotes are built from 1 additional note
+		// some metaNotes are built from 1 additional note
 		int nbMetaNotesWithNbNMPMPlus1 = (nbGrey * 10) % 10; // first decimal
-															 // rank of the non null note
+		// rank of the non null note
 		int indGreyNote = 0;
 		// rank of the note inside the metaNote group
 		int indNotesMinPerMetaNote = 0;
+		// average note value
+		float metaNote[10] = { 0.f };
+		// average intensity values
+		float metaGrey[10] = { 0.f };
 		// builds the metaNotes from note groups
 		for (int indMetaNote = 0; indMetaNote < 10; indMetaNote++) {
 			// average note value
-			float metaNote = 0;
+			metaNote[indMetaNote] = 0.f;
 			// average intensity values
-			float metaGrey = 0;
+			metaGrey[indMetaNote] = 0.f;
 
 			// METANOTE SIZE
 			// number of notes building the metaNote
@@ -757,31 +788,31 @@ void playChord() {
 			// METANOTE computation
 			// average note and intensity value
 			for (int indLocalGreyNote = 0; indLocalGreyNote < nbNotes && indGreyNote < nbGrey; indLocalGreyNote++) {
-				metaGrey += rowGrey[indGreyNote].grey;
-				metaNote += rowGrey[indGreyNote].note * rowGrey[indGreyNote].grey;
+				metaGrey[indMetaNote] += rowGrey[indGreyNote].grey;
+				metaNote[indMetaNote] += rowGrey[indGreyNote].note * rowGrey[indGreyNote].grey;
 				indGreyNote++;
 			}
 
 			// AVERAGE VALUES
 			// the note is corrected by the sum of weights (intensities) to turn it into a barycenter
 			if (metaGrey > 0) {
-				metaNote /= metaGrey;
+				metaNote[indMetaNote] /= metaGrey[indMetaNote];
 			}
 			else {
-				metaNote = -1;
+				metaNote[indMetaNote] = -1;
 			}
 			if (nbNotes > 0) {
-				metaGrey /= nbNotes;
+				metaGrey[indMetaNote] /= nbNotes;
 			}
 
 			// MESSAGE CONSTRUCTION
 			// the note is converted into a frequency
 			int_string
 				= std::to_string(static_cast<long double>(440 * pow(pow(2., 1. / 12.),
-				(int(round(metaNote)) - 512) / 8)));
+				(int(round(metaNote[indMetaNote])) - 512) / 8)));
 			message += int_string + " ";
 			// the intensity is turned into decibels
-			float_string = std::to_string(static_cast<long double>(metaGrey * 100.f));
+			float_string = std::to_string(static_cast<long double>(metaGrey[indMetaNote] * 100.f));
 			// float_str.resize(4);
 			if (indMetaNote < 10 - 1) {
 				message += float_string + " ";
@@ -796,8 +827,19 @@ void playChord() {
 		}
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
+
+		//printf("More than 10 notes (%d)\n", indGreyNote);
+		//for (int indMetaNote = 0; indMetaNote < 10; indMetaNote++) {
+		//	printf("%.0f %.2f / ", metaNote[indMetaNote], metaGrey[indMetaNote]);
+		//}
+		//printf("\nPixels\n");
+		//for (int indNote = 0; indNote < min(100, nbGrey); indNote++) {
+		//	printf("%.2f ", rowGrey[indNote].grey);
+		//}
+		//printf("\n");
 	}
 	delete rowColor;
+	delete rowGrey;
 }
 #endif
 //////////////////////////////////////////////////////
@@ -888,7 +930,7 @@ void one_frame_variables_reset(void) {
 	}
 #endif
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	// CA seed
 	pg_CAseed_trigger = false;
 #endif
@@ -996,11 +1038,11 @@ void pg_update_camera_and_video_frame(void) {
 // scene update
 
 void pg_update_shader_uniforms(void) {
-//#ifdef TVW
-//	/////////////////////////////////////////////////////////////////////////
-//	// TRANSFER OF LOADED BUFFER IMAGES TO GPU
-//	GPUtransfer_Photo_buffer_dataTVW();
-//#endif
+	//#ifdef TVW
+	//	/////////////////////////////////////////////////////////////////////////
+	//	// TRANSFER OF LOADED BUFFER IMAGES TO GPU
+	//	GPUtransfer_Photo_buffer_dataTVW();
+	//#endif
 
 #ifdef GN
 #include "pg_update_body_GN.cpp"
@@ -1023,6 +1065,9 @@ void pg_update_shader_uniforms(void) {
 #if defined (CAVERNEPLATON)
 #include "pg_update_body_CavernePlaton.cpp"
 #endif
+#if defined (TEMPETE)
+#include "pg_update_body_Tempete.cpp"
+#endif
 #if defined (ULM)
 #include "pg_update_body_Ulm.cpp"
 #endif
@@ -1038,8 +1083,8 @@ void pg_update_shader_uniforms(void) {
 #ifdef INTERFERENCE
 #include "pg_update_body_interference.cpp"
 #endif
-#ifdef MALAUSSENA
-#include "pg_update_body_Malaussena.cpp"
+#ifdef CAAUDIO
+#include "pg_update_body_CAaudio.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_update_body_dasein.cpp"
@@ -1073,7 +1118,7 @@ void pg_update_shader_uniforms(void) {
 	repop_channels[6] = part_path_repop_6;
 	repop_channels[7] = part_path_repop_7;
 #endif
-	int selected_channel = int(floor(randomValue * (nb_repop_channels - 0.00001)));
+	int selected_channel = int(floor(rand_0_1 * (nb_repop_channels - 0.00001)));
 	int nbActChannels = 0;
 	for (int indCh = 0; indCh < PG_NB_PATHS + 1; indCh++) {
 		if (repop_channels[indCh]) {
@@ -1204,7 +1249,7 @@ void pg_update_shader_uniforms(void) {
 		0.f);
 #endif
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	if (pg_CAseed_trigger) {
 		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc,
 			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
@@ -1493,18 +1538,18 @@ void pg_update_shader_uniforms(void) {
 
 #if defined (TVW)
 	// image buffer layer weights
-	centralPhoto += photoJitterAmpl * fabs(float((double)rand() / (double)RAND_MAX - 0.5));
+	centralPhoto += photoJitterAmpl * fabs(rand_0_1 - 0.5f);
 	while (centralPhoto < 0) centralPhoto += PG_PHOTO_NB_TEXTURES;
 	while (centralPhoto >= PG_PHOTO_NB_TEXTURES) centralPhoto -= PG_PHOTO_NB_TEXTURES;
 	// float images_weights_variance = 10.0;
 	float dist[PG_PHOTO_NB_TEXTURES];
 	for (int ind = 0; ind < PG_PHOTO_NB_TEXTURES; ind++) {
 		//// the new value obtained by a gaussian around the central standard value
-		dist[ind] 
-			= std::min(std::min(fabs(ind - centralPhoto), 
-			                    fabs(ind + PG_PHOTO_NB_TEXTURES - centralPhoto)),
-				       fabs(ind - PG_PHOTO_NB_TEXTURES - centralPhoto));
-		pg_Photo_weightTVW[ind] 
+		dist[ind]
+			= std::min(std::min(fabs(ind - centralPhoto),
+				fabs(ind + PG_PHOTO_NB_TEXTURES - centralPhoto)),
+				fabs(ind - PG_PHOTO_NB_TEXTURES - centralPhoto));
+		pg_Photo_weightTVW[ind]
 			= std::max(0.f, 0.2f * (exp(-(dist[ind] * dist[ind]) / PG_MASK_VARIANCE) - 0.5f));
 		// std value variance 36.f
 		pg_Photo_weightTVW[ind] = .35f;
@@ -1526,8 +1571,8 @@ void pg_update_shader_uniforms(void) {
 	// printf("Jitter %.2f %.2f\n" ,maskJitterAmpl ,maskJitterPhase ); 
 	// image buffer layer and masks coordinate offsets
 	for (int ind = 0; ind < PG_PHOTO_NB_TEXTURES * 2; ind++) {
-		float imageCoordOffest = photoJitterAmpl * (float)((double)rand() / (double)RAND_MAX - 0.5);
-		float maskCoordOffest = maskJitterAmpl * float((double)rand() / (double)RAND_MAX - 0.5);
+		float imageCoordOffest = photoJitterAmpl * (rand_0_1 - 0.5f);
+		float maskCoordOffest = maskJitterAmpl * (rand_0_1 - 0.5f);
 		if (pg_Photo_position_noises[ind] + imageCoordOffest < 2.f
 			&& pg_Photo_position_noises[ind] + imageCoordOffest > -2.f) {
 			pg_Photo_position_noises[ind] += imageCoordOffest;
@@ -1583,7 +1628,7 @@ void pg_update_shader_uniforms(void) {
 	// in case of interpolation between CA1 and CA2 
 	if (!BrokenInterpolationVar[_CA1_CA2_weight]) {
 		if (CA1_CA2_weight < 1.0 && CA1_CA2_weight > 0.0) {
-			float randVal = (float)rand() / (float)RAND_MAX;
+			float randVal = rand_0_1;
 			if (randVal <= CA1_CA2_weight) {
 				CAInterpolatedType = CA1Type;
 				CAInterpolatedSubType = CA1SubType;
@@ -1616,8 +1661,8 @@ void pg_update_shader_uniforms(void) {
 #else
 		0.f, 0.f);
 #endif
-		// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
-	// printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
+	// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
+// printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 #endif
 
 #ifdef GN
@@ -1635,9 +1680,9 @@ void pg_update_shader_uniforms(void) {
 #endif
 	if (CAInterpolatedType_prev != CAInterpolatedType
 		|| CAInterpolatedSubType_prev != CAInterpolatedSubType) {
-		sprintf(AuxString, "/CAType %d", CAInterpolatedType); 
+		sprintf(AuxString, "/CAType %d", CAInterpolatedType);
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
-		sprintf(AuxString, "/CASubType %d", CAInterpolatedSubType); 
+		sprintf(AuxString, "/CASubType %d", CAInterpolatedSubType);
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 		CAInterpolatedType_prev = CAInterpolatedType;
 		CAInterpolatedSubType_prev = CAInterpolatedSubType;
@@ -1695,7 +1740,7 @@ void pg_update_shader_uniforms(void) {
 	if (!assigned) {
 		if (paths_x[0] >= 0 && paths_y[0] >= 0) {
 			glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height, paths_x[0], paths_y[0], (float)window_height);
-	   }
+		}
 		else {
 			glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height, -1000.f, -1000.f, (float)window_height);
 		}
@@ -1705,7 +1750,7 @@ void pg_update_shader_uniforms(void) {
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
 	// the center of the screen is the default position for this track
 	if (part_path_repulse_1 || part_path_follow_1) {
-		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(leftWindowWidth/2), float(window_height/2));
+		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(leftWindowWidth / 2), float(window_height / 2));
 	}
 	// special case for army radar: track 2 is assigned as repop path but is not replayed
 	// the center of the top left screen is the default position for this track
@@ -1773,9 +1818,9 @@ void pg_update_shader_uniforms(void) {
 #ifdef PG_SENSORS
 	/////////////////////////////////////////////////////////////////////////
 	// SENSOR SHADER UNIFORM VARIABLES
-	glUseProgram(shader_programme[pg_shader_Sensor]);
-	//glUniform2f(uniform_Sensor_fs_2fv_frameno_invert, 
-	//         (GLfloat)FrameNo, (invertAllLayers ? 1.0f : -1.0f) );
+	// glUseProgram(shader_programme[pg_shader_Sensor]);
+	// the variable of the sensor shader is updated individually before each sensor rendering
+	// no update is made globally for all the sensors
 #endif
 
 	printOglError(517);
@@ -1805,9 +1850,9 @@ void pg_ParticleAnimationPass(void) {
 
 	glBindVertexArray(pg_vaoID[pg_VAOQuad]);
 	
-	glUniformMatrix4fv(uniform_ParticleAnimation_vp_proj, 1, GL_FALSE, projMatrix);
-	glUniformMatrix4fv(uniform_ParticleAnimation_vp_view, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(uniform_ParticleAnimation_vp_model, 1, GL_FALSE, modelMatrix);
+	glUniformMatrix4fv(uniform_ParticleAnimation_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
+	glUniformMatrix4fv(uniform_ParticleAnimation_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+	glUniformMatrix4fv(uniform_ParticleAnimation_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler);
@@ -1849,7 +1894,7 @@ void pg_ParticleAnimationPass(void) {
 	// 0 & PG_NB_PARTICLE_INITIAL_IMAGES - 1
 	else if (part_initialization >= PG_NB_PARTICLE_INITIAL_IMAGES
 		&& part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES + 2) {
-		int indTex = int(floor(randomValue * PG_NB_PARTICLE_INITIAL_IMAGES)) % PG_NB_PARTICLE_INITIAL_IMAGES;
+		int indTex = int(floor(rand_0_1 * PG_NB_PARTICLE_INITIAL_IMAGES)) % PG_NB_PARTICLE_INITIAL_IMAGES;
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_images_texID[indTex][0]); // pos - speed 
 		printf("particle initialization %d texture %d\n", part_initialization, indTex);
 	}
@@ -1949,9 +1994,9 @@ void pg_UpdatePass(void) {
 	// activate shaders and sets uniform variable values    
 	glUseProgram(shader_programme[pg_shader_Update]);
 	glBindVertexArray(pg_vaoID[pg_VAOQuad]);
-	glUniformMatrix4fv(uniform_Update_vp_proj, 1, GL_FALSE, projMatrix);
-	glUniformMatrix4fv(uniform_Update_vp_view, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(uniform_Update_vp_model, 1, GL_FALSE, modelMatrix);
+	glUniformMatrix4fv(uniform_Update_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
+	glUniformMatrix4fv(uniform_Update_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+	glUniformMatrix4fv(uniform_Update_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
 #ifdef PG_NB_CA_TYPES
@@ -2002,7 +2047,7 @@ void pg_UpdatePass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Update_texture_fs_Trk3, pg_Trk3_FBO_Update_sampler);
 #endif
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 	glUniform1i(uniform_Update_texture_fs_CATable, pg_CATable_Update_sampler);
 #endif
 #ifdef GN
@@ -2173,7 +2218,7 @@ void pg_UpdatePass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
 
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 	// CA Data table (FBO attachment 11)
 	glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
@@ -2226,9 +2271,9 @@ void pg_ParticleRenderingPass( void ) {
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
-	glUniformMatrix4fv(uniform_ParticleSplat_vp_proj, 1, GL_FALSE, projMatrix);
-	glUniformMatrix4fv(uniform_ParticleSplat_vp_view, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(uniform_ParticleSplat_vp_model, 1, GL_FALSE, modelMatrix);
+	glUniformMatrix4fv(uniform_ParticleSplat_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
+	glUniformMatrix4fv(uniform_ParticleSplat_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+	glUniformMatrix4fv(uniform_ParticleSplat_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
 	// position/speed Particle update
@@ -2239,9 +2284,9 @@ void pg_ParticleRenderingPass( void ) {
 #if defined (CURVE_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
-	glUniformMatrix4fv(uniform_ParticleCurve_vp_proj, 1, GL_FALSE, projMatrix);
-	glUniformMatrix4fv(uniform_ParticleCurve_vp_view, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(uniform_ParticleCurve_vp_model, 1, GL_FALSE, modelMatrix);
+	glUniformMatrix4fv(uniform_ParticleCurve_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
+	glUniformMatrix4fv(uniform_ParticleCurve_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+	glUniformMatrix4fv(uniform_ParticleCurve_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
 	// position/speed Particle update
@@ -2340,9 +2385,9 @@ void pg_MixingPass(void) {
 	glUseProgram(shader_programme[pg_shader_Mixing]);
 	glBindVertexArray(pg_vaoID[pg_VAOQuad]);
 
-	glUniformMatrix4fv(uniform_Mixing_vp_proj, 1, GL_FALSE, projMatrix);
-	glUniformMatrix4fv(uniform_Mixing_vp_view, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(uniform_Mixing_vp_model, 1, GL_FALSE, modelMatrix);
+	glUniformMatrix4fv(uniform_Mixing_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
+	glUniformMatrix4fv(uniform_Mixing_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+	glUniformMatrix4fv(uniform_Mixing_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
 #ifdef PG_NB_CA_TYPES
@@ -2482,8 +2527,8 @@ void pg_MasterPass(void) {
 	glBindVertexArray(pg_vaoID[pg_VAOQuadMaster]);
 
 	glUniformMatrix4fv(uniform_Master_vp_proj, 1, GL_FALSE, doubleProjMatrix);
-	glUniformMatrix4fv(uniform_Master_vp_view, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(uniform_Master_vp_model, 1, GL_FALSE, modelMatrix);
+	glUniformMatrix4fv(uniform_Master_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+	glUniformMatrix4fv(uniform_Master_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -2608,11 +2653,11 @@ void pg_SensorPass(void) {
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_RECTANGLE, Sensor_texture_rectangle);
 
-	glUniformMatrix4fv(uniform_Sensor_vp_view, 1, GL_FALSE, viewMatrix);
+	glUniformMatrix4fv(uniform_Sensor_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
 	glUniformMatrix4fv(uniform_Sensor_vp_proj, 1, GL_FALSE, doubleProjMatrix);
 	printOglError(597);
 
-#ifndef MALAUSSENA
+#ifndef CAAUDIO
 	// sensor rendering
 	int Sensor_order[PG_NB_SENSORS] = { 8, 13, 14, 11, 7, 2, 1, 4, 12, 15, 3, 0, 9, 10, 5, 6 };
 #else
@@ -2637,7 +2682,7 @@ void pg_SensorPass(void) {
 		}
 		else {
 			// incremental sensor activation every 45 sec. = 720/16
-			if (sensor_activation == 5 
+			if (sensor_activation == 5
 				&& CurrentClockTime - sensor_last_activation_time > 45) {
 				sensor_last_activation_time = CurrentClockTime;
 				sensor_onOff[reindexed_Sensor] = true;
@@ -2668,6 +2713,127 @@ void pg_SensorPass(void) {
 
 	printOglError(595);
 	glDisable(GL_BLEND);
+}
+#endif
+
+
+#ifdef PG_MESHES
+//////////////////////////////////////////////////
+// PASS #6: MESH PASS
+void pg_MeshPass(void) {
+	glm::mat4 projPerspMatrix;
+	glm::mat4 viewPerspMatrix;
+	glm::mat4 modelPerspMatrix;
+
+	float eyePosition[3] = { 20.f, 0.f, 0.f };
+	float lookat[3] = { 0.f, 0.f, 0.f };
+
+	////////////////////////////////////////
+	// drawing meshes
+	// no transparency
+	glDisable(GL_BLEND);
+	// output buffer cleanup
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	// activate shaders and sets uniform variable values    
+	glUseProgram(shader_programme[pg_shader_Mesh]);
+
+	// perspective matrices
+	projPerspMatrix
+		= glm::perspective(float(PI/4.f), 4.f/3.f, 0.1f, 100.f);
+	viewPerspMatrix
+		= glm::lookAt(
+			glm::vec3(eyePosition[0], eyePosition[1], eyePosition[2]), // Camera in World Space
+			glm::vec3(lookat[0], lookat[1], lookat[2]), // and where it looks  at
+			glm::vec3(0, 0, 1)  // Head is up (set to 0,0,1)
+		);
+
+	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE, 
+		glm::value_ptr(projPerspMatrix));
+	glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
+		glm::value_ptr(viewPerspMatrix));
+/*
+	// standard matrices
+	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
+	glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
+*/
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
+			// transformed mesh according to configuration file
+			// Model matrix : a varying rotation matrix (around Oz)
+			glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile], 
+				pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
+			modelPerspMatrix = glm::translate(glm::mat4(1.0f),
+				glm::vec3(pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]));
+			modelPerspMatrix = glm::rotate(modelPerspMatrix, pg_Mesh_Rotation_angle[indMeshFile], myRotationAxis);
+			modelPerspMatrix = glm::scale(modelPerspMatrix,
+				glm::vec3(pg_Mesh_Scale[indMeshFile]));
+
+			// rotation update
+			pg_Mesh_Rotation_angle[indMeshFile] += 0.01f;
+			pg_Mesh_Rotation_X[indMeshFile] += 0.01f;
+			pg_Mesh_Rotation_Y[indMeshFile] += 0.01f;
+			pg_Mesh_Rotation_Z[indMeshFile] += 0.01f;
+
+			// forces no transformations on the volumes
+			// modelPerspMatrix = glm::mat4(1.0f);
+			glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
+							glm::value_ptr(modelPerspMatrix));
+
+			glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
+
+			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			// texture unit location
+			glUniform1i(uniform_Mesh_texture_fs_decal, 0);
+			// previous pass output
+			glActiveTexture(GL_TEXTURE0 + 0);
+			glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle);
+
+			// draw points from the currently bound VAO with current in-use shader
+			// glDrawArrays(GL_TRIANGLES, 0, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+			glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+
+			//printf("Display mesh %d/%d size (nb faces) %d\n", indMeshFile, indMeshInFile,
+			//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
+
+			printOglError(597);
+		}
+	}
+
+	// duplicates the Meshs in case of double window
+	if (double_window) {
+		for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+			for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
+				projPerspMatrix
+					= glm::perspectiveFov(float(PI / 4.f), 1024.f, 768.f, 0.1f, 100.f);
+				viewPerspMatrix
+					= glm::lookAt(
+						glm::vec3(eyePosition[0], eyePosition[1], eyePosition[2]), // Camera in World Space
+						glm::vec3(lookat[0], lookat[1], lookat[2]), // and where it looks  at
+						glm::vec3(0, 0, 1)  // Head is up (set to 0,0,1)
+					);
+
+				glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE,
+					glm::value_ptr(projPerspMatrix));
+				glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
+					glm::value_ptr(viewPerspMatrix));
+
+				// draw points from the currently bound VAO with current in-use shader
+				// glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+				glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+			}
+		}
+		printOglError(599);
+	}
+	glDisable(GL_DEPTH_TEST);
+
+	printOglError(598);
 }
 #endif
 
@@ -2912,16 +3078,22 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 	}
 #endif
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 #ifdef PG_PUREDATA_SOUND
 #ifdef PG_NB_CA_TYPES
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Update[((pg_FrameNo) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]); // drawing memory on odd and even frames for echo and sensors	
+	// drawing memory on odd and even frames for CA	
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec[(pg_FrameNo % 2)]); // drawing memory on odd and even frames for echo and sensors	
 	playChord();
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 #endif
 #endif
 #endif
   }
+
+#ifdef PG_MESHES
+  pg_MeshPass();
+#endif
+  printOglError(686);
 
 
   // // flushes OpenGL commands

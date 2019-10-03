@@ -41,6 +41,9 @@
 #if defined (CAVERNEPLATON)
 #include "pg_script_body_CavernePlaton.cpp"
 #endif
+#if defined (TEMPETE)
+#include "pg_script_body_Tempete.cpp"
+#endif
 #if defined (ULM)
 #include "pg_script_body_Ulm.cpp"
 #endif
@@ -56,8 +59,8 @@
 #ifdef INTERFERENCE
 #include "pg_script_body_interference.cpp"
 #endif
-#ifdef MALAUSSENA
-#include "pg_script_body_Malaussena.cpp"
+#ifdef CAAUDIO
+#include "pg_script_body_CAaudio.cpp"
 #endif
 #ifdef DASEIN
 #include "pg_script_body_dasein.cpp"
@@ -247,7 +250,7 @@ float lastBeatTime = 0.0f;
 // +++++++++++++++++++++++ CA SubType memory for CA on/off command ++++++++++
 int CASubTypeMem = 1;
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 pg_CAseed_types pg_CAseed_type = _pg_CAseed_dot_center;
 pg_CAseed_locations pg_CAseed_location = _pg_CAseed_loc_center;
 int pg_CAseed_coordinates[2] = { -1, -1 };
@@ -337,7 +340,7 @@ enum pg_stringCommands_IDs
 	_pen_colorPreset_minus,
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	_CAseed_dot_center,
 	_CAseed_dot,
 	_CAseed_h_line,
@@ -464,7 +467,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	{ "CAseed_dot_center", _CAseed_dot_center },
 	{ "CAseed_dot", _CAseed_dot },
 	{ "CAseed_h_line", _CAseed_h_line },
@@ -521,7 +524,7 @@ std::unordered_map<std::string, int> pg_stringCommands = {
 };
 // if (strcmp(newCommand, CmdString[indVar]
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordinates[2]) {
 	switch(location) {
 	case 	_pg_CAseed_loc_center: {
@@ -794,7 +797,7 @@ void pg_initializationScript(void) {
 	nb_blur_frames_2 = 0;
 #endif
 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	// CA seed
 	pg_CAseed_trigger = false;
 	pg_CAseed_type = _pg_CAseed_dot_center;
@@ -1000,6 +1003,8 @@ void pg_displaySceneVariables(void) {
 			}
 			else {
 				sprintf(AuxString, "/setup initial_setup"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/setup_1 __________"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/setup_2 __________"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 			}
 			sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			InterfaceInitializations();
@@ -1944,7 +1949,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 				indParam == _CA1SubType || indParam == _CA2SubType) {
 				// for CAType we choose to alternate randomly between both types, according
 				// to the proximity of floor or ceiling
-				float randVal = (float)rand() / (float)RAND_MAX;
+				float randVal = rand_0_1;
 				float thefloor = floor(scenario_or_gui_command_value);
 				float decimalPart = scenario_or_gui_command_value - thefloor;
 				if (randVal > decimalPart) {
@@ -2601,7 +2606,7 @@ void pg_keyStrokeScripts(int key) {
 	// +++++++++++++++++ CA SEEDING ++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	case'C':
 		pg_CAseed_trigger = true;
 		break;
@@ -3829,7 +3834,7 @@ void pg_aliasScript(char *command_symbol,
 		}
 		break;
 	}
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 	// +++++++++++++++++ CA SEEDING ++++++++++++++++++++++++++++
@@ -4228,9 +4233,9 @@ void pg_update_pulsed_colors(void) {
 	// the colors for drawing are inverted in case of inverted rendering, so that the drawing colors are not seen inverted
 #if !defined (CAVERNEPLATON) && !defined(ULM)
 	if (invertAllLayers) {
-		pulsed_pen_color[0] = value - pulsed_pen_color[0];
-		pulsed_pen_color[1] = value - pulsed_pen_color[1];
-		pulsed_pen_color[2] = value - pulsed_pen_color[2];
+		pulsed_pen_color[0] = 1.f - pulsed_pen_color[0];
+		pulsed_pen_color[1] = 1.f - pulsed_pen_color[1];
+		pulsed_pen_color[2] = 1.f - pulsed_pen_color[2];
 	}
 #endif
 	/***************************** SHOULD BE REACTIVATED WHEN THE INTERFACE CAN DISPLAY COLORS */

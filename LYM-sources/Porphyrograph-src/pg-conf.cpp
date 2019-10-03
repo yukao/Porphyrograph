@@ -118,6 +118,27 @@ pg_ClipArt_Colors_Types *pg_ClipArt_Colors = NULL;
 // subpath display
 bool *pg_ClipArt_SubPath = NULL;
 
+#ifdef PG_MESHES
+// MESHES
+// number of meshe files
+int pg_nb_Mesh_files = 0;
+// number of meshes in each file
+int *pg_nb_Meshes_in_each_file = NULL;
+// file names
+string *pg_Mesh_fileNames = NULL;
+// geometrical transformations
+float *pg_Mesh_Scale = NULL;
+float *pg_Mesh_Rotation_angle = NULL;
+float *pg_Mesh_Rotation_X = NULL;
+float *pg_Mesh_Rotation_Y = NULL;
+float *pg_Mesh_Rotation_Z = NULL;
+float *pg_Mesh_Translation_X = NULL;
+float *pg_Mesh_Translation_Y = NULL;
+float *pg_Mesh_Translation_Z = NULL;
+// color
+pg_ClipArt_Colors_Types *pg_Mesh_Colors = NULL;
+#endif
+
 /////////////////////////////////////////////////////
 // Default values for global variables
 /////////////////////////////////////////////////////
@@ -1135,7 +1156,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_nb_tot_SvgGpu_paths = 0;
 	for (int indClipArtFile = 0; indClipArtFile < pg_nb_ClipArt; indClipArtFile++) {
 		pg_ind_first_SvgGpu_path_in_ClipArt[indClipArtFile] = pg_nb_tot_SvgGpu_paths;
-			
+
 		std::getline(scenarioFin, line);
 		sstrem.clear();
 		sstrem.str(line);
@@ -1145,7 +1166,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstrem >> pg_nb_paths_in_ClipArt[indClipArtFile]; // number of paths in the file
 		pg_nb_tot_SvgGpu_paths += pg_nb_paths_in_ClipArt[indClipArtFile];
 		//printf("ind path file %d name %s nb paths %d\n", indClipArtFile, pg_ClipArt_fileNames[indClipArtFile].c_str(), pg_nb_paths_in_ClipArt[indClipArtFile]);
-		
+
 		// image initial geometry
 		sstrem >> pg_ClipArt_Scale[indClipArtFile];
 		sstrem >> pg_ClipArt_Translation_X[indClipArtFile];
@@ -1175,9 +1196,106 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstrem.str(line);
 	sstrem >> ID; // string /svg_clip_arts
 	if (ID.compare("/svg_clip_arts") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_clip_arts\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
+#ifdef PG_MESHES
+	////////////////////////////
+	////// MESHES
+	// the meshes are loaded inside the GPU and diplayed path by path
+
+	// Number of meshes
+	std::getline(scenarioFin, line);
+	sstrem.clear();
+	sstrem.str(line);
+	// sstrem = std::stringstream(line);
+	sstrem >> ID; // string svg_clip_arts
+	if (ID.compare("meshes") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"meshes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+
+	// number of obj files in the configuration file
+	sstrem >> pg_nb_Mesh_files;
+
+	pg_Mesh_fileNames = new string[pg_nb_Mesh_files];
+
+	pg_nb_Meshes_in_each_file = new int[pg_nb_Mesh_files];
+	memset((char *)pg_nb_Meshes_in_each_file, 0, pg_nb_Mesh_files * sizeof(int));
+
+	pg_Mesh_Scale = new float[pg_nb_Mesh_files];
+	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
+		pg_Mesh_Scale[indFile] = 1.0f;
+	}
+	pg_Mesh_Rotation_angle = new float[pg_nb_Mesh_files];
+	pg_Mesh_Rotation_X = new float[pg_nb_Mesh_files];
+	pg_Mesh_Rotation_Y = new float[pg_nb_Mesh_files];
+	pg_Mesh_Rotation_Z = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Rotation_angle, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char *)pg_Mesh_Rotation_X, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char *)pg_Mesh_Rotation_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char *)pg_Mesh_Rotation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Translation_X = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Translation_X, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Translation_Y = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Translation_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Translation_Z = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Translation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Colors = new pg_ClipArt_Colors_Types[pg_nb_Mesh_files];
+	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
+		pg_Mesh_Colors[indFile] = ClipArt_nat;
+	}
+
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		std::getline(scenarioFin, line);
+		sstrem.clear();
+		sstrem.str(line);
+
+		sstrem >> ID; // string svg_clip_art
+		sstrem >> pg_Mesh_fileNames[indMeshFile]; // file name
+		pg_Mesh_fileNames[indMeshFile]
+			= "Data/" + project_name + "-data/meshes/"
+			+ pg_Mesh_fileNames[indMeshFile];
+
+		// image initial geometry
+		sstrem >> pg_Mesh_Scale[indMeshFile];
+		sstrem >> pg_Mesh_Translation_X[indMeshFile];
+		sstrem >> pg_Mesh_Translation_Y[indMeshFile];
+		sstrem >> pg_Mesh_Translation_Z[indMeshFile];
+		sstrem >> pg_Mesh_Rotation_angle[indMeshFile];
+		sstrem >> pg_Mesh_Rotation_X[indMeshFile];
+		sstrem >> pg_Mesh_Rotation_Y[indMeshFile];
+		sstrem >> pg_Mesh_Rotation_Z[indMeshFile];
+		sstrem >> ID;
+		if (ID.compare("nat") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_nat;
+		}
+		else if (ID.compare("white") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_white;
+		}
+		else if (ID.compare("red") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_red;
+		}
+		else if (ID.compare("green") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_green;
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, red, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+		//printf("Mesh #%d scale %.2f translation (%.2f,%.2f,%.2f), rotation %.2f\n",
+		//	indMeshFile, pg_Mesh_Scale[indMeshFile], pg_Mesh_Translation_X[indMeshFile],
+		//	pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile],
+		//	pg_Mesh_Rotation_angle[indMeshFile]);
+	}
+
+	// /meshes
+	std::getline(scenarioFin, line);
+	sstrem.clear();
+	sstrem.str(line);
+	sstrem >> ID; // string /svg_clip_arts
+	if (ID.compare("/meshes") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/meshes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+#endif
 
 	////////////////////////////
 	////// PALETTE COLORSS

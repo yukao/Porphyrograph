@@ -10,7 +10,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 3
 /*#define ATELIERS_PORTATIFS
 */// #define WHITE_CIRCLE
-#define MIRRORED_PROJECTION
+// #define MIRRORED_PROJECTION
 
 bool      mute_second_screen;
 bool      invertAllLayers;
@@ -220,16 +220,16 @@ void main() {
     coordX -= width;
   }
   radiusCircle = int(length(vec2(coordX - 700 , coords.y - 525)));
-  if( radiusCircle > 525  ) {
+  if( radiusCircle > 440 ) {
     outColor0.rgb = vec3(0);
   }
   #ifdef WHITE_CIRCLE
-   else if( radiusCircle == 525 ) {
+   else if( radiusCircle == 440 ) {
     outColor0.rgb = vec3(1);
   }
   #endif
-  else if( radiusCircle > 490 ) {
-    outColor0.rgb *= ((525 - radiusCircle)/35.0);
+  else if( radiusCircle > 433 ) {
+    outColor0.rgb *= ((440 - radiusCircle)/7.0);
   }
 
   // cursor

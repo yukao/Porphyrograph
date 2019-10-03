@@ -47,6 +47,9 @@
 #if defined (CAVERNEPLATON)
 #include "pg_shader_header_CavernePlaton.h"
 #endif
+#if defined (TEMPETE)
+#include "pg_shader_header_Tempete.h"
+#endif
 #if defined (ULM)
 #include "pg_shader_header_Ulm.h"
 #endif
@@ -62,8 +65,8 @@
 #ifdef INTERFERENCE
 #include "pg_shader_header_interference.h"
 #endif
-#ifdef MALAUSSENA
-#include "pg_shader_header_Malaussena.h"
+#ifdef CAAUDIO
+#include "pg_shader_header_CAaudio.h"
 #endif
 #ifdef DASEIN
 #include "pg_shader_header_dasein.h"
@@ -98,6 +101,9 @@ enum ShaderFileTypes {
 	pg_shader_Sensor,
 #endif
 	pg_ClipArt,
+#ifdef PG_MESHES
+	pg_shader_Mesh,
+#endif
 	pg_NbShaderTotal
 };
 extern unsigned int shader_programme[pg_NbShaderTotal];
@@ -174,7 +180,7 @@ extern GLint uniform_Update_vp_proj;
 extern GLint uniform_Update_vp_2fv_width_height;
 extern GLint uniform_Update_fs_4fv_W_H_time_currentScene;
 extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-#ifdef MALAUSSENA
+#ifdef CAAUDIO
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
@@ -262,7 +268,7 @@ extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 #endif
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 extern GLint uniform_Update_texture_fs_CATable;
 #endif
 #ifdef GN
@@ -450,6 +456,18 @@ extern GLint uniform_Sensor_vp_proj;
 extern GLint uniform_Sensor_texture_fs_decal;         // sensor texture
 extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency;
 // extern GLint uniform_Sensor_fs_2fv_frameno_invert;
+#endif
+
+#ifdef PG_MESHES
+/////////////////////////////////////////////////////////////////////////
+// MESH SHADER
+// MESH SHADER UNIFORM VARIABLES
+extern GLint uniform_Mesh_vp_model;
+extern GLint uniform_Mesh_vp_view;
+extern GLint uniform_Mesh_vp_proj;
+
+// Mesh SHADER TEXTURE IDS
+extern GLint uniform_Mesh_texture_fs_decal;         // Mesh texture
 #endif
 
 #endif

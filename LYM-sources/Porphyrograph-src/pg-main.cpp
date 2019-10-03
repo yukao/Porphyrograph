@@ -207,6 +207,11 @@ int main(int argcMain, char **argvMain) {
 	SensorInitialization();
 #endif
 
+#ifdef PG_MESHES
+	// mesh initialization
+	MeshInitialization();
+#endif
+
 	// matrices, geometry, shaders and FBOs
 	pg_initRenderingMatrices();
 	printOglError(31);

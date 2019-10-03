@@ -53,7 +53,7 @@
 #include <math.h>    // math constants such as M_PI
 // define the round function for Visual Studio (not include in math.h)
 #ifdef _WIN32
-	#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
+	//#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
 	//double round(double x) { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
 #endif // _WIN32
 #include <stdlib.h>
@@ -70,6 +70,8 @@
 #include <fstream>
 #include <random>
 #include <algorithm>    // std::max / min
+
+#define rand_0_1 (float(rand()) / float(RAND_MAX))
 
 #ifndef INT_MAX
         #include <limits.h>
@@ -131,6 +133,13 @@
 #include <sys/stat.h>
 #endif
 
+#define GLM_FORCE_RADIANS
+#include <glm.hpp>
+#include <gtc/type_ptr.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtx/string_cast.hpp>
+
+
 #define OPENCV_3
 
 #ifndef OPENCV_3
@@ -175,7 +184,7 @@ using std::ifstream;
 
 #if defined (TVW) || defined (KOMPARTSD) // || defined (REUTLINGEN)
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
-#elif defined (GN) || defined (MALAUSSENA) || defined (CRITON)
+#elif defined (GN) || defined (CAAUDIO) || defined (CRITON)
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #elif defined (BONNOTTE) || defined (effe)
 #define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
@@ -211,7 +220,7 @@ using std::ifstream;
 // video noise
 
 // NB CAMERA IMAGE CUMUL MODES
-#ifndef MALAUSSENA
+#ifndef CAAUDIO
 #define PG_WITH_CAMERA_CAPTURE
 #endif
 
@@ -247,7 +256,7 @@ using std::ifstream;
 //#define CA_GAL_BIN_NEUMANN        4
 //#define CA_NEUMANN_BINARY         5
 #endif
-#if defined(MALAUSSENA)
+#if defined(CAAUDIO)
 #define PG_NB_CA_TYPES 7
 //#define CA_TOTALISTIC             0
 //#define CA_GENERATION             1
@@ -271,7 +280,7 @@ using std::ifstream;
 #if defined(KOMPARTSD)
 #undef PG_NB_CA_TYPES
 #endif
-#if !defined(GN) && !defined(MALAUSSENA) && !defined(TVW) && !defined(CRITON) && !defined(KOMPARTSD)
+#if !defined(GN) && !defined(CAAUDIO) && !defined(TVW) && !defined(CRITON) && !defined(KOMPARTSD)
 #define PG_NB_CA_TYPES 4
 //const uint CA_CYCLIC = 0;
 //const uint CA_CYCLIC_1 = 1;
@@ -289,7 +298,7 @@ using std::ifstream;
 #undef BLURRED_SPLAT_PARTICLES_TEXTURED
 #elif defined (DASEIN)
 #define CURVE_PARTICLES
-#elif defined (effe) || defined (DEMO) || defined (DEMO_BEZIER) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (MALAUSSENA) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (ULM)
+#elif defined (effe) || defined (DEMO) || defined (DEMO_BEZIER) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (CAAUDIO) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ULM)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -312,25 +321,28 @@ using std::ifstream;
 #endif
 
 // MASTER's MASK
-#if defined (CAVERNEPLATON) 
+#if defined (CAVERNEPLATON)
 #define PG_WITH_MASTER_MASK
 #endif
 
 
 // SENSORS
-#if defined (MALAUSSENA)
+#if defined (CAAUDIO)
 // #define PG_SENSORS
 // #define PG_NB_SENSORS 1
 // #define PG_NB_MAX_SENSOR_ACTIVATIONS 2
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined (DEMO) || defined (DEMO_BEZIER) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON)
+#if defined (DEMO) || defined (DEMO_BEZIER) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (TEMPETE)
 #define PG_SENSORS
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
 #define BEAT_DURATION (1.0f)
 #define PG_RENOISE
+#endif
+#if defined (CAVERNEPLATON) || defined (TEMPETE)
+#define PG_MESHES
 #endif
 #ifdef PG_SENSORS
 #define PG_SENSOR_TEXTURE_WIDTH 100
@@ -343,7 +355,7 @@ using std::ifstream;
 #endif
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (ULM) || defined (BICHES) || defined (VOLUSPA)
+#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ULM) || defined (BICHES) || defined (VOLUSPA)
 #define PG_BEZIER_PATHS
 #endif
 
@@ -392,6 +404,9 @@ using std::ifstream;
 #if defined (CAVERNEPLATON)
 #include "pg_script_header_CavernePlaton.h"
 #endif
+#if defined (TEMPETE)
+#include "pg_script_header_Tempete.h"
+#endif
 #if defined (ULM)
 #include "pg_script_header_Ulm.h"
 #endif
@@ -407,8 +422,8 @@ using std::ifstream;
 #ifdef INTERFERENCE
 #include "pg_script_header_interference.h"
 #endif
-#ifdef MALAUSSENA
-#include "pg_script_header_Malaussena.h"
+#ifdef CAAUDIO
+#include "pg_script_header_CAaudio.h"
 #endif
 #ifdef DASEIN
 #include "pg_script_header_dasein.h"
@@ -418,6 +433,9 @@ using std::ifstream;
 #endif
 
 #include "pg-udp.h"
+#ifdef PG_MESHES
+#include "pg-mesh.h"
+#endif
 #include "pg-script.h"
 #include "pg-update.h"
 #include "pg-texture.h"

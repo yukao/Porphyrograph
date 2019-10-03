@@ -216,6 +216,13 @@ bool pg_initTextures(void) {
 		100, 100);
 #endif
 
+#ifdef PG_MESHES
+	pg_loadTexture((char *)("Data/" + project_name + "-data/textures/platosHead.png").c_str(), &Mesh_image,
+		&Mesh_texture_rectangle, true, false, GL_RGBA8, GL_RGBA,
+		GL_UNSIGNED_BYTE, GL_LINEAR,
+		1024, 1024);
+#endif
+
 #if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	for (int ind = 0; ind < PG_NB_PARTICLE_INITIAL_IMAGES; ind++) {
 		string fileName = "Data/" + project_name + "-data/textures/PartInit_" + std::to_string(ind) + ".png";
@@ -225,7 +232,7 @@ bool pg_initTextures(void) {
 	}
 #endif
 
-#if defined (GN) || defined (MALAUSSENA)
+#if defined (GN) || defined (CAAUDIO)
 #define width_data_table 600
 #define height_data_table 200
 	pg_CATable =
@@ -353,8 +360,8 @@ void *pg_generateTexture(GLuint *textureID, pg_TextureFormat texture_format,
 #include "pg_CATable_GN.cpp"
 #endif
 
-#if defined (MALAUSSENA)
-#include "pg_CATable_Malaussena.cpp"
+#if defined (CAAUDIO)
+#include "pg_CATable_CAaudio.cpp"
 #endif
 
 
@@ -722,7 +729,7 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName,
 			b /= nbPixels;
 
 			// random particle (for some mixture)
-			int indParticle = int(randomValue * nb_particles) % nb_particles;
+			int indParticle = int(rand_0_1 * nb_particles) % nb_particles;
 			while (allocated[indParticle]) {
 				indParticle = (indParticle + 1) % nb_particles;
 			}
@@ -734,8 +741,8 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName,
 			color_radius[indParticle * 4 + 3] = partic_radius;
 			pos_speed[indParticle * 4] = float(indPixelCol);
 			pos_speed[indParticle * 4 + 1] = float(indPixelRow);
-			pos_speed[indParticle * 4 + 2] = randomValue - 0.5f;
-			pos_speed[indParticle * 4 + 3] = randomValue - 0.5f;
+			pos_speed[indParticle * 4 + 2] = rand_0_1 - 0.5f;
+			pos_speed[indParticle * 4 + 3] = rand_0_1 - 0.5f;
 			//if (abs(indRow - partic_height / 2) < 5 && abs(indCol - partic_width / 2) < 5) {
 			//	printf("col/row %dx%d ind part %d color %.1f %.1f %.1f rad %.1f  pos %.1f %.1f  speed %.1f %.1f \n",
 			//		indCol, indRow, indParticle,
@@ -1000,10 +1007,6 @@ int pg_initVideoCameraCapture(void) {
 	pg_camera_capture.open(camID);
 	sprintf(pg_camera_capture_name, "Camera_%d", camID);
 
-	// pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 960);
-	// pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
-	// higher values could be tried for width, fx 1280 x 720 
-
 	// to be checked in real time
 	// SHARPNESS
 	// minimum                 : 0
@@ -1036,8 +1039,19 @@ int pg_initVideoCameraCapture(void) {
 	// default_value           : 4000
 
 	/* cvSetCaptureProperty comment for see3cam */
-	//pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-	//pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	float window_ratio = float(leftWindowWidth) / window_height;
+	const float ratio_16_9 = 16.0f / 9.0f;
+	if (window_ratio >= ratio_16_9 || ratio_16_9 - window_ratio < window_ratio - 4.0 / 3.0) {
+		// pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+		pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+		// pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+		pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+	}
+	else {
+		pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 960);
+		pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	}
+	// higher values could be tried for width, fx 1280 x 720 (16:9) 960x720 (4:3)
 	//pg_camera_capture.set(CV_CAP_PROP_FPS, 60);
 
 	// initial camera frame reading

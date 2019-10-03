@@ -105,10 +105,6 @@ const float weights_GaussianBlur[8][10] = {
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS 3
 
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,0,0,0);
-
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
 const uint pg_FBO_fs_Pixels_attacht = 1;
@@ -958,6 +954,10 @@ void main() {
   fft_scale = uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_fft_scale[3];
 
   //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,0,0,0);
+
+  //////////////////////////
   // variables 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
@@ -1248,25 +1248,35 @@ void main() {
       // drawing occurs
       if( pathStroke > 0 ) {
         if(indPath < 4) {
-            curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                uniform_Update_fs_4fv_paths03_y[indPath] , 
-                uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                pathStroke );
             if(indPath == 0 && // rubber stylus
                                Cursor < 0) {
-                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * uniform_Update_fs_4fv_paths03_a[indPath]);
-                curTrack_grayLevel = 0;
+                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
+                    uniform_Update_fs_4fv_paths03_y[indPath] , 
+                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
+                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
+                    3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
+                    3 * uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
+                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
+                    pathStroke );
+                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
+                curTrack_color.rgb = vec3(0);
             }
-            curTrack_color.rgb
-            += curTrack_grayLevel
-                * uniform_Update_fs_4fv_paths03_a[indPath]
-                * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
-                            uniform_Update_fs_4fv_paths03_g[indPath] , 
-                            uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
+            else { // normal stylus
+                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
+                    uniform_Update_fs_4fv_paths03_y[indPath] , 
+                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
+                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
+                    uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
+                    uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
+                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
+                    pathStroke );
+                curTrack_color.rgb
+                  += curTrack_grayLevel
+                    * uniform_Update_fs_4fv_paths03_a[indPath]
+                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
+                                uniform_Update_fs_4fv_paths03_g[indPath] , 
+                                uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
+            }
         }
       }
     }

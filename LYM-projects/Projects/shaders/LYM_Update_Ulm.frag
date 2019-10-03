@@ -1696,19 +1696,23 @@ void main() {
               vec2(uniform_Update_fs_4fv_paths03_x[indPath],uniform_Update_fs_4fv_paths03_y[indPath]);
             isBegin = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] > 0);
             isEnd = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] < 0);
-            curTrack_grayLevel =  out_gray_drawing( 
-                uniform_Update_fs_4fv_paths03_RadiusX[indPath] );
             if(indPath == 0 && // rubber stylus
                                Cursor < 0) {
+                curTrack_grayLevel =  out_gray_drawing( 
+                    3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ); // rubber radius is made 3 times larger than regular pen
                 out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
-                curTrack_grayLevel = 0;
+                curTrack_color.rgb = vec3(0);
             }
-            curTrack_color.rgb
-            += curTrack_grayLevel
-                * uniform_Update_fs_4fv_paths03_a[indPath]
-                * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
-                            uniform_Update_fs_4fv_paths03_g[indPath] , 
-                            uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
+            else { // normal stylus
+                curTrack_grayLevel =  out_gray_drawing( 
+                    uniform_Update_fs_4fv_paths03_RadiusX[indPath] );
+                curTrack_color.rgb
+                  += curTrack_grayLevel
+                    * uniform_Update_fs_4fv_paths03_a[indPath]
+                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
+                                uniform_Update_fs_4fv_paths03_g[indPath] , 
+                                uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
+            }
         }
         else {
             int indPathRel = indPath - 4;
