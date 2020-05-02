@@ -1,3 +1,4 @@
 # Porphyrograph
-Porphyrograph is Lola and Yukao Meet's visual engine http://lolaandyukaomeet.com/index.php/art-and-technology
+Porphyrograph is Yukao Nagemi's visual engine https://yukaonagemi.com
+Use also by Lola and Yukao Meet duo https://lolaandyukaomeet.com
 # Porphyrograph
