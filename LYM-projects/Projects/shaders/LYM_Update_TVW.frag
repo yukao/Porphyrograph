@@ -153,7 +153,7 @@ uniform vec4 uniform_Update_fs_4fv_paths03_BrushID;
 uniform vec4 uniform_Update_fs_4fv_paths03_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths03_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
-uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
+uniform vec4 uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_paths03_r;
 uniform vec4 uniform_Update_fs_4fv_paths03_g;
@@ -163,7 +163,6 @@ uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 
-uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
@@ -1746,10 +1745,6 @@ void main() {
 
   //////////////////////////
   // variables 
-
-  vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
-
   // frame number
   frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
@@ -2075,21 +2070,18 @@ void main() {
   }
   if( currentPhotoTrack == 1 ) {
     out_track1_FBO.rgb 
-      = clamp(imageBufferColor * (vec3(photo_value) + photo_value_pulse * pulse * flashValueCoef) , 0 , 1 );
+      = clamp(imageBufferColor * (vec3(photo_value) * (1 + flashValueCoef) , 0 , 1 );
+    // out_track1_FBO.rgb 
+    //  = clamp(imageBufferColor * (vec3(photo_value) + photo_value_pulse * pulse * flashValueCoef) , 0 , 1 );
     // out_track1_FBO.rgb = imageBufferColor;
 
-    // photo_satur photo_satur_pulse
-    vec3 pulsed_satur = vec3(photo_satur) + photo_satur_pulse * pulse;
+    // video_satur
     //  public-domain function by Darel Rex Finley
     float  powerColor = sqrt( (out_track1_FBO.r)*(out_track1_FBO.r) * .299 +
                                (out_track1_FBO.g)*(out_track1_FBO.g) * .587 +
                                (out_track1_FBO.b)*(out_track1_FBO.b) * .114 ) ;
-    out_track1_FBO.r = clamp( powerColor 
-      + (out_track1_FBO.r - powerColor) * pulsed_satur.r , 0 , 1 );
-    out_track1_FBO.g = clamp( powerColor 
-      + (out_track1_FBO.g - powerColor) * pulsed_satur.g , 0 , 1 );
-    out_track1_FBO.b = clamp( powerColor 
-      + (out_track1_FBO.b - powerColor) * pulsed_satur.b , 0 , 1 );
+    out_track1_FBO.rgb = clamp( powerColor 
+      + (out_track1_FBO.rgb - vec3(powerColor)) * video_satur , 0 , 1 );
 
     // image contrast
     //  from http://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/
@@ -2210,9 +2202,9 @@ void main() {
 
   //////////////////////////////////////
   // FLASH BACK FROM CA LAYER TO BG LAYER
-  // if no flashback uniform_Update_fs_4fv_repop_Color_flashCABGWght.w == 0
+  // if no flashback uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w == 0
   out_localColor_FBO.rgb = clamp( out_localColor_FBO.rgb 
-            + uniform_Update_fs_4fv_repop_Color_flashCABGWght.w * out_CA_FBO.rgb , 0 , 1 );
+            + uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w * out_CA_FBO.rgb , 0 , 1 );
 
   //////////////////////////////////////
   //////////////////////////////////////
@@ -2276,7 +2268,7 @@ void main() {
         + randomCA.y * 462.0
         + randomCA.z * 8000.0 ) ) {
         out_localColor_FBO.rgb 
-        = uniform_Update_fs_4fv_repop_Color_flashCABGWght.rgb;
+        = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.rgb;
     }
   }
 

@@ -30,6 +30,9 @@ my $SCENARIO = 9;
 
 my $pad_len = 12;
 
+my $separator_config = "\t";
+my $separator_scenario = "\t";
+
 # command to regenerate cpp files + shaders: to be called after each change of variables in the scenario
 # perl song\cmd\PG_confGenerator_song-v1.prl song\configuration\LYM_song-head-single.csv song\scenarios\LYM_song-scenario-v1.csv song\shaders\LYM_Update_song.frag song\shaders\LYM_Update_song_full.frag song\shaders\LYM_Mixing_song.frag song\shaders\LYM_Mixing_song_full.frag song\shaders\LYM_ParticleRender_song.frag song\shaders\LYM_ParticleRender_song_full.frag song\shaders\LYM_Master_song.frag song\shaders\LYM_Master_song_full.frag ..\Porphyrograph\Porphyrograph-song-src\pg_script_header.h ..\Porphyrograph\Porphyrograph-song-src\pg_script_body.cpp  ..\Porphyrograph\Porphyrograph-song-src\pg_shader_header.h ..\Porphyrograph\Porphyrograph-song-src\pg_shader_body_decl.cpp ..\Porphyrograph\Porphyrograph-song-src\pg_shader_body_bind.cpp ..\Porphyrograph\Porphyrograph-song-src\pg_update_body.cpp
 
@@ -205,6 +208,9 @@ else {
 }
 
 my $line = <INPUT_CONFIG_TXT>;
+if(!($line =~ /\t/)) {
+	$separator_config = ",";
+}
 my $mode = $COMMENT;
 my $value = 0;
 while (!eof(INPUT_CONFIG_TXT)) {
@@ -264,8 +270,8 @@ while (!eof(INPUT_CONFIG_TXT)) {
 		$line = <INPUT_CONFIG_TXT>;
     }
     elsif( $mode == $UDP_LOCAL_SERVER ) {
-		$line =~ s/^\t+//;
-		my @values = split /\t/ , $line;
+		$line =~ s/^${separator_config}+//;
+		my @values = split /${separator_config}/ , $line;
 		my $nb_servers = $values[1];
 		print $nb_servers." servers / ";
 		$line = <INPUT_CONFIG_TXT>;
@@ -292,8 +298,8 @@ while (!eof(INPUT_CONFIG_TXT)) {
 		$line = <INPUT_CONFIG_TXT>;
     }
     elsif( $mode == $UDP_REMOTE_CLIENT ) {
-		$line =~ s/^\t+//;
-		my @values = split /\t/ , $line;
+		$line =~ s/^${separator_config}+//;
+		my @values = split /${separator_config}/ , $line;
 		my $nb_clients = $values[1];
 		print $nb_clients." clients\n";
 		$line = <INPUT_CONFIG_TXT>;
@@ -324,18 +330,18 @@ while (!eof(INPUT_CONFIG_TXT)) {
     elsif( $mode == $SPECIFICATION ) {
 		# variable rank -> comment
 		chomp $line;
-		$line =~ s/\t+$//;
+		$line =~ s/${separator_config}+$//;
 		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
 		$line = <INPUT_CONFIG_TXT>;
 
 		# variable verbatim
 		chomp $line;
 		# -> nb of variables 
-		my @verbatims = split /\t/ , $line;
+		my @verbatims = split /${separator_config}/ , $line;
 		my $nb_variables = @verbatims - 1;
 		printf "%d configuration variables\n" , $nb_variables;
 		# -> comment in the header file
-		$line =~ s/\t+$//;
+		$line =~ s/${separator_config}+$//;
 		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
 		$line = <INPUT_CONFIG_TXT>;
 
@@ -343,35 +349,35 @@ while (!eof(INPUT_CONFIG_TXT)) {
 		# builds two times variable  array because the variable
 		# and constant declaration commands destruct the variable list
 		chomp $line;
-		my @config_types = split /\t/ , $line;
+		my @config_types = split /${separator_config}/ , $line;
 		my $frontTag  = shift(@config_types);
 		if( $frontTag ne "TYPE") {
 			die "TYPE line expected not [$frontTag]!";
 		}
-		my @config_typesCopy = split /\t/ , $line;
+		my @config_typesCopy = split /${separator_config}/ , $line;
 		shift(@config_typesCopy);
-		my @config_typesCopyCopy = split /\t/ , $line;
+		my @config_typesCopyCopy = split /${separator_config}/ , $line;
 		shift(@config_typesCopyCopy);
 		$line = <INPUT_CONFIG_TXT>;
 
 		# variable strings (used for alias commands from PD 
 		# and for variable & initial values declarations)
 		chomp $line;
-		my @config_ids = split /\t/ , $line;
+		my @config_ids = split /${separator_config}/ , $line;
 		$frontTag  = shift(@config_ids);
 		if( $frontTag ne "ID") {
 			die "ID line expected not [$frontTag]!";
 		}
 		# builds three times variable strings array because the variable
 		# and constant declaration commands detruct the variable list
-		my @config_idsCopy = split /\t/ , $line;
+		my @config_idsCopy = split /${separator_config}/ , $line;
 		shift(@config_idsCopy);
-		my @config_idsCopyCopy = split /\t/ , $line;
+		my @config_idsCopyCopy = split /${separator_config}/ , $line;
 		shift(@config_idsCopyCopy);
-		my @config_idsCopyCopyCopy = split /\t/ , $line;
+		my @config_idsCopyCopyCopy = split /${separator_config}/ , $line;
 		shift(@config_idsCopyCopyCopy);
 		# var IDs -> comment in the config file
-		$line =~ s/\t+$//;
+		$line =~ s/${separator_config}+$//;
 		$line = <INPUT_CONFIG_TXT>;
 		
 		############################### constant declarations
@@ -416,7 +422,7 @@ while (!eof(INPUT_CONFIG_TXT)) {
 		############################### configuration variable declarations
 		# extern configuration variable types & pointers declarations
    		printf OUTPUT_SCRIPT_HEADER_FILE "enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };\n";
-   		printf OUTPUT_SCRIPT_HEADER_FILE "enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n";
+   		printf OUTPUT_SCRIPT_HEADER_FILE "enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n";
    		printf OUTPUT_SCRIPT_HEADER_FILE "extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];\n";
    		printf OUTPUT_SCRIPT_HEADER_FILE "extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];\n";
 
@@ -457,6 +463,9 @@ my @pulsing_modes;
 my %pulsing_modes_dict;
 $line = <INPUT_SCENARIO_TXT>;
 chomp $line;
+if(!($line =~ /\t/)) {
+	$separator_scenario = ",";
+}
 while (!eof(INPUT_SCENARIO_TXT)) {
     chomp $line;
     if( $line =~ m/^RANK/ ) {
@@ -491,8 +500,8 @@ while (!eof(INPUT_SCENARIO_TXT)) {
 	}
     elsif( $mode == $SCENARIO ) {
 		chomp $line;
-		$line =~ s/^\t+//;
-		my @values = split /\t/ , $line;
+		$line =~ s/^${separator_scenario}+//;
+		my @values = split /${separator_scenario}/ , $line;
 		my $nb_scenes = $values[1];
 		print $nb_scenes." scenes: ";
 		$line = <INPUT_SCENARIO_TXT>;
@@ -500,8 +509,8 @@ while (!eof(INPUT_SCENARIO_TXT)) {
     elsif( $mode == $SCENE ) {
 		# scene name and duration
 		chomp $line;
-		$line =~ s/^\t+//;
-		my @values = split /\t/ , $line;
+		$line =~ s/^${separator_scenario}+//;
+		my @values = split /${separator_scenario}/ , $line;
 		print $values[1].", ";
 		$line = <INPUT_SCENARIO_TXT>;
 
@@ -526,18 +535,18 @@ while (!eof(INPUT_SCENARIO_TXT)) {
     elsif( $mode == $SPECIFICATION ) {
 		# variable rank -> comment
 		chomp $line;
-		$line =~ s/\t+$//;
+		$line =~ s/${separator_scenario}+$//;
 		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
 		$line = <INPUT_SCENARIO_TXT>;
 
 		# variable verbatim
 		chomp $line;
 		# -> nb of variables 
-		my @verbatims = split /\t/ , $line;
+		my @verbatims = split /${separator_scenario}/ , $line;
 		my $nb_variables = @verbatims - 1;
 		printf "%d scenario variables\n" , $nb_variables;
 		# -> comment in the header file
-		$line =~ s/\t+$//;
+		$line =~ s/${separator_scenario}+$//;
 		printf OUTPUT_SCRIPT_HEADER_FILE "// " . $line . "\n";
 		$line = <INPUT_SCENARIO_TXT>;
 
@@ -545,57 +554,57 @@ while (!eof(INPUT_SCENARIO_TXT)) {
 		# builds two times variable  array because the variable
 		# and constant declaration commands destruct the variable list
 		chomp $line;
-		@types = split /\t/ , $line;
+		@types = split /${separator_scenario}/ , $line;
 		my $frontTag  = shift(@types);
 		if( $frontTag ne "TYPE") {
 			die "TYPE line expected not [$frontTag]!";
 		}
-		@typesCopy = split /\t/ , $line;
+		@typesCopy = split /${separator_scenario}/ , $line;
 		shift(@typesCopy);
-		@typesCopyCopy = split /\t/ , $line;
+		@typesCopyCopy = split /${separator_scenario}/ , $line;
 		shift(@typesCopyCopy);
-		@typesCopyCopyCopy = split /\t/ , $line;
+		@typesCopyCopyCopy = split /${separator_scenario}/ , $line;
 		shift(@typesCopyCopyCopy);
 		$line = <INPUT_SCENARIO_TXT>;
 
 		# variable strings (used for alias commands from PD 
 		# and for variable & initial values declarations)
 		chomp $line;
-		@ids = split /\t/ , $line;
+		@ids = split /${separator_scenario}/ , $line;
 		$frontTag  = shift(@ids);
 		if( $frontTag ne "ID") {
 			die "ID line expected not [$frontTag]!";
 		}
 		# builds three times variable strings array because the variable
 		# and constant declaration commands detruct the variable list
-		@idsCopy = split /\t/ , $line;
+		@idsCopy = split /${separator_scenario}/ , $line;
 		shift(@idsCopy);
-		@idsCopyCopy = split /\t/ , $line;
+		@idsCopyCopy = split /${separator_scenario}/ , $line;
 		shift(@idsCopyCopy);
-		@idsCopyCopyCopy = split /\t/ , $line;
+		@idsCopyCopyCopy = split /${separator_scenario}/ , $line;
 		shift(@idsCopyCopyCopy);
-		@idsCopyCopyCopyCopy = split /\t/ , $line;
+		@idsCopyCopyCopyCopy = split /${separator_scenario}/ , $line;
 		shift(@idsCopyCopyCopyCopy);
-		@idstrings = split /\t/ , $line;
+		@idstrings = split /${separator_scenario}/ , $line;
 		shift(@idstrings);
 		# var IDs -> comment in the config file
-		$line =~ s/\t+$//;
+		$line =~ s/${separator_scenario}+$//;
 		$line = <INPUT_SCENARIO_TXT>;
 
-		# function pointers for specific additional updates
+		# function callBack pointers for specific additional updates
 		chomp $line;
-		@callBacks = split /\t/ , $line;
+		@callBacks = split /${separator_scenario}/ , $line;
 		$frontTag  = shift(@callBacks);
 		if( $frontTag ne "FUNCTION") {
 			die "FUNCTION line expected not [$frontTag]!";
 		}
-		@callBacksCopy = split /\t/ , $line;
+		@callBacksCopy = split /${separator_scenario}/ , $line;
 		shift(@callBacksCopy);
 		$line = <INPUT_SCENARIO_TXT>;
 
 		# string for message display on GUI
 		chomp $line;
-		@messageStrings = split /\t/ , $line;
+		@messageStrings = split /${separator_scenario}/ , $line;
 		$frontTag  = shift(@messageStrings);
 		if( $frontTag ne "GUI") {
 			die "GUI line expected not [$frontTag]!";
@@ -606,7 +615,7 @@ while (!eof(INPUT_SCENARIO_TXT)) {
 		#  WRITES THE SCENARIO VARIABLES AS SHADER INPUTS 
 		# destination shader for variables
 		chomp $line;
-		@target_shaders = split /\t/ , $line;
+		@target_shaders = split /${separator_scenario}/ , $line;
 		$frontTag = shift (@target_shaders);
 		if( $frontTag ne "SHADER") {
 			die "SHADER line expected not [$frontTag]!";
@@ -616,7 +625,7 @@ while (!eof(INPUT_SCENARIO_TXT)) {
 
 		# pulsed variables declaration
 		chomp $line;
-		@pulsing_modes = split /\t/ , $line;
+		@pulsing_modes = split /${separator_scenario}/ , $line;
 		$frontTag  = shift(@pulsing_modes);
 		if( $frontTag ne "PULSE") {
 			die "PULSE line expected not [$frontTag]!";
@@ -730,7 +739,7 @@ while (@messageStrings) {
 }
 printf OUTPUT_SCRIPT_BODY_FILE "};\n";
 
-# printf OUTPUT_SCRIPT_HEADER_FILE "enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n";
+# printf OUTPUT_SCRIPT_HEADER_FILE "enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n";
 printf OUTPUT_SCRIPT_BODY_FILE "PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = { \n";
 while (@pulsing_modes) {
 		my $pulsing_mode = shift(@pulsing_modes);
@@ -739,6 +748,9 @@ while (@pulsing_modes) {
 		}
 		elsif( $pulsing_mode eq "pulsed_absolute" ) {
     		printf OUTPUT_SCRIPT_BODY_FILE "  _pg_pulsed_absolute,\n";
+		}
+		elsif( $pulsing_mode eq "pulsed_uniform" ) {
+    		printf OUTPUT_SCRIPT_BODY_FILE "  _pg_pulsed_uniform,\n";
 		}
 		elsif( $pulsing_mode eq "pulsed_differential" ) {
     		printf OUTPUT_SCRIPT_BODY_FILE "  _pg_pulsed_differential,\n";
@@ -862,9 +874,16 @@ foreach my $target_shader_list (@target_shaders) { # $target_shader_list is * / 
 						$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind]. 
 							" * (1.f + pulse_average * " . $ParticleAnimation_fs_IDs[$ind] . "_pulse)";
 					}
+					elsif($pulsing_mode eq "pulsed_uniform") {
+						$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind]. 
+							" + pulse_average * " . $ParticleAnimation_fs_IDs[$ind] . "_pulse";
+					}
 					elsif($pulsing_mode eq "pulsed_differential") {
 						$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind]. 
 							" * (pulse_average - pulse_average_prec) * " . $ParticleAnimation_fs_IDs[$ind] . "_pulse";
+					}
+					else {
+						printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
 					}
 			 	}
 				$ParticleAnimation_bindingString_cpp .= " );\n";
@@ -923,9 +942,16 @@ foreach my $target_shader_list (@target_shaders) { # $target_shader_list is * / 
 					$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
 						" * (1.f + pulse_average * " . $Update_fs_IDs[$ind] . "_pulse)";
 				}
+				elsif($pulsing_mode eq "pulsed_uniform") {
+					$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
+						" + pulse_average * " . $Update_fs_IDs[$ind] . "_pulse";
+				}
 				elsif($pulsing_mode eq "pulsed_differential") {
 					$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
 						" * (pulse_average - pulse_average_prec) * " . $Update_fs_IDs[$ind] . "_pulse";
+				}
+				else {
+					printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
 				}
 		 	}
 			$Update_bindingString_cpp .= " );\n";
@@ -983,10 +1009,17 @@ foreach my $target_shader_list (@target_shaders) { # $target_shader_list is * / 
 					$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind]. 
 						" * (1.f + pulse_average * " . $Mixing_fs_IDs[$ind] . "_pulse)";
 				}
+				elsif($pulsing_mode eq "pulsed_uniform") {
+					$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind]. 
+						" + pulse_average * " . $Mixing_fs_IDs[$ind] . "_pulse";
+				}
 				elsif($pulsing_mode eq "pulsed_differential") {
 					$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
 						" * (pulse_average - pulse_average_prec) * " . $Mixing_fs_IDs[$ind] . "_pulse";
 				}
+				else {
+						printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+					}
 		 	}
 			$Mixing_bindingString_cpp .= " );\n";
 		 	$Mixing_fs_index = 0;
@@ -1045,10 +1078,17 @@ foreach my $target_shader_list (@target_shaders) { # $target_shader_list is * / 
 						$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind]. 
 							" * (1.f + pulse_average * " . $ParticleRender_fs_IDs[$ind] . "_pulse)";
 					}
+					elsif($pulsing_mode eq "pulsed_uniform") {
+						$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind]. 
+							" + pulse_average * " . $ParticleRender_fs_IDs[$ind] . "_pulse";
+					}
 					elsif($pulsing_mode eq "pulsed_differential") {
 						$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind]. 
 							" * (pulse_average - pulse_average_prec) * " . $ParticleRender_fs_IDs[$ind] . "_pulse";
 					}
+					else {
+							printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+						}
 			 	}
 				$ParticleRender_bindingString_cpp .= " );\n";
 			 	$ParticleRender_fs_index = 0;
@@ -1107,10 +1147,17 @@ foreach my $target_shader_list (@target_shaders) { # $target_shader_list is * / 
 					$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind]. 
 						" * (1.f + pulse_average * " . $Master_fs_IDs[$ind] . "_pulse)";
 				}
+				elsif($pulsing_mode eq "pulsed_uniform") {
+					$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind]. 
+						" + pulse_average * " . $Master_fs_IDs[$ind] . "_pulse";
+				}
 				elsif($pulsing_mode eq "pulsed_differential") {
 					$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind]. 
 						" * (pulse_average - pulse_average_prec) * " . $Master_fs_IDs[$ind] . "_pulse";
 				}
+				else {
+						printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+					}
 		 	}
 			$Master_bindingString_cpp .= " );\n";
 		 	$Master_fs_index = 0;
@@ -1157,10 +1204,17 @@ if(  $withParticleShaders ) {
 					$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind]. 
 						" * (1.f + pulse_average * " . $ParticleAnimation_fs_IDs[$ind] . "_pulse)";
 				}
+				elsif($pulsing_mode eq "pulsed_uniform") {
+					$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind]. 
+						" + pulse_average * " . $ParticleAnimation_fs_IDs[$ind] . "_pulse";
+				}
 				elsif($pulsing_mode eq "pulsed_differential") {
 					$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[$ind]. 
 						" * (pulse_average - pulse_average_prec) * " . $ParticleAnimation_fs_IDs[$ind] . "_pulse";
 				}
+				else {
+						printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+					}
 		 	}
 		 }
 		 else {
@@ -1181,10 +1235,17 @@ if(  $withParticleShaders ) {
 				$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[0]. 
 					" * (1.f + pulse_average * " . $ParticleAnimation_fs_IDs[0] . "_pulse)";
 			}
+			elsif($pulsing_mode eq "pulsed_uniform") {
+				$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[0]. 
+					" + pulse_average * " . $ParticleAnimation_fs_IDs[0] . "_pulse";
+			}
 			elsif($pulsing_mode eq "pulsed_differential") {
 				$ParticleAnimation_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleAnimation_fs_IDs[0]. 
 					" * (pulse_average - pulse_average_prec) * " . $ParticleAnimation_fs_IDs[0] . "_pulse";
 			}
+			else {
+					printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+				}
 		 }
 		$ParticleAnimation_bindingString_cpp .= " );\n";
 	 	$ParticleAnimation_fs_index = 0;
@@ -1228,10 +1289,17 @@ if( $Update_fs_index > 0 ) {
 				$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
 					" * (1.f + pulse_average * " . $Update_fs_IDs[$ind] . "_pulse)";
 			}
+			elsif($pulsing_mode eq "pulsed_uniform") {
+				$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
+					" + pulse_average * " . $Update_fs_IDs[$ind] . "_pulse";
+			}
 			elsif($pulsing_mode eq "pulsed_differential") {
 				$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[$ind]. 
 					" * (pulse_average - pulse_average_prec) * " . $Update_fs_IDs[$ind] . "_pulse";
 			}
+			else {
+					printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+				}
 	 	}
 	 }
 	 else {
@@ -1252,10 +1320,17 @@ if( $Update_fs_index > 0 ) {
 			$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[0]. 
 				" * (1.f + pulse_average * " . $Update_fs_IDs[0] . "_pulse)";
 		}
+		elsif($pulsing_mode eq "pulsed_uniform") {
+			$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[0]. 
+				" + pulse_average * " . $Update_fs_IDs[0] . "_pulse";
+		}
 		elsif($pulsing_mode eq "pulsed_differential") {
 			$Update_bindingString_cpp .= ",\n	      (GLfloat)" . $Update_fs_IDs[0]. 
 				" * (pulse_average - pulse_average_prec) * " . $Update_fs_IDs[0] . "_pulse";
 		}
+		else {
+				printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+			}
 	 }
 	$Update_bindingString_cpp .= " );\n";
  	$Update_fs_index = 0;
@@ -1297,10 +1372,17 @@ if( $Mixing_fs_index > 0 ) {
 				$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind]. 
 					" * (1.f + pulse_average * " . $Mixing_fs_IDs[$ind] . "_pulse)";
 			}
+			elsif($pulsing_mode eq "pulsed_uniform") {
+				$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind]. 
+					" + pulse_average * " . $Mixing_fs_IDs[$ind] . "_pulse";
+			}
 			elsif($pulsing_mode eq "pulsed_differential") {
 				$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[$ind]. 
 					" * (pulse_average - pulse_average_prec) * " . $Mixing_fs_IDs[$ind] . "_pulse";
 			}
+			else {
+					printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+				}
 	 	}
 	 }
 	 else {
@@ -1321,10 +1403,17 @@ if( $Mixing_fs_index > 0 ) {
 			$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[0]. 
 				" * (1.f + pulse_average * " . $Mixing_fs_IDs[0] . "_pulse)";
 		}
+		elsif($pulsing_mode eq "pulsed_uniform") {
+			$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[0]. 
+				" + pulse_average * " . $Mixing_fs_IDs[0] . "_pulse";
+		}
 		elsif($pulsing_mode eq "pulsed_differential") {
 			$Mixing_bindingString_cpp .= ",\n	      (GLfloat)" . $Mixing_fs_IDs[0]. 
 				" * (pulse_average - pulse_average_prec) * " . $Mixing_fs_IDs[0] . "_pulse";
 		}
+		else {
+				printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+			}
 	 }
 	$Mixing_bindingString_cpp .= " );\n";
  	$Mixing_fs_index = 0;
@@ -1359,10 +1448,17 @@ if(  $withParticleShaders ) {
 				$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind]. 
 					" * (1.f + pulse_average * " . $ParticleRender_fs_IDs[$ind] . "_pulse)";
 			}
+			elsif($pulsing_mode eq "pulsed_uniform") {
+				$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind]. 
+					" + pulse_average * " . $ParticleRender_fs_IDs[$ind] . "_pulse";
+			}
 			elsif($pulsing_mode eq "pulsed_differential") {
 				$ParticleRender_bindingString_cpp .= ",\n	      (GLfloat)" . $ParticleRender_fs_IDs[$ind]. 
 					" * (pulse_average - pulse_average_prec) * " . $ParticleRender_fs_IDs[$ind] . "_pulse";
 			}
+			else {
+					printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+				}
 	 	}
 		$ParticleRender_bindingString_cpp .= " );\n";
 	 	$ParticleRender_fs_index = 0;
@@ -1405,10 +1501,17 @@ if( $Master_fs_index > 0 ) {
 				$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind]. 
 					" * (1.f + pulse_average * " . $Master_fs_IDs[$ind] . "_pulse)";
 			}
+			elsif($pulsing_mode eq "pulsed_uniform") {
+				$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind]. 
+					" + pulse_average * " . $Master_fs_IDs[$ind] . "_pulse";
+			}
 			elsif($pulsing_mode eq "pulsed_differential") {
 				$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[$ind]. 
 					" * (pulse_average - pulse_average_prec) * " . $Master_fs_IDs[$ind] . "_pulse";
 			}
+			else {
+					printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+				}
 	 	}
 	}
  	else {
@@ -1429,10 +1532,17 @@ if( $Master_fs_index > 0 ) {
 			$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[0]. 
 				" * (1.f + pulse_average * " . $Master_fs_IDs[0] . "_pulse)";
 		}
+		elsif($pulsing_mode eq "pulsed_uniform") {
+			$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[0]. 
+				" + pulse_average * " . $Master_fs_IDs[0] . "_pulse";
+		}
 		elsif($pulsing_mode eq "pulsed_differential") {
 			$Master_bindingString_cpp .= ",\n	      (GLfloat)" . $Master_fs_IDs[0]. 
 				" * (pulse_average - pulse_average_prec) * " . $Master_fs_IDs[0] . "_pulse";
 		}
+		else {
+				printf("Unknown pulsing mode [%s]\n", $pulsing_mode ); die;
+			}
  	}
 	$Master_bindingString_cpp .= " );\n";
  	$Master_fs_index = 0;

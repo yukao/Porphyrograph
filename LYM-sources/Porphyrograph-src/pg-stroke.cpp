@@ -52,6 +52,12 @@ float **pg_Path_Time = NULL;
 struct pg_Path_Status_Struct *pg_Path_Status = NULL;
 int *pg_indPreviousFrameReading = NULL;
 
+#ifdef PG_BEZIER_PATHS
+// convex hull shipped to the GPU
+glm::vec2 pg_BezierControl[(PG_NB_PATHS + 1) * 4];
+glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
+glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
+#endif
 
 // pen_radius multiplicative factor for large pen_brush 
 float pen_radiusMultiplier = 1.0f;
@@ -546,78 +552,384 @@ void LoadPathFromXML(char *pathString, int indPath,
 //////////////////////////////////////////////////////////////////
 // CONVEX HULL 
 //////////////////////////////////////////////////////////////////
-// https://www.sanfoundry.com/cpp-program-implement-jarvis-march-find-convex-hull/
-// A C++ program to find convex hull of a set of points
-// Refer http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-// for explanation of orientation()
-
-// To find orientation of ordered triplet (p, q, r).
-// The function returns following values
-// 0 --> p, q and r are colinear
-// 1 --> Clockwise
-// 2 --> Counterclockwise
-
-int orientation(float p_x, float p_y, float q_x, float q_y, float r_x, float r_y)
-{
-	float val = (q_y - p_y) * (r_x - q_x) - (q_x - p_x) * (r_y - q_y);
-
-	if (val == 0)
-		return 0; // colinear
-	return (val > 0) ? 1 : 2; // clock or counterclock wise
+#ifdef PG_BEZIER_PATHS
+bool pointEquals(glm::vec2 p, glm::vec2 q) {
+	return p.x == q.x && p.y == q.y;
+};
+float distance(glm::vec2 p, glm::vec2 q) {
+	float dx = (p.x - q.x);
+	float dy = (p.y - q.y);
+	return sqrt(dx*dx + dy*dy);
+};
+bool left_oriented(glm::vec2 p1, glm::vec2 p2, glm::vec2 candidate) {
+	float det = (p2.x - p1.x) * (candidate.y - p1.y)
+		- (candidate.x - p1.x) * (p2.y - p1.y);
+	if (det > 0) return true;  // left-oriented 
+	if (det < 0) return false; // right oriented
+	// select the farthest point in case of colinearity
+	return distance(p1, candidate) > distance(p1, p2);
 }
+void convex_hull(glm::vec2 control_points[4], int *hull) {
+	// get leftmost point
+	int min = 0;
+	hull[0] = -1;
+	for (int i = 1; i < 4; i++) {
+		if (control_points[i].y < control_points[min].y) {
+			min = i;
+		}
+		hull[i] = -1;
+	}
 
-// Prints convex hull of a set of 4 points.
-void convexHull(float points_x[4], float points_y[4], int next[4])
-{
-	// Result should be initialized when calling the function
-	for (int i = 0; i < 4; i++)
-		next[i] = -1;
-
-	// Find the leftmost point
-	int leftmost_point = 0;
-	for (int i = 1; i < 4; i++)
-		if (points_x[i] < points_x[leftmost_point])
-			leftmost_point = i;
-
-	// Start from leftmost point, keep moving counterclockwise
-	// until reach the start point again
-	int current_point = leftmost_point;
-	int n = 4;
+	int hull_point = min;
+	int end_point;
+	int indHull = 0;
+	// walk the hull
 	do
 	{
-		int next_point;
+		hull[indHull++] = hull_point;
 
-		// Search for a point 'next_point' such that orientation(current_point, i, next_point) is
-		// counterclockwise for all points 'i'
-		next_point = (current_point + 1) % 4;
-		for (int i = 0; i < 4; i++)
-			if (orientation(points_x[current_point], points_y[current_point], points_x[i], points_y[i], points_x[next_point], points_y[next_point]) == 2)
-				next_point = i;
-
-		next[current_point] = next_point; // Add next_point to result as a next point of current_point
-		current_point = next_point; // Set current_point as next_point for next iteration
-
-		n--;
+		end_point = 0;
+		for (int i = 1; i < 4; i++) {
+			if (pointEquals(control_points[hull_point], control_points[end_point])
+				|| left_oriented(control_points[hull_point], control_points[end_point], control_points[i])) {
+				end_point = i;
+			}
+		}
+		hull_point = end_point;
 	}
-	while (current_point != leftmost_point && n >= 0);
+	/*
+	 * must compare coordinates values (and not simply objects)
+	 * for the case of 4 co-incident points
+	 */
+	while (!pointEquals(control_points[end_point], control_points[hull[0]]));
+}
 
-	// counts the number of next points
-	//*nb_next_points = 0;
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	if (next[i] != -1)
-	//		(*nb_next_points)++;
-	//}
+void hull_expanded_by_radius(glm::vec2 control_points[4], int *hull,
+	float radius, glm::vec2 hull_points[4]) {
+	// copies the coordinates of the hull points
+	glm::vec2 inner_hull_points[4];
+	int nb_hull_points = 0;
+	for (int i = 0; i < 4; i++) {
+		if (hull[i] >= 0 && hull[i] < 4) {
+			inner_hull_points[i] = control_points[hull[i]];
+			nb_hull_points++;
+		}
+		else {
+			inner_hull_points[i] = glm::vec2(PG_OUT_OF_SCREEN_CURSOR, PG_OUT_OF_SCREEN_CURSOR);
+		}
+		hull_points[i].x = PG_OUT_OF_SCREEN_CURSOR;
+		hull_points[i].y = PG_OUT_OF_SCREEN_CURSOR;
+	}
+	// expands each segment by its normal and looks for the intersection of the expanded segments, as new hull points
+	// (1) quad or triangle
+	if (nb_hull_points >= 3) {
+		for (int i = 0; i < 4; i++) {
+			if (inner_hull_points[i].x != PG_OUT_OF_SCREEN_CURSOR
+				&& inner_hull_points[i].y != PG_OUT_OF_SCREEN_CURSOR) {
+				int next_i = (i + 1) % 4;
+				int prev_i = (i - 1 + 4) % 4;
+				while ((inner_hull_points[next_i].x == PG_OUT_OF_SCREEN_CURSOR
+					|| inner_hull_points[next_i].y == PG_OUT_OF_SCREEN_CURSOR)
+					&& next_i != i) {
+					next_i = (next_i + 1) % 4;
+				}
+				while ((inner_hull_points[prev_i].x == PG_OUT_OF_SCREEN_CURSOR
+					|| inner_hull_points[prev_i].y == PG_OUT_OF_SCREEN_CURSOR)
+					&& prev_i != i) {
+					prev_i = (prev_i - 1 + 4) % 4;
+				}
+				if (next_i != i && next_i != prev_i && prev_i != i) {
+					//printf("\nPrev - loc - next %d - %d - %d\n", prev_i, i, next_i);
+					glm::vec2 next_normal = inner_hull_points[next_i] - inner_hull_points[i];
+					next_normal = glm::vec2(-next_normal.y, next_normal.x);
+					float n = float(glm::length(next_normal));
+					if (n != 0) {
+						next_normal /= n;
+					}
+					glm::vec2 prev_normal = inner_hull_points[i] - inner_hull_points[prev_i];
+					prev_normal = glm::vec2(-prev_normal.y, prev_normal.x);
+					n = float(glm::length(prev_normal));
+					if (n != 0) {
+						prev_normal /= n;
+					}
+					glm::vec2 expanded_prev_points[2];
+					expanded_prev_points[0] = inner_hull_points[prev_i] + radius * prev_normal;
+					expanded_prev_points[1] = inner_hull_points[i] + radius * prev_normal;
+					glm::vec2 expanded_next_points[2];
+					expanded_next_points[0] = inner_hull_points[i] + radius * next_normal;
+					expanded_next_points[1] = inner_hull_points[next_i] + radius * next_normal;
+					//printf("Expanded points %.2f,%.2f   %.2f,%.2f   %.2f,%.2f   %.2f,%.2f \n",
+					//	expanded_prev_points[0].x, expanded_prev_points[0].y,
+					//	expanded_prev_points[1].x, expanded_prev_points[1].y,
+					//	expanded_next_points[0].x, expanded_next_points[0].y,
+					//	expanded_next_points[1].x, expanded_next_points[1].y);
+					// D_next next_normal.x * x + next_normal.y * y 
+					//        = next_normal.x * expanded_next_points[0].x + next_normal.y * expanded_next_points[0].y
+					float det_normals = prev_normal.x * next_normal.y - next_normal.x * prev_normal.y;
+					float c_prev = prev_normal.x * expanded_prev_points[0].x + prev_normal.y * expanded_prev_points[0].y;
+					float c_next = next_normal.x * expanded_next_points[0].x + next_normal.y * expanded_next_points[0].y;
+					if (det_normals != 0) {
+						hull_points[i].x = (c_prev * next_normal.y - c_next * prev_normal.y) / det_normals;
+						hull_points[i].y = (prev_normal.x * c_next - next_normal.x * c_prev) / det_normals;
+						//printf("hull_point %d %.2f,%.2f \n", i,
+						//	hull_points[i].x, hull_points[i].y);
+					}
+				}
+			}
+		}
+	}
+	// (2) segment
+	else if (nb_hull_points == 2) {
+		// builds a square around the point
+		glm::vec2 segment_points[2];
+		int ind_segment_points = 0;
+		for (int i = 0; i < 4; i++) {
+			if (inner_hull_points[i].x != PG_OUT_OF_SCREEN_CURSOR && inner_hull_points[i].y != PG_OUT_OF_SCREEN_CURSOR) {
+				segment_points[ind_segment_points++] = inner_hull_points[i];
+				if (ind_segment_points == 2) {
+					break;
+				}
+			}
+		}
+		glm::vec2 seg_vec = segment_points[1] - segment_points[0];
+		float n = float(glm::length(seg_vec));
+		if (n != 0) {
+			seg_vec /= n;
+		}
+		else { // point
+			hull_points[0] = segment_points[0] + glm::vec2(radius, radius);
+			hull_points[1] = segment_points[0] + glm::vec2(radius, -radius);
+			hull_points[2] = segment_points[0] + glm::vec2(-radius, -radius);
+			hull_points[3] = segment_points[0] + glm::vec2(-radius, radius);
+			return;
+		}
+		glm::vec2 normal = glm::vec2(-seg_vec.y, seg_vec.x);
+		hull_points[0] = segment_points[0] - radius * 1.5f * seg_vec - radius * 1.5f * normal;
+		hull_points[1] = segment_points[0] - radius * 1.5f * seg_vec + radius * 1.5f * normal;
+		hull_points[2] = segment_points[1] + radius * 1.5f * seg_vec + radius * 1.5f * normal;
+		hull_points[3] = segment_points[1] + radius * 1.5f * seg_vec - radius * 1.5f * normal;
+	}
+	// (1) point
+	else if (nb_hull_points == 1) {
+		// builds a square around the point
+		for (int i = 0; i < 4; i++) {
+			if (inner_hull_points[i].x != PG_OUT_OF_SCREEN_CURSOR && inner_hull_points[i].y != PG_OUT_OF_SCREEN_CURSOR) {
+				hull_points[0] = inner_hull_points[i] + glm::vec2(radius * 1.5f, radius * 1.5f);
+				hull_points[1] = inner_hull_points[i] + glm::vec2(radius * 1.5f, -radius * 1.5f);
+				hull_points[2] = inner_hull_points[i] + glm::vec2(-radius * 1.5f, -radius * 1.5f);
+				hull_points[3] = inner_hull_points[i] + glm::vec2(-radius * 1.5f, radius * 1.5f);
+			}
+		}
+	}
+}
+
+void boundingBox_expanded_by_radius(glm::vec2 control_points[4], 
+	float radius, glm::vec4 *boundingBox) {
+	// coords min/max
+	float min_x = control_points[0].x;
+	float max_x = control_points[0].x;
+	float min_y = control_points[0].y;
+	float max_y = control_points[0].y;
+	for (int i = 1; i < 4; i++) {
+		if (control_points[i].x != PG_OUT_OF_SCREEN_CURSOR
+			&& control_points[i].y != PG_OUT_OF_SCREEN_CURSOR) {
+			if (control_points[i].x < min_x) {
+				min_x = control_points[i].x;
+			}
+			else if (control_points[i].x > max_x) {
+				max_x = control_points[i].x;
+			}
+			if (control_points[i].y < min_y) {
+				min_y = control_points[i].y;
+			}
+			else if (control_points[i].y > max_y) {
+				max_y = control_points[i].y;
+			}
+		}
+	}
+	// expands the bounding box by 1.5 the radius
+	(*boundingBox).x = min_x - 1.5f * radius;
+	(*boundingBox).y = max_x + 1.5f * radius;
+	(*boundingBox).z = min_y - 1.5f * radius;
+	(*boundingBox).w = max_y + 1.5f * radius;
+}
 
 
-	// Print Result
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	if (next[i] != -1)
-	//		std::cout << "(" << points_x[i] << ", " << points_y[i] << ")\n";
+void build_bounding_box(int indPath) {
+	if (indPath >= (PG_NB_PATHS + 1)) {
+		return;
+	}
+
+	// convex hull shipped to the GPU
+	pg_BezierControl[indPath * 4 + 0] = glm::vec2(paths_x_prev[indPath], paths_y_prev[indPath]);
+	pg_BezierControl[indPath * 4 + 1] = glm::vec2(paths_xL[indPath], paths_yL[indPath]);
+	pg_BezierControl[indPath * 4 + 2] = glm::vec2(paths_xR[indPath], paths_yR[indPath]);
+	if (indPath == 0) {
+		pg_BezierControl[indPath * 4 + 3] = glm::vec2(paths_x_0_forGPU, paths_y_0_forGPU);
+	}
+	else {
+		pg_BezierControl[indPath * 4 + 3] = glm::vec2(paths_x[indPath], paths_y[indPath]);
+	}
+
+	// BOUNDING SOLUTION
+	// alternative possibility with a simple bounding box around the stroke
+	boundingBox_expanded_by_radius(&(pg_BezierControl[indPath * 4]),
+		paths_RadiusX[indPath] * 1.1f,
+		&(pg_BezierBox[indPath]));
+
+	// trace in the log file
+
+	//if (indPath == 0) {
+		//fprintf(pg_csv_file, "Points %.2f,%.2f   %.2f,%.2f   %.2f,%.2f   %.2f,%.2f (radius %.2f)\n",
+		//	pg_BezierControl[indPath * 4 + 0].x, pg_BezierControl[indPath * 4 + 0].y,
+		//	pg_BezierControl[indPath * 4 + 1].x, pg_BezierControl[indPath * 4 + 1].y,
+		//	pg_BezierControl[indPath * 4 + 2].x, pg_BezierControl[indPath * 4 + 2].y,
+		//	pg_BezierControl[indPath * 4 + 3].x, pg_BezierControl[indPath * 4 + 3].y,
+		//	paths_RadiusX[indPath]);
+		//fprintf(pg_csv_file, "Bounding box x-X y-X %.2f,%.2f   %.2f,%.2f \n\n",
+		//	pg_BezierBox[indPath * 4 + 0].x, pg_BezierBox[indPath * 4 + 0].y,
+		//	pg_BezierBox[indPath * 4 + 0].z, pg_BezierBox[indPath * 4 + 0].w);
 	//}
 }
 
+void build_expanded_hull(int indPath) {
+	if (indPath >= (PG_NB_PATHS + 1)) {
+		return;
+	}
+
+	// convex hull shipped to the GPU
+	pg_BezierControl[indPath * 4 + 0] = glm::vec2(paths_x_prev[indPath], paths_y_prev[indPath]);
+	pg_BezierControl[indPath * 4 + 1] = glm::vec2(paths_xL[indPath], paths_yL[indPath]);
+	pg_BezierControl[indPath * 4 + 2] = glm::vec2(paths_xR[indPath], paths_yR[indPath]);
+	if (indPath == 0) {
+		pg_BezierControl[indPath * 4 + 3] = glm::vec2(paths_x_0_forGPU, paths_y_0_forGPU);
+	}
+	else {
+		pg_BezierControl[indPath * 4 + 3] = glm::vec2(paths_x[indPath], paths_y[indPath]);
+	}
+
+	// CONVEX HULL SOLUTION
+	// checks whether the point is inside the convex hull of the control points
+	// the test is made by counting how many times a horizontal 1/2 line from the point
+	// cuts the hull, odd: outside, even: inside 
+	// checks whether current point is inside the hull of the bezier curve 
+	// and takes into consideration the radius
+
+	// does not work well because the points are often almost aligned resulting in a 
+	int path_next_in_hull[4];
+	for (int indPt = 0; indPt < 4; indPt++) {
+		path_next_in_hull[indPt] = -1;
+	}
+	convex_hull(&(pg_BezierControl[indPath * 4]), path_next_in_hull);
+	hull_expanded_by_radius(&(pg_BezierControl[indPath * 4]),
+		path_next_in_hull,
+		paths_RadiusX[indPath] * 1.5f,
+		&(pg_BezierHull[indPath * 4])); 
+
+	// trace in the log file
+
+	if (indPath == 0) {
+		//fprintf(pg_csv_file, "Points %.2f,%.2f   %.2f,%.2f   %.2f,%.2f   %.2f,%.2f (radius %.2f)\n",
+		//	pg_BezierControl[indPath * 4 + 0].x, pg_BezierControl[indPath * 4 + 0].y,
+		//	pg_BezierControl[indPath * 4 + 1].x, pg_BezierControl[indPath * 4 + 1].y,
+		//	pg_BezierControl[indPath * 4 + 2].x, pg_BezierControl[indPath * 4 + 2].y,
+		//	pg_BezierControl[indPath * 4 + 3].x, pg_BezierControl[indPath * 4 + 3].y,
+		//	paths_RadiusX[indPath]);
+		//fprintf(pg_csv_file, "Hull %d %d %d %d\n", path_next_in_hull[0], path_next_in_hull[1], path_next_in_hull[2], path_next_in_hull[3]);
+		//fprintf(pg_csv_file, "Hull points %.2f,%.2f   %.2f,%.2f   %.2f,%.2f   %.2f,%.2f \n\n",
+		//	pg_BezierHull[indPath * 4 + 0].x, pg_BezierHull[indPath * 4 + 0].y,
+		//	pg_BezierHull[indPath * 4 + 1].x, pg_BezierHull[indPath * 4 + 1].y,
+		//	pg_BezierHull[indPath * 4 + 2].x, pg_BezierHull[indPath * 4 + 2].y,
+		//	pg_BezierHull[indPath * 4 + 3].x, pg_BezierHull[indPath * 4 + 3].y);
+	}
+
+}
+
+void test_hull(void) {
+	glm::vec2 control_points[4];
+	glm::vec2 hull_points[4];
+	int path_next_in_hull[4] = { -1,-1,-1,-1 };
+	float rad = 1.0;
+	hull_points[0].x = 0.0f; hull_points[0].y = 0.0f;
+	hull_points[1].x = 0.0f; hull_points[1].y = 0.0f;
+	hull_points[2].x = 0.0f; hull_points[2].y = 0.0f;
+	hull_points[3].x = 0.0f; hull_points[3].y = 0.0f;
+
+	control_points[0].x = 5.0f; control_points[0].y = 5.0f;
+	control_points[1].x = 3.0f; control_points[1].y = 7.0f;
+	control_points[2].x = 9.0f; control_points[2].y = 6.0f;
+	control_points[3].x = 4.0f; control_points[3].y = 10.0f;
+	convex_hull(control_points, path_next_in_hull);
+	hull_expanded_by_radius(control_points,
+		path_next_in_hull,
+		rad,
+		hull_points);
+	printf("Points %.2f,%.2f   %.2f,%.2f   %.2f,%.2f   %.2f,%.2f \n",
+		control_points[0].x, control_points[0].y,
+		control_points[1].x, control_points[1].y,
+		control_points[2].x, control_points[2].y,
+		control_points[3].x, control_points[3].y);
+	printf("Hull %d %d %d %d\n", path_next_in_hull[0], path_next_in_hull[1], path_next_in_hull[2], path_next_in_hull[3]);
+	printf("Hull points %.2f,%.2f   %.2f,%.2f   %.2f,%.2f   %.2f,%.2f \n",
+		hull_points[0].x, hull_points[0].y,
+		hull_points[1].x, hull_points[1].y,
+		hull_points[2].x, hull_points[2].y,
+		hull_points[3].x, hull_points[3].y);
+
+	int countIntersections = 0;
+	glm::vec2 PixelLocation = glm::vec2(2.0f, 9.0f);
+	for (int i = 0; i < 4; i++) {
+		// quad or triangle if one of the points is inside the triangle defined by the 3 others
+		// the non out of screen points in the hull are given first
+		int indHull = (i + 1) % 4;
+		float xA = hull_points[i].x;
+		float yA = hull_points[i].y;
+		float xB = hull_points[indHull].x;
+		float yB = hull_points[indHull].y;
+		while (indHull != 0 && xB == PG_OUT_OF_SCREEN_CURSOR && yB == PG_OUT_OF_SCREEN_CURSOR) {
+			indHull = (indHull + 1) % 4;
+			xB = hull_points[indHull].x;
+			yB = hull_points[indHull].y;
+		}
+
+		if (yA != yB) {
+			float alpha_intersection = (PixelLocation.y  - yA) / (yB - yA);
+			if (alpha_intersection >= 0 && alpha_intersection <= 1) {
+				float x_intersection = (1 - alpha_intersection) * xA + alpha_intersection * xB;
+				if (PixelLocation.x <= x_intersection ) {
+					printf("Ind segment %d - %d x intersection %.2f alpha %.2f\n", i, indHull, x_intersection, alpha_intersection);
+					countIntersections++;
+				}
+				else {
+					printf("Ind segment %d - %d x intersection %.2f alpha %.2f\n", i, indHull, x_intersection, alpha_intersection);
+				}
+			}
+			else {
+				printf("Ind segment %d - %d alpha %.2f\n", i, indHull, alpha_intersection);
+			}
+		}
+		else {
+			if (PixelLocation.y == yA
+				&& (PixelLocation.x < xA) != (PixelLocation.x < xB)) {
+				countIntersections++;
+			}
+		}
+		if (indHull == 0) {
+			break;
+		}
+	}
+	// odd number of intersections -> outside the hull
+	if (countIntersections % 2 == 0) {
+		printf("Out\n");
+	}
+	else {
+		printf("in\n");
+	}
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////
+// scene update
 //////////////////////////////////////////////////////////////////
 // REPLAY PATHS  
 //////////////////////////////////////////////////////////////////
@@ -742,14 +1054,18 @@ void pg_replay_paths(float theTime) {
 			//indFrameReading = pg_indPreviousFrameReading[indPath] + 1;
 			paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 			paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+#ifdef PG_BEZIER_PATHS
 			paths_xL[indPath] = 0.f;
 			paths_yL[indPath] = 0.f;
+#endif
 		}
 		else {
 			paths_x_prev[indPath] = (float)pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath]];
 			paths_y_prev[indPath] = (float)pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath]];
+#ifdef PG_BEZIER_PATHS
 			paths_xL[indPath] = 2 * (float)pg_Path_Pos_x[indPath][pg_indPreviousFrameReading[indPath]] - (float)pg_Path_Pos_xR[indPath][pg_indPreviousFrameReading[indPath]];
 			paths_yL[indPath] = 2 * (float)pg_Path_Pos_y[indPath][pg_indPreviousFrameReading[indPath]] - (float)pg_Path_Pos_yR[indPath][pg_indPreviousFrameReading[indPath]];
+#endif
 		}
 		//printf("prev frame %d curr frame %d\n", pg_indPreviousFrameReading[indPath], indFrameReading);
 
@@ -757,14 +1073,18 @@ void pg_replay_paths(float theTime) {
 		// next frame for tangent and position
 		// negative values in case of curve break
 		if (isCurveBreakEnd) {
+#ifdef PG_BEZIER_PATHS
 			paths_xR[indPath] = 0.f;
 			paths_yR[indPath] = 0.f;
+#endif
 			paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 			paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		}
 		else {
+#ifdef PG_BEZIER_PATHS
 			paths_xR[indPath] = (float)pg_Path_Pos_xR[indPath][indFrameReading];
 			paths_yR[indPath] = (float)pg_Path_Pos_yR[indPath][indFrameReading];
+#endif
 			paths_x[indPath] = (float)pg_Path_Pos_x[indPath][indFrameReading];
 			paths_y[indPath] = (float)pg_Path_Pos_y[indPath][indFrameReading];
 		}
@@ -807,19 +1127,21 @@ void pg_replay_paths(float theTime) {
 		//}
 
 
-		// printf( "replay %d %.2f %.2f %.2f\n" , indPath ,
-		// 	      is_path_replay[ indPath ] ,
-		// 	      paths_x[ indPath -1 ] ,
-		// 	      paths_y[ indPath ] );
-
+#ifndef PG_BEZIER_PATHS
 		// management of brush ID (w/wo possible interpolation)
 		paths_BrushID[indPath] = pg_Path_BrushID[indPath][indFrameReading];
-
+#endif
 		// management of brush radius (w/wo possible interpolation)
 		paths_RadiusX[indPath] = (float)pg_Path_RadiusX[indPath][indFrameReading] * pen_radius_replay
 			* (1.f + pulse_average * pen_radius_replay_pulse);
 		paths_RadiusY[indPath] = (float)pg_Path_RadiusY[indPath][indFrameReading] * pen_radius_replay
 			* (1.f + pulse_average * pen_radius_replay_pulse);
+
+		//if (is_path_replay[indPath]) {
+		//	printf("replay #%d %.2f %.2f rad %.2f pen_radius_replay %.2f\n", indPath,
+		//		paths_x[indPath],
+		//		paths_y[indPath], paths_RadiusX[indPath], pen_radius_replay);
+		//}
 
 		pg_indPreviousFrameReading[indPath] = indFrameReading;
 	}
@@ -840,13 +1162,25 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 	// PARTICLE COLOR UPDATING INDEPENDENTLY OF TRACK READING OR WRITING
 	///////////////////////////////////////////////////////////////////////
 	/// uses pulsed color to repop
-	repop_Color_r
-		= min(1.f, pulsed_repop_color[0]);
-	repop_Color_g
-		= min(1.f, pulsed_repop_color[1]);
-	repop_Color_b
-		= min(1.f, pulsed_repop_color[2]);
-	// printf("repop color %.2f %.2f %.2f \n", repop_Color_r, repop_Color_g, repop_Color_b);
+	repop_ColorBG_r
+		= min(1.f, pulsed_repop_colorBG[0]);
+	repop_ColorBG_g
+		= min(1.f, pulsed_repop_colorBG[1]);
+	repop_ColorBG_b
+		= min(1.f, pulsed_repop_colorBG[2]);
+	repop_ColorCA_r
+		= min(1.f, pulsed_repop_colorCA[0]);
+	repop_ColorCA_g
+		= min(1.f, pulsed_repop_colorCA[1]);
+	repop_ColorCA_b
+		= min(1.f, pulsed_repop_colorCA[2]);
+	repop_ColorPart_r
+		= min(1.f, pulsed_repop_colorPart[0]);
+	repop_ColorPart_g
+		= min(1.f, pulsed_repop_colorPart[1]);
+	repop_ColorPart_b
+		= min(1.f, pulsed_repop_colorPart[2]);
+	// printf("repop color %.2f %.2f %.2f \n", repop_ColorPart_r, repop_ColorPart_g, repop_ColorPart_b);
 
 	///////////////////////////////////////////////////////////////////////
 	// PEN PARAMETERS IN PATH 0
@@ -862,7 +1196,9 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 	//printf("PEN color a %.2f %.2f %.2f %.2f\n", paths_Color_r[0] ,
 	//	   paths_Color_g[1] , paths_Color_b[2] , paths_Color_a[3] );
 
+#ifndef PG_BEZIER_PATHS
 	paths_BrushID[0] = pen_brush;
+#endif
 #ifdef PG_WACOM_TABLET
 	paths_RadiusX[0]
 		= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
@@ -898,16 +1234,48 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 	// calculates the distance wrt the preceding position and 
 	// only updates if it is greater than a minimal value
 	// printf("PEN pos %dx%d\n",CurrentMousePos_x,CurrentMousePos_y);
+#ifdef PG_METAWEAR
+	if (pg_mw_boards[0].mss_pos_update == true) {
+		CurrentMousePos_x = int(pg_mw_boards[0].mss_pos[0]);
+		CurrentMousePos_y = int(pg_mw_boards[0].mss_pos[1]);
+
+		pg_mw_boards[0].mss_pos_update = false;
+	}
+#endif
+
 	float motionVector_x = CurrentMousePos_x - paths_x_next_0;
 	float motionVector_y = CurrentMousePos_y - paths_y_next_0;
 	float distanceFromPrecedingPoint = sqrt(motionVector_x * motionVector_x + motionVector_y * motionVector_y);
+	// does not update GPU and considers the position as fixed 
+	// if the pen moves of less than 2 pixels or the fifth of the radius
 	if (distanceFromPrecedingPoint < std::max(2.f,(paths_RadiusX[0]/5.f))
 		&& CurrentMousePos_x != PG_OUT_OF_SCREEN_CURSOR
 		&& CurrentMousePos_y != PG_OUT_OF_SCREEN_CURSOR) {
 		paths_x_0_forGPU = PG_IDLE_CURSOR;
 		paths_y_0_forGPU = PG_IDLE_CURSOR;
 	}
+	// pen position update for the GPU rendering
 	else {
+
+//#ifdef PG_METAWEAR
+//		if (pg_mw_boards[0].mw_linAcc_update == true) {
+//			float accFactor = 10.0;
+//			float v_cur[2] = { paths_x[0] - paths_x_prev[0], paths_y[0] - paths_y_prev[0] };
+//			float v_new[2] = { v_cur[0] + accFactor * pg_mw_boards[0].mw_linAcc[0], v_cur[1] + accFactor * pg_mw_boards[0].mw_linAcc[1] };
+//
+//			paths_x_next_0 = paths_x[0] + v_new[0];
+//			paths_y_next_0 = paths_y[0] + v_new[1];
+//
+//			paths_x_next_0 = min(max(0.f, paths_x_next_0), float(leftWindowWidth));
+//			paths_y_next_0 = min(max(0.f, paths_y_next_0), float(window_height));
+//			//printf("acc %.2f %.2f v_cur %.2f %.2f v_new %.2f %.2f new pos %.2f %.2f\n", 
+//			//	pg_mw_boards[0].mw_linAcc[0], pg_mw_boards[0].mw_linAcc[1], 
+//			//	v_cur[0], v_cur[1], v_new[0], v_new[1], paths_x_next_0, paths_y_next_0);
+//
+//			pg_mw_boards[0].mw_linAcc_update = false;
+//		}
+//#endif
+
 		paths_x_prev_prev_0 = paths_x_prev[0];
 		paths_y_prev_prev_0 = paths_y_prev[0];
 
@@ -921,6 +1289,16 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 
 		paths_x_next_0 = (float)CurrentMousePos_x;
 		paths_y_next_0 = (float)CurrentMousePos_y;
+		// printf("/abs_pen_xy %.0f %.0f\n", float(CurrentMousePos_x), float(CurrentMousePos_y));
+
+#ifdef KOMPARTSD
+		// sends the position of the cursor to the recorder for later replay
+		pg_IPClient * client;
+		sprintf(AuxString, "/abs_pen_xy %.0f %.0f", float(CurrentMousePos_x), float(CurrentMousePos_y)); 
+		if ((client = pg_UDP_client((char *)"udp_Record_send"))) {
+			pg_send_message_udp((char *)"ff", (char *)AuxString, client);
+		}
+#endif
 
 		// define the tangents
 		// in the future, keep the previous tangent memory so that it is not recomputed twice
@@ -968,6 +1346,7 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 		}
 
 		// control points from positions and tangents for current and preceding positions
+#ifdef PG_BEZIER_PATHS
 		paths_xL[0] = paths_x_prev[0] + tang_x_prev;
 		paths_yL[0] = paths_y_prev[0] + tang_y_prev;
 		paths_xR[0] = paths_x[0] - tang_x;
@@ -994,15 +1373,6 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 
 			n--;
 		}
-
-#ifdef PG_BEZIER_PATHS
-		/* NOT USED CURRENTLY 
-		// convex hull shipped to the GPU
-		float points_x[4] = { paths_x_prev[0] , paths_xL[0] , paths_xR[0] , paths_x[0] };
-		float points_y[4] = { paths_y_prev[0] , paths_yL[0] , paths_yR[0] , paths_y[0] };
-		int nb_next_points = 0;
-		convexHull(points_x, points_y, path0_next_in_hull);
-		*/
 #endif
 
 		// line begin or line end
@@ -1159,6 +1529,7 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 				pg_Path_Pos_x_prev[indRecordingPath][indFrameRec] = paths_x_prev[0];
 				pg_Path_Pos_y_prev[indRecordingPath][indFrameRec] = paths_y_prev[0];
 
+#ifdef PG_BEZIER_PATHS
 				// second control point
 				pg_Path_Pos_xL[indRecordingPath][indFrameRec] = paths_xL[0];
 				pg_Path_Pos_yL[indRecordingPath][indFrameRec] = paths_yL[0];
@@ -1166,6 +1537,7 @@ void pg_update_pulsed_colors_and_replay_paths(float theTime) {
 				// third control point
 				pg_Path_Pos_xR[indRecordingPath][indFrameRec] = paths_xR[0];
 				pg_Path_Pos_yR[indRecordingPath][indFrameRec] = paths_yR[0];
+#endif
 
 				// fourth control points (next curve first control point)
 				if (indFrameRec >= 1) {
@@ -1298,7 +1670,7 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 		////////////////////////////
 		////// path tag
 		else {
-			std::stringstream  sstrem;
+			std::stringstream  sstream;
 			float init_time = 0.f;
 			float fin_time = 0.f;
 			std::size_t found2 = std::string::npos;
@@ -1320,13 +1692,13 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 				do {
 					found = line.find(" initial_time=\"", 0);
 					if (found != std::string::npos) {
-						sstrem.str(line.substr(found + strlen(" initial_time=\"")));
-						sstrem >> pg_Path_Status[indPath].initialTimeRecording;
+						sstream.str(line.substr(found + strlen(" initial_time=\"")));
+						sstream >> pg_Path_Status[indPath].initialTimeRecording;
 					}
 					found = line.find(" final_time=\"", found + 1);
 					if (found != std::string::npos) {
-						sstrem.str(line.substr(found + strlen(" final_time=\"")));
-						sstrem >> pg_Path_Status[indPath].finalTimeRecording;
+						sstream.str(line.substr(found + strlen(" final_time=\"")));
+						sstream >> pg_Path_Status[indPath].finalTimeRecording;
 					}
 					found = line.find(" d=\"", 0);
 					if (found != std::string::npos) {

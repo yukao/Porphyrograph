@@ -105,7 +105,7 @@ float tabletInclinationRadius = 0.0f;
 float LinearMotionStep = 0;
 
 /// log file
-FILE    *fileLog;
+FILE    *pg_csv_file;
 
 // date string for output files
 std::stringstream  date_stringStream;
@@ -181,7 +181,7 @@ int main(int argcMain, char **argvMain) {
 
 	// Version number
 	string applicationName = "Porphyrograph  (" + project_name + ")";
-	fprintf(fileLog, "%s\n", applicationName.c_str());
+	fprintf(pg_csv_file, "%s\n", applicationName.c_str());
 	pg_logFirstLineSceneVariables();
 	printf("%s\n", applicationName.c_str());
 
@@ -190,6 +190,12 @@ int main(int argcMain, char **argvMain) {
 	// printf( "Glut initialization\n" );
 	// glut parameters initialization 
 	glutInit(&argc, argv);
+#ifdef PG_MESHES
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
+#else
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS); // 
+#endif
+
 	initGlutWindows();
 	printOglError(474);
 
@@ -210,6 +216,10 @@ int main(int argcMain, char **argvMain) {
 #ifdef PG_MESHES
 	// mesh initialization
 	MeshInitialization();
+#endif
+
+#ifdef PG_METAWEAR
+	MetawearBoardInitialization();
 #endif
 
 	// matrices, geometry, shaders and FBOs
@@ -244,7 +254,10 @@ int main(int argcMain, char **argvMain) {
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 #ifdef USINE
 	// tells Usine that it is not launched
-	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_Usine_send");
+	pg_IPClient * client;
+	if ((client = pg_UDP_client((char *)"udp_Usine_send"))) {
+		pg_send_message_udp((char *)"f", (char *)"/launch 0", client);
+	}
 #endif
 
 
@@ -285,7 +298,7 @@ int main(int argcMain, char **argvMain) {
 #endif
 
 	// video intialization
-	if (playing_movieNo >= 0 && playing_movieNo < nb_movies) {
+	if (playing_movieNo >= 0 && playing_movieNo < nb_movies && playing_movieNo != currentlyPlaying_movieNo) {
 		currentlyPlaying_movieNo = playing_movieNo;
 
 		// texture ID initialization (should not be inside a thread)
@@ -294,7 +307,11 @@ int main(int argcMain, char **argvMain) {
 		}
 
 		is_movieLoading = true;
-		printf("Loading %s\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
+#ifndef TEMPETE
+		printf("Loading movie %s\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
+#else
+		printf("Loading movie %s\n", ( movieFileName[currentlyPlaying_movieNo]).c_str());
+#endif
 		sprintf(AuxString, "/movie_shortName %s", movieShortName[currentlyPlaying_movieNo].c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
@@ -354,9 +371,7 @@ void initGlutWindows( void ) {
 
   glutInitWindowSize( window_width, window_height );
   glutInitWindowPosition( window_x, window_y );
-  
-  glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS ); // 
-  
+
   CurrentWindow->glutID = glutCreateWindow(" ");
 
   // window resize
@@ -402,12 +417,12 @@ void initGlutWindows( void ) {
   glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttach);
   GLint maxDrawBuf = 0;
   glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
-  printf ("Max texture size %d geometry shader vertices %d max attach %d max draw buffs %d\n", 
-	  maxTextureSize, maxGeomVert, maxAttach, maxDrawBuf);
+  //printf ("Max texture size %d geometry shader vertices %d max attach %d max draw buffs %d\n", 
+	 // maxTextureSize, maxGeomVert, maxAttach, maxDrawBuf);
   GLint maxFragUnif = 0;
   glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragUnif);
-  printf("Max uniform components %d\n",
-	  maxFragUnif);
+  //printf("Max uniform components %d\n",
+	 // maxFragUnif);
   
   
   // window selection
@@ -439,7 +454,7 @@ void initGlutWindows( void ) {
   // window visibility
   glutVisibilityFunc(NULL);
   // idle update
-  glutTimerFunc((int)minimal_interframe_latency,
+  glutTimerFunc(int(minimal_interframe_latency * 1000),
 		&window_idle_browse,Step);
   glutDisplayFunc(&window_display);
 
@@ -493,14 +508,14 @@ void pg_init_scene(void) {
 	}
 
 	// log file
-	if (!log_file_name.empty()) {
-		printf("Opening log file %s\n", log_file_name.c_str());
-		if ((fileLog = fopen(log_file_name.c_str(), "wb")) == NULL) {
-			sprintf(ErrorStr, "File %s not opened!", log_file_name.c_str()); ReportError(ErrorStr); throw 152;
+	if (!pg_csv_file_name.empty()) {
+		printf("Opening csv file %s\n", pg_csv_file_name.c_str());
+		if ((pg_csv_file = fopen(pg_csv_file_name.c_str(), "wb")) == NULL) {
+			sprintf(ErrorStr, "File %s not opened!", pg_csv_file_name.c_str()); ReportError(ErrorStr); throw 152;
 		}
 	}
 	else {
-		fileLog = stdout;
+		pg_csv_file = stdout;
 	}
 
 	///////////////////////////////////////////////
@@ -522,7 +537,7 @@ void pg_init_scene(void) {
 	// current time initialization: internal time
 	CurrentClockTime = RealTime();
 
-	printf("Initial time %.2f (real time %.5f)\n", CurrentClockTime, InitialRealTime);
+	//printf("Initial time %.2f (real time %.5f)\n", CurrentClockTime, InitialRealTime);
 
 	// random seed initialization
 	srand(clock());
@@ -530,10 +545,14 @@ void pg_init_scene(void) {
 	// ------ screen message initialization  ------------- //
 	pg_init_screen_message();
 
+#if defined (ETOILES)
+	// reads the text messages in the text file
+	pg_ReadAllDisplayMessages(pg_MessageDirectory, "etoiles/gll_psc_v21_Energy_Flux100.txt");
+#endif
+
 #if defined (TVW)
 	// reads the text messages in the text file
 	pg_ReadAllDisplayMessages(pg_MessageDirectory, "message_list.txt");
-
 	// ------ display message initialization  ------------- //
 	pg_init_display_message();
 #endif
@@ -589,6 +608,9 @@ void pg_init_scene(void) {
 	Output_Message_ArgList
 		= new char[max_network_message_length];
 	// printf( "End of scene initialization\n" );
+
+	//test_hull();
+	//exit(0);
 }
 
 bool pg_shutdown = false;
@@ -597,25 +619,45 @@ void quit( void ) {
 	// for Annika performance: save the svg paths before quitting (could perhaps be generalized)
 #ifdef KOMPARTSD
 	pg_draw_scene(_Svg, false);
+	// sends the position of the cursor to the recorder for later replay
+	sprintf(AuxString, "/quit");
+	pg_IPClient * client;
+	if ((client = pg_UDP_client((char *)"udp_Record_send"))) {
+		pg_send_message_udp((char *)"", (char *)AuxString, client);
+	}
+	if ((client = pg_UDP_client((char *)"udp_Usine_send"))) {
+		// sends the new scene to Usine for sample selection
+		for (int ind = 0; ind < 4; ind++) {
+			sprintf(AuxString, "/new_scene_%d 0", ind);
+			pg_send_message_udp((char *)"i", (char *)AuxString, client);
+		}
+	}
 #endif
 	
 	// lights off the LED
 	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 #ifdef USINE
 	// starts the backtrack
-	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_Usine_send");
+	pg_IPClient * client;
+	if ((client = pg_UDP_client((char *)"udp_Usine_send"))) {
+		pg_send_message_udp((char *)"f", (char *)"/launch 0", client);
+	}
 #endif
 #ifdef PG_RENOISE
 	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
 #endif
 	pg_send_message_udp((char *)"f", (char *)"/quit 1", (char *)"udp_TouchOSC_send");
 
+	// soundtrack on
+	soundTrack_on = false;
 #ifdef PG_WITH_PUREDATA
 	pg_send_message_udp((char *)"f", (char *)"/stopsoundtrack 0", (char *)"udp_PD_send");
-
-	// soundtrack off
-	pg_send_message_udp((char *)"i", "/soundtrack_onOff 0", (char *)"udp_PD_send");
+	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
+	printf("Main: soundtrack: %s\n", AuxString);
 #endif
+	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
+	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 #ifdef PG_WITH_JUCE
 	// soundtrack off
 	pg_send_message_udp((char *)"", (char *)"/JUCE_stop_track", (char *)"udp_SoundJUCE_send");
@@ -641,8 +683,8 @@ void quit( void ) {
 
   printf( "Last Frame #%d\n" , pg_FrameNo );
 
-  if( fileLog != stdout ) {
-    fclose( fileLog );
+  if( pg_csv_file != stdout ) {
+    fclose( pg_csv_file );
   }
 
   // release camera
@@ -706,33 +748,69 @@ void window_special_key_browse(int key, int x, int y)
 
 #ifdef PG_WACOM_TABLET
 void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
+#ifdef TEMPETE
+	// printf("pos = %d %d\n", CurrentMousePos_x, CurrentMousePos_y);
+	// mapping between tablet and target texture position
+	// 2 sets of four corners in tablet position are selected (by they x,y coordinates of the pen)
+	// the source corners corresponding to the drawing area on the tablet (a rectangle) (X0s,Y0s), (X1s, Y1s)...
+	// the target corners corresponding to the drawing area on the screen (a rectangle) (X0t,Y0t), (X1t, Y1t)...
+	// the scale is calculated as follows
+	// s = ( (X1t-X0t)/(X1s-X0s), (Y3t-Y0t)/(Y3s-Y0s) )
+	// and the translation as follows
+	// t = (X0t,Y0t) - s * (X0s,Y0s)
+	// the final transformation to be applied on the mouse coordinates is
+	// CurrentCursorHooverPos_x = sx (x) + tx
+	// CurrentCursorHooverPos_y = sy (y) + ty
+	int mappedX = int(x * 1.39f - 451.0f);
+	int mappedY = int(y * 1.336f - 216.5f);
+	//mappedX = int(x * 1.f - 0.0f);
+	//mappedY = int(y * 1.f - 0.0);
+	mappedX = int(x * 0.7194f + 324.6f);
+	mappedY = int(y * 0.777f + 146.5f);
+
+#endif
 	// drawing
-	if (press > 0) {
-		//printf("pen writing %d %d\n",x,y);
+	if (press > 0.05) {
+		// printf("pen writing %d %d\n",x,y);
+#ifdef TEMPETE
+		CurrentMousePos_x = mappedX; //  int(x / 1024. * leftWindowWidth);
+		CurrentMousePos_y = mappedY; // int(y / 768. * window_height);
+#else
 		CurrentMousePos_x = x; //  int(x / 1024. * leftWindowWidth);
 		CurrentMousePos_y = y; // int(y / 768. * window_height);
+#endif
 		if (CurrentCursorStylusvsRubber == pg_Stylus) {
 			CurrentCursorHooverPos_x = PG_OUT_OF_SCREEN_CURSOR;
 			CurrentCursorHooverPos_y = PG_OUT_OF_SCREEN_CURSOR;
 		}
 		else {
+#ifdef TEMPETE
+			CurrentCursorHooverPos_x = mappedX; //  int(x / 1024. * leftWindowWidth);
+			CurrentCursorHooverPos_y = mappedY; // int(y / 768. * window_height);
+#else
 			CurrentCursorHooverPos_x = x; // int(x / 1024. * leftWindowWidth);
 			CurrentCursorHooverPos_y = y; // int(y / 768. * window_height);
+#endif
 		}
 	}	
 	// hoovering
 	else {
-		//printf("pen hoovering %d %d\n", x, y);
+		// printf("pen hoovering %d %d\n", x, y);
 		CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;
 		CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
+#ifdef TEMPETE
+		CurrentCursorHooverPos_x = mappedX; //  int(x / 1024. * leftWindowWidth);
+		CurrentCursorHooverPos_y = mappedY; // int(y / 768. * window_height);
+#else
 		CurrentCursorHooverPos_x = x; // int(x / 1024. * leftWindowWidth);
 		CurrentCursorHooverPos_y = y; // int(y / 768. * window_height);
+#endif
 	}
-	// printf("pos = %d %d\n", CurrentMousePos_x, CurrentMousePos_y);
 
 	tabletPressureRadius = press;
 	tabletAzimutRadius = az;
 	tabletInclinationRadius = incl;
+	//printf("press %.2f az %.2f incl %.2f\n", press, az, incl);
 
 	// verify these values received from wacom tablet
 	if (cursor == 1) {
@@ -784,12 +862,12 @@ void window_idle_browse( void ) {
 
 void window_idle_browse(int step) {
 	// printf("begin window_idle_browse\n");
-	// fprintf( fileLog, "%.10f begin Time #\n" , RealTime() );
+	// fprintf( pg_csv_file, "%.10f begin Time #\n" , RealTime() );
 
 	// MemoryUsage();
 
 	// -------------------- idle function recall ------------------------- //
-	glutTimerFunc((int)minimal_interframe_latency,
+	glutTimerFunc(int(minimal_interframe_latency * 1000),
 		&window_idle_browse, Step);
 
 	Step = step;
@@ -802,6 +880,8 @@ void window_idle_browse(int step) {
 		// frame count
 		pg_FrameNo++;
 		// printf(" Frame %d\n", pg_FrameNo);
+
+		//printf(" part_size %.2f\n", part_size);
 
 		if (pg_FrameNo == pg_targetFrameNo) {
 			// printf(" End of image target\n");
@@ -883,7 +963,7 @@ void window_idle_browse(int step) {
 #endif
 
 		// updates diaporama
-		if (photo_diaporama >= 0 && photo_diaporama < nb_photo_albums) {
+		if (pg_CurrentDiaporamaDir >= 0 && pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
 			// printf("pg_update_diaporama\n");
 			pg_update_diaporama();
 		}
@@ -893,7 +973,7 @@ void window_idle_browse(int step) {
 		if (trace_output_frame_number) {
 			printf("Frame #%d\n", pg_FrameNo);
 		}
-		// fprintf( fileLog , "Frame #%d\n" , pg_FrameNo );
+		// fprintf( pg_csv_file , "Frame #%d\n" , pg_FrameNo );
 		// last image No display
 		if (pg_FrameNo > last_frame_number) {
 			printf("Reached Final Frame #%d\n", last_frame_number);
@@ -916,12 +996,33 @@ void window_idle_browse(int step) {
 			pg_aliasScript(msg, arg, arguments);
 		}
 
+		// pulse in case of internal pulse
+		if (auto_pulse) {
+			pulse[0] = float(noise(seed_pulsePerlinNoise[0], seed_pulsePerlinNoise[1], pg_FrameNo) * sound_volume + sound_min);
+			pulse[1] = float(noise(seed_pulsePerlinNoise[2], seed_pulsePerlinNoise[3], pg_FrameNo) * sound_volume + sound_min);
+			pulse[2] = float(noise(seed_pulsePerlinNoise[4], seed_pulsePerlinNoise[5], pg_FrameNo) * sound_volume + sound_min);
+			// not used currently  pulse_attack = noise(x, y, pg_FrameNo) * sound_volume + sound_min;
+			sprintf(AuxString, "/pulse_low %.5f", pulse[0]);
+			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
+			sprintf(AuxString, "/pulse_medium %.5f", pulse[1]);
+			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
+			sprintf(AuxString, "/pulse_high %.5f", pulse[2]);
+			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
+
+			pulse_average_prec = pulse_average;
+			pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
+
+			sprintf(AuxString, "/pulse_enveloppe %.5f", pulse_average);
+			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
+
+		}
+
 		// continous flashes
 		// in case the flash frequency (flashPixel_freq, flashTrkCA_freq_0, flashCABG_freq)
 		// is greater than PG_LOOP_SIZE, whatever the value, flashes are emitted at every frame
 		pg_continuous_flahes();
 
-		// fprintf( fileLog, "%.10f popEvents Time #\n" , RealTime() );
+		// fprintf( pg_csv_file, "%.10f popEvents Time #\n" , RealTime() );
 		// internal and external event processing
 
 		// sends the color IDS during the first frames
@@ -942,10 +1043,10 @@ void window_idle_browse(int step) {
 	// glutSetWindow( CurrentWindow->glutID );
 
 	// -------------------- window redisplay ------------------------- //
-	// fprintf( fileLog, "%.10f glutPostRedisplay Time #\n" , RealTime() );
+	// fprintf( pg_csv_file, "%.10f glutPostRedisplay Time #\n" , RealTime() );
 	glutPostRedisplay();
 
-	// fprintf( fileLog, "%.10f end Time #\n\n" , RealTime() );
+	// fprintf( pg_csv_file, "%.10f end Time #\n\n" , RealTime() );
 	Step++;
 	// printf("end window_idle_browse\n");
 }

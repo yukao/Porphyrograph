@@ -20,16 +20,19 @@ https://github.com/fcaruso/GLSLParametricCurve
 */
 
 #version 420
-
 // comet texture
-// uniform sampler2D fs_blurredDisk; // control point positions
+layout (binding = 2) uniform sampler2D uniform_ParticleSplat_BlurredDisk_texture_fs_decal; // control point positions
 
 in VertexData {
     vec3 color;
+    vec2 texCoord;
 } VertexIn;
  
 out vec4 fColor;
 
 void main() {
-	fColor =  vec4(VertexIn.color,1);//vec4( 1., 1., 1., 1. );
+	 fColor = texture(uniform_ParticleSplat_BlurredDisk_texture_fs_decal , VertexIn.texCoord);
+	 fColor.rgb = fColor.rgb * 0.5 + VertexIn.color * 0.5;
+	 // fColor.rgb = vec3(1,0,0);
+	 // fColor.a = 1;
 }

@@ -1,0 +1,232 @@
+<HTML>
+    <HEAD>
+        <TITLE>KineticsKit - A Physics-Based General 3D Mass-Spring System</TITLE>
+        <STYLE>
+            .S0 {color: #808070;}
+            .S1 {color: #dd0000;}
+            .S2 {font-weight: bold; color: #007f7f;}
+            .S3 {color: #007f00;}
+            .S4 {color: #007f00;}
+            .S5 {font-weight: bold; color: #ff7700;}
+            .S6 {color: #00aa00;}
+            .S7 {color: #00aa00;}
+            .S8 {font-weight: bold; color: #0000ff;}
+            .S9 {font-weight: bold; color: #7f00aa;}
+            .S10 {font-weight: bold; color: #7f3f00;}
+            .S12 {color: #7F7F7F;}
+            .S13 {font-family: Courier New; color: #000000; background: #E0C0E0;}
+            SPAN {font-family: Courier New;}
+        </STYLE>
+    </HEAD>
+
+    <BODY BGCOLOR=#ffffff>
+
+        <IMG SRC="lattice.jpg" WIDTH="150" HEIGHT="150" ALIGN="right">
+        <H1><IMG SRC="logoKineticsKit.jpg"  WIDTH="421" HEIGHT="68" ALT="KineticsKit"></H1>
+        <H2>A Physics-Based General 3D Mass-Spring System</H2>
+        by Markus Gritsch (<A HREF="mailto:gritsch@iue.tuwien.ac.at?subject=KineticsKit">gritsch@iue.tuwien.ac.at</a>)<P>
+
+        [ <A HREF="#Download">Download</A> ]
+        [ <A HREF="#Usage">Usage</A> ]
+        [ <A HREF="#Examples">Screenshots</A> ]
+        [ <A HREF="KineticsKit.html">Package Documentation</A> ]
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Objective">Objective</a></B></TD></TR></TABLE>
+
+        KineticsKit provides some classes written in <A HREF="http://www.python.org/">Python</A> to simulate the behaviour of a 3D
+        mass-spring-system.  It can be used to investigate some basic kinetics, but I wrote it mostly for the fun of programming
+        it and playing with it.
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Requirements">Requirements</a></B></TD></TR></TABLE>
+
+        <UL>
+            <LI>Python 2.0 or higher (<A HREF="http://www.python.org/">http://www.python.org/</A>)
+            <LI>VPython (<A HREF="http://www.vpython.org/">http://www.vpython.org/</A>)
+            <LI>(optionally) POV-Ray (<A HREF="http://www.povray.org/">http://www.povray.org/</A>)
+        </UL>
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Download">Download</a></B></TD></TR></TABLE>
+
+        <A HREF="KineticsKit.zip">KineticsKit.zip</A> (760kB)
+        <IMG SRC="animspring.gif"  WIDTH="50" HEIGHT="9" ALIGN="bottom"><BR>
+
+        Extract the ZIP archive into any folder which lies in your module-searchpath (e.g. the 'Lib/site-packages' folder).
+        Beside the KineticsKit classes, the archive also contains several instructive <a href="#Examples">examples</a> which show
+        how to use KineticsKit.  Try them anyway - they make fun to play with.  The picture of the lattice at the top of this page
+        is produced by an example included in the ZIP archive.
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Usage">Usage</a></B></TD></TR></TABLE>
+
+        First a System has to be generated.
+        <BR>
+        <BR>
+        <table border=0 cellspacing=0 cellpadding=0 width=100%>
+            <tr>
+                <td width=1>                  <img src="trp1_1.gif" width=20 height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=2  height=1></td>
+                <td width=10000>
+                    <SPAN class=S0>
+                    </SPAN><SPAN class=S5>from</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>KineticsKit</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S5>import</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>System</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>Mass</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>CylinderSpring</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>system</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>System</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>timestep</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>0.04</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+                    </SPAN>
+                </td>
+            </tr>
+        </table>
+        <BR>
+        <!--
+        <PRE>
+            from KineticsKit import System, Mass, Spring
+            system = System(timestep=0.04)
+
+        </PRE>
+        -->
+
+        The System has several attributes like gravity, viscosity and timestep which must be given in the constructor.  Some of
+        them are mandatory (timestep), the rest of them are optional.<P>
+
+        Next, Masses are generated and inserted into the System.
+        <BR>
+        <BR>
+        <table border=0 cellspacing=0 cellpadding=0 width=100%>
+            <tr>
+                <td width=1>                  <img src="trp1_1.gif" width=20 height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=2  height=1></td>
+                <td width=10000>
+                    <SPAN class=S0>
+                    </SPAN><SPAN class=S12>##&nbsp;generate&nbsp;some&nbsp;masses</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>mass1</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>Mass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>m</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>0.1</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>pos</SPAN><SPAN class=S10>=(</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>))</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>mass2</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>Mass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>m</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>0.1</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>pos</SPAN><SPAN class=S10>=(</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.5</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>))</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S12>##&nbsp;insert&nbsp;them&nbsp;into&nbsp;the&nbsp;system</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>insertMass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>mass1</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>insertMass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>mass2</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+                    </SPAN>
+                </td>
+            </tr>
+        </table>
+        <BR>
+
+        <!-- <PRE> -->
+        <!--     # generate some masses -->
+        <!--     mass1 = Mass(m=0.1, pos=(0.0, 0.0, 0.0)) -->
+        <!--     mass2 = Mass(m=0.1, pos=(0.0, 0.5, 0.0)) -->
+        <!--     # insert them into the system -->
+        <!--     system.insertMass(mass1) -->
+        <!--     system.insertMass(mass2) -->
+        <!-- </PRE> -->
+
+        Masses also have lots of attributes like m, pos, an indicator if it should be fixed at its initial location, its initial
+        velocity and the color.  Most of them are implemented as keyword arguments and can thus be omitted if they are not
+        used.<P>
+
+        After this, the Masses can be connected with Springs.  There are several types of Springs available which differ in their
+        visual appearance.  Here we take a <TT>CylinderSpring</TT>.
+        <BR>
+        <BR>
+        <table border=0 cellspacing=0 cellpadding=0 width=100%>
+            <tr>
+                <td width=1>                  <img src="trp1_1.gif" width=20 height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=2  height=1></td>
+                <td width=10000>
+                    <SPAN class=S0>
+                    </SPAN><SPAN class=S12>##&nbsp;connect&nbsp;the&nbsp;masses&nbsp;with&nbsp;a&nbsp;spring</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>spring1</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>CylinderSpring</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>m0</SPAN><SPAN class=S10>=</SPAN><SPAN class=S11>mass1</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>m1</SPAN><SPAN class=S10>=</SPAN><SPAN class=S11>mass2</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>k</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>1</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S12>##&nbsp;insert&nbsp;the&nbsp;spring&nbsp;into&nbsp;the&nbsp;system</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>insertSpring</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>spring1</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+                    </SPAN>
+                </td>
+            </tr>
+        </table>
+        <BR>
+
+        <!-- <PRE> -->
+        <!--     # connect the masses with a spring -->
+        <!--     spring1 = Spring(m0=mass1, m1=mass2, k=10) -->
+        <!--     # insert the spring into the system -->
+        <!--     system.insertSpring(spring1) -->
+        <!-- </PRE> -->
+
+        There is no restriction in making the connections, so one Mass can be connected with several others.  A Spring needs to
+        know which two Masses it should connect, and its spring-constant.  The rest of the constructor arguments are again
+        implemented as keyword arguments, but I recommend to take a look at them.  They are useful to tense the Spring, specify a
+        damping value, select between different visual representations of the Spring, or give it a nicer color.<P>
+
+        Finally the System has to be started and kept running with an infinite loop.  The System also provides a convenience
+        function for this purpose.
+        <BR>
+        <BR>
+        <table border=0 cellspacing=0 cellpadding=0 width=100%>
+            <tr>
+                <td width=1>                  <img src="trp1_1.gif" width=20 height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1 bgcolor="#FF9900"><img src="trp1_1.gif" width=1  height=1></td>
+                <td width=1>                  <img src="trp1_1.gif" width=2  height=1></td>
+                <td width=10000>
+                    <SPAN class=S0>
+                    </SPAN><SPAN class=S12>##&nbsp;start&nbsp;the&nbsp;mainloop&nbsp;(convenience&nbsp;function)</SPAN><SPAN class=S0><BR>
+                    </SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>mainloop</SPAN><SPAN class=S10>()</SPAN><SPAN class=S0><BR>
+                    </SPAN>
+                </td>
+            </tr>
+        </table>
+        <BR>
+
+        <!-- <PRE> -->
+        <!--     #start the mainloop (convenience function) -->
+        <!--     system.mainloop() -->
+        <!-- </PRE> -->
+
+        For further details please have a look at the included example programs and the constructors of the
+        classes <TT>System</TT>, <TT>Mass</TT> and
+        <TT>Spring</TT> described in the <A HREF="KineticsKit.html">package documentation</A>.
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Interaction">Interaction</a></B></TD></TR></TABLE>
+
+        Interaction with the System is possible with the mouse.  A Mass is picked by clicking at it.  It can be moved around and
+        the rest of the System responds to the movement.  To release the Mass the mouse must be clicked again.<P>
+
+        Zooming / rotating of the scene is also done with the mouse by holding the left / right mouse button down.<P>
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Examples">Examples</a></B></TD></TR></TABLE>
+
+        Please have a look at the examples.  They are very useful to understand further details of KineticsKit.<P>
+        <A HREF="exa01.png">screenshot</A>, <A HREF="exa01_unstable_equilibrium.py.html">exa01_unstable_equilibrium.py</A><BR>
+        <A HREF="exa02.png">screenshot</A>, <A HREF="exa02_doublependulum_in_space.py.html">exa02_doublependulum_in_space.py</A><BR>
+        <A HREF="exa03.png">screenshot</A>, <A HREF="exa03_circling_mass.py.html">exa03_circling_mass.py</A><BR>
+        <A HREF="exa04.png">screenshot</A>, <A HREF="exa04_the_cube.py.html">exa04_the_cube.py</A><BR>
+        <A HREF="exa05.png">screenshot</A>, <A HREF="exa05_multiple_Systems.py.html">exa05_multiple_Systems.py</A><BR>
+        <A HREF="exa06.png">screenshot</A>, <A HREF="exa06_golden_gate.py.html">exa06_golden_gate.py</A><BR>
+        <A HREF="exa07.png">screenshot</A>, <A HREF="exa07_lattice.py.html">exa07_lattice.py</A><BR>
+        <A HREF="exa08.png">screenshot</A>, <A HREF="exa08_zinkblende.py.html">exa08_zinkblende.py</A><BR>
+        <A HREF="exa09.png">screenshot</A>, <A HREF="exa09_the_grid.py.html">exa09_the_grid.py</A><BR>
+        <A HREF="exa10.png">screenshot</A>, <A HREF="exa10_hypergrid.py.html">exa10_hypergrid.py</A><BR>
+
+        <!-------------------------------------------------------------------->
+        <P><TABLE BGCOLOR=#ffccff CELLSPACING="0" CELLPADDING="0" BORDER="0" WIDTH="100%"><TR><TD WIDTH="100%">&nbsp;<B><a name="Package Documentation">Package Documentation</a></B></TD></TR></TABLE>
+
+        The class reference and beautifully colored sourcecode can be found in the <A HREF="KineticsKit.html">package
+        documentation</A>.  Make extensive use of it to reveal all the power of KineticsKit.
+
+        <P>Have fun! <IMG SRC="animgrid.gif"  WIDTH="64" HEIGHT="40" ALIGN="middle">
+
+        <P><HR>
+        <A HREF="http://www.python.org/"><IMG SRC="PythonPowered.gif" WIDTH="110" HEIGHT="44" ALIGN="right" BORDER="0" ALT="PythonPowered Logo"></A>
+        <a href="http://sourceforge.net/projects/kineticskit/"><img src="http://sourceforge.net/sflogo.php?group_id=66696&amp;type=2" width="125" height="37" border="0" alt="SourceForge.net Logo"></a>
+
+    </BODY>
+</HTML>

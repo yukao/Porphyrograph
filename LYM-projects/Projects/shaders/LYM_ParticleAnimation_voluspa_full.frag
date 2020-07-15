@@ -11,46 +11,38 @@ float     partDecay;
 int       part_initialization;
 bool      part_path_follow_0;
 bool      part_path_follow_1;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_partDecay_part_initialization_part_path_follow_0_part_path_follow_1;
 bool      part_path_follow_2;
 bool      part_path_follow_3;
 bool      part_path_follow_4;
 bool      part_path_follow_5;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_follow_2_part_path_follow_3_part_path_follow_4_part_path_follow_5;
 bool      part_path_follow_6;
 bool      part_path_follow_7;
 bool      part_path_repulse_0;
 bool      part_path_repulse_1;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_follow_6_part_path_follow_7_part_path_repulse_0_part_path_repulse_1;
 bool      part_path_repulse_2;
 bool      part_path_repulse_3;
 bool      part_path_repulse_4;
 bool      part_path_repulse_5;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4_part_path_repulse_5;
 bool      part_path_repulse_6;
 bool      part_path_repulse_7;
 float     part_size;
 float     part_acc;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_repulse_6_part_path_repulse_7_part_size_part_acc;
 float     part_damp;
 float     noiseScale;
 float     part_field_weight;
 float     part_damp_targtRad;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_part_damp_noiseScale_part_field_weight_part_damp_targtRad;
 float     part_timeToTargt;
 bool      partMove_target;
 bool      partMove_rand;
 int       partExit_mode;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_part_timeToTargt_partMove_target_partMove_rand_partExit_mode;
 int       partStroke_mode;
 int       partColor_mode;
 float     pixel_acc_shiftX;
 float     pixel_acc_shiftY;
-uniform vec4 uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_pixel_acc_shiftX_pixel_acc_shiftY;
 float     repop_part;
 float     repop_path;
 bool      freeze;
-uniform vec3 uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze;
+uniform float uniform_ParticleAnimation_scenario_var_data[35];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -60,6 +52,10 @@ uniform vec3 uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze;
 #define PG_VIDEO_ACTIVE
 #define PG_NB_TRACKS 4
 #define PG_NB_PATHS 7
+
+#define PG_PATH_ANIM_POS              0
+#define PG_PATH_ANIM_RAD              1
+#define PG_MAX_PATH_ANIM_DATA         2
 
 // VIDEO UPDATE
 #ifdef PG_VIDEO_ACTIVE
@@ -199,23 +195,14 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
+uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_PATHS + 1)];
+
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
 uniform vec3 uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH; //
  
 uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   // 
-
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_x; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_y; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_x_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_y_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_RadiusX; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_x; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_y; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_x_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_y_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_RadiusX; // 
 
 /////////////////////////////////////
 // INPUT
@@ -450,21 +437,18 @@ void particle_out( void ) {
   // REPOP ALONG PATHS (A RANDOM PATH AMONG THE ACTIVE ONES IS CHOSEN AT EACH FRAME)
   // SINCE REPOPULATION IS AN ADDITIVE PROCESS, SEVERAL SOURCES OF PARTICLES CAN
   // EXIST SIMULTANEOUSLY
-  int repopChannel = int(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo.z);
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-  
+  int repopChannel = int(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo.z);  
   vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.75 ) );
   if( repop_path > 0
     && int((frameNo+5000) * randomValue.w ) % int(15000 *(1-repop_path)) == int((randomValue.x * 5000.0
         + randomValue.z * 5000.0 + randomValue.y * 5000.0 ) *(1-repop_path)) ) {
-    if( repopChannel >= 0 && repopChannel < 4 
-      && uniform_ParticleAnimation_fs_4fv_paths03_x[repopChannel] > 0
-      && uniform_ParticleAnimation_fs_4fv_paths03_y[repopChannel] > 0 ) {
-     /////////////////////////////////////////////////////////////////////
-      vec2 pen_prev = vec2( uniform_ParticleAnimation_fs_4fv_paths03_x_prev[repopChannel],
-                height - uniform_ParticleAnimation_fs_4fv_paths03_y_prev[repopChannel]);
-      vec2 pen_curr = vec2( uniform_ParticleAnimation_fs_4fv_paths03_x[repopChannel],
-                height - uniform_ParticleAnimation_fs_4fv_paths03_y[repopChannel]);
+    vec4 pen_pos_prev_cur 
+      = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
+    vec4 radius = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
+    if( repopChannel >= 0 && pen_pos_prev_cur.z > 0 && pen_pos_prev_cur.w > 0 ) {
+      /////////////////////////////////////////////////////////////////////
+      vec2 pen_prev = vec2( pen_pos_prev_cur.x, height - pen_pos_prev_cur.y);
+      vec2 pen_curr = vec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w);
       vec2 orth = pen_prev - pen_curr;
       if(length(orth) != 0) {
         orth.xy = orth.yx;
@@ -473,39 +457,12 @@ void particle_out( void ) {
       }
       out_position_speed_particle.xy 
         = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) 
-              * (uniform_ParticleAnimation_fs_4fv_paths03_RadiusX[repopChannel]); // thickness
+      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius.x; // thickness
       out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
       out_color_radius_particle 
           = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
                   part_size);
     }
-#endif
-#if PG_NB_PATHS == 7
-    else if( repopChannel >= 4 
-              && uniform_ParticleAnimation_fs_4fv_paths47_x[repopChannel - 4] > 0
-              && uniform_ParticleAnimation_fs_4fv_paths47_y[repopChannel - 4] > 0 ) {
-     /////////////////////////////////////////////////////////////////////
-      vec2 pen_prev = vec2( uniform_ParticleAnimation_fs_4fv_paths47_x_prev[repopChannel - 4],
-                height - uniform_ParticleAnimation_fs_4fv_paths47_y_prev[repopChannel - 4]);
-      vec2 pen_curr = vec2( uniform_ParticleAnimation_fs_4fv_paths47_x[repopChannel - 4],
-                height - uniform_ParticleAnimation_fs_4fv_paths47_y[repopChannel - 4]);
-      vec2 orth = pen_prev - pen_curr;
-      if(length(orth) != 0) {
-        orth.xy = orth.yx;
-        orth.y *= -1;
-        orth = normalize(orth);
-      }
-      out_position_speed_particle.xy 
-        = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) 
-              * (uniform_ParticleAnimation_fs_4fv_paths47_RadiusX[repopChannel - 4]); // thickness
-      out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-      out_color_radius_particle 
-          = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
-                  part_size);
-    }
-#endif
   }
 
   //////////////////////////////////////////////////////////////////
@@ -628,13 +585,14 @@ void particle_out( void ) {
   ///////////////////////////////////////////////////////////////////
   // PARTICLE: PATH FOLLOW OR REPULSE
   for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
+    vec4 pen_pos_prev_cur 
+      = uniform_ParticleAnimation_path_data[indPath * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
+    dvec2 curPos = dvec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w );
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
     if( indPath < 4 && path_follow03[indPath] ) {
       // reaches for pen position
       part_acceleration 
-        = dvec2(dvec2( uniform_ParticleAnimation_fs_4fv_paths03_x[indPath] , 
-                          height - uniform_ParticleAnimation_fs_4fv_paths03_y[indPath] )
-                    - out_position_speed_particle.xy);
+        = dvec2(curPos - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
@@ -644,9 +602,7 @@ void particle_out( void ) {
     else if( indPath >= 4 && path_follow47[indPath - 4] ) {
       // reaches for pen position
       part_acceleration 
-        = dvec2(dvec2( uniform_ParticleAnimation_fs_4fv_paths47_x[indPath - 4] , 
-                          height - uniform_ParticleAnimation_fs_4fv_paths47_y[indPath - 4] )
-                    - out_position_speed_particle.xy);
+        = dvec2(curPos - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
@@ -656,9 +612,7 @@ void particle_out( void ) {
     if( indPath < 4 && path_repulse03[indPath] ) {
       // escapes from pen position
       part_acceleration 
-        = dvec2(out_position_speed_particle.xy 
-             - dvec2( (uniform_ParticleAnimation_fs_4fv_paths03_x[indPath]) , 
-                     height - uniform_ParticleAnimation_fs_4fv_paths03_y[indPath] ));
+        = dvec2(out_position_speed_particle.xy - curPos);
     }
 #endif
 #if PG_NB_PATHS == 7
@@ -666,9 +620,7 @@ void particle_out( void ) {
       // reaches for pen position
       // escapes from pen position
       part_acceleration 
-        = dvec2(out_position_speed_particle.xy 
-             - dvec2( (uniform_ParticleAnimation_fs_4fv_paths47_x[indPath - 4]) , 
-                     height - uniform_ParticleAnimation_fs_4fv_paths47_y[indPath - 4] ));
+        = dvec2(out_position_speed_particle.xy - curPos);
     }
 #endif
   }
@@ -840,41 +792,41 @@ void particle_out( void ) {
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  partDecay = uniform_ParticleAnimation_fs_4fv_partDecay_part_initialization_part_path_follow_0_part_path_follow_1[0];
-  part_initialization = int(uniform_ParticleAnimation_fs_4fv_partDecay_part_initialization_part_path_follow_0_part_path_follow_1[1]);
-  part_path_follow_0 = (uniform_ParticleAnimation_fs_4fv_partDecay_part_initialization_part_path_follow_0_part_path_follow_1[2] > 0 ? true : false);
-  part_path_follow_1 = (uniform_ParticleAnimation_fs_4fv_partDecay_part_initialization_part_path_follow_0_part_path_follow_1[3] > 0 ? true : false);
-  part_path_follow_2 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_2_part_path_follow_3_part_path_follow_4_part_path_follow_5[0] > 0 ? true : false);
-  part_path_follow_3 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_2_part_path_follow_3_part_path_follow_4_part_path_follow_5[1] > 0 ? true : false);
-  part_path_follow_4 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_2_part_path_follow_3_part_path_follow_4_part_path_follow_5[2] > 0 ? true : false);
-  part_path_follow_5 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_2_part_path_follow_3_part_path_follow_4_part_path_follow_5[3] > 0 ? true : false);
-  part_path_follow_6 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_6_part_path_follow_7_part_path_repulse_0_part_path_repulse_1[0] > 0 ? true : false);
-  part_path_follow_7 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_6_part_path_follow_7_part_path_repulse_0_part_path_repulse_1[1] > 0 ? true : false);
-  part_path_repulse_0 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_6_part_path_follow_7_part_path_repulse_0_part_path_repulse_1[2] > 0 ? true : false);
-  part_path_repulse_1 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_6_part_path_follow_7_part_path_repulse_0_part_path_repulse_1[3] > 0 ? true : false);
-  part_path_repulse_2 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4_part_path_repulse_5[0] > 0 ? true : false);
-  part_path_repulse_3 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4_part_path_repulse_5[1] > 0 ? true : false);
-  part_path_repulse_4 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4_part_path_repulse_5[2] > 0 ? true : false);
-  part_path_repulse_5 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4_part_path_repulse_5[3] > 0 ? true : false);
-  part_path_repulse_6 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_6_part_path_repulse_7_part_size_part_acc[0] > 0 ? true : false);
-  part_path_repulse_7 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_6_part_path_repulse_7_part_size_part_acc[1] > 0 ? true : false);
-  part_size = uniform_ParticleAnimation_fs_4fv_part_path_repulse_6_part_path_repulse_7_part_size_part_acc[2];
-  part_acc = uniform_ParticleAnimation_fs_4fv_part_path_repulse_6_part_path_repulse_7_part_size_part_acc[3];
-  part_damp = uniform_ParticleAnimation_fs_4fv_part_damp_noiseScale_part_field_weight_part_damp_targtRad[0];
-  noiseScale = uniform_ParticleAnimation_fs_4fv_part_damp_noiseScale_part_field_weight_part_damp_targtRad[1];
-  part_field_weight = uniform_ParticleAnimation_fs_4fv_part_damp_noiseScale_part_field_weight_part_damp_targtRad[2];
-  part_damp_targtRad = uniform_ParticleAnimation_fs_4fv_part_damp_noiseScale_part_field_weight_part_damp_targtRad[3];
-  part_timeToTargt = uniform_ParticleAnimation_fs_4fv_part_timeToTargt_partMove_target_partMove_rand_partExit_mode[0];
-  partMove_target = (uniform_ParticleAnimation_fs_4fv_part_timeToTargt_partMove_target_partMove_rand_partExit_mode[1] > 0 ? true : false);
-  partMove_rand = (uniform_ParticleAnimation_fs_4fv_part_timeToTargt_partMove_target_partMove_rand_partExit_mode[2] > 0 ? true : false);
-  partExit_mode = int(uniform_ParticleAnimation_fs_4fv_part_timeToTargt_partMove_target_partMove_rand_partExit_mode[3]);
-  partStroke_mode = int(uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_pixel_acc_shiftX_pixel_acc_shiftY[0]);
-  partColor_mode = int(uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_pixel_acc_shiftX_pixel_acc_shiftY[1]);
-  pixel_acc_shiftX = uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_pixel_acc_shiftX_pixel_acc_shiftY[2];
-  pixel_acc_shiftY = uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_pixel_acc_shiftX_pixel_acc_shiftY[3];
-  repop_part = uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze[0];
-  repop_path = uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze[1];
-  freeze = (uniform_ParticleAnimation_fs_3fv_repop_part_repop_path_freeze[2] > 0 ? true : false);
+  partDecay = uniform_ParticleAnimation_scenario_var_data[0];
+  part_initialization = int(uniform_ParticleAnimation_scenario_var_data[1]);
+  part_path_follow_0 = (uniform_ParticleAnimation_scenario_var_data[2] > 0 ? true : false);
+  part_path_follow_1 = (uniform_ParticleAnimation_scenario_var_data[3] > 0 ? true : false);
+  part_path_follow_2 = (uniform_ParticleAnimation_scenario_var_data[4] > 0 ? true : false);
+  part_path_follow_3 = (uniform_ParticleAnimation_scenario_var_data[5] > 0 ? true : false);
+  part_path_follow_4 = (uniform_ParticleAnimation_scenario_var_data[6] > 0 ? true : false);
+  part_path_follow_5 = (uniform_ParticleAnimation_scenario_var_data[7] > 0 ? true : false);
+  part_path_follow_6 = (uniform_ParticleAnimation_scenario_var_data[8] > 0 ? true : false);
+  part_path_follow_7 = (uniform_ParticleAnimation_scenario_var_data[9] > 0 ? true : false);
+  part_path_repulse_0 = (uniform_ParticleAnimation_scenario_var_data[10] > 0 ? true : false);
+  part_path_repulse_1 = (uniform_ParticleAnimation_scenario_var_data[11] > 0 ? true : false);
+  part_path_repulse_2 = (uniform_ParticleAnimation_scenario_var_data[12] > 0 ? true : false);
+  part_path_repulse_3 = (uniform_ParticleAnimation_scenario_var_data[13] > 0 ? true : false);
+  part_path_repulse_4 = (uniform_ParticleAnimation_scenario_var_data[14] > 0 ? true : false);
+  part_path_repulse_5 = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
+  part_path_repulse_6 = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
+  part_path_repulse_7 = (uniform_ParticleAnimation_scenario_var_data[17] > 0 ? true : false);
+  part_size = uniform_ParticleAnimation_scenario_var_data[18];
+  part_acc = uniform_ParticleAnimation_scenario_var_data[19];
+  part_damp = uniform_ParticleAnimation_scenario_var_data[20];
+  noiseScale = uniform_ParticleAnimation_scenario_var_data[21];
+  part_field_weight = uniform_ParticleAnimation_scenario_var_data[22];
+  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[23];
+  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[24];
+  partMove_target = (uniform_ParticleAnimation_scenario_var_data[25] > 0 ? true : false);
+  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[26] > 0 ? true : false);
+  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[27]);
+  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[28]);
+  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[29]);
+  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[30];
+  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[31];
+  repop_part = uniform_ParticleAnimation_scenario_var_data[32];
+  repop_path = uniform_ParticleAnimation_scenario_var_data[33];
+  freeze = (uniform_ParticleAnimation_scenario_var_data[34] > 0 ? true : false);
 
   //////////////////////////
   // variables 

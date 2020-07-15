@@ -14,16 +14,14 @@ bool      mute_second_screen;
 bool      invertAllLayers;
 int       cursorSize;
 float     master;
-uniform vec4 uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master;
 float     CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
-uniform vec4 uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1;
 float     trackMasterWeight_2;
 float     trackMasterWeight_3;
 bool      interfaceOnScreen;
-uniform vec3 uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen;
+uniform float uniform_Master_scenario_var_data[11];
 
 // Main shader.
 
@@ -53,7 +51,7 @@ uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
-uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
+uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
@@ -63,17 +61,17 @@ out vec4 outColor0;
 
 
 void main() {
-  mute_second_screen = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[0] > 0 ? true : false);
-  invertAllLayers = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[2]);
-  master = uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[3];
-  CAMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[0];
-  PartMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[1];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[2];
-  trackMasterWeight_1 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[3];
-  trackMasterWeight_2 = uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[0];
-  trackMasterWeight_3 = uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[1];
-  interfaceOnScreen = (uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[2] > 0 ? true : false);
+  mute_second_screen = (uniform_Master_scenario_var_data[0] > 0 ? true : false);
+  invertAllLayers = (uniform_Master_scenario_var_data[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_scenario_var_data[2]);
+  master = uniform_Master_scenario_var_data[3];
+  CAMasterWeight = uniform_Master_scenario_var_data[4];
+  PartMasterWeight = uniform_Master_scenario_var_data[5];
+  trackMasterWeight_0 = uniform_Master_scenario_var_data[6];
+  trackMasterWeight_1 = uniform_Master_scenario_var_data[7];
+  trackMasterWeight_2 = uniform_Master_scenario_var_data[8];
+  trackMasterWeight_3 = uniform_Master_scenario_var_data[9];
+  interfaceOnScreen = (uniform_Master_scenario_var_data[10] > 0 ? true : false);
 
   float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
   float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
@@ -105,7 +103,7 @@ void main() {
   // interface
   if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
     else if(decalCoords.x < 200) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);

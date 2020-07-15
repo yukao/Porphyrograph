@@ -364,6 +364,7 @@ void pg_Display_All_SVG_ClipArt(int activeFiles) {
 			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
 			for (int indClipArt = 0; indClipArt < std::min(pg_nb_ClipArt, 32); indClipArt++) {
 				if (activeFiles & (1 << indClipArt)) {
+					//printf("active clipart display %d\n", indClipArt);
 					glMatrixPushEXT(GL_MODELVIEW); {
 						glMatrixLoadIdentityEXT(GL_MODELVIEW);
 						glTranslatef(pg_ClipArt_Translation_X[indClipArt], pg_ClipArt_Translation_Y[indClipArt], 0);
@@ -377,7 +378,7 @@ void pg_Display_All_SVG_ClipArt(int activeFiles) {
 								|| (indLocalPath < 4 && pg_ClipArt_SubPath[indClipArt * 4 + indLocalPath] == true)) {
 								pg_Display_One_SVG_ClipArt(pg_ClipArt_Colors[indClipArt], indPath);
 							}
-						} 
+						}
 					}
 					glMatrixPopEXT(GL_MODELVIEW);
 				}
@@ -387,3 +388,128 @@ void pg_Display_All_SVG_ClipArt(int activeFiles) {
 	}
 	printOglError(5257);
 }
+
+#if defined (ETOILES)
+//////////////////////////////////////////////////
+// RENDERING OF MESSAGE THROUGH SVG GPU CHARACTERS
+float pg_Translate_SVG_Text(int indDisplayText) {
+	return float(log(indDisplayText) * 110);
+}
+void pg_Display_SVG_Text(int *ind_Current_DisplayText, bool randomDecreasing) {
+	if ((*ind_Current_DisplayText) >= 0 && (*ind_Current_DisplayText) < NbDisplayTexts) {
+		glUseProgram(shader_programme[pg_ClipArt]);
+		//glDisable(GL_DEPTH_TEST);
+
+		//glClearStencil(0);
+		// glClearColor(1, 1, 1, 1);
+
+		// glEnable(GL_BLEND);
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_NOTEQUAL, 0, 0x1F);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+
+		glClear(GL_STENCIL_BUFFER_BIT);
+		glMatrixPushEXT(GL_PROJECTION); {
+			glMatrixLoadIdentityEXT(GL_PROJECTION);
+			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
+			std::string displayed_text("");
+			if (randomDecreasing) {
+				int digit_rank = (*ind_Current_DisplayText) / 10;
+				// digits of the number
+				if ((*ind_Current_DisplayText) < 130) {
+					int digit_value = 0;
+					for (int curDigitRank = 0; curDigitRank < 12; curDigitRank++) {
+						if (curDigitRank >= digit_rank) {
+							digit_value = int(rand_0_1 * 10) % 10;
+						}
+						else {
+							digit_value = 0;
+						}
+						displayed_text.push_back(char('0'+digit_value));
+						if (curDigitRank == 0) {
+							displayed_text += std::string(".");
+						}
+					}
+					// exponent of the number
+					displayed_text += std::string("e-");
+					std::string exponent("");
+					int exponent_value;
+					if (digit_rank < 12) {
+						exponent_value = 6;
+					}
+					else {
+						int local_rank = (*ind_Current_DisplayText) % 10;
+						exponent_value = int(rand_0_1 * 10 + 10 * local_rank) % 100;
+					}
+					std::stringstream ss;
+					ss << std::setw(2) << std::setfill('0') << exponent_value;
+					exponent = ss.str();
+					displayed_text += exponent;
+				}
+				else {
+					displayed_text = string("               0.");
+				}
+				//std::cout << "text " << displayed_text << " rank " << (*ind_Current_DisplayText) << std::endl;
+			}
+			else {
+				displayed_text = DisplayTextList[(*ind_Current_DisplayText)];
+			}
+			// decomposition of the string into characters and svg index lookup
+			for (unsigned int indChar = 0; indChar < displayed_text.size(); indChar++) {
+				char curChar = displayed_text.at(indChar);
+				int indClipArt = -1;
+				if (curChar >= '0' && curChar <= '9') {
+					indClipArt = curChar - '0';
+				}
+				else {
+					switch (curChar) {
+					case '.':  indClipArt = 10; break;
+					case ',':  indClipArt = 11; break;
+					case '+':  indClipArt = 12; break;
+					case '-':  indClipArt = 13; break;
+					case 'e':  indClipArt = 14; break;
+					}
+				}
+				if (indClipArt >= 0 && indClipArt < pg_nb_ClipArt) {
+					//printf("active clipart display %d\n", indClipArt);
+					glMatrixPushEXT(GL_MODELVIEW); {
+						glMatrixLoadIdentityEXT(GL_MODELVIEW);
+						float y_transl = 0.f;
+						if (randomDecreasing) {
+							y_transl = pg_ClipArt_Translation_Y[indClipArt];
+						}
+						else {
+							y_transl = pg_Translate_SVG_Text((*ind_Current_DisplayText));
+						}
+						glTranslatef(100.f + 100.f * indChar, y_transl, 0);
+						//glRotatef(pg_ClipArt_Rotation[indClipArt], 0, 0, 1);
+						//glScalef(pg_ClipArt_Scale[indClipArt], pg_ClipArt_Scale[indClipArt], 1);
+						for (int indPath = pg_ind_first_SvgGpu_path_in_ClipArt[indClipArt];
+							indPath < pg_ind_first_SvgGpu_path_in_ClipArt[indClipArt] + pg_nb_paths_in_ClipArt[indClipArt];
+							indPath++) {
+							int indLocalPath = indPath - pg_ind_first_SvgGpu_path_in_ClipArt[indClipArt];
+							if (indLocalPath >= 4
+								|| (indLocalPath < 4 && pg_ClipArt_SubPath[indClipArt * 4 + indLocalPath] == true)) {
+								pg_Display_One_SVG_ClipArt(pg_ClipArt_Colors[indClipArt], indPath);
+							}
+						}
+					}
+					glMatrixPopEXT(GL_MODELVIEW);
+				}
+			}
+		} glMatrixPopEXT(GL_PROJECTION);
+		glDisable(GL_STENCIL_TEST);
+	}
+	if (randomDecreasing) {
+		if (pg_FrameNo % 3 == 0) {
+			(*ind_Current_DisplayText) = ((*ind_Current_DisplayText) + 1) % NbDisplayTexts;
+		}
+	}
+	else {
+		if (pg_FrameNo % 3 == 0) {
+			(*ind_Current_DisplayText) = ((*ind_Current_DisplayText) + 1) % NbDisplayTexts;
+		}
+	}
+	printOglError(5257);
+}
+#endif

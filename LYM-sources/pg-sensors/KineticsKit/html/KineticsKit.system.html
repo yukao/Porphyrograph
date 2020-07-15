@@ -1,0 +1,64 @@
+
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module KineticsKit.system</title>
+<style type="text/css"><!--
+TT { font-family: lucidatypewriter, lucida console, courier }
+--></style></head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0>
+<tr bgcolor="#7799ee">
+<td valign=bottom><small>&nbsp;<br></small
+><font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="KineticsKit.html"><font color="#ffffff">KineticsKit</font></a>.system</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href="index.html">index</a><br><a href="KineticsKit.system.py.html">KineticsKit.system.py</a>  </font></td></tr></table>
+    <p><small></small></p>
+
+<p><table width="100%" cellspacing=0 cellpadding=2 border=0>
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom><small><small>&nbsp;<br></small></small
+><font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;&nbsp;</td>
+<td width="100%"><table width="100%"><tr><td width="25%" valign=top><a href="visual.html">visual</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table>
+<p><table width="100%" cellspacing=0 cellpadding=2 border=0>
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom><small><small>&nbsp;<br></small></small
+><font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><small><a href="KineticsKit.system.html#System">System</a>
+</small></font></dt></dl>
+ 
+<p><table width="100%" cellspacing=0 cellpadding=2 border=0>
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom><small><small>&nbsp;<br></small></small
+><font color="#000000" face="helvetica, arial"><a name="System">class <strong>System</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><small><tt>The&nbsp;system.<br>&nbsp;</tt></small></td></tr>
+<tr><td>&nbsp;&nbsp;</td>
+<td width="100%"><dl><dt><a name="System-__init__"><strong>__init__</strong></a>(self, timestep, oversample<small><font color="#909090">=1</font></small>, gravity<small><font color="#909090">=None</font></small>, viscosity<small><font color="#909090">=None</font></small>, name<small><font color="#909090">='KineticsKit'</font></small>, **keywords)<dd><small><tt>Construct&nbsp;a&nbsp;system.</tt></small></dl>
+<dl><dt><a name="System-advance"><strong>advance</strong></a>(self)<dd><small><tt>Perform&nbsp;one&nbsp;Iteration&nbsp;of&nbsp;the&nbsp;system&nbsp;by&nbsp;advancing&nbsp;one&nbsp;timestep.</tt></small></dl>
+<dl><dt><a name="System-dispatchDnD"><strong>dispatchDnD</strong></a>(self)<dd><small><tt>Process&nbsp;the&nbsp;drag&nbsp;and&nbsp;drop&nbsp;interaction&nbsp;from&nbsp;the&nbsp;mouse.</tt></small></dl>
+<dl><dt><a name="System-insertMass"><strong>insertMass</strong></a>(self, mass)<dd><small><tt>Insert&nbsp;mass&nbsp;into&nbsp;the&nbsp;system.</tt></small></dl>
+<dl><dt><a name="System-insertMassList"><strong>insertMassList</strong></a>(self, masslist)<dd><small><tt>Insert&nbsp;all&nbsp;Masses&nbsp;in&nbsp;masslist&nbsp;into&nbsp;the&nbsp;system.</tt></small></dl>
+<dl><dt><a name="System-insertSpring"><strong>insertSpring</strong></a>(self, spring)<dd><small><tt>Insert&nbsp;spring&nbsp;into&nbsp;the&nbsp;system.</tt></small></dl>
+<dl><dt><a name="System-insertSpringList"><strong>insertSpringList</strong></a>(self, springlist)<dd><small><tt>Insert&nbsp;all&nbsp;Springs&nbsp;in&nbsp;springlist&nbsp;into&nbsp;the&nbsp;system.</tt></small></dl>
+<dl><dt><a name="System-mainloop"><strong>mainloop</strong></a>(self)<dd><small><tt>Start&nbsp;the&nbsp;mainloop,&nbsp;which&nbsp;means&nbsp;that&nbsp;<a href="#System-step">step</a>()&nbsp;is<br>
+called&nbsp;in&nbsp;an&nbsp;infinite&nbsp;loop.</tt></small></dl>
+<dl><dt><a name="System-povexport"><strong>povexport</strong></a>(self, filename<small><font color="#909090">=None</font></small>, **keywords)<dd><small><tt>Export&nbsp;the&nbsp;system&nbsp;to&nbsp;a&nbsp;POV-Ray&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;filename<br>
+is&nbsp;given,&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;system&nbsp;is&nbsp;used.</tt></small></dl>
+<dl><dt><a name="System-step"><strong>step</strong></a>(self)<dd><small><tt>Perform&nbsp;one&nbsp;step.&nbsp;&nbsp;This&nbsp;is&nbsp;a&nbsp;convenience&nbsp;method.<br>
+It&nbsp;actually&nbsp;calls&nbsp;<a href="#System-dispatchDnD">dispatchDnD</a>()&nbsp;and&nbsp;<a href="#System-advance">advance</a>().</tt></small></dl>
+</td></tr></table></td></tr></table>
+<p><table width="100%" cellspacing=0 cellpadding=2 border=0>
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom><small><small>&nbsp;<br></small></small
+><font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;&nbsp;</td>
+<td width="100%"><strong>__file__</strong> = 'C:\\Python24\\lib\\site-packages\\KineticsKit\\system.pyc'<br>
+<strong>__name__</strong> = 'KineticsKit.system'</td></tr></table>
+</body></html>

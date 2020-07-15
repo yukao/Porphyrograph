@@ -25,33 +25,50 @@
       
 /////////////////////////////////////////////////////////////////
 // config variables
+// large array for passing the path data to the fragment shader
+float path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
+float path_data_ParticleAnimation[(PG_NB_PATHS + 1) * PG_MAX_PATH_ANIM_DATA * 4];
+
 float paths_x_next_0 = -1;
 float paths_y_next_0 = -1;
 float paths_x_prev_prev_0 = -1;
 float paths_y_prev_prev_0 = -1;
-float paths_xL[PG_NB_PATHS + 1];
-float paths_yL[PG_NB_PATHS + 1];
-float paths_xR[PG_NB_PATHS + 1];
-float paths_yR[PG_NB_PATHS + 1];
-#ifdef PG_BEZIER_PATHS
-int path0_next_in_hull[4];
-#endif
+
+// path variables
 float paths_x[PG_NB_PATHS + 1];
 float paths_y[PG_NB_PATHS + 1];
 float paths_x_prev[PG_NB_PATHS + 1];
 float paths_y_prev[PG_NB_PATHS + 1];
+float paths_x_memory[PG_NB_PATHS + 1];
+float paths_y_memory[PG_NB_PATHS + 1];
+float paths_x_prev_memory[PG_NB_PATHS + 1];
+float paths_y_prev_memory[PG_NB_PATHS + 1];
 bool isBegin[PG_NB_PATHS + 1];
 bool isEnd[PG_NB_PATHS + 1];
 float paths_Color_r[PG_NB_PATHS + 1];
 float paths_Color_g[PG_NB_PATHS + 1];
 float paths_Color_b[PG_NB_PATHS + 1];
 float paths_Color_a[PG_NB_PATHS + 1];
-float repop_Color_r;
-float repop_Color_g;
-float repop_Color_b;
-int paths_BrushID[PG_NB_PATHS + 1];
 float paths_RadiusX[PG_NB_PATHS + 1];
 float paths_RadiusY[PG_NB_PATHS + 1];
+#ifdef PG_BEZIER_PATHS
+float paths_xL[PG_NB_PATHS + 1];
+float paths_yL[PG_NB_PATHS + 1];
+float paths_xR[PG_NB_PATHS + 1];
+float paths_yR[PG_NB_PATHS + 1];
+#else
+int paths_BrushID[PG_NB_PATHS + 1];
+#endif
+
+float repop_ColorBG_r;
+float repop_ColorBG_g;
+float repop_ColorBG_b;
+float repop_ColorCA_r;
+float repop_ColorCA_g;
+float repop_ColorCA_b;
+float repop_ColorPart_r;
+float repop_ColorPart_g;
+float repop_ColorPart_b;
 
 // interpolated CA
 int CAInterpolatedType;
@@ -65,6 +82,14 @@ float				svg_translate_y = 0.f;
 float				svg_translate_z = 0.f;
 // svg gpu scaling
 float				svg_scale = 1.f;
+
+#ifdef PG_MESHES
+// MVP matrices
+glm::mat4 VP1perspMatrix;
+glm::mat4 VP1viewMatrix;
+glm::mat4 VP1modelMatrix;
+glm::mat4 VP1homographyMatrix;
+#endif
 
 #ifdef PG_SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -115,6 +140,14 @@ float sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { 0.0, 0.0, 0.0 };
 #endif
 
+#ifndef CAAUDIO
+// sensor rendering
+int Sensor_order[PG_NB_SENSORS] = { 8, 13, 14, 11, 7, 2, 1, 4, 12, 15, 3, 0, 9, 10, 5, 6 };
+#else
+// sensor rendering
+int Sensor_order[PG_NB_SENSORS] = { 0 };
+#endif
+
 #ifdef PG_SUPERCOLLIDER
 // groups of samples for aliasing with additive samples
 int sample_groups[PG_NB_SENSOR_GROUPS][4] =
@@ -155,8 +188,9 @@ float CameraCurrent_WB_R = 0.0f;
 
 /////////////////////////////////////////////////////////////////
 // textures bitmaps and associated IDs
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-GLuint pg_particle_initial_images_texID[PG_NB_PARTICLE_INITIAL_IMAGES][2];
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+std::vector<GLuint> pg_particle_initial_pos_speed_texID;
+std::vector<GLuint> pg_particle_initial_color_radius_texID;
 #endif
 
 GLuint pg_screenMessageBitmap_texID = 0; // nb_attachments=1
@@ -176,24 +210,23 @@ GLubyte *pg_CATable = NULL;
 
 #if defined (GN) || defined (INTERFERENCE)
 GLuint pg_LYMlogo_texID = NULL_ID;
-cv::Mat pg_LYMlogo_image;
 #endif
 
-GLuint Screen_Font_texture_Rectangle_texID = 0;
-cv::Mat Screen_Font_image;
+GLuint Screen_Font_texture_Rectangle_texID = NULL_ID;
 #if defined (TVW)
-GLuint Display_Font_texture_Rectangle_texID = 0;
-cv::Mat Display_Font_image;
+GLuint Display_Font_texture_Rectangle_texID = NULL_ID;
 #endif
 
 #ifndef PG_BEZIER_PATHS
-GLuint Pen_texture_3D_texID = 0;
+GLuint Pen_texture_3D_texID = NULL_ID;
 #endif
-GLuint Noise_texture_3D = 0;
+GLuint Noise_texture_3D = NULL_ID;
+#ifdef PG_WITH_REPOP_DENSITY
+std::vector<GLuint>  pg_RepopDensity_texture_texID;
+#endif
 
 #ifdef PG_WITH_MASTER_MASK
 GLuint Master_Mask_texID = 0;
-cv::Mat Master_Mask_image;
 #endif
 
 #if defined (TVW)
@@ -222,10 +255,12 @@ int IndDisplayText2 = -1;
 
 bool DisplayText1Front = true;
 float DisplayTextSwapInitialTime = 0;
-
+#endif
+#if defined (TVW) || defined (ETOILES)
 std::string* DisplayTextList;
 int* DisplayTextFirstInChapter;
 int NbDisplayTexts = 0;
+int pg_Ind_Current_DisplayText = 0;
 
 // message chapters
 int NbTextChapters = 0;
@@ -233,12 +268,6 @@ int NbTextChapters = 0;
 
 #ifdef PG_SENSORS
 GLuint Sensor_texture_rectangle = NULL_ID;
-cv::Mat Sensor_image;
-#endif
-
-#ifdef PG_MESHES
-GLuint Mesh_texture_rectangle = NULL_ID;
-cv::Mat Mesh_image;
 #endif
 
 // video texture ID, image and camera
@@ -274,7 +303,7 @@ int nb_pen_palette_colors = 0;
 vector<string> pen_palette_colors_names;
 float **pen_palette_colors_values = NULL;
 // photo albums
-vector<string> photoAlbumDirName;
+string photoAlbumDirName;
 int nb_photo_albums = 0;
 // pen brushes
 string pen_brushes_fileName;
@@ -338,6 +367,7 @@ void window_display( void ) {
   // printOglError(509);
 
   // proper scene redrawing
+  // printf("VideoPb Draw scene \n\n");
   pg_draw_scene( _Render, false );
 
   //////////////////////////////////////////////////
@@ -875,21 +905,28 @@ void one_frame_variables_reset(void) {
 	if (flashCameraTrk_weight > 0.0f) {
 		if (flashCameraTrk_weight - flashCameraTrk_decay > 0) {
 			flashCameraTrk_weight -= flashCameraTrk_decay;
+			//printf("flash camera weight %.3f\n", flashCameraTrk_weight);
 		}
 		else {
 			flashCameraTrk_weight = 0.0f;
-			// printf("end of flash camera weight %.3f\n", flashCameraTrk_weight);
+			//printf("end of flash camera weight %.3f\n", flashCameraTrk_weight);
 		}
 	}
 #ifdef PG_WITH_PHOTO_FLASH
 	// flash photo reset
 	if (flashPhotoTrk_weight > 0.0f) {
-		if (flashPhotoTrk_weight - flashPhotoTrk_decay > 0) {
+		if (flashPhotoTrk_nbFrames == 0) {
+			invertAllLayers = !invertAllLayers;
+			flashPhotoTrk_nbFrames++;
+		}
+		else if (flashPhotoTrk_weight - flashPhotoTrk_decay > 0) {
 			flashPhotoTrk_weight -= flashPhotoTrk_decay;
+			flashPhotoTrk_nbFrames++;
 		}
 		else {
 			flashPhotoTrk_weight = 0.0f;
-			// printf("end of flash photo weight %.3f\n", flashPhotoTrk_weight);
+			 //printf("end of flash photo weight %.3f\n", flashPhotoTrk_weight);
+			 flashPhotoTrk_nbFrames = 0;
 		}
 	}
 #endif
@@ -897,7 +934,11 @@ void one_frame_variables_reset(void) {
 	// /////////////////////////
 	// clear layer reset
 	// does not reset if camera capture is still ongoing
-	if ((!reset_camera && !secondCurrentBGCapture)
+	if ((
+#ifdef PG_WITH_CAMERA_CAPTURE
+		!reset_camera && 
+#endif
+		!secondCurrentBGCapture)
 #ifdef GN
 		|| (!initialBGCapture && !secondInitialBGCapture)
 #endif
@@ -910,6 +951,8 @@ void one_frame_variables_reset(void) {
 	isClearLayer = 0;
 	// clear all layers reset
 	isClearAllLayers = 0;
+	// clear CA reset
+	isClearEcho = 0;
 	// layer copy reset
 	// copy to layer above (+1) or to layer below (-1)
 	copyToNextTrack = 0;
@@ -935,7 +978,7 @@ void one_frame_variables_reset(void) {
 	pg_CAseed_trigger = false;
 #endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// /////////////////////////
 	// particle initialization reset
 	part_initialization = -1;
@@ -957,60 +1000,81 @@ void pg_update_camera_and_video_frame(void) {
 		}
 		float elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
 		// printf("\nCurrent time %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
-		while (elapsedTimeSinceLastCapture >= (1.0f / movieCaptFreq) ) { // frame capture
+//#ifndef TEMPETE
+//		while (elapsedTimeSinceLastCapture >= (1.0f / movieCaptFreq) ) { // frame capture
+//		// for La Tempete, we make the hypothesis that the frame rate is the same as the video 24FPS
+//			// a video frame is capture at each framebuffer generation
+//#endif
 			lastFrameCaptureTime = CurrentClockTime + (elapsedTimeSinceLastCapture - (1.0f / movieCaptFreq));
-			if (pg_movie_nbFrames < 10 || !pg_movie_capture.grab()) {
-				// loops unless a thread for looping has been launched
-				// printf("movie loop %d\n", pg_movie_nbFrames);
-				is_movieLooping = true;
-#ifdef WIN32
-				DWORD rc;
-				HANDLE  hThread = CreateThread(
-					NULL,                   // default security attributes
-					0,                      // use default stack size  
-					pg_movieLoop,		    // thread function name
-					(void *)NULL,		    // argument to thread function 
-					0,                      // use default creation flags 
-					&rc);   // returns the thread identifier 
-				if (hThread == NULL) {
-					std::cout << "Error:unable to create thread pg_movieLoop" << std::endl;
-					exit(-1);
+//#ifndef TEMPETE
+//			if (pg_movie_nbFrames < 10 || !pg_movie_capture.grab()) {
+//				// loops unless a thread for looping has been launched
+//				// printf("movie loop %d\n", pg_movie_nbFrames);
+//				is_movieLooping = true;
+//#ifdef WIN32
+//				DWORD rc;
+//				HANDLE  hThread = CreateThread(
+//					NULL,                   // default security attributes
+//					0,                      // use default stack size  
+//					pg_movieLoop,		    // thread function name
+//					(void *)NULL,		    // argument to thread function 
+//					0,                      // use default creation flags 
+//					&rc);   // returns the thread identifier 
+//				if (hThread == NULL) {
+//					std::cout << "Error:unable to create thread pg_movieLoop" << std::endl;
+//					exit(-1);
+//				}
+//				CloseHandle(hThread);
+//#else
+//				pthread_t drawing_thread;
+//				int rc;
+//				rc = pthread_create(&drawing_thread, NULL,
+//					pg_movieLoop, (void *)NULL);
+//				if (rc) {
+//					std::cout << "Error:unable to create thread pg_movieLoop" << rc << std::endl;
+//					exit(-1);
+//				}
+//				pthread_exit(NULL);
+//#endif
+//			}
+//			else {
+//#endif
+				if (!pg_FirstMovieFrameIsAvailable) {
+					// printf("VideoPb Read frame \n");
+
+					// video loop
+					if (pg_movie_nbFrames < 10){
+						// resets the movie
+						pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+						pg_movie_nbFrames = int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT));
+						// printf("movie restarted\n");
+					}
+
+					// non threaded
+					Mat pg_movie_frame;
+
+					//Grabs and returns a frame from movie
+					pg_movie_capture >> pg_movie_frame;
+					if (!pg_movie_frame.data) {
+						printf("Movie frame not grabbed!\n");
+						return;
+					}
+					else {
+						pg_movie_nbFrames--;
+					}
+
+					//  transfer to GPU
+					pg_initMovieFrameTexture(&pg_movie_frame);
 				}
-				CloseHandle(hThread);
-#else
-				pthread_t drawing_thread;
-				int rc;
-				rc = pthread_create(&drawing_thread, NULL,
-					pg_movieLoop, (void *)NULL);
-				if (rc) {
-					std::cout << "Error:unable to create thread pg_movieLoop" << rc << std::endl;
-					exit(-1);
+				else {
+					pg_FirstMovieFrameIsAvailable = false;
 				}
-				pthread_exit(NULL);
-#endif
-			}
-			else {
-				// non threaded
-				Mat pg_movie_frame;
-				pg_movie_capture >> pg_movie_frame;
-				pg_movie_nbFrames--;
-				if (pg_movie_frame.data) {
-					glEnable(GL_TEXTURE_RECTANGLE);
-					glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
-					glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
-						0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-						GL_RGB,            // Internal colour format to convert to
-						pg_movie_frame_width,          // Image width  i.e. 640 for Kinect in standard mode
-						pg_movie_frame_height,          // Image height i.e. 480 for Kinect in standard mode
-						0,                 // Border width in pixels (can either be 1 or 0)
-						GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-						GL_UNSIGNED_BYTE,  // Image data type
-						(char *)pg_movie_frame.data);        // The actual image data itself
-				}
-			}
-			elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
-			// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
-		}
+				elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
+				// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
+//#ifndef TEMPETE
+//			}
+//		}
+//#endif
 	}
 
 	// /////////////////////////
@@ -1034,8 +1098,6 @@ void pg_update_camera_and_video_frame(void) {
 #endif
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
-// scene update
 
 void pg_update_shader_uniforms(void) {
 	//#ifdef TVW
@@ -1080,6 +1142,12 @@ void pg_update_shader_uniforms(void) {
 #ifdef VOLUSPA
 #include "pg_update_body_voluspa.cpp"
 #endif
+#ifdef ARAKNIT
+#include "pg_update_body_araknit.cpp"
+#endif
+#if defined (ETOILES)
+#include "pg_update_body_etoiles.cpp"
+#endif
 #ifdef INTERFERENCE
 #include "pg_update_body_interference.cpp"
 #endif
@@ -1095,7 +1163,7 @@ void pg_update_shader_uniforms(void) {
 	printOglError(510);
 
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	/////////////////////////////////////////////////////////////////////////
 	// PARTICLE ANIMATION SHADER UNIFORM VARIABLES
 	glUseProgram(shader_programme[pg_shader_ParticleAnimation]);
@@ -1132,7 +1200,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)selected_channel, GLfloat(pg_targetFrameNo));
 
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+//#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 	// pen paths positions
 #if defined (TVW)
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
@@ -1152,34 +1220,53 @@ void pg_update_shader_uniforms(void) {
 		paths_y_prev[2] = float(window_height / 4 + 2 * radius * sin(randval));
 	}
 #endif
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_x, paths_x[0], paths_x[1], paths_x[2], paths_x[3]);
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_y, paths_y[0], paths_y[1], paths_y[2], paths_y[3]);
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_x_prev,
-		paths_x_prev[0], paths_x_prev[1], paths_x_prev[2], paths_x_prev[3]);
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_y_prev,
-		paths_y_prev[0], paths_y_prev[1], paths_y_prev[2], paths_y_prev[3]);
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		paths_x_memory[indPath] = (paths_x[indPath] > 0 ? paths_x[indPath] : paths_x_memory[indPath]);
+		paths_x_prev_memory[indPath] = (paths_x_prev[indPath] > 0 ? paths_x_prev[indPath] : paths_x_prev_memory[indPath]);
+		paths_y_memory[indPath] = (paths_y[indPath] > 0 ? paths_y[indPath] : paths_y_memory[indPath]);
+		paths_y_prev_memory[indPath] = (paths_y_prev[indPath] > 0 ? paths_y_prev[indPath] : paths_y_prev_memory[indPath]);
+	}
+
+	// position
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 0] = paths_x_prev_memory[indPath];
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 1] = paths_y_prev_memory[indPath];
+	}
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 2] = paths_x_memory[indPath];
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 3] = paths_y_memory[indPath];
+	}
+	// color, radius, beginning or end of a stroke
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 0] = paths_RadiusX[indPath];
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 1] = rand_0_1;
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 2] = rand_0_1;
+	}
+	glUniform4fv(uniform_ParticleAnimation_path_data, (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_ParticleAnimation);
+
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_x, paths_x_memory[0], paths_x_memory[1], paths_x_memory[2], paths_x_memory[3]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_y, paths_y_memory[0], paths_y_memory[1], paths_y_memory[2], paths_y_memory[3]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_x_prev, paths_x_prev_memory[0], paths_x_prev_memory[1], paths_x_prev_memory[2], paths_x_prev_memory[3]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_y_prev, paths_y_prev_memory[0], paths_y_prev_memory[1], paths_y_prev_memory[2], paths_y_prev_memory[3]);
 
 	// pen paths brush & size
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_RadiusX,
-		paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_RadiusX, paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
 	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
-#endif
-
-#if PG_NB_PATHS == 7
+//#endif
+//
+//#if PG_NB_PATHS == 7
 	// pen paths positions
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_x, paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	// printf("path 4-7 X %.f %.f %.f %.f\n", paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_y, paths_y[4], paths_y[5], paths_y[6], paths_y[7]);
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_x_prev,
-		paths_x_prev[4], paths_x_prev[5], paths_x_prev[6], paths_x_prev[7]);
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_y_prev,
-		paths_y_prev[4], paths_y_prev[5], paths_y_prev[6], paths_y_prev[7]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_x, paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
+	//// printf("path 4-7 X %.f %.f %.f %.f\n", paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_y, paths_y[4], paths_y[5], paths_y[6], paths_y[7]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_x_prev, paths_x_prev[4], paths_x_prev[5], paths_x_prev[6], paths_x_prev[7]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_y_prev, paths_y_prev[4], paths_y_prev[5], paths_y_prev[6], paths_y_prev[7]);
 
 	// pen paths brush & size
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_RadiusX,
-		paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6], paths_RadiusX[7]);
+	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_RadiusX,
+	//	paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6], paths_RadiusX[7]);
 	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6] , paths_RadiusX[7] );
-#endif
+//#endif
 
 #if PG_NB_TRACKS >= 4
 	// flash Trk -> Part weights
@@ -1215,16 +1302,17 @@ void pg_update_shader_uniforms(void) {
 
 	// flash CA -> BG & repop color (BG & CA)
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo,
-		repop_Color_r, repop_Color_g, repop_Color_b, (GLfloat)pg_FrameNo);
+		repop_ColorPart_r, repop_ColorPart_g, repop_ColorPart_b, GLfloat(pg_FrameNo));
 	// clear layer, flash pixel, flash CA -> Part
-	glUniform3f(uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear,
-		(GLfloat)flashCAPart_weight, (GLfloat)nb_particles, (GLfloat)isClearAllLayers);
+	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit,
+		GLfloat(flashCAPart_weight), GLfloat(nb_particles), GLfloat(isClearAllLayers),
+		GLfloat(pg_particle_initial_pos_speed_texID.size()));
 
 	// movie size, flash camera and copy tracks
 	// copy to layer above (+1) or to layer below (-1)
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH,
-		(GLfloat)pg_camera_frame_width, (GLfloat)pg_camera_frame_height,
-		(GLfloat)pg_movie_frame_width, (GLfloat)pg_movie_frame_height);
+		GLfloat(pg_camera_frame_width), GLfloat(pg_camera_frame_height),
+		GLfloat(pg_movie_frame_width), GLfloat(pg_movie_frame_height));
 
 #endif
 	printOglError(511);
@@ -1243,7 +1331,7 @@ void pg_update_shader_uniforms(void) {
 	// pixels acceleration
 	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift,
 		(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 		fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
 #else
 		0.f);
@@ -1264,17 +1352,56 @@ void pg_update_shader_uniforms(void) {
 	}
 #endif
 
-	//if (isClearAllLayers > 0) {
-	//	printf("-> clear all layers\n");
-	//}
-	// printf("pixel_radius_pulse %.2f vol %.2f\n", pixel_radius_pulse, pulse_average * pixel_radius_pulse);
-	// printf("is clear layer %.2f\n", (GLfloat)isClearLayer);
 
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-	// pen paths positions
-	glUniform4f(uniform_Update_fs_4fv_paths03_x, paths_x_0_forGPU, paths_x[1], paths_x[2], paths_x[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_y, paths_y_0_forGPU, paths_y[1], paths_y[2], paths_y[3]);
+	// position
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 0] = paths_x_prev[indPath];
+#ifdef PG_BEZIER_PATHS
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 1] = paths_xL[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 2] = paths_xR[indPath];
+#endif
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 0] = paths_y_prev[indPath];
+#ifdef PG_BEZIER_PATHS
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 1] = paths_yL[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 2] = paths_yR[indPath];
+#endif
+	}
+	path_data_Update[0 * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x_0_forGPU;
+	path_data_Update[0 * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y_0_forGPU;
+	for (int indPath = 1; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y[indPath];
+	}
+	// color, radius, beginning or end of a stroke
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_COLOR * 4 + 0] = paths_Color_r[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_COLOR * 4 + 1] = paths_Color_g[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_COLOR * 4 + 2] = paths_Color_b[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_COLOR * 4 + 3] = paths_Color_a[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 0] = paths_RadiusX[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 1] = (isBegin[indPath] ? 1.f : (isEnd[indPath] ? -1.f : 0.f));
+#ifndef PG_BEZIER_PATHS
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 2] = paths_RadiusY[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 3] = float(paths_BrushID[indPath]);
+#endif
+	}
+#ifdef PG_BEZIER_PATHS
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		build_bounding_box(indPath);
+	}
+
+	// bounding box containing the bezier curve augmented by its radius
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_BOX * 4 + 0] = pg_BezierBox[indPath].x;
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_BOX * 4 + 1] = pg_BezierBox[indPath].y;
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_BOX * 4 + 2] = pg_BezierBox[indPath].z;
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_BOX * 4 + 3] = pg_BezierBox[indPath].w;
+	}
+#endif
+	glUniform4fv(uniform_Update_path_data, (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_Update);
+
 	//  checks the information shipped to GPU at beginning or ending of a stroke
+	// printf("path 4-7 X %.f %.f %.f %.f\n", paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
 	// begin
 	//if (isBegin[0]) {
 	//	printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
@@ -1291,117 +1418,21 @@ void pg_update_shader_uniforms(void) {
 	//	&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
 	//	printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
 	//}
-	if (paths_x_0_forGPU >= 0 && paths_y_0_forGPU >= 0) {
+	//if (paths_x_0_forGPU >= 0 && paths_y_0_forGPU >= 0) {
 		// printf("Position %.1f %.1f\n\n", paths_x_0_forGPU, paths_y_0_forGPU);
-	}
-
-	glUniform4f(uniform_Update_fs_4fv_paths03_x_prev,
-		paths_x_prev[0], paths_x_prev[1], paths_x_prev[2], paths_x_prev[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_y_prev,
-		paths_y_prev[0], paths_y_prev[1], paths_y_prev[2], paths_y_prev[3]);
-
-#ifdef PG_BEZIER_PATHS
-	glUniform4i(uniform_Update_fs_4iv_path03_beginOrEnd,
-		(isBegin[0] ? 1 : (isEnd[0] ? -1 : 0)), (isBegin[1] ? 1 : (isEnd[1] ? -1 : 0)),
-		(isBegin[2] ? 1 : (isEnd[2] ? -1 : 0)), (isBegin[3] ? 1 : (isEnd[3] ? -1 : 0)));
+	//}
 	//if (isBegin[0] && isEnd[0]) {
 	//	printf("Point: %.1f %.1f (%.1f %.1f %.1f %.1f) % .1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
-
 	//}
-
-	// pen Bezier curve tangents
-	glUniform4f(uniform_Update_fs_4fv_paths03_xL,
-		paths_xL[0], paths_xL[1], paths_xL[2], paths_xL[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_yL,
-		paths_yL[0], paths_yL[1], paths_yL[2], paths_yL[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_xR,
-		paths_xR[0], paths_xR[1], paths_xR[2], paths_xR[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_yR,
-		paths_yR[0], paths_yR[1], paths_yR[2], paths_yR[3]);
-	//glUniform4i(uniform_Update_fs_4iv_path0_next_in_hull,
-	//	path0_next_in_hull[0], path0_next_in_hull[1], path0_next_in_hull[2], path0_next_in_hull[3]);
-#endif
-
-
-	// pen paths color
-	glUniform4f(uniform_Update_fs_4fv_paths03_r,
-		paths_Color_r[0], paths_Color_r[1], paths_Color_r[2], paths_Color_r[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_g,
-		paths_Color_g[0], paths_Color_g[1], paths_Color_g[2], paths_Color_g[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_b,
-		paths_Color_b[0], paths_Color_b[1], paths_Color_b[2], paths_Color_b[3]);
-	glUniform4f(uniform_Update_fs_4fv_paths03_a,
-		paths_Color_a[0], paths_Color_a[1], paths_Color_a[2], paths_Color_a[3]);
 	//printf("Track#0 color %.2f %.2f %.2f %.2f\n", paths_Color_r[0], paths_Color_g[0], paths_Color_b[0], paths_Color_a[0]);
 	//printf("Track#1 color %.2f %.2f %.2f %.2f\n", paths_Color_r[1], paths_Color_g[1], paths_Color_b[1], paths_Color_a[1]);
 	//printf("Track#2 color %.2f %.2f %.2f %.2f\n", paths_Color_r[2], paths_Color_g[2], paths_Color_b[2], paths_Color_a[2]);
 	//printf("Track#3 color %.2f %.2f %.2f %.2f\n", paths_Color_r[3], paths_Color_g[3], paths_Color_b[3], paths_Color_a[3]);
-
-	// pen paths brush & size
-#ifndef PG_BEZIER_PATHS
-	glUniform4f(uniform_Update_fs_4fv_paths03_BrushID,
-		(GLfloat)paths_BrushID[0], (GLfloat)paths_BrushID[1], (GLfloat)paths_BrushID[2], (GLfloat)paths_BrushID[3]);
 	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[0] , paths_BrushID[1] , paths_BrushID[2] , paths_BrushID[3] );
-#endif
-	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusX,
-		paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
 	//printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
-#ifndef PG_BEZIER_PATHS
-	glUniform4f(uniform_Update_fs_4fv_paths03_RadiusY,
-		paths_RadiusY[0], paths_RadiusY[1], paths_RadiusY[2], paths_RadiusY[3]);
-#endif
-#endif
-	printOglError(521);
-
-
-#if PG_NB_PATHS == 7
-	// pen paths positions
-	glUniform4f(uniform_Update_fs_4fv_paths47_x, paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	// printf("path 4-7 X %.f %.f %.f %.f\n", paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_y, paths_y[4], paths_y[5], paths_y[6], paths_y[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_x_prev,
-		paths_x_prev[4], paths_x_prev[5], paths_x_prev[6], paths_x_prev[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_y_prev,
-		paths_y_prev[4], paths_y_prev[5], paths_y_prev[6], paths_y_prev[7]);
-#ifdef PG_BEZIER_PATHS
-	glUniform4i(uniform_Update_fs_4iv_path47_beginOrEnd,
-		(isBegin[4] ? 1 : (isEnd[4] ? -1 : 0)), (isBegin[5] ? 1 : (isEnd[5] ? -1 : 0)),
-		(isBegin[6] ? 1 : (isEnd[6] ? -1 : 0)), (isBegin[7] ? 1 : (isEnd[7] ? -1 : 0)));
-	// pen Bezier curve tangents
-	glUniform4f(uniform_Update_fs_4fv_paths47_xL,
-		paths_xL[4], paths_xL[5], paths_xL[6], paths_xL[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_yL,
-		paths_yL[4], paths_yL[5], paths_yL[6], paths_yL[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_xR,
-		paths_xR[4], paths_xR[5], paths_xR[6], paths_xR[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_yR,
-		paths_yR[4], paths_yR[5], paths_yR[6], paths_yR[7]);
-#endif
-
-	// pen paths color
-	glUniform4f(uniform_Update_fs_4fv_paths47_r,
-		paths_Color_r[4], paths_Color_r[5], paths_Color_r[6], paths_Color_r[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_g,
-		paths_Color_g[4], paths_Color_g[5], paths_Color_g[6], paths_Color_g[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_b,
-		paths_Color_b[4], paths_Color_b[5], paths_Color_b[6], paths_Color_b[7]);
-	glUniform4f(uniform_Update_fs_4fv_paths47_a,
-		paths_Color_a[4], paths_Color_a[5], paths_Color_a[6], paths_Color_a[7]);
-
-	// pen paths brush & size
-#ifndef PG_BEZIER_PATHS
-	glUniform4f(uniform_Update_fs_4fv_paths47_BrushID,
-		(GLfloat)paths_BrushID[4], (GLfloat)paths_BrushID[5], (GLfloat)paths_BrushID[6], (GLfloat)paths_BrushID[7]);
-	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[4] , paths_BrushID[5] , paths_BrushID[6] , paths_BrushID[7] );
-#endif
-	glUniform4f(uniform_Update_fs_4fv_paths47_RadiusX,
-		paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6], paths_RadiusX[7]);
-#ifndef PG_BEZIER_PATHS
-	glUniform4f(uniform_Update_fs_4fv_paths47_RadiusY,
-		paths_RadiusY[4], paths_RadiusY[5], paths_RadiusY[6], paths_RadiusY[7]);
-#endif
 	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6] , paths_RadiusX[7] );
-#endif
+
+
 #ifdef CRITON
 	glUniform4f(uniform_Update_fs_4fv_fftLevels03,
 		fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3]);
@@ -1457,7 +1488,7 @@ void pg_update_shader_uniforms(void) {
 #endif
 #else
 #if PG_NB_TRACKS >= 1
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	// flash Trk -> BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght,
 		0.f, 0.f, 0.f, flashPartBG_weight);
@@ -1492,13 +1523,24 @@ void pg_update_shader_uniforms(void) {
 
 #ifdef PG_WITH_PHOTO_FLASH
 	// photo flash
-	glUniform2f(uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres,
-		flashPhotoTrk_weight, flashPhotoTrk_threshold);
+#if defined (ETOILES)
+	photo_offsetX = 0;
+	photo_offsetY = 0;
+	if (pg_CurrentScene == 0 || pg_CurrentScene == 1) {
+		photo_offsetY = 0.52f -pg_Translate_SVG_Text(pg_Ind_Current_DisplayText)/window_height;
+	}
+#endif
+	glUniform4f(uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY,
+		flashPhotoTrk_weight, flashPhotoTrk_threshold, photo_offsetX, photo_offsetY);
 #endif
 
 	// flash CA -> BG & repop color (BG & CA)
-	glUniform4f(uniform_Update_fs_4fv_repop_Color_flashCABGWght,
-		repop_Color_r, repop_Color_g, repop_Color_b, flashCABG_weight);
+	glUniform4f(uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght,
+		repop_ColorBG_r, repop_ColorBG_g, repop_ColorBG_b, flashCABG_weight);
+#if defined(PG_NB_CA_TYPES) && !defined (GN)
+	glUniform3f(uniform_Update_fs_3fv_repop_ColorCA,
+		repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
+#endif
 	// clear layer, flash pixel, flash CA -> Part
 	glUniform3f(uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres,
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
@@ -1519,8 +1561,14 @@ void pg_update_shader_uniforms(void) {
 
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 	// photo weights 
-	glUniform2f(uniform_Update_fs_2fv_photo01Wghts,
-		pg_Photo_weight[0], pg_Photo_weight[1]);
+	if (pg_CurrentDiaporamaDir >= 0) {
+		glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
+			pg_Photo_weight[0], pg_Photo_weight[1], rand_0_1, rand_0_1);
+	}
+	else {
+		glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
+			0.f, 0.f, rand_0_1, rand_0_1);
+	}
 	//printf("photo weight %.2f %.2f\n",
 	//	pg_Photo_weight[0], pg_Photo_weight[1]);
 #endif
@@ -1597,10 +1645,6 @@ void pg_update_shader_uniforms(void) {
 	glUniform4fv(uniform_Update_fs_4fv_image_noisesxy, 3, pg_Photo_position_noises);
 	glUniform4fv(uniform_Update_fs_4fv_mask_noisesxy, 3, pg_Photo_mask_position_noises);
 #endif
-
-	// music pulse
-	glUniform4f(uniform_Update_fs_4fv_pulse, pulse[0], pulse[1], pulse[2],
-		pulse_average);
 
 	// track x & y translations
 	float translation_x[2] = { 0.f, 0.f };
@@ -1694,12 +1738,12 @@ void pg_update_shader_uniforms(void) {
 	/////////////////////////////////////////////////////////////////////////
 	// PARTICLE RENDERING SHADER UNIFORM VARIABLES
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
-	glUniform3f(uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse,
+	glUniform4f(uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio,
 		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
 		(GLfloat)particle_type,
-		pulse[2]);
+		pulse[2], float(leftWindowWidth)/float(window_height));
 
 	///////////////////////////////////////////////////////////////////////
 	bool assigned = false;
@@ -1805,22 +1849,44 @@ void pg_update_shader_uniforms(void) {
 
 	// draws the palette on screen
 	glUniform4f(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey,
-		pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pen_grey);
-	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb,
-		pen_base_3color_palette[0], pen_base_3color_palette[1], pen_base_3color_palette[2]);
+		pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pen_grey * (1.f + pulse_average * pen_grey_pulse));
+	// low bandpass color             pen_color, pen_color_pulse
+	glUniform4f(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene,
+		bandpass_3color_palette[0][0], bandpass_3color_palette[0][1], bandpass_3color_palette[0][2], (GLfloat)pg_CurrentScene);
+	//printf("Color pulse %.2f %.2f\n", pen_color, pen_color_pulse);
 	//printf("Low palette color update %.2f %.2f %.2f\n",
-	//	pen_base_3color_palette[0], pen_base_3color_palette[1], pen_base_3color_palette[2]);
+	//	bandpass_3color_palette[0][0], bandpass_3color_palette[0][1], bandpass_3color_palette[0][2]);
+	//printf("medium palette color update %.2f %.2f %.2f\n",
+	//	bandpass_3color_palette[1][0], bandpass_3color_palette[1][1], bandpass_3color_palette[1][2]);
+	//printf("High palette color update %.2f %.2f %.2f\n",
+	//	bandpass_3color_palette[2][0], bandpass_3color_palette[2][1], bandpass_3color_palette[2][2]);
+	// medium bandpass color
 	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb,
-		pen_base_3color_palette[3], pen_base_3color_palette[4], pen_base_3color_palette[5]);
+		bandpass_3color_palette[1][0], bandpass_3color_palette[1][1], bandpass_3color_palette[1][2]);
+	// high bandpass color
 	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb,
-		pen_base_3color_palette[6], pen_base_3color_palette[7], pen_base_3color_palette[8]);
-
+		bandpass_3color_palette[2][0], bandpass_3color_palette[2][1], bandpass_3color_palette[2][3]);
 #ifdef PG_SENSORS
 	/////////////////////////////////////////////////////////////////////////
 	// SENSOR SHADER UNIFORM VARIABLES
 	// glUseProgram(shader_programme[pg_shader_Sensor]);
 	// the variable of the sensor shader is updated individually before each sensor rendering
 	// no update is made globally for all the sensors
+#endif
+
+#ifdef PG_MESHES
+	/////////////////////////////////////////////////////////////////////////
+	// MESH SHADER UNIFORM VARIABLES
+	glUseProgram(shader_programme[pg_shader_Mesh]);
+	// the variable of the mesh shader is updated before each rendering mode (lines of facets)
+#ifndef TEMPETE
+	glUniform3f(uniform_Mesh_fs_3fv_light, mesh_light_x, mesh_light_y, mesh_light_z);
+#endif
+#ifdef PG_AUGMENTED_REALITY
+	glUniform4f(uniform_Mesh_fs_4fv_textureFrontier, textureFrontier_wmin, textureFrontier_wmax, textureFrontier_hmin, textureFrontier_hmax);
+	glUniform4f(uniform_Mesh_fs_4fv_textureFrontier_width, textureFrontier_wmin_width, textureFrontier_wmax_width, textureFrontier_hmin_width, textureFrontier_hmax_width);
+	glUniform4f(uniform_Mesh_fs_4fv_textureScaleTransl, textureScale_w, textureScale_h, textureTranslate_w, textureTranslate_h);
+#endif
 #endif
 
 	printOglError(517);
@@ -1836,7 +1902,7 @@ void pg_update_shader_uniforms(void) {
 /////////////////////////////////////
 // PASS #0: PARTICLE ANIMATION PASS
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 void pg_ParticleAnimationPass(void) {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
 	// printf("FBO ANIMATION       %d\n", pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
@@ -1855,8 +1921,8 @@ void pg_ParticleAnimationPass(void) {
 	glUniformMatrix4fv(uniform_ParticleAnimation_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
-	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler);
-	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad, pg_Part_init_col_rad_FBO_ParticleAnimation_sampler);
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, pg_Part_init_pos_speed_ParticleAnimation_sampler);
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad, pg_Part_init_col_rad_ParticleAnimation_sampler);
 #ifdef PG_NB_CA_TYPES
 	glUniform1i(uniform_ParticleAnimation_texture_fs_CA, pg_CA_FBO_ParticleAnimation_sampler);
 #endif
@@ -1864,9 +1930,11 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_pos_speed, pg_Part_pos_speed_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_col_rad, pg_Part_col_rad_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad, pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_sampler);
-	glUniform1i(uniform_ParticleAnimation_texture_fs_Noise, pg_Noise_FBO_ParticleAnimation_sampler);
-	glUniform1i(uniform_ParticleAnimation_texture_fs_Camera_frame, pg_Camera_frame_FBO_ParticleAnimation_sampler);
-	glUniform1i(uniform_ParticleAnimation_texture_fs_Movie_frame, pg_Movie_frame_FBO_ParticleAnimation_sampler);
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Noise, pg_Noise_ParticleAnimation_sampler);
+#ifdef PG_WITH_CAMERA_CAPTURE
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Camera_frame, pg_Camera_frame_ParticleAnimation_sampler);
+#endif
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Movie_frame, pg_Movie_frame_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk0, pg_Trk0_FBO_ParticleAnimation_sampler);
 #if PG_NB_TRACKS >= 2
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk1, pg_Trk1_FBO_ParticleAnimation_sampler);
@@ -1882,30 +1950,32 @@ void pg_ParticleAnimationPass(void) {
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
 	// position speed are stored in a texture
-	glActiveTexture(GL_TEXTURE0 + pg_Part_init_pos_speed_FBO_ParticleAnimation_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Part_init_pos_speed_ParticleAnimation_sampler);
 	// TMP
 	// glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_images_texID[0][0]); // pos - speed 
 	// TMP
-	if (part_initialization >= 0 && part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_images_texID[part_initialization][0]); // pos - speed 
+	if (part_initialization >= 0
+		&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_pos_speed_texID.at(part_initialization)); // pos - speed 
 		printf("particle initialization %d\n", part_initialization);
 	}
 	// photo or video particles, position and speed are chosen from a random texture between 
 	// 0 & PG_NB_PARTICLE_INITIAL_IMAGES - 1
-	else if (part_initialization >= PG_NB_PARTICLE_INITIAL_IMAGES
-		&& part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES + 2) {
-		int indTex = int(floor(rand_0_1 * PG_NB_PARTICLE_INITIAL_IMAGES)) % PG_NB_PARTICLE_INITIAL_IMAGES;
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_images_texID[indTex][0]); // pos - speed 
+	else if (part_initialization >= 0
+			&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
+		unsigned int indTex = unsigned int(floor(rand_0_1 * pg_particle_initial_pos_speed_texID.size())) % pg_particle_initial_pos_speed_texID.size();
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_pos_speed_texID.at(indTex)); // pos - speed 
 		printf("particle initialization %d texture %d\n", part_initialization, indTex);
 	}
 
-	glActiveTexture(GL_TEXTURE0 + pg_Part_init_col_rad_FBO_ParticleAnimation_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Part_init_col_rad_ParticleAnimation_sampler);
 	// TMP
 	// glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_images_texID[0][1]); // pos - speed 
 	// TMP
 	// color and radius are taken from photo or video and partic radius
-	if (part_initialization >= 0 && part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_images_texID[part_initialization][1]); // color RGB - rad 
+	if (part_initialization >= 0
+		&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_color_radius_texID.at(part_initialization)); // color RGB - rad 
 	}
 
 #ifdef PG_NB_CA_TYPES
@@ -1927,18 +1997,18 @@ void pg_ParticleAnimationPass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleAnimation_texID[(pg_FrameNo % 2) * PG_FBO_PARTICLEANIMATION_NBATTACHTS + pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_attcht]);
 
 	// noise texture (noise is also generated procedurally in the update shader)
-	glActiveTexture(GL_TEXTURE0 + pg_Noise_FBO_ParticleAnimation_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Noise_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_3D, Noise_texture_3D);
 
 	// camera texture produced at preceding pass
 	// glActiveTexture(GL_TEXTURE0 + 7);
 	// glBindTexture(GL_TEXTURE_RECTANGLE, FBO_CameraFrame_texID);
 	// current camera texture
-	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_FBO_ParticleAnimation_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_texture_texID);
 
 	// movie texture
-	glActiveTexture(GL_TEXTURE0 + pg_Movie_frame_FBO_ParticleAnimation_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Movie_frame_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
 
 	// 2-cycle ping-pong BG track step n (FBO attachment 5)
@@ -2006,19 +2076,22 @@ void pg_UpdatePass(void) {
 	glUniform1i(uniform_Update_texture_fs_Pixels, pg_Pixels_FBO_Update_sampler);
 #endif
 #ifndef PG_BEZIER_PATHS
-	glUniform1i(uniform_Update_texture_fs_Brushes, pg_Brushes_FBO_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Brushes, pg_Brushes_Update_sampler);
 #endif
 #ifdef PG_WITH_CAMERA_CAPTURE
-	glUniform1i(uniform_Update_texture_fs_Camera_frame, pg_Camera_frame_FBO_Update_sampler);
-	glUniform1i(uniform_Update_texture_fs_Camera_BG, pg_Camera_BG_FBO_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Camera_frame, pg_Camera_frame_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Camera_BG, pg_Camera_BG_Update_sampler);
 #endif
-	glUniform1i(uniform_Update_texture_fs_Movie_frame, pg_Movie_frame_FBO_Update_sampler);
-	glUniform1i(uniform_Update_texture_fs_Noise, pg_Noise_FBO_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Movie_frame, pg_Movie_frame_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Noise, pg_Noise_Update_sampler);
+#ifdef PG_WITH_REPOP_DENSITY
+	glUniform1i(uniform_Update_texture_fs_RepopDensity, pg_RepopDensity_Update_sampler);
+#endif
 #ifdef PG_WITH_PHOTO_DIAPORAMA
-	glUniform1i(uniform_Update_texture_fs_Photo0, pg_Photo0_FBO_Update_sampler);
-	glUniform1i(uniform_Update_texture_fs_Photo1, pg_Photo1_FBO_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Photo0, pg_Photo0_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Photo1, pg_Photo1_Update_sampler);
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	glUniform1i(uniform_Update_texture_fs_Part_render, pg_Part_render_FBO_Update_sampler);
 #endif
 #if defined (TVW)
@@ -2072,7 +2145,7 @@ void pg_UpdatePass(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// pen patterns
 #ifndef PG_BEZIER_PATHS
-	glActiveTexture(GL_TEXTURE0 + pg_Brushes_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Brushes_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Pen_texture_3D_texID);
 #endif
 
@@ -2084,43 +2157,64 @@ void pg_UpdatePass(void) {
 	// glBindTexture(GL_TEXTURE_RECTANGLE, FBO_CameraFrame_texID);
 	// current camera texture
 #ifdef PG_WITH_CAMERA_CAPTURE
-	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_texture_texID);
 
 	// current background texture
-	glActiveTexture(GL_TEXTURE0 + pg_Camera_BG_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Camera_BG_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BG_texture_texID);
 #endif
 
 	// movie texture
-	glActiveTexture(GL_TEXTURE0 + pg_Movie_frame_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Movie_frame_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
 
 	// noise texture (noise is also generated procedurally in the update shader)
-	glActiveTexture(GL_TEXTURE0 + pg_Noise_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Noise_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Noise_texture_3D);
+
+#ifdef PG_WITH_REPOP_DENSITY
+	// repop density texture
+	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_Update_sampler);
+	if (repop_density >= 0
+		&& unsigned int(repop_density) < pg_RepopDensity_texture_texID.size()) {
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_RepopDensity_texture_texID.at(repop_density));
+	}
+	else {
+		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+	}
+#endif
 
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 	// photo[0] texture
-	glActiveTexture(GL_TEXTURE0 + pg_Photo0_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Photo0_Update_sampler);
 	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2 
 		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto >= 0
 		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto < pg_nbCompressedImages) {
 		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
 		// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[0]->texBuffID);
 	}
+	else {
+		glBindTexture(GL_TEXTURE_2D, NULL_ID);
+		// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[1]->texBuffID);
+	}
 
 	// photo[1] texture
-	glActiveTexture(GL_TEXTURE0 + pg_Photo1_FBO_Update_sampler);
+	glActiveTexture(GL_TEXTURE0 + pg_Photo1_Update_sampler);
 	if (pg_Photo_buffer_data && pg_nbCompressedImages >= 2
 		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto >= 0
 		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto < pg_nbCompressedImages) {
 		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
 		// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[1]->texBuffID);
 	}
+	else {
+		glBindTexture(GL_TEXTURE_2D, NULL_ID);
+		// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[1]->texBuffID);
+	}
 #endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// FBO capture of particle rendering used for flashing layers with particles
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
@@ -2250,25 +2344,45 @@ void pg_UpdatePass(void) {
 /////////////////////////////////////
 // PASS #2: PARTICLE RENDERING PASS
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-void pg_ParticleRenderingPass( void ) {
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+void pg_ParticleRenderingPass(void) {
 	// printf("nb paticles %d\^n", nb_particles);
 	// draws the Bezier curve
+
+#ifndef PG_AUGMENTED_REALITY
 	if (pg_FrameNo > 0) {
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
 	}
-	//glDisable(GL_BLEND);
-	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+#endif
+
+#if defined (TEXTURED_QUAD_PARTICLES)
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	//glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+#endif
+
+	//glDisable(GL_BLEND);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+#if defined (ETOILES)
+	if (pg_CurrentScene == 0) {
+		pg_Display_SVG_Text(&pg_Ind_Current_DisplayText, false);
+	}
+	else if (pg_CurrentScene == 5) {
+		pg_Display_SVG_Text(&pg_Ind_Current_DisplayText, true);
+	}
+#else
 	pg_Display_All_SVG_ClipArt(activeClipArts);
+#endif
 	printOglError(5256);
 
 	////////////////////////////////////////
 	// activate shaders and sets uniform variable values    
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
 	glUniformMatrix4fv(uniform_ParticleSplat_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
@@ -2280,6 +2394,11 @@ void pg_ParticleRenderingPass( void ) {
 	glUniform1i(uniform_ParticleSplat_texture_vp_Part_pos_speed, 0);
 	// color/radius Particle update
 	glUniform1i(uniform_ParticleSplat_texture_vp_Part_col_rad, 1); 
+
+#if defined (TEXTURED_QUAD_PARTICLES)
+	// blurred disk texture
+	glUniform1i(uniform_ParticleSplat_BlurredDisk_texture_fs_decal, 2);
+#endif
 #endif
 #if defined (CURVE_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
@@ -2297,11 +2416,7 @@ void pg_ParticleRenderingPass( void ) {
 	// comet texture
 	glUniform1i(uniform_ParticleCurve_Comet_texture_fs_decal, 2);
 #endif
-
-#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
-	// blurred disk texture
-	glUniform1i(uniform_ParticleSplat_BlurredDisk_texture_fs_decal, 2);
-#endif
+	printOglError(5256);
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -2319,11 +2434,12 @@ void pg_ParticleRenderingPass( void ) {
 	glActiveTexture(GL_TEXTURE0 + 2);
 	glBindTexture(GL_TEXTURE_2D, comet_texture_2D_texID);
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES)
 	// blurred disk texture
 	glActiveTexture(GL_TEXTURE0 + 2);
 	glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID);
 #endif
+	printOglError(5259);
 
 	////////////////////////////////////////
 	// binds geometry and displays it    
@@ -2347,7 +2463,7 @@ void pg_ParticleRenderingPass( void ) {
 		(void*)0           // element array buffer offset
 	);
 #endif
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	// Draw the patches !
 	glDrawElements(
 		GL_POINTS,      // mode
@@ -2361,6 +2477,11 @@ void pg_ParticleRenderingPass( void ) {
 	glBindVertexArray(0);
 	glDisableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+#if defined (TEXTURED_QUAD_PARTICLES)
+	glDisable(GL_BLEND);
+#endif
+
 }
 #endif
 
@@ -2376,6 +2497,12 @@ void pg_MixingPass(void) {
 	// output video buffer clean-up
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	if (isClearEcho == 1) {
+		// printf("VideoPb clear echo buffer\n");
+		isClearEcho = 0;
+		return;
+	}
 
 	/////////////////////////////////////////////////////////
 	// draws the main rectangular surface with 
@@ -2393,7 +2520,7 @@ void pg_MixingPass(void) {
 #ifdef PG_NB_CA_TYPES
 	glUniform1i(uniform_Mixing_texture_fs_CA, pg_CA_FBO_Mixing_sampler);
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	glUniform1i(uniform_Mixing_texture_fs_Part_render, pg_Part_render_FBO_Mixing_sampler);
 #endif
 	glUniform1i(uniform_Mixing_texture_fs_Render_prec, pg_Render_prec_FBO_Mixing_sampler);
@@ -2425,7 +2552,7 @@ void pg_MixingPass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 #endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// Particles step n
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
@@ -2509,13 +2636,21 @@ void pg_MixingPass(void) {
 // PASS #4: FINAL DISPLAY: MIX OF ECHOED AND NON-ECHOED LAYERS
 
 void pg_MasterPass(void) {
+#ifdef PG_AUGMENTED_REALITY
+	if (pg_FrameNo > 0) {
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
+	}
+#else
 	// unbind output FBO 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
 
 	// sets viewport to double window
 	glViewport(0, 0, doubleWindowWidth, window_height);
 
+#ifndef PG_AUGMENTED_REALITY
 	glDrawBuffer(GL_BACK);
+#endif
 
 	// output video buffer clean-up
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -2538,7 +2673,7 @@ void pg_MasterPass(void) {
 	glUniform1i(uniform_Master_texture_fs_CA, pg_CA_FBO_Master_sampler);
 #endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	glUniform1i(uniform_Master_texture_fs_Part_render, pg_Part_render_FBO_Master_sampler);
 #endif
 	glUniform1i(uniform_Master_texture_fs_Trk0, pg_Trk0_FBO_Master_sampler);
@@ -2569,7 +2704,7 @@ void pg_MasterPass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 #endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// Particles step n 
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
@@ -2601,11 +2736,12 @@ void pg_MasterPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID);
 #endif
-#if defined (GN) || defined (INTERFERENCE)
+#if defined (GN)
 	// LYM logo
 	glActiveTexture(GL_TEXTURE0 + pg_LYMlogo_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_LYMlogo_texID);
 #endif
+
 
 	//if (pg_FrameNo % 1000 <= 1) {
 	//	printf("Final check texID 0-5 %d %d %d %d %d %d\n\n",
@@ -2622,6 +2758,7 @@ void pg_MasterPass(void) {
 	// Index buffer for indexed rendering
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABQuadMaster]);
 	// Draw the triangles !
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawElements(
 		GL_TRIANGLE_STRIP,      // mode
 		3 * PG_SIZE_QUAD_ARRAY,    // count
@@ -2657,13 +2794,6 @@ void pg_SensorPass(void) {
 	glUniformMatrix4fv(uniform_Sensor_vp_proj, 1, GL_FALSE, doubleProjMatrix);
 	printOglError(597);
 
-#ifndef CAAUDIO
-	// sensor rendering
-	int Sensor_order[PG_NB_SENSORS] = { 8, 13, 14, 11, 7, 2, 1, 4, 12, 15, 3, 0, 9, 10, 5, 6 };
-#else
-	// sensor rendering
-	int Sensor_order[PG_NB_SENSORS] = { 0 };
-#endif
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 		int reindexed_Sensor = Sensor_order[indSens];
 		if (sensor_onOff[reindexed_Sensor]) {
@@ -2720,118 +2850,356 @@ void pg_SensorPass(void) {
 #ifdef PG_MESHES
 //////////////////////////////////////////////////
 // PASS #6: MESH PASS
-void pg_MeshPass(void) {
-	glm::mat4 projPerspMatrix;
-	glm::mat4 viewPerspMatrix;
-	glm::mat4 modelPerspMatrix;
 
+
+#ifdef PG_WITH_HOMOGRAPHY
+// initializes the homography matrices for the distortion of the projected image
+void pg_calculate_homography_matrices(void) {
+	//////////////////////////////////////////////////////////////////////////////////
+	// right camera (left display)
+
+	///////////////////////// HOMOGRPAHY
+	// This homography transforms the points projected at near=1 into the four
+	// points measured experimetally corresponding to the 4 vertices of the
+	// quad projected at 1m with the projector axis orthogonal to the projection plane
+	// Read points
+	std::vector<cv::Point2f> sourcePoints;
+	std::vector<cv::Point2f> source2Points;
+	std::vector<cv::Point2f> destinationPoints;
+
+	sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
+		-VP1KeystoneYBottomLeft));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
+		-VP1KeystoneYBottomRight));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
+		VP1KeystoneYTopRight));
+	sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
+		VP1KeystoneYTopLeft));
+
+	destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
+	destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
+	destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
+	destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
+
+	cv::Mat homography = cv::findHomography(sourcePoints, destinationPoints, 0);
+	// printf("mat size %d %d\n", homography.size().width, homography.size().height);
+	// in GLM Matrix types store their values in column - major order.
+	float matValues[16] = { (float)((double *)homography.data)[0],
+		(float)((double *)homography.data)[3],
+		0.0,
+		(float)((double *)homography.data)[6],
+
+		(float)((double *)homography.data)[1],
+		(float)((double *)homography.data)[4],
+		0.0,
+		(float)((double *)homography.data)[7],
+
+		0.0, 0.0, 0.0, 0.0,
+
+		(float)((double *)homography.data)[2],
+		(float)((double *)homography.data)[5],
+		0.0,
+		(float)((double *)homography.data)[8] };
+
+	VP1homographyMatrix = (glm::make_mat4(matValues));
+}
+#endif
+
+
+// initializes the transformation matrices related to the frustum
+// should only be called when the values are changed through pd or maxmsp
+void pg_calculate_projection_matrices(void) {
+	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
+	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// right camera (right display)
+	VP1perspMatrix
+		= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+
+	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m );
+
+	// Camera matrix
+	// float eyePosition[3] = {10.1f,4.6f,4.4f};
+	// the projection of the bottom of the screen is known
+	// we have to deduce the look at from this point and the measure of 
+	// the projector calibration
+	// the look at has to be recalculated because the targe point is above the axis of projection
+	// by an angle alpha
+    //printf("VP1BottomAt1m %.2f\n" , VP1BottomAt1m );
+
+	float VP1alpha = atan(VP1BottomAt1m);
+	glm::vec4 vectorVPPositionToScreenBottom
+		= glm::vec4(VP1LookAtX - VP1LocX, VP1LookAtY - VP1LocY, VP1LookAtZ - VP1LocZ, 0.0);
+	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
+	glm::mat4 rotationMat(1); // Creates a identity matrix
+	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
+	glm::vec3 rotationAxis = glm::cross(glm::vec3(0, 0, (VP1Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
+	glm::normalize(rotationAxis);
+	// shifts towards the bottom the actual lookat center according to VP1BottomAt1m
+	rotationMat = glm::rotate(rotationMat, VP1alpha, rotationAxis); // (VP1Reversed?-1.0f:1.0f) *
+	glm::vec3 vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
+	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
+	glm::vec3 lookAtPoint = glm::vec3(VP1LocX, VP1LocY, VP1LocZ) + vectorLookAt;
+	// printf("Look at real %.2f %.2f %.2f\n\n" , lookAtPoint.x , lookAtPoint.y , lookAtPoint.z );
+	VP1viewMatrix
+		= glm::lookAt(
+			glm::vec3(VP1LocX, VP1LocY, VP1LocZ), // Camera is at (VP1LocX, VP1LocY, VP1LocZ), in World Space
+			lookAtPoint, // and looks at lookAtPoint
+			glm::vec3(0, VP1UpY, (VP1Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP1UpY, 1 or 0, VP1UpY, -1 if projector is upside down)
+		);
+}
+
+void pg_MeshPass(void) {
 	float eyePosition[3] = { 20.f, 0.f, 0.f };
 	float lookat[3] = { 0.f, 0.f, 0.f };
 
-	////////////////////////////////////////
-	// drawing meshes
+#ifndef PG_AUGMENTED_REALITY
+	// draws the meshes on top of particles
+	if (pg_FrameNo > 0) {
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
+	}
+	// transparency
+	glEnable(GL_BLEND);
+	// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#else
+	// draws the meshes alone
+	// unbind output FBO 
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	// draws on back buffer
+	glDrawBuffer(GL_BACK);
+
 	// no transparency
 	glDisable(GL_BLEND);
+#endif
+
 	// output buffer cleanup
-	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	//glDepthMask(GL_FALSE);
+	//glDepthFunc(GL_LESS);
+
+	////////////////////////////////////////
+	// drawing meshes
 
 	// activate shaders and sets uniform variable values    
 	glUseProgram(shader_programme[pg_shader_Mesh]);
 
 	// perspective matrices
-	projPerspMatrix
-		= glm::perspective(float(PI/4.f), 4.f/3.f, 0.1f, 100.f);
-	viewPerspMatrix
-		= glm::lookAt(
-			glm::vec3(eyePosition[0], eyePosition[1], eyePosition[2]), // Camera in World Space
-			glm::vec3(lookat[0], lookat[1], lookat[2]), // and where it looks  at
-			glm::vec3(0, 0, 1)  // Head is up (set to 0,0,1)
-		);
+	//VP1perspMatrix
+	//	= glm::perspective(float(PI/4.f), 4.f/3.f, 0.1f, 100.f);
+	//VP1viewMatrix
+	//	= glm::lookAt(
+	//		glm::vec3(eyePosition[0], eyePosition[1], eyePosition[2]), // Camera in World Space
+	//		glm::vec3(lookat[0], lookat[1], lookat[2]), // and where it looks  at
+	//		glm::vec3(0, 0, 1)  // Head is up (set to 0,0,1)
+	//	);
+
+	// calculates the view and perspective matrices according to the parameters in the scenario file
+	pg_calculate_projection_matrices();
+
+#ifdef PG_WITH_HOMOGRAPHY
+	// initializes the homography matrices for the distortion of the projected image
+	pg_calculate_homography_matrices();
+#endif
 
 	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE, 
-		glm::value_ptr(projPerspMatrix));
+		// glm::value_ptr(VP1homographyMatrix * VP1perspMatrix));
+		glm::value_ptr(VP1perspMatrix));
 	glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
-		glm::value_ptr(viewPerspMatrix));
-/*
-	// standard matrices
-	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
-	glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
-*/
-	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
-		for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
-			// transformed mesh according to configuration file
-			// Model matrix : a varying rotation matrix (around Oz)
-			glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile], 
-				pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
-			modelPerspMatrix = glm::translate(glm::mat4(1.0f),
-				glm::vec3(pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]));
-			modelPerspMatrix = glm::rotate(modelPerspMatrix, pg_Mesh_Rotation_angle[indMeshFile], myRotationAxis);
-			modelPerspMatrix = glm::scale(modelPerspMatrix,
-				glm::vec3(pg_Mesh_Scale[indMeshFile]));
+		glm::value_ptr(VP1viewMatrix));
 
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		bool visible = false;
+#ifdef ETOILES
+		// meshes are guided by strokes
+		int path_no = indMeshFile + 1;
+		// brings the path coordinates to the normal cube
+		float pen_x, pen_y, vec_x, vec_y;
+		if (path_no < PG_NB_PATHS + 1) {
+			visible = (is_path_replay[path_no] && paths_x[path_no] > 0 && paths_y[path_no] > 0);
+			if (visible) {
+				// normal pen coordinates
+				pen_x = (paths_x[path_no] / leftWindowWidth) * 2.f - 1.f;
+				pen_y = (paths_y[path_no] / window_height) * 2.f - 1.f;
+			}
+			else {
+				bool isTrackRecord = false;
+				switch (path_no) {
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+				case 1:
+					isTrackRecord = path_record_1;
+					break;
+				case 2:
+					isTrackRecord = path_record_2;
+					break;
+				case 3:
+					isTrackRecord = path_record_3;
+					break;
+#endif
+#if PG_NB_PATHS == 7
+				case 4:
+					isTrackRecord = path_record_4;
+					break;
+				case 5:
+					isTrackRecord = path_record_5;
+					break;
+				case 6:
+					isTrackRecord = path_record_6;
+					break;
+				case 7:
+					isTrackRecord = path_record_7;
+					break;
+#endif
+				}
+				visible = isTrackRecord && paths_x[0] > 0 && paths_y[0] > 0;
+				if (visible) {
+					// normal pen coordinates
+					pen_x = (paths_x[0] / leftWindowWidth) * 2.f - 1.f;
+					pen_y = (paths_y[0] / window_height) * 2.f - 1.f;
+				}
+			}
+		}
+#else
+		visible = (activeMeshes & (1 << indMeshFile));
+#endif
+		if (visible) {
+#ifdef CAVERNEPLATON
 			// rotation update
-			pg_Mesh_Rotation_angle[indMeshFile] += 0.01f;
+			pg_Mesh_Rotation_angle[indMeshFile] += 0.1f;
 			pg_Mesh_Rotation_X[indMeshFile] += 0.01f;
 			pg_Mesh_Rotation_Y[indMeshFile] += 0.01f;
 			pg_Mesh_Rotation_Z[indMeshFile] += 0.01f;
+			// translation update
+			if (mobileMeshes & (1 << indMeshFile)) {
+				pg_Mesh_Translation_X[indMeshFile] += pg_Mesh_Motion_X[indMeshFile];
+				pg_Mesh_Translation_Y[indMeshFile] += pg_Mesh_Motion_Y[indMeshFile];
+				pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile];
+			}
+#endif
 
+#ifdef ETOILES
+			// rotates and scales a ray so that it follows a pen
+			// vector from ray center to pen
+			vec_x = pen_x + pg_Mesh_Translation_X[indMeshFile];
+			vec_y = pen_y + pg_Mesh_Translation_Y[indMeshFile];
+			// angle from ray center to pen -> ray angle
+			if (vec_x != 0) {
+				pg_Mesh_Rotation_angle[indMeshFile] = atan(vec_y / vec_x);
+			}
+			else {
+				pg_Mesh_Rotation_angle[indMeshFile] = 0;
+			}
+			if (vec_x > 0) {
+				pg_Mesh_Rotation_angle[indMeshFile] += float(M_PI);
+			}
+			// ray size so that the tip of the ray coincides with the pen
+			float norm_vec = sqrt(vec_x * vec_x + vec_y * vec_y);
+			pg_Mesh_Scale[indMeshFile] = norm_vec;
+#endif
+
+			// transformed mesh according to configuration file
+			// Model matrix : a varying rotation matrix (around Oz)
+			glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile],
+				pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
+			VP1modelMatrix = glm::translate(glm::mat4(1.0f),
+				glm::vec3(pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]));
+			VP1modelMatrix = glm::rotate(VP1modelMatrix, pg_Mesh_Rotation_angle[indMeshFile], myRotationAxis);
+#ifdef ETOILES
+			VP1modelMatrix = glm::scale(VP1modelMatrix,	glm::vec3(pg_Mesh_Scale[indMeshFile],1,1));
+#else
+			VP1modelMatrix = glm::scale(VP1modelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
+#endif
 			// forces no transformations on the volumes
-			// modelPerspMatrix = glm::mat4(1.0f);
+			// VP1modelMatrix = glm::mat4(1.0f);
 			glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
-							glm::value_ptr(modelPerspMatrix));
+				glm::value_ptr(VP1modelMatrix));
 
-			glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
-
-			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
-			// texture unit location
-			glUniform1i(uniform_Mesh_texture_fs_decal, 0);
-			// previous pass output
-			glActiveTexture(GL_TEXTURE0 + 0);
-			glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle);
-
-			// draw points from the currently bound VAO with current in-use shader
-			// glDrawArrays(GL_TRIANGLES, 0, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
-			glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-
-			//printf("Display mesh %d/%d size (nb faces) %d\n", indMeshFile, indMeshInFile,
-			//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
-
-			printOglError(597);
-		}
-	}
-
-	// duplicates the Meshs in case of double window
-	if (double_window) {
-		for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
 			for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
-				projPerspMatrix
-					= glm::perspectiveFov(float(PI / 4.f), 1024.f, 768.f, 0.1f, 100.f);
-				viewPerspMatrix
-					= glm::lookAt(
-						glm::vec3(eyePosition[0], eyePosition[1], eyePosition[2]), // Camera in World Space
-						glm::vec3(lookat[0], lookat[1], lookat[2]), // and where it looks  at
-						glm::vec3(0, 0, 1)  // Head is up (set to 0,0,1)
-					);
+				// binds VAO
+				glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
 
-				glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE,
-					glm::value_ptr(projPerspMatrix));
-				glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
-					glm::value_ptr(viewPerspMatrix));
+				// activate shaders and sets uniform variable values    
+				glUseProgram(shader_programme[pg_shader_Mesh]);
+
+				glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
+				glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+				// texture unit location
+				glUniform1i(uniform_Mesh_texture_fs_decal, 0);
+#ifdef PG_MESHES
+				glActiveTexture(GL_TEXTURE0 + 0);
+				if (pg_Mesh_TextureRank[indMeshFile] != -1) {
+					// specific texture
+					glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle[indMeshFile]);
+				}
+				else {
+					// previous pass output
+					// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
+#ifdef PG_AUGMENTED_REALITY
+					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
+#endif
+				}
+#endif
 
 				// draw points from the currently bound VAO with current in-use shader
-				// glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				// glDrawArrays(GL_TRIANGLES, 0, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+
+				glUseProgram(shader_programme[pg_shader_Mesh]);
+
+				// updates this variable according whether triangles or lines are shown
+				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText, isDisplayLookAt, 0, with_blue, with_whiteText);
+
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-			}
-		}
-		printOglError(599);
-	}
+
+#if defined(CAVERNEPLATON) // draws the polygon contours
+				// updates this variable according whether triangles or lines are shown
+				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText, isDisplayLookAt, 1, with_blue, with_whiteText);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
+#ifdef TEMPETE
+				if (with_mesh) {
+					// no z-Buffer
+					glDisable(GL_DEPTH_TEST);
+					glLineWidth(3);
+					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText, isDisplayLookAt, 1, with_blue, with_whiteText);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					// no z-Buffer
+					glEnable(GL_DEPTH_TEST);
+				}
+#endif
+				//printf("Display mesh %d/%d size (nb faces) %d\n", indMeshFile, indMeshInFile,
+				//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
+
+				// duplicates the Meshs in case of double window
+				if (double_window) {
+					glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE,
+						glm::value_ptr(VP1homographyMatrix * VP1perspMatrix));
+					glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
+						glm::value_ptr(VP1viewMatrix));
+
+					// draw points from the currently bound VAO with current in-use shader
+					// glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+					printOglError(599);
+				} // double window
+				printOglError(597);
+			} // submeshes
+		} // visible mesh
+	} // all the meshes
+
 	glDisable(GL_DEPTH_TEST);
+	// no transparency
+	glDisable(GL_BLEND);
 
 	printOglError(598);
 }
@@ -2848,12 +3216,13 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
     pData->fname = new char[512];
     pData->w = leftWindowWidth;
     pData->h = window_height;
+	indSvgSnapshot++;
 
 	sprintf(pData->fname, "%s%s-%s-%04d.svg",
 		snapshots_dir_path_name.c_str(),
 		Svg_file_name.c_str(),
 		date_stringStream.str().c_str(),
-		(stepSvg > 0 ? pg_FrameNo / stepSvg : pg_FrameNo));
+		indSvgSnapshot);
 	pg_logCurrentLineSceneVariables(pData->fname);
 
 	if (!threaded) {
@@ -2895,12 +3264,13 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
     pData->w = leftWindowWidth;
     pData->h = window_height;
     pData->imgThreadData = new cv::Mat( pData->h, pData->w, CV_8UC3 );
+	indPngSnapshot++;
 
 	sprintf(pData->fname, "%s%s-%s-%04d.png",
 		snapshots_dir_path_name.c_str(),
 		Png_file_name.c_str(),
 		date_stringStream.str().c_str(),
-		pg_FrameNo / stepPng);
+		indPngSnapshot);
 	struct stat buffer;
 	int count = 0;
 	while (stat(pData->fname, &buffer) == 0) {
@@ -2908,7 +3278,7 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 			snapshots_dir_path_name.c_str(),
 			Png_file_name.c_str(),
 			date_stringStream.str().c_str(),
-			pg_FrameNo / stepPng, count);
+			indPngSnapshot, count);
 		count++;
 	}
 	pg_logCurrentLineSceneVariables( pData->fname );
@@ -2964,12 +3334,13 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
     pData->w = leftWindowWidth;
     pData->h = window_height;
     pData->imgThreadData = new cv::Mat( pData->h, pData->w, CV_8UC3 );
+	indJpgSnapshot++;
 
 	sprintf(pData->fname, "%s%s-%s-%04d.jpg",
 		snapshots_dir_path_name.c_str(),
 		Jpg_file_name.c_str(),
 		date_stringStream.str().c_str(),
-		pg_FrameNo / stepJpg);
+		indJpgSnapshot);
 	struct stat buffer;
 	int count = 0;
 	while (stat(pData->fname, &buffer) == 0) {
@@ -2977,12 +3348,12 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 			snapshots_dir_path_name.c_str(),
 			Jpg_file_name.c_str(),
 			date_stringStream.str().c_str(),
-			pg_FrameNo / stepJpg, count);
+			indJpgSnapshot, count);
 		count++;
 	}
 	pg_logCurrentLineSceneVariables(pData->fname);
 	printf( "Snapshot jpg step %d (%s)\n" ,
-	     pg_FrameNo / stepJpg ,
+		indJpgSnapshot,
 	     pData->fname );
 
     glReadBuffer(GL_FRONT);
@@ -3037,15 +3408,18 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 
 	glDisable(GL_BLEND);
 
-#if defined(BLURRED_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	// particle pass #0
 	pg_ParticleAnimationPass();
 #endif
+	printOglError(681);
 
 	// update pass #1
 	pg_UpdatePass();
+	printOglError(682);
 
-#if defined(BLURRED_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+//#ifndef TEMPETE
+#if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	// particle rendering pass #2
 	// glEnable(GL_BLEND);
 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -3053,28 +3427,46 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 	// glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
 	pg_ParticleRenderingPass();
+	printOglError(683);
 
 	// glDisable(GL_BLEND);
+#endif
+//#endif
+  // the meshes are displayed together with the particles except for augmented reality
+	// where it is displayed last
+#if defined(PG_MESHES) && !defined(PG_AUGMENTED_REALITY)
+	if (activeMeshes > 0) {
+		pg_MeshPass();
+	}
 #endif
 
 	// layer compositing & echo pass #3
 	pg_MixingPass();
+	printOglError(684);
 
 	// final combination of echoed and non echoed rendering #4
 	pg_MasterPass();
 	printOglError(685);
 
 #ifdef PG_SENSORS
-	pg_SensorPass();
-#endif
-	printOglError(686);
+	bool oneSensorActiveMin = false;
+	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
+		int reindexed_Sensor = Sensor_order[indSens];
+		if (sensor_onOff[reindexed_Sensor]) {
+			oneSensorActiveMin = true;
+			break;
+		}
+	}
+	if (oneSensorActiveMin) {
+		pg_SensorPass();
+		printOglError(686);
 
-#ifdef PG_SENSORS
-	// /////////////////////////
-	// read sensor values on CA (non echoed) and send messages
-	if (pg_FrameNo >= 10 + first_frame_number) {
-		readSensors();
-		printOglError(687);
+		// /////////////////////////
+		// read sensor values on CA (non echoed) and send messages
+		if (pg_FrameNo >= 10 + first_frame_number) {
+			readSensors();
+			printOglError(687);
+		}
 	}
 #endif
 
@@ -3090,9 +3482,29 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 #endif
   }
 
-#ifdef PG_MESHES
-  pg_MeshPass();
+  // the meshes are displayed last for augmented reality
+#if defined(PG_MESHES) && defined(PG_AUGMENTED_REALITY)
+  if (activeMeshes > 0) {
+	  pg_MeshPass();
+  }
 #endif
+
+/*
+#ifdef TEMPETE
+#if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+  // particle rendering pass #2
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  pg_ParticleRenderingPass();
+
+   glDisable(GL_BLEND);
+#endif
+#endif
+*/
+
   printOglError(686);
 
 

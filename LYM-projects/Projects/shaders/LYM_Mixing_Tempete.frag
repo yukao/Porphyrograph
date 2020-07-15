@@ -20,7 +20,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
+uniform vec3 uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -50,21 +50,22 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
+  float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 
 
   ////////////////////////////////////////////////////////////////////
   // CA color according to CA state and possible flash video
   vec4 CA_color = texture(uniform_Mixing_texture_fs_CA, decalCoords);
+  vec3 initial_CA_color = CA_color.rgb;
   if( CA_color.a < 0 ) {
     CA_color = vec4(0.0);
   }
 
   // brigher CA at the beginning of a flash
-  float flashCameraCoef = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.y;
-  if( flashCameraCoef > 0 ) { // flash video
-    if(flashCameraCoef < 0.3) {
-      CAMixingWeight += (1.0 - CAMixingWeight) * flashCameraCoef / 0.3;          
+  float flashPhotoCoef = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.z;
+  if( flashPhotoCoef > 0 ) { // flash photo
+    if(flashPhotoCoef < 0.3) {
+      CAMixingWeight += (1.0 - CAMixingWeight) * flashPhotoCoef / 0.3;          
     }
     else {
       CAMixingWeight = 1.0;          
@@ -107,6 +108,10 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // accumulation: mix of current layers and echo
   vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords);
+
+  if( flashPhotoCoef > 0.3 ) { // flash photo
+    previous_snapshot_color.rgb *= initial_CA_color.rgb;
+  }
 
   if( echo + echoNeg > 0.0 ) {
     combined_color = clamp( combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb , 

@@ -48,6 +48,13 @@ struct pg_Path_Status_Struct {
 extern struct pg_Path_Status_Struct *pg_Path_Status;
 extern int *pg_indPreviousFrameReading;
 
+#ifdef PG_BEZIER_PATHS
+// convex hull shipped to the GPU
+extern glm::vec2 pg_BezierControl[(PG_NB_PATHS + 1) * 4];
+extern glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
+extern glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
+#endif
+
 // pen_radius multiplicative factor for large pen_brush
 extern float pen_radiusMultiplier;
 
@@ -83,6 +90,19 @@ void LoadPathFromXML( char *pathString , int indPath , float *translation , floa
 // loads a track from a svg file
 void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
 void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
+
+// CONVEX HULL 
+#ifdef PG_BEZIER_PATHS
+bool pointEquals(glm::vec2 p, glm::vec2 q);
+float distance(glm::vec2 p, glm::vec2 q);
+bool left_oriented(glm::vec2 p1, glm::vec2 p2, glm::vec2 candidate);
+void convex_hull(glm::vec2 control_points[4], int *hull);
+void hull_expanded_by_radius(glm::vec2 control_points[4], int *hull, float radius, glm::vec2 hull_points[4]);
+void boundingBox_expanded_by_radius(glm::vec2 control_points[4], float radius, glm::vec4 *boundingBox);
+void build_bounding_box(int indPath);
+void build_expanded_hull(int indPath);
+void test_hull(void);
+#endif
 
 // REPLAY PATHS  
 void pg_replay_paths(float theTime);

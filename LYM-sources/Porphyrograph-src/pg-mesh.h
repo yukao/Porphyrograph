@@ -30,10 +30,10 @@
 #define PG_MESH_H
 
 // mesh data
-extern GLfloat **pointBuffer;
-extern GLfloat **texCoordBuffer;
-extern GLfloat **normalBuffer;
-extern GLuint  **indexBuffer;
+extern GLfloat *vertexBuffer;
+extern GLfloat *texCoordBuffer;
+extern GLfloat *normalBuffer;
+extern GLuint  *indexBuffer;
 
 // shader variable pointers
 extern GLint *uniform_mesh_model;
@@ -41,7 +41,14 @@ extern GLint *uniform_mesh_view;
 extern GLint *uniform_mesh_proj;
 extern GLint *uniform_mesh_light;
 
-void copyMeshData(int indMeshInFile, GLfloat *pointBufferIni, GLfloat *texCoordBufferIni, GLfloat *normalBufferIni,
+#ifndef TEMPETE
+// mesh lighting
+extern GLfloat mesh_light_x;
+extern GLfloat mesh_light_y;
+extern GLfloat mesh_light_z;
+#endif
+
+void copyMeshData(int indMeshInFile, GLfloat *vertexBufferIni, GLfloat *texCoordBufferIni, GLfloat *normalBufferIni,
 	GLuint  *indexPointBufferIni, GLuint  *indexTexCoordBufferIni, GLuint  *indexNormalBufferIni,
 	int nbFacesInThisMesh);
 void count_faces_mesh_obj(FILE *file, int *meshNo,
@@ -50,6 +57,7 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 	int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
 	int *nbFacesInEachMesh);
+void transferMeshDataToGPU(int indMeshFile, int indMeshInFile);
 void load_mesh_obj(string obj_file_name, int indMeshFile);
 
 #endif

@@ -14,14 +14,20 @@ float     CAMixingWeight;
 float     PartMixingWeight;
 float     trackMixingWeight_0;
 float     trackMixingWeight_1;
-uniform vec4 uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1;
 float     trackMixingWeight_2;
 float     trackMixingWeight_3;
 float     echo;
 float     echoNeg;
-uniform vec4 uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg;
+uniform float uniform_Mixing_scenario_var_data[8];
 
 // Main shader.
+
+////////////////////////////////////////////////////////////////////
+// MACROS
+#define graylevel(col) ((col.r+col.g+col.b)/3.0)
+#define maxCol(col) (max(col.r,max(col.g,col.b)))
+#define minCol(col) (min(col.r,min(col.g,col.b)))
+#define delta(gray) (gray>0.5?1:0)
 
 // obtained from Vertex Program
 in vec2 decalCoords;  // coord text
@@ -57,14 +63,14 @@ layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  CAMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[0];
-  PartMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[1];
-  trackMixingWeight_0 = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[2];
-  trackMixingWeight_1 = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[3];
-  trackMixingWeight_2 = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[0];
-  trackMixingWeight_3 = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[1];
-  echo = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[2];
-  echoNeg = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[3];
+  CAMixingWeight = uniform_Mixing_scenario_var_data[0];
+  PartMixingWeight = uniform_Mixing_scenario_var_data[1];
+  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[2];
+  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[3];
+  trackMixingWeight_2 = uniform_Mixing_scenario_var_data[4];
+  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[5];
+  echo = uniform_Mixing_scenario_var_data[6];
+  echoNeg = uniform_Mixing_scenario_var_data[7];
 
   float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 
@@ -132,10 +138,21 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // accumulation: mix of current layers and echo
   vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords);
-
-  if( echo + echoNeg > 0.0 ) {
+/*  
+    // brightness echo
+    if( echo + echoNeg > 0.0 ) {
     combined_color = clamp( combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb , 
-		                        0.0 , 1.0 );
+                            0.0 , 1.0 );
+  }
+*/
+  // saturation echo
+  // a new version of echo that only saturates the color and does not change brightness
+  if( echo + echoNeg > 0.0 ) {
+    vec3 echoedColor = combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb;
+    float maxEchoedColor = maxCol( echoedColor );
+    if( maxEchoedColor <= 1.0 ) {
+      combined_color = clamp( echoedColor , 0.0 , 1.0 );
+    }
   }
      
   ////////////////////////////////////

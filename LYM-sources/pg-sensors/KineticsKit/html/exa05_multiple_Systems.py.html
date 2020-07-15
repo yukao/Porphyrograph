@@ -1,0 +1,88 @@
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>exa05_multiple_Systems.py</title>
+<meta name="GENERATOR" content="SciTE - www.Scintilla.org" />
+<style type="text/css">
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S4 {
+	color: #007f00;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S7 {
+	color: #00aa00;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+span {
+	font-family: 'Verdana';
+	color: #000000;
+	font-size: 9pt;
+}
+</style>
+</head>
+<body bgcolor=#f0f0f8>
+<span><span class="S5">from</span><span class="S0"> </span>KineticsKit<span class="S0"> </span><span class="S5">import</span><span class="S0"> </span><span class="S10">*</span><br />
+<span class="S5">import</span><span class="S0"> </span>visual<br />
+<br />
+<span class="S5">print</span><span class="S0"> </span><span class="S7">"""Try to click at a Mass to grip it, click again to release it.</span><br />
+<span class="S7">Zooming / rotating of the scene is done by holding the left / right</span><br />
+<span class="S7">mouse button down while moving the mouse around."""</span><br />
+<br />
+rate<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">30</span><br />
+count<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">4</span><span class="S0"> </span><span class="S1"># number of systems</span><br />
+<br />
+systems<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">[</span><span class="S5">None</span><span class="S10">]</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span>count<br />
+<span class="S5">for</span><span class="S0"> </span>i<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>visc<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>i<span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">0.1</span><span class="S0"> </span><span class="S1"># each system should have a different viscosity</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">]</span><span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>System<span class="S10">(</span>timestep<span class="S10">=</span><span class="S2">1.</span><span class="S10">/</span>rate<span class="S10">,</span><span class="S0"> </span>gravity<span class="S10">=</span><span class="S2">9.84</span><span class="S10">,</span><span class="S0"> </span>viscosity<span class="S10">=</span>visc<span class="S10">,</span><span class="S0"> </span>name<span class="S10">=</span><span class="S4">'viscosity='</span><span class="S10">+</span>str<span class="S10">(</span>visc<span class="S10">),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>x<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>i<span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">200</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>y<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>width<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">200</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>height<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">400</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># generate some masses</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>mass1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>Mass<span class="S10">(</span>m<span class="S10">=</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span>pos<span class="S10">=(</span><span class="S2">0.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>mass2<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>Mass<span class="S10">(</span>m<span class="S10">=</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span>pos<span class="S10">=(</span><span class="S2">0.01</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>mass3<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>Mass<span class="S10">(</span>m<span class="S10">=</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span>pos<span class="S10">=(</span><span class="S2">0.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># insert them into the system</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">].</span>insertMass<span class="S10">(</span>mass1<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">].</span>insertMass<span class="S10">(</span>mass2<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">].</span>insertMass<span class="S10">(</span>mass3<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># an objects property can be changed like this</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>mass1<span class="S10">.</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># connect the masses with springs</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>spring1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>mass1<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>mass2<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10.</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.01</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>spring2<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>mass2<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>mass3<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10.</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.01</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># insert the springs into the system</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">].</span>insertSpring<span class="S10">(</span>spring1<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">].</span>insertSpring<span class="S10">(</span>spring2<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>systems<span class="S10">[</span>i<span class="S10">].</span>display<span class="S10">.</span>autoscale<span class="S10">=</span><span class="S2">0</span><br />
+<br />
+<span class="S1"># manual mainloop</span><br />
+<span class="S5">while</span><span class="S0"> </span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>system<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>systems<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>dispatchDnD<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>advance<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>visual<span class="S10">.</span>rate<span class="S10">(</span>rate<span class="S10">)</span><br />
+<span class="S0"></span></span>
+</body>
+</html>

@@ -11,81 +11,66 @@ bool      camera_BG_subtr;
 float     CAdecay;
 float     trkDecay_0;
 float     trkDecay_1;
-uniform vec4 uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1;
 float     trkDecay_2;
 float     trkDecay_3;
 int       currentDrawingTrack;
 int       currentVideoTrack;
-uniform vec4 uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack;
 int       currentPhotoTrack;
 int       path_replay_trackNo_1;
 int       path_replay_trackNo_2;
 int       path_replay_trackNo_3;
-uniform vec4 uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3;
 int       path_replay_trackNo_4;
 int       path_replay_trackNo_5;
 int       path_replay_trackNo_6;
 int       path_replay_trackNo_7;
-uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7;
 float     noiseScale;
 int       noiseType;
 float     noiseLineScale;
 float     noiseAngleScale;
-uniform vec4 uniform_Update_fs_4fv_noiseScale_noiseType_noiseLineScale_noiseAngleScale;
 float     noiseCenterX;
 float     noiseCenterY;
 float     pixel_acc;
 float     pixel_acc_shiftX;
-uniform vec4 uniform_Update_fs_4fv_noiseCenterX_noiseCenterY_pixel_acc_pixel_acc_shiftX;
 float     pixel_acc_shiftY;
 float     pixel_radius;
 int       pixel_mode;
 float     repop_CA;
-uniform vec4 uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA;
 float     repop_BG;
 float     cameraGamma;
 int       activeClipArts;
 float     cameraThreshold;
-uniform vec4 uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold;
 float     cameraWeight;
 float     cameraSobel;
 float     movieWeight;
 float     movieSobel;
-uniform vec4 uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel;
 bool      invertMovie;
 float     video_hue;
 float     video_satur;
 float     video_satur_pulse;
-uniform vec4 uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse;
 float     video_value;
 float     photoWeight;
 float     photo_hue;
 float     photo_satur;
-uniform vec4 uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur;
 float     photo_satur_pulse;
 float     photo_value;
 float     photo_value_pulse;
 float     photo_scale;
-uniform vec4 uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale;
 float     mask_scale;
 float     photo_contrast;
 float     mask_contrast;
 float     CAParams1;
-uniform vec4 uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1;
 float     CAParams2;
 float     CAParams3;
 float     CAParams4;
 float     CAParams5;
-uniform vec4 uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5;
 float     CAParams6;
 float     CAParams7;
 float     CAParams8;
 int       cameraCumul;
-uniform vec4 uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul;
 int       CAstep;
 bool      CAcolorSpread;
 bool      freeze;
-uniform vec3 uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze;
+uniform float uniform_Update_scenario_var_data[63];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -109,13 +94,20 @@ const float weights_GaussianBlur[8][10] = {
 */
 
 #define SPLAT_PARTICLES
-
 #define PG_BEZIER_PATHS
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
 #define PG_NB_TRACKS 3
 #define PG_NB_PATHS 7
+
+// path data array structure
+#define PG_PATH_P_X              0
+#define PG_PATH_P_Y              1
+#define PG_PATH_BOX              2
+#define PG_PATH_COLOR            3
+#define PG_PATH_RADIUS_BEGINEND  4
+#define PG_MAX_PATH_DATA         5
 
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
@@ -212,6 +204,9 @@ float signed_ry;
 
 // Bezier control points 
 vec2 BezierControl[4];
+vec4 BezierControlX;
+vec4 BezierControlY;
+vec4 BezierBox;
 bool isBegin;
 bool isEnd;
 
@@ -279,43 +274,8 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
-uniform vec4 uniform_Update_fs_4fv_paths03_x;
-uniform vec4 uniform_Update_fs_4fv_paths03_y;
-uniform vec4 uniform_Update_fs_4fv_paths03_x_prev;
-uniform vec4 uniform_Update_fs_4fv_paths03_y_prev;
-// pen Bezier curve tangents
-uniform vec4 uniform_Update_fs_4fv_paths03_xL;
-uniform vec4 uniform_Update_fs_4fv_paths03_yL;
-uniform vec4 uniform_Update_fs_4fv_paths03_xR;
-uniform vec4 uniform_Update_fs_4fv_paths03_yR;
-uniform ivec4 uniform_Update_fs_4iv_path03_beginOrEnd;
-uniform vec4 uniform_Update_fs_4fv_paths03_r;
-uniform vec4 uniform_Update_fs_4fv_paths03_g;
-uniform vec4 uniform_Update_fs_4fv_paths03_b;
-uniform vec4 uniform_Update_fs_4fv_paths03_a;
-#ifndef PG_BEZIER_PATHS
-uniform vec4 uniform_Update_fs_4fv_paths03_BrushID;
-#endif
-uniform vec4 uniform_Update_fs_4fv_paths03_RadiusX;
-
-uniform vec4 uniform_Update_fs_4fv_paths47_x;
-uniform vec4 uniform_Update_fs_4fv_paths47_y;
-uniform vec4 uniform_Update_fs_4fv_paths47_x_prev;
-uniform vec4 uniform_Update_fs_4fv_paths47_y_prev;
-// pen Bezier curve tangents
-uniform vec4 uniform_Update_fs_4fv_paths47_xL;
-uniform vec4 uniform_Update_fs_4fv_paths47_yL;
-uniform vec4 uniform_Update_fs_4fv_paths47_xR;
-uniform vec4 uniform_Update_fs_4fv_paths47_yR;
-uniform ivec4 uniform_Update_fs_4iv_path47_beginOrEnd;
-uniform vec4 uniform_Update_fs_4fv_paths47_r;
-uniform vec4 uniform_Update_fs_4fv_paths47_g;
-uniform vec4 uniform_Update_fs_4fv_paths47_b;
-uniform vec4 uniform_Update_fs_4fv_paths47_a;
-#ifndef PG_BEZIER_PATHS
-uniform vec4 uniform_Update_fs_4fv_paths47_BrushID;
-#endif
-uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
+// pen Bezier curve control points
+uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
 
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
@@ -326,10 +286,11 @@ uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
-uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
+uniform vec4 uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
+uniform vec3 uniform_Update_fs_3fv_repop_ColorCA;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
+uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
@@ -702,7 +663,7 @@ void CA_out( vec4 currentCA ) {
     if( currentCA.a < 0 ) {
       out4_CA.a = floor(randomCA.x * (nbStates+1)); // nbStates states randomly
       newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.rgb;
+      out4_CA.rgb = uniform_Update_fs_3fv_repop_ColorCA.rgb;
     }
     else {
       // CCA with atuotmatic cycling from one step to the next
@@ -1333,47 +1294,44 @@ float out_gray_drawing( float current_Brush_Radius ) {
   vec2 PixelLocation = vec2(decalCoords.x , height - decalCoords.y);
 
   /////////////////////////////////////////////////
+  // just a point
+  if(isBegin && isEnd) {
+      /////////////////////////////////////////////////
+      // WRITING POSITION
+      // distance from pen center
+      signed_rx = PixelLocation.x - BezierControl[3].x;
+      signed_ry = PixelLocation.y - BezierControl[3].y;
+      float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+      if( // doesnt redraw on previously drawn place
+          distanceToCurve < current_Brush_Radius ) {
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
+        // to reactivate later
+        // return stroke_out( current_Brush_Radius , current_brushID );
+      }
+  }
+
+  /////////////////////////////////////////////////
   // The cubic Bezier curve hasfour control points BezierControl
   // from the previous mouse position BezierControl[0].x BezierControl[0].y 
   // to the current one BezierControl[3].x BezierControl[3].y 
 
   /////////////////////////////////////////////////
   // a segment made of 2 distinct real points 
-  if( BezierControl[0].x >= 0 && BezierControl[0].y >= 0 
-      && BezierControl[3].x >= 0 && BezierControl[3].y >= 0
-      && (BezierControl[0].x != BezierControl[3].x
-          || BezierControl[0].y != BezierControl[3].y) ) {
+  if( BezierControlX[0] >= 0 && BezierControlY[0] >= 0 
+      && BezierControlX[3] >= 0 && BezierControlY[3] >= 0
+      && (BezierControlX[0] != BezierControlX[3]
+          || BezierControlY[0] != BezierControlY[3]) ) {
 
     // Bezier curve based rendering
-    // checks whether the point is inside the convex hull of the control points
-    // the convex hull is given by the next vertex of each vertex on the  hull
-    // if the vertex is inside the hull, next is -1 
-    // the test for the hull is made with the normals to each edge
-    // here we assume that radius X and radius Y are the same
-    // if n is the normalized inward normal to an edge, [Pi,Qi] 
-    // a point M on a disk of radius R such that the center C is inside the hull
-    // PiM . n > -R <=> (OM - Opi) . n > -R <=> OM . n > OPi . n - R
-    // inward normal: +90 from [Pi, Pnext]
-    // [0, 1, -1, 0] * [Pnx - Pix, Pny - Piy] = [-Pny + Piy, Pnx - Pix]
 
-    // TOREWRITE
-    /* bool inside = true;
-    for(int i = 0; i < 4; i++) {
-      int next = uniform_Update_fs_4iv_path0_next_in_hull[i];
-      if(next != -1) {
-        vec2 normal = normalize(vec2( -BezierControl[next].y + BezierControl[i].y , 
-                                       BezierControl[next].x - BezierControl[i].x ));
-        if( dot(decalCoords, normal) < dot(BezierControl[i] , normal) - current_Brush_Radius ) {
-          inside = false;
-          break;
-        }
-      }
+    // BOUNDING SOLUTION
+    // simple bounding box around the stroke
+    if( (PixelLocation.x <= BezierBox.x) || (PixelLocation.x >= BezierBox.y)
+       || (PixelLocation.y <= BezierBox.z) || (PixelLocation.y >= BezierBox.w) ) {
+      return  0.f; 
     }
-    if(!inside) {
-      // to reactivate later
-      // return  0.f; 
-    }
-    */
 
     // marching along the Bezier curve
     // 3-pixel steps
@@ -1400,8 +1358,8 @@ float out_gray_drawing( float current_Brush_Radius ) {
       /////////////////////////////////////////////////
       // WRITING POSITION
       // distance from pen center
-      signed_rx = PixelLocation.x - BezierControl[3].x;
-      signed_ry = PixelLocation.y - BezierControl[3].y;
+      signed_rx = PixelLocation.x - BezierControlX[3];
+      signed_ry = PixelLocation.y - BezierControlY[3];
       float distanceToCurve = length( vec2(signed_rx , signed_ry) );
 
       if( // doesnt redraw on previously drawn place
@@ -1453,8 +1411,8 @@ float out_gray_drawing( float current_Brush_Radius ) {
       /////////////////////////////////////////////////
       // WRITING POSITION
       // distance from pen center
-      signed_rx = PixelLocation.x - BezierControl[0].x;
-      signed_ry = PixelLocation.y - BezierControl[0].y;
+      signed_rx = PixelLocation.x - BezierControlX[0];
+      signed_ry = PixelLocation.y - BezierControlY[0];
       float distanceToCurve = length( vec2(signed_rx , signed_ry) );
 
       if( // doesnt redraw on previously drawn place
@@ -1477,69 +1435,69 @@ float out_gray_drawing( float current_Brush_Radius ) {
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  camera_BG_subtr = (uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[0] > 0 ? true : false);
-  CAdecay = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[1];
-  trkDecay_0 = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[2];
-  trkDecay_1 = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[3];
-  trkDecay_2 = uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[0];
-  trkDecay_3 = uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[1];
-  currentDrawingTrack = int(uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[2]);
-  currentVideoTrack = int(uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[3]);
-  currentPhotoTrack = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[0]);
-  path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[1]);
-  path_replay_trackNo_2 = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[2]);
-  path_replay_trackNo_3 = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[3]);
-  path_replay_trackNo_4 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[0]);
-  path_replay_trackNo_5 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[1]);
-  path_replay_trackNo_6 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[2]);
-  path_replay_trackNo_7 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[3]);
-  noiseScale = uniform_Update_fs_4fv_noiseScale_noiseType_noiseLineScale_noiseAngleScale[0];
-  noiseType = int(uniform_Update_fs_4fv_noiseScale_noiseType_noiseLineScale_noiseAngleScale[1]);
-  noiseLineScale = uniform_Update_fs_4fv_noiseScale_noiseType_noiseLineScale_noiseAngleScale[2];
-  noiseAngleScale = uniform_Update_fs_4fv_noiseScale_noiseType_noiseLineScale_noiseAngleScale[3];
-  noiseCenterX = uniform_Update_fs_4fv_noiseCenterX_noiseCenterY_pixel_acc_pixel_acc_shiftX[0];
-  noiseCenterY = uniform_Update_fs_4fv_noiseCenterX_noiseCenterY_pixel_acc_pixel_acc_shiftX[1];
-  pixel_acc = uniform_Update_fs_4fv_noiseCenterX_noiseCenterY_pixel_acc_pixel_acc_shiftX[2];
-  pixel_acc_shiftX = uniform_Update_fs_4fv_noiseCenterX_noiseCenterY_pixel_acc_pixel_acc_shiftX[3];
-  pixel_acc_shiftY = uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[0];
-  pixel_radius = uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[1];
-  pixel_mode = int(uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[2]);
-  repop_CA = uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[3];
-  repop_BG = uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[0];
-  cameraGamma = uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[1];
-  activeClipArts = int(uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[2]);
-  cameraThreshold = uniform_Update_fs_4fv_repop_BG_cameraGamma_activeClipArts_cameraThreshold[3];
-  cameraWeight = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[0];
-  cameraSobel = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[1];
-  movieWeight = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[2];
-  movieSobel = uniform_Update_fs_4fv_cameraWeight_cameraSobel_movieWeight_movieSobel[3];
-  invertMovie = (uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[0] > 0 ? true : false);
-  video_hue = uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[1];
-  video_satur = uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[2];
-  video_satur_pulse = uniform_Update_fs_4fv_invertMovie_video_hue_video_satur_video_satur_pulse[3];
-  video_value = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur[0];
-  photoWeight = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur[1];
-  photo_hue = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur[2];
-  photo_satur = uniform_Update_fs_4fv_video_value_photoWeight_photo_hue_photo_satur[3];
-  photo_satur_pulse = uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale[0];
-  photo_value = uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale[1];
-  photo_value_pulse = uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale[2];
-  photo_scale = uniform_Update_fs_4fv_photo_satur_pulse_photo_value_photo_value_pulse_photo_scale[3];
-  mask_scale = uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1[0];
-  photo_contrast = uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1[1];
-  mask_contrast = uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1[2];
-  CAParams1 = uniform_Update_fs_4fv_mask_scale_photo_contrast_mask_contrast_CAParams1[3];
-  CAParams2 = uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5[0];
-  CAParams3 = uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5[1];
-  CAParams4 = uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5[2];
-  CAParams5 = uniform_Update_fs_4fv_CAParams2_CAParams3_CAParams4_CAParams5[3];
-  CAParams6 = uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul[0];
-  CAParams7 = uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul[1];
-  CAParams8 = uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul[2];
-  cameraCumul = int(uniform_Update_fs_4fv_CAParams6_CAParams7_CAParams8_cameraCumul[3]);
-  CAstep = int(uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze[0]);
-  CAcolorSpread = (uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze[1] > 0 ? true : false);
-  freeze = (uniform_Update_fs_3fv_CAstep_CAcolorSpread_freeze[2] > 0 ? true : false);
+  camera_BG_subtr = (uniform_Update_scenario_var_data[0] > 0 ? true : false);
+  CAdecay = uniform_Update_scenario_var_data[1];
+  trkDecay_0 = uniform_Update_scenario_var_data[2];
+  trkDecay_1 = uniform_Update_scenario_var_data[3];
+  trkDecay_2 = uniform_Update_scenario_var_data[4];
+  trkDecay_3 = uniform_Update_scenario_var_data[5];
+  currentDrawingTrack = int(uniform_Update_scenario_var_data[6]);
+  currentVideoTrack = int(uniform_Update_scenario_var_data[7]);
+  currentPhotoTrack = int(uniform_Update_scenario_var_data[8]);
+  path_replay_trackNo_1 = int(uniform_Update_scenario_var_data[9]);
+  path_replay_trackNo_2 = int(uniform_Update_scenario_var_data[10]);
+  path_replay_trackNo_3 = int(uniform_Update_scenario_var_data[11]);
+  path_replay_trackNo_4 = int(uniform_Update_scenario_var_data[12]);
+  path_replay_trackNo_5 = int(uniform_Update_scenario_var_data[13]);
+  path_replay_trackNo_6 = int(uniform_Update_scenario_var_data[14]);
+  path_replay_trackNo_7 = int(uniform_Update_scenario_var_data[15]);
+  noiseScale = uniform_Update_scenario_var_data[16];
+  noiseType = int(uniform_Update_scenario_var_data[17]);
+  noiseLineScale = uniform_Update_scenario_var_data[18];
+  noiseAngleScale = uniform_Update_scenario_var_data[19];
+  noiseCenterX = uniform_Update_scenario_var_data[20];
+  noiseCenterY = uniform_Update_scenario_var_data[21];
+  pixel_acc = uniform_Update_scenario_var_data[22];
+  pixel_acc_shiftX = uniform_Update_scenario_var_data[23];
+  pixel_acc_shiftY = uniform_Update_scenario_var_data[24];
+  pixel_radius = uniform_Update_scenario_var_data[25];
+  pixel_mode = int(uniform_Update_scenario_var_data[26]);
+  repop_CA = uniform_Update_scenario_var_data[27];
+  repop_BG = uniform_Update_scenario_var_data[28];
+  cameraGamma = uniform_Update_scenario_var_data[29];
+  activeClipArts = int(uniform_Update_scenario_var_data[30]);
+  cameraThreshold = uniform_Update_scenario_var_data[31];
+  cameraWeight = uniform_Update_scenario_var_data[32];
+  cameraSobel = uniform_Update_scenario_var_data[33];
+  movieWeight = uniform_Update_scenario_var_data[34];
+  movieSobel = uniform_Update_scenario_var_data[35];
+  invertMovie = (uniform_Update_scenario_var_data[36] > 0 ? true : false);
+  video_hue = uniform_Update_scenario_var_data[37];
+  video_satur = uniform_Update_scenario_var_data[38];
+  video_satur_pulse = uniform_Update_scenario_var_data[39];
+  video_value = uniform_Update_scenario_var_data[40];
+  photoWeight = uniform_Update_scenario_var_data[41];
+  photo_hue = uniform_Update_scenario_var_data[42];
+  photo_satur = uniform_Update_scenario_var_data[43];
+  photo_satur_pulse = uniform_Update_scenario_var_data[44];
+  photo_value = uniform_Update_scenario_var_data[45];
+  photo_value_pulse = uniform_Update_scenario_var_data[46];
+  photo_scale = uniform_Update_scenario_var_data[47];
+  mask_scale = uniform_Update_scenario_var_data[48];
+  photo_contrast = uniform_Update_scenario_var_data[49];
+  mask_contrast = uniform_Update_scenario_var_data[50];
+  CAParams1 = uniform_Update_scenario_var_data[51];
+  CAParams2 = uniform_Update_scenario_var_data[52];
+  CAParams3 = uniform_Update_scenario_var_data[53];
+  CAParams4 = uniform_Update_scenario_var_data[54];
+  CAParams5 = uniform_Update_scenario_var_data[55];
+  CAParams6 = uniform_Update_scenario_var_data[56];
+  CAParams7 = uniform_Update_scenario_var_data[57];
+  CAParams8 = uniform_Update_scenario_var_data[58];
+  cameraCumul = int(uniform_Update_scenario_var_data[59]);
+  CAstep = int(uniform_Update_scenario_var_data[60]);
+  CAcolorSpread = (uniform_Update_scenario_var_data[61] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[62] > 0 ? true : false);
 
   //////////////////////////
   // TRACK DECAY
@@ -1720,16 +1678,16 @@ void main() {
 
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y);
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
     coordsImage *= uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0) {
     coordsImage *= uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
   photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
@@ -1904,55 +1862,31 @@ void main() {
 #endif
       // drawing occurs
       if( pathStroke > 0 ) {
-        if(indPath < 4) {
-            BezierControl[0] =
-              vec2(uniform_Update_fs_4fv_paths03_x_prev[indPath],uniform_Update_fs_4fv_paths03_y_prev[indPath]);
-            BezierControl[1] =
-              vec2(uniform_Update_fs_4fv_paths03_xL[indPath],uniform_Update_fs_4fv_paths03_yL[indPath]);
-            BezierControl[2] =
-              vec2(uniform_Update_fs_4fv_paths03_xR[indPath],uniform_Update_fs_4fv_paths03_yR[indPath]); 
-            BezierControl[3] =
-              vec2(uniform_Update_fs_4fv_paths03_x[indPath],uniform_Update_fs_4fv_paths03_y[indPath]);
-            isBegin = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] > 0);
-            isEnd = (uniform_Update_fs_4iv_path03_beginOrEnd[indPath] < 0);
-            if(indPath == 0 && // rubber stylus
-                               Cursor < 0) {
-                curTrack_grayLevel =  out_gray_drawing( 
-                    3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ); // rubber radius is made 3 times larger than regular pen
-                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
-                curTrack_color.rgb = vec3(0);
-            }
-            else { // normal stylus
-                curTrack_grayLevel =  out_gray_drawing( 
-                    uniform_Update_fs_4fv_paths03_RadiusX[indPath] );
-                curTrack_color.rgb
-                  += curTrack_grayLevel
-                    * uniform_Update_fs_4fv_paths03_a[indPath]
-                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
-                                uniform_Update_fs_4fv_paths03_g[indPath] , 
-                                uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
-            }
+        BezierControlX = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];
+        BezierControlY = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_Y];
+        BezierControl[0] = vec2(BezierControlX[0], BezierControlY[0]);
+        BezierControl[1] = vec2(BezierControlX[1], BezierControlY[1]);
+        BezierControl[2] = vec2(BezierControlX[2], BezierControlY[2]);
+        BezierControl[3] = vec2(BezierControlX[3], BezierControlY[3]);
+        BezierBox = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_BOX];
+        vec4 radius_beginOrEnd = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_RADIUS_BEGINEND];
+        vec4 pathColor = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_COLOR];
+        float isBeginOrEnd = radius_beginOrEnd.y;
+        isBegin = (isBeginOrEnd > 0);
+        isEnd = (isBeginOrEnd < 0);
+        if(indPath == 0 && // rubber stylus
+                           Cursor < 0) {
+            curTrack_grayLevel =  out_gray_drawing( 3 * radius_beginOrEnd.x ); 
+                                 // rubber radius is made 3 times larger than regular pen
+            out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
+            curTrack_color.rgb = vec3(0);
         }
-        else {
-            int indPathRel = indPath - 4;
-            BezierControl[0] =
-              vec2(uniform_Update_fs_4fv_paths47_x_prev[indPathRel],uniform_Update_fs_4fv_paths47_y_prev[indPathRel]);
-            BezierControl[1] =
-              vec2(uniform_Update_fs_4fv_paths47_xL[indPathRel],uniform_Update_fs_4fv_paths47_yL[indPathRel]);
-            BezierControl[2] =
-              vec2(uniform_Update_fs_4fv_paths47_xR[indPathRel],uniform_Update_fs_4fv_paths47_yR[indPathRel]); 
-            BezierControl[3] =
-              vec2(uniform_Update_fs_4fv_paths47_x[indPathRel],uniform_Update_fs_4fv_paths47_y[indPathRel]);
-            isBegin = (uniform_Update_fs_4iv_path47_beginOrEnd[indPathRel] > 0);
-            isEnd = (uniform_Update_fs_4iv_path47_beginOrEnd[indPathRel] < 0);
-            curTrack_grayLevel =  out_gray_drawing( 
-                uniform_Update_fs_4fv_paths47_RadiusX[indPathRel] );
+        else { // normal stylus
+            curTrack_grayLevel =  out_gray_drawing( radius_beginOrEnd.x );
             curTrack_color.rgb
-            += curTrack_grayLevel
-                * uniform_Update_fs_4fv_paths47_a[indPathRel]
-                * vec3( uniform_Update_fs_4fv_paths47_r[indPathRel] , 
-                            uniform_Update_fs_4fv_paths47_g[indPathRel] , 
-                            uniform_Update_fs_4fv_paths47_b[indPathRel] );  // brush opacity is combined with color opacity
+              += curTrack_grayLevel
+                * pathColor.a
+                * pathColor.rgb;  // brush opacity is combined with color opacity
         }
       }
     }
@@ -2010,7 +1944,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x + photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 ) {
       // only photo (but not drawing or whatever memory from preceding tracks)
       if(!videoOn) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
@@ -2083,7 +2017,7 @@ void main() {
       if( int(frameNo * randomCA.w ) % int(15000 *(1-repop_CA)) == int((randomCA.z * 5000.0
         + randomCA.x * 5000.0 + randomCA.y * 5000.0 ) *(1-repop_CA)) ) {
         out4_CA.a = -1.0;
-        out4_CA.rgb  = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
+        out4_CA.rgb  = uniform_Update_fs_3fv_repop_ColorCA.xyz;
       }
     }
 
@@ -2093,9 +2027,9 @@ void main() {
 
   //////////////////////////////////////
   // FLASH BACK FROM CA LAYER TO BG LAYER
-  // if no flashback uniform_Update_fs_4fv_repop_Color_flashCABGWght.w == 0
+  // if no flashback uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w == 0
   out_track_FBO[0].rgb = clamp( out_track_FBO[0].rgb 
-				    + uniform_Update_fs_4fv_repop_Color_flashCABGWght.w 
+				    + uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w 
             * out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 
             0 , 1 );
 
@@ -2185,7 +2119,7 @@ void main() {
   if( repop_BG > 0 ) {
     if( int(frameNo * randomCA.z ) % int(15000 *(1-repop_BG)) == int((randomCA.x * 5000.0
         + randomCA.y * 5000.0 + randomCA.w * 5000.0 ) *(1-repop_BG)) ) {
-        out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
+        out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.xyz;
     }
   }
 

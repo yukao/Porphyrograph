@@ -138,7 +138,7 @@
 #include <gtc/type_ptr.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtx/string_cast.hpp>
-
+#include <gtx/norm.hpp>
 
 #define OPENCV_3
 
@@ -151,6 +151,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/calib3d.hpp>
 #endif
 using namespace cv;
 
@@ -197,7 +198,7 @@ using std::ifstream;
 #define PG_WITH_PHOTO_DIAPORAMA
 #endif
 
-#if defined (VOLUSPA)
+#if defined (VOLUSPA) || defined (ETOILES) || defined (ARAKNIT)
 #define PG_WITH_BLUR
 #endif
 
@@ -220,7 +221,8 @@ using std::ifstream;
 // video noise
 
 // NB CAMERA IMAGE CUMUL MODES
-#ifndef CAAUDIO
+// lists the projects that *DO NOT* use the camera (and the drawing machine)
+#if !defined (CAAUDIO) && !defined (TEMPETE) && !defined (KOMPARTSD) && !defined (ETOILES) && !defined (BICHES)
 #define PG_WITH_CAMERA_CAPTURE
 #endif
 
@@ -292,13 +294,11 @@ using std::ifstream;
 #define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
-// #define BLURRED_SPLAT_PARTICLES
-#if defined(TVW) || defined (BONNOTTE)
-#define BLURRED_SPLAT_PARTICLES
-#undef BLURRED_SPLAT_PARTICLES_TEXTURED
+#if defined(TVW) || defined (BONNOTTE) || defined (TEMPETE) || defined (ETOILES) || defined (BICHES)
+#define TEXTURED_QUAD_PARTICLES
 #elif defined (DASEIN)
 #define CURVE_PARTICLES
-#elif defined (effe) || defined (DEMO) || defined (DEMO_BEZIER) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (CAAUDIO) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ULM)
+#elif defined (effe) || defined (DEMO) || defined (DEMO_BEZIER) || defined (VOLUSPA) || defined (INTERFERENCE) || defined (CAAUDIO) || defined (REUTLINGEN) || defined (CAVERNEPLATON) || defined (ULM) || defined (ARAKNIT)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -306,7 +306,7 @@ using std::ifstream;
 #define PG_PARTICLE_CURVE_DEGREE 3
 #endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // NB PARTICLE MODES
 #define PG_NB_PARTMOVE_MODES 5
 
@@ -316,12 +316,10 @@ using std::ifstream;
 #define PG_NB_PARTEXIT_MODES 3
 #define PG_NB_PARTSTROKE_MODES 4
 #define PG_NB_PARTCOLOR_MODES 3
-
-#define PG_NB_PARTICLE_INITIAL_IMAGES 6 // number of images used for particle initialization
 #endif
 
 // MASTER's MASK
-#if defined (CAVERNEPLATON)
+#if defined (CAVERNEPLATON) || defined (INTERFERENCE)
 #define PG_WITH_MASTER_MASK
 #endif
 
@@ -334,15 +332,22 @@ using std::ifstream;
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined (DEMO) || defined (DEMO_BEZIER) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON) || defined (TEMPETE)
+#if defined (DEMO) || defined (DEMO_BEZIER) || defined (GN) || defined (REUTLINGEN) || defined (BICHES) || defined (CAVERNEPLATON)
 #define PG_SENSORS
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
 #define BEAT_DURATION (1.0f)
 #define PG_RENOISE
 #endif
-#if defined (CAVERNEPLATON) || defined (TEMPETE)
+#if defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ETOILES)
 #define PG_MESHES
+#if defined (TEMPETE)
+// FBO capture of Master to be displayed on a mesh for augmented reality
+#define PG_AUGMENTED_REALITY
+#endif
+#endif
+#if defined (ARAKNIT)
+#define PG_METAWEAR
 #endif
 #ifdef PG_SENSORS
 #define PG_SENSOR_TEXTURE_WIDTH 100
@@ -355,13 +360,18 @@ using std::ifstream;
 #endif
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ULM) || defined (BICHES) || defined (VOLUSPA)
+#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ULM) || defined (BICHES) || defined (VOLUSPA) || defined (ETOILES) || defined (ARAKNIT)
 #define PG_BEZIER_PATHS
 #endif
 
 // PHOTO FLASH ON CA IN ADDITION TO CAMERA FLASH
-#if defined (CAVERNEPLATON) || defined (ULM)
+#if defined (CAVERNEPLATON) || defined (ULM) || defined (TEMPETE) || defined (ETOILES)
 #define PG_WITH_PHOTO_FLASH
+#endif
+
+// REPOP DENSITY TEXTURE FOR NON HOMOGENEOUS REPOP
+#if defined (ETOILES) || defined (BICHES)
+#define PG_WITH_REPOP_DENSITY
 #endif
 
 
@@ -418,6 +428,12 @@ using std::ifstream;
 #endif
 #ifdef VOLUSPA
 #include "pg_script_header_voluspa.h"
+#endif
+#ifdef ARAKNIT
+#include "pg_script_header_araknit.h"
+#endif
+#if defined (ETOILES)
+#include "pg_script_header_etoiles.h"
 #endif
 #ifdef INTERFERENCE
 #include "pg_script_header_interference.h"

@@ -24,14 +24,17 @@
  */
 
 #include "pg-all_include.h"
+
+#ifdef PG_MESHES
+
 ////////////////////////////////////////
 // geometrical data of mesh
 
 // mesh data
-GLfloat **pointBuffer = NULL;
-GLfloat **texCoordBuffer = NULL;
-GLfloat **normalBuffer = NULL;
-GLuint  **indexBuffer = NULL;
+GLfloat *vertexBuffer = NULL;
+GLfloat *texCoordBuffer = NULL;
+GLfloat *normalBuffer = NULL;
+GLuint  *indexBuffer = NULL;
 
 // shader variable pointers
 GLint *uniform_mesh_model = NULL;
@@ -39,83 +42,92 @@ GLint *uniform_mesh_view = NULL;
 GLint *uniform_mesh_proj = NULL;
 GLint *uniform_mesh_light = NULL;
 
+#ifndef TEMPETE
+// mesh lighting
+GLfloat mesh_light_x = 0.56f;
+GLfloat mesh_light_y = 0.35f;
+GLfloat mesh_light_z = -1.f;
+#endif
+
+
 //////////////////////////////////////////////////////////////////
 // MESH AND KEYPOINT FILE PARSING
 //////////////////////////////////////////////////////////////////
 
 // the linearization for OpenGL replaces indices associated with each face in obj format
 // by coordinates copied from these temporary buffers (through copyMeshData)
-void copyMeshData(  int indMeshInFile , GLfloat *pointBufferIni , GLfloat *texCoordBufferIni , GLfloat *normalBufferIni ,
+void copyMeshData(  int indMeshInFile , GLfloat *vertexBufferIni , GLfloat *texCoordBufferIni , GLfloat *normalBufferIni ,
 					GLuint  *indexPointBufferIni, GLuint  *indexTexCoordBufferIni, GLuint  *indexNormalBufferIni,
 					int nbFacesInThisMesh) {
-  	pointBuffer[indMeshInFile] = (GLfloat *)malloc( nbFacesInThisMesh * 3 * 3 * sizeof *pointBuffer);
-	texCoordBuffer[indMeshInFile] = (GLfloat *)malloc( nbFacesInThisMesh * 3 * 2 * sizeof *texCoordBuffer);
-	normalBuffer[indMeshInFile] = (GLfloat *)malloc(nbFacesInThisMesh * 3 * 3 * sizeof *normalBuffer);
-	indexBuffer[indMeshInFile] = (GLuint *)malloc( nbFacesInThisMesh * 3 * sizeof *indexBuffer);
+  	vertexBuffer = (GLfloat *)malloc( nbFacesInThisMesh * 3 * 3 * sizeof(GLfloat));
+	texCoordBuffer = (GLfloat *)malloc( nbFacesInThisMesh * 3 * 2 * sizeof(GLfloat));
+	normalBuffer = (GLfloat *)malloc(nbFacesInThisMesh * 3 * 3 * sizeof(GLfloat));
+	indexBuffer = (GLuint *)malloc( nbFacesInThisMesh * 3 * sizeof(GLuint));
 	for( int indFace = 0 ; indFace < nbFacesInThisMesh ; indFace++ ) {
 	  // copies the indices in the index table
-	  indexBuffer[indMeshInFile][ indFace * 3 ] = indFace * 3;
-	  indexBuffer[indMeshInFile][ indFace * 3 + 1 ] = indFace * 3 + 1;
-	  indexBuffer[indMeshInFile][ indFace * 3 + 2 ] = indFace * 3 + 2;
+	  indexBuffer[ indFace * 3 ] = indFace * 3;
+	  indexBuffer[ indFace * 3 + 1 ] = indFace * 3 + 1;
+	  indexBuffer[ indFace * 3 + 2 ] = indFace * 3 + 2;
 
 	  // copies the vertices coordinates from the initial buffer to the final one
 	  int indVertex1 = indexPointBufferIni[ indFace * 3 ];
 	  int indVertex2 = indexPointBufferIni[ indFace * 3 + 1 ];
 	  int indVertex3 = indexPointBufferIni[ indFace * 3 + 2 ];
 	  // printf("Face indPoint %d %d %d %d\n" , indFace ,indVertex1,indVertex2,indVertex3);
-	  pointBuffer[indMeshInFile][ indFace * 3 * 3 ]     = pointBufferIni[ indVertex1 * 3 ];
-	  pointBuffer[indMeshInFile][ indFace * 3 * 3 + 1 ] = pointBufferIni[ indVertex1 * 3 + 1 ];
-	  pointBuffer[indMeshInFile][ indFace * 3 * 3 + 2 ] = pointBufferIni[ indVertex1 * 3 + 2 ];
-	  pointBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 ] = pointBufferIni[ indVertex2 * 3 ];
-	  pointBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 + 1 ] = pointBufferIni[ indVertex2 * 3 + 1 ];
-	  pointBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 + 2 ] = pointBufferIni[ indVertex2 * 3 + 2 ];
-	  pointBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 ] = pointBufferIni[ indVertex3 * 3 ];
-	  pointBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 + 1 ] = pointBufferIni[ indVertex3 * 3 + 1 ];
-	  pointBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 + 2 ] = pointBufferIni[ indVertex3 * 3 + 2 ];
+	  vertexBuffer[ indFace * 3 * 3 ]     = vertexBufferIni[ indVertex1 * 3 ];
+	  vertexBuffer[ indFace * 3 * 3 + 1 ] = vertexBufferIni[ indVertex1 * 3 + 1 ];
+	  vertexBuffer[ indFace * 3 * 3 + 2 ] = vertexBufferIni[ indVertex1 * 3 + 2 ];
+	  vertexBuffer[ (indFace * 3 + 1) * 3 ] = vertexBufferIni[ indVertex2 * 3 ];
+	  vertexBuffer[ (indFace * 3 + 1) * 3 + 1 ] = vertexBufferIni[ indVertex2 * 3 + 1 ];
+	  vertexBuffer[ (indFace * 3 + 1) * 3 + 2 ] = vertexBufferIni[ indVertex2 * 3 + 2 ];
+	  vertexBuffer[ (indFace * 3 + 2) * 3 ] = vertexBufferIni[ indVertex3 * 3 ];
+	  vertexBuffer[ (indFace * 3 + 2) * 3 + 1 ] = vertexBufferIni[ indVertex3 * 3 + 1 ];
+	  vertexBuffer[ (indFace * 3 + 2) * 3 + 2 ] = vertexBufferIni[ indVertex3 * 3 + 2 ];
 	 // printf("Face point %d %.2f/%.2f/%.2f %.2f/%.2f/%.2f %.2f/%.2f/%.2f \n" , indFace ,
-		//pointBuffer[indMeshInFile][ indFace * 3 * 3 ] , pointBuffer[indMeshInFile][ indFace * 3 * 3 + 1 ] , pointBuffer[indMeshInFile][ indFace * 3 * 3 + 2 ] ,
-		//pointBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 ] , pointBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 + 1 ] , pointBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 + 2 ] ,
-		//pointBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 ] , pointBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 + 1 ] , pointBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 + 2 ] );
+		//vertexBuffer[ indFace * 3 * 3 ] , vertexBuffer[ indFace * 3 * 3 + 1 ] , vertexBuffer[ indFace * 3 * 3 + 2 ] ,
+		//vertexBuffer[ (indFace * 3 + 1) * 3 ] , vertexBuffer[ (indFace * 3 + 1) * 3 + 1 ] , vertexBuffer[ (indFace * 3 + 1) * 3 + 2 ] ,
+		//vertexBuffer[ (indFace * 3 + 2) * 3 ] , vertexBuffer[ (indFace * 3 + 2) * 3 + 1 ] , vertexBuffer[ (indFace * 3 + 2) * 3 + 2 ] );
 
 	  // copies the texture coordinates from the initial buffer to the final one
 	  int indexTexCoord1 = indexTexCoordBufferIni[ indFace * 3 ];
 	  int indexTexCoord2 = indexTexCoordBufferIni[ indFace * 3 + 1 ];
 	  int indexTexCoord3 = indexTexCoordBufferIni[ indFace * 3 + 2 ];
 	  // printf("Face indTexC %d %d %d %d\n" , indFace ,indexTexCoord1,indexTexCoord2,indexTexCoord3);
-	  texCoordBuffer[indMeshInFile][ indFace * 3 * 2 ]     = texCoordBufferIni[ indexTexCoord1 * 2 ];
-	  texCoordBuffer[indMeshInFile][ indFace * 3 * 2 + 1 ] = texCoordBufferIni[ indexTexCoord1 * 2 + 1 ];
-	  texCoordBuffer[indMeshInFile][ (indFace * 3 + 1) * 2 ] = texCoordBufferIni[ indexTexCoord2 * 2 ];
-	  texCoordBuffer[indMeshInFile][ (indFace * 3 + 1) * 2 + 1 ] = texCoordBufferIni[ indexTexCoord2 * 2 + 1 ];
-	  texCoordBuffer[indMeshInFile][ (indFace * 3 + 2) * 2 ] = texCoordBufferIni[ indexTexCoord3 * 2 ];
-	  texCoordBuffer[indMeshInFile][ (indFace * 3 + 2) * 2 + 1 ] = texCoordBufferIni[ indexTexCoord3 * 2 + 1 ];
+	  texCoordBuffer[ indFace * 3 * 2 ]     = texCoordBufferIni[ indexTexCoord1 * 2 ];
+	  texCoordBuffer[ indFace * 3 * 2 + 1 ] = texCoordBufferIni[ indexTexCoord1 * 2 + 1 ];
+	  texCoordBuffer[ (indFace * 3 + 1) * 2 ] = texCoordBufferIni[ indexTexCoord2 * 2 ];
+	  texCoordBuffer[ (indFace * 3 + 1) * 2 + 1 ] = texCoordBufferIni[ indexTexCoord2 * 2 + 1 ];
+	  texCoordBuffer[ (indFace * 3 + 2) * 2 ] = texCoordBufferIni[ indexTexCoord3 * 2 ];
+	  texCoordBuffer[ (indFace * 3 + 2) * 2 + 1 ] = texCoordBufferIni[ indexTexCoord3 * 2 + 1 ];
 
 	  // copies the vertices coordinates from the initial buffer to the final one
 	  int indNormal1 = indexNormalBufferIni[indFace * 3];
 	  int indNormal2 = indexNormalBufferIni[indFace * 3 + 1];
 	  int indNormal3 = indexNormalBufferIni[indFace * 3 + 2];
 	  // printf("Face indNormal %d %d %d %d\n" , indFace ,indNormal1,indNormal2,indNormal3);
-	  normalBuffer[indMeshInFile][indFace * 3 * 3] = normalBufferIni[indNormal1 * 3];
-	  normalBuffer[indMeshInFile][indFace * 3 * 3 + 1] = normalBufferIni[indNormal1 * 3 + 1];
-	  normalBuffer[indMeshInFile][indFace * 3 * 3 + 2] = normalBufferIni[indNormal1 * 3 + 2];
-	  normalBuffer[indMeshInFile][(indFace * 3 + 1) * 3] = normalBufferIni[indNormal2 * 3];
-	  normalBuffer[indMeshInFile][(indFace * 3 + 1) * 3 + 1] = normalBufferIni[indNormal2 * 3 + 1];
-	  normalBuffer[indMeshInFile][(indFace * 3 + 1) * 3 + 2] = normalBufferIni[indNormal2 * 3 + 2];
-	  normalBuffer[indMeshInFile][(indFace * 3 + 2) * 3] = normalBufferIni[indNormal3 * 3];
-	  normalBuffer[indMeshInFile][(indFace * 3 + 2) * 3 + 1] = normalBufferIni[indNormal3 * 3 + 1];
-	  normalBuffer[indMeshInFile][(indFace * 3 + 2) * 3 + 2] = normalBufferIni[indNormal3 * 3 + 2];
-	  // printf("Face normal %d %.2f/%.2f/%.2f %.2f/%.2f/%.2f %.2f/%.2f/%.2f \n" , indFace ,
-		 //normalBuffer[indMeshInFile][ indFace * 3 * 3 ] , normalBuffer[indMeshInFile][ indFace * 3 * 3 + 1 ] , normalBuffer[indMeshInFile][ indFace * 3 * 3 + 2 ] ,
-		 //normalBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 ] , normalBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 + 1 ] , normalBuffer[indMeshInFile][ (indFace * 3 + 1) * 3 + 2 ] ,
-		 //normalBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 ] , normalBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 + 1 ] , normalBuffer[indMeshInFile][ (indFace * 3 + 2) * 3 + 2 ] );
-	  // printf("Face texC %d %.2f/%.2f %.2f/%.2f %.2f/%.2f  \n" , indFace ,
-		//texCoordBuffer[indMeshInFile][ indFace * 3 * 2  ] , texCoordBuffer[indMeshInFile][ indFace * 3 * 2 + 1 ] ,
-		//texCoordBuffer[indMeshInFile][ (indFace * 3 + 1) * 2 ] , texCoordBuffer[indMeshInFile][ (indFace * 3 + 1) * 2 + 1 ] ,
-		//texCoordBuffer[indMeshInFile][ (indFace * 3 + 2) * 2 ] , texCoordBuffer[indMeshInFile][ (indFace * 3 + 2) * 2 + 1 ]  );
+	  normalBuffer[indFace * 3 * 3] = normalBufferIni[indNormal1 * 3];
+	  normalBuffer[indFace * 3 * 3 + 1] = normalBufferIni[indNormal1 * 3 + 1];
+	  normalBuffer[indFace * 3 * 3 + 2] = normalBufferIni[indNormal1 * 3 + 2];
+	  normalBuffer[(indFace * 3 + 1) * 3] = normalBufferIni[indNormal2 * 3];
+	  normalBuffer[(indFace * 3 + 1) * 3 + 1] = normalBufferIni[indNormal2 * 3 + 1];
+	  normalBuffer[(indFace * 3 + 1) * 3 + 2] = normalBufferIni[indNormal2 * 3 + 2];
+	  normalBuffer[(indFace * 3 + 2) * 3] = normalBufferIni[indNormal3 * 3];
+	  normalBuffer[(indFace * 3 + 2) * 3 + 1] = normalBufferIni[indNormal3 * 3 + 1];
+	  normalBuffer[(indFace * 3 + 2) * 3 + 2] = normalBufferIni[indNormal3 * 3 + 2];
+	 //  printf("Face normal %d %.2f/%.2f/%.2f %.2f/%.2f/%.2f %.2f/%.2f/%.2f \n" , indFace ,
+		// normalBuffer[ indFace * 3 * 3 ] , normalBuffer[ indFace * 3 * 3 + 1 ] , normalBuffer[ indFace * 3 * 3 + 2 ] ,
+		// normalBuffer[ (indFace * 3 + 1) * 3 ] , normalBuffer[ (indFace * 3 + 1) * 3 + 1 ] , normalBuffer[ (indFace * 3 + 1) * 3 + 2 ] ,
+		// normalBuffer[ (indFace * 3 + 2) * 3 ] , normalBuffer[ (indFace * 3 + 2) * 3 + 1 ] , normalBuffer[ (indFace * 3 + 2) * 3 + 2 ] );
+	 //  printf("Face texC %d %.2f/%.2f %.2f/%.2f %.2f/%.2f  \n" , indFace ,
+		//texCoordBuffer[ indFace * 3 * 2  ] , texCoordBuffer[ indFace * 3 * 2 + 1 ] ,
+		//texCoordBuffer[ (indFace * 3 + 1) * 2 ] , texCoordBuffer[ (indFace * 3 + 1) * 2 + 1 ] ,
+		//texCoordBuffer[ (indFace * 3 + 2) * 2 ] , texCoordBuffer[ (indFace * 3 + 2) * 2 + 1 ]  );
 	}
+	//printf("\n");
 }
 
 // OBJ file parsing (Alias Wavefront ASCII format)
-#define MAX_MESHES 100
+#define MAX_MESHES 1200
 void count_faces_mesh_obj(FILE *file, int *meshNo,
 	int **nbVerticesInEachMesh, int **nbTextCoordsInEachMesh, int **nbNormalsInEachMesh,
 	int **nbFacesInEachMesh) {
@@ -134,17 +146,18 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 
 	if (!fgets(line, 256, file)) { return; }
 	// material name
+	// or mesh ID
+	sscanf(line, "%s", tag);
 	if (strcmp(tag, "mtllib") == 0) {
 		sscanf(line, "%s", tag);
 		// reads next line: object
 		if (!fgets(line, 256, file)) { return; }
+		// mesh ID
+		sscanf(line, "%s", tag);
 	}
 	else {
 		// we are on object line
 	}
-
-	// mesh ID
-	sscanf(line, "%s", tag);
 
 	*meshNo = 0;
 	while (strcmp(tag, "o") == 0) {
@@ -216,8 +229,8 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 					(*nbTextCoordsInEachMesh)[indMesh] = nbTextCoordsInEachMeshTmp[indMesh];
 					(*nbNormalsInEachMesh)[indMesh] = nbNormalsInEachMeshTmp[indMesh];
 					(*nbFacesInEachMesh)[indMesh] = nbFacesInEachMeshTmp[indMesh];
-					//printf("Mesh Count %d Vertices %d texCoords %d normals %d faces %d\n",
-					//	*meshNo, (*nbVerticesInEachMesh)[indMesh], (*nbTextCoordsInEachMesh)[indMesh], (*nbNormalsInEachMesh)[indMesh], (*nbFacesInEachMesh)[indMesh]);
+					//printf("Counted mesh %d Vertices %d texCoords %d normals %d faces %d\n",
+					//	indMesh, (*nbVerticesInEachMesh)[indMesh], (*nbTextCoordsInEachMesh)[indMesh], (*nbNormalsInEachMesh)[indMesh], (*nbFacesInEachMesh)[indMesh]);
 				}
 				return;
 			}
@@ -238,8 +251,8 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 					(*nbTextCoordsInEachMesh)[indMesh] = nbTextCoordsInEachMeshTmp[indMesh];
 					(*nbNormalsInEachMesh)[indMesh] = nbNormalsInEachMeshTmp[indMesh];
 					(*nbFacesInEachMesh)[indMesh] = nbFacesInEachMeshTmp[indMesh];
-					printf("Mesh %d Vertices %d texCoords %d normals %d faces %d\n",
-						*meshNo, (*nbVerticesInEachMesh)[indMesh], (*nbTextCoordsInEachMesh)[indMesh], (*nbNormalsInEachMesh)[indMesh], (*nbFacesInEachMesh)[indMesh]);
+					printf("Counted mesh %d Vertices %d texCoords %d normals %d faces %d\n",
+						indMesh, (*nbVerticesInEachMesh)[indMesh], (*nbTextCoordsInEachMesh)[indMesh], (*nbNormalsInEachMesh)[indMesh], (*nbFacesInEachMesh)[indMesh]);
 				}
 				return;
 			}
@@ -250,12 +263,88 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 	}
 }
 
+void transferMeshDataToGPU(int indMeshFile, int indMeshInFile) {
+	///////////////////////////////////////////////////////////
+	// vertex buffer objects and vertex array for the mesh
+	unsigned int mesh_points_vbo;
+	unsigned int mesh_texCoords_vbo;
+	unsigned int mesh_normals_vbo;
+
+	// 3 VBOs
+	//printf("GPU transfer %d mesh %d faces %d\n", indMeshFile, indMeshInFile, nbFacesPerMesh[indMeshFile][indMeshInFile]);
+	glGenBuffers(1, &mesh_points_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
+	glBufferData(GL_ARRAY_BUFFER,
+		3 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
+		vertexBuffer,
+		GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mesh_texCoords_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
+	glBufferData(GL_ARRAY_BUFFER,
+		2 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
+		texCoordBuffer,
+		GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mesh_normals_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
+	glBufferData(GL_ARRAY_BUFFER,
+		3 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
+		normalBuffer,
+		GL_STATIC_DRAW);
+
+	glGenBuffers(1, &(mesh_index_vbo[indMeshFile][indMeshInFile]));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+		3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLuint),
+		indexBuffer,
+		GL_STATIC_DRAW);
+
+	//printf("Index Buffer mesh %d: ", indMeshFile);
+	//for (int ind = 0; ind < 3 * nbFacesPerMesh[indMeshFile][indMeshInFile]; ind++) {
+	//	printf("%d ", indexBuffer[ind]);
+	//}
+	//printf("\n");
+
+	// VAO
+	mesh_vao[indMeshFile][indMeshInFile] = 0;
+	glGenVertexArrays(1, &(mesh_vao[indMeshFile][indMeshInFile]));
+	glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
+	// vertex positions are at location 0
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
+	// texCoord positions are at location 1
+	glEnableVertexAttribArray(1); // don't forget this!
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
+	// texCoord positions are at location 1
+	glEnableVertexAttribArray(2); // don't forget this!
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+
+	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indMeshInFile , mesh_vao[indMeshFile][indMeshInFile], mesh_index_vbo[indMeshFile][indMeshInFile], nbFacesPerMesh[indMeshFile][indMeshInFile]);
+	glBindVertexArray(0); // Disable our Vertex Buffer Object
+
+	printOglError(23);
+
+	free(vertexBuffer);
+	free(texCoordBuffer);
+	free(normalBuffer);
+	free(indexBuffer);
+}
+
 // OBJ file parsing (Alias Wavefront ASCII format)
 void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 	int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
 	int *nbFacesInEachMesh) {
 	char    tag[256];
-	char    meshString[256];
+	char    meshString[1024];
 	char    line[256];
 
 	// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
@@ -263,21 +352,22 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 	// they are then used for linearization for OpenGL
 	// the linearization for OpenGL replaces indices associated with each face in obj format
 	// by coordinates copied from these temporary buffers (through copyMeshData)
-	GLfloat *pointBufferIni = NULL;
+	GLfloat *vertexBufferIni = NULL;
 	GLfloat *texCoordBufferIni = NULL;
 	GLfloat *normalBufferIni = NULL;
 	GLuint  *indexPointBufferIni = NULL;
 	GLuint  *indexTexCoordBufferIni = NULL;
 	GLuint  *indexNormalBufferIni = NULL;
 
+	vector <string> mesh_IDs_current_mesh;
+
 	// local size of mesh
 	// initial count of mesh elements, before linearization by copyMeshData for OpenGL
 	// after linearization there are 3 vertices, texCoords, and normals per face
-	int *nbPointsMeshIni = new int[nbMeshes];
+	int *nbVerticesMeshIni = new int[nbMeshes];
 	int *nbTexCoordsMeshIni = new int[nbMeshes];
 	int *nbNormalsMeshIni = new int[nbMeshes];
-
-	int indMesh = 0;
+	int *nbFacesMeshIni = new int[nbMeshes];
 
 	// Two comment lines
 	// # Blender3D v244 OBJ File: Anime_Girl.blend
@@ -287,21 +377,23 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 	if (!fgets(line, 256, file)) { return; }
 	// material name
+	// or mesh ID
+	sscanf(line, "%s", tag);
 	if (strcmp(tag, "mtllib") == 0) {
 		sscanf(line, "%s", tag);
 		// reads next line: object
 		if (!fgets(line, 256, file)) { return; }
+		// mesh ID
+		sscanf(line, "%s", tag);
 	}
 	else {
 		// we are on object line
 	}
 
-	// mesh ID
-	sscanf(line, "%s", tag);
-
 	int nbVertexTot = 0;
 	int nbCoordTexTot = 0;
 	int nbNormalTot = 0;
+	int indMesh = 0;
 	while (strcmp(tag, "o") == 0) {
 		if (indMesh >= nbMeshes) {
 			printf("Error: Excessive number of Meshes, max %d\n", nbMeshes);
@@ -309,7 +401,7 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 		}
 
 		// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
-		pointBufferIni = (GLfloat *)malloc(nbVerticesInEachMesh[indMesh] * 3 * sizeof *pointBufferIni);
+		vertexBufferIni = (GLfloat *)malloc(nbVerticesInEachMesh[indMesh] * 3 * sizeof *vertexBufferIni);
 		texCoordBufferIni = (GLfloat *)malloc(nbTextCoordsInEachMesh[indMesh] * 2 * sizeof *texCoordBufferIni);
 		normalBufferIni = (GLfloat *)malloc(nbNormalsInEachMesh[indMesh] * 3 * sizeof *normalBufferIni);
 		indexTexCoordBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indMesh] * 3 * sizeof *indexTexCoordBufferIni);
@@ -317,16 +409,14 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 		indexNormalBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indMesh] * 3 * sizeof *indexNormalBufferIni);
 
 		// initial count of mesh elements, before linearization by copyMeshData for OpenGL, local value
-		nbPointsMeshIni[indMesh] = 0;
+		nbVerticesMeshIni[indMesh] = 0;
 		nbTexCoordsMeshIni[indMesh] = 0;
 		nbNormalsMeshIni[indMesh] = 0;
-
-		// number faces per mesh, non local value
-		nbFacesInEachMesh[indMesh] = 0;
+		nbFacesMeshIni[indMesh] = 0;
 
 		// mesh ID
 		sscanf(line, "%s %s", tag, meshString);
-		mesh_IDs[indMeshFile][indMesh] = string(meshString);
+		mesh_IDs_current_mesh.push_back(meshString);
 
 		// next tag
 		if (!fgets(line, 256, file)) { return; }
@@ -334,15 +424,15 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 		// Scan for Verts in this mesh
 		while (strcmp(tag, "v") == 0) {
-			if (nbPointsMeshIni[indMesh] >= nbVerticesInEachMesh[indMesh]) {
+			if (nbVerticesMeshIni[indMesh] >= nbVerticesInEachMesh[indMesh]) {
 				printf("Error: Excessive number of vertices\n");
 				throw 0;
 			}
 			sscanf(line, "%s %f %f %f",
-				tag, &pointBufferIni[nbPointsMeshIni[indMesh] * 3],
-				&pointBufferIni[nbPointsMeshIni[indMesh] * 3 + 1],
-				&pointBufferIni[nbPointsMeshIni[indMesh] * 3 + 2]);
-			nbPointsMeshIni[indMesh]++;
+				tag, &vertexBufferIni[nbVerticesMeshIni[indMesh] * 3],
+				&vertexBufferIni[nbVerticesMeshIni[indMesh] * 3 + 1],
+				&vertexBufferIni[nbVerticesMeshIni[indMesh] * 3 + 2]);
+			nbVerticesMeshIni[indMesh]++;
 
 			if (!fgets(line, 256, file)) { return; }
 			sscanf(line, "%s", tag);
@@ -385,7 +475,7 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 			|| strcmp(tag, "usemtl") == 0
 			|| strcmp(tag, "s") == 0) {
 			if (strcmp(tag, "f") == 0) {
-				if (nbFacesInEachMesh[indMesh] > nbFacesInEachMesh[indMesh]) {
+				if (nbFacesMeshIni[indMesh] >= nbFacesInEachMesh[indMesh]) {
 					printf("Error: Excessive number of faces\n");
 					throw 0;
 				}
@@ -414,57 +504,74 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 				//	indVertex2 , indexTexCoord2 , indVertex3 , indexTexCoord3 );
 
 				// copies the texCoords from the initial buffer to the final one
-				// pointBufferIniPtr should be used because pointBufferIni has been
+				// pointBufferIniPtr should be used because vertexBufferIni has been
 				// incremented during texCoords scanning
-				indexPointBufferIni[nbFacesInEachMesh[indMesh] * 3] = indVertex1 - nbVertexTot;
-				indexPointBufferIni[nbFacesInEachMesh[indMesh] * 3 + 1] = indVertex2 - nbVertexTot;
-				indexPointBufferIni[nbFacesInEachMesh[indMesh] * 3 + 2] = indVertex3 - nbVertexTot;
+				indexPointBufferIni[nbFacesMeshIni[indMesh]  * 3] = indVertex1 - nbVertexTot;
+				indexPointBufferIni[nbFacesMeshIni[indMesh]  * 3 + 1] = indVertex2 - nbVertexTot;
+				indexPointBufferIni[nbFacesMeshIni[indMesh]  * 3 + 2] = indVertex3 - nbVertexTot;
 
-				indexTexCoordBufferIni[nbFacesInEachMesh[indMesh] * 3] = indexTexCoord1 - nbCoordTexTot;
-				indexTexCoordBufferIni[nbFacesInEachMesh[indMesh] * 3 + 1] = indexTexCoord2 - nbCoordTexTot;
-				indexTexCoordBufferIni[nbFacesInEachMesh[indMesh] * 3 + 2] = indexTexCoord3 - nbCoordTexTot;
+				indexTexCoordBufferIni[nbFacesMeshIni[indMesh]  * 3] = indexTexCoord1 - nbCoordTexTot;
+				indexTexCoordBufferIni[nbFacesMeshIni[indMesh]  * 3 + 1] = indexTexCoord2 - nbCoordTexTot;
+				indexTexCoordBufferIni[nbFacesMeshIni[indMesh]  * 3 + 2] = indexTexCoord3 - nbCoordTexTot;
 
-				indexNormalBufferIni[nbFacesInEachMesh[indMesh] * 3] = indexNormal1 - nbNormalTot;
-				indexNormalBufferIni[nbFacesInEachMesh[indMesh] * 3 + 1] = indexNormal2 - nbNormalTot;
-				indexNormalBufferIni[nbFacesInEachMesh[indMesh] * 3 + 2] = indexNormal3 - nbNormalTot;
+				indexNormalBufferIni[nbFacesMeshIni[indMesh]  * 3] = indexNormal1 - nbNormalTot;
+				indexNormalBufferIni[nbFacesMeshIni[indMesh]  * 3 + 1] = indexNormal2 - nbNormalTot;
+				indexNormalBufferIni[nbFacesMeshIni[indMesh]  * 3 + 2] = indexNormal3 - nbNormalTot;
 
-				nbFacesInEachMesh[indMesh]++;
+				nbFacesMeshIni[indMesh]++;
 			}
 
 			// last line of the obj file, last mesh in this file
 			// copies the data (and possibly duplicate them)
 			if (!fgets(line, 256, file)) {
-				copyMeshData(indMesh, pointBufferIni, texCoordBufferIni, normalBufferIni,
+				if (indMesh != nbMeshes - 1) {
+					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indMesh, nbMeshes - 1);
+					throw 0;
+				}
+				if (nbFacesMeshIni[indMesh] != nbFacesInEachMesh[indMesh]) {
+					printf("Error: Face counted number and face parsed number discrepancy\n");
+					throw 0;
+				}
+
+				copyMeshData(indMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
-					nbFacesInEachMesh[indMesh]);
-				nbVertexTot += nbPointsMeshIni[indMesh];
+					nbFacesMeshIni[indMesh]);
+
+				//printf("\nParsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+				//	indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
+				transferMeshDataToGPU(indMeshFile, indMesh);
+
+				nbVertexTot += nbVerticesMeshIni[indMesh];
 				nbCoordTexTot += nbTexCoordsMeshIni[indMesh];
 				nbNormalTot += nbNormalsMeshIni[indMesh];
-				/*
-				if (indMeshFile == 0) {
-					printf("Final Mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-						indMesh, mesh_IDs[indMeshFile][indMesh].c_str(), nbPointsMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
-					for (int indF = 0; indF < nbFacesInEachMesh[indMesh]; indF++) {
-						printf("indices %d %d %d\n", indexBuffer[indMesh][3 * indF], indexBuffer[indMesh][3 * indF + 1], indexBuffer[indMesh][3 * indF + 2]);
-						printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
-							pointBuffer[indMesh][(3 * indF) * 3], pointBuffer[indMesh][(3 * indF) * 3 + 1], pointBuffer[indMesh][(3 * indF) * 3 + 2],
-							pointBuffer[indMesh][(3 * indF + 1) * 3], pointBuffer[indMesh][(3 * indF + 1) * 3 + 1], pointBuffer[indMesh][(3 * indF + 1) * 3 + 2],
-							pointBuffer[indMesh][(3 * indF + 2) * 3], pointBuffer[indMesh][(3 * indF + 2) * 3 + 1], pointBuffer[indMesh][(3 * indF + 2) * 3 + 2]);
-						printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
-							texCoordBuffer[indMesh][(3 * indF) * 2], texCoordBuffer[indMesh][(3 * indF) * 2 + 1],
-							texCoordBuffer[indMesh][(3 * indF + 1) * 2], texCoordBuffer[indMesh][(3 * indF + 1) * 2 + 1],
-							texCoordBuffer[indMesh][(3 * indF + 2) * 2], texCoordBuffer[indMesh][(3 * indF + 2) * 2 + 1]);
-						printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
-							normalBuffer[indMesh][(3 * indF) * 3], normalBuffer[indMesh][(3 * indF) * 3 + 1], normalBuffer[indMesh][(3 * indF) * 3 + 2],
-							normalBuffer[indMesh][(3 * indF + 1) * 3], normalBuffer[indMesh][(3 * indF + 1) * 3 + 1], normalBuffer[indMesh][(3 * indF + 1) * 3 + 2],
-							normalBuffer[indMesh][(3 * indF + 2) * 3], normalBuffer[indMesh][(3 * indF + 2) * 3 + 1], normalBuffer[indMesh][(3 * indF + 2) * 3 + 2]);
-					}
-				}
-				*/
+
+				 //if (indMeshFile == 0) {
+					// printf("Copied first mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);
+					// for (int indF = 0; indF < nbFacesMeshIni[indMesh]; indF++) {
+					//	printf("indices %d %d %d\n", indexBuffer[3 * indF], indexBuffer[3 * indF + 1], indexBuffer[3 * indF + 2]);
+					//	printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
+					//		vertexBuffer[(3 * indF) * 3], vertexBuffer[(3 * indF) * 3 + 1], vertexBuffer[(3 * indF) * 3 + 2],
+					//		vertexBuffer[(3 * indF + 1) * 3], vertexBuffer[(3 * indF + 1) * 3 + 1], vertexBuffer[(3 * indF + 1) * 3 + 2],
+					//		vertexBuffer[(3 * indF + 2) * 3], vertexBuffer[(3 * indF + 2) * 3 + 1], vertexBuffer[(3 * indF + 2) * 3 + 2]);
+					//	printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
+					//		texCoordBuffer[(3 * indF) * 2], texCoordBuffer[(3 * indF) * 2 + 1],
+					//		texCoordBuffer[(3 * indF + 1) * 2], texCoordBuffer[(3 * indF + 1) * 2 + 1],
+					//		texCoordBuffer[(3 * indF + 2) * 2], texCoordBuffer[(3 * indF + 2) * 2 + 1]);
+					//	printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
+					//		normalBuffer[(3 * indF) * 3], normalBuffer[(3 * indF) * 3 + 1], normalBuffer[(3 * indF) * 3 + 2],
+					//		normalBuffer[(3 * indF + 1) * 3], normalBuffer[(3 * indF + 1) * 3 + 1], normalBuffer[(3 * indF + 1) * 3 + 2],
+					//		normalBuffer[(3 * indF + 2) * 3], normalBuffer[(3 * indF + 2) * 3 + 1], normalBuffer[(3 * indF + 2) * 3 + 2]);
+					//}
+					// printf("\n");
+				 //}
+
 				(indMesh)++;
 
+				// stores the mesh vector inside the mesh vector of vectors
+				mesh_IDs.push_back(mesh_IDs_current_mesh);
+
 				// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
-				free(pointBufferIni);
+				free(vertexBufferIni);
 				free(texCoordBufferIni);
 				free(normalBufferIni);
 				free(indexPointBufferIni);
@@ -473,7 +580,7 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 				// initial count of mesh elements, before linearization by copyMeshData for OpenGL
 				// after linearization there are 3 vertices, texCoords, and normals per face
-				free(nbPointsMeshIni);
+				free(nbVerticesMeshIni);
 				free(nbTexCoordsMeshIni);
 				free(nbNormalsMeshIni);
 
@@ -484,35 +591,51 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 			sscanf(line, "%s", tag);
 			// last mesh in the obj file
 			if (!tag) {
-				copyMeshData(indMesh, pointBufferIni, texCoordBufferIni, normalBufferIni,
+				if (indMesh != nbMeshes - 1) {
+					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indMesh, nbMeshes - 1);
+					throw 0;
+				}
+				if (nbFacesMeshIni[indMesh] != nbFacesInEachMesh[indMesh]) {
+					printf("Error: Face counted number and face parsed number discrepancy\n");
+					throw 0;
+				}
+
+				copyMeshData(indMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
-					nbFacesInEachMesh[indMesh]);
-				nbVertexTot += nbPointsMeshIni[indMesh];
+					nbFacesMeshIni[indMesh]);
+
+				//printf("Last parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+				//	indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
+				transferMeshDataToGPU(indMeshFile, indMesh);
+
+				nbVertexTot += nbVerticesMeshIni[indMesh];
 				nbCoordTexTot += nbTexCoordsMeshIni[indMesh];
 				nbNormalTot += nbNormalsMeshIni[indMesh];
-				if (indMeshFile == 0) {
-					printf("Final Mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-						indMesh, mesh_IDs[indMeshFile][indMesh].c_str(), nbPointsMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
-					for (int indF = 0; indF < nbFacesInEachMesh[indMesh]; indF++) {
-						printf("indices %d %d %d\n", indexBuffer[indMesh][3 * indF], indexBuffer[indMesh][3 * indF + 1], indexBuffer[indMesh][3 * indF + 2]);
-						printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
-							pointBuffer[indMesh][(3 * indF) * 3], pointBuffer[indMesh][(3 * indF) * 3 + 1], pointBuffer[indMesh][(3 * indF) * 3 + 2],
-							pointBuffer[indMesh][(3 * indF + 1) * 3], pointBuffer[indMesh][(3 * indF + 1) * 3 + 1], pointBuffer[indMesh][(3 * indF + 1) * 3 + 2],
-							pointBuffer[indMesh][(3 * indF + 2) * 3], pointBuffer[indMesh][(3 * indF + 2) * 3 + 1], pointBuffer[indMesh][(3 * indF + 2) * 3 + 2]);
-						printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
-							texCoordBuffer[indMesh][(3 * indF) * 2], texCoordBuffer[indMesh][(3 * indF) * 2 + 1],
-							texCoordBuffer[indMesh][(3 * indF + 1) * 2], texCoordBuffer[indMesh][(3 * indF + 1) * 2 + 1],
-							texCoordBuffer[indMesh][(3 * indF + 2) * 2], texCoordBuffer[indMesh][(3 * indF + 2) * 2 + 1]);
-						printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
-							normalBuffer[indMesh][(3 * indF) * 3], normalBuffer[indMesh][(3 * indF) * 3 + 1], normalBuffer[indMesh][(3 * indF) * 3 + 2],
-							normalBuffer[indMesh][(3 * indF + 1) * 3], normalBuffer[indMesh][(3 * indF + 1) * 3 + 1], normalBuffer[indMesh][(3 * indF + 1) * 3 + 2],
-							normalBuffer[indMesh][(3 * indF + 2) * 3], normalBuffer[indMesh][(3 * indF + 2) * 3 + 1], normalBuffer[indMesh][(3 * indF + 2) * 3 + 2]);
-					}
-				}
+				//printf("Copied last mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);
+				//if (indMeshFile == 0) {
+				//	for (int indF = 0; indF < nbFacesMeshIni[indMesh]; indF++) {
+				//		printf("indices %d %d %d\n", indexBuffer[3 * indF], indexBuffer[3 * indF + 1], indexBuffer[3 * indF + 2]);
+				//		printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
+				//			vertexBuffer[(3 * indF) * 3], vertexBuffer[(3 * indF) * 3 + 1], vertexBuffer[(3 * indF) * 3 + 2],
+				//			vertexBuffer[(3 * indF + 1) * 3], vertexBuffer[(3 * indF + 1) * 3 + 1], vertexBuffer[(3 * indF + 1) * 3 + 2],
+				//			vertexBuffer[(3 * indF + 2) * 3], vertexBuffer[(3 * indF + 2) * 3 + 1], vertexBuffer[(3 * indF + 2) * 3 + 2]);
+				//		printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
+				//			texCoordBuffer[(3 * indF) * 2], texCoordBuffer[(3 * indF) * 2 + 1],
+				//			texCoordBuffer[(3 * indF + 1) * 2], texCoordBuffer[(3 * indF + 1) * 2 + 1],
+				//			texCoordBuffer[(3 * indF + 2) * 2], texCoordBuffer[(3 * indF + 2) * 2 + 1]);
+				//		printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
+				//			normalBuffer[(3 * indF) * 3], normalBuffer[(3 * indF) * 3 + 1], normalBuffer[(3 * indF) * 3 + 2],
+				//			normalBuffer[(3 * indF + 1) * 3], normalBuffer[(3 * indF + 1) * 3 + 1], normalBuffer[(3 * indF + 1) * 3 + 2],
+				//			normalBuffer[(3 * indF + 2) * 3], normalBuffer[(3 * indF + 2) * 3 + 1], normalBuffer[(3 * indF + 2) * 3 + 2]);
+				//	}
+				//}
 				(indMesh)++;
 
+				// stores the mesh vector inside the mesh vector of vectors
+				mesh_IDs.push_back(mesh_IDs_current_mesh);
+
 				// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
-				free(pointBufferIni);
+				free(vertexBufferIni);
 				free(texCoordBufferIni);
 				free(normalBufferIni);
 				free(indexPointBufferIni);
@@ -521,7 +644,7 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 				// initial count of mesh elements, before linearization by copyMeshData for OpenGL
 				// after linearization there are 3 vertices, texCoords, and normals per face
-				free(nbPointsMeshIni);
+				free(nbVerticesMeshIni);
 				free(nbTexCoordsMeshIni);
 				free(nbNormalsMeshIni);
 
@@ -529,21 +652,49 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 			}
 		}
 
+		if (nbFacesMeshIni[indMesh] != nbFacesInEachMesh[indMesh]) {
+			printf("Error: Face counted number and face parsed number discrepancy\n");
+			throw 0;
+		}
+
 		// another mesh follows in the same obj file
-		copyMeshData(indMesh, pointBufferIni, texCoordBufferIni, normalBufferIni,
+		copyMeshData(indMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
 			indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
-			nbFacesInEachMesh[indMesh]);
-		nbVertexTot += nbPointsMeshIni[indMesh];
+			nbFacesMeshIni[indMesh]);
+
+		//printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+		//	indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
+		transferMeshDataToGPU(indMeshFile, indMesh);
+
+		// printf("Copied mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);
+		nbVertexTot += nbVerticesMeshIni[indMesh];
 		nbCoordTexTot += nbTexCoordsMeshIni[indMesh];
 		nbNormalTot += nbNormalsMeshIni[indMesh];
-
+		// if (indMeshFile == 0) {
+		//	for (int indF = 0; indF < nbFacesMeshIni[indMesh]; indF++) {
+		//		printf("indices %d %d %d\n", indexBuffer[3 * indF], indexBuffer[3 * indF + 1], indexBuffer[3 * indF + 2]);
+		//		printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
+		//			vertexBuffer[(3 * indF) * 3], vertexBuffer[(3 * indF) * 3 + 1], vertexBuffer[(3 * indF) * 3 + 2],
+		//			vertexBuffer[(3 * indF + 1) * 3], vertexBuffer[(3 * indF + 1) * 3 + 1], vertexBuffer[(3 * indF + 1) * 3 + 2],
+		//			vertexBuffer[(3 * indF + 2) * 3], vertexBuffer[(3 * indF + 2) * 3 + 1], vertexBuffer[(3 * indF + 2) * 3 + 2]);
+		//		printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
+		//			texCoordBuffer[(3 * indF) * 2], texCoordBuffer[(3 * indF) * 2 + 1],
+		//			texCoordBuffer[(3 * indF + 1) * 2], texCoordBuffer[(3 * indF + 1) * 2 + 1],
+		//			texCoordBuffer[(3 * indF + 2) * 2], texCoordBuffer[(3 * indF + 2) * 2 + 1]);
+		//		printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
+		//			normalBuffer[(3 * indF) * 3], normalBuffer[(3 * indF) * 3 + 1], normalBuffer[(3 * indF) * 3 + 2],
+		//			normalBuffer[(3 * indF + 1) * 3], normalBuffer[(3 * indF + 1) * 3 + 1], normalBuffer[(3 * indF + 1) * 3 + 2],
+		//			normalBuffer[(3 * indF + 2) * 3], normalBuffer[(3 * indF + 2) * 3 + 1], normalBuffer[(3 * indF + 2) * 3 + 2]);
+		//	}
+		// }
 		// printf ( "%s", line );
-		printf("Mesh %d Vertices %d texCoords %d normals %d faces %d\n",
-			indMesh, nbPointsMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
 		(indMesh)++;
 
+		// stores the mesh vector inside the mesh vector of vectors
+		mesh_IDs.push_back(mesh_IDs_current_mesh);
+
 		// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
-		free(pointBufferIni);
+		free(vertexBufferIni);
 		free(texCoordBufferIni);
 		free(normalBufferIni);
 		free(indexPointBufferIni);
@@ -584,85 +735,24 @@ void load_mesh_obj(string obj_file_name, int indMeshFile) {
 		exit(0);
 	}
 
-	mesh_IDs[indMeshFile] = new string[nbMeshesInFile];
+	///////////////////////////////////////////////////////////
+	// vertex buffer objects and vertex array for the mesh
 	mesh_vao[indMeshFile] = new unsigned int[nbMeshesInFile];
 	mesh_index_vbo[indMeshFile] = new unsigned int[nbMeshesInFile];
+	for (int ind = 0; ind < nbMeshesInFile; ind++) {
+		mesh_vao[indMeshFile][ind] = NULL_ID;
+		mesh_index_vbo[indMeshFile][ind] = NULL_ID;
+	}
+
 	nbMeshesPerMeshFile[indMeshFile] = nbMeshesInFile;
 	rewind(fileMesh);
 	parse_mesh_obj(fileMesh, indMeshFile, nbMeshesInFile, nbVerticesPerMesh,
 		nbTexCoordsPerMesh, nbNormalsPerMesh, nbFacesPerMesh[indMeshFile]);
 	fclose(fileMesh);
 
-	///////////////////////////////////////////////////////////
-	// vertex buffer objects and vertex array for the mesh
-	unsigned int mesh_points_vbo;
-	unsigned int mesh_texCoords_vbo;
-	unsigned int mesh_normals_vbo;
-	for (int indMeshInFile = 0; indMeshInFile < nbMeshesInFile; indMeshInFile++) {
-		// 3 VBOs
-		glGenBuffers(1, &mesh_points_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
-		glBufferData(GL_ARRAY_BUFFER,
-			3 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
-			pointBuffer[indMeshInFile],
-			GL_STATIC_DRAW);
-
-		glGenBuffers(1, &mesh_texCoords_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
-		glBufferData(GL_ARRAY_BUFFER,
-			2 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
-			texCoordBuffer[indMeshInFile],
-			GL_STATIC_DRAW);
-
-		glGenBuffers(1, &mesh_normals_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
-		glBufferData(GL_ARRAY_BUFFER,
-			3 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
-			normalBuffer[indMeshInFile],
-			GL_STATIC_DRAW);
-
-		glGenBuffers(1, &(mesh_index_vbo[indMeshFile][indMeshInFile]));
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-			3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLuint),
-			indexBuffer[indMeshInFile],
-			GL_STATIC_DRAW);
-
-		//printf("indices mesh %d: ", indMeshFile);
-		//for (int ind = 0; ind < 3 * nbFacesPerMesh[indMeshFile][indMeshInFile]; ind++) {
-		//	printf("%d ", indexBuffer[indMeshInFile][ind]);
-		//}
-		//printf("\n");
-
-		// VAO
-		mesh_vao[indMeshFile][indMeshInFile] = 0;
-		glGenVertexArrays(1, &(mesh_vao[indMeshFile][indMeshInFile]));
-		glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
-
-		glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
-		// vertex positions are at location 0
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-
-		glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
-		// texCoord positions are at location 1
-		glEnableVertexAttribArray(1); // don't forget this!
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-
-		glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
-		// texCoord positions are at location 1
-		glEnableVertexAttribArray(2); // don't forget this!
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-
-		// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
-
-		// printf("Load Mesh %d vao ID %d vbo ID %d nbfaces %d\n" ,indMeshInFile , mesh_vao[indMeshInFile], mesh_index_vbo[indMeshInFile], nbFacesInEachMesh[indMeshInFile]);
-		glBindVertexArray(0); // Disable our Vertex Buffer Object
-
-		printOglError(23);
-	}
-
 	free(nbVerticesPerMesh);
 	free(nbTexCoordsPerMesh);
 	free(nbNormalsPerMesh);
 }
+
+#endif

@@ -401,6 +401,8 @@ extern float				interframe_delay;
 void initializeNVPathRender(const char *programName);
 void LoadSVGPathsToGPU(string fileName, int ind_first_gpu_path, int nb_gpu_paths);
 void pg_Display_All_SVG_ClipArt(int activeFiles);
+float pg_Translate_SVG_Text(int indDisplayText);
+void pg_Display_SVG_Text(int *indActiveDisplayText, bool randomDecreasing);
 
 #endif /* __PG_SVG_GPU_H__ */
 

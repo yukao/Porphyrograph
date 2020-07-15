@@ -1,0 +1,18 @@
+SensorSet,,,,,,
+nb_sensors,sensors_sample_frequency,nb_udp_servers,nb_udp_clients,UDP_sensor_state_fowarding,MSS_sensor_state_fowarding,
+2,0.15,1,2,False,True,
+/SensorSet,,,,,,
+sensor,,,,,,
+ID,MAC ADDRESS,min_conn_interval,max_conn_interval,latency,timeout,sensor_acc_factor
+mw1,E9:0F:0A:C5:4D:66,7.5,7.5,0,6000,0.1
+mw2,C7:7D:6A:41:B4:15,7.5,7.5,0,6000,0.1
+/sensor,,,,,,
+UDP_server,,,,,,
+ID,port,,,,,
+udp_porphyrograph_receive,1982,,,,,
+/UDP_server,,,,,,
+UDP_client,,,,,,
+ID,ip_address,port,,,,
+udp_porphyrograph_send,127.0.0.1,9000,,,,
+udp_TouchOSC_send,192.168.43.1,8000,,,,
+/UDP_client,,,,,,

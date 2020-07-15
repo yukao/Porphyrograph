@@ -1,5 +1,5 @@
-// RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17
-// VERBATIM	double window	wide screen	window width	window height	window x	window y	minimal interframe latency	time scale	initial time	camera ID	message pixel length	trace output frame number	trace time	first frame number	last frame number	max mouse recording frames (for track drawing reording)	max network message length	nb of particles
+// RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
+// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,camera ID,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles
 enum ConfigurationVarIDs{ 
   _double_window = 0,
   _wide_screen,
@@ -39,11 +39,11 @@ extern int   max_mouse_recording_frames;
 extern int   max_network_message_length;
 extern int   nb_particles        ;
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };
-enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
+enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];
 extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
-// RANK	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	51	52	53	54	55	56	57	58	59	60	61	62	63	64	65	66	67	68	69	70	71	72	73	74	75	76	77	78	79	80	81	82	83	84	85	86	87	88	89	90	91	92	93	94	95	96	97	98	99	100	101	102	103	104	105	106	107	108	109	110	111	112	113	114	115	116	117	118	119	120	121	122	123	124	125	126	127	128	129	130	131	132	133	134	135	136	137	138	139	140	141	142	143	144	145	146	147	148	149	150	151	152	153	154	155	156	157	158	159	160	161	162	163	164	165	166	167	168	169	170	171	172	173	174	175	176	177	178	179	180	181	182	183	184	185	186	187	188	189	190	191	192	193	194	195	196	197	198	199	200	201	202	203	204	205	206	207	208	209	210	211	212	213	214	215	216	217	218	219	220	221	222
-// VERBATIM	auto_beat	clear all Layers	clearCA	clear layer	current background capture	BG Subtraction on/off	mute screen	invert	snapshot onOff	cursor size	beat duration	Blend Transparency	CA mixing weight	ID comment	track0 mixing weight	ID comment	track1 mixing weight	ID comment	track2 mixing weight	ID comment	track3 mixing weight	ID comment	CA Master weight	ID comment	track0 Master weight	ID comment	track1 Master weight	ID comment	track2 Master weight	ID comment	track3 Master weight	ID comment	echo	ID comment	echo neg	ID comment	CA decay	CA decay pulse	track0 decay	ID comment	track1 decay	ID comment	track2 decay	ID comment	track3 decay	ID comment	pen_radius	pen radius pulse	palette for pen	palette for pen	Grey level for pen	ID comment	A color	ID comment	pen brush	pen radius replay	pen radius replay pulse	ID comment	ID comment	current drawing track	current video track	current photo track	ID comment	ID comment	ID comment	ID comment	ID comment	ID comment	ID comment	ID comment	path0 repop on/off	path1 repop on/off	path2 repop on/off	path3 repop on/off	path4 repop on/off	path5 repop on/off	path6 repop on/off	path7 repop on/off	path1 record on/off	path2 record on/off	path3 record on/off	path4 record on/off	path5 record on/off	path3 record on/off	path7 record on/off	path1 replay track	path2 replay track	path3 replay track	path4 replay track	path5 replay track	path6 replay track	path7 replay track	ID comment	particle motion shift pulse	noise scale	ID comment	part noise type	part noise line scale	part noise angle scale	part noise center-x	part noise center-y	pixel acc	pixel acc pulse	pixel acc center-x	ID comment	pixel acc center-y	ID comment	radius pixel	pixel radius pulse	pixel mode	repopuplating CA	ID comment	repopuplating track0	ID comment	repopuplating Path	ID comment	palette for repop	repop color pulse	Grey level for repop	ID comment	camera white balance red	camera white balance blue	camera exposure	camera gain	cameraBrightness	camera saturation	camera contrast	camera gamma	camera capture frequency	movie no	movie capture frequency	photo diaporama index	photo diaporama fade dur	photo diaporama plateau dur	current SvgGpu images	soundtrack on/off	camera threshold	ID comment	camera Weight	ID comment	Sobel camera	ID comment	movie weight	ID comment	Sobel movie	ID comment	invert movie	ID comment	ID comment	ID comment	video saturation 	video saturation pulse	ID comment	ID comment	photo weight	ID comment	ID comment	ID comment	photo satur	photo satur pulse	photo value	photo value pulse	photo jitter amplitude	mask jitter amplitude	photo scale	mask scale	photo contrast	mask contrast	CA cell proliferation	ID comment	CA cancer proliferation	ID comment	CA cancer cell ratio	ID comment	CAParams4	ID comment	CAParams5	ID comment	CAParams6	ID comment	CAParams7	ID comment	CAParams8	ID comment	CA 1 type	CA 1 subtype	CA 2 type	CA 2 subtype	CA1/CA2 weight	 Flash track0->CA freq	 Flash track1->CA freq	 Flash track2->CA freq	 Flash track3->CA freq	Flash CA->BG freq	 Flash track1->BG freq	 Flash track2->BG freq	 Flash track3->BG freq	Flash pixel freq	Flash pixel duration	camera flash length (in frames)	camera flash bright (in frames)	camera flash beat no	beat threshold	beat min duration (ms)	input volume	Min input volume	pen pressure coef	pen angleH coef	pen angleV coef	tracks sync on/off	cumul video	CA update step	color interface display	fast vs slow CA color spreading	freeze on/off	sound enveloppe min	sound envelope max	adc weight (eg microphone)	soundtrack weight	sample setUp	sensor spatial pattern	sensor activation	sensor volume
+// RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230
+// VERBATIM,auto_beat,clear all Layers,clearCA,clear layer,current background capture,BG Subtraction on/off,mute screen,invert,snapshot onOff,cursor size,beat duration,Blend Transparency,CA mixing weight,ID comment,track0 mixing weight,ID comment,track1 mixing weight,ID comment,track2 mixing weight,ID comment,track3 mixing weight,ID comment,CA Master weight,ID comment,track0 Master weight,ID comment,track1 Master weight,ID comment,track2 Master weight,ID comment,track3 Master weight,ID comment,echo,ID comment,echo neg,ID comment,CA decay,CA decay pulse,track0 decay,ID comment,track1 decay,ID comment,track2 decay,ID comment,track3 decay,ID comment,pen_radius,pen radius pulse,palette for pen,palette for pen,Grey level for pen,ID comment,A color,ID comment,pen brush,pen radius replay,pen radius replay pulse,ID comment,ID comment,current drawing track,current video track,current photo track,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,path0 repop on/off,path1 repop on/off,path2 repop on/off,path3 repop on/off,path4 repop on/off,path5 repop on/off,path6 repop on/off,path7 repop on/off,path1 record on/off,path2 record on/off,path3 record on/off,path4 record on/off,path5 record on/off,path3 record on/off,path7 record on/off,path1 replay track,path2 replay track,path3 replay track,path4 replay track,path5 replay track,path6 replay track,path7 replay track,ID comment,particle motion shift pulse,noise scale,ID comment,part noise type,part noise line scale,part noise angle scale,part noise center-x,part noise center-y,pixel acc,pixel acc pulse,pixel acc center-x,ID comment,pixel acc center-y,ID comment,radius pixel,pixel radius pulse,pixel mode,repopuplating CA,ID comment,repopuplating track0,ID comment,repopuplating Path,ID comment,repop_colorBG,repop_colorBG_pulse,repop_greyBG,repop_greyBG_pulse,repop_colorPart,repop_colorPart_pulse,repop_greyPart,repop_greyPart_pulse,repop_colorCA,repop_colorCA_pulse,repop_greyCA,repop_greyCA_pulse,camera white balance red,camera white balance blue,camera exposure,camera gain,cameraBrightness,camera saturation,camera contrast,camera gamma,camera capture frequency,movie no,movie capture frequency,photo diaporama index,photo diaporama fade dur,photo diaporama plateau dur,current SvgGpu images,soundtrack on/off,camera threshold,ID comment,camera Weight,ID comment,Sobel camera,ID comment,movie weight,ID comment,Sobel movie,ID comment,invert movie,ID comment,ID comment,ID comment,video saturation ,video saturation pulse,ID comment,ID comment,photo weight,ID comment,ID comment,ID comment,photo satur,photo satur pulse,photo value,photo value pulse,photo jitter amplitude,mask jitter amplitude,photo scale,mask scale,photo contrast,mask contrast,CA cell proliferation,ID comment,CA cancer proliferation,ID comment,CA cancer cell ratio,ID comment,CAParams4,ID comment,CAParams5,ID comment,CAParams6,ID comment,CAParams7,ID comment,CAParams8,ID comment,CA 1 type,CA 1 subtype,CA 2 type,CA 2 subtype,CA1/CA2 weight, Flash track0->CA freq, Flash track1->CA freq, Flash track2->CA freq, Flash track3->CA freq,Flash CA->BG freq, Flash track1->BG freq, Flash track2->BG freq, Flash track3->BG freq,Flash pixel freq,Flash pixel duration,camera flash length (in frames),camera flash bright (in frames),camera flash beat no,beat threshold,beat min duration (ms),input volume,Min input volume,pen pressure coef,pen angleH coef,pen angleV coef,tracks sync on/off,cumul video,CA update step,color interface display,fast vs slow CA color spreading,freeze on/off,sound enveloppe min,sound envelope max,adc weight (eg microphone),soundtrack weight,sample setUp,sensor spatial pattern,sensor activation,sensor volume
 enum InterpVarIDs{ 
   _auto_beat = 0,
   _clearAllLayers,
@@ -161,10 +161,18 @@ enum InterpVarIDs{
   _repop_BG_pulse,
   _repop_path,
   _repop_path_pulse,
-  _repop_color,
-  _repop_color_pulse,
-  _repop_grey,
-  _repop_grey_pulse,
+  _repop_colorBG,
+  _repop_colorBG_pulse,
+  _repop_greyBG,
+  _repop_greyBG_pulse,
+  _repop_colorPart,
+  _repop_colorPart_pulse,
+  _repop_greyPart,
+  _repop_greyPart_pulse,
+  _repop_colorCA,
+  _repop_colorCA_pulse,
+  _repop_greyCA,
+  _repop_greyCA_pulse,
   _cameraWB_R,
   _cameraWB_B,
   _cameraExposure,
@@ -385,10 +393,18 @@ extern float repop_BG            ;
 extern float repop_BG_pulse      ;
 extern float repop_path          ;
 extern float repop_path_pulse    ;
-extern float repop_color         ;
-extern float repop_color_pulse   ;
-extern float repop_grey          ;
-extern float repop_grey_pulse    ;
+extern float repop_colorBG       ;
+extern float repop_colorBG_pulse ;
+extern float repop_greyBG        ;
+extern float repop_greyBG_pulse  ;
+extern float repop_colorPart     ;
+extern float repop_colorPart_pulse;
+extern float repop_greyPart      ;
+extern float repop_greyPart_pulse;
+extern float repop_colorCA       ;
+extern float repop_colorCA_pulse ;
+extern float repop_greyCA        ;
+extern float repop_greyCA_pulse  ;
 extern float cameraWB_R          ;
 extern float cameraWB_B          ;
 extern float cameraExposure      ;

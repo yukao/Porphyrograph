@@ -60,8 +60,7 @@ bool  auto_beat           ;
 bool  clearAllLayers      ;
 bool  clearCA             ;
 bool  clearLayer          ;
-bool  reset_camera        ;
-bool  camera_BG_subtr     ;
+bool  clearEcho           ;
 bool  mute_second_screen  ;
 bool  invertAllLayers     ;
 bool  take_snapshots      ;
@@ -213,55 +212,47 @@ float repop_BG            ;
 float repop_BG_pulse      ;
 float repop_path          ;
 float repop_path_pulse    ;
-float repop_color         ;
-float repop_color_pulse   ;
-float repop_grey          ;
-float repop_grey_pulse    ;
-float cameraWB_R          ;
-float cameraWB_B          ;
-float cameraExposure      ;
-float cameraGain          ;
-float cameraBrightness    ;
-float cameraSaturation    ;
-float cameraContrast      ;
-float cameraGamma         ;
-float cameraCaptFreq      ;
+float repop_colorBG       ;
+float repop_colorBG_pulse ;
+float repop_greyBG        ;
+float repop_greyBG_pulse  ;
+float repop_colorPart     ;
+float repop_colorPart_pulse;
+float repop_greyPart      ;
+float repop_greyPart_pulse;
+float repop_colorCA       ;
+float repop_colorCA_pulse ;
+float repop_greyCA        ;
+float repop_greyCA_pulse  ;
 int   playing_movieNo     ;
 float movieCaptFreq       ;
 int   photo_diaporama     ;
 float photo_diaporama_fade;
 float photo_diaporama_plateau;
 int   activeClipArts      ;
+int   activeMeshes        ;
+int   mobileMeshes        ;
 int   playing_soundtrackNo;
-float cameraThreshold     ;
-float cameraThreshold_pulse;
-float cameraWeight        ;
-float cameraWeight_pulse  ;
-float cameraSobel         ;
-float cameraSobel_pulse   ;
 float movieWeight         ;
 float movieWeight_pulse   ;
 float movieSobel          ;
 float movieSobel_pulse    ;
 bool  invertMovie         ;
-bool  invertCamera        ;
-float video_hue           ;
-float video_hue_pulse     ;
-float video_satur         ;
-float video_satur_pulse   ;
-float video_value         ;
-float video_value_pulse   ;
+float video_threshold     ;
+float video_threshold_pulse;
+float video_gamma         ;
+float video_gamma_pulse   ;
 float photoWeight         ;
 float photoWeight_pulse   ;
-float photo_hue           ;
-float photo_hue_pulse     ;
-float photo_satur         ;
-float photo_satur_pulse   ;
-float photo_value         ;
-float photo_value_pulse   ;
+float photo_threshold     ;
+float photo_threshold_pulse;
+float photo_gamma         ;
+float photo_gamma_pulse   ;
 float photoJitterAmpl     ;
 float maskJitterAmpl      ;
 float photo_scale         ;
+float photo_offsetX       ;
+float photo_offsetY       ;
 float mask_scale          ;
 float photo_contrast      ;
 float mask_contrast       ;
@@ -303,9 +294,9 @@ int   flashTrkPart_freq_2 ;
 int   flashTrkPart_freq_3 ;
 int   flashPixel_freq     ;
 int   flashPixel_duration ;
-float flashCameraTrkLength;
-float flashCameraTrkBright;
-int   flashCameraTrkBeat  ;
+float flashPhotoTrkLength ;
+float flashPhotoTrkBright ;
+int   flashPhotoTrkBeat   ;
 float beat_threshold      ;
 float beat_delay          ;
 float sound_volume        ;
@@ -314,7 +305,6 @@ float pen_radius_pressure_coef;
 float pen_radius_angleHor_coef;
 float pen_radius_angleVer_coef;
 bool  tracksSync          ;
-int   cameraCumul         ;
 int   CAstep              ;
 bool  interfaceOnScreen   ;
 bool  CAcolorSpread       ;
@@ -323,10 +313,38 @@ float sound_env_min       ;
 float sound_env_max       ;
 float audioInput_weight   ;
 float soundtrack_weight   ;
-float sensor_sample_setUp ;
-int   sensor_layout       ;
-int   sensor_activation   ;
-float sensor_vol          ;
+float isDisplayLookAt     ;
+float with_mesh           ;
+float with_blue           ;
+float with_whiteText      ;
+float VP1LocX             ;
+float VP1LocY             ;
+float VP1LocZ             ;
+float VP1UpY              ;
+float VP1Reversed         ;
+float VP1LookAtX          ;
+float VP1LookAtY          ;
+float VP1LookAtZ          ;
+float VP1WidthTopAt1m     ;
+float VP1WidthBottomAt1m  ;
+float VP1TopAt1m          ;
+float VP1BottomAt1m       ;
+float textureFrontier_wmin;
+float textureFrontier_wmax;
+float textureFrontier_hmin;
+float textureFrontier_hmax;
+float textureFrontier_wmin_width;
+float textureFrontier_wmax_width;
+float textureFrontier_hmin_width;
+float textureFrontier_hmax_width;
+float textureScale_w      ;
+float textureScale_h      ;
+float textureTranslate_w  ;
+float textureTranslate_h  ;
+float meshFrontier_X      ;
+float meshFrontier_width  ;
+float nearPlane           ;
+float farPlane            ;
 VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { 
     _pg_bool,
     _pg_bool,
@@ -336,7 +354,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_bool,
     _pg_bool,
     _pg_bool,
-    _pg_bool,
     _pg_int,
     _pg_float,
     _pg_float,
@@ -497,7 +514,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_float,
-    _pg_float,
     _pg_int,
     _pg_float,
     _pg_int,
@@ -505,20 +521,13 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_int,
     _pg_int,
-    _pg_float,
-    _pg_float,
-    _pg_float,
-    _pg_float,
-    _pg_float,
-    _pg_float,
+    _pg_int,
+    _pg_int,
     _pg_float,
     _pg_float,
     _pg_float,
     _pg_float,
     _pg_bool,
-    _pg_bool,
-    _pg_float,
-    _pg_float,
     _pg_float,
     _pg_float,
     _pg_float,
@@ -587,7 +596,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_bool,
     _pg_int,
-    _pg_int,
     _pg_bool,
     _pg_bool,
     _pg_bool,
@@ -596,8 +604,36 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_float,
-    _pg_int ,
-    _pg_int ,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
     _pg_float,
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
@@ -605,8 +641,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&clearAllLayers,
    (void *)&clearCA,
    (void *)&clearLayer,
-   (void *)&reset_camera,
-   (void *)&camera_BG_subtr,
+   (void *)&clearEcho,
    (void *)&mute_second_screen,
    (void *)&invertAllLayers,
    (void *)&take_snapshots,
@@ -758,55 +793,47 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&repop_BG_pulse,
    (void *)&repop_path,
    (void *)&repop_path_pulse,
-   (void *)&repop_color,
-   (void *)&repop_color_pulse,
-   (void *)&repop_grey,
-   (void *)&repop_grey_pulse,
-   (void *)&cameraWB_R,
-   (void *)&cameraWB_B,
-   (void *)&cameraExposure,
-   (void *)&cameraGain,
-   (void *)&cameraBrightness,
-   (void *)&cameraSaturation,
-   (void *)&cameraContrast,
-   (void *)&cameraGamma,
-   (void *)&cameraCaptFreq,
+   (void *)&repop_colorBG,
+   (void *)&repop_colorBG_pulse,
+   (void *)&repop_greyBG,
+   (void *)&repop_greyBG_pulse,
+   (void *)&repop_colorPart,
+   (void *)&repop_colorPart_pulse,
+   (void *)&repop_greyPart,
+   (void *)&repop_greyPart_pulse,
+   (void *)&repop_colorCA,
+   (void *)&repop_colorCA_pulse,
+   (void *)&repop_greyCA,
+   (void *)&repop_greyCA_pulse,
    (void *)&playing_movieNo,
    (void *)&movieCaptFreq,
    (void *)&photo_diaporama,
    (void *)&photo_diaporama_fade,
    (void *)&photo_diaporama_plateau,
    (void *)&activeClipArts,
+   (void *)&activeMeshes,
+   (void *)&mobileMeshes,
    (void *)&playing_soundtrackNo,
-   (void *)&cameraThreshold,
-   (void *)&cameraThreshold_pulse,
-   (void *)&cameraWeight,
-   (void *)&cameraWeight_pulse,
-   (void *)&cameraSobel,
-   (void *)&cameraSobel_pulse,
    (void *)&movieWeight,
    (void *)&movieWeight_pulse,
    (void *)&movieSobel,
    (void *)&movieSobel_pulse,
    (void *)&invertMovie,
-   (void *)&invertCamera,
-   (void *)&video_hue,
-   (void *)&video_hue_pulse,
-   (void *)&video_satur,
-   (void *)&video_satur_pulse,
-   (void *)&video_value,
-   (void *)&video_value_pulse,
+   (void *)&video_threshold,
+   (void *)&video_threshold_pulse,
+   (void *)&video_gamma,
+   (void *)&video_gamma_pulse,
    (void *)&photoWeight,
    (void *)&photoWeight_pulse,
-   (void *)&photo_hue,
-   (void *)&photo_hue_pulse,
-   (void *)&photo_satur,
-   (void *)&photo_satur_pulse,
-   (void *)&photo_value,
-   (void *)&photo_value_pulse,
+   (void *)&photo_threshold,
+   (void *)&photo_threshold_pulse,
+   (void *)&photo_gamma,
+   (void *)&photo_gamma_pulse,
    (void *)&photoJitterAmpl,
    (void *)&maskJitterAmpl,
    (void *)&photo_scale,
+   (void *)&photo_offsetX,
+   (void *)&photo_offsetY,
    (void *)&mask_scale,
    (void *)&photo_contrast,
    (void *)&mask_contrast,
@@ -848,9 +875,9 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&flashTrkPart_freq_3,
    (void *)&flashPixel_freq,
    (void *)&flashPixel_duration,
-   (void *)&flashCameraTrkLength,
-   (void *)&flashCameraTrkBright,
-   (void *)&flashCameraTrkBeat,
+   (void *)&flashPhotoTrkLength,
+   (void *)&flashPhotoTrkBright,
+   (void *)&flashPhotoTrkBeat,
    (void *)&beat_threshold,
    (void *)&beat_delay,
    (void *)&sound_volume,
@@ -859,7 +886,6 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&pen_radius_angleHor_coef,
    (void *)&pen_radius_angleVer_coef,
    (void *)&tracksSync,
-   (void *)&cameraCumul,
    (void *)&CAstep,
    (void *)&interfaceOnScreen,
    (void *)&CAcolorSpread,
@@ -868,15 +894,44 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&sound_env_max,
    (void *)&audioInput_weight,
    (void *)&soundtrack_weight,
-   (void *)&sensor_sample_setUp,
-   (void *)&sensor_layout,
-   (void *)&sensor_activation,
-   (void *)&sensor_vol,
+   (void *)&isDisplayLookAt,
+   (void *)&with_mesh,
+   (void *)&with_blue,
+   (void *)&with_whiteText,
+   (void *)&VP1LocX,
+   (void *)&VP1LocY,
+   (void *)&VP1LocZ,
+   (void *)&VP1UpY,
+   (void *)&VP1Reversed,
+   (void *)&VP1LookAtX,
+   (void *)&VP1LookAtY,
+   (void *)&VP1LookAtZ,
+   (void *)&VP1WidthTopAt1m,
+   (void *)&VP1WidthBottomAt1m,
+   (void *)&VP1TopAt1m,
+   (void *)&VP1BottomAt1m,
+   (void *)&textureFrontier_wmin,
+   (void *)&textureFrontier_wmax,
+   (void *)&textureFrontier_hmin,
+   (void *)&textureFrontier_hmax,
+   (void *)&textureFrontier_wmin_width,
+   (void *)&textureFrontier_wmax_width,
+   (void *)&textureFrontier_hmin_width,
+   (void *)&textureFrontier_hmax_width,
+   (void *)&textureScale_w,
+   (void *)&textureScale_h,
+   (void *)&textureTranslate_w,
+   (void *)&textureTranslate_h,
+   (void *)&meshFrontier_X,
+   (void *)&meshFrontier_width,
+   (void *)&nearPlane,
+   (void *)&farPlane,
 };
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void clearCA_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void clearLayer_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void clearEcho_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void pen_brush_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void part_initialization_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
@@ -912,34 +967,24 @@ void path_replay_trackNo_6_callBack(pg_Parameter_Input_Type param_input_type , f
 void path_replay_trackNo_7_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void partMove_target_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void partMove_rand_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraGain_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void beat_delay_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void sensor_sample_setUp_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
-void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { 
    &auto_beat_callBack,
    &clearAllLayers_callBack,
    &clearCA_callBack,
    &clearLayer_callBack,
-   NULL,
-   NULL,
+   &clearEcho_callBack,
    NULL,
    NULL,
    NULL,
@@ -1095,14 +1140,13 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
-   &cameraWB_R_callBack,
-   &cameraWB_B_callBack,
-   &cameraExposure_callBack,
-   &cameraGain_callBack,
-   &cameraBrightness_callBack,
-   &cameraSaturation_callBack,
-   &cameraContrast_callBack,
-   &cameraGamma_callBack,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
    NULL,
    &playing_movieNo_callBack,
    NULL,
@@ -1110,6 +1154,8 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
+   &activeMeshes_callBack,
+   &mobileMeshes_callBack,
    &playing_soundtrackNo_callBack,
    NULL,
    NULL,
@@ -1172,16 +1218,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   &flashCameraTrkLength_callBack,
+   &flashPhotoTrkLength_callBack,
    NULL,
    NULL,
    &beat_threshold_callBack,
@@ -1196,14 +1233,41 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
-   NULL,
    &sound_env_min_callBack,
    &sound_env_max_callBack,
    &audioInput_weight_callBack,
    &soundtrack_weight_callBack,
-   &sensor_sample_setUp_callBack,
-   &sensor_layout_callBack,
-   &sensor_activation_callBack,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
    NULL,
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
@@ -1211,8 +1275,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"clearAllLayers",
   (char *)"clearCA",
   (char *)"clearLayer",
-  (char *)"reset_camera",
-  (char *)"camera_BG_subtr",
+  (char *)"clearEcho",
   (char *)"mute_second_screen",
   (char *)"invertAllLayers",
   (char *)"take_snapshots",
@@ -1364,55 +1427,47 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_color",
-  (char *)"repop_color_pulse",
-  (char *)"repop_grey",
-  (char *)"repop_grey_pulse",
-  (char *)"cameraWB_R",
-  (char *)"cameraWB_B",
-  (char *)"cameraExposure",
-  (char *)"cameraGain",
-  (char *)"cameraBrightness",
-  (char *)"cameraSaturation",
-  (char *)"cameraContrast",
-  (char *)"cameraGamma",
-  (char *)"cameraCaptFreq",
+  (char *)"repop_colorBG",
+  (char *)"repop_colorBG_pulse",
+  (char *)"repop_greyBG",
+  (char *)"repop_greyBG_pulse",
+  (char *)"repop_colorPart",
+  (char *)"repop_colorPart_pulse",
+  (char *)"repop_greyPart",
+  (char *)"repop_greyPart_pulse",
+  (char *)"repop_colorCA",
+  (char *)"repop_colorCA_pulse",
+  (char *)"repop_greyCA",
+  (char *)"repop_greyCA_pulse",
   (char *)"playing_movieNo",
   (char *)"movieCaptFreq",
   (char *)"photo_diaporama",
   (char *)"photo_diaporama_fade",
   (char *)"photo_diaporama_plateau",
   (char *)"activeClipArts",
+  (char *)"activeMeshes",
+  (char *)"mobileMeshes",
   (char *)"playing_soundtrackNo",
-  (char *)"cameraThreshold",
-  (char *)"cameraThreshold_pulse",
-  (char *)"cameraWeight",
-  (char *)"cameraWeight_pulse",
-  (char *)"cameraSobel",
-  (char *)"cameraSobel_pulse",
   (char *)"movieWeight",
   (char *)"movieWeight_pulse",
   (char *)"movieSobel",
   (char *)"movieSobel_pulse",
   (char *)"invertMovie",
-  (char *)"invertCamera",
-  (char *)"video_hue",
-  (char *)"video_hue_pulse",
-  (char *)"video_satur",
-  (char *)"video_satur_pulse",
-  (char *)"video_value",
-  (char *)"video_value_pulse",
+  (char *)"video_threshold",
+  (char *)"video_threshold_pulse",
+  (char *)"video_gamma",
+  (char *)"video_gamma_pulse",
   (char *)"photoWeight",
   (char *)"photoWeight_pulse",
-  (char *)"photo_hue",
-  (char *)"photo_hue_pulse",
-  (char *)"photo_satur",
-  (char *)"photo_satur_pulse",
-  (char *)"photo_value",
-  (char *)"photo_value_pulse",
+  (char *)"photo_threshold",
+  (char *)"photo_threshold_pulse",
+  (char *)"photo_gamma",
+  (char *)"photo_gamma_pulse",
   (char *)"photoJitterAmpl",
   (char *)"maskJitterAmpl",
   (char *)"photo_scale",
+  (char *)"photo_offsetX",
+  (char *)"photo_offsetY",
   (char *)"mask_scale",
   (char *)"photo_contrast",
   (char *)"mask_contrast",
@@ -1454,9 +1509,9 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"flashTrkPart_freq_3",
   (char *)"flashPixel_freq",
   (char *)"flashPixel_duration",
-  (char *)"flashCameraTrkLength",
-  (char *)"flashCameraTrkBright",
-  (char *)"flashCameraTrkBeat",
+  (char *)"flashPhotoTrkLength",
+  (char *)"flashPhotoTrkBright",
+  (char *)"flashPhotoTrkBeat",
   (char *)"beat_threshold",
   (char *)"beat_delay",
   (char *)"sound_volume",
@@ -1465,7 +1520,6 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"pen_radius_angleHor_coef",
   (char *)"pen_radius_angleVer_coef",
   (char *)"tracksSync",
-  (char *)"cameraCumul",
   (char *)"CAstep",
   (char *)"interfaceOnScreen",
   (char *)"CAcolorSpread",
@@ -1474,10 +1528,38 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"sound_env_max",
   (char *)"audioInput_weight",
   (char *)"soundtrack_weight",
-  (char *)"sensor_sample_setUp",
-  (char *)"sensor_layout",
-  (char *)"sensor_activation",
-  (char *)"sensor_vol",
+  (char *)"isDisplayLookAt",
+  (char *)"with_mesh",
+  (char *)"with_blue",
+  (char *)"with_whiteText",
+  (char *)"VP1LocX",
+  (char *)"VP1LocY",
+  (char *)"VP1LocZ",
+  (char *)"VP1UpY",
+  (char *)"VP1Reversed",
+  (char *)"VP1LookAtX",
+  (char *)"VP1LookAtY",
+  (char *)"VP1LookAtZ",
+  (char *)"VP1WidthTopAt1m",
+  (char *)"VP1WidthBottomAt1m",
+  (char *)"VP1TopAt1m",
+  (char *)"VP1BottomAt1m",
+  (char *)"textureFrontier_wmin",
+  (char *)"textureFrontier_wmax",
+  (char *)"textureFrontier_hmin",
+  (char *)"textureFrontier_hmax",
+  (char *)"textureFrontier_wmin_width",
+  (char *)"textureFrontier_wmax_width",
+  (char *)"textureFrontier_hmin_width",
+  (char *)"textureFrontier_hmax_width",
+  (char *)"textureScale_w",
+  (char *)"textureScale_h",
+  (char *)"textureTranslate_w",
+  (char *)"textureTranslate_h",
+  (char *)"meshFrontier_X",
+  (char *)"meshFrontier_width",
+  (char *)"nearPlane",
+  (char *)"farPlane",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = { 
   _pg_pulsed_none,
@@ -1491,7 +1573,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
@@ -1641,12 +1722,13 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1661,13 +1743,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -1679,9 +1754,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1704,6 +1777,33 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1757,8 +1857,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"clearAllLayers",
   (char *)"clearCA",
   (char *)"clearLayer",
-  (char *)"reset_camera",
-  (char *)"camera_BG_subtr",
+  (char *)"clearEcho",
   (char *)"mute_second_screen",
   (char *)"invertAllLayers",
   (char *)"take_snapshots",
@@ -1910,55 +2009,47 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_color",
-  (char *)"repop_color_pulse",
-  (char *)"repop_grey",
-  (char *)"repop_grey_pulse",
-  (char *)"cameraWB_R",
-  (char *)"cameraWB_B",
-  (char *)"cameraExposure",
-  (char *)"cameraGain",
-  (char *)"cameraBrightness",
-  (char *)"cameraSaturation",
-  (char *)"cameraContrast",
-  (char *)"cameraGamma",
-  (char *)"cameraCaptFreq",
+  (char *)"repop_colorBG",
+  (char *)"repop_colorBG_pulse",
+  (char *)"repop_greyBG",
+  (char *)"repop_greyBG_pulse",
+  (char *)"repop_colorPart",
+  (char *)"repop_colorPart_pulse",
+  (char *)"repop_greyPart",
+  (char *)"repop_greyPart_pulse",
+  (char *)"repop_colorCA",
+  (char *)"repop_colorCA_pulse",
+  (char *)"repop_greyCA",
+  (char *)"repop_greyCA_pulse",
   (char *)"playing_movieNo",
   (char *)"movieCaptFreq",
   (char *)"photo_diaporama",
   (char *)"photo_diaporama_fade",
   (char *)"photo_diaporama_plateau",
   (char *)"activeClipArts",
+  (char *)"activeMeshes",
+  (char *)"mobileMeshes",
   (char *)"playing_soundtrackNo",
-  (char *)"cameraThreshold",
-  (char *)"cameraThreshold_pulse",
-  (char *)"cameraWeight",
-  (char *)"cameraWeight_pulse",
-  (char *)"cameraSobel",
-  (char *)"cameraSobel_pulse",
   (char *)"movieWeight",
   (char *)"movieWeight_pulse",
   (char *)"movieSobel",
   (char *)"movieSobel_pulse",
   (char *)"invertMovie",
-  (char *)"invertCamera",
-  (char *)"video_hue",
-  (char *)"video_hue_pulse",
-  (char *)"video_satur",
-  (char *)"video_satur_pulse",
-  (char *)"video_value",
-  (char *)"video_value_pulse",
+  (char *)"video_threshold",
+  (char *)"video_threshold_pulse",
+  (char *)"video_gamma",
+  (char *)"video_gamma_pulse",
   (char *)"photoWeight",
   (char *)"photoWeight_pulse",
-  (char *)"photo_hue",
-  (char *)"photo_hue_pulse",
-  (char *)"photo_satur",
-  (char *)"photo_satur_pulse",
-  (char *)"photo_value",
-  (char *)"photo_value_pulse",
+  (char *)"photo_threshold",
+  (char *)"photo_threshold_pulse",
+  (char *)"photo_gamma",
+  (char *)"photo_gamma_pulse",
   (char *)"photoJitterAmpl",
   (char *)"maskJitterAmpl",
   (char *)"photo_scale",
+  (char *)"photo_offsetX",
+  (char *)"photo_offsetY",
   (char *)"mask_scale",
   (char *)"photo_contrast",
   (char *)"mask_contrast",
@@ -2000,9 +2091,9 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"flashTrkPart_freq_3",
   (char *)"flashPixel_freq",
   (char *)"flashPixel_duration",
-  (char *)"flashCameraTrkLength",
-  (char *)"flashCameraTrkBright",
-  (char *)"flashCameraTrkBeat",
+  (char *)"flashPhotoTrkLength",
+  (char *)"flashPhotoTrkBright",
+  (char *)"flashPhotoTrkBeat",
   (char *)"beat_threshold",
   (char *)"beat_delay",
   (char *)"sound_volume",
@@ -2011,7 +2102,6 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"pen_radius_angleHor_coef",
   (char *)"pen_radius_angleVer_coef",
   (char *)"tracksSync",
-  (char *)"cameraCumul",
   (char *)"CAstep",
   (char *)"interfaceOnScreen",
   (char *)"CAcolorSpread",
@@ -2020,8 +2110,36 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"sound_env_max",
   (char *)"audioInput_weight",
   (char *)"soundtrack_weight",
-  (char *)"sensor_sample_setUp",
-  (char *)"sensor_layout",
-  (char *)"sensor_activation",
-  (char *)"sensor_vol",
+  (char *)"isDisplayLookAt",
+  (char *)"with_mesh",
+  (char *)"with_blue",
+  (char *)"with_whiteText",
+  (char *)"VP1LocX",
+  (char *)"VP1LocY",
+  (char *)"VP1LocZ",
+  (char *)"VP1UpY",
+  (char *)"VP1Reversed",
+  (char *)"VP1LookAtX",
+  (char *)"VP1LookAtY",
+  (char *)"VP1LookAtZ",
+  (char *)"VP1WidthTopAt1m",
+  (char *)"VP1WidthBottomAt1m",
+  (char *)"VP1TopAt1m",
+  (char *)"VP1BottomAt1m",
+  (char *)"textureFrontier_wmin",
+  (char *)"textureFrontier_wmax",
+  (char *)"textureFrontier_hmin",
+  (char *)"textureFrontier_hmax",
+  (char *)"textureFrontier_wmin_width",
+  (char *)"textureFrontier_wmax_width",
+  (char *)"textureFrontier_hmin_width",
+  (char *)"textureFrontier_hmax_width",
+  (char *)"textureScale_w",
+  (char *)"textureScale_h",
+  (char *)"textureTranslate_w",
+  (char *)"textureTranslate_h",
+  (char *)"meshFrontier_X",
+  (char *)"meshFrontier_width",
+  (char *)"nearPlane",
+  (char *)"farPlane",
 };

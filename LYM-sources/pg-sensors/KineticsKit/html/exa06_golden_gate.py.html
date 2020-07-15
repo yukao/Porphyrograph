@@ -1,0 +1,67 @@
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>exa06_golden_gate.py</title>
+<meta name="GENERATOR" content="SciTE - www.Scintilla.org" />
+<style type="text/css">
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S7 {
+	color: #00aa00;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+span {
+	font-family: 'Verdana';
+	color: #000000;
+	font-size: 9pt;
+}
+</style>
+</head>
+<body bgcolor=#f0f0f8>
+<span><span class="S5">from</span><span class="S0"> </span>KineticsKit<span class="S0"> </span><span class="S5">import</span><span class="S0"> </span><span class="S10">*</span><br />
+<span class="S5">import</span><span class="S0"> </span>visual<br />
+<br />
+<span class="S5">print</span><span class="S0"> </span><span class="S7">"""Try to click at a Mass to grip it, click again to release it.</span><br />
+<span class="S7">Zooming / rotating of the scene is done by holding the left / right</span><br />
+<span class="S7">mouse button down while moving the mouse around."""</span><br />
+<br />
+rate<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">30</span><br />
+count<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">11</span><span class="S0"> </span><span class="S1"># number of masses</span><br />
+<br />
+system<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>System<span class="S10">(</span>timestep<span class="S10">=</span><span class="S2">1.</span><span class="S10">/</span>rate<span class="S10">,</span><span class="S0"> </span>gravity<span class="S10">=</span><span class="S2">5.0</span><span class="S10">,</span><span class="S0"> </span>viscosity<span class="S10">=</span><span class="S2">0.1</span><span class="S10">)</span><br />
+<br />
+<span class="S1"># generate some masses and insert them into the system</span><br />
+dx<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">2.0</span><span class="S0"> </span><span class="S10">/</span><span class="S0"> </span>count<br />
+<span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>visual<span class="S10">.</span>arange<span class="S10">(-</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1</span><span class="S10">+</span>dx<span class="S10">,</span><span class="S0"> </span>dx<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertMass<span class="S10">(</span>Mass<span class="S10">(</span>m<span class="S10">=</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span>pos<span class="S10">=(</span>x<span class="S10">,</span><span class="S0"> </span>x<span class="S10">*</span><span class="S2">0.7</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">)))</span><br />
+<br />
+<span class="S1"># an objects property can also be changed via the reference inserted into the system</span><br />
+system<span class="S10">.</span>masses<span class="S10">[</span><span class="S2">0</span><span class="S10">].</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+system<span class="S10">.</span>masses<span class="S10">[-</span><span class="S2">1</span><span class="S10">].</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<br />
+<span class="S1"># connect the masses with springs</span><br />
+<span class="S5">for</span><span class="S0"> </span>i<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>len<span class="S10">(</span>system<span class="S10">.</span>masses<span class="S10">)-</span><span class="S2">1</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertSpring<span class="S10">(</span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>system<span class="S10">.</span>masses<span class="S10">[</span>i<span class="S10">],</span><span class="S0"> </span>m1<span class="S10">=</span>system<span class="S10">.</span>masses<span class="S10">[</span>i<span class="S10">+</span><span class="S2">1</span><span class="S10">],</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10.</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.0</span><span class="S10">))</span><br />
+<br />
+system<span class="S10">.</span>display<span class="S10">.</span>forward<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(-</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">0.4</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">0.2</span><span class="S10">)</span><br />
+<br />
+<span class="S1">#start the mainloop (convenience function)</span><br />
+system<span class="S10">.</span>mainloop<span class="S10">()</span><br />
+<span class="S0"></span></span>
+</body>
+</html>

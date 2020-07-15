@@ -1,0 +1,120 @@
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>exa07_lattice.py</title>
+<meta name="GENERATOR" content="SciTE - www.Scintilla.org" />
+<style type="text/css">
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S4 {
+	color: #007f00;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S7 {
+	color: #00aa00;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+span {
+	font-family: 'Verdana';
+	color: #000000;
+	font-size: 9pt;
+}
+</style>
+</head>
+<body bgcolor=#f0f0f8>
+<span><span class="S5">from</span><span class="S0"> </span>KineticsKit<span class="S0"> </span><span class="S5">import</span><span class="S0"> </span><span class="S10">*</span><br />
+<span class="S5">import</span><span class="S0"> </span>visual<br />
+<span class="S5">import</span><span class="S0"> </span>math<br />
+<br />
+rate<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">30</span><br />
+count<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">5</span><span class="S0"> </span><span class="S1"># number of masses per dimension</span><br />
+<span class="S1">#Spring = CylinderSpring</span><br />
+Spring<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>DoubleHelixSpring<br />
+dnd<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><span class="S0"> </span><span class="S1"># 1 to drag and drop the masses; 0 to export to pov and exit</span><br />
+<br />
+system<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>System<span class="S10">(</span>timestep<span class="S10">=</span><span class="S2">1.</span><span class="S10">/</span>rate<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>viscosity<span class="S10">=</span><span class="S2">0.1</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>fov<span class="S10">=</span>math<span class="S10">.</span>pi<span class="S10">/</span><span class="S2">4.</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ambient<span class="S10">=</span><span class="S2">0.5</span><span class="S10">)</span><br />
+<span class="S5">if</span><span class="S0"> </span>dnd<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S7">"""Try to click at a Mass to grip it, click again to release it.</span><br />
+<span class="S7">Zooming / rotating of the scene is done by holding the left / right</span><br />
+<span class="S7">mouse button down while moving the mouse around."""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>display<span class="S10">.</span>background<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span><span class="S2">0</span><span class="S10">,</span><span class="S2">0.2</span><span class="S10">,</span><span class="S2">0.2</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>spc<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">10</span><br />
+<span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>display<span class="S10">.</span>background<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span><span class="S2">1.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1.0</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>spc<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">20</span><br />
+<br />
+<span class="S1"># generate some masses</span><br />
+dx<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dy<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dz<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">2.0</span><span class="S0"> </span><span class="S10">/</span><span class="S0"> </span><span class="S10">(</span>count<span class="S10">-</span><span class="S2">1</span><span class="S10">)</span><br />
+<span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>visual<span class="S10">.</span>arange<span class="S10">(-</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1</span><span class="S10">+</span>dz<span class="S10">,</span><span class="S0"> </span>dz<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>y<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>visual<span class="S10">.</span>arange<span class="S10">(-</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1</span><span class="S10">+</span>dy<span class="S10">,</span><span class="S0"> </span>dy<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>visual<span class="S10">.</span>arange<span class="S10">(-</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1</span><span class="S10">+</span>dx<span class="S10">,</span><span class="S0"> </span>dx<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertMass<span class="S10">(</span><span class="S0"> </span>Mass<span class="S10">(</span>m<span class="S10">=</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span>pos<span class="S10">=(</span>x<span class="S10">,</span><span class="S0"> </span>y<span class="S10">,</span><span class="S0"> </span>z<span class="S10">))</span><span class="S0"> </span><span class="S10">)</span><br />
+<br />
+<span class="S1"># connect the masses with springs</span><br />
+<span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>y<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">-</span><span class="S2">1</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m0<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>z<span class="S10">*</span>count<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>y<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>x<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>z<span class="S10">*</span>count<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>y<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S10">(</span>x<span class="S10">+</span><span class="S2">1</span><span class="S10">)]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertSpring<span class="S10">(</span><span class="S0"> </span>Spring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10.</span><span class="S10">,</span><span class="S0"> </span>spc<span class="S10">=</span>spc<span class="S10">)</span><span class="S0"> </span><span class="S10">)</span><br />
+<span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>y<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">-</span><span class="S2">1</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m0<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>z<span class="S10">*</span>count<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>y<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>x<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>z<span class="S10">*</span>count<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S10">(</span>y<span class="S10">+</span><span class="S2">1</span><span class="S10">)*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>x<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertSpring<span class="S10">(</span><span class="S0"> </span>Spring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10.</span><span class="S10">,</span><span class="S0"> </span>spc<span class="S10">=</span>spc<span class="S10">)</span><span class="S0"> </span><span class="S10">)</span><br />
+<span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">-</span><span class="S2">1</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>y<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>count<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m0<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>z<span class="S10">*</span>count<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>y<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>x<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[(</span>z<span class="S10">+</span><span class="S2">1</span><span class="S10">)*</span>count<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>y<span class="S10">*</span>count<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>x<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertSpring<span class="S10">(</span><span class="S0"> </span>Spring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10.</span><span class="S10">,</span><span class="S0"> </span>spc<span class="S10">=</span>spc<span class="S10">)</span><span class="S0"> </span><span class="S10">)</span><br />
+<br />
+<span class="S1"># place camera</span><br />
+system<span class="S10">.</span>display<span class="S10">.</span>forward<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(-</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">0.1</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">2.0</span><span class="S10">)</span><br />
+system<span class="S10">.</span>display<span class="S10">.</span>scale<span class="S0"> </span><span class="S10">*=</span><span class="S0"> </span><span class="S2">1.1</span><br />
+<br />
+<span class="S5">if</span><span class="S0"> </span>dnd<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>mainloop<span class="S10">()</span><br />
+<span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>inifile<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""\</span><br />
+<span class="S7">[150x150, AA]</span><br />
+<span class="S7">Width=150</span><br />
+<span class="S7">Height=150</span><br />
+<span class="S7">Antialias=On</span><br />
+<span class="S7">Sampling_Method=2 ; adaptive and recursive super-sampling method</span><br />
+<span class="S7">Antialias_Depth=3</span><br />
+<span class="S7">Antialias_Threshold=0.1</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>f<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>open<span class="S10">(</span><span class="S4">'lattice.ini'</span><span class="S10">,</span><span class="S0"> </span><span class="S4">'wt'</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>f<span class="S10">.</span>write<span class="S10">(</span>inifile<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>f<span class="S10">.</span>close<span class="S10">()</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">import</span><span class="S0"> </span>time<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>time<span class="S10">.</span>sleep<span class="S10">(</span><span class="S2">5</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>start<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>time<span class="S10">.</span>time<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>display<span class="S10">.</span>visible<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><span class="S0"> </span><span class="S1"># to speed up exporting</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">'exporting ...'</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>povexport<span class="S10">(</span>filename<span class="S10">=</span><span class="S4">'lattice.pov'</span><span class="S10">,</span><span class="S0"> </span>xy_ratio<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>shadowless<span class="S10">=</span><span class="S2">1</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">'took'</span><span class="S10">,</span><span class="S0"> </span>time<span class="S10">.</span>time<span class="S10">()</span><span class="S0"> </span><span class="S10">-</span><span class="S0"> </span>start<span class="S10">,</span><span class="S0"> </span><span class="S4">'seconds'</span><br />
+<span class="S0"></span></span>
+</body>
+</html>

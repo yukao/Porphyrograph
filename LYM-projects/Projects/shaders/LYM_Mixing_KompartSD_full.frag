@@ -13,9 +13,8 @@ float     CAMixingWeight;
 float     trackMixingWeight_0;
 float     trackMixingWeight_1;
 float     echo;
-uniform vec4 uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_trackMixingWeight_1_echo;
 float     echoNeg;
-uniform float uniform_Mixing_fs_1fv_echoNeg;
+uniform float uniform_Mixing_scenario_var_data[5];
 
 // Main shader.
 
@@ -51,11 +50,11 @@ layout (binding = 6) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  CAMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_trackMixingWeight_1_echo[0];
-  trackMixingWeight_0 = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_trackMixingWeight_1_echo[1];
-  trackMixingWeight_1 = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_trackMixingWeight_1_echo[2];
-  echo = uniform_Mixing_fs_4fv_CAMixingWeight_trackMixingWeight_0_trackMixingWeight_1_echo[3];
-  echoNeg = uniform_Mixing_fs_1fv_echoNeg;
+  CAMixingWeight = uniform_Mixing_scenario_var_data[0];
+  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[1];
+  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[2];
+  echo = uniform_Mixing_scenario_var_data[3];
+  echoNeg = uniform_Mixing_scenario_var_data[4];
 
   float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
 

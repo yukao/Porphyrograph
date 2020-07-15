@@ -1,0 +1,167 @@
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>system.py</title>
+<meta name="GENERATOR" content="SciTE - www.Scintilla.org" />
+<style type="text/css">
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S4 {
+	color: #007f00;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S7 {
+	color: #00aa00;
+}
+.S8 {
+	font-weight: bold;
+	color: #0000ff;
+}
+.S9 {
+	font-weight: bold;
+	color: #7f00aa;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+span {
+	font-family: 'Verdana';
+	color: #000000;
+	font-size: 9pt;
+}
+</style>
+</head>
+<body bgcolor=#f0f0f8>
+<span><span class="S5">import</span><span class="S0"> </span>visual<br />
+<br />
+<br />
+<span class="S5">class</span><span class="S0"> </span><span class="S8">System</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""The system.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">__init__</span><span class="S10">(</span>self<span class="S10">,</span><span class="S0"> </span>timestep<span class="S10">,</span><span class="S0"> </span>oversample<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>gravity<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><span class="S0"> </span>viscosity<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><span class="S0"> </span>name<span class="S10">=</span><span class="S4">'KineticsKit'</span><span class="S10">,</span><span class="S0"> </span><span class="S10">**</span>keywords<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Construct a system.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>timestep<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>timestep<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rate<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1.0</span><span class="S0"> </span><span class="S10">/</span><span class="S0"> </span>timestep<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>oversample<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>oversample<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>gravity<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>gravity<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>viscosity<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>viscosity<br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>masses<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">[]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>springs<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">[]</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>display<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>visual<span class="S10">.</span>display<span class="S10">(</span>title<span class="S10">=</span>name<span class="S10">,</span><span class="S0"> </span><span class="S10">**</span>keywords<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>display<span class="S10">.</span>select<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S5">None</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>click<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S5">None</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>distance<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S5">None</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rememberFixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S5">None</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rememberColor<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S5">None</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">insertMass</span><span class="S10">(</span>self<span class="S10">,</span><span class="S0"> </span>mass<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Insert mass into the system.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>masses<span class="S10">.</span>append<span class="S10">(</span>mass<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">insertMassList</span><span class="S10">(</span>self<span class="S10">,</span><span class="S0"> </span>masslist<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Insert all Masses in masslist into the system.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>map<span class="S10">(</span>self<span class="S10">.</span>insertMass<span class="S10">,</span><span class="S0"> </span>masslist<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">insertSpring</span><span class="S10">(</span>self<span class="S10">,</span><span class="S0"> </span>spring<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Insert spring into the system.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>springs<span class="S10">.</span>append<span class="S10">(</span>spring<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">insertSpringList</span><span class="S10">(</span>self<span class="S10">,</span><span class="S0"> </span>springlist<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Insert all Springs in springlist into the system.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>map<span class="S10">(</span>self<span class="S10">.</span>insertSpring<span class="S10">,</span><span class="S0"> </span>springlist<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">advance</span><span class="S10">(</span>self<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Perform one Iteration of the system by advancing one timestep.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>microstep<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>timestep<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span>self<span class="S10">.</span>oversample<br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>i<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>self<span class="S10">.</span>oversample<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>spring<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>self<span class="S10">.</span>springs<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S10">.</span>calcSpringForce<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>spring<span class="S10">.</span>damping<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S10">.</span>calcDampingForce<span class="S10">()</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>mass<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>self<span class="S10">.</span>masses<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span><span class="S5">not</span><span class="S0"> </span>mass<span class="S10">.</span>fixed<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>self<span class="S10">.</span>gravity<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>mass<span class="S10">.</span>calcGravityForce<span class="S10">(</span>self<span class="S10">.</span>gravity<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>self<span class="S10">.</span>viscosity<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>mass<span class="S10">.</span>calcViscosityForce<span class="S10">(</span>self<span class="S10">.</span>viscosity<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>mass<span class="S10">.</span>calcNewLocation<span class="S10">(</span>microstep<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>mass<span class="S10">.</span>clearForce<span class="S10">()</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>spring<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>self<span class="S10">.</span>springs<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S10">.</span>update<span class="S10">()</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">dispatchDnD</span><span class="S10">(</span>self<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Process the drag and drop interaction from the mouse.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>self<span class="S10">.</span>display<span class="S10">.</span>mouse<span class="S10">.</span>clicked<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>click<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>display<span class="S10">.</span>mouse<span class="S10">.</span>getclick<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>self<span class="S10">.</span>dragObject<span class="S10">:</span><span class="S0"> </span><span class="S1"># drop the selected object</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># restore original attributes</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S10">.</span>mass<span class="S10">.</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>rememberFixed<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S10">.</span>color<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>rememberColor<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># no initial velocity after dragging</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S10">.</span>mass<span class="S10">.</span>v<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>visual<span class="S10">.</span>vector<span class="S10">(</span><span class="S2">0.</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S5">None</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">elif</span><span class="S0"> </span>self<span class="S10">.</span>click<span class="S10">.</span>pick<span class="S0"> </span><span class="S5">and</span><span class="S0"> </span>self<span class="S10">.</span>click<span class="S10">.</span>pick<span class="S10">.</span>__class__<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span>visual<span class="S10">.</span>sphere<span class="S0"> </span><span class="S5">and</span><span class="S0"> </span>self<span class="S10">.</span>click<span class="S10">.</span>pick<span class="S10">.</span>mass<span class="S10">.</span>pickable<span class="S10">:</span><span class="S0"> </span><span class="S1"># pick up the object (but only masses)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>click<span class="S10">.</span>pick<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>distance<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>visual<span class="S10">.</span>dot<span class="S10">(</span>self<span class="S10">.</span>display<span class="S10">.</span>forward<span class="S10">,</span><span class="S0"> </span>self<span class="S10">.</span>dragObject<span class="S10">.</span>pos<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># save original attributes and overwrite them</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rememberFixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>dragObject<span class="S10">.</span>mass<span class="S10">.</span>fixed<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S10">.</span>mass<span class="S10">.</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rememberColor<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>dragObject<span class="S10">.</span>color<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S10">.</span>color<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span>self<span class="S10">.</span>rememberColor<span class="S10">[</span><span class="S2">0</span><span class="S10">]</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">1.5</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rememberColor<span class="S10">[</span><span class="S2">1</span><span class="S10">]</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">1.5</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>rememberColor<span class="S10">[</span><span class="S2">2</span><span class="S10">]</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">1.5</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>self<span class="S10">.</span>dragObject<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dragObject<span class="S10">.</span>pos<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>self<span class="S10">.</span>display<span class="S10">.</span>mouse<span class="S10">.</span>project<span class="S10">(</span>normal<span class="S10">=</span>self<span class="S10">.</span>display<span class="S10">.</span>forward<span class="S10">,</span><span class="S0"> </span>d<span class="S10">=</span>self<span class="S10">.</span>distance<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">step</span><span class="S10">(</span>self<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Perform one step. &nbsp;This is a convenience method.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;It actually calls dispatchDnD() and advance().</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>dispatchDnD<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>advance<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>visual<span class="S10">.</span>rate<span class="S10">(</span>self<span class="S10">.</span>rate<span class="S10">)</span><span class="S0"> </span><span class="S1"># best when placed after advance() and before dispatchDnD()</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">mainloop</span><span class="S10">(</span>self<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Start the mainloop, which means that step() is</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;called in an infinite loop.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>display<span class="S10">.</span>autoscale<span class="S10">=</span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">while</span><span class="S0"> </span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>self<span class="S10">.</span>step<span class="S10">()</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">def</span><span class="S0"> </span><span class="S9">povexport</span><span class="S10">(</span>self<span class="S10">,</span><span class="S0"> </span>filename<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><span class="S0"> </span><span class="S10">**</span>keywords<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S7">"""Export the system to a POV-Ray file. &nbsp;If no filename</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is given, the name of the system is used.</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">import</span><span class="S0"> </span>povexport<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>povexport<span class="S10">.</span>export<span class="S10">(</span>display<span class="S10">=</span>self<span class="S10">.</span>display<span class="S10">,</span><span class="S0"> </span>filename<span class="S10">=</span>filename<span class="S10">,</span><span class="S0"> </span><span class="S10">**</span>keywords<span class="S10">)</span><br />
+<span class="S0"></span></span>
+</body>
+</html>

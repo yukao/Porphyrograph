@@ -230,14 +230,14 @@ uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;
 
 uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
-uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
+uniform vec4 uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
+uniform vec3 uniform_Update_fs_3fv_repop_ColorCA;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
+uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
@@ -628,7 +628,7 @@ void CA_out( vec4 currentCA ) {
     if( currentCA.a < 0 ) {
       out4_CA.a = floor(randomCA.x * (nbStates+1)); // nbStates states randomly
       newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.rgb;
+      out4_CA.rgb = uniform_Update_fs_3fv_repop_ColorCA.rgb;
     }
     else {
       // CCA with atuotmatic cycling from one step to the next
@@ -1360,10 +1360,6 @@ void main() {
 
   //////////////////////////
   // variables 
-  // sound pulse
-  vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
-
   // frame number
   frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
@@ -1493,19 +1489,19 @@ void main() {
 
   vec3 photocolor = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
     coordsImage = vec2(decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0) {
     coordsImage = vec2(decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
-  photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
+  photocolor *= vec3(photo_value);
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -1605,22 +1601,14 @@ void main() {
   videocolor = cameraWeight * cameraImage 
               + movieWeight * movieImage;
 
-  // image_satur image_satur_pulse
-  vec3 pulsed_satur = vec3(1);
-  if(video_satur_pulse > 0) {
-    pulsed_satur = video_satur + video_satur_pulse * pulse;
-  }
+  // video_satur
   //  public-domain function by Darel Rex Finley
-  if(video_satur > 0 || video_satur_pulse > 0 ) {
+  if(video_satur > 0) {
     float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
                                (videocolor.g)*(videocolor.g) * .587 +
                                (videocolor.b)*(videocolor.b) * .114 ) ;
-    videocolor.r = clamp( powerColor 
-      + (videocolor.r - powerColor) * pulsed_satur.r , 0 , 1 );
-    videocolor.g = clamp( powerColor 
-      + (videocolor.g - powerColor) * pulsed_satur.g , 0 , 1 );
-    videocolor.b = clamp( powerColor 
-      + (videocolor.b - powerColor) * pulsed_satur.b , 0 , 1 );
+    videocolor = clamp( powerColor 
+      + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
   }
 
   ///////////////////////////////////////////////////
@@ -1783,7 +1771,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x + photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 ) {
       // only photo (but not drawing or whatever memory from preceding tracks)
       if(!videoOn) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
@@ -1856,7 +1844,7 @@ void main() {
       if( int(frameNo * randomCA2.w ) % int(15000 *(1-repop_CA)) == int((randomCA2.z * 5000.0
         + randomCA2.x * 5000.0 + randomCA2.y * 5000.0 ) *(1-repop_CA)) ) {
         out4_CA.a = -1.0;
-        out4_CA.rgb  = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
+        out4_CA.rgb  = uniform_Update_fs_3fv_repop_ColorCA.xyz;
       }
     }
 
@@ -1866,9 +1854,9 @@ void main() {
 
   //////////////////////////////////////
   // FLASH BACK FROM CA LAYER TO BG LAYER
-  // if no flashback uniform_Update_fs_4fv_repop_Color_flashCABGWght.w == 0
+  // if no flashback uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w == 0
   out_track_FBO[0].rgb = clamp( out_track_FBO[0].rgb 
-				    + uniform_Update_fs_4fv_repop_Color_flashCABGWght.w 
+				    + uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w 
             * out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 
             0 , 1 );
 
@@ -1934,7 +1922,7 @@ void main() {
   if( repop_BG > 0 ) {
     if( int(frameNo * randomCA2.z ) % int(15000 *(1-repop_BG)) == int((randomCA2.x * 5000.0
         + randomCA2.y * 5000.0 + randomCA2.w * 5000.0 ) *(1-repop_BG)) ) {
-        out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
+        out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.xyz;
     }
   }
 

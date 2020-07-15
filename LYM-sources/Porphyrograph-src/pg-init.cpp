@@ -98,9 +98,14 @@ float quadSensor_texCoords[] = {
 };
 #endif
 
+// +++++++++++++++++++++++ Metawear boards ++++++++++++++++++++
+#ifdef PG_METAWEAR
+struct metawear_board_data pg_mw_boards[PG_MW_NB_MAX_BOARDS];
+#endif
+
 #ifdef PG_MESHES
 unsigned int **mesh_vao = NULL;
-string **mesh_IDs = NULL;
+vector <vector <string>> mesh_IDs;
 int *nbMeshesPerMeshFile = NULL;
 int **nbFacesPerMesh = NULL;
 unsigned int **mesh_index_vbo = NULL;
@@ -112,7 +117,7 @@ GLfloat *pg_Particle_control_points;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
 #endif
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 GLfloat *pg_Particle_vertices;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
@@ -127,13 +132,11 @@ unsigned int *pg_Particle_indices;
 
 #ifdef CURVE_PARTICLES
 // comet texture
-cv::Mat comet_image;
-GLuint comet_texture_2D_texID;
+GLuint comet_texture_2D_texID = NULL_ID;
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES)
 // blurred disk texture
-cv::Mat blurredDisk_image;
-GLuint blurredDisk_texture_2D_texID;
+GLuint blurredDisk_texture_2D_texID = NULL_ID;
 #endif
 
 /////////////////////////////////////////////////////////////////
@@ -153,7 +156,8 @@ GLuint drawBuffers[16] = {
 /////////////////////////////////////////////
 // FBO 
 GLuint pg_FBO_Update[2]; // PG_FBO_UPDATE_NBATTACHTS
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES || defined CURVE_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+
 GLuint pg_FBO_ParticleAnimation[2]; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
 GLuint pg_FBO_ParticleRendering = 0; // particle rendering
 GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
@@ -161,11 +165,17 @@ GLuint pg_FBO_ParticleRendering_texID = 0; // particle rendering + stencil
 #endif
 GLuint pg_FBO_Mixing_capturedFB_prec[2] = { 0,0 }; //  drawing memory on odd and even frames for echo
 // GLuint FBO_CameraFrame = 0; //  video preprocessing outcome
+#ifdef PG_AUGMENTED_REALITY
+GLuint pg_FBO_Master_capturedFB_prec = 0; // master output memory for mapping on mesh
+#endif
 
 						  // FBO texture
 GLuint pg_FBO_Update_texID[2 * PG_FBO_UPDATE_NBATTACHTS]; // Update
 GLuint pg_FBO_Mixing_capturedFB_prec_texID[2] = { 0,0 }; // drawing memory on odd and even frames for echo 
 // GLuint FBO_CameraFrame_texID = 0; // video preprocessing outcome 
+#ifdef PG_AUGMENTED_REALITY
+GLuint pg_FBO_Master_capturedFB_prec_texID = 0; // master output memory for mapping on mesh  
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // TEXT
@@ -588,6 +598,67 @@ void InterfaceInitializations(void) {
 	for (int indImage = 0; indImage < pg_nb_ClipArt; indImage++) {
 		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (activeClipArts & (1 << (indImage - 1)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	}
+#ifdef PG_MESHES
+	// MESH INTERFACE VARIABLE INITIALIZATION
+	for (int indImage = 0; indImage < pg_nb_Mesh_files; indImage++) {
+		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	}
+	for (int indImage = 0; indImage < pg_nb_Mesh_files; indImage++) {
+		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage + 1, (mobileMeshes & (1 << (indImage)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+	}
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// PERLIN NOISE
+//////////////////////////////////////////////////////////////////////////////////////////////
+// https://rosettacode.org/wiki/Perlin_noise
+double fade(double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+double lerp(double t, double a, double b) { return a + t * (b - a); }
+double grad(int hash, double x, double y, double z) {
+	int h = hash & 15;
+	double u = h < 8 ? x : y,
+		v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+	return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+int p[512] = { 151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 
+	194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 
+	23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 
+	117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 
+	171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 
+	231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 
+	245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 
+	132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 
+	164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 
+	202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 
+	58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 
+	154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 
+	19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 
+	97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 
+	81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 
+	106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 
+	205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180 };
+double noise(double x, double y, double z) {
+	int X = (int)floor(x) & 255,
+		Y = (int)floor(y) & 255,
+		Z = (int)floor(z) & 255;
+	x -= floor(x);
+	y -= floor(y);
+	z -= floor(z);
+	double u = fade(x),
+		v = fade(y),
+		w = fade(z);
+	int A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z,
+		B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
+
+	return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z),
+		grad(p[BA], x - 1, y, z)),
+		lerp(u, grad(p[AB], x, y - 1, z),
+			grad(p[BB], x - 1, y - 1, z))),
+		lerp(v, lerp(u, grad(p[AA + 1], x, y, z - 1),
+			grad(p[BA + 1], x - 1, y, z - 1)),
+			lerp(u, grad(p[AB + 1], x, y - 1, z - 1),
+				grad(p[BB + 1], x - 1, y - 1, z - 1))));
 }
 
 
@@ -612,8 +683,8 @@ int printOglError(int no) {
 }
 
 void ReportError(char *errorString) {
-	//if (fileLog) {
-	//	fprintf(fileLog, "%s\n", errorString);
+	//if (pg_csv_file) {
+	//	fprintf(pg_csv_file, "%s\n", errorString);
 	//}
 
 	fprintf(stderr, "%s\n", errorString);
@@ -1049,13 +1120,25 @@ void pg_initGeometry_quads(void) {
 	// LOADS MESHES FROM BLENDER FILES
 	// point positions and texture coordinates
 
+	// OLD_MESH mesh data
+	//pointBuffer = new GLfloat *[pg_nb_Mesh_files];
+	//texCoordBuffer = new GLfloat *[pg_nb_Mesh_files];
+	//normalBuffer = new GLfloat *[pg_nb_Mesh_files];
+	//indexBuffer = new GLuint *[pg_nb_Mesh_files];
+	//for (int indMeshInFile = 0; indMeshInFile < pg_nb_Mesh_files; indMeshInFile++) {
+	//	pointBuffer[indMeshInFile] = NULL;
+	//	texCoordBuffer[indMeshInFile] = NULL;
+	//	normalBuffer[indMeshInFile] = NULL;
+	//	indexBuffer[indMeshInFile] = NULL;
+	//}
+
 	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
 		load_mesh_obj(pg_Mesh_fileNames[indMeshFile], indMeshFile);
 	}
 #endif
 
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	/////////////////////////////////////////////////////////////////////
 	// PARTICLES TO BE TESSELATED
 	// initializes the arrays that contains the positions and the indices of the particles
@@ -1074,7 +1157,7 @@ void pg_initGeometry_quads(void) {
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
 #endif
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	// vertex buffer objects and vertex array
 	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
 	// vertices
@@ -1093,7 +1176,7 @@ void pg_initGeometry_quads(void) {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 	glEnableVertexAttribArray(0);
 
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	// radius is location 1
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
 	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
@@ -1120,7 +1203,7 @@ void pg_initGeometry_quads(void) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
 		pg_Particle_indices, GL_STATIC_DRAW);
 #endif
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	// vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * sizeof(unsigned int),
@@ -1272,21 +1355,8 @@ void sensor_sample_setUp_interpolation(void) {
 void MeshInitialization(void) {
 	mesh_vao = new unsigned int *[pg_nb_Mesh_files];
 	mesh_index_vbo = new unsigned int *[pg_nb_Mesh_files];
-	mesh_IDs = new string *[pg_nb_Mesh_files];
 	nbMeshesPerMeshFile = new int[pg_nb_Mesh_files];
 	nbFacesPerMesh = new int *[pg_nb_Mesh_files];
-
-	// mesh data
-	pointBuffer = new GLfloat *[pg_nb_Mesh_files];
-	texCoordBuffer = new GLfloat *[pg_nb_Mesh_files];
-	normalBuffer = new GLfloat *[pg_nb_Mesh_files];
-	indexBuffer = new GLuint *[pg_nb_Mesh_files];
-	for (int indMeshInFile = 0; indMeshInFile < pg_nb_Mesh_files; indMeshInFile++) {
-		pointBuffer[indMeshInFile] = NULL;
-		texCoordBuffer[indMeshInFile] = NULL;
-		normalBuffer[indMeshInFile] = NULL;
-		indexBuffer[indMeshInFile] = NULL;
-	}
 
 	// shader variable pointers
 	uniform_mesh_model = new GLint[pg_nb_Mesh_files];
@@ -1296,6 +1366,22 @@ void MeshInitialization(void) {
 }
 
 #endif
+
+#ifdef PG_METAWEAR
+void MetawearBoardInitialization() {
+	for (int imwb = 0; imwb < PG_MW_NB_MAX_BOARDS; imwb++) {
+		for (int i = 0; i < 3; i++) {
+			pg_mw_boards[imwb].mw_linAcc[i] = 0;
+			pg_mw_boards[imwb].mw_euler[i] = 0;
+			pg_mw_boards[imwb].mss_pos[i] = 0;
+		}
+		pg_mw_boards[imwb].mw_linAcc_update = false;
+		pg_mw_boards[imwb].mw_euler_update = false;
+		pg_mw_boards[imwb].mss_pos_update = false;
+	}
+}
+#endif
+
 
 
 /////////////////////////////////////////////////////////////////
@@ -1396,7 +1482,7 @@ bool pg_initFBO(void) {
 	//printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
 	printOglError(341);
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// FBO: multi-attachment for particle animation 
 	glGenFramebuffers(2, pg_FBO_ParticleAnimation);
 	// initializations to NULL
@@ -1435,6 +1521,16 @@ bool pg_initFBO(void) {
 		pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID + indFB, 1, false);
 		glDrawBuffers(1, drawBuffers);
 	}
+#ifdef PG_AUGMENTED_REALITY
+	// FBO: composition output for echo
+	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh 
+															// initializations to NULL
+	pg_FBO_Master_capturedFB_prec_texID = 0;
+	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
+	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec);
+	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false);
+	glDrawBuffers(1, drawBuffers);
+#endif
 	printOglError(342);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1668,32 +1764,58 @@ void pg_screenMessage_update(void) {
 	}
 }
 
-#if defined (TVW)
+#if defined (TVW) || defined (ETOILES)
 ///////////////////////////////////////////////////////
 // Message Uploads
 
 bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	bool valRet = true;
-	DisplayTextList = new string[PG_NB_DISPLAY_MESSAGES];
-	DisplayTextFirstInChapter = new int[PG_NB_DISPLAY_MESSAGES];
-	for (int ind = 0; ind < PG_NB_DISPLAY_MESSAGES; ind++) {
+	NbDisplayTexts = 0;
+#if defined (TVW)
+	NbDisplayTexts = PG_NB_DISPLAY_MESSAGES;
+#else
+	// line count
+	ifstream myReadFile;
+	myReadFile.open(dir + basefilename);
+	std::string line;
+	if (myReadFile.is_open()) {
+		while (!myReadFile.eof()) {
+			std::getline(myReadFile, line); // Saves the line in line.
+			NbDisplayTexts++;
+		}
+	}
+	else {
+		strcpy(ErrorStr, ("File " + dir + basefilename + " not opened!").c_str()); ReportError(ErrorStr); throw 152;
+	}
+	myReadFile.close();
+#endif
+	std::cout << "Loaded texts #" << NbDisplayTexts << " from " << basefilename << "\n";
+
+	// init
+	DisplayTextList = new string[NbDisplayTexts];
+	DisplayTextFirstInChapter = new int[NbDisplayTexts];
+	for (int ind = 0; ind < NbDisplayTexts; ind++) {
 		DisplayTextList[ind] = "";
 		DisplayTextFirstInChapter[ind] = 0;
 	}
-	ifstream myReadFile;
+
+	// line read
 	myReadFile.open(dir + basefilename);
 	int indChapter = 0;
+	int indtext = 0;
 	if (myReadFile.is_open()) {
-		while (!myReadFile.eof() && NbDisplayTexts < PG_NB_DISPLAY_MESSAGES) {
-			std::getline(myReadFile, DisplayTextList[NbDisplayTexts]); // Saves the line in STRING.
-																	   // std::cout << DisplayTextList[NbDisplayTexts]+"\n"; // Prints our STRING.
-			while (!myReadFile.eof() && (DisplayTextList[NbDisplayTexts].find("request =>", 0, strlen("request =>")) == 0)) {
-				DisplayTextFirstInChapter[indChapter++] = NbDisplayTexts;
+		while (!myReadFile.eof() && indtext < NbDisplayTexts) {
+			std::getline(myReadFile, DisplayTextList[indtext]); // Saves the line in DisplayTextList[indtext].
+#if defined (TVW)
+		    // std::cout << DisplayTextList[indtext]+"\n"; // Prints our STRING.
+			while (!myReadFile.eof() && (DisplayTextList[indtext].find("request =>", 0, strlen("request =>")) == 0)) {
+				DisplayTextFirstInChapter[indChapter++] = indtext;
 				// std::cout << "Message dir #" << indChapter - 1 << " index #" << DisplayTextFirstInChapter[indChapter-1] << "\n"; // Prints our STRING.
-				std::getline(myReadFile, DisplayTextList[NbDisplayTexts]);
+				std::getline(myReadFile, DisplayTextList[indtext]);
 			}
-			if (!(DisplayTextList[NbDisplayTexts].empty())) {
-				NbDisplayTexts++;
+#endif
+			if (!(DisplayTextList[indtext].empty())) {
+				indtext++;
 			}
 		}
 	}
@@ -1702,9 +1824,13 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	}
 	myReadFile.close();
 
-	if (NbDisplayTexts >= PG_NB_DISPLAY_MESSAGES) {
+	if (indtext >= NbDisplayTexts) {
 		strcpy(ErrorStr, ("Only part of the messages read from " + dir + basefilename + "!").c_str()); ReportError(ErrorStr);
+		NbDisplayTexts = indtext;
+		valRet = false;
 	}
+
+#if defined(TVW)
 	pg_CurrentDiaporamaDir = -1;
 	DisplayTextFirstInChapter[indChapter] = NbDisplayTexts;
 	NbTextChapters = indChapter;
@@ -1713,10 +1839,15 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	DisplayText1Front = false;
 	DisplayText1 = "";
 	DisplayText2 = "";
+#endif
+#if defined(ETOILES)
+	std::cout << "Loaded texts #" << NbDisplayTexts << " from " << basefilename << "\n";
+#endif 
 
 	return valRet;
 }
 
+#if defined(TVW)
 ///////////////////////////////////////////////////////
 // large display messages
 int pg_displayMessage_update(int indMesg) {
@@ -1846,6 +1977,7 @@ int pg_displayMessage_update(int indMesg) {
 	return pixelRank + 1;
 }
 #endif
+#endif
 
 /////////////////////////////////////////////////
 // PARTICLES INITIALIZATION
@@ -1918,7 +2050,7 @@ void pg_initParticlePosition_Texture( void ) {
 		}
 	}
 #endif
-#if defined BLURRED_SPLAT_PARTICLES || defined LINE_SPLAT_PARTICLES
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
 	// the vertices position contain column and row of the vertices coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader

@@ -56,6 +56,8 @@
 // SCENARIO AND CONFIGURATION VARIABLES
 // changed to true when a value is changed manually during scenario
 extern bool BrokenInterpolationVar[_MaxInterpVarIDs];
+// stepwise interpolation made only once
+extern bool StepwiseInterpolationEffective[_MaxInterpVarIDs];
 // initial values in the scenario (before first scene)
 extern float InitialValuesInterpVar[_MaxInterpVarIDs];
 // last value shipped to the GUI (PD)
@@ -65,8 +67,7 @@ extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 
 //////////////////////////////////////////////
 // Cuurent palette after interpolation
-extern float pen_base_3color_palette[9];
-extern float repop_base_3color_palette[9];
+extern float bandpass_3color_palette[3][3];
 
 #if defined (GN)
 #define CA_SQUENCR                0
@@ -108,6 +109,7 @@ extern int pg_CurrentScene;
 extern int isClearCA;
 extern int isClearLayer;
 extern int isClearAllLayers;
+extern int isClearEcho;
 
 #ifdef PG_WITH_BLUR
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
@@ -126,7 +128,9 @@ extern int copyToNextTrack;
 // addition of color based on palette for pen
 extern float pulsed_pen_color[4];
 // addition of color based on palette for particles
-extern float pulsed_repop_color[3];
+extern  float pulsed_repop_colorBG[3];
+extern  float pulsed_repop_colorCA[3];
+extern  float pulsed_repop_colorPart[3];
 
 // factor increasing the acceleration weight of particles
 // based on sound volume attacks
@@ -134,20 +138,23 @@ extern float pulsed_repop_color[3];
 // particle radius
 extern float pulse_average;
 extern float pulse_average_prec;
-extern float pulse_attack;
+// not used currently extern float pulse_attack;
 
 // sound track playing
 extern int currentlyPlaying_trackNo;
+extern bool soundTrack_on;
 
 // movie playing
 extern int currentlyPlaying_movieNo;
 extern bool movie_on;
+extern float current_extern_movieNo;
 
 // pen preset
 extern int current_pen_colorPreset;
 
 // +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
 extern float pulse[3];
+extern float seed_pulsePerlinNoise[3 * 2];
 
 // ++++++++++++++++++++++ FLASHES +++++++++++++++++++++++++
 // flash: Trk->CA  
@@ -179,12 +186,20 @@ extern bool is_flashPhotoTrk;
 extern float flashPhotoTrk_weight;
 extern float flashPhotoTrk_decay;
 extern float flashPhotoTrk_threshold;
+extern int flashPhotoTrk_nbFrames;
 #endif
 
 // ++++++++++++++++++++++ CA and TACKS WOKING VARIABLE ++++
 // CA and track working variable
 // memory of current track in case of temporary background track control 
 extern int currentDrawingTrack_memory;
+
+// +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
+#ifdef CRITON
+extern float fftLevels[8];
+extern float fftFrequencies[8];
+extern float fftPhases[8];
+#endif
 
 // scene management
 extern bool pg_FirstFrameInScene;
@@ -279,9 +294,12 @@ void InitializeConfigurationVar(void);
 // GUI DISPLAY & LOG FILE LOGGING
 void pg_displaySceneVariables( void );
 void pg_send_message_udp( char *pattern , char * message , char *targetHostid );
+void pg_send_message_udp(char *pattern, char * message, pg_IPClient *targetHost);
+pg_IPClient *pg_UDP_client(char *targetHostid);
 void pg_logCurrentLineSceneVariables(char *fileName);
 void pg_logFirstLineSceneVariables(void);
 void PlayTrack(int trackNo);
+void StopTrack(void);
 #if defined (TVW)
 float starting_time(float elapsed_time_from_start);
 #endif
@@ -292,12 +310,18 @@ void setup_plus(void);
 void setup_minus(void);
 void pg_keyStrokeScripts( int key );
 void pg_continuous_flahes( void );
+#ifdef PG_WITH_PHOTO_FLASH
+void pg_Make_flashPhoto(void);
+#endif
 void pg_aliasScript( char * command_pattern , 
 		     char * string_argument_0 ,
 		     float arguments[MAX_OSC_ARGUMENTS] );
 void ClipArt_OnOff(int indImage);
+void Mesh_OnOff(int indImage);
+void Mesh_mobile_OnOff(int indImage);
 void ClipArt_SubPathOnOff(int indPath);
 void pg_update_pulsed_colors(void);
+void blend_closest_palettes(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3]);
 void pg_path_recording_onOff( int indPath );
 // playing track onoff
 void pg_path_replay_trackNo_onOff( int indPath, int trackNo);

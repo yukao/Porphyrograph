@@ -57,6 +57,7 @@ void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = {
    (void *)&nb_particles,
 };
 bool  auto_beat           ;
+bool  auto_pulse          ;
 bool  clearAllLayers      ;
 bool  clearCA             ;
 bool  clearLayer          ;
@@ -213,10 +214,19 @@ float repop_BG            ;
 float repop_BG_pulse      ;
 float repop_path          ;
 float repop_path_pulse    ;
-float repop_color         ;
-float repop_color_pulse   ;
-float repop_grey          ;
-float repop_grey_pulse    ;
+int   repop_density       ;
+float repop_colorBG       ;
+float repop_colorBG_pulse ;
+float repop_greyBG        ;
+float repop_greyBG_pulse  ;
+float repop_colorPart     ;
+float repop_colorPart_pulse;
+float repop_greyPart      ;
+float repop_greyPart_pulse;
+float repop_colorCA       ;
+float repop_colorCA_pulse ;
+float repop_greyCA        ;
+float repop_greyCA_pulse  ;
 float cameraWB_R          ;
 float cameraWB_B          ;
 float cameraExposure      ;
@@ -245,16 +255,12 @@ float movieSobel          ;
 float movieSobel_pulse    ;
 bool  invertMovie         ;
 bool  invertCamera        ;
-float video_hue           ;
-float video_hue_pulse     ;
 float video_satur         ;
 float video_satur_pulse   ;
 float video_value         ;
 float video_value_pulse   ;
 float photoWeight         ;
 float photoWeight_pulse   ;
-float photo_hue           ;
-float photo_hue_pulse     ;
 float photo_satur         ;
 float photo_satur_pulse   ;
 float photo_value         ;
@@ -290,17 +296,14 @@ int   flashPartCA_freq    ;
 int   flashTrkCA_freq_0   ;
 int   flashTrkCA_freq_1   ;
 int   flashTrkCA_freq_2   ;
-int   flashTrkCA_freq_3   ;
 int   flashCABG_freq      ;
 int   flashPartBG_freq    ;
 int   flashTrkBG_freq_1   ;
 int   flashTrkBG_freq_2   ;
-int   flashTrkBG_freq_3   ;
 int   flashCAPart_freq    ;
 int   flashTrkPart_freq_0 ;
 int   flashTrkPart_freq_1 ;
 int   flashTrkPart_freq_2 ;
-int   flashTrkPart_freq_3 ;
 int   flashPixel_freq     ;
 int   flashPixel_duration ;
 float flashCameraTrkLength;
@@ -328,6 +331,7 @@ int   sensor_layout       ;
 int   sensor_activation   ;
 float sensor_vol          ;
 VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { 
+    _pg_bool,
     _pg_bool,
     _pg_bool,
     _pg_bool,
@@ -485,6 +489,15 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_float,
+    _pg_int,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
     _pg_float,
     _pg_float,
     _pg_float,
@@ -549,18 +562,11 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_float,
-    _pg_float,
-    _pg_float,
-    _pg_float,
-    _pg_float,
     _pg_int,
     _pg_int,
     _pg_int,
     _pg_int,
     _pg_float,
-    _pg_int,
-    _pg_int,
-    _pg_int,
     _pg_int,
     _pg_int,
     _pg_int,
@@ -602,6 +608,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
    (void *)&auto_beat,
+   (void *)&auto_pulse,
    (void *)&clearAllLayers,
    (void *)&clearCA,
    (void *)&clearLayer,
@@ -758,10 +765,19 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&repop_BG_pulse,
    (void *)&repop_path,
    (void *)&repop_path_pulse,
-   (void *)&repop_color,
-   (void *)&repop_color_pulse,
-   (void *)&repop_grey,
-   (void *)&repop_grey_pulse,
+   (void *)&repop_density,
+   (void *)&repop_colorBG,
+   (void *)&repop_colorBG_pulse,
+   (void *)&repop_greyBG,
+   (void *)&repop_greyBG_pulse,
+   (void *)&repop_colorPart,
+   (void *)&repop_colorPart_pulse,
+   (void *)&repop_greyPart,
+   (void *)&repop_greyPart_pulse,
+   (void *)&repop_colorCA,
+   (void *)&repop_colorCA_pulse,
+   (void *)&repop_greyCA,
+   (void *)&repop_greyCA_pulse,
    (void *)&cameraWB_R,
    (void *)&cameraWB_B,
    (void *)&cameraExposure,
@@ -790,16 +806,12 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&movieSobel_pulse,
    (void *)&invertMovie,
    (void *)&invertCamera,
-   (void *)&video_hue,
-   (void *)&video_hue_pulse,
    (void *)&video_satur,
    (void *)&video_satur_pulse,
    (void *)&video_value,
    (void *)&video_value_pulse,
    (void *)&photoWeight,
    (void *)&photoWeight_pulse,
-   (void *)&photo_hue,
-   (void *)&photo_hue_pulse,
    (void *)&photo_satur,
    (void *)&photo_satur_pulse,
    (void *)&photo_value,
@@ -835,17 +847,14 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&flashTrkCA_freq_0,
    (void *)&flashTrkCA_freq_1,
    (void *)&flashTrkCA_freq_2,
-   (void *)&flashTrkCA_freq_3,
    (void *)&flashCABG_freq,
    (void *)&flashPartBG_freq,
    (void *)&flashTrkBG_freq_1,
    (void *)&flashTrkBG_freq_2,
-   (void *)&flashTrkBG_freq_3,
    (void *)&flashCAPart_freq,
    (void *)&flashTrkPart_freq_0,
    (void *)&flashTrkPart_freq_1,
    (void *)&flashTrkPart_freq_2,
-   (void *)&flashTrkPart_freq_3,
    (void *)&flashPixel_freq,
    (void *)&flashPixel_duration,
    (void *)&flashCameraTrkLength,
@@ -874,6 +883,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&sensor_vol,
 };
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
+void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void clearCA_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void clearLayer_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
@@ -935,6 +945,7 @@ void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type , float sce
 void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = { 
    &auto_beat_callBack,
+   &auto_pulse_callBack,
    &clearAllLayers_callBack,
    &clearCA_callBack,
    &clearLayer_callBack,
@@ -1095,6 +1106,15 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
    &cameraWB_R_callBack,
    &cameraWB_B_callBack,
    &cameraExposure_callBack,
@@ -1111,13 +1131,6 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    &playing_soundtrackNo_callBack,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
    NULL,
    NULL,
    NULL,
@@ -1208,6 +1221,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
+  (char *)"auto_pulse",
   (char *)"clearAllLayers",
   (char *)"clearCA",
   (char *)"clearLayer",
@@ -1364,10 +1378,19 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_color",
-  (char *)"repop_color_pulse",
-  (char *)"repop_grey",
-  (char *)"repop_grey_pulse",
+  (char *)"repop_density",
+  (char *)"repop_colorBG",
+  (char *)"repop_colorBG_pulse",
+  (char *)"repop_greyBG",
+  (char *)"repop_greyBG_pulse",
+  (char *)"repop_colorPart",
+  (char *)"repop_colorPart_pulse",
+  (char *)"repop_greyPart",
+  (char *)"repop_greyPart_pulse",
+  (char *)"repop_colorCA",
+  (char *)"repop_colorCA_pulse",
+  (char *)"repop_greyCA",
+  (char *)"repop_greyCA_pulse",
   (char *)"cameraWB_R",
   (char *)"cameraWB_B",
   (char *)"cameraExposure",
@@ -1396,16 +1419,12 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"movieSobel_pulse",
   (char *)"invertMovie",
   (char *)"invertCamera",
-  (char *)"video_hue",
-  (char *)"video_hue_pulse",
   (char *)"video_satur",
   (char *)"video_satur_pulse",
   (char *)"video_value",
   (char *)"video_value_pulse",
   (char *)"photoWeight",
   (char *)"photoWeight_pulse",
-  (char *)"photo_hue",
-  (char *)"photo_hue_pulse",
   (char *)"photo_satur",
   (char *)"photo_satur_pulse",
   (char *)"photo_value",
@@ -1441,17 +1460,14 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"flashTrkCA_freq_0",
   (char *)"flashTrkCA_freq_1",
   (char *)"flashTrkCA_freq_2",
-  (char *)"flashTrkCA_freq_3",
   (char *)"flashCABG_freq",
   (char *)"flashPartBG_freq",
   (char *)"flashTrkBG_freq_1",
   (char *)"flashTrkBG_freq_2",
-  (char *)"flashTrkBG_freq_3",
   (char *)"flashCAPart_freq",
   (char *)"flashTrkPart_freq_0",
   (char *)"flashTrkPart_freq_1",
   (char *)"flashTrkPart_freq_2",
-  (char *)"flashTrkPart_freq_3",
   (char *)"flashPixel_freq",
   (char *)"flashPixel_duration",
   (char *)"flashCameraTrkLength",
@@ -1492,6 +1508,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
@@ -1637,10 +1654,18 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1651,37 +1676,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1699,14 +1693,39 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1754,6 +1773,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
 };
 char *CmdString[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
+  (char *)"auto_pulse",
   (char *)"clearAllLayers",
   (char *)"clearCA",
   (char *)"clearLayer",
@@ -1910,10 +1930,19 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_color",
-  (char *)"repop_color_pulse",
-  (char *)"repop_grey",
-  (char *)"repop_grey_pulse",
+  (char *)"repop_density",
+  (char *)"repop_colorBG",
+  (char *)"repop_colorBG_pulse",
+  (char *)"repop_greyBG",
+  (char *)"repop_greyBG_pulse",
+  (char *)"repop_colorPart",
+  (char *)"repop_colorPart_pulse",
+  (char *)"repop_greyPart",
+  (char *)"repop_greyPart_pulse",
+  (char *)"repop_colorCA",
+  (char *)"repop_colorCA_pulse",
+  (char *)"repop_greyCA",
+  (char *)"repop_greyCA_pulse",
   (char *)"cameraWB_R",
   (char *)"cameraWB_B",
   (char *)"cameraExposure",
@@ -1942,16 +1971,12 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"movieSobel_pulse",
   (char *)"invertMovie",
   (char *)"invertCamera",
-  (char *)"video_hue",
-  (char *)"video_hue_pulse",
   (char *)"video_satur",
   (char *)"video_satur_pulse",
   (char *)"video_value",
   (char *)"video_value_pulse",
   (char *)"photoWeight",
   (char *)"photoWeight_pulse",
-  (char *)"photo_hue",
-  (char *)"photo_hue_pulse",
   (char *)"photo_satur",
   (char *)"photo_satur_pulse",
   (char *)"photo_value",
@@ -1987,17 +2012,14 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"flashTrkCA_freq_0",
   (char *)"flashTrkCA_freq_1",
   (char *)"flashTrkCA_freq_2",
-  (char *)"flashTrkCA_freq_3",
   (char *)"flashCABG_freq",
   (char *)"flashPartBG_freq",
   (char *)"flashTrkBG_freq_1",
   (char *)"flashTrkBG_freq_2",
-  (char *)"flashTrkBG_freq_3",
   (char *)"flashCAPart_freq",
   (char *)"flashTrkPart_freq_0",
   (char *)"flashTrkPart_freq_1",
   (char *)"flashTrkPart_freq_2",
-  (char *)"flashTrkPart_freq_3",
   (char *)"flashPixel_freq",
   (char *)"flashPixel_duration",
   (char *)"flashCameraTrkLength",

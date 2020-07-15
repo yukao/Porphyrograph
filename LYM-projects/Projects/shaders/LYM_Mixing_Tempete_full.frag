@@ -14,12 +14,11 @@ float     CAMixingWeight;
 float     PartMixingWeight;
 float     trackMixingWeight_0;
 float     trackMixingWeight_1;
-uniform vec4 uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1;
 float     trackMixingWeight_2;
 float     trackMixingWeight_3;
 float     echo;
 float     echoNeg;
-uniform vec4 uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg;
+uniform float uniform_Mixing_scenario_var_data[8];
 
 // Main shader.
 
@@ -29,7 +28,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
+uniform vec3 uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -57,30 +56,31 @@ layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  CAMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[0];
-  PartMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[1];
-  trackMixingWeight_0 = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[2];
-  trackMixingWeight_1 = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[3];
-  trackMixingWeight_2 = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[0];
-  trackMixingWeight_3 = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[1];
-  echo = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[2];
-  echoNeg = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[3];
+  CAMixingWeight = uniform_Mixing_scenario_var_data[0];
+  PartMixingWeight = uniform_Mixing_scenario_var_data[1];
+  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[2];
+  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[3];
+  trackMixingWeight_2 = uniform_Mixing_scenario_var_data[4];
+  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[5];
+  echo = uniform_Mixing_scenario_var_data[6];
+  echoNeg = uniform_Mixing_scenario_var_data[7];
 
-  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
+  float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 
 
   ////////////////////////////////////////////////////////////////////
   // CA color according to CA state and possible flash video
   vec4 CA_color = texture(uniform_Mixing_texture_fs_CA, decalCoords);
+  vec3 initial_CA_color = CA_color.rgb;
   if( CA_color.a < 0 ) {
     CA_color = vec4(0.0);
   }
 
   // brigher CA at the beginning of a flash
-  float flashCameraCoef = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.y;
-  if( flashCameraCoef > 0 ) { // flash video
-    if(flashCameraCoef < 0.3) {
-      CAMixingWeight += (1.0 - CAMixingWeight) * flashCameraCoef / 0.3;          
+  float flashPhotoCoef = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.z;
+  if( flashPhotoCoef > 0 ) { // flash photo
+    if(flashPhotoCoef < 0.3) {
+      CAMixingWeight += (1.0 - CAMixingWeight) * flashPhotoCoef / 0.3;          
     }
     else {
       CAMixingWeight = 1.0;          
@@ -123,6 +123,10 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // accumulation: mix of current layers and echo
   vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords);
+
+  if( flashPhotoCoef > 0.3 ) { // flash photo
+    previous_snapshot_color.rgb *= initial_CA_color.rgb;
+  }
 
   if( echo + echoNeg > 0.0 ) {
     combined_color = clamp( combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb , 

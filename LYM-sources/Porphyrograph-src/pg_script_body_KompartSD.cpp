@@ -142,10 +142,14 @@ float repop_BG            ;
 float repop_BG_pulse      ;
 float repop_path          ;
 float repop_path_pulse    ;
-float repop_color         ;
-float repop_color_pulse   ;
-float repop_grey          ;
-float repop_grey_pulse    ;
+float repop_colorBG       ;
+float repop_colorBG_pulse ;
+float repop_greyBG        ;
+float repop_greyBG_pulse  ;
+float repop_colorPart     ;
+float repop_colorPart_pulse;
+float repop_greyPart      ;
+float repop_greyPart_pulse;
 float cameraWB_R          ;
 float cameraWB_B          ;
 float cameraExposure      ;
@@ -311,6 +315,10 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
     _pg_float,
     _pg_float,
     _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
+    _pg_float,
     _pg_int,
     _pg_float,
     _pg_int,
@@ -455,10 +463,14 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
    (void *)&repop_BG_pulse,
    (void *)&repop_path,
    (void *)&repop_path_pulse,
-   (void *)&repop_color,
-   (void *)&repop_color_pulse,
-   (void *)&repop_grey,
-   (void *)&repop_grey_pulse,
+   (void *)&repop_colorBG,
+   (void *)&repop_colorBG_pulse,
+   (void *)&repop_greyBG,
+   (void *)&repop_greyBG_pulse,
+   (void *)&repop_colorPart,
+   (void *)&repop_colorPart_pulse,
+   (void *)&repop_greyPart,
+   (void *)&repop_greyPart_pulse,
    (void *)&cameraWB_R,
    (void *)&cameraWB_B,
    (void *)&cameraExposure,
@@ -647,6 +659,10 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type,float) = 
    NULL,
    NULL,
    NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
    &cameraWB_R_callBack,
    &cameraWB_B_callBack,
    &cameraExposure_callBack,
@@ -800,10 +816,14 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_color",
-  (char *)"repop_color_pulse",
-  (char *)"repop_grey",
-  (char *)"repop_grey_pulse",
+  (char *)"repop_colorBG",
+  (char *)"repop_colorBG_pulse",
+  (char *)"repop_greyBG",
+  (char *)"repop_greyBG_pulse",
+  (char *)"repop_colorPart",
+  (char *)"repop_colorPart_pulse",
+  (char *)"repop_greyPart",
+  (char *)"repop_greyPart_pulse",
   (char *)"cameraWB_R",
   (char *)"cameraWB_B",
   (char *)"cameraExposure",
@@ -946,9 +966,9 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_differential,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_differential,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -956,6 +976,10 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
@@ -1114,10 +1138,14 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_color",
-  (char *)"repop_color_pulse",
-  (char *)"repop_grey",
-  (char *)"repop_grey_pulse",
+  (char *)"repop_colorBG",
+  (char *)"repop_colorBG_pulse",
+  (char *)"repop_greyBG",
+  (char *)"repop_greyBG_pulse",
+  (char *)"repop_colorPart",
+  (char *)"repop_colorPart_pulse",
+  (char *)"repop_greyPart",
+  (char *)"repop_greyPart_pulse",
   (char *)"cameraWB_R",
   (char *)"cameraWB_B",
   (char *)"cameraExposure",

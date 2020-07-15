@@ -108,6 +108,12 @@ class PhotoDataStruct {
 #define PG_MAX_NUMBER_OF_OPENGL_CONTEXTS  (4)
 	
 ////////////////////////////////////////////////////////////////////
+// FIRST FRAME IN A MOVIE
+////////////////////////////////////////////////////////////////////
+extern Mat pg_FirstMovieFrame; // First frame in a video (opening or looping) 
+extern bool pg_FirstMovieFrameIsAvailable; // Available frist frame so as to avoid second reading  
+
+											////////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
 ////////////////////////////////////////////////////////////////////
 // Images used for displaying or for blending
@@ -188,6 +194,8 @@ extern GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
 extern std::string pg_ImageDirectory;
 #if defined (TVW)
 extern std::string pg_MaskDirectory;
+#endif
+#if defined (TVW) || defined(ETOILES)
 extern std::string pg_MessageDirectory;
 #endif
 
@@ -253,9 +261,9 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	bool invert,
 	GLuint *textureID,
 	GLint components, GLenum format,
-	GLenum texturefilter,
-	int width, int height, int depth);
-bool pg_loadTexture(string fileName, cv::Mat *image,
+	GLenum datatype, GLenum texturefilter,
+	int width, int height);
+bool pg_loadTexture(string fileName,
 	GLuint *textureID, bool is_rectangle,
 	bool invert,
 	GLint components, GLenum format,
@@ -270,16 +278,18 @@ int pg_initVideoCameraCapture(void);
 #endif
 
 // particle initialization from photography
-bool generateParticleInitialPosColorRadiusfromImage(string fileName,
-	GLuint *textureParticleInitializationID); // 2 texture IDs one for pos/speed, the other one for color/radius
+bool generateParticleInitialPosColorRadiusfromImage(string fileName); // 2 texture IDs one for pos/speed, the other one for color/radius
 
 // VIDEO FRAME AND CAPTURE INITIALIZATION (CAMERA AND MOVIE)
 bool pg_initMovieFrameTexture(Mat *video_frame);
+
 #ifdef WIN32
 DWORD WINAPI pg_initVideoMoviePlayback(LPVOID lpParam);
 #else
 void* pg_initVideoMoviePlayback(void * lpParam);
 #endif
+void* pg_initVideoMoviePlayback_nonThreaded(string * fileName);
+
 #ifdef WIN32
 DWORD WINAPI pg_movieLoop(LPVOID lpParam);
 #else

@@ -221,7 +221,6 @@ uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;
 
 uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
@@ -1271,10 +1270,6 @@ void main() {
 
   //////////////////////////
   // variables 
-  // sound pulse
-  vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
-
   // frame number
   frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
@@ -1448,7 +1443,7 @@ void main() {
     photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
-  photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
+  photocolor *= vec3(photo_value);
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -1548,22 +1543,14 @@ void main() {
   videocolor = cameraWeight * cameraImage 
               + movieWeight * movieImage;
 
-  // image_satur image_satur_pulse
-  vec3 pulsed_satur = vec3(1);
-  if(video_satur_pulse > 0) {
-    pulsed_satur = video_satur + video_satur_pulse * pulse;
-  }
+  // video_satur
   //  public-domain function by Darel Rex Finley
-  if(video_satur > 0 || video_satur_pulse > 0 ) {
+  if(video_satur > 0) {
     float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
                                (videocolor.g)*(videocolor.g) * .587 +
                                (videocolor.b)*(videocolor.b) * .114 ) ;
-    videocolor.r = clamp( powerColor 
-      + (videocolor.r - powerColor) * pulsed_satur.r , 0 , 1 );
-    videocolor.g = clamp( powerColor 
-      + (videocolor.g - powerColor) * pulsed_satur.g , 0 , 1 );
-    videocolor.b = clamp( powerColor 
-      + (videocolor.b - powerColor) * pulsed_satur.b , 0 , 1 );
+    videocolor = clamp( powerColor 
+      + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
   }
 
   ///////////////////////////////////////////////////

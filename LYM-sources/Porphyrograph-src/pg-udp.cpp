@@ -193,9 +193,9 @@ pg_IPClient::~pg_IPClient(void) {
   if (output_message_stack) {
     for (int ind = 0; ind < depth_output_stack; ind ++) {
       if (output_message_stack[ind]) {
-	delete [] output_message_stack[ind];
-	output_message_stack[ind] = NULL;
-      }
+		delete [] output_message_stack[ind];
+		output_message_stack[ind] = NULL;
+	  }
     }
 
     delete [] output_message_stack;
@@ -205,8 +205,8 @@ pg_IPClient::~pg_IPClient(void) {
   if (output_pattern_stack) {
     for (int ind = 0; ind < depth_output_stack; ind ++) {
       if (output_pattern_stack[ind]) {
-	delete [] output_pattern_stack[ind];
-	output_pattern_stack[ind] = NULL;
+		delete [] output_pattern_stack[ind];
+		output_pattern_stack[ind] = NULL;
       }
     }
 
@@ -284,6 +284,8 @@ void pg_IPClient::InitClient(void) {
 	else {
 		// liblo client
 		lo_client = lo_address_new(Remote_server_IP.c_str(), Remote_server_port_string);
+		printf("Network client '%s': sending OSC to '%s' on port %d\n",
+			id.c_str(), Remote_server_IP.c_str(), Remote_server_port);
 	}
 
 	// system initializing
@@ -381,6 +383,9 @@ void pg_IPClient::sendIPmessages(void) {
 								}
 								break;
 							case 'f':
+								if (strcmp(message_arguments[0].c_str(), "/video") == 0) {
+									printf("Message integer string %s value %.2f\n", message_arguments[0].c_str(), stof(message_arguments[1]));
+								}
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stof(message_arguments[1])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
 										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
@@ -1081,7 +1086,8 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 	for (int ind_mess = 0; ind_mess < current_depth_input_stack; ind_mess++) {
 		messString = input_message_stack[ind_mess];
 
-		if (IP_message_trace) {
+		if (IP_message_trace)
+		{
 			printf("process message [%s]\n", messString);
 		}
 

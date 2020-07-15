@@ -82,7 +82,7 @@ extern float leftWindowWidth_powerOf2_ratio;
 extern float window_height_powerOf2_ratio;
 
 /// trace
-extern FILE    *fileLog;
+extern FILE    *pg_csv_file;
 
 /// error message and input buffer
 extern char *ErrorStr;

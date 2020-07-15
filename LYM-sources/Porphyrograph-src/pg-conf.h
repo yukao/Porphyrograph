@@ -72,6 +72,7 @@ extern int                      beginPng;
 extern int                      endPng;
 extern int                      stepPng;
 extern bool                     outputPng;
+extern int						 indPngSnapshot;
 // \}
 
 // SVG capture
@@ -81,6 +82,7 @@ extern int                      beginSvg;
 extern int                      endSvg;
 extern int                      stepSvg;
 extern bool                     outputSvg;
+extern int						 indSvgSnapshot;
 
 // JPG capture
 extern string                    Jpg_file_name;
@@ -89,6 +91,7 @@ extern int                      beginJpg;
 extern int                      endJpg;
 extern int                      stepJpg;
 extern bool                     outputJpg;
+extern int						 indJpgSnapshot;
 
 // VIDEO capture
 extern string                    Video_file_name;
@@ -103,7 +106,7 @@ extern int                      nb_IP_Servers;
 extern pg_IPClient            **IP_Clients;
 extern int                      nb_IP_Clients;
 
-extern string					 log_file_name;
+extern string					 pg_csv_file_name;
 extern string					 snapshots_dir_path_name;
 extern string					 screen_font_file_name;
 extern int                       screen_font_size;
@@ -136,6 +139,8 @@ extern float *pg_ClipArt_Translation_X;
 extern float *pg_ClipArt_Translation_Y;
 // last activated SvgGpu
 extern int pg_last_activated_ClipArt;
+// last activated Mesh
+extern int pg_last_activated_Mesh;
 // color
 enum pg_ClipArt_Colors_Types { ClipArt_nat = 0, ClipArt_white, ClipArt_red, ClipArt_green };
 extern pg_ClipArt_Colors_Types *pg_ClipArt_Colors;
@@ -157,9 +162,44 @@ extern float *pg_Mesh_Rotation_Z;
 extern float *pg_Mesh_Translation_X;
 extern float *pg_Mesh_Translation_Y;
 extern float *pg_Mesh_Translation_Z;
+extern float *pg_Mesh_Motion_X;
+extern float *pg_Mesh_Motion_Y;
+extern float *pg_Mesh_Motion_Z;
+extern int *pg_Mesh_TextureRank;
 // color
 extern pg_ClipArt_Colors_Types *pg_Mesh_Colors;
+// textures
+extern GLuint *Mesh_texture_rectangle;
 #endif
+
+// TEXTURES
+enum pg_Texture_Usages { Texture_master_mask = 0, Texture_mesh, Texture_sensor, Texture_logo, 
+	Texture_brush, Texture_noise, Texture_curve_particle, Texture_splat_particle, Texture_part_init,
+	Texture_repop_density};
+// number of Texture files
+extern int pg_nb_Texture_files;
+// file names
+extern string *pg_Texture_fileNames;
+extern string *pg_Texture_fileNamesSuffix;
+// usages
+extern pg_Texture_Usages *pg_Texture_usages;
+// rank (if used several times for the same usage)
+extern int *pg_Texture_Rank;
+// 2D or 3D
+extern int *pg_Texture_Dimension;
+// number of piled 2D textures for a 3D texture
+extern int *pg_Texture_Nb_3D_Nextures;
+// dimensions
+extern int *pg_Texture_Size_X;
+extern int *pg_Texture_Size_Y;
+// color depth
+extern int *pg_Texture_Nb_Bytes_per_Pixel;
+// rectangle or PoT
+extern bool *pg_Texture_Is_Rectangle;
+// texture inversion
+extern bool *pg_Texture_Invert;
+// texture ID
+extern GLuint *pg_Texture_texID;
 
 /// the params of the font file
 extern string                    font_file_encoding;

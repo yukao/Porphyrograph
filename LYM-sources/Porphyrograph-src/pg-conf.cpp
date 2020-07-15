@@ -38,7 +38,8 @@ int                      pg_NbScenes;
 
 Scene                    *Scenario;
 
-string					 log_file_name;
+string					 pg_csv_file_name;
+string					 snapshots_dir_path_prefix;
 string					 snapshots_dir_path_name;
 string					 screen_font_file_name;
 int                      screen_font_size;
@@ -58,6 +59,7 @@ int                      beginPng;
 int                      endPng;
 int                      stepPng;
 bool                     outputPng;
+int						 indPngSnapshot;
 // \}
 
 // SVG capture
@@ -67,6 +69,7 @@ int                      beginSvg;
 int                      endSvg;
 int                      stepSvg;
 bool                     outputSvg;
+int						 indSvgSnapshot;
 
 // JPG capture
 string                    Jpg_file_name;
@@ -75,6 +78,7 @@ int                      beginJpg;
 int                      endJpg;
 int                      stepJpg;
 bool                     outputJpg;
+int						 indJpgSnapshot;
 
 // VIDEO capture
 string                    Video_file_name;
@@ -113,6 +117,8 @@ float *pg_ClipArt_Translation_X = NULL;
 float *pg_ClipArt_Translation_Y = NULL;
 // last activated SvgGpu
 int pg_last_activated_ClipArt = 0;
+// last activated Mesh
+int pg_last_activated_Mesh = 0;
 // color
 pg_ClipArt_Colors_Types *pg_ClipArt_Colors = NULL;
 // subpath display
@@ -120,10 +126,8 @@ bool *pg_ClipArt_SubPath = NULL;
 
 #ifdef PG_MESHES
 // MESHES
-// number of meshe files
+// number of mesh files
 int pg_nb_Mesh_files = 0;
-// number of meshes in each file
-int *pg_nb_Meshes_in_each_file = NULL;
 // file names
 string *pg_Mesh_fileNames = NULL;
 // geometrical transformations
@@ -135,9 +139,42 @@ float *pg_Mesh_Rotation_Z = NULL;
 float *pg_Mesh_Translation_X = NULL;
 float *pg_Mesh_Translation_Y = NULL;
 float *pg_Mesh_Translation_Z = NULL;
+float *pg_Mesh_Motion_X = NULL;
+float *pg_Mesh_Motion_Y = NULL;
+float *pg_Mesh_Motion_Z = NULL;
+int *pg_Mesh_TextureRank = NULL;
 // color
 pg_ClipArt_Colors_Types *pg_Mesh_Colors = NULL;
+// textures
+GLuint *Mesh_texture_rectangle = NULL_ID;
 #endif
+
+// TEXTURES
+// number of Texture files
+int pg_nb_Texture_files = 0;
+// file names
+string *pg_Texture_fileNames = NULL;
+string *pg_Texture_fileNamesSuffix = NULL;
+// usages
+pg_Texture_Usages *pg_Texture_usages = NULL;
+// rank (if used several times for the same usage)
+int *pg_Texture_Rank = NULL;
+// 2D or 3D
+int *pg_Texture_Dimension = NULL;
+// number of piled 2D textures for a 3D texture
+int *pg_Texture_Nb_3D_Nextures = NULL;
+// dimensions
+int *pg_Texture_Size_X = NULL;
+int *pg_Texture_Size_Y = NULL;
+// color depth
+int *pg_Texture_Nb_Bytes_per_Pixel = NULL;
+// rectangle or PoT
+bool *pg_Texture_Is_Rectangle = NULL;
+// texture inversion
+bool *pg_Texture_Invert = NULL;
+// texture ID
+GLuint *pg_Texture_texID = NULL;
+
 
 /////////////////////////////////////////////////////
 // Default values for global variables
@@ -153,6 +190,14 @@ pg_Window::~pg_Window(void) {
 // environment parsing from configuration file
 /////////////////////////////////////////////////////
 
+void stringstreamStoreLine(std::stringstream *sstream, std::string *line) {
+	(*sstream).clear();
+	if ((*line).find('\t') == std::string::npos) {
+		std::replace((*line).begin(), (*line).end(), ',', ' ');
+	}
+	(*sstream).str((*line));
+}
+
 void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin) {
 	CurrentWindow = new pg_Window();
 
@@ -162,7 +207,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	string ID;
 	string temp;
 	string temp2;
-	std::stringstream  sstrem;
+	std::stringstream  sstream;
 
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -180,34 +225,18 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::getline(confFin, line);
 	// initial_values
 	std::getline(confFin, line);
-
-	screen_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
-	screen_font_size = 15;
-#if defined (TVW)
-	display_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_25_usascii.png";
-	display_font_size = 25;
-#endif
-	font_file_encoding = "png";
-	font_texture_encoding = PNG;
-
-	snapshots_dir_path_name = "./snapshots/pic_" + project_name + "_" + date_stringStream.str() + "/";
-	log_file_name = snapshots_dir_path_name + "log-LYM-" + project_name + "-" + date_stringStream.str() + ".log";
-
-	int nError = 0;
-#ifdef _WIN32
-	nError = CreateDirectoryA(snapshots_dir_path_name.c_str(), NULL); // can be used on Windows
-#else 
-	nError = mkdir(snapshots_dir_path_name.c_str(),  S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // can be used on non-Windows
-#endif
-	if (nError != 0) {
-		// handle your error here
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("initial_values") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"initial_values\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
+	// reads configuration variables initial values
 	std::getline(confFin, line);
-	sstrem.str(line);
+	stringstreamStoreLine(&sstream, &line);
 	//std::cout << "VALUES: \n";
 	for (int indP = 0; indP < _MaxConfigurationVarIDs; indP++) {
-		sstrem >> InitialValuesConfigurationVar[indP];
+		sstream >> InitialValuesConfigurationVar[indP];
 		//std::cout << InitialValuesConfigurationVar[indP];
 		//std::cout << " ";
 	}
@@ -226,68 +255,49 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// storing the Video capture values
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> beginVideo_file;
-	sstrem >> endVideo_file;
-	sstrem >> stepVideo_file;
-	sstrem >> Video_file_name;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	sstream >> beginVideo_file;
+	sstream >> endVideo_file;
+	sstream >> stepVideo_file;
+	sstream >> Video_file_name;
 	outputVideo_file = !Video_file_name.empty();
 
 	// storing the Svg capture values
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> beginSvg;
-	sstrem >> endSvg;
-	sstrem >> stepSvg;
-	sstrem >> Svg_file_name;
-	sstrem >> Svg_shot_dir_name;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	sstream >> beginSvg;
+	sstream >> endSvg;
+	sstream >> stepSvg;
+	sstream >> Svg_file_name;
+	sstream >> Svg_shot_dir_name;
 	outputSvg = !Svg_file_name.empty();
+	indSvgSnapshot = 0;
 
 	// storing the Png capture values
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> beginPng;
-	sstrem >> endPng;
-	sstrem >> stepPng;
-	sstrem >> Png_file_name;
-	sstrem >> Png_shot_dir_name;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	sstream >> beginPng;
+	sstream >> endPng;
+	sstream >> stepPng;
+	sstream >> Png_file_name;
+	sstream >> Png_shot_dir_name;
 	outputPng = !Png_file_name.empty();
+	indPngSnapshot = 0;
 
 	// storing the Jpg capture values
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> beginJpg;
-	sstrem >> endJpg;
-	sstrem >> stepJpg;
-	sstrem >> Jpg_file_name;
-	sstrem >> Jpg_shot_dir_name;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	sstream >> beginJpg;
+	sstream >> endJpg;
+	sstream >> stepJpg;
+	sstream >> Jpg_file_name;
+	sstream >> Jpg_shot_dir_name;
 	outputJpg = !Jpg_file_name.empty();
-
-	//std::cout << "LINE: " + line + "\n";
-	//std::cout << "VALUES: \n";
-	//std::cout << beginJpg;
-	//std::cout << " ";
-	//std::cout << endJpg;
-	//std::cout << " ";
-	//std::cout << stepJpg;
-	//std::cout << " ";
-	//std::cout << Jpg_file_name;
-	//std::cout << " ";
-	//std::cout << Jpg_shot_dir_name;
-	//std::cout << " ";
-	//std::cout << "\n";
+	indJpgSnapshot = 0;
 
 	// /rendering_files
 	std::getline(confFin, line);
@@ -304,13 +314,14 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_Shader_Files = NULL;
 	nb_shader_files = 0;
 
-	// Number of servers
+	// udp_local_server Number of servers
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> nb_IP_Servers;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("udp_local_server") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"udp_local_server\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_IP_Servers;
 	// std::cout << "Nb servers: " << nb_IP_Servers << "\n";
 
 	// VERBATIM
@@ -325,13 +336,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		IP_Servers[ind_IP_Server] = new pg_IPServer();
 
 		std::getline(confFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string "server"
-		sstrem >> IP_Servers[ind_IP_Server]->id;
-		sstrem >> IP_Servers[ind_IP_Server]->Local_server_port;
-		sstrem >> ID;
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string "server"
+		sstream >> IP_Servers[ind_IP_Server]->id;
+		sstream >> IP_Servers[ind_IP_Server]->Local_server_port;
+		sstream >> ID;
 		for (int ind = 0; ind < Emptypg_UDPMessageFormat; ind++) {
 			if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
 				IP_Servers[ind_IP_Server]->receive_format = (pg_UDPMessageFormat)ind;
@@ -341,11 +350,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		if (IP_Servers[ind_IP_Server]->receive_format == Emptypg_UDPMessageFormat) {
 			sprintf(ErrorStr, "Error: unknown receive message format [%s]!", ID.c_str()); ReportError(ErrorStr); throw 249;
 		}
-		sstrem >> IP_Servers[ind_IP_Server]->IP_message_trace;
-		sstrem >> IP_Servers[ind_IP_Server]->depth_input_stack;
-		sstrem >> IP_Servers[ind_IP_Server]->OSC_duplicate_removal;
+		sstream >> IP_Servers[ind_IP_Server]->IP_message_trace;
+		sstream >> IP_Servers[ind_IP_Server]->depth_input_stack;
+		sstream >> IP_Servers[ind_IP_Server]->OSC_duplicate_removal;
 		// printf("serveur %d duplicate removal %d\n", ind_IP_Server, IP_Servers[ind_IP_Server]->OSC_duplicate_removal);
-		sstrem >> IP_Servers[ind_IP_Server]->OSC_endian_reversal;
+		sstream >> IP_Servers[ind_IP_Server]->OSC_endian_reversal;
 	}
 
 	// /udp_local_server
@@ -353,11 +362,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// udp_remote_client Number of clients
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> nb_IP_Clients;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("udp_remote_client") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"udp_remote_client\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_IP_Clients;
 	// std::cout << "Nb clients: " << nb_IP_Clients << "\n";
 
 	// VERBATIM
@@ -372,14 +382,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		IP_Clients[ind_IP_Client] = new pg_IPClient();
 
 		std::getline(confFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string "Client"
-		sstrem >> IP_Clients[ind_IP_Client]->id;
-		sstrem >> IP_Clients[ind_IP_Client]->Remote_server_IP;
-		sstrem >> IP_Clients[ind_IP_Client]->Remote_server_port;
-		sstrem >> ID;
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string "Client"
+		sstream >> IP_Clients[ind_IP_Client]->id;
+		sstream >> IP_Clients[ind_IP_Client]->Remote_server_IP;
+		sstream >> IP_Clients[ind_IP_Client]->Remote_server_port;
+		sstream >> ID;
 		for (int ind = 0; ind < Emptypg_UDPMessageFormat; ind++) {
 			if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
 				IP_Clients[ind_IP_Client]->send_format = (pg_UDPMessageFormat)ind;
@@ -389,9 +397,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		if (IP_Clients[ind_IP_Client]->send_format == Emptypg_UDPMessageFormat) {
 			sprintf(ErrorStr, "Error: unknown receive message format [%s]!", ID.c_str()); ReportError(ErrorStr); throw 249;
 		}
-		sstrem >> IP_Clients[ind_IP_Client]->IP_message_trace;
-		sstrem >> IP_Clients[ind_IP_Client]->depth_output_stack;
-		sstrem >> IP_Clients[ind_IP_Client]->OSC_endian_reversal;
+		sstream >> IP_Clients[ind_IP_Client]->IP_message_trace;
+		sstream >> IP_Clients[ind_IP_Client]->depth_output_stack;
+		sstream >> IP_Clients[ind_IP_Client]->OSC_endian_reversal;
 		// std::cout << "OSC_trace: " << IP_Clients[ind_IP_Client]->IP_message_trace << "\n";
 		//std::cout << "IP_Clients[ ind_IP_Client ]->id: " << IP_Clients[ind_IP_Client]->id << "\n";
 		//std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_IP: " << ind_IP_Client << " " << IP_Clients[ind_IP_Client]->Remote_server_IP << "\n";
@@ -403,14 +411,15 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// shader_files Number of files
 	std::getline(confFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID;
-	sstrem >> nb_shader_files;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("shader_files") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"shader_files\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_shader_files;
 	std::cout << "nb_shader_files: " << nb_shader_files << "\n";
 	if (nb_shader_files != pg_NbShaderTotal) {
-		sprintf(ErrorStr, "Error: number of shader file names does not match expectation [%d/%d]!", nb_shader_files, pg_NbShaderTotal); ReportError(ErrorStr); throw 429;
+		sprintf(ErrorStr, "Error: number of shader file names does not match expectation [%d/%d] (%s)!", nb_shader_files, pg_NbShaderTotal,line.c_str()); ReportError(ErrorStr); throw 429;
 	}
 
 	// VERBATIM
@@ -425,17 +434,15 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_Shader_Types = new GLenum *[nb_shader_files];
 	for (int ind_shader_file = 0; ind_shader_file < nb_shader_files; ind_shader_file++) {
 		std::getline(confFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string "filename"
-		sstrem >> pg_Shader_Files[ind_shader_file];
-		sstrem >> pg_Shader_nbTypes[ind_shader_file];
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string "filename"
+		sstream >> pg_Shader_Files[ind_shader_file];
+		sstream >> pg_Shader_nbTypes[ind_shader_file];
 		pg_Shader_Types[ind_shader_file] = new GLenum[pg_Shader_nbTypes[ind_shader_file]];
 		// std::cout << "pg_Shader_Files[ind_shader_file]: " << pg_Shader_Files[ind_shader_file] << "\n";
 		for (int ind_shader_type = 0; ind_shader_type < pg_Shader_nbTypes[ind_shader_file]; ind_shader_type++) {
 			string shader_type;
-			sstrem >> shader_type;
+			sstream >> shader_type;
 			if (shader_type.compare("GL_VERTEX_SHADER") == 0) {
 				pg_Shader_Types[ind_shader_file][ind_shader_type] = GL_VERTEX_SHADER;
 			}
@@ -460,8 +467,55 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// /shader_files
 	std::getline(confFin, line);
 
+	// directories
+	std::getline(confFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("directories") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"directories\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	int nb_directories;
+	sstream >> nb_directories;
+	for (int i = 0; i < nb_directories; i++) {
+		// reads a configuration directory
+		std::getline(confFin, line);
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string describing the storage type, eg snapshots...
+		if (ID.compare("snapshots") == 0) {
+			sstream >> snapshots_dir_path_prefix; // string of the snapshots and log file directory
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect directory storage ID expected string \"snapshots\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+	}
+
+	// /directories
+	std::getline(confFin, line);
+
 	// /head
 	std::getline(confFin, line);
+
+	screen_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
+	screen_font_size = 15;
+#if defined (TVW)
+	display_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_25_usascii.png";
+	display_font_size = 25;
+#endif
+	font_file_encoding = "png";
+	font_texture_encoding = PNG;
+
+	snapshots_dir_path_name = snapshots_dir_path_prefix + "/pic_" + project_name + "_" + date_stringStream.str() + "/";
+	pg_csv_file_name = snapshots_dir_path_name + "porphyrograph-" + project_name + "-" + date_stringStream.str() + ".csv";
+
+	int nError = 0;
+#ifdef _WIN32
+	nError = CreateDirectoryA(snapshots_dir_path_name.c_str(), NULL); // can be used on Windows
+#else 
+	nError = mkdir(snapshots_dir_path_name.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // can be used on non-Windows
+#endif
+	if (nError != 0) {
+		// handle your error here
+	}
 
 	/////////////////////////////////////////////////////////////////
 	// ASSIGNS INITIAL VALUES TO ALL CONFIGURATION FILES
@@ -502,12 +556,10 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::getline(scenarioFin, line);
 	// storing the initial values
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
+	stringstreamStoreLine(&sstream, &line);
 	//std::cout << "\nvalues :\n";
 	for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-		sstrem >> InitialValuesInterpVar[indP];
+		sstream >> InitialValuesInterpVar[indP];
 		//std::cout << InitialValuesInterpVar[indP] << " ";
 		LastGUIShippedValuesInterpVar[indP] = MAXFLOAT;
 	}
@@ -521,11 +573,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_NbScenes = 0;
 	// Number of scenes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string scenario
-	sstrem >> pg_NbScenes;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string scenario
+	sstream >> pg_NbScenes;
 
 	Scenario = new Scene[pg_NbScenes];
 
@@ -547,13 +597,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string scene
-		sstrem >> Scenario[indScene].scene_IDs;
-		sstrem >> Scenario[indScene].scene_duration;
-		sstrem >> temp;  // change_when_ends or prolong_when_ends
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string scene
+		sstream >> Scenario[indScene].scene_IDs;
+		sstream >> Scenario[indScene].scene_duration;
+		sstream >> temp;  // change_when_ends or prolong_when_ends
 		if (temp.compare("change_when_ends") == 0) {
 			Scenario[indScene].scene_change_when_ends = true;
 		}
@@ -565,14 +613,14 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			sprintf(ErrorStr, "Error: one of strings expected as scene ending mode: \"change_when_ends\" or \"prolong_when_ends\" not \"%s\" for scene %s\n", temp.c_str(), Scenario[indScene].scene_IDs.c_str()); ReportError(ErrorStr); throw 50;
 		}
 		// second and third comments possibly displayed on the interface to help the user
-		if (!sstrem.eof()) {
-			sstrem >> Scenario[indScene].scene_Msg1;
+		if (!sstream.eof()) {
+			sstream >> Scenario[indScene].scene_Msg1;
 		}
 		else {
 			Scenario[indScene].scene_Msg1 = "";
 		}
-		if (!sstrem.eof()) {
-			sstrem >> Scenario[indScene].scene_Msg2;
+		if (!sstream.eof()) {
+			sstream >> Scenario[indScene].scene_Msg2;
 		}
 		else {
 			Scenario[indScene].scene_Msg2 = "";
@@ -617,40 +665,50 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 		// storing the initial values
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
+		stringstreamStoreLine(&sstream, &line);
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			sstrem >> Scenario[indScene].scene_initial_parameters[indP];
+			if (sstream.eof()) {
+				sprintf(ErrorStr, "Error: missing initial value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			}
+			sstream >> temp;
+			bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
+			if(!has_only_digits) {
+				sprintf(ErrorStr, "Error: non numeric variable initial value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			}
+			Scenario[indScene].scene_initial_parameters[indP] = std::stof(temp);
 		}
 		// checks that the number of variables is what is expected
-		//sstrem >> ID;
-		if (!sstrem.eof()) {
-			sprintf(ErrorStr, "Error: too many initial variable values in scene %d\n", indScene + 1); ReportError(ErrorStr); throw 50;
+		//sstream >> ID;
+		if (!sstream.eof()) {
+			sprintf(ErrorStr, "Error: too many initial variable values in scene %d (%s)\n", indScene + 1, sstream.str().c_str()); ReportError(ErrorStr); throw 50;
 		}
 
 		// storing the final values
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
+		stringstreamStoreLine(&sstream, &line);
 		//std::cout << "line :" << line;
 		// std::cout << "\nfinal values :\n";
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			sstrem >> Scenario[indScene].scene_final_parameters[indP];
+			if (sstream.eof()) {
+				sprintf(ErrorStr, "Error: missing final value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			}
+			sstream >> temp;
+			bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
+			if (!has_only_digits) {
+				sprintf(ErrorStr, "Error: non numeric variable final value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			}
+			Scenario[indScene].scene_final_parameters[indP] = std::stof(temp);
 			// std::cout << scene_final_parameters[indScene][indP] << " ";
 		}
 		// checks that the number of variables is what is expected
-		//sstrem >> ID;
-		if (!sstrem.eof()) {
+		//sstream >> ID;
+		if (!sstream.eof()) {
 			sprintf(ErrorStr, "Error: too many final variable values in scene %d\n", indScene + 1); ReportError(ErrorStr); throw 50;
 		}
 
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		// std::cout << "interpolation: " << line << "\n";
-		// sstrem = std::stringstream(line);
+		stringstreamStoreLine(&sstream, &line);
+		// sstream = std::stringstream(line);
 
 		// storing the interpolation mode
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
@@ -663,7 +721,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				= 0.5f * (Scenario[indScene].scene_initial_parameters[indP]
 					+ Scenario[indScene].scene_final_parameters[indP]);
 
-			sstrem >> std::skipws >> valCh;
+			if (sstream.eof()) {
+				sprintf(ErrorStr, "Error: missing interpolation value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			}
+
+			sstream >> std::skipws >> valCh;
 			// printf("valch %d\n" , (int)valCh );
 
 			switch (valCh) {
@@ -676,8 +738,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_linear_interpolation;
 				if (valCh == 'L') {
-					sstrem >> val;
-					sstrem >> val2;
+					sstream >> val;
+					sstream >> val2;
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of L(inear) interpolationn #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -714,8 +776,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_cosine_interpolation;
 				if (valCh == 'C') {
-					sstrem >> val;
-					sstrem >> val2;
+					sstream >> val;
+					sstream >> val2;
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of C(osine) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -749,8 +811,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_bezier_interpolation;
 				if (valCh == 'Z') {
-					sstrem >> val;
-					sstrem >> val2;
+					sstream >> val;
+					sstream >> val2;
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of Z(Bezier) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -783,11 +845,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			case 'E':
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_exponential_interpolation;
-				sstrem >> val3;
+				sstream >> val3;
 				Scenario[indScene].scene_interpolations[indP].exponent = val3;
 				if (valCh == 'E') {
-					sstrem >> val;
-					sstrem >> val2;
+					sstream >> val;
+					sstream >> val2;
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of E(exponential) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -817,28 +879,29 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			case 'b':
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_bell_interpolation;
-				sstrem >> Scenario[indScene].scene_interpolations[indP].midTermValue;
+				sstream >> Scenario[indScene].scene_interpolations[indP].midTermValue;
 				break;
 				// b: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
 				// SAW TOOTH INTERPOLATION
 			case 't':
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_sawtooth_interpolation;
-				sstrem >> Scenario[indScene].scene_interpolations[indP].midTermValue;
+				sstream >> Scenario[indScene].scene_interpolations[indP].midTermValue;
 				break;
 			case 's':
 			case 'S':
 				Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_stepwise_interpolation;
-				Scenario[indScene].scene_interpolations[indP].offSet = 1.0;
-				Scenario[indScene].scene_interpolations[indP].duration = 0.0;
+				Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
+				Scenario[indScene].scene_interpolations[indP].duration = 1.0;
 				if (valCh == 'S') {
-					sstrem >> val;
+					sstream >> val;
 					if (val < 0.0) {
 						sprintf(ErrorStr, "Error: offset values of S(tepwise) interpolation #%d lower than 0.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
 						Scenario[indScene].scene_interpolations[indP].offSet = val;
+						Scenario[indScene].scene_interpolations[indP].duration = 1.0f - val;
 					}
 					else {
 						sprintf(ErrorStr, "Error: offset value of S(tepwise) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
@@ -854,13 +917,20 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				sprintf(ErrorStr, "Error: unknown  interpolation mode in scene %d parameter %d [%c]!", indScene + 1, indP + 1, valCh); ReportError(ErrorStr); throw 50;
 				break;
 			}
+
+			//if (indP == _trkDecay_1 && indScene == 12) {
+			//	printf("Decay Scene %d Interpolation mode %d offset %.2f dur %.2f init %.2f fin %.2f\n", indScene, Scenario[indScene].scene_interpolations[indP].interpolation_mode,
+			//		Scenario[indScene].scene_interpolations[indP].offSet,
+			//		Scenario[indScene].scene_interpolations[indP].duration,
+			//		Scenario[indScene].scene_initial_parameters[indP],
+			//		Scenario[indScene].scene_final_parameters[indP]);
+			//}
 		}
 
 		// /scene
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-		sstrem >> ID; // string /scene
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string /scene
 		if (ID.compare("/scene") != 0) {
 			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/scene\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
@@ -868,9 +938,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	}
 	// /scenario
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /scenario
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /scenario
 	if (ID.compare("/scenario") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/scenario\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
@@ -882,34 +951,29 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	nb_movies = 0;
 	// Number of videos
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string videos
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string videos
 	if (ID.compare("videos") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"videos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstrem >> nb_movies;
+	sstream >> nb_movies;
 
 	for (int indVideo = 0; indVideo < nb_movies; indVideo++) {
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string movie
-		sstrem >> temp;
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string movie
+		sstream >> temp;
 		movieFileName.push_back(temp);
-		sstrem >> temp2;
+		sstream >> temp2;
 		movieShortName.push_back(temp2);
 		//std::cout << "movie : " << 
 		// movieFileName[indVideo] << "\n";
 	}
 	// /videos
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /videos
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /videos
 	if (ID.compare("/videos") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/videos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
@@ -919,31 +983,32 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	nb_photo_albums = 0;
 	// Number of photo albums
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string videos
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string videos
 	if (ID.compare("photos") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"photos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstrem >> nb_photo_albums;
+	sstream >> nb_photo_albums;
 
-	for (int indAlbum = 0; indAlbum < nb_photo_albums; indAlbum++) {
+	if (nb_photo_albums > 1) {
+		sprintf(ErrorStr, "Error: incorrect configuration file: Only one photo album with subdirectories is expected! (instead of \"%d\" dirs)", nb_photo_albums); ReportError(ErrorStr); throw 100;
+	}
+
+	if( nb_photo_albums > 0) {
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string movie
-		sstrem >> temp;
-		photoAlbumDirName.push_back(temp);
-		//std::cout << "movie : " << 
-		// photoAlbumDirName[indVideo] << "\n";
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string album
+		sstream >> photoAlbumDirName;
+		std::cout << "album : " << photoAlbumDirName << "\n";
 	}
-	if (nb_photo_albums > 0 && photoAlbumDirName[0].compare("captures") != 0) {
+	else {
+		photoAlbumDirName = "";
+	}
+	if (nb_photo_albums > 0 && photoAlbumDirName.compare("captures") != 0) {
 		pg_ImageDirectory = "Data/" + project_name + "-data/";
 		if (nb_photo_albums > 0) {
-			pg_ImageDirectory += photoAlbumDirName[0];
+			pg_ImageDirectory += photoAlbumDirName;
 		}
 		else {
 			pg_ImageDirectory += "images/";
@@ -972,80 +1037,80 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	}
 	std::cout << "Loading messages from " << pg_MessageDirectory << std::endl;
 #endif
+
+#if defined (ETOILES)
+	pg_MessageDirectory = "Data/" + project_name + "-data/";
+	pg_MessageDirectory += "messages/";
+	std::cout << "Loading messages from " << pg_MessageDirectory << std::endl;
+#endif
+
+
 	// /photos
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /photos
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /photos
 	if (ID.compare("/photos") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/photos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
+	/* Is now merged with textures upload
 	////////////////////////////
 	////// BRUSHES
 	nb_pen_brushes = 0;
 	// Number of brushes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string brushes
+	stringstreamStoreLine(&sstream, &line);
+	// sstream = std::stringstream(line);
+	sstream >> ID; // string brushes
 	if (ID.compare("brushes") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"brushes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstrem >> nb_pen_brushes;
+	sstream >> nb_pen_brushes;
 
 	std::getline(scenarioFin, line);
 	// std::cout << "scene: " << line << "\n";
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string ID
-	sstrem >> pen_brushes_fileName;
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string ID
+	sstream >> pen_brushes_fileName;
 	//std::cout << "brush : " << 
 	// pen_brushes_fileName << "\n";
 
 	// /brushes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /brushes
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /brushes
 	if (ID.compare("/brushes") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/brushes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
+	*/
 
 	////////////////////////////
 	////// SOUNDTRACKS
 	nb_soundtracks = 0;
 	// Number of soundtracks
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string soundtracks
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string soundtracks
 	if (ID.compare("soundtracks") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"soundtracks\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstrem >> nb_soundtracks;
+	sstream >> nb_soundtracks;
 
 	for (int indTrack = 0; indTrack < nb_soundtracks; indTrack++) {
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // string track
-		sstrem >> temp;
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string track
+		sstream >> temp;
 		trackFileName.push_back(temp);
-		sstrem >> temp2;
+		sstream >> temp2;
 		trackShortName.push_back(temp2);
 		std::cout << "Soundtrack: " << trackFileName[indTrack] << " " << trackShortName[indTrack] << " (#" << indTrack << ")\n";
 	}
 	// /soundtracks
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /soundtracks
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /soundtracks
 	if (ID.compare("/soundtracks") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/soundtracks\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
@@ -1060,40 +1125,38 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// Number of SVG paths
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string svg_paths
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string svg_paths
 	if (ID.compare("svg_paths") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 	int nb_svg_paths = 0;
-	sstrem >> nb_svg_paths;
+	sstream >> nb_svg_paths;
+	//printf("nb svg paths %d\n", nb_svg_paths);
 
 	for (int indPrerecPath = 0; indPrerecPath < nb_svg_paths; indPrerecPath++) {
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-
-		sstrem >> ID; // string svg_path
-		sstrem >> temp;
-		sstrem >> temp2;
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string svg_path
+		sstream >> temp;
+		sstream >> temp2;
 		int indPath = std::stoi(temp2);
-		sstrem >> temp2;
+		sstream >> temp2;
 		int indTrack = std::stoi(temp2);
-		sstrem >> temp2;
+		sstream >> temp2;
 		float pathRadius = std::stof(temp2);
-		sstrem >> temp2;
+		sstream >> temp2;
 		float path_r_color = std::stof(temp2);
-		sstrem >> temp2;
+		sstream >> temp2;
 		float path_g_color = std::stof(temp2);
-		sstrem >> temp2;
+		sstream >> temp2;
 		float path_b_color = std::stof(temp2);
-		sstrem >> temp2;
+		sstream >> temp2;
 		float path_readSpeedScale = std::stof(temp2);
 		//printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
-		//	indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
+			//indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (indTrack >= 0 && indTrack < PG_NB_TRACKS && indPath >= 1 && indPath <= PG_NB_PATHS) {
+			//printf("Loading SVG path %s track %d\n", (char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(), indTrack);
 			load_svg_path((char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(),
 				indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		}
@@ -1105,9 +1168,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	}
 	// /svg_paths
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /svg_paths
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /svg_paths
 	if (ID.compare("/svg_paths") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
@@ -1119,15 +1181,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// Number of SVG GPU paths
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string svg_clip_arts
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string svg_clip_arts
 	if (ID.compare("svg_clip_arts") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_clip_arts\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-	sstrem >> pg_nb_ClipArt;
+	sstream >> pg_nb_ClipArt;
 	pg_nb_paths_in_ClipArt = new int[pg_nb_ClipArt];
 	pg_ind_first_SvgGpu_path_in_ClipArt = new int[pg_nb_ClipArt];
 	pg_ClipArt_fileNames = new string[pg_nb_ClipArt];
@@ -1158,21 +1218,19 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		pg_ind_first_SvgGpu_path_in_ClipArt[indClipArtFile] = pg_nb_tot_SvgGpu_paths;
 
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-
-		sstrem >> ID; // string svg_clip_art
-		sstrem >> pg_ClipArt_fileNames[indClipArtFile]; // file name
-		sstrem >> pg_nb_paths_in_ClipArt[indClipArtFile]; // number of paths in the file
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string svg_clip_art
+		sstream >> pg_ClipArt_fileNames[indClipArtFile]; // file name
+		sstream >> pg_nb_paths_in_ClipArt[indClipArtFile]; // number of paths in the file
 		pg_nb_tot_SvgGpu_paths += pg_nb_paths_in_ClipArt[indClipArtFile];
 		//printf("ind path file %d name %s nb paths %d\n", indClipArtFile, pg_ClipArt_fileNames[indClipArtFile].c_str(), pg_nb_paths_in_ClipArt[indClipArtFile]);
 
 		// image initial geometry
-		sstrem >> pg_ClipArt_Scale[indClipArtFile];
-		sstrem >> pg_ClipArt_Translation_X[indClipArtFile];
-		sstrem >> pg_ClipArt_Translation_Y[indClipArtFile];
-		sstrem >> pg_ClipArt_Rotation[indClipArtFile];
-		sstrem >> ID;
+		sstream >> pg_ClipArt_Scale[indClipArtFile];
+		sstream >> pg_ClipArt_Translation_X[indClipArtFile];
+		sstream >> pg_ClipArt_Translation_Y[indClipArtFile];
+		sstream >> pg_ClipArt_Rotation[indClipArtFile];
+		sstream >> ID;
 		if (ID.compare("nat") == 0) {
 			pg_ClipArt_Colors[indClipArtFile] = ClipArt_nat;
 		}
@@ -1192,9 +1250,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// /svg_clip_arts
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /svg_clip_arts
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /svg_clip_arts
 	if (ID.compare("/svg_clip_arts") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_clip_arts\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
@@ -1202,25 +1259,20 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 #ifdef PG_MESHES
 	////////////////////////////
 	////// MESHES
-	// the meshes are loaded inside the GPU and diplayed path by path
+	// the meshes are loaded inside the GPU and diplayed depending on their activity
 
 	// Number of meshes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string svg_clip_arts
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string svg_clip_arts
 	if (ID.compare("meshes") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"meshes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
 	// number of obj files in the configuration file
-	sstrem >> pg_nb_Mesh_files;
+	sstream >> pg_nb_Mesh_files;
 
 	pg_Mesh_fileNames = new string[pg_nb_Mesh_files];
-
-	pg_nb_Meshes_in_each_file = new int[pg_nb_Mesh_files];
-	memset((char *)pg_nb_Meshes_in_each_file, 0, pg_nb_Mesh_files * sizeof(int));
 
 	pg_Mesh_Scale = new float[pg_nb_Mesh_files];
 	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
@@ -1240,32 +1292,43 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	memset((char *)pg_Mesh_Translation_Y, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_Translation_Z = new float[pg_nb_Mesh_files];
 	memset((char *)pg_Mesh_Translation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Motion_X = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Motion_X, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Motion_Y = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Motion_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Motion_Z = new float[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_Motion_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_TextureRank = new int[pg_nb_Mesh_files];
+	memset((char *)pg_Mesh_TextureRank, 0, pg_nb_Mesh_files * sizeof(int));
 	pg_Mesh_Colors = new pg_ClipArt_Colors_Types[pg_nb_Mesh_files];
 	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
 		pg_Mesh_Colors[indFile] = ClipArt_nat;
 	}
+	Mesh_texture_rectangle = new GLuint[pg_nb_Mesh_files];
+	memset((char *)Mesh_texture_rectangle, 0, pg_nb_Mesh_files * sizeof(GLuint));
 
 	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
 		std::getline(scenarioFin, line);
-		sstrem.clear();
-		sstrem.str(line);
-
-		sstrem >> ID; // string svg_clip_art
-		sstrem >> pg_Mesh_fileNames[indMeshFile]; // file name
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string mesh
+		sstream >> pg_Mesh_fileNames[indMeshFile]; // file name
 		pg_Mesh_fileNames[indMeshFile]
 			= "Data/" + project_name + "-data/meshes/"
 			+ pg_Mesh_fileNames[indMeshFile];
 
 		// image initial geometry
-		sstrem >> pg_Mesh_Scale[indMeshFile];
-		sstrem >> pg_Mesh_Translation_X[indMeshFile];
-		sstrem >> pg_Mesh_Translation_Y[indMeshFile];
-		sstrem >> pg_Mesh_Translation_Z[indMeshFile];
-		sstrem >> pg_Mesh_Rotation_angle[indMeshFile];
-		sstrem >> pg_Mesh_Rotation_X[indMeshFile];
-		sstrem >> pg_Mesh_Rotation_Y[indMeshFile];
-		sstrem >> pg_Mesh_Rotation_Z[indMeshFile];
-		sstrem >> ID;
+		sstream >> pg_Mesh_Scale[indMeshFile];
+		sstream >> pg_Mesh_Translation_X[indMeshFile];
+		sstream >> pg_Mesh_Translation_Y[indMeshFile];
+		sstream >> pg_Mesh_Translation_Z[indMeshFile];
+		sstream >> pg_Mesh_Rotation_angle[indMeshFile];
+		sstream >> pg_Mesh_Rotation_X[indMeshFile];
+		sstream >> pg_Mesh_Rotation_Y[indMeshFile];
+		sstream >> pg_Mesh_Rotation_Z[indMeshFile];
+		sstream >> pg_Mesh_Motion_X[indMeshFile];
+		sstream >> pg_Mesh_Motion_Y[indMeshFile];
+		sstream >> pg_Mesh_Motion_Z[indMeshFile];
+		sstream >> ID;
 		if (ID.compare("nat") == 0) {
 			pg_Mesh_Colors[indMeshFile] = ClipArt_nat;
 		}
@@ -1281,35 +1344,175 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else {
 			sprintf(ErrorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, red, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
+		sstream >> pg_Mesh_TextureRank[indMeshFile];
 		//printf("Mesh #%d scale %.2f translation (%.2f,%.2f,%.2f), rotation %.2f\n",
 		//	indMeshFile, pg_Mesh_Scale[indMeshFile], pg_Mesh_Translation_X[indMeshFile],
 		//	pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile],
 		//	pg_Mesh_Rotation_angle[indMeshFile]);
+		// the rank of the mesh textures applied to this mesh
 	}
 
 	// /meshes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /svg_clip_arts
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /svg_clip_arts
 	if (ID.compare("/meshes") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/meshes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 #endif
 
 	////////////////////////////
+	////// TEXTURES
+	// the textures are loaded inside the GPU and diplayed path by path
+
+	// Number of meshes
+	std::getline(scenarioFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string svg_clip_arts
+	if (ID.compare("textures") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"textures\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+
+	// number of obj files in the configuration file
+	sstream >> pg_nb_Texture_files;
+
+	pg_Texture_fileNames = new string[pg_nb_Texture_files];
+	pg_Texture_fileNamesSuffix= new string[pg_nb_Texture_files];
+	pg_Texture_usages = new pg_Texture_Usages[pg_nb_Texture_files];
+	for (int indFile = 0; indFile < pg_nb_Texture_files; indFile++) {
+		pg_Texture_usages[indFile] = Texture_brush;
+	}
+
+	pg_Texture_Size_X = new int[pg_nb_Texture_files];
+	pg_Texture_Size_Y = new int[pg_nb_Texture_files];
+	pg_Texture_Rank = new int[pg_nb_Texture_files];
+	pg_Texture_Dimension = new int[pg_nb_Texture_files];
+	pg_Texture_Nb_3D_Nextures = new int[pg_nb_Texture_files];
+	pg_Texture_Is_Rectangle = new bool[pg_nb_Texture_files];
+	pg_Texture_Invert = new bool[pg_nb_Texture_files];
+	pg_Texture_Nb_Bytes_per_Pixel = new int[pg_nb_Texture_files];
+	pg_Texture_texID = new GLuint[pg_nb_Texture_files];
+	memset((char *)pg_Texture_Size_X, 0, pg_nb_Texture_files * sizeof(int));
+	memset((char *)pg_Texture_Size_Y, 0, pg_nb_Texture_files * sizeof(int));
+	memset((char *)pg_Texture_Rank, 0, pg_nb_Texture_files * sizeof(int));
+	memset((char *)pg_Texture_Dimension, 0, pg_nb_Texture_files * sizeof(int));
+	memset((char *)pg_Texture_Is_Rectangle, 0, pg_nb_Texture_files * sizeof(bool));
+	memset((char *)pg_Texture_Invert, 0, pg_nb_Texture_files * sizeof(bool));
+	memset((char *)pg_Texture_Nb_Bytes_per_Pixel, 0, pg_nb_Texture_files * sizeof(int));
+	memset((char *)pg_Texture_texID, 0, pg_nb_Texture_files * sizeof(GLuint));
+
+	for (int indTextureFile = 0; indTextureFile < pg_nb_Texture_files; indTextureFile++) {
+		std::getline(scenarioFin, line);
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string texture
+		sstream >> pg_Texture_fileNames[indTextureFile]; // file name
+		pg_Texture_fileNames[indTextureFile]
+			= "Data/" + project_name + "-data/textures/"
+			+ pg_Texture_fileNames[indTextureFile];
+		sstream >> pg_Texture_fileNamesSuffix[indTextureFile]; // file name
+
+		// usage
+		sstream >> ID;
+		if (ID.compare("master_mask") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_master_mask;
+		}
+		else if (ID.compare("mesh") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_mesh;
+		}
+		else if (ID.compare("sensor") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_sensor;
+		}
+		else if (ID.compare("logo") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_logo;
+		}
+		else if (ID.compare("brush") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_brush;
+		}
+		else if (ID.compare("noise") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_noise;
+		}
+		else if (ID.compare("curve_particle") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_curve_particle;
+		}
+		else if (ID.compare("splat_particle") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_splat_particle;
+		}
+		else if (ID.compare("part_init") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_part_init;
+		}
+		else if (ID.compare("repop_density") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_repop_density;
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect configuration file Texture usage \"%s\"\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+		// rank of the texture (used in particular for meshes)
+		sstream >> pg_Texture_Rank[indTextureFile];
+		// dimension (2 or 3)
+		sstream >> pg_Texture_Dimension[indTextureFile];
+		if(pg_Texture_Dimension[indTextureFile] != 2 
+			&& pg_Texture_Dimension[indTextureFile] != 3) {
+			sprintf(ErrorStr, "Error: 2D or 3D texture dimension expected, not %d\n", pg_Texture_Dimension[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		// number of piled textures in case of 3D texture
+		sstream >> pg_Texture_Nb_3D_Nextures[indTextureFile];
+		if (pg_Texture_usages[indTextureFile] == Texture_brush) {
+			nb_pen_brushes = pg_Texture_Nb_3D_Nextures[indTextureFile];
+		}
+
+		// image initial geometry
+		sstream >> pg_Texture_Size_X[indTextureFile];
+		sstream >> pg_Texture_Size_Y[indTextureFile];
+
+		// image color depth
+		sstream >> pg_Texture_Nb_Bytes_per_Pixel[indTextureFile];
+
+		// booleans invert & is rectangle
+		sstream >> ID;
+		if (ID.compare("true") == 0) {
+			pg_Texture_Is_Rectangle[indTextureFile] = true;
+		}
+		else if (ID.compare("false") == 0) {
+			pg_Texture_Is_Rectangle[indTextureFile] = false;
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect boolean for Texture rectangle \"%s\" (true or false expected)\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+		sstream >> ID;
+		if (ID.compare("true") == 0) {
+			pg_Texture_Invert[indTextureFile] = true;
+		}
+		else if (ID.compare("false") == 0) {
+			pg_Texture_Invert[indTextureFile] = false;
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect boolean for Texture invert \"%s\" (true or false expected)\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+		//printf("Texture #%d size (%d,%d), rank %d, usage %s\n",
+		//	indTextureFile, pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile],
+		//	pg_Texture_Rank[indTextureFile], pg_Texture_usages[indTextureFile].c_str());
+	}
+
+	// /textures
+	std::getline(scenarioFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /svg_clip_arts
+	if (ID.compare("/textures") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/textures\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+
+
+	////////////////////////////
 	////// PALETTE COLORSS
 	nb_pen_palette_colors = 0;
 	// Number of palettes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string palette_colors
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string palette_colors
 	if (ID.compare("palette_colors") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"palette_colors\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"palette_colors\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstrem >> nb_pen_palette_colors;
+	sstream >> nb_pen_palette_colors;
 
 	// std::cout << "line: " << line << "\n";
 	// std::cout << "Nb palettes : " << nb_pen_palette_colors <<  "\n";
@@ -1320,24 +1523,23 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // palette ID
-		for (int indColorChannel = 0; indColorChannel < 9; indColorChannel++) {
-			sstrem >> pen_palette_colors_values[indColorPalette][indColorChannel];
-			pen_palette_colors_values[indColorPalette][indColorChannel] /= 255.f;
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // palette ID
+		for (int indColorBandpass = 0; indColorBandpass < 3; indColorBandpass++) {
+			for (int indColorChannel = 0; indColorChannel < 3; indColorChannel++) {
+				sstream >> pen_palette_colors_values[indColorPalette][indColorBandpass * 3 + indColorChannel];
+				pen_palette_colors_values[indColorPalette][indColorBandpass * 3 + indColorChannel] /= 255.f;
+			}
 		}
 		pen_palette_colors_names.push_back(ID.c_str());
 		// std::cout << "palettes : " << indPalette << " " <<  pen_palettes_names[indPalette] << " " << pen_palettes_values[indPalette] << "\n";
 	}
 	// /palettes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /palette_colors
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /palette_colors
 	if (ID.compare("/palette_colors") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/palette_colors\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/palette_colors\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
 	////////////////////////////
@@ -1345,14 +1547,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	nb_pen_colorPresets = 0;
 	// Number of palettes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	// sstrem = std::stringstream(line);
-	sstrem >> ID; // string color_presets
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string color_presets
 	if (ID.compare("color_presets") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"color_presets\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"color_presets\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstrem >> nb_pen_colorPresets;
+	sstream >> nb_pen_colorPresets;
 
 	// std::cout << "line: " << line << "\n";
 	// std::cout << "Nb palettes : " << nb_pen_colorPresets <<  "\n";
@@ -1361,21 +1561,18 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	for (int indPalette = 0; indPalette < nb_pen_colorPresets; indPalette++) {
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
-		sstrem.clear();
-		sstrem.str(line);
-		// sstrem = std::stringstream(line);
-		sstrem >> ID; // palette ID
-		sstrem >> pen_colorPreset_values[indPalette];
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // palette ID
+		sstream >> pen_colorPreset_values[indPalette];
 		pen_colorPresets_names.push_back(ID.c_str());
-		std::cout << "palettes : " << indPalette << " " <<  pen_colorPresets_names[indPalette] << " " << pen_colorPreset_values[indPalette] << "\n";
+		//std::cout << "palettes : " << indPalette << " " <<  pen_colorPresets_names[indPalette] << " " << pen_colorPreset_values[indPalette] << "\n";
 	}
 	// /palettes
 	std::getline(scenarioFin, line);
-	sstrem.clear();
-	sstrem.str(line);
-	sstrem >> ID; // string /palettes
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /palettes
 	if (ID.compare("/color_presets") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/color_presets\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/color_presets\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
 	// saves the original durations

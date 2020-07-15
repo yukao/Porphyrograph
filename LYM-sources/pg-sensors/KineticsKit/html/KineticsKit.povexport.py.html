@@ -1,0 +1,435 @@
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>povexport.py</title>
+<meta name="GENERATOR" content="SciTE - www.Scintilla.org" />
+<style type="text/css">
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S3 {
+	color: #007f00;
+}
+.S4 {
+	color: #007f00;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S7 {
+	color: #00aa00;
+}
+.S9 {
+	font-weight: bold;
+	color: #7f00aa;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+.S12 {
+	color: #7F7F7F;
+}
+span {
+	font-family: 'Verdana';
+	color: #000000;
+	font-size: 9pt;
+}
+</style>
+</head>
+<body bgcolor=#f0f0f8>
+<span><span class="S1"># ruth chabay, carnegie mellon university (rchabay@andrew.cmu.edu)</span><br />
+<span class="S1"># v1.0 2000-12-17</span><br />
+<br />
+<span class="S1"># Markus Gritsch (gritsch@iue.tuwien.ac.at)</span><br />
+<span class="S1"># v.1.1 &nbsp;&nbsp;2001-03-09</span><br />
+<span class="S1"># &nbsp;&nbsp;*) replaced 'scene' by 'display' everywhere</span><br />
+<span class="S1"># &nbsp;&nbsp;*) added spheres at the joints of a curve</span><br />
+<span class="S1"># &nbsp;&nbsp;*) consistent pov_texture usage in process_arrow() also for the shaft</span><br />
+<span class="S1"># &nbsp;&nbsp;*) ambient light, light sources, up, and fov are now handled correctly</span><br />
+<span class="S1"># &nbsp;&nbsp;*) some cosmetic changes to the code</span><br />
+<span class="S1"># v.1.1.1 2001-03-22</span><br />
+<span class="S1"># &nbsp;&nbsp;*) added 'shadowless' keyword to export()</span><br />
+<br />
+<span class="S1"># Ruth Chabay</span><br />
+<span class="S1"># 2001-06-23</span><br />
+<span class="S1"># hack to fix error in export_curve introduced by Python 2.1</span><br />
+<span class="S1"># now can't assign obj.color = array(...)</span><br />
+<br />
+<span class="S1"># Markus Gritsch (gritsch@iue.tuwien.ac.at)</span><br />
+<span class="S1"># v.1.2 &nbsp;&nbsp;2001-11-23</span><br />
+<span class="S1"># &nbsp;&nbsp;*) added 'xy_ratio' and 'custom_text' keywords to export()</span><br />
+<span class="S1"># &nbsp;&nbsp;*) the pov-strings are now directly written to a file</span><br />
+<br />
+<span class="S1"># Bruce Sherwood</span><br />
+<span class="S1"># 2004-07-18</span><br />
+<span class="S1"># add dictionary ("legal") for identifying an object so that</span><br />
+<span class="S1"># povexport will continue to work with the new Boost-based VPython</span><br />
+<span class="S1"># which changes the details returned by object.__class__</span><br />
+<br />
+<span class="S12">## NOTE: when changing this module please change the following string:</span><br />
+POVEXPORT_VERSION<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S3">"povexport 2004-07-18"</span><br />
+<br />
+<span class="S7">"""This module exports a VPython scene as POV-Ray scene description code.</span><br />
+<span class="S7">Lights and camera location from the current visual scene are included.</span><br />
+<span class="S7">Optionally, you may specify a list of include files, and pov textures for</span><br />
+<span class="S7">objects.</span><br />
+<span class="S7">For an example of its use, see 'povexample.py'</span><br />
+<span class="S7">convex objects are not exported.</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S5">from</span><span class="S0"> </span>visual<span class="S0"> </span><span class="S5">import</span><span class="S0"> </span><span class="S10">*</span><br />
+<span class="S5">from</span><span class="S0"> </span>string<span class="S0"> </span><span class="S5">import</span><span class="S0"> </span>rfind<br />
+<br />
+legal<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">{</span>frame<span class="S10">:</span><span class="S4">'frame'</span><span class="S10">,</span><span class="S0"> </span>sphere<span class="S10">:</span><span class="S4">'sphere'</span><span class="S10">,</span><span class="S0"> </span>box<span class="S10">:</span><span class="S4">'box'</span><span class="S10">,</span><span class="S0"> </span>cylinder<span class="S10">:</span><span class="S4">'cylinder'</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>curve<span class="S10">:</span><span class="S4">'curve'</span><span class="S10">,</span><span class="S0"> </span>ring<span class="S10">:</span><span class="S4">'ring'</span><span class="S10">,</span><span class="S0"> </span>arrow<span class="S10">:</span><span class="S4">'arrow'</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>cone<span class="S10">:</span><span class="S4">'cone'</span><span class="S10">}</span><br />
+ihat<span class="S10">=</span>vector<span class="S10">(</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">)</span><br />
+jhat<span class="S10">=</span>vector<span class="S10">(</span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">)</span><br />
+khat<span class="S10">=</span>vector<span class="S10">(</span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1</span><span class="S10">)</span><br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">version</span><span class="S10">():</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>POVEXPORT_VERSION<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">getpolar</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># a is a vector</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># find rotation angles (standard polar coord)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>xy<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>sqrt<span class="S10">(</span>a<span class="S10">.</span>x<span class="S10">**</span><span class="S2">2</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>a<span class="S10">.</span>y<span class="S10">**</span><span class="S2">2</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>theta<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>atan2<span class="S10">(</span>xy<span class="S10">,</span><span class="S0"> </span>a<span class="S10">.</span>z<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>phi<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>atan2<span class="S10">(</span>a<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span>a<span class="S10">.</span>x<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span><span class="S10">[</span>theta<span class="S10">,</span><span class="S0"> </span>phi<span class="S10">]</span><br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">process_frame</span><span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>code<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># add in frame rotations &amp; translations (may be nested)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>frame_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">''</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>fr<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>frame<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">while</span><span class="S0"> </span>fr<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># orientation of frame.axis</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ang<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>getpolar<span class="S10">(</span>fr<span class="S10">.</span>axis<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>theta<span class="S10">=</span>ang<span class="S10">[</span><span class="S2">0</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>phi<span class="S10">=</span>ang<span class="S10">[</span><span class="S2">1</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>aup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>fr<span class="S10">.</span>up<span class="S10">*</span><span class="S2">1.0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># find rotation around x-axis (if fr.up &lt;&gt; jhat)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># "undo" theta &amp; phi rotations so can find alpha</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>aup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rotate<span class="S10">(</span>aup<span class="S10">,</span><span class="S0"> </span>axis<span class="S10">=</span>khat<span class="S10">,</span><span class="S0"> </span>angle<span class="S10">=-</span>phi<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>aup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rotate<span class="S10">(</span>aup<span class="S10">,</span><span class="S0"> </span>axis<span class="S10">=</span>jhat<span class="S10">,</span><span class="S0"> </span>angle<span class="S10">=</span>pi<span class="S10">/</span><span class="S2">2.0</span><span class="S10">-</span>theta<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>a_sin<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dot<span class="S10">(</span>cross<span class="S10">(</span>jhat<span class="S10">,</span><span class="S0"> </span>norm<span class="S10">(</span>aup<span class="S10">)),</span><span class="S0"> </span>ihat<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>a_cos<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dot<span class="S10">(</span>norm<span class="S10">(</span>aup<span class="S10">),</span><span class="S0"> </span>jhat<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>alpha<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>atan2<span class="S10">(</span>a_sin<span class="S10">,</span><span class="S0"> </span>a_cos<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frx<span class="S10">=</span>alpha<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>fry<span class="S10">=-</span><span class="S2">90</span><span class="S10">+</span>theta<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frz<span class="S10">=</span>phi<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>rrot<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">' &nbsp;&nbsp;&nbsp;rotate &lt;%f, %f, %f&gt;\n'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ttrn<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">' &nbsp;&nbsp;&nbsp;translate &lt;%f, %f, %f&gt;\n'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frame_code<span class="S0"> </span><span class="S10">+=</span><span class="S0"> </span>rrot<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">(</span>frx<span class="S10">,</span><span class="S0"> </span>fry<span class="S10">,</span><span class="S0"> </span>frz<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frame_code<span class="S0"> </span><span class="S10">+=</span><span class="S0"> </span>ttrn<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">(</span>fr<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span>fr<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span>fr<span class="S10">.</span>z<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>fr<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>fr<span class="S10">.</span>frame<br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># insert frame_code at end (these rot's must be done last)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>end<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rfind<span class="S10">(</span>code<span class="S10">,</span><span class="S0"> </span><span class="S4">'}'</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>code<span class="S10">[:</span>end<span class="S10">]</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>frame_code<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>code<span class="S10">[</span>end<span class="S10">:]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">add_texture</span><span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>code<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># add in user-specified texture (will override color)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>hasattr<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span><span class="S4">'pov_texture'</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>tstring<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">' &nbsp;&nbsp;&nbsp;texture { '</span><span class="S10">+</span><span class="S0"> </span>a<span class="S10">.</span>pov_texture<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">' }\n'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>end<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rfind<span class="S10">(</span>code<span class="S10">,</span><span class="S0"> </span><span class="S4">'}'</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>code<span class="S10">[:</span>end<span class="S10">]</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>tstring<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>code<span class="S10">[</span>end<span class="S10">:]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_sphere</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>sphere_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">sphere {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&lt;%(posx)f, %(posy)f, %(posz)f&gt;, %(radius)f</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;pigment { color rgb &lt;%(red)f, %(green)f, %(blue)f&gt; }</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>sphere_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'posx'</span><span class="S10">:</span>a<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'posy'</span><span class="S10">:</span>a<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'posz'</span><span class="S10">:</span>a<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'radius'</span><span class="S10">:</span>a<span class="S10">.</span>radius<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'red'</span><span class="S10">:</span>a<span class="S10">.</span>red<span class="S10">,</span><span class="S0"> </span><span class="S4">'green'</span><span class="S10">:</span>a<span class="S10">.</span>green<span class="S10">,</span><span class="S0"> </span><span class="S4">'blue'</span><span class="S10">:</span>a<span class="S10">.</span>blue<span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>process_frame<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_box</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># create box at origin along x-axis</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># then rotate around x,y,z axes</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># then translate to final location</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>box_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">box {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&lt;%(posx)f, %(posy)f, %(posz)f&gt;, &lt;%(pos2x)f, %(pos2y)f, %(pos2z)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;pigment {color rgb &lt;%(red)f, %(green)f, %(blue)f&gt;}</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;rotate &lt;%(rotx)f, %(roty)f, %(rotz)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;translate &lt;%(transx)f, %(transy)f, %(transz)f&gt;</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># find rotations</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>ang<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>getpolar<span class="S10">(</span>a<span class="S10">.</span>axis<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>theta<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>ang<span class="S10">[</span><span class="S2">0</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>phi<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>ang<span class="S10">[</span><span class="S2">1</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># find rotation around x-axis (if a.up &lt;&gt; jhat)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># "undo" theta &amp; phi rotations so can find alpha</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>aup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>up<span class="S10">*</span><span class="S2">1.0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>aup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rotate<span class="S10">(</span>aup<span class="S10">,</span><span class="S0"> </span>axis<span class="S10">=</span>khat<span class="S10">,</span><span class="S0"> </span>angle<span class="S10">=-</span>phi<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>aup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rotate<span class="S10">(</span>aup<span class="S10">,</span><span class="S0"> </span>axis<span class="S10">=</span>jhat<span class="S10">,</span><span class="S0"> </span>angle<span class="S10">=</span>pi<span class="S10">/</span><span class="S2">2.0</span><span class="S10">-</span>theta<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>a_sin<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dot<span class="S10">(</span>cross<span class="S10">(</span>jhat<span class="S10">,</span><span class="S0"> </span>norm<span class="S10">(</span>aup<span class="S10">)),</span><span class="S0"> </span>ihat<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>a_cos<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dot<span class="S10">(</span>norm<span class="S10">(</span>aup<span class="S10">),</span><span class="S0"> </span>jhat<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>alpha<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>atan2<span class="S10">(</span>a_sin<span class="S10">,</span><span class="S0"> </span>a_cos<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># pos of visual box is at center</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># generate two opposite corners for povray</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>pos1<span class="S10">=</span>vector<span class="S10">(</span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">)</span><span class="S0"> </span><span class="S10">-</span><span class="S0"> </span>a<span class="S10">.</span>size<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span><span class="S2">2.0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>pos2<span class="S10">=</span>vector<span class="S10">(</span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">)</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>a<span class="S10">.</span>size<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span><span class="S2">2.0</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>box_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'posx'</span><span class="S10">:</span>pos1<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'posy'</span><span class="S10">:</span>pos1<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'posz'</span><span class="S10">:</span>pos1<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'pos2x'</span><span class="S10">:</span>pos2<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2y'</span><span class="S10">:</span>pos2<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2z'</span><span class="S10">:</span>pos2<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'rotx'</span><span class="S10">:</span>alpha<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><span class="S0"> </span><span class="S4">'roty'</span><span class="S10">:-</span><span class="S2">90.</span><span class="S10">+</span>theta<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><span class="S0"> </span><span class="S4">'rotz'</span><span class="S10">:</span>phi<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'transx'</span><span class="S10">:</span>a<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'transy'</span><span class="S10">:</span>a<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'transz'</span><span class="S10">:</span>a<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'red'</span><span class="S10">:</span>a<span class="S10">.</span>red<span class="S10">,</span><span class="S0"> </span><span class="S4">'green'</span><span class="S10">:</span>a<span class="S10">.</span>green<span class="S10">,</span><span class="S0"> </span><span class="S4">'blue'</span><span class="S10">:</span>a<span class="S10">.</span>blue<span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>process_frame<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_cylinder</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>cylinder_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">cylinder {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&lt;%(posx)f, %(posy)f, %(posz)f&gt;,&lt;%(pos2x)f, %(pos2y)f, %(pos2z)f&gt;, %(radius)f</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;pigment { color rgb &lt;%(red)f, %(green)f, %(blue)f&gt; }</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>endpt1<span class="S10">=</span>a<span class="S10">.</span>pos<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>endpt2<span class="S10">=</span>a<span class="S10">.</span>pos<span class="S10">+</span>a<span class="S10">.</span>axis<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>cylinder_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'posx'</span><span class="S10">:</span>a<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'posy'</span><span class="S10">:</span>a<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'posz'</span><span class="S10">:</span>a<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'pos2x'</span><span class="S10">:</span>endpt2<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2y'</span><span class="S10">:</span>endpt2<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2z'</span><span class="S10">:</span>endpt2<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'red'</span><span class="S10">:</span>a<span class="S10">.</span>red<span class="S10">,</span><span class="S0"> </span><span class="S4">'green'</span><span class="S10">:</span>a<span class="S10">.</span>green<span class="S10">,</span><span class="S0"> </span><span class="S4">'blue'</span><span class="S10">:</span>a<span class="S10">.</span>blue<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'radius'</span><span class="S10">:</span>a<span class="S10">.</span>radius<span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>process_frame<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_curve</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">''</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>len<span class="S10">(</span>a<span class="S10">.</span>pos<span class="S10">)</span><span class="S0"> </span><span class="S10">&gt;</span><span class="S0"> </span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ii<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">while</span><span class="S0"> </span>ii<span class="S0"> </span><span class="S10">&lt;</span><span class="S0"> </span>len<span class="S10">(</span>a<span class="S10">.</span>pos<span class="S10">)-</span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>endpt1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pos<span class="S10">[</span>ii<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>endpt2<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pos<span class="S10">[</span>ii<span class="S10">+</span><span class="S2">1</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>a<span class="S10">.</span>radius<span class="S0"> </span><span class="S10">&gt;</span><span class="S0"> </span><span class="S2">0</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>rr<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>radius<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>rr<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>mag<span class="S10">(</span>endpt1<span class="S10">-</span>endpt2<span class="S10">)/</span><span class="S2">200.</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># create a dummy cylinder to export</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ccyl<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>cylinder<span class="S10">(</span>pos<span class="S10">=</span>endpt1<span class="S10">,</span><span class="S0"> </span>axis<span class="S10">=</span>endpt2<span class="S10">-</span>endpt1<span class="S10">,</span><span class="S0"> </span>radius<span class="S10">=</span>rr<span class="S10">,</span><span class="S0"> </span>color<span class="S10">=</span>tuple<span class="S10">(</span>a<span class="S10">.</span>color<span class="S10">[</span>ii<span class="S10">]),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frame<span class="S10">=</span>a<span class="S10">.</span>frame<span class="S10">,</span><span class="S0"> </span>visible<span class="S10">=</span><span class="S2">0</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>csph<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>sphere<span class="S10">(</span>pos<span class="S10">=</span>endpt1<span class="S10">,</span><span class="S0"> </span>radius<span class="S10">=</span>rr<span class="S10">,</span><span class="S0"> </span>color<span class="S10">=</span>tuple<span class="S10">(</span>a<span class="S10">.</span>color<span class="S10">[</span>ii<span class="S10">]),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frame<span class="S10">=</span>a<span class="S10">.</span>frame<span class="S10">,</span><span class="S0"> </span>visible<span class="S10">=</span><span class="S2">0</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>hasattr<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span><span class="S4">'pov_texture'</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ccyl<span class="S10">.</span>pov_texture<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pov_texture<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>csph<span class="S10">.</span>pov_texture<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pov_texture<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">+=</span><span class="S0"> </span>export_cylinder<span class="S10">(</span>ccyl<span class="S10">)</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>export_sphere<span class="S10">(</span>csph<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ii<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>ii<span class="S10">+</span><span class="S2">1</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>endpt1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pos<span class="S10">[</span>ii<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>csph<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>sphere<span class="S10">(</span>pos<span class="S10">=</span>endpt1<span class="S10">,</span><span class="S0"> </span>radius<span class="S10">=</span>rr<span class="S10">,</span><span class="S0"> </span>color<span class="S10">=</span>tuple<span class="S10">(</span>a<span class="S10">.</span>color<span class="S10">[</span>ii<span class="S10">]),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>frame<span class="S10">=</span>a<span class="S10">.</span>frame<span class="S10">,</span><span class="S0"> </span>visible<span class="S10">=</span><span class="S2">0</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>hasattr<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span><span class="S4">'pov_texture'</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>csph<span class="S10">.</span>pov_texture<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pov_texture<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">+=</span><span class="S0"> </span>export_sphere<span class="S10">(</span>csph<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">del</span><span class="S10">(</span>ccyl<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">del</span><span class="S10">(</span>csph<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_ring</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>torus_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">torus {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;%(radius)f, %(minorradius)f</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;pigment { color rgb &lt;%(red)f, %(green)f, %(blue)f&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;rotate &lt;0.0, 0.0, -90.0&gt; // align with x-axis</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;rotate &lt;%(rotx)f, %(roty)f, %(rotz)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;translate &lt;%(transx)f, %(transy)f, %(transz)f&gt;</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>ang<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>getpolar<span class="S10">(</span>a<span class="S10">.</span>axis<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>theta<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>ang<span class="S10">[</span><span class="S2">0</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>phi<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>ang<span class="S10">[</span><span class="S2">1</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>torus_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'radius'</span><span class="S10">:</span>a<span class="S10">.</span>radius<span class="S10">,</span><span class="S0"> </span><span class="S4">'minorradius'</span><span class="S10">:</span>a<span class="S10">.</span>thickness<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'transx'</span><span class="S10">:</span>a<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'transy'</span><span class="S10">:</span>a<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'transz'</span><span class="S10">:</span>a<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'rotx'</span><span class="S10">:</span><span class="S2">0.0</span><span class="S10">,</span><span class="S0"> </span><span class="S4">'roty'</span><span class="S10">:-</span><span class="S2">90.</span><span class="S10">+</span>theta<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><span class="S0"> </span><span class="S4">'rotz'</span><span class="S10">:</span>phi<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'red'</span><span class="S10">:</span>a<span class="S10">.</span>red<span class="S10">,</span><span class="S0"> </span><span class="S4">'green'</span><span class="S10">:</span>a<span class="S10">.</span>green<span class="S10">,</span><span class="S0"> </span><span class="S4">'blue'</span><span class="S10">:</span>a<span class="S10">.</span>blue<span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>process_frame<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_arrow</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>pyramid_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">object {Pyramid</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;pigment { color rgb &lt;%(red)f, %(green)f, %(blue)f&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;scale &lt;%(scalex)f, %(scaley)f, %(scalez)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;rotate &lt;0, 0, -90&gt; // align with x-axis</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;rotate &lt;%(rotx)f, %(roty)f, %(rotz)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;translate &lt;%(transx)f, %(transy)f, %(transz)f&gt;</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>al<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>length<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>hl<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>headlength<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>sl<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>al<span class="S10">-</span>hl<span class="S0"> </span><span class="S1"># length of shaft</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>hw<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>headwidth<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>sw<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>shaftwidth<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># head is a pyramid</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>ppos<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pos<span class="S10">+</span>a<span class="S10">.</span>axis<span class="S10">*(</span>sl<span class="S10">/</span>al<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>ang<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>getpolar<span class="S10">(</span>a<span class="S10">.</span>axis<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>theta<span class="S10">=</span>ang<span class="S10">[</span><span class="S2">0</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>phi<span class="S10">=</span>ang<span class="S10">[</span><span class="S2">1</span><span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>pyramid_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'scalex'</span><span class="S10">:</span>hw<span class="S10">,</span><span class="S0"> </span><span class="S4">'scaley'</span><span class="S10">:</span>hl<span class="S10">,</span><span class="S0"> </span><span class="S4">'scalez'</span><span class="S10">:</span>hw<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'rotx'</span><span class="S10">:</span><span class="S2">0.</span><span class="S10">,</span><span class="S0"> </span><span class="S4">'roty'</span><span class="S10">:-</span><span class="S2">90.</span><span class="S10">+</span>theta<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><span class="S0"> </span><span class="S4">'rotz'</span><span class="S10">:</span>phi<span class="S10">*</span><span class="S2">180.</span><span class="S10">/</span>pi<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'red'</span><span class="S10">:</span>a<span class="S10">.</span>red<span class="S10">,</span><span class="S0"> </span><span class="S4">'green'</span><span class="S10">:</span>a<span class="S10">.</span>green<span class="S10">,</span><span class="S0"> </span><span class="S4">'blue'</span><span class="S10">:</span>a<span class="S10">.</span>blue<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'transx'</span><span class="S10">:</span>ppos<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'transy'</span><span class="S10">:</span>ppos<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'transz'</span><span class="S10">:</span>ppos<span class="S10">.</span>z<span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>process_frame<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># shaft is a box; need to create a dummy box</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>abox<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>box<span class="S10">(</span>pos<span class="S10">=</span>a<span class="S10">.</span>pos<span class="S10">+</span>a<span class="S10">.</span>axis<span class="S10">*(</span>sl<span class="S10">/</span>al<span class="S10">)/</span><span class="S2">2.0</span><span class="S10">,</span><span class="S0"> </span>axis<span class="S10">=</span>a<span class="S10">.</span>axis<span class="S10">*(</span>sl<span class="S10">/</span>al<span class="S10">),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>up<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>up<span class="S10">,</span><span class="S0"> </span>width<span class="S10">=</span>a<span class="S10">.</span>shaftwidth<span class="S10">,</span><span class="S0"> </span>height<span class="S10">=</span>a<span class="S10">.</span>shaftwidth<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>color<span class="S10">=</span>a<span class="S10">.</span>color<span class="S10">,</span><span class="S0"> </span>frame<span class="S10">=</span>a<span class="S10">.</span>frame<span class="S10">,</span><span class="S0"> </span>visible<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>m2<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>export_box<span class="S10">(</span>abox<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>m2<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span><span class="S0"> </span>m2<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">del</span><span class="S10">(</span>abox<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># concatenate pyramid &amp; box</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>m1<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>m2<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export_cone</span><span class="S10">(</span>a<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>cone_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">cone {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&lt;%(posx)f, %(posy)f, %(posz)f&gt;, %(radius)f</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;&lt;%(pos2x)f, %(pos2y)f, %(pos2z)f&gt;, %(minorradius)f</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;pigment { color rgb &lt;%(red)f, %(green)f, %(blue)f&gt; }</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>pos2<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>a<span class="S10">.</span>pos<span class="S10">+</span>a<span class="S10">.</span>axis<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>cone_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'radius'</span><span class="S10">:</span>a<span class="S10">.</span>radius<span class="S10">,</span><span class="S0"> </span><span class="S4">'minorradius'</span><span class="S10">:</span><span class="S2">0.0</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'posx'</span><span class="S10">:</span>a<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'posy'</span><span class="S10">:</span>a<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'posz'</span><span class="S10">:</span>a<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'pos2x'</span><span class="S10">:</span>pos2<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2y'</span><span class="S10">:</span>pos2<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2z'</span><span class="S10">:</span>pos2<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'red'</span><span class="S10">:</span>a<span class="S10">.</span>red<span class="S10">,</span><span class="S0"> </span><span class="S4">'green'</span><span class="S10">:</span>a<span class="S10">.</span>green<span class="S10">,</span><span class="S0"> </span><span class="S4">'blue'</span><span class="S10">:</span>a<span class="S10">.</span>blue<span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>process_frame<span class="S10">(</span>a<span class="S10">,</span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>add_texture<span class="S10">(</span>a<span class="S10">,</span>object_code<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>object_code<br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">export</span><span class="S10">(</span>display<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><span class="S0"> </span>filename<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><span class="S0"> </span>include_list<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><span class="S0"> </span>xy_ratio<span class="S10">=</span><span class="S2">4.</span><span class="S10">/</span><span class="S2">3.</span><span class="S10">,</span><span class="S0"> </span>custom_text<span class="S10">=</span><span class="S4">''</span><span class="S10">,</span><span class="S0"> </span>shadowless<span class="S10">=</span><span class="S2">0</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>display<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S5">None</span><span class="S10">:</span><span class="S0"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># no display specified so find active display</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>dummy<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>sphere<span class="S10">(</span>visible<span class="S10">=</span><span class="S2">0</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>display<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>dummy<span class="S10">.</span>display<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">del</span><span class="S10">(</span>dummy<span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>filename<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S5">None</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>filename<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>display<span class="S10">.</span>title<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">'.pov'</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>include_list<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S5">None</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>include_text<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">''</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>include_text<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">'\n'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>include_list<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>include_text<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>include_text<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">'#include "'</span><span class="S10">+</span><span class="S0"> </span>x<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">'"\n'</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>initial_comment<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""// povray code generated by povexport.py</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>pyramid_def<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">// Four-sided pyramid from shapes2.inc, slightly modified.</span><br />
+<span class="S7">#declare Pyramid = union {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;triangle { &lt;-1, 0, -1&gt;, &lt;+1, 0, -1&gt;, &lt;0, 1, 0&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;triangle { &lt;+1, 0, -1&gt;, &lt;+1, 0, +1&gt;, &lt;0, 1, 0&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;triangle { &lt;-1, 0, +1&gt;, &lt;+1, 0, +1&gt;, &lt;0, 1, 0&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;triangle { &lt;-1, 0, +1&gt;, &lt;-1, 0, -1&gt;, &lt;0, 1, 0&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;triangle { &lt;-1, 0, -1&gt;, &lt;-1, 0, +1&gt;, &lt;1, 0, 1&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;triangle { &lt;-1, 0, -1&gt;, &lt;+1, 0, -1&gt;, &lt;1, 0, 1&gt; }</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;scale &lt;.5, 1, .5&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// so height = width = 1</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>ambient_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">global_settings { ambient_light rgb &lt;%(amb)f, %(amb)f, %(amb)f&gt; }</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>background_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">background { color rgb &lt;%(red)f, %(green)f, %(blue)f&gt; }</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>light_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">light_source { &lt;%(posx)f, %(posy)f, %(posz)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;color rgb &lt;%(int)f, %(int)f, %(int)f&gt;</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>camera_template<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S7">"""</span><br />
+<span class="S7">camera {</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;right &lt;-%(xyratio)f, 0, 0&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//visual uses right-handed coord. system</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;location &lt;%(posx)f, %(posy)f, %(posz)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;sky &lt;%(upx)f, %(upy)f, %(upz)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;look_at &lt;%(pos2x)f, %(pos2y)f, %(pos2z)f&gt;</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;angle %(fov)f</span><br />
+<span class="S7">&nbsp;&nbsp;&nbsp;&nbsp;rotate &lt;0, 0, 0&gt;</span><br />
+<span class="S7">}</span><br />
+<span class="S7">"""</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># begin povray setup</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>open<span class="S10">(</span>filename<span class="S10">,</span><span class="S0"> </span><span class="S4">'wt'</span><span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>write<span class="S10">(</span><span class="S0"> </span>initial_comment<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>include_text<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>custom_text<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>pyramid_def<span class="S0"> </span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>write<span class="S10">(</span><span class="S0"> </span>ambient_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'amb'</span><span class="S10">:</span>display<span class="S10">.</span>ambient<span class="S10">*</span><span class="S2">10</span><span class="S0"> </span><span class="S10">}</span><span class="S0"> </span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>write<span class="S10">(</span><span class="S0"> </span>background_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'red'</span><span class="S10">:</span>display<span class="S10">.</span>background<span class="S10">[</span><span class="S2">0</span><span class="S10">],</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'green'</span><span class="S10">:</span>display<span class="S10">.</span>background<span class="S10">[</span><span class="S2">1</span><span class="S10">],</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'blue'</span><span class="S10">:</span>display<span class="S10">.</span>background<span class="S10">[</span><span class="S2">2</span><span class="S10">]</span><span class="S0"> </span><span class="S10">}</span><span class="S0"> </span><span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>i<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>arange<span class="S10">(</span>len<span class="S10">(</span>display<span class="S10">.</span>lights<span class="S10">)):</span><span class="S0"> </span><span class="S1"># reproduce visual lighting (not ideal, but good approximation)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>light<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>display<span class="S10">.</span>lights<span class="S10">[</span>i<span class="S10">]</span><span class="S0"> </span><span class="S1"># vector in direction of light</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>intensity<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>mag<span class="S10">(</span>light<span class="S10">)</span><span class="S0"> </span><span class="S1"># intensity of light (all lights are white)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>pos<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>norm<span class="S10">(</span>light<span class="S10">)</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span>max<span class="S10">(</span>display<span class="S10">.</span>range<span class="S10">)</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">100.0</span><span class="S0"> </span><span class="S1"># far away to simulate parallel light</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>light_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>light_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'posx'</span><span class="S10">:</span>pos<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'posy'</span><span class="S10">:</span>pos<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'posz'</span><span class="S10">:</span>pos<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'int'</span><span class="S10">:</span>intensity<span class="S10">*</span><span class="S2">5</span><span class="S10">/</span><span class="S2">3.</span><span class="S0"> </span><span class="S10">}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>shadowless<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S1"># insert frame_code at end (these rot's must be done last)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>end<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>rfind<span class="S10">(</span>light_code<span class="S10">,</span><span class="S0"> </span><span class="S4">'}'</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>light_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>light_code<span class="S10">[:</span>end<span class="S10">]</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">' &nbsp;&nbsp;&nbsp;shadowless\n'</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>light_code<span class="S10">[</span>end<span class="S10">:]</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>write<span class="S10">(</span><span class="S0"> </span>light_code<span class="S0"> </span><span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>cpos<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>display<span class="S10">.</span>mouse<span class="S10">.</span>camera<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>ctr<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>display<span class="S10">.</span>center<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>cup<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>display<span class="S10">.</span>up<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>write<span class="S10">(</span><span class="S0"> </span>camera_template<span class="S0"> </span><span class="S10">%</span><span class="S0"> </span><span class="S10">{</span><span class="S0"> </span><span class="S4">'xyratio'</span><span class="S10">:</span>xy_ratio<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'posx'</span><span class="S10">:</span>cpos<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'posy'</span><span class="S10">:</span>cpos<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'posz'</span><span class="S10">:</span>cpos<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'upx'</span><span class="S10">:</span>cup<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'upy'</span><span class="S10">:</span>cup<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'upz'</span><span class="S10">:</span>cup<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'pos2x'</span><span class="S10">:</span>ctr<span class="S10">.</span>x<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2y'</span><span class="S10">:</span>ctr<span class="S10">.</span>y<span class="S10">,</span><span class="S0"> </span><span class="S4">'pos2z'</span><span class="S10">:</span>ctr<span class="S10">.</span>z<span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'fov'</span><span class="S10">:</span>display<span class="S10">.</span>fov<span class="S10">*</span><span class="S2">180</span><span class="S10">/</span>pi<span class="S0"> </span><span class="S10">}</span><span class="S0"> </span><span class="S10">)</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>obj<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>display<span class="S10">.</span>objects<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>key<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>obj<span class="S10">.</span>__class__<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>legal<span class="S10">.</span>has_key<span class="S10">(</span>key<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>obj_name<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>legal<span class="S10">[</span>key<span class="S10">]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>obj_name<span class="S0"> </span><span class="S10">!=</span><span class="S0"> </span><span class="S4">'frame'</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>function_name<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">'export_'</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>obj_name<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>function<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>globals<span class="S10">().</span>get<span class="S10">(</span>function_name<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>object_code<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>function<span class="S10">(</span>obj<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>write<span class="S10">(</span><span class="S0"> </span>object_code<span class="S0"> </span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">'WARNING: export function for '</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>obj_name<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">' not implemented'</span><br />
+<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>file<span class="S10">.</span>close<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span><span class="S4">'The export() function no longer returns the scene as an\n'</span><span class="S0"> \</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S4">'endless POV-Ray string, but saves it to a file instead.'</span><br />
+<br />
+<br />
+<span class="S5">if</span><span class="S0"> </span>__name__<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S4">'__main__'</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span>__doc__<br />
+<span class="S0"></span></span>
+</body>
+</html>

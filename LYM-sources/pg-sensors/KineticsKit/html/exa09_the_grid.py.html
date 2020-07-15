@@ -1,0 +1,150 @@
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>exa09_the_grid.py</title>
+<meta name="GENERATOR" content="SciTE - www.Scintilla.org" />
+<style type="text/css">
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S4 {
+	color: #007f00;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S7 {
+	color: #00aa00;
+}
+.S9 {
+	font-weight: bold;
+	color: #7f00aa;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+.S12 {
+	color: #7F7F7F;
+}
+span {
+	font-family: 'Verdana';
+	color: #000000;
+	font-size: 9pt;
+}
+</style>
+</head>
+<body bgcolor=#f0f0f8>
+<span><span class="S5">from</span><span class="S0"> </span>KineticsKit<span class="S0"> </span><span class="S5">import</span><span class="S0"> </span><span class="S10">*</span><br />
+<span class="S5">import</span><span class="S0"> </span>visual<br />
+<span class="S5">import</span><span class="S0"> </span>math<br />
+<br />
+xmax<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">15</span><br />
+zmax<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">15</span><br />
+interactive<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<br />
+<span class="S5">def</span><span class="S0"> </span><span class="S9">xz</span><span class="S10">(</span>x<span class="S10">,</span><span class="S0"> </span>z<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">return</span><span class="S0"> </span>z<span class="S0"> </span><span class="S10">*</span><span class="S0"> </span>xmax<span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>x<br />
+<br />
+system<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>System<span class="S10">(</span>timestep<span class="S10">=</span><span class="S2">1.</span><span class="S10">/</span><span class="S2">25</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>oversample<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>gravity<span class="S10">=</span><span class="S5">None</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>viscosity<span class="S10">=</span><span class="S2">0.05</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>width<span class="S10">=</span><span class="S2">320</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>height<span class="S10">=</span><span class="S2">240</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>fov<span class="S10">=</span>visual<span class="S10">.</span>pi<span class="S10">/</span><span class="S2">6.</span><span class="S10">)</span><br />
+<span class="S5">if</span><span class="S0"> </span>interactive<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S7">"""Try to click at a Mass to grip it, click again to release it.</span><br />
+<span class="S7">Zooming / rotating of the scene is done by holding the left / right</span><br />
+<span class="S7">mouse button down while moving the mouse around."""</span><br />
+<br />
+system<span class="S10">.</span>display<span class="S10">.</span>lights<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">[</span>visual<span class="S10">.</span>vector<span class="S10">(-</span><span class="S2">0.2</span><span class="S10">,</span><span class="S0"> &nbsp;</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> &nbsp;</span><span class="S2">0.5</span><span class="S10">),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>visual<span class="S10">.</span>vector<span class="S10">(-</span><span class="S2">0.2</span><span class="S10">,</span><span class="S0"> &nbsp;</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">0.3</span><span class="S10">),</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>visual<span class="S10">.</span>vector<span class="S10">(</span><span class="S0"> </span><span class="S2">0.2</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> &nbsp;</span><span class="S2">0.3</span><span class="S10">)]</span><br />
+<br />
+<span class="S1"># masses</span><br />
+<span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>zmax<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>xmax<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>xcoord<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span>x<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span>float<span class="S10">(</span>xmax<span class="S10">-</span><span class="S2">1</span><span class="S10">)</span><span class="S0"> </span><span class="S10">-</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">)</span><span class="S0"> </span><span class="S10">/</span><span class="S0"> </span><span class="S2">2.</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>zcoord<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span>z<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span>float<span class="S10">(</span>zmax<span class="S10">-</span><span class="S2">1</span><span class="S10">)</span><span class="S0"> </span><span class="S10">-</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">)</span><span class="S0"> </span><span class="S10">/</span><span class="S0"> </span><span class="S2">2.</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>x<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S2">0</span><span class="S0"> </span><span class="S5">or</span><span class="S0"> </span>x<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span>xmax<span class="S10">-</span><span class="S2">1</span><span class="S0"> </span><span class="S5">or</span><span class="S0"> </span>z<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S2">0</span><span class="S0"> </span><span class="S5">or</span><span class="S0"> </span>z<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span>zmax<span class="S10">-</span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>radius<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0.01</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>color<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>radius<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0.015</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>color<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span><span class="S2">0.647059</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.164706</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.164706</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>mass<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>Mass<span class="S10">(</span>m<span class="S10">=</span><span class="S2">0.05</span><span class="S10">,</span><span class="S0"> </span>pos<span class="S10">=</span>visual<span class="S10">.</span>vector<span class="S10">(</span>xcoord<span class="S10">,</span><span class="S0"> </span><span class="S2">0</span><span class="S10">,</span><span class="S0"> </span>zcoord<span class="S10">),</span><span class="S0"> </span>r<span class="S10">=</span>radius<span class="S10">,</span><span class="S0"> </span>fixed<span class="S10">=</span>fixed<span class="S10">,</span><span class="S0"> </span>color<span class="S10">=</span>color<span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S12">## texture {pigment {color %s} finish {specular 0.5 metallic}}</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertMass<span class="S10">(</span>mass<span class="S10">)</span><br />
+<br />
+<span class="S1"># springs</span><br />
+<span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>zmax<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>xmax<span class="S10">-</span><span class="S2">1</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m0<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>x<span class="S10">,</span><span class="S0"> </span>z<span class="S10">)]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>x<span class="S10">+</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>z<span class="S10">)]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>z<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S2">0</span><span class="S0"> </span><span class="S5">or</span><span class="S0"> </span>z<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span>zmax<span class="S10">-</span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.00</span><span class="S10">,</span><span class="S0"> </span>segments<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>radius1<span class="S10">=</span><span class="S2">0.01</span><span class="S10">,</span><span class="S0"> </span>color<span class="S10">=(</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.00</span><span class="S10">,</span><span class="S0"> </span>segments<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>radius1<span class="S10">=</span><span class="S2">0.007</span><span class="S10">,</span><span class="S0"> </span>color<span class="S10">=(</span><span class="S2">1.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertSpring<span class="S10">(</span>spring<span class="S10">)</span><br />
+<span class="S5">for</span><span class="S0"> </span>x<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>xmax<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>z<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>zmax<span class="S10">-</span><span class="S2">1</span><span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m0<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>x<span class="S10">,</span><span class="S0"> </span>z<span class="S10">)]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>m1<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>x<span class="S10">,</span><span class="S0"> </span>z<span class="S10">+</span><span class="S2">1</span><span class="S10">)]</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>x<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span><span class="S2">0</span><span class="S0"> </span><span class="S5">or</span><span class="S0"> </span>x<span class="S0"> </span><span class="S10">==</span><span class="S0"> </span>xmax<span class="S10">-</span><span class="S2">1</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.00</span><span class="S10">,</span><span class="S0"> </span>segments<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>radius1<span class="S10">=</span><span class="S2">0.01</span><span class="S10">,</span><span class="S0"> </span>color<span class="S10">=(</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>CylinderSpring<span class="S10">(</span>m0<span class="S10">=</span>m0<span class="S10">,</span><span class="S0"> </span>m1<span class="S10">=</span>m1<span class="S10">,</span><span class="S0"> </span>k<span class="S10">=</span><span class="S2">10</span><span class="S10">,</span><span class="S0"> </span>damping<span class="S10">=</span><span class="S2">0.00</span><span class="S10">,</span><span class="S0"> </span>segments<span class="S10">=</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span>radius1<span class="S10">=</span><span class="S2">0.007</span><span class="S10">,</span><span class="S0"> </span>color<span class="S10">=(</span><span class="S2">1.0</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">0.0</span><span class="S10">))</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>insertSpring<span class="S10">(</span>spring<span class="S10">)</span><br />
+<br />
+<span class="S1"># tense springs</span><br />
+<span class="S5">for</span><span class="S0"> </span>spring<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>system<span class="S10">.</span>springs<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>spring<span class="S10">.</span>l0<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>spring<span class="S10">.</span>l0<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span><span class="S2">10.</span><br />
+<br />
+<span class="S1"># place camera</span><br />
+system<span class="S10">.</span>display<span class="S10">.</span>forward<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S10">-</span><span class="S2">0.5</span><span class="S10">,</span><span class="S0"> </span><span class="S2">1.0</span><span class="S10">)</span><br />
+<br />
+system<span class="S10">.</span>display<span class="S10">.</span>scale<span class="S0"> </span><span class="S10">*=</span><span class="S0"> </span><span class="S2">1.3</span><br />
+system<span class="S10">.</span>display<span class="S10">.</span>autoscale<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<br />
+<span class="S5">if</span><span class="S0"> </span>interactive<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>mainloop<span class="S10">()</span><br />
+<span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>display<span class="S10">.</span>userzoom<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>display<span class="S10">.</span>userspin<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>frames<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">25</span><span class="S0"> </span><span class="S1">#* 10</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>coslength<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">25</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">import</span><span class="S0"> </span>string<span class="S10">,</span><span class="S0"> </span>math<span class="S10">,</span><span class="S0"> </span>time<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>time<span class="S10">.</span>sleep<span class="S10">(</span><span class="S2">2</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">for</span><span class="S0"> </span>frame<span class="S0"> </span><span class="S5">in</span><span class="S0"> </span>range<span class="S10">(</span>frames<span class="S10">):</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">if</span><span class="S0"> </span>frame<span class="S0"> </span><span class="S10">&lt;=</span><span class="S0"> </span>coslength<span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>arg<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span>frame<span class="S0"> </span><span class="S10">/</span><span class="S0"> </span>float<span class="S10">(</span>coslength<span class="S10">)</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">2</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span>math<span class="S10">.</span>pi<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>xmax<span class="S10">/</span><span class="S2">2</span><span class="S10">,</span><span class="S0"> </span>zmax<span class="S10">/</span><span class="S2">2</span><span class="S10">)].</span>sphere<span class="S10">.</span>y<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S10">(</span><span class="S2">1</span><span class="S0"> </span><span class="S10">-</span><span class="S0"> </span>math<span class="S10">.</span>cos<span class="S10">(</span>arg<span class="S10">))</span><span class="S0"> </span><span class="S10">*</span><span class="S0"> </span><span class="S2">0.1</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>xmax<span class="S10">/</span><span class="S2">2</span><span class="S10">,</span><span class="S0"> </span>zmax<span class="S10">/</span><span class="S2">2</span><span class="S10">)].</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">elif</span><span class="S0"> </span>frame<span class="S0"> </span><span class="S10">&lt;=</span><span class="S0"> </span><span class="S2">100</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>xmax<span class="S10">/</span><span class="S2">2</span><span class="S10">,</span><span class="S0"> </span>zmax<span class="S10">/</span><span class="S2">2</span><span class="S10">)].</span>sphere<span class="S10">.</span>y<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>xmax<span class="S10">/</span><span class="S2">2</span><span class="S10">,</span><span class="S0"> </span>zmax<span class="S10">/</span><span class="S2">2</span><span class="S10">)].</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">1</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">else</span><span class="S10">:</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>masses<span class="S10">[</span>xz<span class="S10">(</span>xmax<span class="S10">/</span><span class="S2">2</span><span class="S10">,</span><span class="S0"> </span>zmax<span class="S10">/</span><span class="S2">2</span><span class="S10">)].</span>fixed<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">'frame'</span><span class="S10">,</span><span class="S0"> </span>frame<span class="S10">+</span><span class="S2">1</span><span class="S10">,</span><span class="S0"> </span><span class="S4">'of'</span><span class="S10">,</span><span class="S0"> </span>frames<br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>filename<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S4">'frm'</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span>string<span class="S10">.</span>zfill<span class="S10">(</span>frame<span class="S10">,</span><span class="S0"> </span><span class="S2">4</span><span class="S10">)</span><span class="S0"> </span><span class="S10">+</span><span class="S0"> </span><span class="S4">'.pov'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">' &nbsp;advancing ...'</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>advance<span class="S10">()</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">'done'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">' &nbsp;writing system ...'</span><span class="S10">,</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>povexport<span class="S10">(</span>filename<span class="S10">=</span>filename<span class="S10">,</span><span class="S0"> </span>custom_text<span class="S10">=</span><span class="S4">'\nglobal_settings { assumed_gamma 2.2 }\n'</span><span class="S10">)</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="S5">print</span><span class="S0"> </span><span class="S4">'done'</span><br />
+<span class="S0">&nbsp;&nbsp;&nbsp;&nbsp;</span>system<span class="S10">.</span>display<span class="S10">.</span>visible<span class="S0"> </span><span class="S10">=</span><span class="S0"> </span><span class="S2">0</span><br />
+<span class="S0"></span></span>
+</body>
+</html>

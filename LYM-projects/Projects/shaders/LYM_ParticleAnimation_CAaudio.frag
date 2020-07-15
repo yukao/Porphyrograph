@@ -18,6 +18,10 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 1
 #define PG_NB_PATHS 7
 
+#define PG_PATH_ANIM_POS              0
+#define PG_PATH_ANIM_RAD              1
+#define PG_MAX_PATH_ANIM_DATA         2
+
 // VIDEO UPDATE
 #ifdef PG_VIDEO_ACTIVE
   vec2 movieWH;
@@ -156,23 +160,14 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
+uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_PATHS + 1)];
+
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
 uniform vec3 uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH; //
  
 uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   // 
-
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_x; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_y; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_x_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_y_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_RadiusX; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_x; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_y; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_x_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_y_prev; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_RadiusX; // 
 
 /////////////////////////////////////
 // INPUT
@@ -407,21 +402,18 @@ void particle_out( void ) {
   // REPOP ALONG PATHS (A RANDOM PATH AMONG THE ACTIVE ONES IS CHOSEN AT EACH FRAME)
   // SINCE REPOPULATION IS AN ADDITIVE PROCESS, SEVERAL SOURCES OF PARTICLES CAN
   // EXIST SIMULTANEOUSLY
-  int repopChannel = int(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo.z);
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-  
+  int repopChannel = int(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo.z);  
   vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.75 ) );
   if( repop_path > 0
     && int((frameNo+5000) * randomValue.w ) % int(15000 *(1-repop_path)) == int((randomValue.x * 5000.0
         + randomValue.z * 5000.0 + randomValue.y * 5000.0 ) *(1-repop_path)) ) {
-    if( repopChannel >= 0 && repopChannel < 4 
-      && uniform_ParticleAnimation_fs_4fv_paths03_x[repopChannel] > 0
-      && uniform_ParticleAnimation_fs_4fv_paths03_y[repopChannel] > 0 ) {
+    vec4 pen_pos_prev_cur 
+      = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
+    vec4 radius = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
+    if( repopChannel >= 0 && pen_pos_prev_cur.z > 0 && pen_pos_prev_cur.w > 0 ) {
      /////////////////////////////////////////////////////////////////////
-      vec2 pen_prev = vec2( uniform_ParticleAnimation_fs_4fv_paths03_x_prev[repopChannel],
-                height - uniform_ParticleAnimation_fs_4fv_paths03_y_prev[repopChannel]);
-      vec2 pen_curr = vec2( uniform_ParticleAnimation_fs_4fv_paths03_x[repopChannel],
-                height - uniform_ParticleAnimation_fs_4fv_paths03_y[repopChannel]);
+      vec2 pen_prev = vec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w);
+      vec2 pen_curr = vec2( pen_pos_prev_cur.x, height - pen_pos_prev_cur.y);
       vec2 orth = pen_prev - pen_curr;
       if(length(orth) != 0) {
         orth.xy = orth.yx;
@@ -430,39 +422,12 @@ void particle_out( void ) {
       }
       out_position_speed_particle.xy 
         = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) 
-              * (uniform_ParticleAnimation_fs_4fv_paths03_RadiusX[repopChannel]); // thickness
+      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius.x; // thickness
       out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
       out_color_radius_particle 
           = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
                   part_size);
     }
-#endif
-#if PG_NB_PATHS == 7
-    else if( repopChannel >= 4 
-              && uniform_ParticleAnimation_fs_4fv_paths47_x[repopChannel - 4] > 0
-              && uniform_ParticleAnimation_fs_4fv_paths47_y[repopChannel - 4] > 0 ) {
-     /////////////////////////////////////////////////////////////////////
-      vec2 pen_prev = vec2( uniform_ParticleAnimation_fs_4fv_paths47_x_prev[repopChannel - 4],
-                height - uniform_ParticleAnimation_fs_4fv_paths47_y_prev[repopChannel - 4]);
-      vec2 pen_curr = vec2( uniform_ParticleAnimation_fs_4fv_paths47_x[repopChannel - 4],
-                height - uniform_ParticleAnimation_fs_4fv_paths47_y[repopChannel - 4]);
-      vec2 orth = pen_prev - pen_curr;
-      if(length(orth) != 0) {
-        orth.xy = orth.yx;
-        orth.y *= -1;
-        orth = normalize(orth);
-      }
-      out_position_speed_particle.xy 
-        = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) 
-              * (uniform_ParticleAnimation_fs_4fv_paths47_RadiusX[repopChannel - 4]); // thickness
-      out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-      out_color_radius_particle 
-          = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
-                  part_size);
-    }
-#endif
   }
 
   //////////////////////////////////////////////////////////////////
@@ -585,13 +550,14 @@ void particle_out( void ) {
   ///////////////////////////////////////////////////////////////////
   // PARTICLE: PATH FOLLOW OR REPULSE
   for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
+    vec4 pen_pos_prev_cur 
+      = uniform_ParticleAnimation_path_data[indPath * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
+    dvec2 curPos = dvec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w );
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
     if( indPath < 4 && path_follow03[indPath] ) {
       // reaches for pen position
       part_acceleration 
-        = dvec2(dvec2( uniform_ParticleAnimation_fs_4fv_paths03_x[indPath] , 
-                          height - uniform_ParticleAnimation_fs_4fv_paths03_y[indPath] )
-                    - out_position_speed_particle.xy);
+        = dvec2(curPos - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
@@ -601,9 +567,7 @@ void particle_out( void ) {
     else if( indPath >= 4 && path_follow47[indPath - 4] ) {
       // reaches for pen position
       part_acceleration 
-        = dvec2(dvec2( uniform_ParticleAnimation_fs_4fv_paths47_x[indPath - 4] , 
-                          height - uniform_ParticleAnimation_fs_4fv_paths47_y[indPath - 4] )
-                    - out_position_speed_particle.xy);
+        = dvec2(curPos - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
@@ -613,9 +577,9 @@ void particle_out( void ) {
     if( indPath < 4 && path_repulse03[indPath] ) {
       // escapes from pen position
       part_acceleration 
-        = dvec2(out_position_speed_particle.xy 
-             - dvec2( (uniform_ParticleAnimation_fs_4fv_paths03_x[indPath]) , 
-                     height - uniform_ParticleAnimation_fs_4fv_paths03_y[indPath] ));
+        = dvec2(out_position_speed_particle.xy - curPos);
+      // adds some field disturbance
+      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
     }
 #endif
 #if PG_NB_PATHS == 7
@@ -623,9 +587,9 @@ void particle_out( void ) {
       // reaches for pen position
       // escapes from pen position
       part_acceleration 
-        = dvec2(out_position_speed_particle.xy 
-             - dvec2( (uniform_ParticleAnimation_fs_4fv_paths47_x[indPath - 4]) , 
-                     height - uniform_ParticleAnimation_fs_4fv_paths47_y[indPath - 4] ));
+        = dvec2(out_position_speed_particle.xy - curPos);
+      // adds some field disturbance
+      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
     }
 #endif
   }

@@ -1,0 +1,239 @@
+HappyDoc version r1_4_1
+
+D:/PYTHON20/happydocwin.py
+
+
+	HappyDoc is a documentation generation/extraction tool which does
+	not depend on being able to import modules.
+	This app is based on the Demos/parser/example.py module distributed
+	with the Python source distribution.
+
+
+SYNTAX:
+
+	D:/PYTHON20/happydocwin.py [-hoqrv] 
+		[-F format] 
+		[-T docset_type] 
+		[-d outputDirectory] 
+		[-i ignoreDirectory] 
+		[-p packageDescriptionFile] 
+		[-t title] 
+		[--help] 
+		[--no_comments] 
+		[--no_private_names] 
+		[--author=authorNameAndEmail] 
+
+OPTIONS:
+
+	-h
+
+			Displays abbreviated help message.
+
+
+	--help
+
+			Displays complete usage information.
+
+
+	-F format
+
+			Specify the output format.
+
+
+	-T docset_type
+
+			Specify the documentation set type.
+
+
+	--author=authorNameAndEmail
+
+			Specify the author identification to be inserted for
+			references.
+
+
+	-d outputDirectory
+
+			Specify an outputDirectory.
+
+
+	-i ignoreDirectory
+
+			Specify a directory basename to be ignored.
+			Use just the base name of the directory.
+			For instance, to ignore all directories
+			with the name CVS, specify: -i CVS.
+			Defaults to ignore::
+			CVS, dist, build, doc, docs.
+
+
+	--no_comments
+
+			Do not include comment text as though it was
+			a __doc__ string.
+
+
+	--no_private_names
+
+			Do not include names beginning with _.
+
+
+	-o
+
+			Specify that output should go to stdout.
+
+
+	-p packageDescriptionFile
+
+			Specify a file with a description of the package.
+			The default packageDescriptionFile is README.txt.
+
+
+	-q
+
+			Turn on quiet mode.
+
+
+	-r
+
+			Disable recursion into subdirectories.
+
+
+	-t title
+
+			Specify a title for the documentation set.
+
+
+	-v
+
+			Increment the verbose level.
+			Higher levels are more verbose.
+			The default is 1.
+
+
+
+
+SUPPORTED FORMATS for -F Option:
+
+  FORMATTER TYPE htmltable: Formatter which produces HTML with tables.
+
+    The output from this formatter is not generally suitable for
+    printing, but works fine for online documentation.  The primary
+    concern with printing the output is that the nested tables can
+    cause pages to be very wide, especially with a lot of nesting of
+    classes.  Printable HTML output should be addressed by another
+    formatter.
+
+      Parameters
+
+        compactHTML -- A boolean switch to cause the formatter
+                       to generate more compact HTML.  Extra
+                       whitespace is removed in order to make the
+                       generated files take up less space and
+                       download more quickly.  The default is
+                       False to cause output to be more readable.
+      
+        filenamePrefix -- A prefix to preprend to the base names of
+                          files and directories being created.  This
+                          is useful for situations where the names
+                          which would be automatically generated might
+                          cause a name clash or conflict.
+
+        pageBackgroundColor -- Background color for HTML pages
+
+        levelOneHeadingBackgroundColor -- Background color for level
+                                          one heading sections.
+
+        levelOneHeadingForegroundColor -- Foreground color for level
+                                          one heading sections.
+
+        levelTwoHeadingBackgroundColor -- Background color for level
+                                          two heading sections
+
+        levelTwoHeadingForegroundColor -- Foreground color for level
+                                          two heading sections.
+
+        codeForegroundColor -- Foreground color for code blocks.
+
+        dateStampFiles -- Boolean indicating whether or not to include
+                          a date/time stamp in files.
+
+        htmlQuoteText -- Boolean indicating whether or not to assume
+                         that docstrings need to be quoted because
+                         they might have special HTML characters in
+                         them.  Defaults to true so that text is
+                         quoted.
+
+        debug -- Enable debugging comments in output.
+      
+    
+  FORMATTER TYPE null: None
+  FORMATTER TYPE sgmldocbook: Formatter which produces simple DocBook SGML.
+  FORMATTER TYPE text: Formatter which produces plain ASCII text.
+
+    Parameters
+          
+       filenamePrefix -- A prefix to append to the base names of files
+                         and directories being created.  This is
+                         useful for situations where the names which
+                         would be automatically generated might cause
+                         a name clash or conflict.
+      
+    
+
+SUPPORTED DOCSET TYPES for -T Option:
+
+  Basic DocSet Parameters
+    
+        Parameters
+
+            includeComments -- Boolean.  False means to skip the
+                               comment parsing step in the parser.
+                               Default is True.
+            
+            includePrivateNames -- Boolean.  False means to ignore
+                                   names beginning with _.  Default
+                                   is True.
+
+            usePackages -- Boolean.  True means to provide special
+                           handling for Packages (directories
+                           containing __init__.py files) from
+                           non-package Modules.
+
+            prewrittenFileBasenames -- Base names (no extensions) of
+                                       StructuredText files which are
+                                       to be converted to the output
+                                       format and included in the
+                                       docset.
+
+            statusMessageFunc -- function which will print a status
+                                 message for the user
+
+            title -- the title of the documentation set
+
+            useRecursion -- Recurse into subdirectories looking for
+                            subdirectories and files within them.
+
+    
+
+  DOCSET TYPE: multifile_docset: Documentation set written to multiple files.
+
+    Parameters
+
+      *Adds no additional parameters not understood by DocSet.*
+    
+    
+  DOCSET TYPE: singlefile: Documentation which writes output to a single file.
+
+      Parameters
+
+        *See MultiFileDocSet.*
+        
+    
+  DOCSET TYPE: stdout: Documentation set which writes output to standard output.
+
+      Parameters
+
+        *See DocSet.*
+
+    
+

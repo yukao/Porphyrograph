@@ -8,7 +8,8 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 #define PG_NB_TRACKS 3
-#define ATELIERS_PORTATIFS
+// #define ATELIERS_PORTATIFS
+#define CAVERNEPLATON
 
 #include_declarations
 
@@ -52,7 +53,7 @@ uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
-uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
+uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
@@ -77,6 +78,8 @@ void main() {
   vec2 initialCoords = coords;
   vec2 centerCoords = vec2(width/2, height/2);
 
+  int currentScene = int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w);
+
   // vertical mirror
   // coords.y = height - coords.y;
   // BRON mirror
@@ -94,7 +97,7 @@ void main() {
   // interface
   if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
     else if(decalCoords.x < 200) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
@@ -165,9 +168,23 @@ void main() {
 
   ////////////////////////////////////////////////////////////////////
   // image mask
-  vec2 coordsWRTcenter = (initialCoords - centerCoords) / master_mask_scale;
-  outColor0.rgb *= texture(uniform_Master_texture_fs_Mask, 
-             coordsWRTcenter + (centerCoords + vec2(master_mask_offsetX, master_mask_offsetY) / master_mask_scale)).r;
+  vec2 ratioed_scale = vec2(master_mask_scale, master_mask_scale * master_mask_scale_ratio);
+  vec2 coordsWRTcenter = (initialCoords - centerCoords) / ratioed_scale;
+  vec4 maskColor;
+  if(currentScene == 7 || currentScene == 8) {
+    maskColor = texture(uniform_Master_texture_fs_Mask, 
+          coordsWRTcenter + (centerCoords + vec2(master_mask_offsetX, master_mask_offsetY) / ratioed_scale));
+    outColor0.rgb *= maskColor.r;
+  }
+  else if(currentScene == 12) {
+    maskColor = texture(uniform_Master_texture_fs_Mask, vec2(coords.x - width/2,height/2-coords.y) / ratioed_scale + vec2(width/2,height/2));
+    outColor0.rgb *= clamp(1.3
+     - maskColor.b,0,1);
+  }
+  else {  
+    maskColor = texture(uniform_Master_texture_fs_Mask, vec2(coords.x - width/2,height/2-coords.y) / ratioed_scale + vec2(width/2,height/2));
+    outColor0.rgb *= maskColor.g;
+  }
 
   ////////////////////////////////////////////////////////////////////
   // blinking cursor 1 pixel wide under the mouse (except for hide)
@@ -199,5 +216,4 @@ void main() {
   }
 
   outColor0.rgb *= master;
-
 }

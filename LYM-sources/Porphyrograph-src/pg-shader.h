@@ -62,6 +62,12 @@
 #ifdef VOLUSPA
 #include "pg_shader_header_voluspa.h"
 #endif
+#ifdef ARAKNIT
+#include "pg_shader_header_araknit.h"
+#endif
+#if defined (ETOILES)
+#include "pg_shader_header_etoiles.h"
+#endif
 #ifdef INTERFERENCE
 #include "pg_shader_header_interference.h"
 #endif
@@ -86,13 +92,13 @@ void pg_initializationScript( void );
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
 enum ShaderFileTypes {
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_shader_ParticleAnimation = 0,
 	pg_shader_Update,
 #else
 	pg_shader_Update = 0,
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	pg_shader_ParticleRender,
 #endif
 	pg_shader_Mixing,
@@ -107,6 +113,7 @@ enum ShaderFileTypes {
 	pg_NbShaderTotal
 };
 extern unsigned int shader_programme[pg_NbShaderTotal];
+extern std::unordered_map<int, std::string> pg_stringShaders;
 
 /////////////////////////////////////////////////////////////////////////
 // CAMERA SHADER
@@ -121,7 +128,7 @@ extern unsigned int shader_programme[pg_NbShaderTotal];
 //extern GLint uniform_Camera_texture_fs_decal;         // camera capture
 //extern GLint uniform_Camera_texture_fs_lookupTable1;  // current background video frame
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
@@ -131,22 +138,23 @@ extern GLint uniform_ParticleAnimation_vp_proj;
 extern GLint uniform_ParticleAnimation_vp_2fv_width_height;
 extern GLint uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo;
 extern GLint uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-extern GLint uniform_ParticleAnimation_fs_4fv_paths03_x;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths03_y;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths03_x_prev;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths03_y_prev;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths03_RadiusX;
-#endif
-#if PG_NB_PATHS == 7
-extern GLint uniform_ParticleAnimation_fs_4fv_paths47_x;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths47_y;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths47_x_prev;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths47_y_prev;
-extern GLint uniform_ParticleAnimation_fs_4fv_paths47_RadiusX;
-#endif
+extern GLint uniform_ParticleAnimation_path_data;
+//#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_x;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_y;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_x_prev;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_y_prev;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_RadiusX;
+//#endif
+//#if PG_NB_PATHS == 7
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_x;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_y;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_x_prev;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_y_prev;
+//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_RadiusX;
+//#endif
 extern GLint uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo;
-extern GLint uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear;
+extern GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit;
 extern GLint uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH;
 extern GLint uniform_ParticleAnimation_texture_fs_Trk0;  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
@@ -164,7 +172,9 @@ extern GLint uniform_ParticleAnimation_texture_fs_CA;         // ping-pong CA (F
 extern GLint uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong position/speed of particles (FBO)
 extern GLint uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong color/radius of particles (FBO)
 extern GLint uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong target position/color/radius of particles (FBO)
+#ifdef PG_WITH_CAMERA_CAPTURE
 extern GLint uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera frame
+#endif
 extern GLint uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_ParticleAnimation_texture_fs_Noise;  // 3D noise
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
@@ -183,63 +193,14 @@ extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 #ifdef CAAUDIO
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
 #endif
 extern GLint uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 #ifdef PG_NB_CA_TYPES
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts;
 #endif
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-extern GLint uniform_Update_fs_4fv_paths03_x;
-extern GLint uniform_Update_fs_4fv_paths03_y;
-extern GLint uniform_Update_fs_4fv_paths03_x_prev;
-extern GLint uniform_Update_fs_4fv_paths03_y_prev;
-#ifdef PG_BEZIER_PATHS
-// pen Bezier curve tangents
-extern GLint uniform_Update_fs_4fv_paths03_xL;
-extern GLint uniform_Update_fs_4fv_paths03_yL;
-extern GLint uniform_Update_fs_4fv_paths03_xR;
-extern GLint uniform_Update_fs_4fv_paths03_yR;
-extern GLint uniform_Update_fs_4iv_path03_beginOrEnd;
-#endif
-extern GLint uniform_Update_fs_4fv_paths03_r;
-extern GLint uniform_Update_fs_4fv_paths03_g;
-extern GLint uniform_Update_fs_4fv_paths03_b;
-extern GLint uniform_Update_fs_4fv_paths03_a;
-#ifndef PG_BEZIER_PATHS
-extern GLint uniform_Update_fs_4fv_paths03_BrushID;
-#endif
-extern GLint uniform_Update_fs_4fv_paths03_RadiusX;
-#ifndef PG_BEZIER_PATHS
-extern GLint uniform_Update_fs_4fv_paths03_RadiusY;
-#endif
-#endif
-#if PG_NB_PATHS == 7
-extern GLint uniform_Update_fs_4fv_paths47_x;
-extern GLint uniform_Update_fs_4fv_paths47_y;
-extern GLint uniform_Update_fs_4fv_paths47_x_prev;
-extern GLint uniform_Update_fs_4fv_paths47_y_prev;
-#ifdef PG_BEZIER_PATHS
-// pen Bezier curve tangents
-extern GLint uniform_Update_fs_4fv_paths47_xL;
-extern GLint uniform_Update_fs_4fv_paths47_yL;
-extern GLint uniform_Update_fs_4fv_paths47_xR;
-extern GLint uniform_Update_fs_4fv_paths47_yR;
-extern GLint uniform_Update_fs_4iv_path47_beginOrEnd;
-#endif
-extern GLint uniform_Update_fs_4fv_paths47_r;
-extern GLint uniform_Update_fs_4fv_paths47_g;
-extern GLint uniform_Update_fs_4fv_paths47_b;
-extern GLint uniform_Update_fs_4fv_paths47_a;
-#ifndef PG_BEZIER_PATHS
-extern GLint uniform_Update_fs_4fv_paths47_BrushID;
-#endif
-extern GLint uniform_Update_fs_4fv_paths47_RadiusX;
-#ifndef PG_BEZIER_PATHS
-extern GLint uniform_Update_fs_4fv_paths47_RadiusY;
-#endif
-#endif
+extern GLint uniform_Update_path_data;
 #ifdef CRITON
 extern GLint uniform_Update_fs_4fv_fftLevels03;
 extern GLint uniform_Update_fs_4fv_fftFrequencies03;
@@ -248,18 +209,20 @@ extern GLint uniform_Update_fs_4fv_fftLevels47;
 extern GLint uniform_Update_fs_4fv_fftFrequencies47;
 extern GLint uniform_Update_fs_4fv_fftPhases47;
 #endif
-extern GLint uniform_Update_fs_4fv_pulse;
 extern GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
-extern GLint uniform_Update_fs_4fv_repop_Color_flashCABGWght;
+extern GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
+#if defined(PG_NB_CA_TYPES) && !defined (GN)
+extern GLint uniform_Update_fs_3fv_repop_ColorCA;
+#endif
 extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 #ifdef PG_WITH_PHOTO_FLASH
-extern GLint uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres;
+extern GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
 #endif
 #if defined (PG_WITH_PHOTO_DIAPORAMA) || defined (TVW)
 extern GLint uniform_Update_fs_4fv_photo01_wh;
 #endif
 #ifdef PG_WITH_PHOTO_DIAPORAMA
-extern GLint uniform_Update_fs_2fv_photo01Wghts;
+extern GLint uniform_Update_fs_4fv_photo01Wghts_randomValues;
 #endif
 #ifdef PG_WITH_CAMERA_CAPTURE
 extern GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
@@ -300,11 +263,14 @@ extern GLint uniform_Update_texture_fs_Camera_frame;  // camera frame
 extern GLint uniform_Update_texture_fs_Camera_BG;  // camera BG capture
 extern GLint uniform_Update_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_Update_texture_fs_Noise;  // 3D noise
+#ifdef PG_WITH_REPOP_DENSITY
+extern GLint uniform_Update_texture_fs_RepopDensity;  // repop density
+#endif
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 extern GLint uniform_Update_texture_fs_Photo0;  // photo[0]
 extern GLint uniform_Update_texture_fs_Photo1;  // photo[1]
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering used for flashing layers with particles
 #endif
 extern GLint uniform_Update_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
@@ -313,11 +279,11 @@ extern GLint uniform_Update_texture_fs_Part_init_col_rad;  // particle initializ
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE RENDERING SHADER
 // PARTICLE RENDERING SHADER UNIFORM VARIABLES
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 extern GLint uniform_ParticleSplat_vp_model;
 extern GLint uniform_ParticleSplat_vp_view;
 extern GLint uniform_ParticleSplat_vp_proj;
-extern GLint uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse;
+extern GLint uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio;
 extern GLint uniform_ParticleSplat_vp_3fv_trackReplay_xy_height;
 
 // PARTICLE SHADER TEXTURE IDS
@@ -339,7 +305,7 @@ extern GLint uniform_ParticleCurve_texture_vp_Part_col_rad;          // Particle
 // color texture
 extern GLint uniform_ParticleCurve_Comet_texture_fs_decal;  // comet texture
 #endif
-#ifdef BLURRED_SPLAT_PARTICLES_TEXTURED
+#if defined (TEXTURED_QUAD_PARTICLES)
 // color texture
 extern GLint uniform_ParticleSplat_BlurredDisk_texture_fs_decal;  // blurred disk texture
 #endif
@@ -361,7 +327,7 @@ extern GLint uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 #ifdef PG_NB_CA_TYPES
 extern GLint uniform_Mixing_texture_fs_CA; // ping-pong BG track (FBO)
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Mixing_texture_fs_Part_render;  // Particles (FBO)
 #endif
 extern GLint uniform_Mixing_texture_fs_Trk0;  // ping-pong track 0 (FBO)
@@ -415,7 +381,7 @@ extern GLint uniform_Master_vp_proj;
 extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 extern GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
-extern GLint uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
+extern GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 extern GLint uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
 extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
@@ -424,7 +390,7 @@ extern GLint uniform_Master_texture_fs_Render_curr;         // previous pass out
 #ifdef PG_NB_CA_TYPES
 extern GLint uniform_Master_texture_fs_CA;  // ping-pong CA (FBO)
 #endif
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Master_texture_fs_Part_render;  // Particles
 #endif
 extern GLint uniform_Master_texture_fs_Trk0;  // ping-pong track 0 (FBO)
@@ -465,7 +431,15 @@ extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transpare
 extern GLint uniform_Mesh_vp_model;
 extern GLint uniform_Mesh_vp_view;
 extern GLint uniform_Mesh_vp_proj;
-
+extern GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText;
+#ifndef TEMPETE
+extern GLint uniform_Mesh_fs_3fv_light;
+#endif
+#ifdef PG_AUGMENTED_REALITY
+extern GLint uniform_Mesh_fs_4fv_textureFrontier;
+extern GLint uniform_Mesh_fs_4fv_textureFrontier_width;
+extern GLint uniform_Mesh_fs_4fv_textureScaleTransl;
+#endif
 // Mesh SHADER TEXTURE IDS
 extern GLint uniform_Mesh_texture_fs_decal;         // Mesh texture
 #endif

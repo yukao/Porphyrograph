@@ -29,6 +29,19 @@ const float PI = 3.1415926535897932384626433832795;
 #define PG_NB_TRACKS 4
 #define PG_NB_PATHS 7
 
+#define PG_PATH_P_X              0
+#define PG_PATH_P_Y              1
+#ifdef PG_BEZIER_PATHS
+#define PG_PATH_BOX              2
+#define PG_PATH_COLOR            3
+#define PG_PATH_RADIUS_BEGINEND  4
+#define PG_MAX_PATH_DATA         5
+#else
+#define PG_PATH_COLOR            2
+#define PG_PATH_RADIUS_BEGINEND  3
+#define PG_MAX_PATH_DATA         4
+#endif
+
 ///////////////////////////////////////////////////////////////////
 // brush side divider for ateliers portatifs
 int brushSizeDivider = 1;
@@ -220,41 +233,21 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
-uniform vec4 uniform_Update_fs_4fv_paths03_x;
-uniform vec4 uniform_Update_fs_4fv_paths03_y;
-uniform vec4 uniform_Update_fs_4fv_paths03_x_prev;
-uniform vec4 uniform_Update_fs_4fv_paths03_y_prev;
-uniform vec4 uniform_Update_fs_4fv_paths03_r;
-uniform vec4 uniform_Update_fs_4fv_paths03_g;
-uniform vec4 uniform_Update_fs_4fv_paths03_b;
-uniform vec4 uniform_Update_fs_4fv_paths03_a;
-uniform vec4 uniform_Update_fs_4fv_paths03_BrushID;
-uniform vec4 uniform_Update_fs_4fv_paths03_RadiusX;
-uniform vec4 uniform_Update_fs_4fv_paths03_RadiusY;
-uniform vec4 uniform_Update_fs_4fv_paths47_x;
-uniform vec4 uniform_Update_fs_4fv_paths47_y;
-uniform vec4 uniform_Update_fs_4fv_paths47_x_prev;
-uniform vec4 uniform_Update_fs_4fv_paths47_y_prev;
-uniform vec4 uniform_Update_fs_4fv_paths47_r;
-uniform vec4 uniform_Update_fs_4fv_paths47_g;
-uniform vec4 uniform_Update_fs_4fv_paths47_b;
-uniform vec4 uniform_Update_fs_4fv_paths47_a;
-uniform vec4 uniform_Update_fs_4fv_paths47_BrushID;
-uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
-uniform vec4 uniform_Update_fs_4fv_paths47_RadiusY;
+uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
+
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
 
 uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
-uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
+uniform vec4 uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
+uniform vec3 uniform_Update_fs_3fv_repop_ColorCA;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
+uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
@@ -1583,10 +1576,6 @@ void main() {
 
   //////////////////////////
   // variables 
-  // sound pulse
-  vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
-
   // frame number
   frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
@@ -1624,7 +1613,8 @@ void main() {
 
 #ifdef ATELIERS_PORTATIFS
   // non circle brush pen is smaller on the left screen part
-  if(decalCoords.x < width / 2 && uniform_Update_fs_4fv_paths03_BrushID[0] != 0) {
+  if(decalCoords.x < width / 2 
+    && uniform_Update_path_data[0 * PG_MAX_PATH_DATA + PG_PATH_RADIUS_BEGINEND].w != 0) {
       brushSizeDivider = 10;
   }
 #endif            
@@ -1769,19 +1759,19 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
-  photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
+  photocolor *= vec3(photo_value);
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -1878,21 +1868,13 @@ void main() {
   videocolor = cameraWeight * cameraImage 
               + movieWeight * movieImage;
 
-  // image_satur image_satur_pulse
-  vec3 pulsed_satur = vec3(1);
-  if(video_satur_pulse > 0) {
-    pulsed_satur = video_satur + video_satur_pulse * pulse;
-  }
+  // video_satur
   //  public-domain function by Darel Rex Finley
   float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
                              (videocolor.g)*(videocolor.g) * .587 +
                              (videocolor.b)*(videocolor.b) * .114 ) ;
-  videocolor.r = clamp( powerColor 
-    + (videocolor.r - powerColor) * pulsed_satur.r , 0 , 1 );
-  videocolor.g = clamp( powerColor 
-    + (videocolor.g - powerColor) * pulsed_satur.g , 0 , 1 );
-  videocolor.b = clamp( powerColor 
-    + (videocolor.b - powerColor) * pulsed_satur.b , 0 , 1 );
+    videocolor = clamp( powerColor 
+      + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -1948,52 +1930,55 @@ void main() {
 #endif
       // drawing occurs
       if( pathStroke > 0 ) {
-        if(indPath < 4) {
-            if(indPath == 0 && // rubber stylus
-                               Cursor < 0) {
-                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y[indPath] , 
-                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                    3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                    3 * uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                    pathStroke );
-                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
-                curTrack_color.rgb = vec3(0);
-            }
-            else { // normal stylus
-                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y[indPath] , 
-                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                    uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                    uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                    pathStroke );
-                curTrack_color.rgb
-                  += curTrack_grayLevel
-                    * uniform_Update_fs_4fv_paths03_a[indPath]
-                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
-                                uniform_Update_fs_4fv_paths03_g[indPath] , 
-                                uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
-            }
-        }
-        else {
-            curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths47_x[indPath - 4] , 
-                uniform_Update_fs_4fv_paths47_y[indPath - 4] , 
-                uniform_Update_fs_4fv_paths47_x_prev[indPath - 4] , 
-                uniform_Update_fs_4fv_paths47_y_prev[indPath - 4] ,
-                uniform_Update_fs_4fv_paths47_RadiusX[indPath - 4] / brushSizeDivider,
-                uniform_Update_fs_4fv_paths47_RadiusY[indPath - 4] / brushSizeDivider,
-                int(uniform_Update_fs_4fv_paths47_BrushID[indPath - 4]) ,
-                pathStroke );
-            curTrack_color.rgb
+        vec4 pathX
+         = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];
+        vec4 pathY
+         = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_Y];
+        vec4 radius_beginOrEnd 
+         = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_RADIUS_BEGINEND];
+        vec4 pathColor
+         = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_COLOR];
+
+        if(indPath == 0 && // rubber stylus
+                         Cursor < 0) {
+          curTrack_grayLevel =  out_gray_drawing( 
+              pathX[3] , pathY[3], // current position
+              pathX[0] , pathY[0], // previous position
+              3 * radius_beginOrEnd.x ,
+              3 * radius_beginOrEnd.z ,
+              int(3 * radius_beginOrEnd.w), pathStroke );
+/*                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
+              uniform_Update_fs_4fv_paths03_y[indPath] , 
+              uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
+              uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
+              3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
+              3 * uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
+              int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
+              pathStroke );
+*/
+          out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
+            curTrack_color.rgb = vec3(0);
+      }
+      else { // normal stylus
+          curTrack_grayLevel =  out_gray_drawing( 
+              pathX[3] , pathY[3], // current position
+              pathX[0] , pathY[0], // previous position
+              radius_beginOrEnd.x ,
+              radius_beginOrEnd.z ,
+              int(radius_beginOrEnd.w), pathStroke );
+/*                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
+              uniform_Update_fs_4fv_paths03_y[indPath] , 
+              uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
+              uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
+              uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
+              uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
+              int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
+              pathStroke );
+*/         
+          curTrack_color.rgb
             += curTrack_grayLevel
-                * uniform_Update_fs_4fv_paths47_a[indPath - 4]
-                * vec3( uniform_Update_fs_4fv_paths47_r[indPath - 4] , 
-                            uniform_Update_fs_4fv_paths47_g[indPath - 4] , 
-                            uniform_Update_fs_4fv_paths47_b[indPath - 4] );  // brush opacity is combined with color opacity
+              * pathColor.a
+              * pathColor.rgb;  // brush opacity is combined with color opacity
         }
       }
     }
@@ -2013,7 +1998,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x + photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 ) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
     }
 
@@ -2113,7 +2098,7 @@ void main() {
       if( int(frameNo * randomCA2.w ) % int(15000 *(1-repop_CA)) == int((randomCA2.z * 5000.0
         + randomCA2.x * 5000.0 + randomCA2.y * 5000.0 ) *(1-repop_CA)) ) {
         out4_CA.a = -1.0;
-        out4_CA.rgb  = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
+        out4_CA.rgb  = uniform_Update_fs_3fv_repop_ColorCA.xyz;
       }
     }
 
@@ -2123,9 +2108,9 @@ void main() {
 
   //////////////////////////////////////
   // FLASH BACK FROM CA LAYER TO BG LAYER
-  // if no flashback uniform_Update_fs_4fv_repop_Color_flashCABGWght.w == 0
+  // if no flashback uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w == 0
   out_track_FBO[0].rgb = clamp( out_track_FBO[0].rgb 
-				    + uniform_Update_fs_4fv_repop_Color_flashCABGWght.w * out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 
+				    + uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.w * out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 
             0 , 1 );
 
   ///////////////////////////////////////////////////
@@ -2190,7 +2175,7 @@ void main() {
   if( repop_BG > 0 ) {
     if( int(frameNo * randomCA2.z ) % int(15000 *(1-repop_BG)) == int((randomCA2.x * 5000.0
         + randomCA2.y * 5000.0 + randomCA2.w * 5000.0 ) *(1-repop_BG)) ) {
-        out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
+        out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.xyz;
     }
   }
 

@@ -40,31 +40,26 @@ extern GLuint Screen_Font_texture_Rectangle_texID;
 #if defined (TVW)
 extern GLuint Display_Font_texture_Rectangle_texID;
 #endif
-extern cv::Mat Screen_Font_image;
-extern cv::Mat Display_Font_image;
 
 #ifdef PG_WITH_MASTER_MASK
 extern GLuint Master_Mask_texID;
-extern cv::Mat Master_Mask_image;
 #endif
 
 #ifndef PG_BEZIER_PATHS
 extern GLuint Pen_texture_3D_texID;
 #endif
 extern GLuint Noise_texture_3D;
+#ifdef PG_WITH_REPOP_DENSITY
+extern std::vector<GLuint>  pg_RepopDensity_texture_texID;
+#endif
 
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-extern GLuint pg_particle_initial_images_texID[PG_NB_PARTICLE_INITIAL_IMAGES][2];
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+extern std::vector<GLuint> pg_particle_initial_pos_speed_texID;
+extern std::vector<GLuint> pg_particle_initial_color_radius_texID;
 #endif
 
 #ifdef PG_SENSORS
 extern GLuint Sensor_texture_rectangle;
-extern cv::Mat Sensor_image;
-#endif
-
-#ifdef PG_MESHES
-extern GLuint Mesh_texture_rectangle;
-extern cv::Mat Mesh_image;
 #endif
 
 #if defined (TVW)
@@ -91,13 +86,23 @@ extern int IndDisplayText2;
 
 extern bool DisplayText1Front;
 extern float DisplayTextSwapInitialTime;
-
+#endif
+#if defined (TVW) || defined (ETOILES)
 extern std::string* DisplayTextList;
 extern int* DisplayTextFirstInChapter;
 extern int NbDisplayTexts;
+extern int pg_Ind_Current_DisplayText;
 
 // message chapters
 extern int NbTextChapters;
+#endif
+
+#ifdef PG_MESHES
+// MVP matrices
+extern glm::mat4 VP1perspMatrix;
+extern glm::mat4 VP1viewMatrix;
+extern glm::mat4 VP1homographyMatrix;
+extern glm::mat4 VP1modelMatrix;
 #endif
 
 ////////////////////////////////////////
@@ -154,7 +159,7 @@ extern int nb_pen_palette_colors;
 extern vector<string> pen_palette_colors_names;
 extern float **pen_palette_colors_values;
 // photo albums
-extern vector<string> photoAlbumDirName;
+extern string photoAlbumDirName;
 extern int nb_photo_albums;
 // pen brushes
 extern string pen_brushes_fileName;
@@ -191,34 +196,66 @@ extern GLuint drawBuffers[16];
 
 /////////////////////////////////////////////////////////////////
 // config variables
+
+// stroke shipping to GPU (Update and PartcleAnimation shaders)
+#define PG_PATH_P_X              0
+#define PG_PATH_P_Y              1
+#ifdef PG_BEZIER_PATHS
+#define PG_PATH_BOX              2
+#define PG_PATH_COLOR            3
+#define PG_PATH_RADIUS_BEGINEND  4
+#define PG_MAX_PATH_DATA         5
+#else
+#define PG_PATH_COLOR            2
+#define PG_PATH_RADIUS_BEGINEND  3
+#define PG_MAX_PATH_DATA         4
+#endif
+extern float path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
+
+#define PG_PATH_ANIM_POS              0
+#define PG_PATH_ANIM_RAD              1
+#define PG_MAX_PATH_ANIM_DATA         2
+extern float path_data_ParticleAnimation[(PG_NB_PATHS + 1) * PG_MAX_PATH_ANIM_DATA * 4];
+
 // current mouse location (also used for displaying the cursor)
 extern float paths_x[PG_NB_PATHS + 1];
 extern float paths_y[PG_NB_PATHS + 1];
+extern float paths_x_memory[PG_NB_PATHS + 1];
+extern float paths_y_memory[PG_NB_PATHS + 1];
 extern float paths_x_next_0;
 extern float paths_y_next_0;
 extern float paths_x_prev_prev_0;
 extern float paths_y_prev_prev_0;
-extern float paths_xL[PG_NB_PATHS + 1];
-extern float paths_yL[PG_NB_PATHS + 1];
-extern float paths_xR[PG_NB_PATHS + 1];
-extern float paths_yR[PG_NB_PATHS + 1];
-#ifdef PG_BEZIER_PATHS
-extern int path0_next_in_hull[4];
-#endif
 extern float paths_x_prev[PG_NB_PATHS + 1];
 extern float paths_y_prev[PG_NB_PATHS + 1];
+extern float paths_x_prev_memory[PG_NB_PATHS + 1];
+extern float paths_y_prev_memory[PG_NB_PATHS + 1];
 extern bool isBegin[PG_NB_PATHS + 1];
 extern bool isEnd[PG_NB_PATHS + 1];
 extern float paths_Color_r[PG_NB_PATHS + 1];
 extern float paths_Color_g[PG_NB_PATHS + 1];
 extern float paths_Color_b[PG_NB_PATHS + 1];
 extern float paths_Color_a[PG_NB_PATHS + 1];
-extern float repop_Color_r;
-extern float repop_Color_g;
-extern float repop_Color_b;
-extern int paths_BrushID[PG_NB_PATHS + 1];
+extern float repop_ColorBG_r;
+extern float repop_ColorBG_g;
+extern float repop_ColorBG_b;
+extern float repop_ColorCA_r;
+extern float repop_ColorCA_g;
+extern float repop_ColorCA_b;
+extern float repop_ColorPart_r;
+extern float repop_ColorPart_g;
+extern float repop_ColorPart_b;
 extern float paths_RadiusX[PG_NB_PATHS + 1];
 extern float paths_RadiusY[PG_NB_PATHS + 1];
+#ifdef PG_BEZIER_PATHS
+extern int path_next_in_hull[PG_NB_PATHS + 1][4];
+extern float paths_xL[PG_NB_PATHS + 1];
+extern float paths_yL[PG_NB_PATHS + 1];
+extern float paths_xR[PG_NB_PATHS + 1];
+extern float paths_yR[PG_NB_PATHS + 1];
+#else
+extern int paths_BrushID[PG_NB_PATHS + 1];
+#endif
 
 #if defined (GN) || defined (CAAUDIO)
 extern GLuint pg_CATable_ID;
@@ -274,13 +311,13 @@ void window_display(void);
 void one_frame_variables_reset(void);
 void pg_update_shader_uniforms(void);
 void pg_update_camera_and_video_frame(void);
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #0: PARTICLE ANIMATION PASS
 void pg_ParticleAnimationPass(void);
 #endif
 // PASS #1: UPDATE (CA, PIXELS, PARTICLES)
 void pg_UpdatePass(void);
-#if defined (BLURRED_SPLAT_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #2: PARTICLE RENDERING PASS
 void pg_ParticleRenderingPass(void);
 #endif
@@ -294,6 +331,7 @@ void pg_SensorPass(void);
 #endif
 #ifdef PG_MESHES
 // PASS #6: MESH PASS
+void pg_calculate_projection_matrices(void);
 void pg_MeshPass(void);
 #endif
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)

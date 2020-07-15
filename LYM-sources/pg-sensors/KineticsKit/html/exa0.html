@@ -1,0 +1,77 @@
+<HTML>
+<HEAD>
+<STYLE>
+.S0 {
+	color: #808070;
+}
+.S1 {
+	color: #dd0000;
+}
+.S2 {
+	font-weight: bold;
+	color: #007f7f;
+}
+.S3 {
+	color: #007f00;
+}
+.S4 {
+	color: #007f00;
+}
+.S5 {
+	font-weight: bold;
+	color: #ff7700;
+}
+.S6 {
+	color: #00aa00;
+}
+.S7 {
+	color: #00aa00;
+}
+.S8 {
+	font-weight: bold;
+	color: #0000ff;
+}
+.S9 {
+	font-weight: bold;
+	color: #7f00aa;
+}
+.S10 {
+	font-weight: bold;
+	color: #7f3f00;
+}
+.S12 {
+	color: #7F7F7F;
+}
+.S13 {
+	font-family: Courier New;
+	color: #000000;
+	background: #E0C0E0;
+}
+SPAN {
+	font-family: Verdana;
+}
+</STYLE>
+</HEAD>
+<BODY BGCOLOR=#f0f0f8>
+<SPAN class=S0></SPAN><SPAN class=S1>#&nbsp;used&nbsp;in&nbsp;the&nbsp;'Usage'&nbsp;section&nbsp;of&nbsp;the&nbsp;documentation</SPAN><SPAN class=S0><BR>
+<BR>
+</SPAN><SPAN class=S5>from</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>KineticsKit</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S5>import</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>System</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>Mass</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>CylinderSpring</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>system</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>System</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>timestep</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>0.04</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+<BR>
+</SPAN><SPAN class=S12>##&nbsp;generate&nbsp;some&nbsp;masses</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>mass1</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>Mass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>m</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>0.1</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>pos</SPAN><SPAN class=S10>=(</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>))</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>mass2</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>Mass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>m</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>0.1</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>pos</SPAN><SPAN class=S10>=(</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.5</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S2>0.0</SPAN><SPAN class=S10>))</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S12>##&nbsp;insert&nbsp;them&nbsp;into&nbsp;the&nbsp;system</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>insertMass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>mass1</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>insertMass</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>mass2</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+<BR>
+</SPAN><SPAN class=S12>##&nbsp;connect&nbsp;the&nbsp;masses&nbsp;with&nbsp;a&nbsp;spring</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>spring1</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S10>=</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>CylinderSpring</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>m0</SPAN><SPAN class=S10>=</SPAN><SPAN class=S11>mass1</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>m1</SPAN><SPAN class=S10>=</SPAN><SPAN class=S11>mass2</SPAN><SPAN class=S10>,</SPAN><SPAN class=S0>&nbsp;</SPAN><SPAN class=S11>k</SPAN><SPAN class=S10>=</SPAN><SPAN class=S2>1</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S12>##&nbsp;insert&nbsp;the&nbsp;spring&nbsp;into&nbsp;the&nbsp;system</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>insertSpring</SPAN><SPAN class=S10>(</SPAN><SPAN class=S11>spring1</SPAN><SPAN class=S10>)</SPAN><SPAN class=S0><BR>
+<BR>
+</SPAN><SPAN class=S12>##&nbsp;start&nbsp;the&nbsp;mainloop&nbsp;(convenience&nbsp;function)</SPAN><SPAN class=S0><BR>
+</SPAN><SPAN class=S11>system</SPAN><SPAN class=S10>.</SPAN><SPAN class=S11>mainloop</SPAN><SPAN class=S10>()</SPAN><SPAN class=S0><BR>
+</SPAN>
+</BODY>
+</HTML>
