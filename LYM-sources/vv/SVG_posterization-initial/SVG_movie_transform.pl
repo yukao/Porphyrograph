@@ -19,7 +19,7 @@ use warnings;
 
 my $USAGE =
 "usage: SVG_movie_transform.pl --nb-layers <integer> -o <file_name> -i <file_name> --transform <transformation_function>
-/mnt/d/sync.com/Sync/LYM-sources/SVG_movie/SVG_movie_transform.pl --nb-layers 4 -o mer_transformed.svg -i mer.svg --transformation COPY --percent 0.7 --input-second-SVGs mer_aux.svg
+/mnt/d/sync.com/Sync/LYM-sources/SVG_movie/SVG_posterization/SVG_movie_transform.pl --nb-layers 4 -o mer.svg -i mer.svg --transformation COPY --percent 0.7 --input-second-SVGs mer_aux.svg
 
 ARGUMENTS:
    --nb_layers: number of layers for posterization
@@ -52,9 +52,16 @@ use constant {
     CROSSFADE => 6,
     CROSSFADE_FINE => 7,
     CROSSFADE_FINE_ALTERNATE => 8,
-    SMOOTHING => 9,
-    BLUR => 10,
-    FILLANDSTROKE => 11,
+    CROSSFADE_ALTERNATE => 9,
+    SMOOTHING => 10,
+    BLUR => 11,
+    FILLANDSTROKE => 12,
+    V_SCALE2 => 13,
+    V_SCALE3 => 14,
+    C_SCALE2 => 15,
+    C_SCALE_TO_BLACK => 16,
+    C_SCALE_TO_BLACK_FROM_NEG => 17,
+    VH_RANDOM_LINE => 18,
 };
 my %transformation_function = (
    "COPY" => COPY,
@@ -65,25 +72,50 @@ my %transformation_function = (
    "CROSSFADE" => CROSSFADE,
    "CROSSFADE_FINE" => CROSSFADE_FINE,
    "CROSSFADE_FINE_ALTERNATE" => CROSSFADE_FINE_ALTERNATE,
+   "CROSSFADE_ALTERNATE" => CROSSFADE_ALTERNATE,
    "SMOOTHING" => SMOOTHING,
    "BLUR" => BLUR,
    "FILLANDSTROKE" => FILLANDSTROKE,
+   "V_SCALE2" => V_SCALE2,
+   "V_SCALE3" => V_SCALE3,
+   "C_SCALE2" => C_SCALE2,
+   "C_SCALE_TO_BLACK" => C_SCALE_TO_BLACK,
+   "C_SCALE_TO_BLACK_FROM_NEG" => C_SCALE_TO_BLACK_FROM_NEG,
+   "VH_RANDOM_LINE" => VH_RANDOM_LINE,
 );
 
 use POSIX;
 
 use Math::Vector::Real;
+use List::Util qw[min max];
 
 ##################################################################
 # TRANSFORMS RELATIVE COORDINATES OF A SVG PATH INTO ABSOLUTE ONES
 ##################################################################
+my $min_abs_X;
+my $min_abs_Y;
+my $max_abs_X;
+my $max_abs_Y;
+my $absolute_current_point_X;
+my $absolute_current_point_Y;
+sub minMaxUpdate {
+	$min_abs_X = min($min_abs_X, $absolute_current_point_X);
+	$min_abs_Y = min($min_abs_Y, $absolute_current_point_Y);
+	$max_abs_X = max($max_abs_X, $absolute_current_point_X);
+	$max_abs_Y = max($max_abs_Y, $absolute_current_point_Y);
+}
 sub relative_to_absolute_coordinates {
 	my $path_data_size_local = shift;
 	my $path_data_array_ref = shift;
 
 	my $index = 0;
-	my $absolute_current_point_X = 0;
-	my $absolute_current_point_Y = 0;
+	$min_abs_X = 1000000;
+	$min_abs_Y = 1000000;
+	$max_abs_X = -1000000;
+	$max_abs_Y = -1000000;
+	$absolute_current_point_X = 0;
+	$absolute_current_point_Y = 0;
+
 	while( $index < $path_data_size_local) {
 		if(${$path_data_array_ref}[$index] eq "M" || (${$path_data_array_ref}[$index] eq "m" && $index == 0)) {
 			$index++;
@@ -91,6 +123,7 @@ sub relative_to_absolute_coordinates {
 			do {
 				$absolute_current_point_X = ${$path_data_array_ref}[$index];
 				$absolute_current_point_Y = ${$path_data_array_ref}[$index + 1];
+				minMaxUpdate();
 				$index += 2;
 			}
 			while($index < $path_data_size_local && !(${$path_data_array_ref}[$index] =~ /^[MmCcZzLl]/));
@@ -104,6 +137,7 @@ sub relative_to_absolute_coordinates {
 				${$path_data_array_ref}[$index + 1] += $absolute_current_point_Y;
 				$absolute_current_point_X = ${$path_data_array_ref}[$index];
 				$absolute_current_point_Y = ${$path_data_array_ref}[$index + 1];
+				minMaxUpdate();
 				$index += 2;
 			}
 			while($index < $path_data_size_local && !(${$path_data_array_ref}[$index] =~ /^[MmCcZzLl]/));
@@ -114,6 +148,7 @@ sub relative_to_absolute_coordinates {
 			do {
 				$absolute_current_point_X = ${$path_data_array_ref}[$index];
 				$absolute_current_point_Y = ${$path_data_array_ref}[$index + 1];
+				minMaxUpdate();
 				$index += 2;
 			}
 			while($index < $path_data_size_local && !(${$path_data_array_ref}[$index] =~ /^[MmCcZzLl]/));
@@ -127,6 +162,7 @@ sub relative_to_absolute_coordinates {
 				${$path_data_array_ref}[$index + 1] += $absolute_current_point_Y;
 				$absolute_current_point_X = ${$path_data_array_ref}[$index];
 				$absolute_current_point_Y = ${$path_data_array_ref}[$index + 1];
+				minMaxUpdate();
 				$index += 2;
 			}
 			while($index < $path_data_size_local && !(${$path_data_array_ref}[$index] =~ /^[MmCcZzLl]/));
@@ -137,6 +173,7 @@ sub relative_to_absolute_coordinates {
 			do {
 				$absolute_current_point_X = ${$path_data_array_ref}[$index + 4];
 				$absolute_current_point_Y = ${$path_data_array_ref}[$index + 5];
+				minMaxUpdate();
 				$index += 6;
 			}
 			while($index < $path_data_size_local && !(${$path_data_array_ref}[$index] =~ /^[MmCcZzLl]/));
@@ -152,6 +189,7 @@ sub relative_to_absolute_coordinates {
 				}
 				$absolute_current_point_X = ${$path_data_array_ref}[$index + 4];
 				$absolute_current_point_Y = ${$path_data_array_ref}[$index + 5];
+				minMaxUpdate();
 				$index += 6;
 			}
 			while($index < $path_data_size_local && !(${$path_data_array_ref}[$index] =~ /^[MmCcZzLl]/));
@@ -163,6 +201,7 @@ sub relative_to_absolute_coordinates {
 			print "Unexpected sign at index $index: [", ${$path_data_array_ref}[$index], "]\n";
 		}
 	}
+	# printf("Image min ($min_abs_X,$min_abs_Y) max ($max_abs_X,$max_abs_Y)\n");
 }
 
 ##################################################################
@@ -232,7 +271,7 @@ $percent = ($percent < 0? 0: $percent);
 $percent = ($percent > 1? 1: $percent);
 
 if($transformation_function == CROSSFADE || $transformation_function == CROSSFADE_FINE
-	 || $transformation_function == CROSSFADE_FINE_ALTERNATE) {
+	 || $transformation_function == CROSSFADE_FINE_ALTERNATE || $transformation_function == CROSSFADE_ALTERNATE) {
 	if( $ARGV[10] ne "--input-second-SVGs" ) {
 	    print $USAGE; die"SVG_movie_transform.pl: --input-second-SVGs expected for argt 11\n";
 	}
@@ -301,6 +340,10 @@ while($line = <$FILEin>){
 				$color = mix_color('FF0000', $color, $local_percentage);
 				$line =~ s/fill:#([0-9a-fA-F]+);/fill:#${color};/;
 			}
+		}
+		elsif($transformation_function == VH_RANDOM_LINE) {
+				$line =~ s/stroke="none"/stroke="white" stroke-width="12"/;
+				$line =~ s/fill:#([0-9a-fA-F]+);/fill:black;/;
 		}
 		else {
 			# nothing to do
@@ -379,6 +422,119 @@ while($line = <$FILEin>){
 				}
 			}
 			##################################################################
+			# VERTICAL SCALING FOR LA TEMPETE (WITH AS MANY LEVELS AS LAYERS)
+			##################################################################
+			elsif($transformation_function == V_SCALE2) {
+				# arbirary height of the initially visible part
+				my $h_ini = 21600/3;
+				# height of the whole image
+				my $h_final = 21600;
+				# scaling of the layers to the initially visible part
+				my $initial_scale = $h_ini/$h_final;
+				# scaling of the layers to the initially visible part
+				my $mid_scale = 1.0/$nb_layers;
+				# scaling of the layers to the full image
+				my $final_scale = 1;
+				# initial translation: no translation, only scaling down to the visible part
+				my $y_initial_translation = 0;
+				# middle translation: scaling is kept down to the visible part but layers are brought towards the top
+				# according to the color rank
+				my $y_mid_translation = ($h_final / $nb_layers) * $path_no;
+				# final translation is no translation again but the image has the final size
+				my $y_final_translation = 0;
+				# 2 steps: first translation towards the top according to layer rank and scaling according to the layer so as to make the layers visible
+				# second scaling towards 1 and translation towards 0 
+				# percent varies from 1 to 0
+				my $index = 0;
+				my $local_percent = 0;
+				my $local_translation = 0;
+				my $local_scale = 0;
+				# first part, percent from 1 to 0.5, 1-percant from 0 to 0.5, local_percent from 0 to 1
+				if((1 - $percent) < 0.5) {
+					$local_percent = (1 - $percent) * 2;
+					$local_translation = (1.0 - $local_percent) * $y_initial_translation
+						+ $local_percent * $y_mid_translation;
+					$local_scale = (1.0 - $local_percent) * $initial_scale
+						+ $local_percent * $mid_scale;
+				}
+				# second part, percent from 0.5 to 0. 1-percent from 0.5 to 1, Local percent from 0 to 1
+				else {
+					$local_percent = (1 - $percent) * 2 - 1.0;
+					$local_translation = (1.0 - $local_percent) * $y_mid_translation
+						+ $local_percent * $y_final_translation;
+					$local_scale = (1.0 - $local_percent) * $mid_scale
+						+ $local_percent * $final_scale;
+				}
+				while($index < $path_data_size) {
+					if(!($path_data[$index] =~ /^[MmCcZzLl]/)) {
+						$path_data[$index + 1] 
+							= $local_translation + $local_scale * $path_data[$index + 1];
+						$index += 2;
+					} 
+					else {
+						$index++;
+					}
+				}
+			}
+			##################################################################
+			# VERTICAL SCALING FOR LA TEMPETE (WITH AS MANY LEVELS AS LAYERS) 
+			# similar to V_SCALE2 but with double length for the first part wrt the second part
+			##################################################################
+			elsif($transformation_function == V_SCALE3) {
+				# arbirary height of the initially visible part
+				my $h_ini = 21600/3;
+				# height of the whole image
+				my $h_final = 21600;
+				# scaling of the layers to the initially visible part
+				my $initial_scale = $h_ini/$h_final;
+				# scaling of the layers to the initially visible part
+				my $mid_scale = 1.0/$nb_layers;
+				# scaling of the layers to the full image
+				my $final_scale = 1;
+				# initial translation: no translation, only scaling down to the visible part
+				my $y_initial_translation = 0;
+				# middle translation: scaling is kept down to the visible part but layers are brought towards the top
+				# according to the color rank
+				my $y_mid_translation = ($h_final / $nb_layers) * $path_no;
+				# final translation is no translation again but the image has the final size
+				my $y_final_translation = 0;
+				# 2 steps: first translation towards the top according to layer rank and scaling according to the layer so as to make the layers visible
+				# second scaling towards 1 and translation towards 0 
+				# percent varies from 1 to 0
+				my $index = 0;
+				my $local_percent = 0;
+				my $local_translation = 0;
+				my $local_scale = 0;
+				# first part, percent from 1 to 0.33 (1-percent varies from 0 to 0.66)
+				# local_percent varies from 0 to 1
+				if((1 - $percent) < 0.66) {
+					$local_percent = (1 - $percent) / 0.66; # from 0 to 0.66/0.66
+					$local_translation = (1.0 - $local_percent) * $y_initial_translation
+						+ $local_percent * $y_mid_translation;
+					$local_scale = (1.0 - $local_percent) * $initial_scale
+						+ $local_percent * $mid_scale;
+				}
+				# second part, percent from 0.33 to 0. (1-percent varies from 0.66 to 1.)
+				# local_percent varies from 0 to 1
+				else {
+					$local_percent = 1 - ($percent / (1 - 0.66)); # from 1 - (1 - 0.66)/(1 - 0.66) = 0 to 1 - (0/(1 - 0.66)) = 1
+					$local_translation = (1.0 - $local_percent) * $y_mid_translation
+						+ $local_percent * $y_final_translation;
+					$local_scale = (1.0 - $local_percent) * $mid_scale
+						+ $local_percent * $final_scale;
+				}
+				while($index < $path_data_size) {
+					if(!($path_data[$index] =~ /^[MmCcZzLl]/)) {
+						$path_data[$index + 1] 
+							= $local_translation + $local_scale * $path_data[$index + 1];
+						$index += 2;
+					} 
+					else {
+						$index++;
+					}
+				}
+			}
+			##################################################################
 			# CENTRAL SCALING (WITH AS PROGRESSIVE SCALING ALONG A CURVE)
 			##################################################################
 			elsif($transformation_function == C_SCALE) {
@@ -430,9 +586,258 @@ while($line = <$FILEin>){
 				}
 			}
 			##################################################################
+			# CENTRAL SCALING FOR LA TEMPETE (WITH AS PROGRESSIVE SCALING ALONG A CURVE)
+			##################################################################
+			elsif($transformation_function == C_SCALE2) {
+				# screen center
+				my $x_reference = 38400 / 2;
+				my $y_reference = 21600 / 2;
+				# scales the path centrally =
+				my $index = 0;
+				# percentage depends on the color
+				# my $color_percentage = ($percent / ($nb_layers - 1)) * $path_no;
+				my $color_percentage = $percent * $nb_layers;
+				my $path_from_black = $nb_layers - 1 - $path_no;
+				if($color_percentage >= $path_from_black && $color_percentage <= $path_from_black + 1) {
+					$color_percentage = $color_percentage - $path_from_black;
+				}
+				elsif($color_percentage > $path_from_black + 1) {
+					$color_percentage = 1;
+				}
+				elsif($color_percentage < $path_from_black) {
+					$color_percentage = 0;
+				}
+				while($index < $path_data_size) {
+					if($path_data[$index] eq "M" || $path_data[$index] eq "L") {
+						$index++;
+						# processes the next moveto and lineto
+						do {
+							$path_data[$index] 
+								= $x_reference 
+								+ $color_percentage * ($path_data[$index] - $x_reference);
+							$path_data[$index + 1] 
+								= $y_reference 
+								+ $color_percentage * ($path_data[$index + 1] - $y_reference);
+							$index += 2;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "C") {
+						$index++;
+						# processes the next curve segments
+						do {
+							for(my $i = $index ; $i < $index + 6 ; $i +=2) {
+								my $control_point_rank = int(POSIX::floor(($i - $index)/2)) + 1;
+								# quicker scaling for the control points
+								my $exponential_percentage = $color_percentage;
+								if($control_point_rank == 1 || $control_point_rank == 2) {
+									$exponential_percentage = $color_percentage ** 3;
+								}
+								$path_data[$i] 
+									= $x_reference 
+									+ $exponential_percentage * ($path_data[$i] - $x_reference);
+								$path_data[$i + 1] 
+									= $y_reference 
+									+ $exponential_percentage * ($path_data[$i + 1] - $y_reference);
+							}
+							$index += 6;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "Z" || $path_data[$index] eq "z") {
+						$index++;
+					}
+					else {
+						print "Unexpected sign at index $index: [", $path_data[$index], "]\n";
+					}
+				}
+			}
+			##################################################################
+			# CENTRAL SCALING FOR LA TEMPETE (WITH AS PROGRESSIVE SCALING ALONG A CURVE)
+			# similar to C_SCALE2 but the three layers all together
+			# and chooses a central point among the stones to scale to black
+			##################################################################
+			elsif($transformation_function == C_SCALE_TO_BLACK) {
+				# screen center
+				my $x_reference = 38400 / 2;
+				my $y_reference = 21600 / 4;
+				# scales the path centrally =
+				my $index = 0;
+				# percentage depends on the color
+				while($index < $path_data_size) {
+					if($path_data[$index] eq "M" || $path_data[$index] eq "L") {
+						$index++;
+						# processes the next moveto and lineto
+						do {
+							$path_data[$index] 
+								= $x_reference 
+								+ $percent * ($path_data[$index] - $x_reference);
+							$path_data[$index + 1] 
+								= $y_reference 
+								+ $percent * ($path_data[$index + 1] - $y_reference);
+							$index += 2;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "C") {
+						$index++;
+						# processes the next curve segments
+						do {
+							for(my $i = $index ; $i < $index + 6 ; $i +=2) {
+								my $control_point_rank = int(POSIX::floor(($i - $index)/2)) + 1;
+								# quicker scaling for the control points
+								my $exponential_percentage = 0;
+								my $scale = 1 + (1-$percent) * 3;
+								if($control_point_rank == 0) {
+									$exponential_percentage = (1-$percent);
+								}
+								elsif($control_point_rank == 1) {
+									$exponential_percentage = -(1-$percent) ** 3;
+								}
+								elsif($control_point_rank == 2) {
+									$exponential_percentage = -(1-$percent) ** 3;
+								}
+								elsif($control_point_rank == 3) {
+									$exponential_percentage = (1-$percent);
+								}
+								$path_data[$i] 
+									= $path_data[$i] 
+									+ $exponential_percentage * ($path_data[$i] - $x_reference);
+								$path_data[$i + 1] 
+									= $path_data[$i + 1] 
+									+ $exponential_percentage * ($path_data[$i + 1] - $y_reference);
+								$path_data[$i] *= $scale;
+								$path_data[$i+1] *= $scale;
+							}
+							$index += 6;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "Z" || $path_data[$index] eq "z") {
+						$index++;
+					}
+					else {
+						print "Unexpected sign at index $index: [", $path_data[$index], "]\n";
+					}
+				}
+			}
+			##################################################################
+			# CENTRAL SCALING FOR LA TEMPETE (WITH AS PROGRESSIVE SCALING ALONG A CURVE)
+			# similar to C_SCALE_TO_BLACK but chooses a point in the sea to scale to white
+			##################################################################
+			elsif($transformation_function == C_SCALE_TO_BLACK_FROM_NEG) {
+				# screen center
+				my $x_reference = 38400 / 2;
+				my $y_reference = 21600 / 2;
+				# scales the path centrally =
+				my $index = 0;
+				# $percent varies from 1 to 0
+				# (1 - $percent) varies from 0 to 1
+				# ((1 - $percent) + 1) varies from 1 to 2
+				my $local_percentage = ((1 - $percent) + 1); # varies from 1 to 2
+				while($index < $path_data_size) {
+					if($path_data[$index] eq "M" || $path_data[$index] eq "L") {
+						$index++;
+						# processes the next moveto and lineto
+						do {
+							my $scale = $local_percentage ** 3;
+							$path_data[$index] 
+								= $x_reference 
+								+ $scale * ($path_data[$index] - $x_reference);
+							$path_data[$index + 1] 
+								= $y_reference 
+								+ $scale * ($path_data[$index + 1] - $y_reference);
+							$index += 2;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "C") {
+						$index++;
+						# processes the next curve segments
+						do {
+							for(my $i = $index ; $i < $index + 6 ; $i +=2) {
+								my $control_point_rank = int(POSIX::floor(($i - $index)/2)) + 1;
+								# quicker scaling for the control points
+								my $scale = 1;
+								if($control_point_rank == 0) {
+									$scale = $local_percentage ** 3;
+								}
+								elsif($control_point_rank == 1) {
+									$scale = $local_percentage ** 6;
+								}
+								elsif($control_point_rank == 2) {
+									$scale = $local_percentage ** 6;
+								}
+								elsif($control_point_rank == 3) {
+									$scale = $local_percentage ** 3;
+								}
+								$path_data[$i] 
+									= $x_reference 
+									+ $scale * ($path_data[$i] - $x_reference);
+								$path_data[$i + 1] 
+									= $y_reference 
+									+ $scale * ($path_data[$i + 1] - $y_reference);
+							}
+							$index += 6;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "Z" || $path_data[$index] eq "z") {
+						$index++;
+					}
+					else {
+						print "Unexpected sign at index $index: [", $path_data[$index], "]\n";
+					}
+				}
+			}
+			##################################################################
 			# ALL DIRECTIONS RANDOMNESS
 			##################################################################
 			elsif($transformation_function == VH_RANDOM) {
+				# adds all directions randomness with weight on the control point rank
+				my $index = 0;
+				while($index < $path_data_size) {
+					if($path_data[$index] eq "M" || $path_data[$index] eq "L") {
+						$index++;
+						# processes the next moveto and lineto
+						do {
+							$path_data[$index] 
+								+= $percent * rand(3000);
+							$path_data[$index + 1] 
+								+= $percent * rand(3000);
+							$index += 2;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "C") {
+						$index++;
+						# processes the next curve segments
+						# scaling is only 1/3 and 2/3 for the first and second control point and full for the last one
+						do {
+							for(my $i = $index ; $i < $index + 6 ; $i +=2) {
+								my $control_point_rank = int(POSIX::floor(($i - $index)/2)) + 1;
+								my $weight = $control_point_rank / 3.0;
+								$path_data[$i] 
+									+= $percent * $weight * rand(3000);
+								$path_data[$i + 1] 
+									+= $percent * $weight * rand(3000);
+							}
+							$index += 6;
+						}
+						while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+					}
+					elsif($path_data[$index] eq "Z" || $path_data[$index] eq "z") {
+						$index++;
+					}
+					else {
+						print "Unexpected sign at index $index: [", $path_data[$index], "]\n";
+					}
+				}
+			}
+			##################################################################
+			# ALL DIRECTIONS RANDOMNESS FOR WHITE LINE CONTOURS
+			##################################################################
+			elsif($transformation_function == VH_RANDOM_LINE) {
 				# adds all directions randomness with weight on the control point rank
 				my $index = 0;
 				while($index < $path_data_size) {
@@ -530,7 +935,8 @@ while($line = <$FILEin>){
 			##################################################################
 			elsif($transformation_function == CROSSFADE
 				|| $transformation_function == CROSSFADE_FINE
-				|| $transformation_function == CROSSFADE_FINE_ALTERNATE) {
+				|| $transformation_function == CROSSFADE_FINE_ALTERNATE
+				|| $transformation_function == CROSSFADE_ALTERNATE) {
 				# crossfades:
 				# 0..25% fade in first video
 				# 25..50% crossfades by adding progressively second video
@@ -694,6 +1100,136 @@ while($line = <$FILEin>){
 						}
 					}
 				}
+				# in this crossfading mode, the curves are taken alternatively from each video to
+				# ensure a maximal mixture of both videos
+				elsif($transformation_function == CROSSFADE_ALTERNATE) {
+					$index = 0;
+					my $second_index = 0;
+					my $fist_video_choice = 1;
+					my $current_point_X = -1;
+					my $current_point_Y = -1;
+					my $second_current_point_X = -1;
+					my $second_current_point_Y = -1;
+
+					# copies the number of items
+					while(($index < $path_data_size) || ($second_index < $second_path_data_size)) {
+						# print "index size stopsize $index $path_data_size $max_index_video_1 / index size stopsize $second_index $second_path_data_size $max_index_video_2\n";
+
+						# takes a segment from the first video if it is not finished or if the second one is finished
+						if(($index < $path_data_size) 
+							&& (($fist_video_choice == 1) || !($second_index < $second_path_data_size))) {
+							if($current_point_X != -1 && $current_point_Y != -1) {
+								$composite_path_data[$index_composite] = "M";
+								$index_composite++;
+								$composite_path_data[$index_composite] = $current_point_X;
+								$index_composite++;
+								$composite_path_data[$index_composite] = $current_point_Y;
+								$index_composite++;
+							}
+							if($path_data[$index] eq "M" || $path_data[$index] eq "L") {
+								$composite_path_data[$index_composite] = $path_data[$index];
+								$index_composite++;
+								$index++;
+								# processes the next moveto and lineto
+								do {
+									for(my $ind = 0; $ind < 2 ; $ind++ ) {
+										$composite_path_data[$index_composite] = $path_data[$index];
+										$index_composite++;
+										$index++;
+									}
+								}
+								while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+								$current_point_X = $path_data[$index -2];
+								$current_point_Y = $path_data[$index -1];
+							}
+							elsif($path_data[$index] eq "C") {
+								$composite_path_data[$index_composite] = $path_data[$index];
+								$index_composite++;
+								$index++;
+								# processes the next curve segments
+								# scaling is only 1/3 and 2/3 for the first and second control point and full for the last one
+								do {
+									for(my $ind = 0; $ind < 6 ; $ind++ ) {
+										$composite_path_data[$index_composite] = $path_data[$index];
+										$index_composite++;
+										$index++;
+									}
+								}
+								while($index < $path_data_size && !($path_data[$index] =~ /^[MCLZz]/));
+								$current_point_X = $path_data[$index -2];
+								$current_point_Y = $path_data[$index -1];
+							}
+							elsif($path_data[$index] eq "Z" || $path_data[$index] eq "z") {
+								$composite_path_data[$index_composite] = $path_data[$index];
+								$index_composite++;
+								$index++;
+							}
+							$fist_video_choice = 0;
+						}
+						# takes a segment from the second video
+						elsif(($second_index < $second_path_data_size)
+							&& (($fist_video_choice == 0) || !($index < $path_data_size))) {
+							if($second_current_point_X != -1 && $second_current_point_Y != -1) {
+								$composite_path_data[$index_composite] = "M";
+								$index_composite++;
+								$composite_path_data[$index_composite] = $second_current_point_X;
+								$index_composite++;
+								$composite_path_data[$index_composite] = $second_current_point_Y;
+								$index_composite++;
+							}
+							if($second_path_data[$second_index] eq "M" || $second_path_data[$second_index] eq "L") {
+								$composite_path_data[$index_composite] = $second_path_data[$second_index];
+								$index_composite++;
+								$second_index++;
+								# processes the next moveto and lineto
+								do {
+									for(my $ind = 0; $ind < 2 ; $ind++ ) {
+										$composite_path_data[$index_composite] = $second_path_data[$second_index];
+										$index_composite++;
+										$second_index++;
+									}
+								}
+								while($second_index < $second_path_data_size && !($second_path_data[$second_index] =~ /^[MCLZz]/));
+								$second_current_point_X = $second_path_data[$second_index -2];
+								$second_current_point_Y = $second_path_data[$second_index -1];
+							}
+							elsif($second_path_data[$second_index] eq "C") {
+								$composite_path_data[$index_composite] = $second_path_data[$second_index];
+								$index_composite++;
+								$second_index++;
+								# processes the next curve segments
+								# scaling is only 1/3 and 2/3 for the first and second control point and full for the last one
+								do {
+									for(my $ind = 0; $ind < 6 ; $ind++ ) {
+										$composite_path_data[$index_composite] = $second_path_data[$second_index];
+										$index_composite++;
+										$second_index++;
+									}
+								}
+								while($second_index < $second_path_data_size && !($second_path_data[$second_index] =~ /^[MCLZz]/));
+								$second_current_point_X = $second_path_data[$second_index -2];
+								$second_current_point_Y = $second_path_data[$second_index -1];
+							}
+							elsif($second_path_data[$second_index] eq "Z" || $second_path_data[$second_index] eq "z") {
+								$composite_path_data[$index_composite] = $second_path_data[$second_index];
+								$index_composite++;
+								$second_index++;
+							}
+							$fist_video_choice = 1;
+						}
+						# the two videos are over
+						else {
+							last;
+						}
+					}
+					# if necessary ends up with a z
+					if($index_composite >= 1) {
+						if(!($composite_path_data[$index_composite - 1] =~ /^[Zz]/)) {
+							$composite_path_data[$index_composite] = "Z";
+							$index_composite++;
+						}
+					}
+				}
 				# in these crossfading modes, the curves are taken first from the first video and
 				# second from the second one (contrary to the alternate mode)
 				# the mixture is fine if we possibly stop the copy inside a curve if we have
@@ -704,7 +1240,7 @@ while($line = <$FILEin>){
 					# copies first video
 					if($transformation_function == CROSSFADE) {
 						# copies the number of items
-						while($index < $path_data_size && $index <  $max_index_video_1) {
+						while($index < $path_data_size) {
 							$composite_path_data[$index_composite] = $path_data[$index];
 							$index_composite++;
 							$index++;
@@ -768,7 +1304,7 @@ while($line = <$FILEin>){
 					$index = 0;
 					if($transformation_function == CROSSFADE) {
 						# copies the number of items
-						while($index < $second_path_data_size && $index <  $max_index_video_2) {
+						while($index < $second_path_data_size) {
 							$composite_path_data[$index_composite] = $second_path_data[$index];
 							$index_composite++;
 							$index++;

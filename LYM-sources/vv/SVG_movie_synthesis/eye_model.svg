@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg height="1080" width="1920" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>multiple paths</title>
+  <desc>multiple paths</desc>
+  <g id="group_y" style="fill: black; stroke: black">
+  <title
+     id="title4163">multiple paths</title>
+  <desc
+     id="desc4165">multiple paths</desc>
+  <g id="group_y" style="fill: black; stroke: black">
+    <path
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:6.44489813;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 56.827282,614.25428 C 345.32119,322.89925 758.08576,175.79729 1119.0233,180.07199 c 306.889,23.87435 668.3679,112.37976 742.3743,408.98423 5.0807,20.47407 -11.1104,60.99721 -58.1495,54.2728 -47.0393,-6.72442 -72.6313,-90.95047 -110.484,-94.97737 -154.7838,-7.24413 -168.1795,225.08839 -362.4647,319.82173 C 879.55931,1182.8711 383.47646,508.61066 56.827282,614.25428 Z"
+       id="path815"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccczccc" />
+    <circle
+       r="356.0376"
+       cy="539.62921"
+       cx="1059.9045"
+       id="circle825"
+       style="opacity:1;fill:#0284fd;fill-opacity:1;stroke:#000000;stroke-width:6.44489813;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.98994978" />
+    <circle
+       style="opacity:1;fill:#070707;fill-opacity:1;stroke:#000000;stroke-width:6.44489813;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.98994978"
+       id="path823"
+       cx="1059.9045"
+       cy="539.62921"
+       r="181.23233" />
+  </g>
+  <!--
+  Generated using the Perl SVG Module V2.84
+  by Ronan Oger
+  Info: http://www.roitsystems.com/
+  -->
+</svg>
