@@ -70,6 +70,8 @@ class PhotoDataStruct {
 			imgPhotoOpenCV = NULL;
 			compressedPhotoBitmap = NULL;
 			compressedFormat = 0;
+			invert = false;
+			texBuffID = -1;
 		}
 		void release(void) {
 			w = -1;
@@ -280,6 +282,9 @@ int pg_initVideoCameraCapture(void);
 // particle initialization from photography
 bool generateParticleInitialPosColorRadiusfromImage(string fileName); // 2 texture IDs one for pos/speed, the other one for color/radius
 
+// particle acceleration shift from photography
+bool storeParticleAccelerationfromImage(string fileName); 
+
 // VIDEO FRAME AND CAPTURE INITIALIZATION (CAMERA AND MOVIE)
 bool pg_initMovieFrameTexture(Mat *video_frame);
 
@@ -300,7 +305,7 @@ void* pg_movieLoop(void * lpParam);
 void pg_launch_diaporama(void);
 bool pg_update_diaporama(void);
 
-#if defined (GN) || defined (CAAUDIO)
+#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);
 #endif
 

@@ -59,7 +59,7 @@ extern bool BrokenInterpolationVar[_MaxInterpVarIDs];
 // stepwise interpolation made only once
 extern bool StepwiseInterpolationEffective[_MaxInterpVarIDs];
 // initial values in the scenario (before first scene)
-extern float InitialValuesInterpVar[_MaxInterpVarIDs];
+extern double InitialValuesInterpVar[_MaxInterpVarIDs];
 // last value shipped to the GUI (PD)
 extern float LastGUIShippedValuesInterpVar[_MaxInterpVarIDs];
 // initial values in the configuration file
@@ -67,7 +67,7 @@ extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 
 //////////////////////////////////////////////
 // Cuurent palette after interpolation
-extern float bandpass_3color_palette[3][3];
+extern float pen_bandpass_3color_palette[3][3];
 
 #if defined (GN)
 #define CA_SQUENCR                0
@@ -78,7 +78,7 @@ extern float bandpass_3color_palette[3][3];
 #define CA_NEUMANN_BINARY         5
 #endif
 
-#if defined (CAAUDIO)
+#if defined(CAAUDIO) || defined(RIVETS)
 #define CA_TOTALISTIC             0
 #define CA_GENERATION             1
 #define CA_GAL_BIN_MOORE          2
@@ -103,13 +103,17 @@ extern float initCA;
 extern std::string project_name;
 
 // ++++++++++++++++++++++ SCENARIO +++++++++++++++++++++++++ 
-extern int pg_CurrentScene;
+extern int pg_CurrentSceneIndex;
+extern float pg_setup_interpolation_duration;
 
 // +++++++++++++++++++++ CLEAR +++++++++++++++++++++++++++
 extern int isClearCA;
 extern int isClearLayer;
 extern int isClearAllLayers;
 extern int isClearEcho;
+
+// DELAYED CAMERA WEIGHT
+extern int delayedCameraWeight;
 
 #ifdef PG_WITH_BLUR
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
@@ -128,9 +132,26 @@ extern int copyToNextTrack;
 // addition of color based on palette for pen
 extern float pulsed_pen_color[4];
 // addition of color based on palette for particles
-extern  float pulsed_repop_colorBG[3];
-extern  float pulsed_repop_colorCA[3];
-extern  float pulsed_repop_colorPart[3];
+extern float pulsed_repop_colorBG[3];
+extern float pulsed_repop_colorCA[3];
+extern float pulsed_repop_colorPart[3];
+// addtion of color for light based on palette
+extern float pulsed_light1_color[3];
+extern float pulsed_light1_dimmer;
+extern float pulsed_light2_color[3];
+extern float pulsed_light2_dimmer;
+extern float pulsed_light3_color[3];
+extern float pulsed_light3_dimmer;
+extern float pulsed_light4_color[3];
+extern float pulsed_light4_dimmer;
+extern float pulsed_light5_color[3];
+extern float pulsed_light5_dimmer;
+extern float pulsed_light6_color[3];
+extern float pulsed_light6_dimmer;
+extern float pulsed_light7_color[3];
+extern float pulsed_light7_dimmer;
+extern float pulsed_light8_color[3];
+extern float pulsed_light8_dimmer;
 
 // factor increasing the acceleration weight of particles
 // based on sound volume attacks
@@ -148,6 +169,10 @@ extern bool soundTrack_on;
 extern int currentlyPlaying_movieNo;
 extern bool movie_on;
 extern float current_extern_movieNo;
+
+// movie soundtrack passes over an onset or a peak before next frame
+extern bool pg_video_sound_onset;
+extern bool pg_video_sound_peak;
 
 // pen preset
 extern int current_pen_colorPreset;
@@ -191,8 +216,6 @@ extern int flashPhotoTrk_nbFrames;
 
 // ++++++++++++++++++++++ CA and TACKS WOKING VARIABLE ++++
 // CA and track working variable
-// memory of current track in case of temporary background track control 
-extern int currentDrawingTrack_memory;
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
 #ifdef CRITON
@@ -204,6 +227,13 @@ extern float fftPhases[8];
 // scene management
 extern bool pg_FirstFrameInScene;
 extern float remainingTimeInScene;
+
+// interpolation scene between two discontinuous scenes so that there is no visual gap inbetween
+extern int pg_SceneIndexAfterInterpolation;
+extern int pg_SceneIndexBeforeInterpolation;
+extern float pg_SceneInterpolationDuration;
+class Scene;
+extern Scene pg_InterpolationScene;
 
 // resend all values (fx after interface crash)
 extern bool resend_all_variables;
@@ -234,7 +264,7 @@ extern int BeatNo;
 extern float lastBeatTime;
 
 // +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
-#ifdef CAAUDIO
+#if defined(CAAUDIO) || defined(RIVETS)
 enum pg_CAseed_types
 {
 	_pg_CAseed_dot_center = 0,
@@ -285,8 +315,13 @@ enum pg_Keystroke_Input_Type {
 	_PG_KEYSTROKE_MINUS = 0, _PG_KEYSTROKE_PLUS, _PG_KEYSTROKE_VOID
 };
 
+// MANAGES EXCLUSIVE BUTTONS IN INTERFACE
+template <typename T>
+void ExclusiveButtonsAndLabelsOnOff(vector<string> ButtonPaths, vector<string> ButtonLabelPaths, vector<T> ButtonValues, bool withDefault, T value);
+// READ CHAR FOR USB PEDALS
+int getch_noblock(void);
 // INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
-void pg_initializationScript( void );
+void pg_initializeScenearioVariables( void );
 // INITIALIZES ALL SCENARIO VARIABLES CALLBACKS
 void pg_initializationCallBacks(void);
 // ASSIGNS INITIAL VALUES TO ALL CONFIGURATION FILES
@@ -304,37 +339,58 @@ void StopTrack(void);
 float starting_time(float elapsed_time_from_start);
 #endif
 void pg_update_scenario( void );
+void updateXYKeystonePad(void);
 void pg_process_key( int key );
 void pg_process_special_key( int key );
-void setup_plus(void);
-void setup_minus(void);
+void setup(int scene_ind);
+void setup_minus(int decay);
+void StartNewScene(int ind_scene);
 void pg_keyStrokeScripts( int key );
-void pg_continuous_flahes( void );
+bool flash_beat_generation(int flash_frequency);
+bool flash_continuous_generation(int flash_frequency);
+void pg_flash_control(bool (*control_function)(int));
+void pg_beat_controlled_flashes(void);
+void pg_non_beat_controlled_flashes(void);
 #ifdef PG_WITH_PHOTO_FLASH
 void pg_Make_flashPhoto(void);
 #endif
-void pg_aliasScript( char * command_pattern , 
-		     char * string_argument_0 ,
-		     float arguments[MAX_OSC_ARGUMENTS] );
+void pg_aliasScript( char * command_pattern , char * string_argument_0 ,
+		     float arguments[MAX_OSC_ARGUMENTS], int argc);
 void ClipArt_OnOff(int indImage);
+void ClipArt_Off(int indImage);
+void ClipArt_On(int indImage);
 void Mesh_OnOff(int indImage);
+void Caverne_Mesh_Profusion_On(int indImage);
+void Caverne_Mesh_Profusion_Off(int indImage);
 void Mesh_mobile_OnOff(int indImage);
+void Mesh_mobile_Off(int indImage);
+void Mesh_mobile_On(int indImage);
+void Mesh_Off(int indImage);
+void Mesh_On(int indImage);
 void ClipArt_SubPathOnOff(int indPath);
 void pg_update_pulsed_colors(void);
-void blend_closest_palettes(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3]);
-void pg_path_recording_onOff( int indPath );
+void compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], bool is_pen_color);
+void HSVtoRGB(float h, float s, float v, float* r, float* g, float* b);
+void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_pulse, float value, float value_pulse, float pulsed_color[3], bool is_pen_color);
+void pg_path_recording_onOff(int indPath);
 // playing track onoff
 void pg_path_replay_trackNo_onOff( int indPath, int trackNo);
-void path_replay_trackNo_callBack( int indPath, pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value );
-void path_record_callBack( int indPath, pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value );
+void path_replay_trackNo_callBack( int indPath, pg_Parameter_Input_Type param_input_type , double scenario_or_gui_command_value );
+void path_record_callBack( int indPath, pg_Parameter_Input_Type param_input_type , double scenario_or_gui_command_value );
 void pg_path_recording_start( int indPath );
 // recording on off
 void pg_path_recording_stop( int indPath );
 // interpolation on off
 void pg_path_replay_trackNo_start( int indPath , int trackNo);
 void pg_path_replay_trackNo_stop( int indPath );
+#ifdef ATELIERSENFANTS
+void NumberOfInteractionFingers(int nb_fingers);
+#endif
 
 void pg_writeMessageOnScreen( char *text );
 void pg_snapshot( char * type );
+
+void pg_play_movie_no(void);
+void setup_plus(int incay);
 
 #endif

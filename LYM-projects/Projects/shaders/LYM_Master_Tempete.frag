@@ -41,7 +41,7 @@ uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
 /////////////////////////////////////
@@ -85,7 +85,7 @@ void main() {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
     else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.rgb, 1);
     }
     else if(decalCoords.x < 300) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
@@ -174,10 +174,13 @@ void main() {
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;
 
-  if( mouse_x < width && mouse_x > 0 
+  if( int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w) >= 10
+      && uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+      && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
-      < cursorSize ) { 
-    outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
+      < 3.5 ) { 
+    // outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/100.0)) );
+    outColor0.rgb = vec3(1,1,1);
   }
 
   outColor0.rgb *= master;

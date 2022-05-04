@@ -44,17 +44,29 @@
 #if defined (BICHES)
 #include "pg_shader_header_Biches.h"
 #endif
+#if defined (ATELIERSENFANTS)
+#include "pg_shader_header_AteliersEnfants.h"
+#endif
 #if defined (CAVERNEPLATON)
 #include "pg_shader_header_CavernePlaton.h"
+#endif
+#if defined (PIERRES)
+#include "pg_shader_header_Pierres.h"
 #endif
 #if defined (TEMPETE)
 #include "pg_shader_header_Tempete.h"
 #endif
+#if defined (DAWN)
+#include "pg_shader_header_Dawn.h"
+#endif
+#if defined (RIVETS)
+#include "pg_shader_header_Rivets.h"
+#endif
 #if defined (ULM)
 #include "pg_shader_header_Ulm.h"
 #endif
-#ifdef effe
-#include "pg_shader_header_effe.h"
+#ifdef SONG
+#include "pg_shader_header_Song.h"
 #endif
 #if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_shader_header_demo.h"
@@ -87,7 +99,7 @@ void pg_printShaderLinkLog(GLuint obj);
 void pg_loadAllShaders( void );
 void pg_shaderVariablesInit( void );
 // INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
-void pg_initializationScript( void );
+void pg_initializeScenearioVariables( void );
 
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
@@ -139,20 +151,6 @@ extern GLint uniform_ParticleAnimation_vp_2fv_width_height;
 extern GLint uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo;
 extern GLint uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;
 extern GLint uniform_ParticleAnimation_path_data;
-//#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_x;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_y;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_x_prev;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_y_prev;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths03_RadiusX;
-//#endif
-//#if PG_NB_PATHS == 7
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_x;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_y;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_x_prev;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_y_prev;
-//extern GLint uniform_ParticleAnimation_fs_4fv_paths47_RadiusX;
-//#endif
 extern GLint uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo;
 extern GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit;
 extern GLint uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH;
@@ -179,6 +177,7 @@ extern GLint uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_ParticleAnimation_texture_fs_Noise;  // 3D noise
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // particle initialization pairs of textures color/radius
+extern GLint uniform_ParticleAnimation_texture_fs_Part_acc;  // particle acceleration texture
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -187,10 +186,13 @@ extern GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // particl
 extern GLint uniform_Update_vp_model;
 extern GLint uniform_Update_vp_view;
 extern GLint uniform_Update_vp_proj;
+#if defined (PIERRES)
+extern GLint uniform_Update_homographyForTexture;
+#endif
 extern GLint uniform_Update_vp_2fv_width_height;
 extern GLint uniform_Update_fs_4fv_W_H_time_currentScene;
 extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-#ifdef CAAUDIO
+#if defined(CAAUDIO) || defined(RIVETS)
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
@@ -231,8 +233,11 @@ extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 #endif
-#if defined (GN) || defined (CAAUDIO)
+#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 extern GLint uniform_Update_texture_fs_CATable;
+#endif
+#if defined (PG_WITH_BURST_MASK)
+extern GLint uniform_Update_texture_fs_Burst_Mask;
 #endif
 #ifdef GN
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
@@ -256,11 +261,13 @@ extern GLint uniform_Update_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Update_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 extern GLint uniform_Update_texture_fs_Brushes;  // pen patterns
 #endif
+#ifdef PG_WITH_CAMERA_CAPTURE
 extern GLint uniform_Update_texture_fs_Camera_frame;  // camera frame
 extern GLint uniform_Update_texture_fs_Camera_BG;  // camera BG capture
+#endif
 extern GLint uniform_Update_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_Update_texture_fs_Noise;  // 3D noise
 #ifdef PG_WITH_REPOP_DENSITY
@@ -382,8 +389,11 @@ extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 extern GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 extern GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-extern GLint uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+extern GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+#ifdef CAVERNEPLATON
+extern GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb;
+#endif
 
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_Render_curr;         // previous pass output
@@ -431,7 +441,7 @@ extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transpare
 extern GLint uniform_Mesh_vp_model;
 extern GLint uniform_Mesh_vp_view;
 extern GLint uniform_Mesh_vp_proj;
-extern GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText;
+extern GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene;
 #ifndef TEMPETE
 extern GLint uniform_Mesh_fs_3fv_light;
 #endif

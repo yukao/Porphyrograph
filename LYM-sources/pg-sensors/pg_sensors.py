@@ -6,8 +6,10 @@
 
 # usage: python3 pg_sensors
 
-from mbientlab.metawear import MetaWear, libmetawear, parse_value
+from mbientlab.metawear import *
 from mbientlab.metawear.cbindings import *
+from mbientlab.warble import * 
+import six
 
 from time import sleep
 from time import time
@@ -25,18 +27,33 @@ import csv
 
 # library to convert between strings and nums
 from vv_lib import to_num
+from vv_lib import force_num
 
-# OSC
-from pythonosc.udp_client import SimpleUDPClient
-from pythonosc.osc_server import AsyncIOOSCUDPServer
-from pythonosc.dispatcher import Dispatcher
-import asyncio
+from pg_lib import Vector
+from pg_lib import Point
 
 # mass spring system
 import pg_mss
 
+# OSC
+import pg_OSC
+
+# KEYBOARD HOT KEYS
+import keyboard
+
+# OSC
+from osc4py3 import oscmethod as osm
+
+# XMM
+import pg_train_reco_xmm
+
+# NumPy
+import numpy as np
+
 if sys.version_info[0] == 2:
 	range = xrange
+
+OSC_emission_timeStep = 0.05
 
 ##################################################################
 # USAGE
@@ -50,15 +67,14 @@ USAGE = '''pg_sensors.py -s sensor_configuration_file -i MSS_configuration_file
 ###############################################
 # GLOBAL VARIABLES
 ###############################################
-SensorSet_current = None
-pg_MSS_current = None
-OSC_dispatcher = None
+ConnectedSensorStates = []
 
 ##################################################################
 # SENSOR
 ##################################################################
-class Sensor:
-	def __init__(self, MAC_address, min_conn_interval, max_conn_interval, latency, timeout, sensor_acc_factor):
+class SensorConfigParams:
+	def __init__(self, sensor_ID, MAC_address, min_conn_interval, max_conn_interval, latency, timeout, sensor_acc_factor):
+		self.sensor_ID = sensor_ID
 		self.sensor_MAC_address = MAC_address
 		self.min_conn_interval = min_conn_interval
 		self.max_conn_interval = max_conn_interval
@@ -67,42 +83,11 @@ class Sensor:
 		self.sensor_acc_factor = sensor_acc_factor
 
 ##################################################################
-# OSC SERVERS AND CLIENTS
-##################################################################
-class UDP_server:
-	def __init__(self, Port):
-		self.port = Port
-
-class UDP_client:
-	def __init__(self, IP_address, Port):
-		self.IP_address = IP_address
-		self.port = Port
-		self.client = SimpleUDPClient(IP_address, Port)
-
-##################################################################
-# SET OF SENSORS
-##################################################################
-class SensorSet:
-	# The system.
-	def __init__(self, sample_frequency, UDP_sensor_state_fowarding, MSS_sensor_state_fowarding):
-		# Construct a system.
-		self.sensors_sample_frequency = sample_frequency
-		self.UDP_sensor_state_fowarding = UDP_sensor_state_fowarding
-		self.MSS_sensor_state_fowarding = MSS_sensor_state_fowarding
-		self.sensors = dict()
-		self.UDP_servers = dict()
-		self.UDP_clients = dict()
-
-# sensors_mac_addresses = ['E9:0F:0A:C5:4D:66', 'C7:7D:6A:41:B4:15']
-# sensors_ids = ['mw1', mw2']
-# sensors_sample_frequency = 0.15 # 60 FPS
-
-##################################################################
 # SENSOR EVENTS MANAGEMENT
 ##################################################################
 class State:
-	def __init__(self, device, ID, sensor_data, sample_frequency, \
-		UDP_sensor_state_fowarding, MSS_sensor_state_fowarding, pg_UDP_client):
+	def __init__(self, device, ID, sensor_data, sensors_sample_frequency, \
+		METAWEAR_forward_sensor_acceleration):
 		self.device = device
 		self.ID = ID
 		self.min_conn_interval = sensor_data.min_conn_interval
@@ -110,96 +95,96 @@ class State:
 		self.latency = sensor_data.latency
 		self.timeout = sensor_data.timeout
 		self.sensor_acc_factor = sensor_data.sensor_acc_factor
-		self.pg_UDP_client = pg_UDP_client
-		self.UDP_sensor_state_fowarding = UDP_sensor_state_fowarding
-		self.MSS_sensor_state_fowarding = MSS_sensor_state_fowarding
-		self.sample_frequency = sample_frequency
+		self.METAWEAR_forward_sensor_acceleration = METAWEAR_forward_sensor_acceleration
+		self.sensors_sample_frequency = sensors_sample_frequency
 
 		self.nb_samples_EULER_ANGLE = 0
 		self.last_posting_time_EULER_ANGLE = time()
-		self.sensor_eulerAngle = pg_mss.Vector(0., 0., 0.)
+		self.sensor_eulerAngle = Vector(0., 0., 0.)
 		self.sensor_heading = 0.
 
 		self.nb_samples_LINEAR_ACC = 0
 		self.last_posting_time_LINEAR_ACC = time()
-		self.sensor_linAcc = pg_mss.Vector(0., 0., 0.)
+		self.sensor_linAcc_base = Vector(0., 0., 0.)
+		self.sensor_linAcc = Vector(0., 0., 0.)
 		# SENSOR FUSION
 		self.callback = FnVoid_VoidP_DataP(self.data_handler)
 
 	##################################################################
 	# SENSOR VALUES CALLBACK
 	def data_handler(self, ctx, data):
-		global pg_MSS_current
-		global SensorSet_current
-
-		# from cbindings: 
-		# class EULERAngles(Structure):
-		#	 _fields_ = [
-		#		 ("heading" , c_float),
-		#		 ("pitch" , c_float),
-		#		 ("roll" , c_float),
-		#		 ("yaw" , c_float)
-		#	 ]
-		# class CartesianFloat(Structure):
-		#	 _fields_ = [
-		#		 ("x" , c_float),
-		#		 ("y" , c_float),
-		#		 ("z" , c_float)
-		#	 ]
 		values = parse_value(data, n_elem = 1)
 		curTime = time()
 		# EULER ANGLES
 		if values.__repr__().find("heading") >= 0:
 			post_interval_EULER_ANGLE = curTime - self.last_posting_time_EULER_ANGLE
-			if post_interval_EULER_ANGLE >= self.sample_frequency:
+			if post_interval_EULER_ANGLE >= self.sensors_sample_frequency:
 				# updates last sampling time
 				self.last_posting_time_EULER_ANGLE = curTime;
 				# update count
 				self.nb_samples_EULER_ANGLE += 1
 
 				#reads the values
-				self.sensor_eulerAngle = pg_mss.Vector(values.pitch, values.roll, values.yaw)
+				self.sensor_eulerAngle = Vector(values.pitch, values.roll, values.yaw)
 				self.sensor_heading = values.heading
 
 				# print("device: %s, EULER %s\n" % (self.device.address, values))
 				# console printing
-				if(self.nb_samples_EULER_ANGLE % 10 == 0):
-					print("device: %s, EULER %f %f %f %f" % (self.ID, self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz))
+				if pg_train_reco_xmm.getGMM() != None :
+					if self.nb_samples_EULER_ANGLE % 10 == 0 and pg_train_reco_xmm.getGMM().xmm_train == True :
+						print("device: %s, EULER %f %f %f %f" % (self.ID, self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz))
 
-				# porphyrograph OSC messages					
-				if(self.UDP_sensor_state_fowarding == True):
-					self.pg_UDP_client.send_message("/mw_euler", [self.ID, self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz])						
-
-				# MSS values updating (nothing for the moment)
-				if(pg_MSS_current != None and self.MSS_sensor_state_fowarding == True):
-					pg_MSS_current.update_Euler(self.ID, self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz)						
+				# LIVE OSC messages					
+				# if self.METAWEAR_forward_sensor_acceleration == True :
+				# 	pg_OSC.UDP_emit("/mw_euler", "udp_porphyrograph_send", [self.ID, self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz])
 
 		# LINEAR ACCELERATION
 		else:
 			post_interval_LINEAR_ACC = curTime - self.last_posting_time_LINEAR_ACC
-			if post_interval_LINEAR_ACC >= self.sample_frequency:
+			if post_interval_LINEAR_ACC >= self.sensors_sample_frequency:
 				# updates last sampling time
 				self.last_posting_time_LINEAR_ACC = curTime;
 				# update count
 				self.nb_samples_LINEAR_ACC += 1
 
 				#reads the values
-				self.sensor_linAcc = pg_mss.Vector(values.x, values.y, values.z) * self.sensor_acc_factor
+				self.sensor_linAcc_base = Vector(values.x, values.y, values.z)
+				# multiplies the sensor acceleration by an impact factor
+				self.sensor_linAcc = self.sensor_linAcc_base * self.sensor_acc_factor
 
 				# print("device: %s, ACCEL %s\n" % (self.device.address, values))
 				# console printing
-				if(self.nb_samples_LINEAR_ACC % 10 == 0):
-					print("device: %s, ACCEL %f %f %f" % (self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz))
+				if pg_train_reco_xmm.getGMM() != None :
+					if self.nb_samples_LINEAR_ACC % 10 == 0 and pg_train_reco_xmm.getGMM().xmm_train == True :
+						print("device: %s, ACCEL %f %f %f" % (self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz))
 
-				# porphyrograph OSC messages					
-				if(self.UDP_sensor_state_fowarding == True):
-					self.pg_UDP_client.send_message("/mw_linAcc", [self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz])
+				# LIVE OSC messages					
+				# if self.METAWEAR_forward_sensor_acceleration == True :
+				# 	pg_OSC.UDP_emit("/mw_linAcc", "udp_porphyrograph_send", [self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz])
+				if self.METAWEAR_forward_sensor_acceleration == True :
+					if self.ID == "mw1" :
+						acc_norm = self.sensor_linAcc.norm()
+						pg_OSC.UDP_emit("/mw/linAcc1", "udp_LIVE_send", [acc_norm])
+						pg_OSC.UDP_emit("/globaltrajectoryspeed", "udp_PYTHON_send", [(acc_norm*10.0)])
+						# print("/globaltrajectoryspeed", "udp_PYTHON_send", [(acc_norm*10.0)])
+					elif self.ID == "mw2" :
+						acc_norm = self.sensor_linAcc.norm()
+						pg_OSC.UDP_emit("/mw/linAcc2", "udp_LIVE_send", [acc_norm])
+						pg_OSC.UDP_emit("/globalsourcespeed", "udp_PYTHON_send", [(acc_norm*10.0)])
+						# print("/globalsourcespeed", "udp_PYTHON_send", [(acc_norm*10.0)])
 
 				# MSS values updating (updates the forces on the masses linked to a sensor)
-				if(pg_MSS_current != None and self.MSS_sensor_state_fowarding == True):
-					pg_MSS_current.update_linAcc(self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz)
-					# MSS dynamics, mass/spring positions updating, and mass position forwarding to porphyrograph for drawing
-					pg_MSS_current.step()			
+				if pg_mss.pg_MSS_current != None :
+					pg_mss.pg_MSS_current.update_linAcc(self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz)
+					# print("MSS updating: %s, ACCEL %f %f %f" % (self.ID, self.sensor_linAcc.vx, self.sensor_linAcc.vy, self.sensor_linAcc.vz))
+
+			##################################################################
+			# sends it to the XMM library if training or recognition is on
+			if pg_train_reco_xmm.getGMM() != None :
+				if pg_train_reco_xmm.getGMM().xmm_train == True :
+					pg_train_reco_xmm.getGMM().gmm_train_on_the_fly(self.ID, np.array([self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz, self.sensor_linAcc_base.vx, self.sensor_linAcc_base.vy, self.sensor_linAcc_base.vz]))
+				elif pg_train_reco_xmm.getGMM().xmm_reco == True :
+					pg_train_reco_xmm.getGMM().gmm_reco_on_the_fly(self.ID, np.array([self.sensor_heading, self.sensor_eulerAngle.vx, self.sensor_eulerAngle.vy, self.sensor_eulerAngle.vz, self.sensor_linAcc_base.vx, self.sensor_linAcc_base.vy, self.sensor_linAcc_base.vz]))
 
 	##################################################################
 	# SENSORS CONFIGURATION FOR DATA FUSTION 
@@ -260,69 +245,38 @@ class State:
 # SENSOR DISCONNECTION BEFORE EXITING
 ##################################################################
 def disconnect():
-	global SensorSet_current
+	global ConnectedSensorStates
 
-	for s in SensorSet_current.states:
+	for s in ConnectedSensorStates:
 		s.sensor_disconnect()
 
 	print("Total samples emitted")
-	for s in SensorSet_current.states:
+	for s in ConnectedSensorStates:
 		print("	%s -> angle %d acc %d tot %d" % (s.ID, s.nb_samples_EULER_ANGLE, s.nb_samples_LINEAR_ACC, s.nb_samples_EULER_ANGLE+s.nb_samples_LINEAR_ACC))
 
-	# OSC server closing
-	for server in SensorSet_current.UDP_servers.values():
-		server.transport.close()  # Clean up serve endpoint
+	# OSC closing.
+	pg_OSC.osc_terminate()
 
 ##################################################################
 # READS THE CONFIGURATION LINE BY LINE
 ##################################################################
-def SensorSet_init(FILEin):
-	readCVS = csv.reader(FILEin, delimiter=',')
-
-	##################################################################
-	# SENSORS INITIALIZATION
-	line = next(readCVS)
-	if line[0] != "SensorSet":
-		print( "Expected tag \"SensorSet\" not found in line: ", line)
-		sys.exit(2)
-	
-	line = next(readCVS) 
-	# print( "line1 ", line )
-
-	SensorSet_line = next(readCVS) 
-	# print( "line2 ", MSS_line )
-
-	nb_sensors = to_num(SensorSet_line[0])
-	SensorSet_sample_frequency = to_num(SensorSet_line[1])
-
-	nb_UDP_servers = to_num(SensorSet_line[2])
-	nb_UDP_clients = to_num(SensorSet_line[3])
-
-	UDP_sensor_state_fowarding = (SensorSet_line[4] == 'True')
-	MSS_sensor_state_fowarding = (SensorSet_line[5] == 'True')
-
-	# /MSS line
-	line = next(readCVS)
-	if line[0] != "/SensorSet":
-		print( "Expected tag \"/SensorSet\" not found in line: ", line)
-		sys.exit(2)
-
-	# MSS initialization
-	SensorSet_return = SensorSet(SensorSet_sample_frequency, UDP_sensor_state_fowarding, MSS_sensor_state_fowarding)
+def SensorConfigurationData(readCSV):
+	# Sensor initialization
+	sensor_config_param = dict()
 
 	################################################
 	# sensor lines
-	line = next(readCVS)
+	line = next(readCSV)
 	if line[0] != "sensor":
 		print( "Expected tag \"sensor\" not found in line: ", line)
 		sys.exit(2)
+	nb_sensors = to_num(line[1])
 	
-	line = next(readCVS) 
+	line = next(readCSV) 
 	# print( "line1 ", line )
 
 	for ind_sensor in range(nb_sensors):
-		sensor_line = next(readCVS) 
-		# print( "line2 ", spring_line )
+		sensor_line = next(readCSV) 
 		sensor_ID = sensor_line[0]
 		sensor_MAC_address = sensor_line[1]
 		min_conn_interval = to_num(sensor_line[2])
@@ -331,155 +285,40 @@ def SensorSet_init(FILEin):
 		timeout = to_num(sensor_line[5])
 		sensor_acc_factor = to_num(sensor_line[6])
 
-		if(not(sensor_ID in SensorSet_return.sensors.keys())):
-			SensorSet_return.sensors[sensor_ID] = Sensor(sensor_MAC_address, min_conn_interval, max_conn_interval, latency, timeout, sensor_acc_factor)
+		if(not(sensor_ID in sensor_config_param.keys())):
+			sensor_config_param[sensor_ID] = SensorConfigParams(sensor_ID, sensor_MAC_address, min_conn_interval, max_conn_interval, latency, timeout, sensor_acc_factor)
 		else:
 			print("Duplicate sensor ID: ", sensor_ID)
 			sys.exit(2)
 
+		print( "Sensor #{} id {}".format(ind_sensor+1, sensor_ID) )
+
 	# /sensor line
-	line = next(readCVS)
+	line = next(readCSV)
 	if line[0] != "/sensor":
 		print( "Expected tag \"/sensor\" not found in line: ", line)
 		sys.exit(2)
 
 	################################################
-	# UDP_server lines
-	line = next(readCVS)
-	if line[0] != "UDP_server":
-		print( "Expected tag \"UDP_server\" not found in line: ", line)
-		sys.exit(2)
-	
-	line = next(readCVS) 
-	# print( "line1 ", line )
-
-	for ind_UDP_server in range(nb_UDP_servers):
-		UDP_server_line = next(readCVS) 
-		# print( "line2 ", UDP_server_line )
-		UDP_server_ID = UDP_server_line[0]
-		UDP_server_port = int(to_num(UDP_server_line[1]))
-		if(not(UDP_server_ID in SensorSet_return.UDP_servers.keys())):
-			SensorSet_return.UDP_servers[UDP_server_ID] = UDP_server(UDP_server_port)
-		else:
-			print("Duplicate UDP_server ID: ", UDP_server_ID)
-			sys.exit(2)
-
-	# /UDP_server line
-	line = next(readCVS)
-	if line[0] != "/UDP_server":
-		print( "Expected tag \"/UDP_server\" not found in line: ", line)
-		sys.exit(2)
-
-	################################################
-	# UDP_client lines
-	line = next(readCVS)
-	if line[0] != "UDP_client":
-		print( "Expected tag \"UDP_client\" not found in line: ", line)
-		sys.exit(2)
-	
-	line = next(readCVS) 
-	# print( "line1 ", line )
-
-	for ind_UDP_client in range(nb_UDP_clients):
-		UDP_client_line = next(readCVS) 
-		# print( "line2 ", UDP_client_line )
-		UDP_client_ID = UDP_client_line[0]
-		UDP_client_IP_address = UDP_client_line[1]
-		UDP_client_port = to_num(UDP_client_line[2])
-		if(not(UDP_client_ID in SensorSet_return.UDP_clients.keys())):
-			SensorSet_return.UDP_clients[UDP_client_ID] = UDP_client(UDP_client_IP_address, UDP_client_port)
-		else:
-			print("Duplicate UDP_client ID: ", UDP_client_ID)
-			sys.exit(2)
-
-	# /UDP_client line
-	line = next(readCVS)
-	if line[0] != "/UDP_client":
-		print( "Expected tag \"/UDP_client\" not found in line: ", line)
-		sys.exit(2)
-
-	################################################
-	# retunrs the SensorSet
-	return SensorSet_return
-
-##################################################################
-# OSC COMMUNICATION
-##################################################################
-def	UDP_emit(address, UDP_client_ID, arg_list) :
-	if(UDP_client_ID in SensorSet_current.UDP_clients.keys()):
-		SensorSet_current.UDP_clients[UDP_client_ID].client.send_message(address, arg_list)						
-	else:
-		print('missing "', UDP_client_ID, '" UDP client')
-		exit(0)
+	# retunrs the SensorParams
+	return sensor_config_param
 
 ##################################################################
 # OSC RECEIVED MESSAGES PROCESSING
-def UDP_receive_sensor_acc_factor_handler(address, *args):
-	global SensorSet_current
-	print("received OSC {", address, "}: {", args, "}")
-	for sensor in SensorSet_current.sensors.values() :
-		sensor.sensor_acc_factor = to_num(args[0])
-	UDP_emit(address, "udp_TouchOSC_send", sensor_acc_factor_value())
+def UDP_receive_sensor_acc_factor_handler(address, arg):
+	global ConnectedSensorStates
+
+	# print("received OSC {", address, "}: {", arg, "} {", force_num(arg), "}")
+	for s in ConnectedSensorStates:
+		s.sensor_acc_factor = force_num(arg)
+	pg_OSC.UDP_emit(address, "udp_TouchOSC_send", [sensor_acc_factor_value()])
+	# print("New value {", sensor_acc_factor_value(), "}")
+
 def sensor_acc_factor_value():
-	global SensorSet_current
-	if(SensorSet_current.sensors.values()) :
-		sensor = next(iter(SensorSet_current.sensors.values()))
-		return [sensor.sensor_acc_factor]
-	return [1]
-
-##################################################################
-# OSC MESSAGE RECEPTION DISPATCHING
-def OSC_dispatecher_mapping():
-	OSC_dispatcher.map("/mss_mass_mass_factor", pg_mss.UDP_receive_mss_mass_mass_factor_handler)
-	OSC_dispatcher.map("/mss_mass_visc", pg_mss.UDP_receive_mss_mass_visc_handler)
-	OSC_dispatcher.map("/mss_mass_grav", pg_mss.UDP_receive_mss_mass_grav_handler)
-	OSC_dispatcher.map("/mss_spring_k_factor", pg_mss.UDP_receive_mss_spring_k_factor_handler)
-	OSC_dispatcher.map("/mss_spring_l0_factor", pg_mss.UDP_receive_mss_spring_l0_factor_handler)
-	OSC_dispatcher.map("/mss_spring_damp_factor", pg_mss.UDP_receive_mss_spring_damp_factor_handler)
-	OSC_dispatcher.map("/mss_sensor_acc_factor", UDP_receive_sensor_acc_factor_handler)
-	OSC_dispatcher.map("/mss_spring_mode", pg_mss.UDP_receive_mss_spring_mode_handler)
-
-##################################################################
-# OSC MESSAGE EMISSION DISPATCHING
-def OSC_emitter_resend_all():
-	UDP_emit("/mss_mass_mass_factor", "udp_TouchOSC_send", pg_mss.mss_mass_mass_factor_value())
-	UDP_emit("/mss_mass_visc", "udp_TouchOSC_send", pg_mss.mss_mass_visc_value())
-	UDP_emit("/mss_mass_grav", "udp_TouchOSC_send", pg_mss.mss_mass_grav_value())
-	UDP_emit("/mss_spring_k_factor", "udp_TouchOSC_send", pg_mss.mss_spring_k_factor_value())
-	UDP_emit("/mss_spring_l0_factor", "udp_TouchOSC_send", pg_mss.mss_spring_l0_factor_value())
-	UDP_emit("/mss_spring_damp_factor", "udp_TouchOSC_send", pg_mss.mss_spring_damp_factor_value())
-	UDP_emit("/mss_sensor_acc_factor", "udp_TouchOSC_send", sensor_acc_factor_value())
-	UDP_emit("/mss_spring_mode", "udp_TouchOSC_send", pg_mss.mss_spring_mode_value())
-
-##################################################################
-# OSC ASYNC MESSAGE RECEPTION LOOP
-async def OSC_loop():
-	global SensorSet_current
-
-	##################################################################
-	# Tell Python to run the handlerForInterruption() function when SIGINT is recieved
-	signal(SIGINT, handlerForInterruption)
-
-	"""Example main loop that only runs for 10 iterations before finishing"""
-	while(True):
-		# print("OSC loop")
-		await asyncio.sleep(SensorSet_current.sensors_sample_frequency/2.0)
-
-##################################################################
-# OSC MAIN SUB
-async def OSC_main():
-	global SensorSet_current
-	global OSC_dispatcher
-
-	for server in SensorSet_current.UDP_servers.values():
-		server.OSC_server = AsyncIOOSCUDPServer(('0.0.0.0', server.port), OSC_dispatcher, asyncio.get_event_loop())
-		server.transport, server.protocol = await server.OSC_server.create_serve_endpoint()  # Create datagram endpoint and start serving
-		print("Opening OSC server on Port: %d" % (server.port))
-
-	await OSC_loop()  # Enter main loop of program
-
-	for server in SensorSet_current.UDP_servers.values():
-   		server.transport.close()  # Clean up serve endpoint
+	global ConnectedSensorStates
+	if ConnectedSensorStates != [] :
+		return ConnectedSensorStates[0].sensor_acc_factor
+	return 1
 
 ##################################################################
 # MAIN SUB
@@ -491,90 +330,247 @@ def handlerForInterruption(signal_received, frame):
 	exit(0)
 
 def main(main_args) :
-	global SensorSet_current
-	global pg_MSS_current
-	global OSC_dispatcher
+	global ConnectedSensorStates
 
 	##################################################################
 	# ARGUMENTS
 	##################################################################
-	configuration_file_name = ''
+	OSC_sensor_MSS_configuration_file_name = ''
+	# sensor_configuration_file_name = ''
+	# MSS_configuration_file_name = ''
+	# OSC_configuration_file_name = ''
+	MSS_scenario_file_name = ''
+	XMM_training_data_dir_name = ''
+	sensors_sample_frequency = 0.15
+	XMM_likelihood_window = 40
+	XMM_likelihood_threshold = 0.7
+	XMM_likelihood_minimal_duration = 1.0
+	XMM_forward_gesture_recognition = True
+	XMM_forward_web_animation = True
+	XMM_forward_sensor_masses_animation = True
+	METAWEAR_forward_sensor_acceleration = True
+
 	try:
-		opts, args = getopt.getopt(main_args,"i:s:",["inputfile=","sensors="])
+		opts, args = getopt.getopt(main_args,"c:s:",["configurationfile=","scenario=","training-data=","training-sensors-ID=","sensors-sample-frequency=","likelihood-window=","training-labels=","training-label-ClipArts=","likelihood-threshold=","likelihood-minimal-duration=","forward-gesture-recognition=","forward-web-animation=","forward-sensor-masses-animation=","forward-sensor-acceleration="])
 	except getopt.GetoptError:
 		print(USAGE)
 		sys.exit(2)
 	for opt, arg in opts:
-		if opt in ("-s", "--sensors"):
-			sensor_configuration_file_name = arg
-		elif opt in ("-i", "--inputfile"):
-			MSS_configuration_file_name = arg
+		if opt in ("-c", "--configurationfile"):
+			OSC_sensor_MSS_configuration_file_name = arg
+		elif opt in ("--scenario"):
+			MSS_scenario_file_name = arg
+		elif opt in ("--training-sensors-ID"):
+			XMM_sensors_ID = arg
+		elif opt in ("--sensors-sample-frequency"):
+			sensors_sample_frequency = arg
+		elif opt in ("--training-data"):
+			XMM_training_data_dir_name = arg
+		elif opt in ("--likelihood-window"):
+			XMM_likelihood_window = arg
+		elif opt in ("--training-labels"):
+			XMM_training_labels = arg
+		elif opt in ("--training-label-ClipArts"):
+			XMM_training_labels_ClipArts = arg
+		elif opt in ("--likelihood-threshold"):
+			XMM_likelihood_threshold = arg
+		elif opt in ("--likelihood-minimal-duration"):
+			XMM_likelihood_minimal_duration = arg
+		elif opt in ("--forward-gesture-recognition"):
+			XMM_forward_gesture_recognition = arg
+		elif opt in ("--forward-web-animation"):
+			XMM_forward_web_animation = arg
+		elif opt in ("--forward-sensor-masses-animation"):
+			XMM_forward_sensor_masses_animation = arg
+		elif opt in ("--forward-sensor-acceleration"):
+			METAWEAR_forward_sensor_acceleration = arg
 		else:
 			assert False, "unhandled option"
 	# print( 'Input scenario file is ', configuration_file_name)
 
-	try:
-		FILEin = open(sensor_configuration_file_name, "rt")
-	except IOError:
-		print("File not found :", sensor_configuration_file_name, " or path is incorrect")
-
-	##################################################################
-	# creates the OSC messages dispatcher used to define the servers in the sensor set initialization
-	OSC_dispatcher = Dispatcher()
-
-	##################################################################
-	# SENSOR SET INITIALIZATION
-	SensorSet_current = SensorSet_init(FILEin)
-
-	##################################################################
-	# MSS INITIALIZATION
-	pg_MSS_current = pg_mss.main(["-i", MSS_configuration_file_name])
-
-	##################################################################
-	# SENSOR SET CALLBACKS FOR OSC MESSAGES (BOTH FOR SENSORS AND FOR MSS)
-	OSC_dispatecher_mapping()
+	if len(XMM_training_labels) !=  len(XMM_training_labels_ClipArts) :
+		print("the size of the training labels should be the same as the size of the associated ClipArt indices")
+		sys.exit(0)
 
 	##################################################################
 	# Tell Python to run the handlerForInterruption() function when SIGINT is recieved
 	signal(SIGINT, handlerForInterruption)
 
 	##################################################################
+	# CONFIGURATION FILE OPENING
+	try:
+		FILEin = open(OSC_sensor_MSS_configuration_file_name, "rt")
+	except IOError:
+		print("File not found :", OSC_configuration_file_name, " or path is incorrect")
+
+	OSC_sensor_MSS_readCSV = csv.reader(FILEin, delimiter=',')
+
+	####################
+	# OSC INITIALIZATION
+	pg_OSC.OSC_init(OSC_sensor_MSS_readCSV)
+
+	###########################
+	# SENSOR SET INITIALIZATION
+	sensor_config_param = SensorConfigurationData(OSC_sensor_MSS_readCSV)
+
+	####################
+	# MSS INITIALIZATION
+	pg_mss.pg_MSS_current = pg_mss.MSS_init(OSC_sensor_MSS_readCSV)
+
+	# CONFIGURATION FILE CLOSING
+	FILEin.close()
+
+	##################################################################
+	# MSS SCENARIO
+	if(MSS_scenario_file_name != '') :
+		pg_mss.pg_MSS_current.MSS_scenario(MSS_scenario_file_name)
+	print("scenario loaded")
+
+	##################################################################
 	# SENSORS CONNECTION AND UDP LINK TO PORPHYROGRAPH (SENSOR VALUE AND/OR MSS VALUES)
-	SensorSet_current.states = []
-	for sensor_ID, sensor_data in SensorSet_current.sensors.items():
-		print( "connect to sensor: ", sensor_ID, " address: ", sensor_data.sensor_MAC_address)
-		d = MetaWear(sensor_data.sensor_MAC_address)
-		d.connect()
-		print("Connected to " + d.address)
-		if("udp_porphyrograph_send" in SensorSet_current.UDP_clients.keys()):
-			SensorSet_current.states.append(State(d, sensor_ID, sensor_data, SensorSet_current.sensors_sample_frequency, \
-				SensorSet_current.UDP_sensor_state_fowarding, SensorSet_current.MSS_sensor_state_fowarding, \
-				SensorSet_current.UDP_clients["udp_porphyrograph_send"].client))
-		else:
-			print('missing "udp_porphyrograph_send" UDP client')
-			exit(0)
+	print("scanning for devices...")
+	devices = {}
+	def handler(result):
+		devices[result.mac] = result.name
+
+	BleScanner.set_handler(handler)
+	BleScanner.start()
+
+	sleep(10.0)
+	BleScanner.stop()
+
+	# scans the BLE devices around and reports their IDs and MAC addresses
+	i = 0
+	list_of_connectable_sensors = []
+	for address, name in six.iteritems(devices):
+		print("[%d] %s (%s)" % (i, address, name))
+		if name == "MetaWear" :
+			for sensor_ID, one_sensor_config_param in sensor_config_param.items():
+				if one_sensor_config_param.sensor_MAC_address == address :
+					list_of_connectable_sensors.append([sensor_ID, one_sensor_config_param])
+		i += 1
+
+	# tries to connect to the available MetaWear devices among the ones given in the configuration file
+	ConnectedSensorStates = []
+	ConnectedSensorIDs = []
+	for sensor_ID, one_sensor_config_param in list_of_connectable_sensors :
+		if sensor_ID in XMM_sensors_ID :
+			print( "connect to sensor: ", sensor_ID, " address: ", one_sensor_config_param.sensor_MAC_address)
+			d = MetaWear(one_sensor_config_param.sensor_MAC_address)
+			try_count = 0
+			while True:
+				# due to the likely connection failure, the exception is caught so that to have the possibility to retry
+				try :
+					d.connect()
+					print("Connected to " + d.address)
+					if("udp_PYTHON_send" in pg_OSC.UDP_clients.keys()):
+						s = State(d, sensor_ID, one_sensor_config_param, sensors_sample_frequency, \
+							METAWEAR_forward_sensor_acceleration)
+						ConnectedSensorStates.append(s)
+						ConnectedSensorIDs.append(s.ID)
+						s.sensor_data_fusion_configuration()
+						# used for sampling rate
+						s.last_posting_time_EULER_ANGLE = time();
+						s.last_posting_time_LINEAR_ACC = time();
+
+						pattern= LedPattern(repeat_count= 2)
+						libmetawear.mbl_mw_led_load_preset_pattern(byref(pattern), LedPreset.BLINK)
+						libmetawear.mbl_mw_led_write_pattern(d.board, byref(pattern), LedColor.GREEN)
+						libmetawear.mbl_mw_led_play(d.board)
+					else:
+						print('missing "udp_PYTHON_send" UDP client')
+						exit(0)
+					break
+				# in case of failure tries 3 connections in a row
+				except WarbleException :
+					try_count += 1
+					if try_count >= 2 :
+						print("**** Failed connection to " + d.address + "  ****")
+						break
+					else :
+						print("Failed connection, retries...")
+						sleep(1.)
+			sleep(1.)
+		# only one connected sensor is used currently due to the difficulty of doubling the connection
+		if len(ConnectedSensorStates) > 0 :
+			break
+
+	if len(ConnectedSensorStates) <= 0 :
+		print("No sensor connected")
+		sys.exit(0)
+
+	##################################################################
+	# INIIALIZES  with the setup parameter values 
+	print("******************* ", ConnectedSensorIDs[0] , " ***************************")
+	print("New GMM for sensor IDs", ConnectedSensorIDs)
+	pg_train_reco_xmm.setGMM(ConnectedSensorIDs, XMM_training_data_dir_name, XMM_likelihood_window, XMM_training_labels, XMM_training_labels_ClipArts, XMM_likelihood_threshold, XMM_likelihood_minimal_duration, XMM_forward_gesture_recognition, XMM_forward_web_animation, XMM_forward_sensor_masses_animation)
+	if pg_train_reco_xmm.getGMM() == None :
+		print("GMM initialization failed")
+		sys.exit(0)
+	else :
+		print("GMM initialization succeeded")
+	# pg_train_reco_xmm.getGMM().gmm_on_off_train1("/train1", "1")
 
 	##################################################################
 	# SENSORS CONFIGURATION FOR DATA FUSTION 
 	# AND COLLECTION OF ORIENTATION (EULER ANGLES) + LINEAR ACCELERATION 
-	for s in SensorSet_current.states:
-		s.sensor_data_fusion_configuration()
+	# for s in ConnectedSensorStates:
+		# s.sensor_data_fusion_configuration()
 
-		# used for sampling rate
-		s.last_posting_time_EULER_ANGLE = time();
-		s.last_posting_time_LINEAR_ACC = time();
+		# # used for sampling rate
+		# s.last_posting_time_EULER_ANGLE = time();
+		# s.last_posting_time_LINEAR_ACC = time();
+	print("sensors configured")
+
+	##################################################################
+	# OPENS the log file 
+	if(False) :
+		try:
+			csvfile = open(MSS_log_file_name, "wt", newline='')
+		except IOError:
+			print("File not created :", transformation_scenario_file_name, " or path is incorrect")
+		logwriter = csv.writer(csvfile, delimiter=',')
+		pg_mss.pg_MSS_current.log_mass_positions_header(logwriter)
+
+	##################################################################
+	# SENSOR SET CALLBACKS FOR OSC MESSAGES (BOTH FOR SENSORS AND FOR MSS)
+	pg_mss.OSC_dispatcher_mapping()
 
 	##################################################################
 	# INIIALIZES TouchOSC with the setup parameter values 
-	OSC_emitter_resend_all()
+	pg_mss.OSC_emitter_resend_all()
 
 	##################################################################
-	# Runs the loop for receiving async OSC messages 
-	asyncio.run(OSC_main())
+	# DEFINES hot keys
+	# keyboard.add_hotkey('l', pg_mss.UDP_receive_mss_launch_handler, args=['/mss_launch', 1])
+	# keyboard.add_hotkey('q', pg_mss.UDP_receive_mss_quit_handler, args=['/mss_quit', 1])
 
 	##################################################################
-	# Sleeps while the threads run
-	sleep(30000.0)
+	# launches the MSS scenario 
+	# (optional, can also be commented and launched with 'l' hotkey)
+	pg_mss.UDP_receive_mss_launch_handler('/mss_launch', [])
+
+ 	##################################################################
+	# main loop
+	indstep = 0
+	while(not pg_mss.pg_MSS_current.terminated) :
+		##################################################################
+		# SENSOR SET CALLBACKS FOR OSC MESSAGES (BOTH FOR SENSORS AND FOR MSS)
+		# MSS dynamics, mass/spring positions updating, and mass position forwarding to porphyrograph for drawing
+		pg_mss.pg_MSS_current.step()	
+		pg_mss.pg_MSS_current.send_mass_positions_values()	
+		if indstep % 20 == 0:	
+			pg_mss.OSC_emitter_resend_all()		
+		if(False) :
+			pg_mss.pg_MSS_current.log_mass_positions_values(logwriter)		
+
+		for i in range(30) :
+			pg_OSC.osc_process()
+		sleep(OSC_emission_timeStep)
+		indstep += 1
+
+	##################################################################
+	# DISCONNECTION
 	disconnect()
 
 if __name__ == "__main__":

@@ -36,7 +36,7 @@ const char *pg_UDPMessageFormatString[Emptypg_UDPMessageFormat + 1] = { "Plain" 
 
 int                      pg_NbScenes;
 
-Scene                    *Scenario;
+Scene                    *pg_Scenario;
 
 string					 pg_csv_file_name;
 string					 snapshots_dir_path_prefix;
@@ -54,7 +54,6 @@ pg_Window              *PG_Window;
 
 // PNG capture
 string                    Png_file_name;
-string                    Png_shot_dir_name;
 int                      beginPng;
 int                      endPng;
 int                      stepPng;
@@ -64,7 +63,6 @@ int						 indPngSnapshot;
 
 // SVG capture
 string                    Svg_file_name;
-string                    Svg_shot_dir_name;
 int                      beginSvg;
 int                      endSvg;
 int                      stepSvg;
@@ -73,7 +71,6 @@ int						 indSvgSnapshot;
 
 // JPG capture
 string                    Jpg_file_name;
-string                    Jpg_shot_dir_name;
 int                      beginJpg;
 int                      endJpg;
 int                      stepJpg;
@@ -133,16 +130,36 @@ string *pg_Mesh_fileNames = NULL;
 // geometrical transformations
 float *pg_Mesh_Scale = NULL;
 float *pg_Mesh_Rotation_angle = NULL;
-float *pg_Mesh_Rotation_X = NULL;
-float *pg_Mesh_Rotation_Y = NULL;
-float *pg_Mesh_Rotation_Z = NULL;
-float *pg_Mesh_Translation_X = NULL;
-float *pg_Mesh_Translation_Y = NULL;
-float *pg_Mesh_Translation_Z = NULL;
+float* pg_Mesh_Rotation_X = NULL;
+float* pg_Mesh_Rotation_Y = NULL;
+float* pg_Mesh_Rotation_Z = NULL;
+float* pg_Mesh_Translation_X = NULL;
+float* pg_Mesh_Translation_Y = NULL;
+float* pg_Mesh_Translation_Z = NULL;
+float* pg_Mesh_Rotation_Ini_X = NULL;
+float* pg_Mesh_Rotation_Ini_Y = NULL;
+float* pg_Mesh_Rotation_Ini_Z = NULL;
+float* pg_Mesh_Translation_Ini_X = NULL;
+float* pg_Mesh_Translation_Ini_Y = NULL;
+float* pg_Mesh_Translation_Ini_Z = NULL;
 float *pg_Mesh_Motion_X = NULL;
 float *pg_Mesh_Motion_Y = NULL;
 float *pg_Mesh_Motion_Z = NULL;
 int *pg_Mesh_TextureRank = NULL;
+#if defined(CAVERNEPLATON)
+bool *pg_CaverneActveMesh = NULL;
+float* pg_CaverneMeshWakeupTime = NULL;
+float* pg_CaverneMeshBirthTime = NULL;
+float* pg_CaverneMeshDeathTime = NULL;
+float Caverne_BackColorRed = 0.f;
+float Caverne_BackColorGreen = 0.f;
+float Caverne_BackColorBlue = 0.f;
+float Caverne_BackColorRed_prec = 0.f;
+float Caverne_BackColorGreen_prec = 0.f;
+float Caverne_BackColorBlue_prec = 0.f;
+bool Caverne_BackColorFlash = false;
+bool Caverne_BackColorFlash_prec = false;
+#endif
 // color
 pg_ClipArt_Colors_Types *pg_Mesh_Colors = NULL;
 // textures
@@ -162,7 +179,7 @@ int *pg_Texture_Rank = NULL;
 // 2D or 3D
 int *pg_Texture_Dimension = NULL;
 // number of piled 2D textures for a 3D texture
-int *pg_Texture_Nb_3D_Nextures = NULL;
+int *pg_Texture_Nb_Layers = NULL;
 // dimensions
 int *pg_Texture_Size_X = NULL;
 int *pg_Texture_Size_Y = NULL;
@@ -196,6 +213,27 @@ void stringstreamStoreLine(std::stringstream *sstream, std::string *line) {
 		std::replace((*line).begin(), (*line).end(), ',', ' ');
 	}
 	(*sstream).str((*line));
+}
+
+float stringToDuration(string percentOrAbsoluteDuration, float full_length, int ind_scene, int ind_var) {
+	float returnedPercent = 0.f;
+	if (percentOrAbsoluteDuration.back() == 's') {
+		percentOrAbsoluteDuration.resize(size_t(percentOrAbsoluteDuration.size() - 1));
+		returnedPercent = std::stof(percentOrAbsoluteDuration);
+		if (returnedPercent < 0 || returnedPercent > full_length) {
+			sprintf(ErrorStr, "Error: in scene %d var %d absolute duration %s negative or greater than full scene duration %.2f\n", ind_scene, ind_var, (percentOrAbsoluteDuration + "s").c_str(), full_length); ReportError(ErrorStr); throw 50;
+		}
+		if (full_length != 0.f) {
+			returnedPercent /= full_length;
+		}
+	}
+	else {
+		returnedPercent = std::stof(percentOrAbsoluteDuration);
+		if (returnedPercent < 0 || returnedPercent > 1.f) {
+			sprintf(ErrorStr, "Error: in scene %d var %d relative duration %s negative or greater than 1.\n", ind_scene, ind_var, percentOrAbsoluteDuration.c_str()); ReportError(ErrorStr); throw 50;
+		}
+	}
+	return min(max(returnedPercent, 0.f), 1.f);
 }
 
 void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin) {
@@ -271,7 +309,6 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstream >> endSvg;
 	sstream >> stepSvg;
 	sstream >> Svg_file_name;
-	sstream >> Svg_shot_dir_name;
 	outputSvg = !Svg_file_name.empty();
 	indSvgSnapshot = 0;
 
@@ -283,7 +320,6 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstream >> endPng;
 	sstream >> stepPng;
 	sstream >> Png_file_name;
-	sstream >> Png_shot_dir_name;
 	outputPng = !Png_file_name.empty();
 	indPngSnapshot = 0;
 
@@ -295,7 +331,6 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstream >> endJpg;
 	sstream >> stepJpg;
 	sstream >> Jpg_file_name;
-	sstream >> Jpg_shot_dir_name;
 	outputJpg = !Jpg_file_name.empty();
 	indJpgSnapshot = 0;
 
@@ -557,12 +592,25 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// storing the initial values
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
-	//std::cout << "\nvalues :\n";
 	for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-		sstream >> InitialValuesInterpVar[indP];
+		if (sstream.eof()) {
+			sprintf(ErrorStr, "Error: missing initial value %s %d\n", temp.c_str(), indP); ReportError(ErrorStr); throw 50;
+		}
+		sstream >> temp;
+		bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
+		if (!has_only_digits) {
+			sprintf(ErrorStr, "Error: non numeric variable initial value for var %d (%s)\n", indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+		}
+		InitialValuesInterpVar[indP] = std::stod(temp);
 		//std::cout << InitialValuesInterpVar[indP] << " ";
 		LastGUIShippedValuesInterpVar[indP] = MAXFLOAT;
 	}
+	// checks that the number of variables is what is expected
+	//sstream >> ID;
+	if (!sstream.eof()) {
+		sprintf(ErrorStr, "Error: too many initial variable values %s\n", sstream.str().c_str()); ReportError(ErrorStr); throw 50;
+	}
+
 	//std::cout << "\n";
 	// /initial_values
 	std::getline(scenarioFin, line);
@@ -577,21 +625,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstream >> ID; // string scenario
 	sstream >> pg_NbScenes;
 
-	Scenario = new Scene[pg_NbScenes];
+	pg_Scenario = new Scene[pg_NbScenes];
 
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
-		Scenario[indScene].scene_duration = 0.0;
-		Scenario[indScene].scene_change_when_ends = true;
-		Scenario[indScene].scene_initial_time = 0.0;
-		Scenario[indScene].scene_final_time = 0.0;
-		Scenario[indScene].scene_originalDuration = 0.0;
-		Scenario[indScene].scene_originalInitial_time = 0.0;
-		Scenario[indScene].scene_originalFinal_time = 0.0;
-	
-		Scenario[indScene].scene_initial_parameters = NULL;
-		Scenario[indScene].scene_final_parameters = NULL;
-		Scenario[indScene].scene_interpolations = NULL;
+		pg_Scenario[indScene].init();
 	}
+	pg_InterpolationScene.init();
 
 	printf("Loading %d scenes with %d variables\n", pg_NbScenes, _MaxInterpVarIDs);
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
@@ -599,62 +638,47 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		// std::cout << "scene: " << line << "\n";
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string scene
-		sstream >> Scenario[indScene].scene_IDs;
-		sstream >> Scenario[indScene].scene_duration;
+		sstream >> pg_Scenario[indScene].scene_IDs;
+		sstream >> pg_Scenario[indScene].scene_duration;
 		sstream >> temp;  // change_when_ends or prolong_when_ends
 		if (temp.compare("change_when_ends") == 0) {
-			Scenario[indScene].scene_change_when_ends = true;
+			pg_Scenario[indScene].scene_change_when_ends = true;
 		}
 		else if (temp.compare("prolong_when_ends") == 0) {
-			Scenario[indScene].scene_change_when_ends = false;
+			pg_Scenario[indScene].scene_change_when_ends = false;
 		}
 		else {
-			Scenario[indScene].scene_change_when_ends = true;
-			sprintf(ErrorStr, "Error: one of strings expected as scene ending mode: \"change_when_ends\" or \"prolong_when_ends\" not \"%s\" for scene %s\n", temp.c_str(), Scenario[indScene].scene_IDs.c_str()); ReportError(ErrorStr); throw 50;
+			pg_Scenario[indScene].scene_change_when_ends = true;
+			sprintf(ErrorStr, "Error: one of strings expected as scene ending mode: \"change_when_ends\" or \"prolong_when_ends\" not \"%s\" for scene %d %s\n", temp.c_str(), indScene, pg_Scenario[indScene].scene_IDs.c_str()); ReportError(ErrorStr); throw 50;
 		}
 		// second and third comments possibly displayed on the interface to help the user
 		if (!sstream.eof()) {
-			sstream >> Scenario[indScene].scene_Msg1;
+			sstream >> pg_Scenario[indScene].scene_Msg1;
 		}
 		else {
-			Scenario[indScene].scene_Msg1 = "";
+			pg_Scenario[indScene].scene_Msg1 = "";
 		}
 		if (!sstream.eof()) {
-			sstream >> Scenario[indScene].scene_Msg2;
+			sstream >> pg_Scenario[indScene].scene_Msg2;
 		}
 		else {
-			Scenario[indScene].scene_Msg2 = "";
+			pg_Scenario[indScene].scene_Msg2 = "";
 		}
 
 		//std::cout << "duration : " << 
-		//  Scenario[indScene].scene_duration << " sc #" << indScene << "\n";
+		//  pg_Scenario[indScene].scene_duration << " sc #" << indScene << "\n";
 
-		if (Scenario[indScene].scene_duration <= 0.0) {
-			sprintf(ErrorStr, "Error: null scene #%d duration [%f]!", indScene + 1, Scenario[indScene].scene_duration); ReportError(ErrorStr); throw 50;
+		if (pg_Scenario[indScene].scene_duration <= 0.0) {
+			sprintf(ErrorStr, "Error: null scene #%d duration [%f]!", indScene + 1, pg_Scenario[indScene].scene_duration); ReportError(ErrorStr); throw 50;
 		}
 		if (indScene > 0) {
-			Scenario[indScene].scene_initial_time = Scenario[indScene - 1].scene_final_time;
+			pg_Scenario[indScene].scene_initial_time = pg_Scenario[indScene - 1].scene_final_time;
 		}
 		else {
-			Scenario[indScene].scene_initial_time = 0.0;
+			pg_Scenario[indScene].scene_initial_time = 0.0;
 		}
-		Scenario[indScene].scene_final_time
-			= Scenario[indScene].scene_initial_time + Scenario[indScene].scene_duration;
-
-		Scenario[indScene].scene_initial_parameters = new float[_MaxInterpVarIDs];
-		Scenario[indScene].scene_final_parameters = new float[_MaxInterpVarIDs];
-		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			Scenario[indScene].scene_initial_parameters[indP] = 0.0;
-			Scenario[indScene].scene_final_parameters[indP] = 0.0;
-		}
-		Scenario[indScene].scene_interpolations
-			= new pg_Interpolation[_MaxInterpVarIDs];
-		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			Scenario[indScene].scene_interpolations[indP].interpolation_mode
-				= pg_linear_interpolation;
-			Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
-			Scenario[indScene].scene_interpolations[indP].duration = 1.0;
-		}
+		pg_Scenario[indScene].scene_final_time
+			= pg_Scenario[indScene].scene_initial_time + pg_Scenario[indScene].scene_duration;
 
 		// verbatim
 		std::getline(scenarioFin, line);
@@ -672,10 +696,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			}
 			sstream >> temp;
 			bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
-			if(!has_only_digits) {
+			if (!has_only_digits) {
 				sprintf(ErrorStr, "Error: non numeric variable initial value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
 			}
-			Scenario[indScene].scene_initial_parameters[indP] = std::stof(temp);
+			else {
+				pg_Scenario[indScene].scene_initial_parameters[indP] = std::stod(temp);
+			}
 		}
 		// checks that the number of variables is what is expected
 		//sstream >> ID;
@@ -697,7 +723,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			if (!has_only_digits) {
 				sprintf(ErrorStr, "Error: non numeric variable final value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
 			}
-			Scenario[indScene].scene_final_parameters[indP] = std::stof(temp);
+			pg_Scenario[indScene].scene_final_parameters[indP] = std::stod(temp);
 			// std::cout << scene_final_parameters[indScene][indP] << " ";
 		}
 		// checks that the number of variables is what is expected
@@ -713,16 +739,17 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		// storing the interpolation mode
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 			char valCh = 0;
-			float val, val2, val3;
+			string vals, val2s;
+			float val3;
 
-			Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
-			Scenario[indScene].scene_interpolations[indP].duration = 1.0;
-			Scenario[indScene].scene_interpolations[indP].midTermValue
-				= 0.5f * (Scenario[indScene].scene_initial_parameters[indP]
-					+ Scenario[indScene].scene_final_parameters[indP]);
+			pg_Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
+			pg_Scenario[indScene].scene_interpolations[indP].duration = 1.0;
+			pg_Scenario[indScene].scene_interpolations[indP].midTermValue
+				= 0.5 * (pg_Scenario[indScene].scene_initial_parameters[indP]
+					+ pg_Scenario[indScene].scene_final_parameters[indP]);
 
 			if (sstream.eof()) {
-				sprintf(ErrorStr, "Error: missing interpolation value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+				sprintf(ErrorStr, "Error: missing interpolation value in scene %d var %d (%s)\n", indScene + 1, indP + 1, temp.c_str()); ReportError(ErrorStr); throw 50;
 			}
 
 			sstream >> std::skipws >> valCh;
@@ -735,32 +762,34 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				// is final value between offset + duration and 1.0%
 			case 'l':
 			case 'L':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_linear_interpolation;
 				if (valCh == 'L') {
-					sstream >> val;
-					sstream >> val2;
+					sstream >> vals;
+					sstream >> val2s;
+					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
-						sprintf(ErrorStr, "Error: one of values of L(inear) interpolationn #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: one of values of L(inear) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
-						Scenario[indScene].scene_interpolations[indP].offSet = val;
-						if (val + val2 <= 1.00001) {
+						pg_Scenario[indScene].scene_interpolations[indP].offSet = val;
+						if (float(val + val2) <= 1.00001f) {
 							// deals with approximate values that can summ above 1.0
-							if (val + val2 > 1.0) {
+							if (float(val + val2) > 1.0f) {
 								val2 = 1.0f - val;
 							}
-							Scenario[indScene].scene_interpolations[indP].duration = val2;
-							if (Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
-								sprintf(ErrorStr, "Error: null L(inear) interpolation #%d duration [%f]!", indP + 1, Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
+							pg_Scenario[indScene].scene_interpolations[indP].duration = val2;
+							if (pg_Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
+								sprintf(ErrorStr, "Error: null L(inear) in scene %d var %d duration [%f]!", indScene + 1, indP + 1, pg_Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(ErrorStr, "Error: total duration of L(inear) interpolation #%d greater than 1.0: %.3f + %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+							sprintf(ErrorStr, "Error: total duration of L(inear) in scene %d var %d greater than 1.0: %.3f + %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 						}
 					}
 					else {
-						sprintf(ErrorStr, "Error: offset value L(inear) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: offset value L(inear) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 					// std::cout << "L " << val << " " << val2 << " ";
 
@@ -773,32 +802,34 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				// COSINE INTERPOLATION
 			case 'c':
 			case 'C':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_cosine_interpolation;
 				if (valCh == 'C') {
-					sstream >> val;
-					sstream >> val2;
+					sstream >> vals;
+					sstream >> val2s;
+					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
-						sprintf(ErrorStr, "Error: one of values of C(osine) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: one of values of C(osine) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
-						Scenario[indScene].scene_interpolations[indP].offSet = val;
+						pg_Scenario[indScene].scene_interpolations[indP].offSet = val;
 						// deals with approximate values that can summ above 1.0
-						if (val + val2 <= 1.00001) {
-							if (val + val2 > 1.0) {
+						if (float(val + val2) <= 1.00001f) {
+							if (float(val + val2) > 1.0f) {
 								val2 = 1.0f - val;
 							}
-							Scenario[indScene].scene_interpolations[indP].duration = val2;
-							if (Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
-								sprintf(ErrorStr, "Error: null C(osine) interpolation #%d duration [%f]!", indP + 1, Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
+							pg_Scenario[indScene].scene_interpolations[indP].duration = val2;
+							if (pg_Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
+								sprintf(ErrorStr, "Error: null C(osine) in scene %d var %d duration [%f]!", indScene + 1, indP + 1, pg_Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(ErrorStr, "Error: total duration of C(osine) interpolation #%d greater than 1.0: %.3f + %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+							sprintf(ErrorStr, "Error: total duration of C(osine) in scene %d var %d greater than 1.0: %.3f + %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 						}
 					}
 					else {
-						sprintf(ErrorStr, "Error: offset value C(osine) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: offset value C(osine) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
 				break;
@@ -808,32 +839,34 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				// BEZIER INTERPOLATION
 			case 'z':
 			case 'Z':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_bezier_interpolation;
 				if (valCh == 'Z') {
-					sstream >> val;
-					sstream >> val2;
+					sstream >> vals;
+					sstream >> val2s;
+					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
-						sprintf(ErrorStr, "Error: one of values of Z(Bezier) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: one of values of Z(Bezier) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
-						Scenario[indScene].scene_interpolations[indP].offSet = val;
+						pg_Scenario[indScene].scene_interpolations[indP].offSet = double(val);
 						// deals with approximate values that can summ above 1.0
-						if (val + val2 <= 1.00001) {
-							if (val + val2 > 1.0) {
+						if (float(double(val) + double(val2)) <= 1.00001) {
+							if (float(double(val) + double(val2)) > 1.0) {
 								val2 = 1.0f - val;
 							}
-							Scenario[indScene].scene_interpolations[indP].duration = val2;
-							if (Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
-								sprintf(ErrorStr, "Error: null Z(Bezier) interpolation #%d duration [%f]!", indP + 1, Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
+							pg_Scenario[indScene].scene_interpolations[indP].duration = val2;
+							if (pg_Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
+								sprintf(ErrorStr, "Error: null Z(Bezier) in scene %d var %d duration [%f]!", indScene + 1, indP + 1, pg_Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(ErrorStr, "Error: total duration of Z(Bezier) interpolation #%d greater than 1.0: %.3f + %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+							sprintf(ErrorStr, "Error: total duration of Z(Bezier) in scene %d var %d greater than 1.0: %.3f + %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 						}
 					}
 					else {
-						sprintf(ErrorStr, "Error: offset value Z(Bezier) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: offset value Z(Bezier) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
 				break;
@@ -843,87 +876,90 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				// BEZIER INTERPOLATION
 			case 'e':
 			case 'E':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_exponential_interpolation;
 				sstream >> val3;
-				Scenario[indScene].scene_interpolations[indP].exponent = val3;
+				pg_Scenario[indScene].scene_interpolations[indP].exponent = val3;
 				if (valCh == 'E') {
-					sstream >> val;
-					sstream >> val2;
+					sstream >> vals;
+					sstream >> val2s;
+					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
-						sprintf(ErrorStr, "Error: one of values of E(exponential) interpolation #%d lower than 0.0: %.3f %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: one of values of E(exponential) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
-						Scenario[indScene].scene_interpolations[indP].offSet = val;
+						pg_Scenario[indScene].scene_interpolations[indP].offSet = val;
 						// deals with approximate values that can summ above 1.0
-						if (val + val2 <= 1.00001) {
-							if (val + val2 > 1.0) {
+						if (float(double(val) + double(val2)) <= 1.00001) {
+							if (float(double(val) + double(val2)) > 1.0) {
 								val2 = 1.0f - val;
 							}
-							Scenario[indScene].scene_interpolations[indP].duration = val2;
-							if (Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
-								sprintf(ErrorStr, "Error: null Z(Bezier) interpolation #%d duration [%f]!", indP + 1, Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
+							pg_Scenario[indScene].scene_interpolations[indP].duration = val2;
+							if (pg_Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
+								sprintf(ErrorStr, "Error: null Z(Bezier) in scene %d var %d duration [%f]!", indScene + 1, indP + 1, pg_Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(ErrorStr, "Error: total duration of Z(Bezier) interpolation #%d greater than 1.0: %.3f + %.3f\n", indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+							sprintf(ErrorStr, "Error: total duration of Z(Bezier) in scene %d var %d greater than 1.0: %.3f + %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 						}
 					}
 					else {
-						sprintf(ErrorStr, "Error: offset value Z(Bezier) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: offset value Z(Bezier) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
 				break;
 				// b: bell curve interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
 				// BELL INTERPOLATION
 			case 'b':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_bell_interpolation;
-				sstream >> Scenario[indScene].scene_interpolations[indP].midTermValue;
+				sstream >> pg_Scenario[indScene].scene_interpolations[indP].midTermValue;
 				break;
 				// b: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
 				// SAW TOOTH INTERPOLATION
 			case 't':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_sawtooth_interpolation;
-				sstream >> Scenario[indScene].scene_interpolations[indP].midTermValue;
+				sstream >> pg_Scenario[indScene].scene_interpolations[indP].midTermValue;
 				break;
 			case 's':
 			case 'S':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_stepwise_interpolation;
-				Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
-				Scenario[indScene].scene_interpolations[indP].duration = 1.0;
+				pg_Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
+				pg_Scenario[indScene].scene_interpolations[indP].duration = 1.0;
 				if (valCh == 'S') {
-					sstream >> val;
+					sstream >> vals;
+					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0) {
-						sprintf(ErrorStr, "Error: offset values of S(tepwise) interpolation #%d lower than 0.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: offset values of S(tepwise) in scene %d (%s) var %d lower than 0.0: %.3f\n", indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 					if (val <= 1.0) {
-						Scenario[indScene].scene_interpolations[indP].offSet = val;
-						Scenario[indScene].scene_interpolations[indP].duration = 1.0f - val;
+						pg_Scenario[indScene].scene_interpolations[indP].offSet = val;
+						pg_Scenario[indScene].scene_interpolations[indP].duration = 1.0 - double(val);
 					}
 					else {
-						sprintf(ErrorStr, "Error: offset value of S(tepwise) interpolation #%d greater than 1.0: %.3f\n", indP + 1, val); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: offset value of S(tepwise) in scene %d (%s) var %d greater than 1.0: %.3f\n", indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
 				break;
 			case 'k':
 			case 'K':
-				Scenario[indScene].scene_interpolations[indP].interpolation_mode
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_keep_value;
 				break;
 			default:
-				sprintf(ErrorStr, "Error: unknown  interpolation mode in scene %d parameter %d [%c]!", indScene + 1, indP + 1, valCh); ReportError(ErrorStr); throw 50;
+				sprintf(ErrorStr, "Error: unknown interpolation mode in scene %d (%s) parameter %d [%d] [%c]!", indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, int(valCh), valCh); ReportError(ErrorStr); throw 50;
 				break;
 			}
 
 			//if (indP == _trkDecay_1 && indScene == 12) {
-			//	printf("Decay Scene %d Interpolation mode %d offset %.2f dur %.2f init %.2f fin %.2f\n", indScene, Scenario[indScene].scene_interpolations[indP].interpolation_mode,
-			//		Scenario[indScene].scene_interpolations[indP].offSet,
-			//		Scenario[indScene].scene_interpolations[indP].duration,
-			//		Scenario[indScene].scene_initial_parameters[indP],
-			//		Scenario[indScene].scene_final_parameters[indP]);
+			//	printf("Decay Scene %d Interpolation mode %d offset %.2f dur %.2f init %.2f fin %.2f\n", indScene, pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode,
+			//		pg_Scenario[indScene].scene_interpolations[indP].offSet,
+			//		pg_Scenario[indScene].scene_interpolations[indP].duration,
+			//		pg_Scenario[indScene].scene_initial_parameters[indP],
+			//		pg_Scenario[indScene].scene_final_parameters[indP]);
 			//}
 		}
 
@@ -967,6 +1003,83 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		movieFileName.push_back(temp);
 		sstream >> temp2;
 		movieShortName.push_back(temp2);
+
+		// in addition to the movie name and short name, 2 additional
+		// sound files can be provided that are synchronized with the 
+		// movie and used to generate beats from sound envelope at 1
+		// or sound onsets detected through aubio library
+
+		// possible additional soundtrack file with peaked sound envelope at 1.0 or above
+		// NULL value or no value means no file
+		if (sstream >> temp2) {
+			// there is a soundtrack file with peaked sound envelope at 1.0
+			if (temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
+				movieSoundtrackPeaksFileName.push_back(temp2);
+				string csv_line;
+				vector<float> peak_times;
+				std::ifstream peak_file(temp2);
+				if (!peak_file) {
+					sprintf(ErrorStr, "Error: peak file [%s] not found!", temp2.c_str()); ReportError(ErrorStr); throw 11;
+				}
+				printf("Read video soundtrack peaks [%s]\n", temp2.c_str());
+				// reads the peaks timecodes and stores them in a float vector
+				std::getline(peak_file, csv_line);
+				std::getline(peak_file, csv_line);
+				std::getline(peak_file, csv_line);
+				while (std::getline(peak_file, csv_line)) {
+					std::stringstream  peak_sstream;
+					stringstreamStoreLine(&peak_sstream, &csv_line);
+					float time, sound;
+					peak_sstream >> time;
+					peak_sstream >> sound;
+					if (sound >= 1) {
+						peak_times.push_back(time);
+					}
+				}
+				peak_file.close();
+				movieSoundtrackPeaks.push_back(peak_times);
+				//for (int i = 0; i < int(peak_times.size()); ++i) {
+				//	std::cout << "Peak: " << peak_times[i] << '\n';
+				//}
+			}
+			else {
+				movieSoundtrackPeaksFileName.push_back("");
+				movieSoundtrackPeaks.push_back({});
+			}
+			if (sstream >> temp2 && temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
+				movieSoundtrackOnsetsFileName.push_back(temp2);
+				string csv_line;
+				vector<float> onset_times;
+				std::ifstream onset_file(temp2);
+				if (!onset_file) {
+					sprintf(ErrorStr, "Error: onset file [%s] not found!", temp2.c_str()); ReportError(ErrorStr); throw 11;
+				}
+				// reads the peaks timecodes and stores them in a float vector
+				printf("Read video soundtrack onsets [%s]\n", temp2.c_str());
+				while (std::getline(onset_file, csv_line)) {
+					std::stringstream  onset_sstream;
+					stringstreamStoreLine(&onset_sstream, &csv_line);
+					float time;
+					onset_sstream >> time;
+					onset_times.push_back(time);
+				}
+				onset_file.close();
+				movieSoundtrackOnsets.push_back(onset_times);
+				//for (int i = 0; i < int(onset_times.size()); ++i) {
+				//	std::cout << "Onset: " << onset_times[i] << '\n';
+				//}
+			}
+			else {
+				movieSoundtrackOnsetsFileName.push_back("");
+				movieSoundtrackOnsets.push_back({});
+			}
+		}
+		else {
+			movieSoundtrackPeaksFileName.push_back("");
+			movieSoundtrackPeaks.push_back({});
+			movieSoundtrackOnsetsFileName.push_back("");
+			movieSoundtrackOnsets.push_back({});
+		}
 		//std::cout << "movie : " << 
 		// movieFileName[indVideo] << "\n";
 	}
@@ -1053,37 +1166,6 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/photos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-	/* Is now merged with textures upload
-	////////////////////////////
-	////// BRUSHES
-	nb_pen_brushes = 0;
-	// Number of brushes
-	std::getline(scenarioFin, line);
-	stringstreamStoreLine(&sstream, &line);
-	// sstream = std::stringstream(line);
-	sstream >> ID; // string brushes
-	if (ID.compare("brushes") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"brushes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
-	}
-	sstream >> nb_pen_brushes;
-
-	std::getline(scenarioFin, line);
-	// std::cout << "scene: " << line << "\n";
-	stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string ID
-	sstream >> pen_brushes_fileName;
-	//std::cout << "brush : " << 
-	// pen_brushes_fileName << "\n";
-
-	// /brushes
-	std::getline(scenarioFin, line);
-	stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string /brushes
-	if (ID.compare("/brushes") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/brushes\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
-	}
-	*/
-
 	////////////////////////////
 	////// SOUNDTRACKS
 	nb_soundtracks = 0;
@@ -1153,12 +1235,15 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		float path_b_color = std::stof(temp2);
 		sstream >> temp2;
 		float path_readSpeedScale = std::stof(temp2);
+		string path_ID = "";
+		sstream >> path_ID;
+		//printf("Path ID [%s]\n", path_ID.c_str());
 		//printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
 			//indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (indTrack >= 0 && indTrack < PG_NB_TRACKS && indPath >= 1 && indPath <= PG_NB_PATHS) {
 			//printf("Loading SVG path %s track %d\n", (char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(), indTrack);
 			load_svg_path((char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(),
-				indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
+				indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale, path_ID);
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path %d number (\"%s\")",
@@ -1229,6 +1314,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> pg_ClipArt_Scale[indClipArtFile];
 		sstream >> pg_ClipArt_Translation_X[indClipArtFile];
 		sstream >> pg_ClipArt_Translation_Y[indClipArtFile];
+		printf("ind clipart %d scale %.2f pos %.2f %.2f\n", indClipArtFile, pg_ClipArt_Scale[indClipArtFile], pg_ClipArt_Translation_X[indClipArtFile], pg_ClipArt_Translation_Y[indClipArtFile]);
 		sstream >> pg_ClipArt_Rotation[indClipArtFile];
 		sstream >> ID;
 		if (ID.compare("nat") == 0) {
@@ -1243,8 +1329,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else if (ID.compare("green") == 0) {
 			pg_ClipArt_Colors[indClipArtFile] = ClipArt_green;
 		}
+		else if (ID.compare("blue") == 0) {
+			pg_ClipArt_Colors[indClipArtFile] = ClipArt_blue;
+		}
 		else {
-			sprintf(ErrorStr, "Error: incorrect configuration file SVG GPU color \"%s\" (nat, white, red, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
+			sprintf(ErrorStr, "Error: incorrect configuration file SVG GPU color \"%s\" (nat, white, red, blue or green expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
 	}
 
@@ -1275,23 +1364,53 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_Mesh_fileNames = new string[pg_nb_Mesh_files];
 
 	pg_Mesh_Scale = new float[pg_nb_Mesh_files];
+#ifdef CAVERNEPLATON
+	pg_CaverneActveMesh = new bool[pg_nb_Mesh_files];
+	pg_CaverneMeshWakeupTime = new float[pg_nb_Mesh_files];
+	pg_CaverneMeshBirthTime = new float[pg_nb_Mesh_files];
+	pg_CaverneMeshDeathTime = new float[pg_nb_Mesh_files];
+#endif
 	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
 		pg_Mesh_Scale[indFile] = 1.0f;
+#ifdef CAVERNEPLATON
+		pg_CaverneActveMesh[indFile] = false;
+		if (indFile < 7) {
+			pg_CaverneMeshWakeupTime[indFile] = float(rand_0_1 * 10.);
+		}
+		else {
+			pg_CaverneMeshWakeupTime[indFile] = float(rand_0_1 * 30.);
+		}
+		pg_CaverneMeshBirthTime[indFile] = 0.f;
+		pg_CaverneMeshDeathTime[indFile] = 0.f;
+#endif
 	}
+
 	pg_Mesh_Rotation_angle = new float[pg_nb_Mesh_files];
 	pg_Mesh_Rotation_X = new float[pg_nb_Mesh_files];
 	pg_Mesh_Rotation_Y = new float[pg_nb_Mesh_files];
 	pg_Mesh_Rotation_Z = new float[pg_nb_Mesh_files];
+	pg_Mesh_Rotation_Ini_X = new float[pg_nb_Mesh_files];
+	pg_Mesh_Rotation_Ini_Y = new float[pg_nb_Mesh_files];
+	pg_Mesh_Rotation_Ini_Z = new float[pg_nb_Mesh_files];
 	memset((char *)pg_Mesh_Rotation_angle, 0, pg_nb_Mesh_files * sizeof(float));
-	memset((char *)pg_Mesh_Rotation_X, 0, pg_nb_Mesh_files * sizeof(float));
-	memset((char *)pg_Mesh_Rotation_Y, 0, pg_nb_Mesh_files * sizeof(float));
-	memset((char *)pg_Mesh_Rotation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Rotation_X, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Rotation_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Rotation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Rotation_Ini_X, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Rotation_Ini_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Rotation_Ini_Z, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_Translation_X = new float[pg_nb_Mesh_files];
-	memset((char *)pg_Mesh_Translation_X, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Translation_X, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_Translation_Y = new float[pg_nb_Mesh_files];
-	memset((char *)pg_Mesh_Translation_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Translation_Y, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_Translation_Z = new float[pg_nb_Mesh_files];
-	memset((char *)pg_Mesh_Translation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	memset((char*)pg_Mesh_Translation_Z, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Translation_Ini_X = new float[pg_nb_Mesh_files];
+	memset((char*)pg_Mesh_Translation_Ini_X, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Translation_Ini_Y = new float[pg_nb_Mesh_files];
+	memset((char*)pg_Mesh_Translation_Ini_Y, 0, pg_nb_Mesh_files * sizeof(float));
+	pg_Mesh_Translation_Ini_Z = new float[pg_nb_Mesh_files];
+	memset((char*)pg_Mesh_Translation_Ini_Z, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_Motion_X = new float[pg_nb_Mesh_files];
 	memset((char *)pg_Mesh_Motion_X, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_Motion_Y = new float[pg_nb_Mesh_files];
@@ -1328,6 +1447,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> pg_Mesh_Motion_X[indMeshFile];
 		sstream >> pg_Mesh_Motion_Y[indMeshFile];
 		sstream >> pg_Mesh_Motion_Z[indMeshFile];
+		pg_Mesh_Translation_Ini_X[indMeshFile] = pg_Mesh_Translation_X[indMeshFile];
+		pg_Mesh_Translation_Ini_Y[indMeshFile] = pg_Mesh_Translation_Y[indMeshFile];
+		pg_Mesh_Translation_Ini_Z[indMeshFile] = pg_Mesh_Translation_Z[indMeshFile];
+		pg_Mesh_Rotation_Ini_X[indMeshFile] = pg_Mesh_Rotation_X[indMeshFile];
+		pg_Mesh_Rotation_Ini_Y[indMeshFile] = pg_Mesh_Rotation_Y[indMeshFile];
+		pg_Mesh_Rotation_Ini_Z[indMeshFile] = pg_Mesh_Rotation_Z[indMeshFile];
 		sstream >> ID;
 		if (ID.compare("nat") == 0) {
 			pg_Mesh_Colors[indMeshFile] = ClipArt_nat;
@@ -1341,8 +1466,20 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else if (ID.compare("green") == 0) {
 			pg_Mesh_Colors[indMeshFile] = ClipArt_green;
 		}
+		else if (ID.compare("blue") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_blue;
+		}
+		else if (ID.compare("cyan") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_cyan;
+		}
+		else if (ID.compare("magenta") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_magenta;
+		}
+		else if (ID.compare("yellow") == 0) {
+			pg_Mesh_Colors[indMeshFile] = ClipArt_yellow;
+		}
 		else {
-			sprintf(ErrorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, red, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
+			sprintf(ErrorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, cyan, yellow, magenta, red, blue, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		sstream >> pg_Mesh_TextureRank[indMeshFile];
 		//printf("Mesh #%d scale %.2f translation (%.2f,%.2f,%.2f), rotation %.2f\n",
@@ -1387,7 +1524,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_Texture_Size_Y = new int[pg_nb_Texture_files];
 	pg_Texture_Rank = new int[pg_nb_Texture_files];
 	pg_Texture_Dimension = new int[pg_nb_Texture_files];
-	pg_Texture_Nb_3D_Nextures = new int[pg_nb_Texture_files];
+	pg_Texture_Nb_Layers = new int[pg_nb_Texture_files];
 	pg_Texture_Is_Rectangle = new bool[pg_nb_Texture_files];
 	pg_Texture_Invert = new bool[pg_nb_Texture_files];
 	pg_Texture_Nb_Bytes_per_Pixel = new int[pg_nb_Texture_files];
@@ -1413,6 +1550,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 		// usage
 		sstream >> ID;
+		//printf("Usage %s: (%s)\n", pg_Texture_fileNames[indTextureFile].c_str(), ID.c_str());
 		if (ID.compare("master_mask") == 0) {
 			pg_Texture_usages[indTextureFile] = Texture_master_mask;
 		}
@@ -1440,8 +1578,17 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else if (ID.compare("part_init") == 0) {
 			pg_Texture_usages[indTextureFile] = Texture_part_init;
 		}
+		else if (ID.compare("part_acc") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_part_acc;
+		}
 		else if (ID.compare("repop_density") == 0) {
 			pg_Texture_usages[indTextureFile] = Texture_repop_density;
+		}
+		else if (ID.compare("burst_mask") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_burst_mask;
+		}
+		else if (ID.compare("multilayer_master_mask") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_multilayer_master_mask;
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect configuration file Texture usage \"%s\"\n", ID.c_str()); ReportError(ErrorStr); throw 100;
@@ -1454,10 +1601,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			&& pg_Texture_Dimension[indTextureFile] != 3) {
 			sprintf(ErrorStr, "Error: 2D or 3D texture dimension expected, not %d\n", pg_Texture_Dimension[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
-		// number of piled textures in case of 3D texture
-		sstream >> pg_Texture_Nb_3D_Nextures[indTextureFile];
+		// number of piled textures in case of 3D texture or tif format
+		sstream >> pg_Texture_Nb_Layers[indTextureFile];
 		if (pg_Texture_usages[indTextureFile] == Texture_brush) {
-			nb_pen_brushes = pg_Texture_Nb_3D_Nextures[indTextureFile];
+			nb_pen_brushes = pg_Texture_Nb_Layers[indTextureFile];
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_multilayer_master_mask) {
+			nb_layers_master_mask = pg_Texture_Nb_Layers[indTextureFile];
 		}
 
 		// image initial geometry
@@ -1469,20 +1619,20 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 		// booleans invert & is rectangle
 		sstream >> ID;
-		if (ID.compare("true") == 0) {
+		if (ID.compare("true") == 0 || ID.compare("TRUE") == 0) {
 			pg_Texture_Is_Rectangle[indTextureFile] = true;
 		}
-		else if (ID.compare("false") == 0) {
-			pg_Texture_Is_Rectangle[indTextureFile] = false;
+		else if (ID.compare("false") == 0 || ID.compare("FALSE") == 0) {
+			pg_Texture_Is_Rectangle[indTextureFile] = false; 
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect boolean for Texture rectangle \"%s\" (true or false expected)\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		sstream >> ID;
-		if (ID.compare("true") == 0) {
+		if (ID.compare("true") == 0 || ID.compare("TRUE") == 0) {
 			pg_Texture_Invert[indTextureFile] = true;
 		}
-		else if (ID.compare("false") == 0) {
+		else if (ID.compare("false") == 0 || ID.compare("FALSE") == 0) {
 			pg_Texture_Invert[indTextureFile] = false;
 		}
 		else {
@@ -1575,12 +1725,95 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/color_presets\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
+#ifdef PG_LIGHTS
+	////////////////////////////
+	////// LIGHTS
+	nb_lights = 0;
+	// Number of palettes
+	std::getline(scenarioFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string color_presets
+	if (ID.compare("lights") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"lights\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_lights;
+
+	// std::cout << "line: " << line << "\n";
+	// std::cout << "Nb lights : " << nb_lights <<  "\n";
+
+	// lights presets
+	lights_group = new int[nb_lights];
+	lights_port = new int[nb_lights];
+	lights_address = new int[nb_lights];
+	lights_channels = new int[nb_lights];
+	lights_red = new int[nb_lights];
+	lights_green = new int[nb_lights];
+	lights_blue = new int[nb_lights];
+	lights_grey = new int[nb_lights];
+	lights_dimmer = new int[nb_lights];
+	lights_strobe = new int[nb_lights];
+	for (int indLight = 0; indLight < nb_lights; indLight++) {
+		std::getline(scenarioFin, line);
+		// std::cout << "scene: " << line << "\n";
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // "light"
+		sstream >> ID; // light ID
+		sstream >> lights_group[indLight];
+		if (lights_group[indLight] < 1 || lights_group[indLight] > PG_LIGHTS) {
+			sprintf(ErrorStr, "Error: incorrect configuration file light group (%d) should be a value between 1 and %d for light %d\n", lights_group[indLight], PG_LIGHTS, indLight); ReportError(ErrorStr); throw 100;
+		}
+		sstream >> lights_port[indLight];
+		if (lights_port[indLight] != 1 && lights_port[indLight] != 2) {
+			sprintf(ErrorStr, "Error: incorrect configuration file light port should be equal to 1 or 2 not %d for light %d\n", lights_port[indLight], indLight); ReportError(ErrorStr); throw 100;
+		}
+		sstream >> lights_address[indLight];
+		sstream >> lights_channels[indLight];
+		sstream >> lights_red[indLight];
+		sstream >> lights_green[indLight];
+		sstream >> lights_blue[indLight];
+		sstream >> lights_grey[indLight];
+		sstream >> lights_dimmer[indLight];
+		sstream >> lights_strobe[indLight];
+		if (lights_red[indLight] > lights_channels[indLight]
+			|| lights_red[indLight] > lights_channels[indLight]
+			|| lights_green[indLight] > lights_channels[indLight]
+			|| lights_blue[indLight] > lights_channels[indLight]
+			|| lights_grey[indLight] > lights_channels[indLight]
+			|| lights_dimmer[indLight] > lights_channels[indLight]
+			|| lights_strobe[indLight] > lights_channels[indLight] ) {
+			sprintf(ErrorStr, "Error: incorrect configuration file rgb, dimmer, strobe and grey should lower or equal to channel number %d for light %d\n", lights_channels[indLight], indLight); ReportError(ErrorStr); throw 100;
+		}
+		lights_names.push_back(ID.c_str());
+		//std::cout << "light : " << indLight << " id " <<  lights_names[indLight] << " port " 
+		//	<< lights_port[indLight] << " rank " << lights_group[indLight] << " add " << lights_address[indLight] << " ch " << lights_channels[indLight] << " r "
+		//	<< lights_red[indLight] << " g " << lights_green[indLight] << " b " << lights_blue[indLight] 
+		//	<< " dimm " << lights_dimmer[indLight] <<" strobe " << lights_strobe[indLight] << "\n";
+	}
+	// /palettes
+	std::getline(scenarioFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /palettes
+	if (ID.compare("/lights") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/lights\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+#endif
+
 	// saves the original durations
 	saveInitialTimesAndDurations();
+}	
+
+int FindSceneById(std::string * sceneID) {
+	for (int ind_scene = 0; ind_scene < pg_NbScenes; ind_scene++) {
+		if (pg_Scenario[ind_scene].scene_IDs.compare(*sceneID) == 0) {
+			return ind_scene;
+		}
+	}
+	return -1;
 }
 
+
 void setWindowDimensions(void) {
-	if (double_window) {
+	if (double_window && window_width > 1920) {
 		if (wide_screen) {
 			leftWindowWidth = window_width * 3 / 7;
 		}
@@ -1613,17 +1846,17 @@ void setWindowDimensions(void) {
 // to be called once after parsing
 void saveInitialTimesAndDurations(void) {
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
-		Scenario[indScene].scene_originalDuration = Scenario[indScene].scene_duration;
-		Scenario[indScene].scene_originalInitial_time = Scenario[indScene].scene_initial_time;
-		Scenario[indScene].scene_originalFinal_time = Scenario[indScene].scene_final_time;
+		pg_Scenario[indScene].scene_originalDuration = pg_Scenario[indScene].scene_duration;
+		pg_Scenario[indScene].scene_originalInitial_time = pg_Scenario[indScene].scene_initial_time;
+		pg_Scenario[indScene].scene_originalFinal_time = pg_Scenario[indScene].scene_final_time;
 	}
 }
 // to be called before setup change
 void restoreInitialTimesAndDurations(void) {
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
-		Scenario[indScene].scene_duration = Scenario[indScene].scene_originalDuration;
-		Scenario[indScene].scene_initial_time = Scenario[indScene].scene_originalInitial_time;
-		Scenario[indScene].scene_final_time = Scenario[indScene].scene_originalFinal_time;
+		pg_Scenario[indScene].scene_duration = pg_Scenario[indScene].scene_originalDuration;
+		pg_Scenario[indScene].scene_initial_time = pg_Scenario[indScene].scene_originalInitial_time;
+		pg_Scenario[indScene].scene_final_time = pg_Scenario[indScene].scene_originalFinal_time;
 	}
 }
 

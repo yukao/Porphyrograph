@@ -23,7 +23,7 @@ https://github.com/fcaruso/GLSLParametricCurve
 layout(points) in;
 layout(points, max_vertices = 4) out;
 
-uniform vec3 uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse;
+uniform vec4 uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio;
 
 in VertexData {
     float radius;
@@ -57,30 +57,23 @@ void main()
     // sets the center in the middle of the particle
     // and calculates the size of the quad
     float internalRadiusTimesRadiusParameter 
-      = VertexIn[0].radius * uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.x;
+      = VertexIn[0].radius * uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio.x;
     internalRadiusTimesRadiusParameter *= distToReplayTrack * 0.5;
 
 
     // emits the polygon (a 6 vertices triangle strip)
-    int partType = int(uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.y);
+    int partType = int(uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio.y);
     VertexOut.color = VertexIn[0].color;
 
-    gl_Position = position0 
-          + vec4( internalRadiusTimesRadiusParameter * quadGeometry[0], 0, 0);
-    VertexOut.texCoord = quadTexCoord[0];
-    EmitVertex();
-    gl_Position = position0 
-          + vec4( internalRadiusTimesRadiusParameter * quadGeometry[1], 0, 0);
-    VertexOut.texCoord = quadTexCoord[1];
-    EmitVertex();
-    gl_Position = position0 
-          + vec4( internalRadiusTimesRadiusParameter * quadGeometry[2], 0, 0);
-    VertexOut.texCoord = quadTexCoord[2];
-    EmitVertex();
-    gl_Position = position0 
-          + vec4( internalRadiusTimesRadiusParameter * quadGeometry[3], 0, 0);
-    VertexOut.texCoord = quadTexCoord[3];
-    EmitVertex();
-   
+    // emits the polygon (a 4 vertices triangle strip)
+    for(int ind = 0 ; ind < 4 ; ind++) {
+        vec2 xyPos = internalRadiusTimesRadiusParameter * quadGeometry[ind];
+        xyPos.y *= uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio.w;
+        gl_Position = position0 + vec4( xyPos, 0, 0);
+ 
+        VertexOut.texCoord = quadTexCoord[ind];
+        EmitVertex();
+    }
+
    EndPrimitive();
 }

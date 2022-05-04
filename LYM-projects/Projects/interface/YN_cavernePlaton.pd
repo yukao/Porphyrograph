@@ -82,35 +82,37 @@
 #X connect 36 11 28 0;
 #X coords 0 0 10 10 0 0 0;
 #X restore 23 145 pd UDPinOut;
-#N canvas 417 50 660 345 play_soundtrack 0;
-#X msg 61 109 open \$1;
-#X obj 60 179 readsf~ 2;
-#X msg 36 152 1;
-#X obj 36 116 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+#N canvas 417 50 660 366 play_soundtrack 0;
+#X msg 61 122 open \$1;
+#X obj 60 192 readsf~ 2;
+#X msg 36 165 1;
+#X obj 36 129 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X obj 61 51 pack s;
 #X text 14 7 TRACK NAME SENT BY PORPHROGRAPH THRU /playsoundtrack MSG
 ;
-#X obj 14 289 s~ channel1;
-#X obj 159 295 s~ channel2;
+#X obj 14 302 s~ channel1;
+#X obj 159 308 s~ channel2;
 #X obj 42 27 r soundtrack_fileName;
-#X obj 58 316 dac~ 1 2;
+#X obj 58 329 dac~ 1 2;
 #X floatatom 302 52 5 0 0 0 - - -;
 #X obj 295 26 r soundtrack_onOff;
 #X obj 243 25 inlet;
-#X symbolatom 61 82 60 0 0 0 - - -;
-#X obj 36 135 delay 500;
-#X obj 157 226 *~ 1;
-#X obj 58 242 *~ 1;
+#X symbolatom 61 95 60 0 0 0 - - -;
+#X obj 36 148 delay 500;
+#X obj 157 239 *~ 1;
+#X obj 58 255 *~ 1;
 #X msg 243 55 1;
+#X obj 181 27 bng 60 250 50 0 empty empty Replay 17 7 1 12 -4034 -1
+-1;
 #X connect 0 0 1 0;
 #X connect 1 0 16 0;
 #X connect 1 1 15 0;
 #X connect 2 0 1 0;
 #X connect 3 0 14 0;
 #X connect 4 0 13 0;
-#X connect 8 0 3 0;
 #X connect 8 0 4 0;
+#X connect 8 0 3 0;
 #X connect 11 0 10 0;
 #X connect 11 0 15 1;
 #X connect 11 0 16 1;
@@ -123,124 +125,14 @@
 #X connect 16 0 9 0;
 #X connect 17 0 15 1;
 #X connect 17 0 16 1;
+#X connect 18 0 13 0;
+#X connect 18 0 3 0;
 #X restore 190 53 pd play_soundtrack;
-#X text 203 142 MUSIC CONTROL;
+#X text 203 79 MUSIC CONTROL;
 #X text 189 35 SOUNDTRACKS;
-#N canvas 0 50 450 300 not_implemented 0;
-#N canvas 684 50 450 300 video_satur_pulse 0;
-#X obj 60 79 inlet;
-#X obj 60 143 s message;
-#X msg 60 127 send /video_satur_pulse \$1;
-#X obj 60 110 * 1;
-#X connect 0 0 3 0;
-#X connect 2 0 1 0;
-#X connect 3 0 2 0;
-#X restore 221 28 pd video_satur_pulse;
-#N canvas 308 311 450 300 repop_hue_pulse 0;
-#X obj 53 166 s message;
-#X obj 70 49 inlet;
-#X obj 70 73 * 3;
-#X msg 53 149 send /repop_hue_pulse \$1;
-#X connect 1 0 2 0;
-#X connect 2 0 3 0;
-#X connect 3 0 0 0;
-#X restore 215 53 pd repop_hue_pulse;
-#N canvas 221 50 450 300 pen_hue_pulse 0;
-#X obj 53 166 s message;
-#X obj 70 49 inlet;
-#X obj 70 73 * 3;
-#X msg 53 149 send /pen_hue_pulse \$1;
-#X connect 1 0 2 0;
-#X connect 2 0 3 0;
-#X connect 3 0 0 0;
-#X restore 221 75 pd pen_hue_pulse;
-#X msg 216 116 send /flashVideo;
-#N canvas 254 50 578 439 CAParams1-7 0;
-#X obj 162 202 s message;
-#X msg 162 96 send /CAParams4 \$1;
-#X msg 147 120 send /CAParams3 \$1;
-#X msg 132 145 send /CAParams2 \$1;
-#X msg 116 168 send /CAParams1 \$1;
-#X obj 96 45 inlet;
-#X obj 154 46 inlet;
-#X obj 207 47 inlet;
-#X obj 271 45 inlet;
-#X obj 404 202 s message;
-#X obj 338 45 inlet;
-#X obj 396 46 inlet;
-#X obj 449 47 inlet;
-#X msg 389 120 send /CAParams7 \$1;
-#X msg 374 145 send /CAParams6 \$1;
-#X msg 358 168 send /CAParams5 \$1;
-#X connect 1 0 0 0;
-#X connect 2 0 0 0;
-#X connect 3 0 0 0;
-#X connect 4 0 0 0;
-#X connect 5 0 4 0;
-#X connect 6 0 3 0;
-#X connect 7 0 2 0;
-#X connect 8 0 1 0;
-#X connect 10 0 15 0;
-#X connect 11 0 14 0;
-#X connect 12 0 13 0;
-#X connect 13 0 9 0;
-#X connect 14 0 9 0;
-#X connect 15 0 9 0;
-#X restore 219 178 pd CAParams1-7;
-#X msg 217 143 send /snapshot;
-#N canvas 886 385 280 94 noiseLinearScale 0;
-#X obj 41 82 s message;
-#X obj 41 6 inlet;
-#X obj 41 37 * 1;
-#X msg 41 65 send /noiseLineScale \$1;
-#X connect 1 0 2 0;
-#X connect 2 0 3 0;
-#X connect 3 0 0 0;
-#X restore 49 145 pd noiseLinearScale;
-#N canvas 886 385 303 132 noiseAngleScale 0;
-#X obj 36 89 s message;
-#X obj 36 13 inlet;
-#X msg 36 72 send /noiseAngleScale \$1;
-#X obj 33 44 * 10;
-#X connect 1 0 3 0;
-#X connect 2 0 0 0;
-#X connect 3 0 2 0;
-#X restore 53 168 pd noiseAngleScale;
-#N canvas 886 385 502 140 noiseCenter 0;
-#X obj 32 113 s message;
-#X obj 32 37 inlet;
-#X obj 195 113 s message;
-#X obj 195 37 inlet;
-#X msg 32 96 send /noiseCenter_0 \$1;
-#X msg 195 96 send /noiseCenter_1 \$1;
-#X obj 32 68 * 2;
-#X obj 195 68 * 2;
-#X connect 1 0 6 0;
-#X connect 3 0 7 0;
-#X connect 4 0 0 0;
-#X connect 5 0 2 0;
-#X connect 6 0 4 0;
-#X connect 7 0 5 0;
-#X restore 50 121 pd noiseCenter;
-#X msg 46 101 send /noiseType_plus;
-#N canvas 221 50 450 300 part_stroke_mode 0;
-#X obj 72 175 s message;
-#X obj 72 88 inlet;
-#X obj 72 133 int;
-#X obj 72 112 * 2.99;
-#X msg 72 158 send /part_stroke_mode \$1;
-#X connect 1 0 3 0;
-#X connect 2 0 4 0;
-#X connect 3 0 2 0;
-#X connect 4 0 0 0;
-#X restore 52 192 pd part_stroke_mode;
-#X msg 51 77 send /invertMovie 1;
-#X msg 56 52 send /invertAllLayers;
-#X msg 49 33 send /clearCA;
-#X restore 201 80 pd not_implemented;
 #X obj 280 13 bng 40 250 50 0 empty empty empty 0 -6 0 8 -258699 -1
 -1;
-#X obj 205 159 bng 40 250 50 0 empty empty empty 0 -6 0 8 -4034 -1
+#X obj 205 100 bng 40 250 50 0 empty empty empty 0 -6 0 8 -4034 -1
 -1;
 #N canvas 205 147 1023 521 sound_analysis 0;
 #X obj 435 166 bonk~;
@@ -726,167 +618,26 @@
 #X connect 86 0 88 0;
 #X connect 87 0 43 1;
 #X connect 87 0 44 0;
-#X restore 205 206 pd sound_analysis;
-#X text 251 170 MIN MAX AUTOM;
-#X text 198 97 Camera Params;
-#N canvas 177 50 430 397 CameraCAParams 0;
-#X obj 27 37 vsl 15 128 0 128 0 0 empty cameraExposure EXPOS 0 -9 0
-14 -162280 -1 -4034 0 1;
-#X obj 76 38 vsl 15 128 0 128 0 0 empty cameraGain GAIN 0 -9 0 14 -162280
--1 -4034 0 1;
-#X obj 124 38 vsl 15 128 0 128 0 0 empty cameraBrightness BRIGHT 0
--9 0 14 -162280 -1 -4034 0 1;
-#X obj 185 39 vsl 15 128 0 128 0 0 empty cameraSaturation SAT 0 -9
-0 14 -162280 -1 -4034 0 1;
-#X obj 276 42 vsl 15 128 0 128 0 0 empty cameraContrast CONTR 0 -9
-0 14 -162280 -1 -4034 0 1;
-#X obj 229 40 vsl 15 128 0 1 0 0 empty cameraGamma GAMMA 0 -9 0 14
--162280 -1 -4034 0 1;
-#X obj 307 246 cnv 15 60 25 empty empty CA_PARAMS 0 12 1 14 -1 -4034
-0;
-#X obj 309 268 cnv 15 40 25 empty CAParams1_can 0.755 0 12 1 14 -1
--262144 0;
-#X obj 309 286 cnv 15 40 25 empty CAParams2_can 0.598 0 12 1 14 -1
--262144 0;
-#X obj 309 304 cnv 15 40 25 empty CAParams3_can 0.598 0 12 1 14 -1
--262144 0;
-#X obj 309 321 cnv 15 40 25 empty CAParams4_can 0.606 0 12 1 14 -1
--262144 0;
-#X obj 366 267 cnv 15 40 25 empty CAParams5_can 0.669 0 12 1 14 -1
--262144 0;
-#X obj 364 287 cnv 15 40 25 empty CAParams6_can 0.464 0 12 1 14 -1
--262144 0;
-#N canvas 72 507 1181 300 camExpGainBrightSatGammaContr 0;
-#X obj 943 116 s message;
-#X obj 943 29 inlet;
-#X msg 943 99 send /cameraContrast \$1;
-#X obj 785 115 s message;
-#X obj 785 28 inlet;
-#X msg 785 98 send /cameraGamma \$1;
-#X obj 577 120 s message;
-#X obj 577 33 inlet;
-#X msg 577 103 send /cameraSaturation \$1;
-#X obj 377 122 s message;
-#X obj 377 35 inlet;
-#X msg 377 105 send /cameraBrightness \$1;
-#X obj 221 126 s message;
-#X obj 221 39 inlet;
-#X msg 221 109 send /cameraGain \$1;
-#X obj 42 130 s message;
-#X obj 42 43 inlet;
-#X msg 42 112 send /cameraExposure \$1;
-#X obj 42 67 / 128;
-#X obj 221 63 / 128;
-#X obj 377 59 / 128;
-#X obj 577 57 / 128;
-#X obj 943 55 / 128;
-#X obj 785 58 / 128;
-#X connect 1 0 22 0;
-#X connect 2 0 0 0;
-#X connect 4 0 23 0;
-#X connect 5 0 3 0;
-#X connect 7 0 21 0;
-#X connect 8 0 6 0;
-#X connect 10 0 20 0;
-#X connect 11 0 9 0;
-#X connect 13 0 19 0;
-#X connect 14 0 12 0;
-#X connect 16 0 18 0;
-#X connect 17 0 15 0;
-#X connect 18 0 17 0;
-#X connect 19 0 14 0;
-#X connect 20 0 11 0;
-#X connect 21 0 8 0;
-#X connect 22 0 2 0;
-#X connect 23 0 5 0;
-#X restore 49 179 pd camExpGainBrightSatGammaContr;
-#X obj 23 216 vsl 15 128 0 128 0 0 empty cameraExposure CAPa1 0 -9
-0 14 -162280 -1 -4034 0 1;
-#X obj 72 217 vsl 15 128 0 128 0 0 empty cameraGain CAPa2 0 -9 0 14
--162280 -1 -4034 0 1;
-#X obj 120 217 vsl 15 128 0 128 0 0 empty cameraBrightness CAPa3 0
--9 0 14 -162280 -1 -4034 0 1;
-#X obj 181 218 vsl 15 128 0 128 0 0 empty cameraSaturation CAPa4 0
--9 0 14 -162280 -1 -4034 0 1;
-#X obj 272 221 vsl 15 128 0 128 0 0 empty cameraContrast CAPa6 0 -9
-0 14 -162280 -1 -4034 0 1;
-#X obj 225 219 vsl 15 128 0 1 0 0 empty cameraGamma CAPa5 0 -9 0 14
--162280 -1 -4034 0 1;
-#N canvas 72 507 1181 300 camCAParams 0;
-#X obj 943 116 s message;
-#X obj 943 29 inlet;
-#X obj 765 115 s message;
-#X obj 765 28 inlet;
-#X obj 577 120 s message;
-#X obj 577 33 inlet;
-#X obj 403 122 s message;
-#X obj 403 35 inlet;
-#X obj 221 126 s message;
-#X obj 221 39 inlet;
-#X obj 42 130 s message;
-#X obj 42 43 inlet;
-#X obj 42 67 / 128;
-#X obj 221 63 / 128;
-#X obj 403 59 / 128;
-#X obj 577 57 / 128;
-#X obj 943 55 / 128;
-#X obj 765 58 / 128;
-#X msg 42 112 send /CAParams1 \$1;
-#X msg 221 109 send /CAParams2 \$1;
-#X msg 403 105 send /CAParams3 \$1;
-#X msg 577 103 send /CAParams4 \$1;
-#X msg 765 98 send /CAParams5 \$1;
-#X msg 943 99 send /CAParams6 \$1;
-#X connect 1 0 16 0;
-#X connect 3 0 17 0;
-#X connect 5 0 15 0;
-#X connect 7 0 14 0;
-#X connect 9 0 13 0;
-#X connect 11 0 12 0;
-#X connect 12 0 18 0;
-#X connect 13 0 19 0;
-#X connect 14 0 20 0;
-#X connect 15 0 21 0;
-#X connect 16 0 23 0;
-#X connect 17 0 22 0;
-#X connect 18 0 10 0;
-#X connect 19 0 8 0;
-#X connect 20 0 6 0;
-#X connect 21 0 4 0;
-#X connect 22 0 2 0;
-#X connect 23 0 0 0;
-#X restore 45 358 pd camCAParams;
-#X connect 0 0 13 0;
-#X connect 1 0 13 1;
-#X connect 2 0 13 2;
-#X connect 3 0 13 3;
-#X connect 4 0 13 5;
-#X connect 5 0 13 4;
-#X connect 14 0 20 0;
-#X connect 15 0 20 1;
-#X connect 16 0 20 2;
-#X connect 17 0 20 3;
-#X connect 18 0 20 5;
-#X connect 19 0 20 4;
-#X restore 200 113 pd CameraCAParams;
-#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 20.1 0 18 1 36
+#X restore 205 140 pd sound_analysis;
+#X text 251 111 MIN MAX AUTOM;
+#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 20.0 0 18 1 36
 -204800 -33289 0;
-#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 100.7 0 18 1 36
+#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 92.6 0 18 1 36
 -262130 -33289 0;
 #X obj 23 322 cnv 15 150 35 empty sound_env_min_can 25.0 0 18 1 48
 -4032 -33289 0;
 #X obj 186 319 cnv 15 150 35 empty sound_env_max_can 91.0 0 18 1 48
 -257985 -33289 0;
-#X obj 24 188 cnv 15 150 35 empty beat_threshold_can 0.87 0 18 1 48
+#X obj 24 188 cnv 15 150 35 empty beat_threshold_can 0.35 0 18 1 48
 -232576 -33289 0;
 #X text 18 234 OBSERVED SOUND MIN AND MAX;
 #X text 21 302 DEFINED SOUND MIN AND MAX;
-#X text 250 157 RESET SOUND;
-#X text 250 182 OBSERVATION;
+#X text 250 94 RESET SOUND;
+#X text 250 123 OBSERVATION;
 #X text 23 168 BEAT THRESHOLD;
 #X connect 0 0 7 0;
 #X connect 1 0 7 1;
 #X connect 2 0 0 0;
 #X connect 5 0 6 0;
-#X connect 12 0 8 0;
-#X connect 13 0 14 0;
+#X connect 11 0 8 0;
+#X connect 12 0 13 0;

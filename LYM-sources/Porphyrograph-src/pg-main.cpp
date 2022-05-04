@@ -45,6 +45,9 @@
 pg_Window     *CurrentWindow = NULL;
 bool           windowDisplayed = false;
 
+int tablet_prec_x = 0;
+int tablet_prec_y = 0;
+
 int leftWindowWidth = 1024;
 int rightWindowWidth = 1024;
 int rightWindowVMargin = 0;
@@ -91,9 +94,14 @@ int FramePerSecond = 0;
 bool DisplayFramePerSecond = false;
 
 /// current mouse location
-int CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR, CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
-float paths_x_0_forGPU = PG_OUT_OF_SCREEN_CURSOR, paths_y_0_forGPU = PG_OUT_OF_SCREEN_CURSOR;
-float paths_x_0_begin_position = PG_OUT_OF_SCREEN_CURSOR, paths_y_0_begin_position = PG_OUT_OF_SCREEN_CURSOR;
+int CurrentMousePos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, CurrentMousePos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+int Pulsed_CurrentMousePos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, Pulsed_CurrentMousePos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+float LastCursorPositionUpdate[PG_NB_CURSORS_MAX] = { -1.f };
+
+float paths_x_forGPU[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, paths_y_forGPU[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+float paths_x_forGPU_prev[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, paths_y_forGPU_prev[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+float paths_x_forGPU_last_pos_time[PG_NB_CURSORS_MAX] = { -1 };
+float paths_x_begin_position[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, paths_y_begin_position[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
 int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 int CurrentCursorStylusvsRubber = pg_Stylus;
 // current tablet pen pressure and orientation
@@ -219,7 +227,7 @@ int main(int argcMain, char **argvMain) {
 #endif
 
 #ifdef PG_METAWEAR
-	MetawearBoardInitialization();
+	MetawearSensorInitialization();
 #endif
 
 	// matrices, geometry, shaders and FBOs
@@ -273,7 +281,7 @@ int main(int argcMain, char **argvMain) {
 
 
 	// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
-	pg_initializationScript();
+	pg_initializeScenearioVariables();
 
 	// GUI DISPLAY & LOG FILE LOGGING
 	pg_displaySceneVariables();
@@ -307,7 +315,7 @@ int main(int argcMain, char **argvMain) {
 		}
 
 		is_movieLoading = true;
-#ifndef TEMPETE
+#if !defined (CAAUDIO) && !defined (DAWN) && !defined (RIVETS)
 		printf("Loading movie %s\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
 #else
 		printf("Loading movie %s\n", ( movieFileName[currentlyPlaying_movieNo]).c_str());
@@ -351,10 +359,15 @@ int main(int argcMain, char **argvMain) {
 	SVG_path_fill_color = new GLint[pg_nb_tot_SvgGpu_paths];
 	for (int indClipArtFile = 0; indClipArtFile < pg_nb_ClipArt; indClipArtFile++) {
 		LoadSVGPathsToGPU("Data/" + project_name + "-data/SVG_GPUs/" + pg_ClipArt_fileNames[indClipArtFile], pg_ind_first_SvgGpu_path_in_ClipArt[indClipArtFile], pg_nb_paths_in_ClipArt[indClipArtFile]);
-		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
+		// std::cout << "Data/" << project_name << "-data/SVG_GPUs/" << pg_ClipArt_fileNames[indClipArtFile] << "\n";
 	}
 
 	printOglError(37);
+
+	/////////////////////////////////////////////////////////////////////////
+	// USB INITIALIZATION
+	//pg_init_USB();
+	//pg_find_USB_pedals();
 
 	// main loop for event processing and display
 	glutMainLoop();
@@ -557,6 +570,11 @@ void pg_init_scene(void) {
 	pg_init_display_message();
 #endif
 
+#ifdef PG_LIGHTS
+	light_init();
+#endif
+
+
 
 #ifdef PG_SENSORS
 	/////////////////////////////////////////////////////////////////////////
@@ -635,7 +653,7 @@ void quit( void ) {
 #endif
 	
 	// lights off the LED
-	pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
+	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 #ifdef USINE
 	// starts the backtrack
 	pg_IPClient * client;
@@ -657,15 +675,17 @@ void quit( void ) {
 	printf("Main: soundtrack: %s\n", AuxString);
 #endif
 	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
-	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+	sprintf(AuxString, "/soundtrack_volume %d", 0);
+	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #ifdef PG_WITH_JUCE
 	// soundtrack off
 	pg_send_message_udp((char *)"", (char *)"/JUCE_stop_track", (char *)"udp_SoundJUCE_send");
-
+	pg_send_message_udp((char *)"", (char *)"/JUCE_exit", (char *)"udp_SoundJUCE_send");
 #endif
 
 	// lights out the LEDs
-	pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
+	//pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
 
 	// sends all the remaining messages
 	for (int ind = 0; ind < nb_IP_Clients; ind++) {
@@ -691,6 +711,9 @@ void quit( void ) {
   pg_movie_capture.release();
   // release movie
   pg_camera_capture.release();
+
+  //// realse USB
+  //pg_release_USB();
 
   // release global parameters
   // release the common variables in PG_EnvironmentNode. (Must be relased before releaseSceneObjects()
@@ -746,10 +769,10 @@ void window_special_key_browse(int key, int x, int y)
   pg_process_special_key( key );
 }
 
-#ifdef PG_WACOM_TABLET
-void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
+void MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
 #ifdef TEMPETE
-	// printf("pos = %d %d\n", CurrentMousePos_x, CurrentMousePos_y);
+	//if (!double_window) {
+	//printf("pos = %d %d\n", CurrentMousePos_x[0], CurrentMousePos_y[0]);
 	// mapping between tablet and target texture position
 	// 2 sets of four corners in tablet position are selected (by they x,y coordinates of the pen)
 	// the source corners corresponding to the drawing area on the tablet (a rectangle) (X0s,Y0s), (X1s, Y1s)...
@@ -761,30 +784,66 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 	// the final transformation to be applied on the mouse coordinates is
 	// CurrentCursorHooverPos_x = sx (x) + tx
 	// CurrentCursorHooverPos_y = sy (y) + ty
-	int mappedX = int(x * 1.39f - 451.0f);
-	int mappedY = int(y * 1.336f - 216.5f);
-	//mappedX = int(x * 1.f - 0.0f);
-	//mappedY = int(y * 1.f - 0.0);
-	mappedX = int(x * 0.7194f + 324.6f);
-	mappedY = int(y * 0.777f + 146.5f);
-
+	//*mappedX = int(x * 1.39f - 451.0f);
+	//*mappedY = int(y * 1.336f - 216.5f);
+	//*mappedX = int(x * 1.f - 0.0f);
+	//*mappedY = int(y * 1.f - 0.0);
+	//*mappedX = int(x * 0.7194f + 324.6f);
+	//*mappedY = int(y * 0.777f + 146.5f);
+	// source 350x0 350x1080      1550x0  1550x1080
+	// target 265x15  290x1080       1425x15  1425x1051
+	float sx = float(1425 - 290) / (1650 - 250);
+	float sy = float(1051 - 15) / (1050 - 0);
+	float tx = 265.f - sx * 250;
+	float ty = 15.f - sy * 0;
+	*mappedX = int(x * sx + tx);
+	*mappedY = int(y * sy + ty);
+	//* mappedX = int(x);
+	//* mappedY = int(y);
+	//}
 #endif
+	//printf("%d x, %d y, %.2f press, %.2f az, %.2f incl, %.2f twist, %d cursor", x, y, press, az, incl, twist, cursor);
+
+#ifdef ARAKNIT
+	*mappedX = int(x);
+	*mappedY = int(y);
+	if (screen_drawing_no == 0) {
+		*mappedY += 1080;
+	}
+	else if (screen_drawing_no == 2) {
+		*mappedX = int(1920.f - y / 1080.f * 1920.f);
+		*mappedY = int(x / 1920.f * 1080.f);
+		*mappedY *= 2;
+	}
+#endif
+}
+
+#ifdef PG_WACOM_TABLET
+void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
+	int mappedX = x;
+	int mappedY = y;
+
+	MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
+
 	// drawing
 	if (press > 0.05) {
 		// printf("pen writing %d %d\n",x,y);
-#ifdef TEMPETE
-		CurrentMousePos_x = mappedX; //  int(x / 1024. * leftWindowWidth);
-		CurrentMousePos_y = mappedY; // int(y / 768. * window_height);
+#if defined(TEMPETE) || defined(ARAKNIT)
+		CurrentMousePos_x[0] = mappedX; //  int(x / 1024. * leftWindowWidth);
+		CurrentMousePos_y[0] = mappedY; // int(y / 768. * window_height);
 #else
-		CurrentMousePos_x = x; //  int(x / 1024. * leftWindowWidth);
-		CurrentMousePos_y = y; // int(y / 768. * window_height);
+		CurrentMousePos_x[0] = x; //  int(x / 1024. * leftWindowWidth);
+		CurrentMousePos_y[0] = y; // int(y / 768. * window_height);
+		float x_tab = float(CurrentMousePos_x[0]) / leftWindowWidth;
+		float y_tab = 1.f - float(CurrentMousePos_y[0]) / window_height;
+		sprintf(AuxString, "/pen_xy %.2f %.2f", y_tab, x_tab); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
-		if (CurrentCursorStylusvsRubber == pg_Stylus) {
+		if (CurrentCursorStylusvsRubber == pg_Stylus || CurrentCursorStylusvsRubber == pg_Rubber) {
 			CurrentCursorHooverPos_x = PG_OUT_OF_SCREEN_CURSOR;
 			CurrentCursorHooverPos_y = PG_OUT_OF_SCREEN_CURSOR;
 		}
 		else {
-#ifdef TEMPETE
+#if defined(TEMPETE) || defined(ARAKNIT)
 			CurrentCursorHooverPos_x = mappedX; //  int(x / 1024. * leftWindowWidth);
 			CurrentCursorHooverPos_y = mappedY; // int(y / 768. * window_height);
 #else
@@ -796,9 +855,9 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 	// hoovering
 	else {
 		// printf("pen hoovering %d %d\n", x, y);
-		CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;
-		CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
-#ifdef TEMPETE
+		CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
+		CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
+#if defined(TEMPETE) || defined(ARAKNIT)
 		CurrentCursorHooverPos_x = mappedX; //  int(x / 1024. * leftWindowWidth);
 		CurrentCursorHooverPos_y = mappedY; // int(y / 768. * window_height);
 #else
@@ -825,31 +884,36 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 }
 #else
 void window_mouseFunc_browse(int button, int state, int x, int y) {
-  // printf( "click button %d (%d,%d)\n" , button , x , y );
-  CurrentMousePos_x = x;
-  CurrentMousePos_y = y;
-  CurrentCursorHooverPos_x = x;
-  CurrentCursorHooverPos_y = y;
-  if( button == 0 ) {
-      CurrentCursorStylusvsRubber = pg_Stylus;
-   }
-   else if( button == 2 ) {
-      CurrentCursorStylusvsRubber = pg_Rubber;
-   }
+	// printf( "click button %d (%d,%d)\n" , button , x , y );
+	int mappedX = x;
+	int mappedY = y;
+
+	MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
+
+	CurrentMousePos_x[0] = mappedX;
+	CurrentMousePos_y[0] = mappedY;
+	CurrentCursorHooverPos_x = mappedX;
+	CurrentCursorHooverPos_y = mappedY;
+	if (button == 0) {
+		CurrentCursorStylusvsRubber = pg_Stylus;
+	}
+	else if (button == 2) {
+		CurrentCursorStylusvsRubber = pg_Rubber;
+	}
 }
 
 void window_motionFunc_browse(int x, int y) {
-  // printf( "active button (%d,%d)\n" , x , y );
-  CurrentMousePos_x = x;
-  CurrentMousePos_y = y;
-  CurrentCursorHooverPos_x = x;
-  CurrentCursorHooverPos_y = y;
+	// printf( "active button (%d,%d)\n" , x , y );
+	CurrentMousePos_x[0] = x;
+	CurrentMousePos_y[0] = y;
+	CurrentCursorHooverPos_x = x;
+	CurrentCursorHooverPos_y = y;
 }
 
 void window_passiveMotionFunc_browse(int x, int y) {
-  // printf( "passive button (%d,%d)\n" , x , y );
-    CurrentMousePos_x = PG_OUT_OF_SCREEN_CURSOR;
-    CurrentMousePos_y = PG_OUT_OF_SCREEN_CURSOR;
+	// printf( "passive button (%d,%d)\n" , x , y );
+    CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
+    CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
     CurrentCursorHooverPos_x = x;
     CurrentCursorHooverPos_y = y;
   // freeglut (PG): glutGetModifiers() called outside an input callback/int
@@ -885,6 +949,10 @@ void window_idle_browse(int step) {
 
 		if (pg_FrameNo == pg_targetFrameNo) {
 			// printf(" End of image target\n");
+		}
+
+		if (pg_FrameNo == 10) {
+			resend_all_variables = true;
 		}
 
 		// current clock time
@@ -937,7 +1005,7 @@ void window_idle_browse(int step) {
 #if defined (TVW)
 		// updates message alpha
 		// only for the terrain vagues scenes
-		if (pg_CurrentScene > 0 && pg_CurrentScene < pg_NbScenes - 1) {
+		if (pg_CurrentSceneIndex > 0 && pg_CurrentSceneIndex < pg_NbScenes - 1) {
 			if (DisplayText1Front) {
 				// increase text1 alpha up to 1 and text2 alpha down to 0 (cross fading text2 -> text1) according to text_swap_duration (1)
 				DisplayText1Alpha = std::min(1.0f, (CurrentClockTime - DisplayTextSwapInitialTime));
@@ -993,7 +1061,7 @@ void window_idle_browse(int step) {
 			}
 			char msg[] = "beat";
 			char arg[] = "";
-			pg_aliasScript(msg, arg, arguments);
+			pg_aliasScript(msg, arg, arguments, 0);
 		}
 
 		// pulse in case of internal pulse
@@ -1002,25 +1070,31 @@ void window_idle_browse(int step) {
 			pulse[1] = float(noise(seed_pulsePerlinNoise[2], seed_pulsePerlinNoise[3], pg_FrameNo) * sound_volume + sound_min);
 			pulse[2] = float(noise(seed_pulsePerlinNoise[4], seed_pulsePerlinNoise[5], pg_FrameNo) * sound_volume + sound_min);
 			// not used currently  pulse_attack = noise(x, y, pg_FrameNo) * sound_volume + sound_min;
-			sprintf(AuxString, "/pulse_low %.5f", pulse[0]);
+#ifndef ATELIERSENFANTS
+			sprintf(AuxString, "/pulse_low %.2f", pulse[0]);
 			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
-			sprintf(AuxString, "/pulse_medium %.5f", pulse[1]);
+			sprintf(AuxString, "/pulse_medium %.2f", pulse[1]);
 			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
-			sprintf(AuxString, "/pulse_high %.5f", pulse[2]);
+			sprintf(AuxString, "/pulse_high %.2f", pulse[2]);
 			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
+#endif
 
 			pulse_average_prec = pulse_average;
 			pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
 
-			sprintf(AuxString, "/pulse_enveloppe %.5f", pulse_average);
+#ifndef ATELIERSENFANTS
+			sprintf(AuxString, "/pulse %.2f", pulse_average);
 			pg_send_message_udp((char *)"f", AuxString, (char *)"udp_TouchOSC_send");
+#endif
 
+			sprintf(AuxString, "/PEN_DISPLAY/pen_color/color %02x%02x%02xFF", int(pulsed_pen_color[0] * 255), int(pulsed_pen_color[1] * 255), int(pulsed_pen_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			//printf("%s\n", AuxString);
 		}
 
 		// continous flashes
 		// in case the flash frequency (flashPixel_freq, flashTrkCA_freq_0, flashCABG_freq)
-		// is greater than PG_LOOP_SIZE, whatever the value, flashes are emitted at every frame
-		pg_continuous_flahes();
+		// is equal to (PG_LOOP_SIZE + 1), whatever the value, flashes are emitted at every frame
+		pg_flash_control(flash_continuous_generation);
 
 		// fprintf( pg_csv_file, "%.10f popEvents Time #\n" , RealTime() );
 		// internal and external event processing

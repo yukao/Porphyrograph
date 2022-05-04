@@ -43,9 +43,14 @@ extern GLuint Display_Font_texture_Rectangle_texID;
 
 #ifdef PG_WITH_MASTER_MASK
 extern GLuint Master_Mask_texID;
+extern GLuint Master_Multilayer_Mask_texID;
 #endif
 
-#ifndef PG_BEZIER_PATHS
+#ifdef PG_WITH_BURST_MASK
+extern GLuint Burst_Mask_texID;
+#endif
+
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 extern GLuint Pen_texture_3D_texID;
 #endif
 extern GLuint Noise_texture_3D;
@@ -56,6 +61,7 @@ extern std::vector<GLuint>  pg_RepopDensity_texture_texID;
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 extern std::vector<GLuint> pg_particle_initial_pos_speed_texID;
 extern std::vector<GLuint> pg_particle_initial_color_radius_texID;
+extern std::vector<GLuint> pg_particle_acc_texID;
 #endif
 
 #ifdef PG_SENSORS
@@ -144,6 +150,10 @@ extern int pg_movie_frame_height;
 // video tracks
 extern vector<string> movieFileName;
 extern vector<string> movieShortName;
+extern vector<string> movieSoundtrackPeaksFileName;
+extern vector<string> movieSoundtrackOnsetsFileName;
+extern vector<vector<float>> movieSoundtrackPeaks;
+extern vector<vector<float>> movieSoundtrackOnsets;
 extern int nb_movies;
 // soundtracks
 extern vector<string> trackFileName;
@@ -154,6 +164,19 @@ extern int nb_soundtracks;
 extern int nb_pen_colorPresets;
 extern vector<string> pen_colorPresets_names;
 extern float *pen_colorPreset_values;
+// lights presets
+extern int nb_lights;
+extern vector<string> lights_names;
+extern int* lights_group;
+extern int* lights_port;
+extern int* lights_address;
+extern int* lights_channels;
+extern int* lights_red;
+extern int* lights_green;
+extern int* lights_blue;
+extern int* lights_grey;
+extern int* lights_dimmer;
+extern int* lights_strobe;
 // pen palettes colors
 extern int nb_pen_palette_colors;
 extern vector<string> pen_palette_colors_names;
@@ -164,12 +187,44 @@ extern int nb_photo_albums;
 // pen brushes
 extern string pen_brushes_fileName;
 extern int nb_pen_brushes;
+// textures with multiple layers
+extern int nb_layers_master_mask;
 
 extern bool is_capture_diaporama;
 extern VideoCapture  pg_camera_capture;
 extern char pg_camera_capture_name[256];
 extern VideoCapture  pg_movie_capture;
-extern int pg_movie_nbFrames;
+class movie_status {
+private:
+	int nbFramesLeft;
+	float initialTime;
+	int initialNbFrames;
+	int currentSoundPeakIndex;
+	int nbSoundPeakIndex;
+	int currentSoundOnsetIndex;
+	int nbSoundOnsetIndex;
+
+public:
+	movie_status();
+	// number frames left until the end from current frame
+	int get_nbFramesLeft();
+	// number of frames read from the beginning of the movie
+	int get_nbFramesRead();
+	// current time when movie started
+	float get_initialTime();
+	// initial total number of frames in the movie
+	int get_initialNbFrames();
+	// checks whether a peak or an onset are passed or closer than one frame
+	void updatePeakOrOnset(void);
+	// sets the movie at a position from beginning
+	void set_position(int nb_frames_from_beginning);
+	// reads one frame and updates the remaining number of frames in the movie
+	void read_one_frame();
+	// (re)starts the movie from begginning with its total number of frames
+	void reset_movie(int nbTotFramesLeft);
+	~movie_status();
+};
+extern movie_status pg_movie_status;
 extern bool is_movieLooping;
 extern bool is_movieLoading;
 extern bool secondCurrentBGCapture;
@@ -186,11 +241,6 @@ extern bool initialBGCapture;
 /// _Png : framebuffer output to png file
 /// _Svg : framebuffer output to svg file
 enum DrawingMode{ _Render=0 , _Svg , _Png , _Jpg , _Video };
-
-// projection and view matrices transmitted to the shader
-extern GLfloat pg_orthoWindowProjMatrix[16];
-extern GLfloat pg_identityViewMatrix[16];
-extern GLfloat pg_identityModelMatrix[16];
 
 extern GLuint drawBuffers[16];
 
@@ -218,14 +268,17 @@ extern float path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
 extern float path_data_ParticleAnimation[(PG_NB_PATHS + 1) * PG_MAX_PATH_ANIM_DATA * 4];
 
 // current mouse location (also used for displaying the cursor)
+extern float paths_time[PG_NB_PATHS + 1];
 extern float paths_x[PG_NB_PATHS + 1];
 extern float paths_y[PG_NB_PATHS + 1];
 extern float paths_x_memory[PG_NB_PATHS + 1];
 extern float paths_y_memory[PG_NB_PATHS + 1];
-extern float paths_x_next_0;
-extern float paths_y_next_0;
-extern float paths_x_prev_prev_0;
-extern float paths_y_prev_prev_0;
+extern float paths_x_next[PG_NB_PATHS + 1];
+extern float paths_y_next[PG_NB_PATHS + 1];
+extern float paths_time_prev_prev[PG_NB_PATHS + 1];
+extern float paths_x_prev_prev[PG_NB_PATHS + 1];
+extern float paths_y_prev_prev[PG_NB_PATHS + 1];
+extern float paths_time_prev[PG_NB_PATHS + 1];
 extern float paths_x_prev[PG_NB_PATHS + 1];
 extern float paths_y_prev[PG_NB_PATHS + 1];
 extern float paths_x_prev_memory[PG_NB_PATHS + 1];
@@ -253,11 +306,12 @@ extern float paths_xL[PG_NB_PATHS + 1];
 extern float paths_yL[PG_NB_PATHS + 1];
 extern float paths_xR[PG_NB_PATHS + 1];
 extern float paths_yR[PG_NB_PATHS + 1];
-#else
-extern int paths_BrushID[PG_NB_PATHS + 1];
 #endif
+extern int paths_BrushID[PG_NB_PATHS + 1];
 
-#if defined (GN) || defined (CAAUDIO)
+extern bool mobile_cursor;
+
+#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 extern GLuint pg_CATable_ID;
 extern GLubyte *pg_CATable;
 #endif
@@ -310,7 +364,11 @@ public:
 void window_display(void);
 void one_frame_variables_reset(void);
 void pg_update_shader_uniforms(void);
-void pg_update_camera_and_video_frame(void);
+// MOVIE STREAMING JUMPS
+void pg_movie_forward(int nb_frames_forth);
+// MOVIE AND CAMERA FRAME CAPTURE
+void pg_movie_backward(int nb_frames_back);
+void pg_update_camera_and_movie_frame(void);
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #0: PARTICLE ANIMATION PASS
 void pg_ParticleAnimationPass(void);
@@ -319,7 +377,7 @@ void pg_ParticleAnimationPass(void);
 void pg_UpdatePass(void);
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 // PASS #2: PARTICLE RENDERING PASS
-void pg_ParticleRenderingPass(void);
+void pg_SVGandParticleRenderingPass(void);
 #endif
 // PASS #3: COMPOSITION + PING-PONG ECHO: ECHOED MIX OF LAYERS
 void pg_MixingPass(void);
@@ -334,7 +392,9 @@ void pg_SensorPass(void);
 void pg_calculate_projection_matrices(void);
 void pg_MeshPass(void);
 #endif
+void pg_calculate_homography_matrices(std::vector<cv::Point2f>* sourcePoints, std::vector<cv::Point2f>* destinationPoints, GLfloat matValues[], int dim);
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
 void pg_draw_scene(DrawingMode mode, bool threaded);
+
 
 #endif

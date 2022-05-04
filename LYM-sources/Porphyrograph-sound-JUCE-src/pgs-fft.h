@@ -45,12 +45,18 @@
 
 *******************************************************************************/
 
-
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 #pragma once
 class Application;
 String trackFileName = String("");
 bool trackFileOpen = false;
+bool outputEnveloppe = false;
+
+long nbTotSamples = 0;
+ofstream fileEnveloppeCSV;
 
 //==============================================================================
 class SpectrogramComponent   : public AudioAppComponent,
@@ -113,6 +119,8 @@ public:
 		AudioSampleBuffer tmpBuffer(bufferToFill.buffer->getNumChannels(), 
 									bufferToFill.buffer->getNumSamples());
 		AudioSourceChannelInfo tmpBufferSource(tmpBuffer);
+
+		//std::cout << "buffer size " << bufferToFill.buffer->getNumSamples() << std::endl;
 			
 		// tests if there is a valid soundtrack to read or audio input
 		for (auto outputChannel = 0; outputChannel < maxOutputChannels; ++outputChannel)
@@ -149,6 +157,17 @@ public:
 				{
 					outBuffer[sample] = audioInput_weight * inBuffer[sample]
 						+ soundtrack_weight * inTmpBuffer[sample];
+					
+					if (outputChannel == 0) {
+						if (nbTotSamples % 10 == 0 && state == Started) {
+							if (outputEnveloppe) {
+								fileEnveloppeCSV << std::fixed << std::setprecision(4) << double(nbTotSamples) / transportSource.getSampleRate() << "," << std::fixed << std::setprecision(5) << float(inTmpBuffer[sample]) << std::endl;
+							}
+						}
+						if (state == Started) {
+							nbTotSamples++;
+						}
+					}
 				}
 			}
 
@@ -233,6 +252,25 @@ public:
 					trackFileName = trackFileName.substring(1, trackFileName.length());
 				}
 			}
+			else if (message.size() == 1 && message[0].isFloat32())
+			{
+				float val = message[0].getFloat32();
+				if (val == 0.f) {
+					trackFileName = juce::String("C:/sync.com/Sync/LYM-videos-sources/LYM_Annika_Araknit_2020/selfies_sounds/3beeps.wav");
+					outputEnveloppe = true;
+				}
+				else if (val == 1.f) {
+					trackFileName = juce::String("C:/sync.com/Sync/LYM-videos-sources/LYM_Annika_Araknit_2020/selfies_sounds/3disch.wav");
+					outputEnveloppe = true;
+				}
+				else if (val == 2.f) {
+					trackFileName = juce::String("C:/sync.com/Sync/LYM-videos-sources/LYM_Isskjutning_2020/Isskjut_NewEnd_v24EQ.wav");
+					outputEnveloppe = true;
+				}
+				else {
+					std::cout << "Incorrect message value " << val << "!" << std::endl;
+				}
+			}
 			else
 			{
 				std::cout << "Incorrect " << str.toStdString() << " message size " << message.size() << "!" << std::endl;
@@ -257,6 +295,10 @@ public:
 			// std::cout << "File name: " << trackFileName << std::endl;
 			if(!trackFileName.isEmpty())
 			{
+				if (outputEnveloppe) {
+					fileEnveloppeCSV.open(trackFileName.toStdString()+".csv");
+					fileEnveloppeCSV.setf(ios_base::fixed);
+				}
 				auto trackFile = File(trackFileName);
 				if (trackFile.existsAsFile())
 				{
@@ -271,7 +313,7 @@ public:
 						transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
 						transportSource.setPosition(0.0);
 						readerSource.reset(newSource.release());
-						std::cout << "Audio file opened: " << trackFileName.toStdString() << std::endl;
+						std::cout << "Audio file opened: " << trackFileName.toStdString() << " sample rate " << reader->sampleRate << std::endl;
 						trackFileOpen = true;
 					}
 					else {
@@ -288,7 +330,7 @@ public:
 		}
 		else if (str.compare("/JUCE_play_track") == 0) {
 			if (trackFileOpen) {
-				looping = true;
+				looping = false;
 				updateLoopState(looping);
 				changeState(Starting);
 			}
@@ -314,6 +356,9 @@ public:
 			// delete this;
 			// app.systemRequestedQuit();
 			// mainWindow = nullptr;
+			if (outputEnveloppe) {
+				fileEnveloppeCSV.close();
+			}
 			exit(0);
 		}
 	}
@@ -351,6 +396,7 @@ public:
         forwardFFT.performFrequencyOnlyForwardTransform (fftData);
 
 		// Store fft data for sorting and sending it through UDP for visualization
+	    //std::cout << "Size: " << fftSize << std::endl;
 		std::vector<std::vector<float>> val_and_id;
 		val_and_id.resize(fftSize / 2);
 		// frequency 0 (index 0 is not used)

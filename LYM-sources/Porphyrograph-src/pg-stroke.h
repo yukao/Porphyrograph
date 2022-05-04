@@ -25,25 +25,43 @@
 #define PG_STROKE_H
 
 /// mouse recording tracks management
-extern float **pg_Path_Pos_x_prev;
-extern float **pg_Path_Pos_y_prev;
-extern float **pg_Path_Pos_x;
-extern float **pg_Path_Pos_y;
-extern float **pg_Path_Pos_xL;
-extern float **pg_Path_Pos_yL;
-extern float **pg_Path_Pos_xR;
-extern float **pg_Path_Pos_yR;
-extern float **pg_Path_Time;
+//extern float **pg_Path_Pos_x_prev;
+//extern float **pg_Path_Pos_y_prev;
+//extern float **pg_Path_Pos_x;
+//extern float **pg_Path_Pos_y;
+//extern float **pg_Path_Pos_xL;
+//extern float **pg_Path_Pos_yL;
+//extern float **pg_Path_Pos_xR;
+//extern float **pg_Path_Pos_yR;
+//extern float **pg_Path_TimeStamp;
+struct pg_Path_Data_Struct {
+	float Color_r;
+	float Color_g;
+	float Color_b;
+	float Color_a;
+	int BrushID;
+	float RadiusX;
+	float RadiusY;
+	float Pos_x_prev;
+	float Pos_y_prev;
+	float Pos_x;
+	float Pos_y;
+	float Pos_xL;
+	float Pos_yL;
+	float Pos_xR;
+	float Pos_yR;
+	float TimeStamp;
+};
 struct pg_Path_Status_Struct {
-  bool isFirstFrame;
-  bool isActiveRecording;
-  bool isNormalized;
-  int nbRecordedFrames;
-  int indReading;
-  float initialTimeRecording;
-  float finalTimeRecording;
-  float initialTimeReading;
-  float readSpeedScale;
+	bool isFirstFrame;
+	bool isActiveRecording;
+	bool isNormalized;
+	int nbRecordedFrames;
+	int indReading;
+	float initialTimeRecording;
+	float finalTimeRecording;
+	float initialTimeReading;
+	float readSpeedScale;
 };
 extern struct pg_Path_Status_Struct *pg_Path_Status;
 extern int *pg_indPreviousFrameReading;
@@ -84,12 +102,15 @@ void CatmullRom_Evaluate(vec2* pOut_result, vec2* p0, vec2* p1, vec2* p2, vec2* 
 void pg_initStrokes( void );
 
 // loads a track from a path string
-void LoadPathFromXML( char *pathString , int indPath , float *translation , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
+void LoadPathPointsFromXML( char *pathString , int indPath , float *translation , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
 					  int * indCurve, float precedingCurrentPoint[2], float  currentPoint[2]);
+void LoadPathColorsFromXML(string pathString, int indPath, int nbRecordedFrames);
+void LoadPathBrushesFromXML(string pathString, int indPath, int nbRecordedFrames);
+void LoadPathTimeStampsFromXML(string pathString, int indPath, int nbRecordedFrames);
 
 // loads a track from a svg file
-void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
-void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale);
+void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID);
+void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID);
 
 // CONVEX HULL 
 #ifdef PG_BEZIER_PATHS
@@ -104,6 +125,8 @@ void build_expanded_hull(int indPath);
 void test_hull(void);
 #endif
 
+// calculation of tangents from successive locations of the pen
+void stroke_geometry_calculation(int indPath, int curr_position_x, int curr_position_y);
 // REPLAY PATHS  
 void pg_replay_paths(float theTime);
 // update of the tables that contain the stroke parameters

@@ -1,6 +1,6 @@
 // RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
 // VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,camera ID,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles
-enum ConfigurationVarIDs{ 
+enum ConfigurationVarIDs {
   _double_window = 0,
   _wide_screen,
   _window_width,
@@ -42,10 +42,11 @@ enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };
 enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];
 extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
-// RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288
-// VERBATIM,auto_beat,clear all Layers,clear CA,clear layer,clear echo,mute screen,invert,snapshot onOff,cursor size,beat duration,Blend Transparency,CA mix weight,ID comment,Part mix weight,ID comment,track0 mix weight,ID comment,track1 mix weight,ID comment,track2 mix weight,ID comment,track3 mix weight,ID comment,CA Master weight,ID comment,Part Master weight,ID comment,track0 Master weight,ID comment,track1 Master weight,ID comment,track2 Master weight,ID comment,track3 Master weight,ID comment,echo,ID comment,echo neg,ID comment,CA decay,CA decay pulse,part decay,ID comment,track0 decay,ID comment,track1 decay,ID comment,track2 decay,ID comment,track3 decay,ID comment,pen radius,pen radius pulse,palette for pen,palette for pen,Grey level for pen,ID comment,A color,ID comment,pen brush,pen radius replay,pen radius replay pulse,ID comment,ID comment,current drawing track,current video track,current photo track,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,part reinitialize,path0 repop on/off,path1 repop on/off,path2 repop on/off,path3 repop on/off,path4 repop on/off,path5 repop on/off,path6 repop on/off,path7 repop on/off,path0 follow on/off,path1 follow on/off,path2 follow on/off,path3 follow on/off,path4 follow on/off,path5 follow on/off,path6 follow on/off,path7 follow on/off,path0 repulse on/off,path1 repulse on/off,path2 repulse on/off,path3 repulse on/off,path4 repulse on/off,path5 repulse on/off,path6 repulse on/off,path7 repulse on/off,path1 record on/off,path2 record on/off,path3 record on/off,path4 record on/off,path5 record on/off,path3 record on/off,path7 record on/off,path1 replay track,path2 replay track,path3 replay track,path4 replay track,path5 replay track,path6 replay track,path7 replay track,part radius,particle radius pulse,part acc,part acc pulse,part damp factor,ID comment,ID comment,particle motion shift pulse,noise scale,ID comment,part noise type,part noise line scale,part noise angle scale,part noise center-x,part noise center-y,part field weight,ID comment,part damp target radius,part time to target,particle type,part move grid,part move rand,part exit mode,part stroke mode,part color mode,pixel acc,pixel acc pulse,pixel acc center-x,ID comment,pixel acc center-y,ID comment,pixel radius ,pixel radius pulse,pixel mode,repopuplating CA,ID comment,repopuplating Part,particle repop pulse,repopuplating BG (grid),ID comment,repopuplating Path,ID comment,repop_colorBG,repop_colorBG_pulse,repop_greyBG,repop_greyBG_pulse,repop_colorPart,repop_colorPart_pulse,repop_greyPart,repop_greyPart_pulse,repop_colorCA,repop_colorCA_pulse,repop_greyCA,repop_greyCA_pulse,movie no,movie capture frequency,photo diaporama index,photo diaporama fade dur,photo diaporama plateau dur,current active clip arts,current active meshes,current mobile meshes,soundtrack no,movie weight,movieWeight_pulse,Sobel movie,movieSobel_pulse,invert movie,ID comment,ID comment,video gammaation ,video gammaation pulse,photoWeight,photoWeight_pulse,photo_threshold,photo_threshold_pulse,photo gamma,photo gamma pulse,photo jitter amplitude,mask jitter amplitude,photo scale,photo offSetX,photo offsetY,mask scale,photo contrast,mask contrast,CAParams1,ID comment,CAParams2,ID comment,CAParams3,ID comment,CAParams4,ID comment,CAParams5,ID comment,CAParams6,ID comment,CAParams7,ID comment,CAParams8,ID comment,CA 1 type,CA 1 subtype,CA 2 type,CA 2 subtype,CA1/CA2 weight,Flash Part->CA freq, Flash track0->CA freq, Flash track1->CA freq, Flash track2->CA freq, Flash track3->CA freq,Flash CA->BG freq,Flash Part->BG freq, Flash track1->BG freq, Flash track2->BG freq, Flash track3->BG freq,Flash CA->Part freq,Flash Trk0->Part freq,Flash Trk1->Part freq,Flash Trk2->Part freq,Flash Trk3->Part freq,Flash pixel freq,Flash pixel duration,photo flash length (in frames),photo flash bright (in frames),photo flash beat no,beat threshold,beat min duration (ms),input volume,Min input volume,pen pressure coef,pen angleH coef,pen angleV coef,tracks sync on/off,CA update step,color interface display,fast vs slow CA color spreading,freeze on/off,sound enveloppe min,sound envelope max,adc weight (eg microphone),soundtrack weight,display lookAt target,with_mesh,with blue/green,with_whiteText,VP1 location,VP1 location,VP1 location,VP1 up 2nd comp,VP1 reversed,VP1LookAtX VP1,VP1LookAtY VP1,VP1LookAtZ VP1,VP1 width top at 1m,VP1 width bottom at 1m,VP1 top at 1m,VP1 bottom at 1m,texture width min,texture width max,texture height min,texture height max,texture width min border,texture width max border,texture height min border,texture height max border,texture scale width,texture scale height,texture translate width,texture translate height,mesh junction point,texture width min border,near plane,far plane
+// RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,236,237,238,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,328,329,330,331,332,333,334,335,262,263,264,265,266,267,268,269,270,271,272,273,328,329,330,331,332,333,334,335,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,326
+// VERBATIM,auto_beat,auto_pulse,clear all Layers,clear CA,clear layer,clear echo,mute screen,invert,snapshot onOff,cursor size,beat duration,Blend Transparency,CA mix weight,ID comment,Part mix weight,ID comment,track0 mix weight,ID comment,track1 mix weight,ID comment,track2 mix weight,ID comment,track3 mix weight,ID comment,CA Master weight,ID comment,Part Master weight,ID comment,track0 Master weight,ID comment,track1 Master weight,ID comment,track2 Master weight,ID comment,track3 Master weight,ID comment,echo,ID comment,echo neg,ID comment,CA decay,CA decay pulse,part decay,ID comment,track0 decay,ID comment,track1 decay,ID comment,track2 decay,ID comment,track3 decay,ID comment,pen radius,pen radius pulse,palette for pen,palette for pen,Grey level for pen,ID comment,A color,ID comment,pen brush,pen radius replay,pen radius replay pulse,ID comment,ID comment,current drawing track,current video track,current photo track,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,ID comment,part reinitialize,part image based acceleration,path0 repop on/off,path1 repop on/off,path2 repop on/off,path3 repop on/off,path4 repop on/off,path5 repop on/off,path6 repop on/off,path7 repop on/off,path0 follow on/off,path1 follow on/off,path2 follow on/off,path3 follow on/off,path4 follow on/off,path5 follow on/off,path6 follow on/off,path7 follow on/off,path0 repulse on/off,path1 repulse on/off,path2 repulse on/off,path3 repulse on/off,path4 repulse on/off,path5 repulse on/off,path6 repulse on/off,path7 repulse on/off,path1 record on/off,path2 record on/off,path3 record on/off,path4 record on/off,path5 record on/off,path3 record on/off,path7 record on/off,path1 replay track,path2 replay track,path3 replay track,path4 replay track,path5 replay track,path6 replay track,path7 replay track,part radius,particle radius pulse,part acc,part acc pulse,part damp factor,ID comment,ID comment,particle motion shift pulse,noise scale,ID comment,part noise type,part noise line scale,part noise angle scale,part noise center-x,part noise center-y,part field weight,ID comment,part damp target radius,part time to target,particle type,part move grid,part move rand,part exit mode,part stroke mode,part color mode,pixel acc,pixel acc pulse,pixel acc center-x,ID comment,pixel acc center-y,ID comment,pixel radius ,pixel radius pulse,pixel mode,repopuplating CA,ID comment,repopuplating Part,particle repop pulse,repopuplating BG (grid),ID comment,repopuplating Path,ID comment,repop_colorBG,repop_colorBG_pulse,repop_greyBG,repop_greyBG_pulse,repop_colorPart,repop_colorPart_pulse,repop_greyPart,repop_greyPart_pulse,repop_colorCA,repop_colorCA_pulse,repop_greyCA,repop_greyCA_pulse,movie no,movie capture frequency,photo diaporama index,photo diaporama fade dur,photo diaporama plateau dur,current active clip arts,current active meshes,current mobile meshes,soundtrack no,movie weight,movieWeight_pulse,Sobel movie,movieSobel_pulse,invert movie,ID comment,ID comment,video gamma,video gamma pulse,photoWeight,photoWeight_pulse,photo_threshold,photo_threshold_pulse,photo gamma,photo gamma pulse,photo jitter amplitude,mask jitter amplitude,photo scale,photo offSetX,photo offsetY,mask scale,photo contrast,mask contrast,CAParams1,ID comment,CAParams2,ID comment,CAParams3,ID comment,CAParams4,ID comment,CAParams5,ID comment,CAParams6,ID comment,CAParams7,ID comment,CAParams8,ID comment,CA 1 type,CA 1 subtype,CA 2 type,CA 2 subtype,CA1/CA2 weight,Flash Part->CA freq, Flash track0->CA freq, Flash track1->CA freq, Flash track2->CA freq, Flash track3->CA freq,Flash CA->BG freq,Flash Part->BG freq, Flash track1->BG freq, Flash track2->BG freq, Flash track3->BG freq,Flash CA->Part freq,Flash Trk0->Part freq,Flash Trk1->Part freq,Flash Trk2->Part freq,Flash Trk3->Part freq,Flash particle init freq,Flash pixel freq,Flash pixel duration,Flash pixel duration,photo flash length (in frames),photo flash bright (in frames),photo flash beat no,beat threshold,beat min duration (ms),input volume,Min input volume,pen pressure coef,pen angleH coef,pen angleV coef,tracks sync on/off,CA update step,color interface display,fast vs slow CA color spreading,freeze on/off,sound enveloppe min,sound envelope max,adc weight (eg microphone),soundtrack weight,display lookAt target,with_mesh,with blue/green,with_whiteText,VP1 location,VP1 location,VP1 location,VP1 up 2nd comp,VP1 reversed,VP1LookAtX VP1,VP1LookAtY VP1,VP1LookAtZ VP1,VP1 width top at 1m,VP1 width bottom at 1m,VP1 top at 1m,VP1 bottom at 1m,VP1KeystoneXTopLeft,VP1KeystoneXBottomLeft,VP1KeystoneYTopLeft,VP1KeystoneYBottomLeft,VP1KeystoneXTopRight,VP1KeystoneXBottomRight,VP1KeystoneYTopRight,VP1KeystoneYBottomRight,VP2 location,VP2 location,VP2 location,VP2 up 2nd comp,VP2 reversed,VP2LookAtX VP2,VP2LookAtY VP2,VP2LookAtZ VP2,VP2 width top at 1m,VP2 width bottom at 1m,VP2 top at 1m,VP2 bottom at 1m,VP2KeystoneXTopLeft,VP2KeystoneXBottomLeft,VP2KeystoneYTopLeft,VP2KeystoneYBottomLeft,VP2KeystoneXTopRight,VP2KeystoneXBottomRight,VP2KeystoneYTopRight,VP2KeystoneYBottomRight,texture width min,texture width max,texture height min,texture height max,texture width min border,texture width max border,texture height min border,texture height max border,texture scale width,texture scale height,texture translate width,texture translate height,mesh junction point,texture width min border,near plane,far plane,movie loop
 enum InterpVarIDs{ 
   _auto_beat = 0,
+  _auto_pulse,
   _clearAllLayers,
   _clearCA,
   _clearLayer,
@@ -121,6 +122,7 @@ enum InterpVarIDs{
   _track_y_transl_1,
   _track_y_transl_1_pulse,
   _part_initialization,
+  _part_image_acceleration,
   _part_path_repop_0,
   _part_path_repop_1,
   _part_path_repop_2,
@@ -281,8 +283,10 @@ enum InterpVarIDs{
   _flashTrkPart_freq_1,
   _flashTrkPart_freq_2,
   _flashTrkPart_freq_3,
+  _flashParticleInit_freq,
   _flashPixel_freq,
   _flashPixel_duration,
+  _flashPhotoChangeBeat,
   _flashPhotoTrkLength,
   _flashPhotoTrkBright,
   _flashPhotoTrkBeat,
@@ -318,6 +322,34 @@ enum InterpVarIDs{
   _VP1WidthBottomAt1m,
   _VP1TopAt1m,
   _VP1BottomAt1m,
+  _VP1KeystoneXTopLeft,
+  _VP1KeystoneXBottomLeft,
+  _VP1KeystoneYTopLeft,
+  _VP1KeystoneYBottomLeft,
+  _VP1KeystoneXTopRight,
+  _VP1KeystoneXBottomRight,
+  _VP1KeystoneYTopRight,
+  _VP1KeystoneYBottomRight,
+  _VP2LocX,
+  _VP2LocY,
+  _VP2LocZ,
+  _VP2UpY,
+  _VP2Reversed,
+  _VP2LookAtX,
+  _VP2LookAtY,
+  _VP2LookAtZ,
+  _VP2WidthTopAt1m,
+  _VP2WidthBottomAt1m,
+  _VP2TopAt1m,
+  _VP2BottomAt1m,
+  _VP2KeystoneXTopLeft,
+  _VP2KeystoneXBottomLeft,
+  _VP2KeystoneYTopLeft,
+  _VP2KeystoneYBottomLeft,
+  _VP2KeystoneXTopRight,
+  _VP2KeystoneXBottomRight,
+  _VP2KeystoneYTopRight,
+  _VP2KeystoneYBottomRight,
   _textureFrontier_wmin,
   _textureFrontier_wmax,
   _textureFrontier_hmin,
@@ -334,8 +366,10 @@ enum InterpVarIDs{
   _meshFrontier_width,
   _nearPlane,
   _farPlane,
+  _movie_loop,
   _MaxInterpVarIDs};
 extern bool  auto_beat           ;
+extern bool  auto_pulse          ;
 extern bool  clearAllLayers      ;
 extern bool  clearCA             ;
 extern bool  clearLayer          ;
@@ -411,6 +445,7 @@ extern float track_x_transl_1_pulse;
 extern float track_y_transl_1    ;
 extern float track_y_transl_1_pulse;
 extern int   part_initialization ;
+extern int   part_image_acceleration;
 extern bool  part_path_repop_0   ;
 extern bool  part_path_repop_1   ;
 extern bool  part_path_repop_2   ;
@@ -571,8 +606,10 @@ extern int   flashTrkPart_freq_0 ;
 extern int   flashTrkPart_freq_1 ;
 extern int   flashTrkPart_freq_2 ;
 extern int   flashTrkPart_freq_3 ;
+extern int   flashParticleInit_freq;
 extern int   flashPixel_freq     ;
 extern int   flashPixel_duration ;
+extern int   flashPhotoChangeBeat;
 extern float flashPhotoTrkLength ;
 extern float flashPhotoTrkBright ;
 extern int   flashPhotoTrkBeat   ;
@@ -608,6 +645,34 @@ extern float VP1WidthTopAt1m     ;
 extern float VP1WidthBottomAt1m  ;
 extern float VP1TopAt1m          ;
 extern float VP1BottomAt1m       ;
+extern float VP1KeystoneXTopLeft ;
+extern float VP1KeystoneXBottomLeft;
+extern float VP1KeystoneYTopLeft ;
+extern float VP1KeystoneYBottomLeft;
+extern float VP1KeystoneXTopRight;
+extern float VP1KeystoneXBottomRight;
+extern float VP1KeystoneYTopRight;
+extern float VP1KeystoneYBottomRight;
+extern float VP2LocX             ;
+extern float VP2LocY             ;
+extern float VP2LocZ             ;
+extern float VP2UpY              ;
+extern float VP2Reversed         ;
+extern float VP2LookAtX          ;
+extern float VP2LookAtY          ;
+extern float VP2LookAtZ          ;
+extern float VP2WidthTopAt1m     ;
+extern float VP2WidthBottomAt1m  ;
+extern float VP2TopAt1m          ;
+extern float VP2BottomAt1m       ;
+extern float VP2KeystoneXTopLeft ;
+extern float VP2KeystoneXBottomLeft;
+extern float VP2KeystoneYTopLeft ;
+extern float VP2KeystoneYBottomLeft;
+extern float VP2KeystoneXTopRight;
+extern float VP2KeystoneXBottomRight;
+extern float VP2KeystoneYTopRight;
+extern float VP2KeystoneYBottomRight;
 extern float textureFrontier_wmin;
 extern float textureFrontier_wmax;
 extern float textureFrontier_hmin;
@@ -624,6 +689,7 @@ extern float meshFrontier_X      ;
 extern float meshFrontier_width  ;
 extern float nearPlane           ;
 extern float farPlane            ;
+extern bool  movie_loop          ;
 extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];
 extern void * ScenarioVarPointers[_MaxInterpVarIDs];
 extern char *ScenarioVarMessages[_MaxInterpVarIDs];

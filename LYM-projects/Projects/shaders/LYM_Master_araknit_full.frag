@@ -8,22 +8,20 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 #define PG_NB_TRACKS 3
-/*#define ATELIERS_PORTATIFS
-*/// #define WHITE_CIRCLE
-// #define MIRRORED_PROJECTION
 
-bool      mute_second_screen;
-bool      invertAllLayers;
-int       cursorSize;
-float     master;
-float     CAMasterWeight;
-float     PartMasterWeight;
-float     trackMasterWeight_0;
-float     trackMasterWeight_1;
-float     trackMasterWeight_2;
-float     trackMasterWeight_3;
-bool      interfaceOnScreen;
-uniform float uniform_Master_scenario_var_data[11];
+bool	  mute_second_screen;
+bool	  invertAllLayers;
+int		cursorSize;
+float	 master;
+float	 CAMasterWeight;
+float	 PartMasterWeight;
+float	 trackMasterWeight_0;
+float	 trackMasterWeight_1;
+float	 trackMasterWeight_2;
+float	 trackMasterWeight_3;
+bool	  interfaceOnScreen;
+float	 master_mask;
+uniform float uniform_Master_scenario_var_data[12];
 
 // Main shader.
 
@@ -45,6 +43,18 @@ layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-c
 #if PG_NB_TRACKS >= 4
 layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
 #endif
+#if PG_NB_TRACKS == 1
+layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
+#if PG_NB_TRACKS == 2
+layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
+#if PG_NB_TRACKS == 3
+layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
+#if PG_NB_TRACKS == 4
+layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
 
 /////////////////////////////////////
 // UNIFORMS
@@ -54,7 +64,7 @@ uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
 /////////////////////////////////////
@@ -74,11 +84,14 @@ void main() {
   trackMasterWeight_2 = uniform_Master_scenario_var_data[8];
   trackMasterWeight_3 = uniform_Master_scenario_var_data[9];
   interfaceOnScreen = (uniform_Master_scenario_var_data[10] > 0 ? true : false);
+  master_mask = uniform_Master_scenario_var_data[11];
 
   float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
   float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
+  int currentScene = int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w);
+  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
 
   // vertical mirror
   // TO UNCOMMENT FOR CHATEAU  
@@ -104,7 +117,7 @@ void main() {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
     else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.rgb, 1);
     }
     else if(decalCoords.x < 300) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
@@ -194,48 +207,20 @@ void main() {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
 
-  // white flash
-  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
-  // transition invvert début frozen clear
-  if(timeFromStart > 1020 && timeFromStart < 1024) {
-    outColor0.rgb = clamp(outColor0.rgb + vec3((2 - abs(timeFromStart - 1022))/2.0), 0.0, 1.0);
+  // dimmed border
+  vec4 maskColor;
+  maskColor = texture(uniform_Master_texture_fs_Mask, coords);
+  if( master_mask > 0) {
+      outColor0.rgb *= (maskColor.g * master_mask + maskColor.r * (1.0- master_mask));
   }
-  // pendant frozen clear à 17'19" du début et à 19" debut frozen clea
-  // événement musical
-  /*
-  else if(timeFromStart > 1035 && timeFromStart < 1043) {
-    outColor0.rgb = clamp(outColor0.rgb + vec3(4 - abs(timeFromStart - 1039)), 0.0, 1.0);
-  }
-  */
-  // transition invvert début ragnarok
-  else if(timeFromStart > 1436 && timeFromStart < 1444) {
-    outColor0.rgb = clamp(outColor0.rgb + vec3((4 - abs(timeFromStart - 1440))/4.0), 0.0, 1.0);
+  else {
+    outColor0.rgb *= maskColor.r;
   }
 
-  // central circle
-  /*
-  int  radiusCircle;
-  if( coordX > width) {
-    coordX -= width;
-  }
-  radiusCircle = int(length(vec2(coordX - 700 , coords.y - 525)));
-  if( radiusCircle > 440 ) {
-    outColor0.rgb = vec3(0);
-  }
-  #ifdef WHITE_CIRCLE
-   else if( radiusCircle == 440 ) {
-    outColor0.rgb = vec3(1);
-  }
-  #endif
-  else if( radiusCircle > 433 ) {
-    outColor0.rgb *= ((440 - radiusCircle)/7.0);
-  }
-*/
-  
-  // cursor
-  if( mouse_x < width && mouse_x > 0 
-      && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
-      < cursorSize ) { 
+  // blinking cursor
+  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+      && mouse_x < width && mouse_x > 0 
+      && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 

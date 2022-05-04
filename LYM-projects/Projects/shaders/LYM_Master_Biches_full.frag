@@ -10,17 +10,17 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 3
 #define ATELIERS_PORTATIFS
 
-bool      mute_second_screen;
-bool      invertAllLayers;
-int       cursorSize;
-float     master;
-float     CAMasterWeight;
-float     PartMasterWeight;
-float     trackMasterWeight_0;
-float     trackMasterWeight_1;
-float     trackMasterWeight_2;
-float     trackMasterWeight_3;
-bool      interfaceOnScreen;
+bool	  mute_second_screen;
+bool	  invertAllLayers;
+int		cursorSize;
+float	 master;
+float	 CAMasterWeight;
+float	 PartMasterWeight;
+float	 trackMasterWeight_0;
+float	 trackMasterWeight_1;
+float	 trackMasterWeight_2;
+float	 trackMasterWeight_3;
+bool	  interfaceOnScreen;
 uniform float uniform_Master_scenario_var_data[11];
 
 // Main shader.

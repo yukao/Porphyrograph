@@ -70,6 +70,8 @@ class pg_Window;
 extern pg_Window    *CurrentWindow;
 extern bool           windowDisplayed;
 
+extern int tablet_prec_x;
+extern int tablet_prec_y;
 
 extern int leftWindowWidth;
 extern int rightWindowWidth;
@@ -96,15 +98,18 @@ extern char *Output_Message_ArgList;
 extern char *Output_Message_OSC;
 
 /// current mouse location
-extern int CurrentMousePos_x, CurrentMousePos_y;
-extern float paths_x_0_forGPU, paths_y_0_forGPU;
-extern float paths_x_0_begin_position, paths_y_0_begin_position;
-extern int PreviousMousePos_x, PreviousMousePos_y;
+extern int CurrentMousePos_x[PG_NB_CURSORS_MAX], CurrentMousePos_y[PG_NB_CURSORS_MAX];
+extern int Pulsed_CurrentMousePos_x[PG_NB_CURSORS_MAX], Pulsed_CurrentMousePos_y[PG_NB_CURSORS_MAX];
+extern float LastCursorPositionUpdate[PG_NB_CURSORS_MAX];
+extern float paths_x_forGPU[PG_NB_CURSORS_MAX], paths_y_forGPU[PG_NB_CURSORS_MAX];
+extern float paths_x_forGPU_prev[PG_NB_CURSORS_MAX], paths_y_forGPU_prev[PG_NB_CURSORS_MAX];
+extern float paths_x_forGPU_last_pos_time[PG_NB_CURSORS_MAX];
+extern float paths_x_begin_position[PG_NB_CURSORS_MAX], paths_y_begin_position[PG_NB_CURSORS_MAX];
 extern int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 extern int CurrentCursorStylusvsRubber;
 #define pg_Stylus  1
 #define pg_Rubber -1
-#define PG_OUT_OF_SCREEN_CURSOR -10
+#define PG_OUT_OF_SCREEN_CURSOR -1000
 #define PG_IDLE_CURSOR -5
 // current tablet pen pressure and orientation
 extern float tabletPressureRadius;
@@ -119,6 +124,7 @@ extern float LastDecayTime;
  *  \brief size of the view volume
  */
 // @{
+extern int  *input_argc_stack;
 extern char  **input_message_stack;
 extern int   *input_message_length_stack;
 // @}

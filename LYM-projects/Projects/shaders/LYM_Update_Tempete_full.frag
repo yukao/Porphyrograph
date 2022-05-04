@@ -7,64 +7,64 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 430
 
-float     CAdecay;
-float     trkDecay_0;
-float     trkDecay_1;
-float     trkDecay_2;
-float     trkDecay_3;
-int       currentDrawingTrack;
-int       currentVideoTrack;
-int       currentPhotoTrack;
-int       path_replay_trackNo_1;
-int       path_replay_trackNo_2;
-int       path_replay_trackNo_3;
-int       path_replay_trackNo_4;
-int       path_replay_trackNo_5;
-int       path_replay_trackNo_6;
-int       path_replay_trackNo_7;
-float     noiseScale;
-int       noiseType;
-float     noiseLineScale;
-float     noiseAngleScale;
-float     noiseCenterX;
-float     noiseCenterY;
-float     pixel_acc;
-float     pixel_acc_shiftX;
-float     pixel_acc_shiftY;
-float     pixel_radius;
-int       pixel_mode;
-float     repop_CA;
-float     repop_BG;
-int       activeClipArts;
-float     movieWeight;
-float     movieSobel;
-bool      invertMovie;
-float     video_threshold;
-float     video_threshold_pulse;
-float     video_gamma;
-float     video_gamma_pulse;
-float     photoWeight;
-float     photo_threshold;
-float     photo_threshold_pulse;
-float     photo_gamma;
-float     photo_gamma_pulse;
-float     photo_scale;
-float     photo_offsetX;
-float     photo_offsetY;
-float     mask_scale;
-float     photo_contrast;
-float     mask_contrast;
-float     CAParams1;
-float     CAParams2;
-float     CAParams3;
-float     CAParams4;
-float     CAParams5;
-float     CAParams6;
-float     CAParams7;
-float     CAParams8;
-int       CAstep;
-bool      CAcolorSpread;
-bool      freeze;
+float	 CAdecay;
+float	 trkDecay_0;
+float	 trkDecay_1;
+float	 trkDecay_2;
+float	 trkDecay_3;
+int		currentDrawingTrack;
+int		currentVideoTrack;
+int		currentPhotoTrack;
+int		path_replay_trackNo_1;
+int		path_replay_trackNo_2;
+int		path_replay_trackNo_3;
+int		path_replay_trackNo_4;
+int		path_replay_trackNo_5;
+int		path_replay_trackNo_6;
+int		path_replay_trackNo_7;
+float	 noiseScale;
+int		noiseType;
+float	 noiseLineScale;
+float	 noiseAngleScale;
+float	 noiseCenterX;
+float	 noiseCenterY;
+float	 pixel_acc;
+float	 pixel_acc_shiftX;
+float	 pixel_acc_shiftY;
+float	 pixel_radius;
+int		pixel_mode;
+float	 repop_CA;
+float	 repop_BG;
+int		activeClipArts;
+float	 movieWeight;
+float	 movieSobel;
+bool	  invertMovie;
+float	 video_threshold;
+float	 video_threshold_pulse;
+float	 video_gamma;
+float	 video_gamma_pulse;
+float	 photoWeight;
+float	 photo_threshold;
+float	 photo_threshold_pulse;
+float	 photo_gamma;
+float	 photo_gamma_pulse;
+float	 photo_scale;
+float	 photo_offsetX;
+float	 photo_offsetY;
+float	 mask_scale;
+float	 photo_contrast;
+float	 mask_contrast;
+float	 CAParams1;
+float	 CAParams2;
+float	 CAParams3;
+float	 CAParams4;
+float	 CAParams5;
+float	 CAParams6;
+float	 CAParams7;
+float	 CAParams8;
+int		CAstep;
+bool	  CAcolorSpread;
+bool	  freeze;
 uniform float uniform_Update_scenario_var_data[58];
 
 ////////////////////////////////////////////////////////////////////
@@ -266,14 +266,13 @@ uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;
 
 uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
-uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_repop_ColorCA;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
-uniform vec2 uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres;
+uniform vec4 uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
 #ifdef PG_WITH_CAMERA
@@ -1120,10 +1119,6 @@ void main() {
 
   //////////////////////////
   // variables 
-  // sound pulse
-  vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
-
   // frame number
   frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
@@ -1277,8 +1272,8 @@ void main() {
   float flashCameraTrkWght = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.z;
   float flashCameraTrkThreshold = uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.z;
 #endif
-  float flashPhotoTrkWght = uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres.x;
-  float flashPhotoTrkThreshold = uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres.y;
+  float flashPhotoTrkWght = uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.x;
+  float flashPhotoTrkThreshold = uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.y;
   // no flash Camera for the moment
   // flashCameraTrkWght = .0f;
   
@@ -1382,30 +1377,21 @@ void main() {
 #endif
                vec3(movieWeight) * movieImage;
 
-  // image_gamma image_gamma_pulse
-  vec3 pulsed_gamma = vec3(video_gamma);
-  if(video_gamma_pulse > 0) {
-    pulsed_gamma += video_gamma_pulse * pulse;
-  }
+  // video_gamma
   // Gamma correction on video (mainly blck and white)
-  if(video_gamma != 1 || video_gamma_pulse > 0 ) 
+  if(video_gamma != 1) 
   {
-    videocolor.r = pow( videocolor.r, pulsed_gamma.x);
-    videocolor.g = pow( videocolor.g, pulsed_gamma.y);
-    videocolor.b = pow( videocolor.b, pulsed_gamma.z);
+    videocolor.r = pow( videocolor.r, video_gamma);
+    videocolor.g = pow( videocolor.g, video_gamma);
+    videocolor.b = pow( videocolor.b, video_gamma);
   }
 
-  // image_threshold image_threshold_pulse
-  vec3 pulsed_threshold = vec3(video_threshold);
-  if(video_threshold_pulse > 0) {
-    pulsed_threshold += video_threshold_pulse * pulse;
-  }
-  // Gamma correction on video (mainly blck and white)
-  if(video_threshold > 0 || video_threshold_pulse > 0) 
+  // image_threshold 
+  if(video_threshold > 0) 
   {
-    videocolor.r = (videocolor.r > pulsed_threshold.x? videocolor.r : 0);
-    videocolor.g = (videocolor.g > pulsed_threshold.y? videocolor.g : 0);
-    videocolor.b = (videocolor.b > pulsed_threshold.z? videocolor.b : 0);
+    videocolor.r = (videocolor.r > video_threshold? videocolor.r : 0);
+    videocolor.g = (videocolor.g > video_threshold? videocolor.g : 0);
+    videocolor.b = (videocolor.b > video_threshold? videocolor.b : 0);
   }
 
   // color inversion

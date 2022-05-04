@@ -214,7 +214,7 @@ uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_repop_ColorCA;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
-uniform vec2 uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
+uniform vec4 uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
 #ifdef PG_WITH_CAMERA
@@ -1266,17 +1266,17 @@ void main() {
   // Gamma correction on video (mainly blck and white)
   if(video_gamma != 1) 
   {
-    videocolor.r = pow( videocolor.r, video_gamma.x);
-    videocolor.g = pow( videocolor.g, video_gamma.y);
-    videocolor.b = pow( videocolor.b, video_gamma.z);
+    videocolor.r = pow( videocolor.r, video_gamma);
+    videocolor.g = pow( videocolor.g, video_gamma);
+    videocolor.b = pow( videocolor.b, video_gamma);
   }
 
   // image_threshold 
   if(video_threshold > 0) 
   {
-    videocolor.r = (videocolor.r > video_threshold.x? videocolor.r : 0);
-    videocolor.g = (videocolor.g > video_threshold.y? videocolor.g : 0);
-    videocolor.b = (videocolor.b > video_threshold.z? videocolor.b : 0);
+    videocolor.r = (videocolor.r > video_threshold? videocolor.r : 0);
+    videocolor.g = (videocolor.g > video_threshold? videocolor.g : 0);
+    videocolor.b = (videocolor.b > video_threshold? videocolor.b : 0);
   }
 
   // color inversion

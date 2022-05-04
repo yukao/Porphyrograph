@@ -1,8 +1,7 @@
 /***********************************************************************
 File: LYM_Update_etoiles.frag
 
-LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajim
-a
+LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 *************************************************************************/
 
 #version 430
@@ -16,22 +15,10 @@ a
 ////////////////////////////////////////////////////////////////////
 
 const float PI = 3.1415926535897932384626433832795;
-/*
-// Gaussian blur
-const float weights_GaussianBlur[8][10] = {
-  { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
-  { 0.160943513523684, 0.0976171754339892, 0.0217813359878234, 0.00178792093458716, 0, 0, 0, 0, 0, 0, },
-  { 0.0906706626819157, 0.0684418069308968, 0.0294364543567006, 0.00721371337812935, 0.00100726007785354, 0, 0, 0, 0, 0, },
-  { 0.0578976290770481, 0.0483601648793973, 0.0281818015679868, 0.0114578654743735, 0.00325006967689874, 0.000643184560989364, 0, 0, 0, 0, },
-  { 0.0402440592208142, 0.0355152576097996, 0.0244092557887147, 0.0130653331225529, 0.0054464411532399, 0.00176820055872139, 0.000447071114568843, 0, 0, 0, },
-  { 0.0296130974533233, 0.0270146688793152, 0.0205091228908708, 0.0129576472196559, 0.00681297573282909, 0.00298111793949366, 0.0010855581688134, 0.000328971797095601, 0, 0, },
-  { 0.022659246945633, 0.0211207405530146, 0.0171040969458123, 0.0120342352127056, 0.00735638042938192, 0.00390694415457561, 0.00180275855491957, 0.000722711999073055, 0.000251721495878215, 0, },
-  { 0.0178892106047989, 0.0169224681628769, 0.0143245600399185, 0.0108503547098669, 0.00735447434710435, 0.00446071417758884, 0.00242104138407988, 0.00117583149116467, 0.000511014259566371, 0.000198731178680599, },
-};
-*/
 
 #define SPLAT_PARTICLES
 #define PG_BEZIER_PATHS
+#define PG_CAMERA_ACTIVE
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
@@ -128,7 +115,7 @@ vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
 
 /////////////////////////////////////
 // PG_NB_TRACKS TRACK COLOR FBO OUTPUT
- vec4 out_track_FBO[PG_NB_TRACKS];
+vec4 out_track_FBO[PG_NB_TRACKS];
 
 ////////////////////////////////////
 // PARTICLE UPDATE
@@ -1291,24 +1278,6 @@ void main() {
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
-  /*
-    // BLUR
-    if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
-      int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
-      vec3 valPixel = vec3(0);
-      float totWeight = 0;
-      for( int i = -blurRad ; i <= blurRad ; i++ ) {
-        for( int j = -blurRad ; j <= blurRad ; j++ ) {
-          int dist = min(int(length(vec2(i,j))),10);
-          float locWeight = weights_GaussianBlur[blurRad - 2][dist];
-          valPixel += texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                      * locWeight;
-          totWeight += locWeight;
-        }
-      }
-      out_track_FBO[1] = vec4(valPixel/totWeight, out_track_FBO[1].a);
-    }
-    */
   }
 #endif
 
@@ -1316,29 +1285,10 @@ void main() {
 #if PG_NB_TRACKS >= 3
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
-  // BLUR
-    /*
-  if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
-    int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
-    vec3 valPixel = vec3(0);
-    float totWeight = 0;
-    for( int i = -blurRad ; i <= blurRad ; i++ ) {
-      for( int j = -blurRad ; j <= blurRad ; j++ ) {
-        int dist = min(int(length(vec2(i,j))),10);
-        float locWeight = weights_GaussianBlur[blurRad - 2][dist];
-        valPixel += texture( uniform_Update_texture_fs_Trk2 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                    * locWeight;
-        totWeight += locWeight;
-      }
-    }
-    out_track_FBO[2] = vec4(valPixel/totWeight, out_track_FBO[1].a);
-  }
-  */
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
     = texture( uniform_Update_texture_fs_Trk3 , decalCoords );
-  // BLUR
 #endif
 
   // if freeze, just keep values as they are
@@ -1428,7 +1378,7 @@ void main() {
  */
   cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
-               * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+               * cameraWH + vec2(max(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.x,0),max(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.y,0));
 #endif
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
@@ -1437,7 +1387,7 @@ void main() {
   // image reading
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   // gamma correction
-  // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
+  cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
   if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
@@ -1474,6 +1424,10 @@ void main() {
       sobelY = mix( samplerSobel , sobelY , cameraSobel );
 
       cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+  }
+  // color inversion
+  if( invertCamera ) {
+      cameraImage = vec3(1) - cameraImage;
   }
 #endif
   // Sobel on movie

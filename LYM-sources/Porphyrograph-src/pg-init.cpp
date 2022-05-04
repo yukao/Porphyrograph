@@ -33,6 +33,9 @@ GLfloat pg_orthoWindowProjMatrix[16];
 GLfloat doubleProjMatrix[16];
 GLfloat pg_identityViewMatrix[16];
 GLfloat pg_identityModelMatrix[16];
+#if defined (PIERRES)
+GLfloat pg_homographyForTexture[9];
+#endif
 #ifdef PG_SENSORS
 GLfloat modelMatrixSensor[16];
 #endif
@@ -98,9 +101,9 @@ float quadSensor_texCoords[] = {
 };
 #endif
 
-// +++++++++++++++++++++++ Metawear boards ++++++++++++++++++++
+// +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
 #ifdef PG_METAWEAR
-struct metawear_board_data pg_mw_boards[PG_MW_NB_MAX_BOARDS];
+struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
 #endif
 
 #ifdef PG_MESHES
@@ -596,8 +599,11 @@ void InterfaceInitializations(void) {
 	}
 	// SVG GPU INTERFACE VARIABLE INITIALIZATION
 	for (int indImage = 0; indImage < pg_nb_ClipArt; indImage++) {
-		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (activeClipArts & (1 << (indImage - 1)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, ((activeClipArts == -1) || (activeClipArts & (1 << (indImage - 1))))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 	}
+	// interpolation duration initial value (0.f)
+	sprintf(AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
+	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #ifdef PG_MESHES
 	// MESH INTERFACE VARIABLE INITIALIZATION
 	for (int indImage = 0; indImage < pg_nb_Mesh_files; indImage++) {
@@ -1368,16 +1374,12 @@ void MeshInitialization(void) {
 #endif
 
 #ifdef PG_METAWEAR
-void MetawearBoardInitialization() {
-	for (int imwb = 0; imwb < PG_MW_NB_MAX_BOARDS; imwb++) {
+void MetawearSensorInitialization() {
+	for (int ind_sensor = 0; ind_sensor < PG_MW_NB_MAX_SENSORS; ind_sensor++) {
 		for (int i = 0; i < 3; i++) {
-			pg_mw_boards[imwb].mw_linAcc[i] = 0;
-			pg_mw_boards[imwb].mw_euler[i] = 0;
-			pg_mw_boards[imwb].mss_pos[i] = 0;
+			pg_mw_sensors[ind_sensor].mw_mss_pos[i] = 0;
 		}
-		pg_mw_boards[imwb].mw_linAcc_update = false;
-		pg_mw_boards[imwb].mw_euler_update = false;
-		pg_mw_boards[imwb].mss_pos_update = false;
+		pg_mw_sensors[ind_sensor].mw_mss_pos_update = false;
 	}
 }
 #endif
@@ -1473,13 +1475,14 @@ bool pg_initFBO(void) {
 		pg_FBO_Update_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(2 * PG_FBO_UPDATE_NBATTACHTS, pg_FBO_Update_texID);
+	printf("FBO Update size %d %d attachments %d\n", leftWindowWidth, window_height, PG_FBO_UPDATE_NBATTACHTS);
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Update[indFB]);
 		pg_initFBOTextures(pg_FBO_Update_texID + indFB * PG_FBO_UPDATE_NBATTACHTS, 
 			PG_FBO_UPDATE_NBATTACHTS, false);
 		glDrawBuffers(PG_FBO_UPDATE_NBATTACHTS, drawBuffers);
 	}
-	//printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
+	// printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
 	printOglError(341);
 
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
@@ -1490,6 +1493,7 @@ bool pg_initFBO(void) {
 		pg_FBO_ParticleAnimation_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS, pg_FBO_ParticleAnimation_texID);
+	printf("FBO Particle animation size %d %d attachments %d\n", leftWindowWidth, window_height, PG_FBO_PARTICLEANIMATION_NBATTACHTS);
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_ParticleAnimation[indFB]);
 		pg_initFBOTextures(pg_FBO_ParticleAnimation_texID + indFB * PG_FBO_PARTICLEANIMATION_NBATTACHTS, 
@@ -1504,6 +1508,7 @@ bool pg_initFBO(void) {
 	glGenTextures(1, &pg_FBO_ParticleRendering_texID);
 	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_ParticleRendering);
 	// pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1, false);
+	printf("FBO Particle rendering size %d %d\n", leftWindowWidth, window_height);
 	pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1, true);
 	glDrawBuffers(1, drawBuffers);
 	printOglError(344);
@@ -1516,6 +1521,7 @@ bool pg_initFBO(void) {
 		pg_FBO_Mixing_capturedFB_prec_texID[indFB] = 0;
 	}
 	glGenTextures(2, pg_FBO_Mixing_capturedFB_prec_texID);
+	printf("FBO Mixing animation size %d %d attachments %d\n", leftWindowWidth, window_height, 2);
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec[indFB]);
 		pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID + indFB, 1, false);
@@ -1528,6 +1534,7 @@ bool pg_initFBO(void) {
 	pg_FBO_Master_capturedFB_prec_texID = 0;
 	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
 	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec);
+	printf("FBO Master size %d %d attachments %d\n", leftWindowWidth, window_height, 1);
 	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false);
 	glDrawBuffers(1, drawBuffers);
 #endif
@@ -1569,19 +1576,22 @@ void pg_initRenderingMatrices(void) {
 	float n = -1.0f;
 	float f = 1.0f;
 	GLfloat mat[] = {
-		(GLfloat)(2.0 / (r - l)), 0.0, 0.0, 0.0,
-		0.0, (GLfloat)(2.0 / (t - b)), 0.0, 0.0,
-		0.0, 0.0, (GLfloat)(2.0 / (f - n)), 0.0,
-		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0 };
+		(GLfloat)(2.0f / (r - l)), 0.0, 0.0, 0.0,
+		0.0, (GLfloat)(2.0f / (t - b)), 0.0, 0.0,
+		0.0, 0.0, (GLfloat)(2.0f / (f - n)), 0.0,
+		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0f };
 	memcpy((char *)pg_orthoWindowProjMatrix, mat, 16 * sizeof(float));
 	// printf("Orthographic projection l %.2f r %.2f b %.2f t %.2f n %.2f f %.2f\n" , l,r,b,t,n,f);
+#if defined (PIERRES)
+	memcpy((char*)pg_homographyForTexture, mat, 9 * sizeof(float));
+#endif
 
 	r = (float)doubleWindowWidth;
 	GLfloat mat2[] = {
-		(GLfloat)(2.0 / (r - l)), 0.0, 0.0, 0.0,
-		0.0, (GLfloat)(2.0 / (t - b)), 0.0, 0.0,
-		0.0, 0.0, (GLfloat)(2.0 / (f - n)), 0.0,
-		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0 };
+		(GLfloat)(2.0f / (r - l)), 0.0, 0.0, 0.0,
+		0.0, (GLfloat)(2.0f / (t - b)), 0.0, 0.0,
+		0.0, 0.0, (GLfloat)(2.0f / (f - n)), 0.0,
+		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0f };
 	memcpy((char *)doubleProjMatrix, mat2, 16 * sizeof(float));
 	// printf("Double width orthographic projection l %.2f r %.2f b %.2f t %.2f n %.2f f %.2f\n" , l,r,b,t,n,f);
 }

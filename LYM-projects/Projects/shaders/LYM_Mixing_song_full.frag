@@ -7,21 +7,27 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-#define PG_NB_TRACKS 4
+#define PG_NB_TRACKS 3
 #define ATELIERS_PORTATIFS
 
-float     echo;
-float     echoNeg;
-float     CAMixingWeight;
-float     PartMixingWeight;
-uniform vec4 uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight;
-float     trackMixingWeight_0;
-float     trackMixingWeight_1;
-float     trackMixingWeight_2;
-float     trackMixingWeight_3;
-uniform vec4 uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3;
+float	 CAMixingWeight;
+float	 PartMixingWeight;
+float	 trackMixingWeight_0;
+float	 trackMixingWeight_1;
+float	 trackMixingWeight_2;
+float	 trackMixingWeight_3;
+float	 echo;
+float	 echoNeg;
+uniform float uniform_Mixing_scenario_var_data[8];
 
 // Main shader.
+
+////////////////////////////////////////////////////////////////////
+// MACROS
+#define graylevel(col) ((col.r+col.g+col.b)/3.0)
+#define maxCol(col) (max(col.r,max(col.g,col.b)))
+#define minCol(col) (min(col.r,min(col.g,col.b)))
+#define delta(gray) (gray>0.5?1:0)
 
 // obtained from Vertex Program
 in vec2 decalCoords;  // coord text
@@ -29,7 +35,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec3 uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
+uniform vec3 uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -57,16 +63,16 @@ layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  echo = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[0];
-  echoNeg = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[1];
-  CAMixingWeight = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[2];
-  PartMixingWeight = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[3];
-  trackMixingWeight_0 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[0];
-  trackMixingWeight_1 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[1];
-  trackMixingWeight_2 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[2];
-  trackMixingWeight_3 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[3];
+  CAMixingWeight = uniform_Mixing_scenario_var_data[0];
+  PartMixingWeight = uniform_Mixing_scenario_var_data[1];
+  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[2];
+  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[3];
+  trackMixingWeight_2 = uniform_Mixing_scenario_var_data[4];
+  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[5];
+  echo = uniform_Mixing_scenario_var_data[6];
+  echoNeg = uniform_Mixing_scenario_var_data[7];
 
-  float height = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.y;
+  float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 
 
   ////////////////////////////////////////////////////////////////////
@@ -77,10 +83,19 @@ void main() {
   }
 
   // brigher CA at the beginning of a flash
-  float flashCameraCoef = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.z;
-  if( flashCameraCoef > 0 ) { // flash video
+  float flashCameraCoef = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.y;
+  float flashPhotoCoef = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.z;
+  if( flashCameraCoef > 0 && flashCameraCoef > flashPhotoCoef) { // flash camera
     if(flashCameraCoef < 0.3) {
       CAMixingWeight += (1.0 - CAMixingWeight) * flashCameraCoef / 0.3;          
+    }
+    else {
+      CAMixingWeight = 1.0;          
+    }
+  }
+  if( flashPhotoCoef > 0 && flashPhotoCoef > flashCameraCoef ) { // flash photo
+    if(flashPhotoCoef < 0.3) {
+      CAMixingWeight += (1.0 - CAMixingWeight) * flashPhotoCoef / 0.3;          
     }
     else {
       CAMixingWeight = 1.0;          
@@ -123,10 +138,21 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // accumulation: mix of current layers and echo
   vec4 previous_snapshot_color = texture(uniform_Mixing_texture_fs_Render_prec, decalCoords);
-
-  if( echo + echoNeg > 0.0 ) {
+/*  
+    // brightness echo
+    if( echo + echoNeg > 0.0 ) {
     combined_color = clamp( combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb , 
-		                        0.0 , 1.0 );
+                            0.0 , 1.0 );
+  }
+*/
+  // saturation echo
+  // a new version of echo that only saturates the color and does not change brightness
+  if( echo + echoNeg > 0.0 ) {
+    vec3 echoedColor = combined_color  * (1.0 - echoNeg) + echo * previous_snapshot_color.rgb;
+    float maxEchoedColor = maxCol( echoedColor );
+    if( maxEchoedColor <= 1.0 ) {
+      combined_color = clamp( echoedColor , 0.0 , 1.0 );
+    }
   }
      
   ////////////////////////////////////

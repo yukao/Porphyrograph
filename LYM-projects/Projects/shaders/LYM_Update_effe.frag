@@ -1873,7 +1873,7 @@ void main() {
   float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
                              (videocolor.g)*(videocolor.g) * .587 +
                              (videocolor.b)*(videocolor.b) * .114 ) ;
-    videocolor = clamp( powerColor 
+    videocolor = clamp( vec3(powerColor) 
       + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
 
   ///////////////////////////////////////////////////

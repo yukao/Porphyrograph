@@ -326,6 +326,18 @@ static void pg_Display_One_SVG_ClipArt(pg_ClipArt_Colors_Types color, int path_l
 		case ClipArt_green:
 			glColor3ub(0, 255, 0);
 			break;
+		case ClipArt_blue:
+			glColor3ub(0, 0, 255);
+			break;
+		case ClipArt_yellow:
+			glColor3ub(255, 255, 0);
+			break;
+		case ClipArt_cyan:
+			glColor3ub(0, 255, 255);
+			break;
+		case ClipArt_magenta:
+			glColor3ub(255, 0, 255);
+			break;
 		}
 		glStencilFillPathNV(SVG_path_baseID + path_layer, GL_COUNT_UP_NV, 0x1F);
 		glCoverFillPathNV(SVG_path_baseID + path_layer, GL_BOUNDING_BOX_NV);
@@ -346,6 +358,7 @@ static void pg_Display_One_SVG_ClipArt(pg_ClipArt_Colors_Types color, int path_l
 //////////////////////////////////////////////////
 // RENDERING GPU SVG IF SOME LAYERS ARE ACTIVE
 void pg_Display_All_SVG_ClipArt(int activeFiles) {
+	//printf("active cliparts: %d\n", activeFiles);
 	if (activeFiles != 0) {
 		glUseProgram(shader_programme[pg_ClipArt]);
 		//glDisable(GL_DEPTH_TEST);
@@ -362,8 +375,13 @@ void pg_Display_All_SVG_ClipArt(int activeFiles) {
 		glMatrixPushEXT(GL_PROJECTION); {
 			glMatrixLoadIdentityEXT(GL_PROJECTION);
 			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
-			for (int indClipArt = 0; indClipArt < std::min(pg_nb_ClipArt, 32); indClipArt++) {
-				if (activeFiles & (1 << indClipArt)) {
+
+			int maxNbDisplayedClipArts = std::min(pg_nb_ClipArt, 32);
+			if (activeFiles == -1) { // if activeClipArts is equal to -1: all clip arts are visible
+				maxNbDisplayedClipArts = pg_nb_ClipArt;
+			}
+			for (int indClipArt = 0; indClipArt < maxNbDisplayedClipArts ; indClipArt++) {
+				if ((activeFiles == -1) || (activeFiles & (1 << indClipArt))) {
 					//printf("active clipart display %d\n", indClipArt);
 					glMatrixPushEXT(GL_MODELVIEW); {
 						glMatrixLoadIdentityEXT(GL_MODELVIEW);
@@ -389,7 +407,7 @@ void pg_Display_All_SVG_ClipArt(int activeFiles) {
 	printOglError(5257);
 }
 
-#if defined (ETOILES)
+#if defined (ETOILES_TEASER)
 //////////////////////////////////////////////////
 // RENDERING OF MESSAGE THROUGH SVG GPU CHARACTERS
 float pg_Translate_SVG_Text(int indDisplayText) {

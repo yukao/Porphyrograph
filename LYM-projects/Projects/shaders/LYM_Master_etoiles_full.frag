@@ -12,16 +12,16 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 */// #define WHITE_CIRCLE
 // #define MIRRORED_PROJECTION
 
-bool      mute_second_screen;
-bool      invertAllLayers;
-int       cursorSize;
-float     master;
-float     CAMasterWeight;
-float     PartMasterWeight;
-float     trackMasterWeight_0;
-float     trackMasterWeight_1;
-float     trackMasterWeight_2;
-bool      interfaceOnScreen;
+bool	  mute_second_screen;
+bool	  invertAllLayers;
+int		cursorSize;
+float	 master;
+float	 CAMasterWeight;
+float	 PartMasterWeight;
+float	 trackMasterWeight_0;
+float	 trackMasterWeight_1;
+float	 trackMasterWeight_2;
+bool	  interfaceOnScreen;
 uniform float uniform_Master_scenario_var_data[10];
 
 // Main shader.
@@ -53,7 +53,7 @@ uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
 /////////////////////////////////////
@@ -102,7 +102,7 @@ void main() {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
     else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.rgb, 1);
     }
     else if(decalCoords.x < 300) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
@@ -170,6 +170,7 @@ void main() {
 
   // possible double cursor
   float coordX = decalCoords.x;
+  float coordY = decalCoords.y;
 
   // comment for single cursor
 /*  if( coordX > width) {
@@ -193,23 +194,23 @@ void main() {
   }
 
   // white flash
-  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
+/*  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
   // transition invvert début frozen clear
   if(timeFromStart > 1020 && timeFromStart < 1024) {
     outColor0.rgb = clamp(outColor0.rgb + vec3((2 - abs(timeFromStart - 1022))/2.0), 0.0, 1.0);
   }
-  // pendant frozen clear à 17'19" du début et à 19" debut frozen clea
+*/  // pendant frozen clear à 17'19" du début et à 19" debut frozen clea
   // événement musical
   /*
   else if(timeFromStart > 1035 && timeFromStart < 1043) {
     outColor0.rgb = clamp(outColor0.rgb + vec3(4 - abs(timeFromStart - 1039)), 0.0, 1.0);
   }
   */
-  // transition invvert début ragnarok
+/*  // transition invvert début ragnarok
   else if(timeFromStart > 1436 && timeFromStart < 1444) {
     outColor0.rgb = clamp(outColor0.rgb + vec3((4 - abs(timeFromStart - 1440))/4.0), 0.0, 1.0);
   }
-
+*/
   // central circle
 /*  int  radiusCircle;
   if( coordX > width) {
@@ -228,10 +229,23 @@ void main() {
     outColor0.rgb *= ((440 - radiusCircle)/7.0);
   }
 */
+  if( coordX > width -5) {
+    outColor0.rgb = vec3(0);
+  }
+  else if( coordX < 5) {
+    outColor0.rgb = vec3(0);  
+  }
+  if( coordY > height -5) {
+    outColor0.rgb = vec3(0);
+  }
+  else if( coordY < 5) {
+    outColor0.rgb = vec3(0);
+  }
+
   // cursor
-  if( mouse_x < width && mouse_x > 0 
-      && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
-      < cursorSize ) { 
+  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+      && mouse_x < width && mouse_x > 0 
+      && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 

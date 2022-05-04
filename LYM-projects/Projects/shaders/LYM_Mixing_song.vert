@@ -1,7 +1,7 @@
 /***********************************************************************
-File: song/shaders/LYM_Mixing_song-VP.glsl
+File: effe/shaders/LYM_Composition_effe-VP.glsl
 
-LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
+LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 

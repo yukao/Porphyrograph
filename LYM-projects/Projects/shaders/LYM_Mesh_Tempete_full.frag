@@ -29,7 +29,7 @@ out vec4 outColor0;
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
-uniform vec4 uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText;
+uniform vec4 uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene;
 uniform vec4 uniform_Mesh_fs_4fv_textureFrontier;
 uniform vec4 uniform_Mesh_fs_4fv_textureFrontier_width;
 uniform vec4 uniform_Mesh_fs_4fv_textureScaleTransl;
@@ -78,7 +78,7 @@ void main() {
   // outputs a small point for calibration of the position of the videoprojector 
   // after moving from ground to wall position
   vec2 uv = gl_FragCoord.xy;
-  if(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText.z == 1
+  if(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene.z == 1
     && uv.x > 1655 && uv.x <= 1660 && uv.y > 1075) {
     // pointeur pour la position du VP
     outColor0 = vec4(1.0,1.0,1.0,1.0);
@@ -88,7 +88,7 @@ void main() {
 
   // outputs the center of the screen for calibration purpose
   // of the image so that the points are visible
-  if( uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText.x > 0
+  if( uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene.x > 0
     && abs(glpositionOut.x/glpositionOut.w) < 0.02 && glpositionOut.y/glpositionOut.w < -0.98 ) {
     outColor0 = vec4(1.0,1.0,0.0,1.0);
     // outColor0.rgb  *= transparency;
@@ -96,7 +96,7 @@ void main() {
   }
 
   // line display
-  if(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText.y == 0) {
+  if(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene.y == 0) {
     //outColor0 = vec4( 0.1 * vec3(gray) + 0.9 * meshColor.rgb, 1);
       outColor0 = meshColor;
   }
@@ -107,7 +107,7 @@ void main() {
 
   // uniform dark blue background
   /*
-  if( uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText.z > 0 ) {
+  if( uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene.z > 0 ) {
     // left is green
     if( true ) {
       outColor0 = vec4(0.0,0.2,0.0,1.0);

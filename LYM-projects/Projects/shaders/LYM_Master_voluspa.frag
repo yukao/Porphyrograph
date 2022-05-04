@@ -8,9 +8,10 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 #define PG_NB_TRACKS 3
-/*#define ATELIERS_PORTATIFS
-*/// #define WHITE_CIRCLE
-// #define MIRRORED_PROJECTION
+// #define WHITE_CIRCLE
+// #define FULL_VERSION
+//#define MIRRORED_PROJECTION
+// #define ROTATED_PROJECTION
 
 #include_declarations
 
@@ -34,6 +35,18 @@ layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-c
 #if PG_NB_TRACKS >= 4
 layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 6)
 #endif
+#if PG_NB_TRACKS == 1
+layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
+#if PG_NB_TRACKS == 2
+layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
+#if PG_NB_TRACKS == 3
+layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
+#if PG_NB_TRACKS == 4
+layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_Mask;  // mask for master output
+#endif
 
 /////////////////////////////////////
 // UNIFORMS
@@ -43,7 +56,7 @@ uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
+uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
 /////////////////////////////////////
@@ -59,13 +72,24 @@ void main() {
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
 
+#ifdef ROTATED_PROJECTION
+  float old_coordX = coords.x;
+  coords.x = coords.y;
+  coords.y = width - old_coordX;
+  coords.y -= (width - height)/2;
+#endif
+  vec2 initialCoords = coords;
+  vec2 centerCoords = vec2(width/2, height/2);
+
+  int currentScene = int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w);
+
   // vertical mirror
   // TO UNCOMMENT FOR CHATEAU  
   //    coords.y = height - coords.y;
 #ifdef MIRRORED_PROJECTION
   // ST OUEN horizontal mirror
-  // coords.x = width - coords.x;
-  coords.y = height - coords.y;
+  coords.x = width - coords.x;
+  //coords.y = height - coords.y;
 #endif
   // double mirror
   //   coords.y = height - coords.y;
@@ -83,7 +107,7 @@ void main() {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
     else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.rgb, 1);
     }
     else if(decalCoords.x < 300) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
@@ -163,6 +187,7 @@ void main() {
 #ifdef MIRRORED_PROJECTION
 // ST OUEN horizontal mirror
  // coordX = width - coordX;
+  mouse_x = width - mouse_x;
 #endif
 // double mirror
 //   coords.y = height - coords.y;
@@ -176,9 +201,11 @@ void main() {
   // white flash
   float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
   // transition invvert début frozen clear
+#ifdef FULL_VERSION
   if(timeFromStart > 1020 && timeFromStart < 1024) {
     outColor0.rgb = clamp(outColor0.rgb + vec3((2 - abs(timeFromStart - 1022))/2.0), 0.0, 1.0);
   }
+#endif
   // pendant frozen clear à 17'19" du début et à 19" debut frozen clea
   // événement musical
   /*
@@ -187,34 +214,71 @@ void main() {
   }
   */
   // transition invvert début ragnarok
+#ifdef FULL_VERSION
   else if(timeFromStart > 1436 && timeFromStart < 1444) {
     outColor0.rgb = clamp(outColor0.rgb + vec3((4 - abs(timeFromStart - 1440))/4.0), 0.0, 1.0);
   }
-
+#else
+  if(timeFromStart > 596 && timeFromStart < 604) {
+    outColor0.rgb = clamp(outColor0.rgb + vec3((4 - abs(timeFromStart - 600))/4.0), 0.0, 1.0);
+  }
+#endif
+  /*
   // central circle
   int  radiusCircle;
+#ifndef ROTATED_PROJECTION
   if( coordX > width) {
     coordX -= width;
   }
   radiusCircle = int(length(vec2(coordX - 700 , coords.y - 525)));
-  if( radiusCircle > 440 ) {
+#else
+  if( coords.y > width) {
+    coords.y -= width;
+  }
+  radiusCircle = int(length(vec2(coords.x - 525 , coords.y - 525)));
+#endif
+
+  if( radiusCircle > 525 ) {
     outColor0.rgb = vec3(0);
   }
-  #ifdef WHITE_CIRCLE
-   else if( radiusCircle == 440 ) {
+#ifdef WHITE_CIRCLE
+   else if( radiusCircle <= 518 && radiusCircle >= 513 ) {
     outColor0.rgb = vec3(1);
   }
-  #endif
-  else if( radiusCircle > 433 ) {
-    outColor0.rgb *= ((440 - radiusCircle)/7.0);
+#endif
+  else if( radiusCircle > 510 ) {
+    outColor0.rgb *= ((525 - radiusCircle)/15.0);
   }
+  */
+
+  ////////////////////////////////////////////////////////////////////
+  // image mask
+  vec2 ratioed_scale = vec2(master_mask_scale, master_mask_scale * master_mask_scale_ratio);
+  vec2 coordsWRTcenter = (initialCoords - centerCoords) / ratioed_scale;
+  vec4 maskColor;
+/*  if(currentScene >= 0) {
+*/    maskColor = texture(uniform_Master_texture_fs_Mask, 
+          coordsWRTcenter + (centerCoords + vec2(master_mask_offsetX, master_mask_offsetY) / ratioed_scale));
+    outColor0.rgb *= maskColor.r;
+/*  }
+*/
 
   // cursor
-  if( mouse_x < width && mouse_x > 0 
+#ifndef ROTATED_PROJECTION
+  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+      && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
+#else
+  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+      && mouse_x < width && mouse_x > 0 
+      && length(vec2(coords.x - mouse_x , height - coords.y - mouse_y)) 
+      < cursorSize ) { 
+    outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
+  }
+#endif
 
   outColor0.rgb *= master;
 }

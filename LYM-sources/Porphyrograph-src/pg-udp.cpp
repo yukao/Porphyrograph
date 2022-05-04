@@ -286,6 +286,8 @@ void pg_IPClient::InitClient(void) {
 		lo_client = lo_address_new(Remote_server_IP.c_str(), Remote_server_port_string);
 		printf("Network client '%s': sending OSC to '%s' on port %d\n",
 			id.c_str(), Remote_server_IP.c_str(), Remote_server_port);
+		printf("Sending OSC packets to '%s'\n",
+			lo_address_get_url(lo_client));
 	}
 
 	// system initializing
@@ -313,7 +315,9 @@ void pg_IPClient::sendIPmessages(void) {
 		return;
 	}
 
-	while (current_depth_output_stack >= 0) {
+	int nb_sent_messages = 0;
+	// messages are sent by packets to avoir overflowing the client with more messages than it can process at a time
+	while (current_depth_output_stack >= 0 || ++nb_sent_messages > 50) {
 		// printf( "sendUDPmessage %d\n" , current_depth_output_stack );
 
 		// checks whether last message was received
@@ -330,7 +334,9 @@ void pg_IPClient::sendIPmessages(void) {
 				> maximal_IP_message_delay) {
 
 
-			// printf( "send message [%s]\n" , output_message_stack[ 0 ]);
+			if (IP_message_trace) {
+				printf("send message [%s, %s]\n", output_message_stack[0], output_pattern_stack[0]);
+			}
 
 			// copies the earliest message
 			int     indLocalCommandLine = 0;
@@ -342,16 +348,56 @@ void pg_IPClient::sendIPmessages(void) {
 			}
 
 			// OSC bundle
-			else if (send_format == OSC && *(output_message_stack[0]) != '/') {
-				// sends bundle through OSC
-				// message that does not begin by an OSC address
-				strcpy(Output_Message_OSC, "#bundle");
-				for (int ind = int(strlen("#bundle")); ind < 20 - 1; ind++) {
-					Output_Message_OSC[ind] = 0;
+			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
+				// splits the argument separated by space chars
+				std::vector<std::string> message_arguments;
+				message_arguments = split(String(output_message_stack[0]), ' ');
+
+				// sends OSC message through OSC bundle
+				// message that begins by an OSC address #/aaaa/aaa 
+				// whether or not the pattern is provided with the command
+				int pattern_size = int(strlen(output_pattern_stack[0]));
+
+				lo_bundle osc_bundle = lo_bundle_new(LO_TT_IMMEDIATE);
+				lo_message message_osc = lo_message_new();
+
+				if (pattern_size == message_arguments.size() - 1) {
+					// single argument
+					if (pattern_size == 1) {
+						switch (*(output_pattern_stack[0])) {
+						case 's':
+							lo_message_add_string(message_osc, message_arguments[1].c_str());
+							lo_bundle_add_message(osc_bundle, message_arguments[0].c_str() + 1, message_osc);
+							if (lo_send_bundle(lo_client, osc_bundle) == -1) {
+								sprintf(ErrorStr, "Error: OSC error %d (s): %s  for message %s\n", lo_address_errno(lo_client),
+									lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
+							}
+							break;
+						case 'i':
+							lo_message_add_int32(message_osc, stoi(message_arguments[1]));
+							lo_bundle_add_message(osc_bundle, message_arguments[0].c_str() + 1, message_osc);
+							if (lo_send_bundle(lo_client, osc_bundle) == -1) {
+								sprintf(ErrorStr, "Error: OSC error %d (i): %s  for message %s\n", lo_address_errno(lo_client),
+									lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
+							}
+							break;
+						case 'f':
+							lo_message_add_float(message_osc, stof(message_arguments[1]));
+							lo_bundle_add_message(osc_bundle, message_arguments[0].c_str() + 1, message_osc);
+							//printf("send float %.2f address %s\n", stof(message_arguments[1]), message_arguments[0].c_str() + 1);
+							if (lo_send_bundle(lo_client, osc_bundle) == -1) {
+								sprintf(ErrorStr, "Error: OSC error %d (f): %s  for message %s\n", lo_address_errno(lo_client),
+									lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
+							}
+							break;
+						default:
+							sprintf(ErrorStr, "Error: unknown OSC pattern element %c!", *(output_pattern_stack[0])); ReportError(ErrorStr);
+							break;
+						}
+					}
+					lo_bundle_free(osc_bundle);
+					lo_message_free(message_osc);
 				}
-				strncpy(Output_Message_OSC + 20, output_message_stack[0],
-					2 * max_network_message_length - 21);
-				Output_Message_OSC[20 - 1] = (char)strlen(Output_Message_OSC + 20);
 			}
 
 			// OSC message
@@ -372,13 +418,13 @@ void pg_IPClient::sendIPmessages(void) {
 							switch (*(output_pattern_stack[0])) {
 							case 's':
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], message_arguments[1].c_str()) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+									sprintf(ErrorStr, "Error: OSC error %d (s): %s  for message %s\n", lo_address_errno(lo_client),
 										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 								}
 								break;
 							case 'i':
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stoi(message_arguments[1])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+									sprintf(ErrorStr, "Error: OSC error %d (i): %s  for message %s\n", lo_address_errno(lo_client),
 										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 								}
 								break;
@@ -387,7 +433,7 @@ void pg_IPClient::sendIPmessages(void) {
 									printf("Message integer string %s value %.2f\n", message_arguments[0].c_str(), stof(message_arguments[1]));
 								}
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stof(message_arguments[1])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+									sprintf(ErrorStr, "Error: OSC error %d (f): %s  for message %s\n", lo_address_errno(lo_client),
 										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 								}
 								break;
@@ -400,6 +446,13 @@ void pg_IPClient::sendIPmessages(void) {
 							if (strcmp(output_pattern_stack[0], "ff") == 0) {
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
 									stof(message_arguments[1]), stof(message_arguments[2])) == -1) {
+									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+								}
+							}
+							else if (strcmp(output_pattern_stack[0], "sff") == 0) {
+								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
+									message_arguments[1].c_str(), stof(message_arguments[2]), stof(message_arguments[3])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
 										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
 								}
@@ -572,7 +625,7 @@ void pg_IPClient::sendIPmessages(void) {
 							}
 							else {
 								// error: does not process message of more than one argument for the moment
-								sprintf(ErrorStr, "Error: OSC output message with more thant one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[0], pattern_size); ReportError(ErrorStr); throw(100);
+								sprintf(ErrorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[0], pattern_size); ReportError(ErrorStr); throw(100);
 							}
 						}
 					}
@@ -625,9 +678,9 @@ void pg_IPClient::sendIPmessages(void) {
 				// MaxOutput_Message_String[ length + (12 - length % 4) - 1] = 0;
 			}
 			// OSC bundle
-			else if (send_format == OSC && *(output_message_stack[0]) != '/') {
-				// the OSC bundle message is currently not sent through the OSC library liblo
-				sprintf(ErrorStr, "Error: udp client: OSC bundle emission not processed [%s]!", output_message_stack[0]); ReportError(ErrorStr);
+			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
+				// the message has been sent through the OSC library liblo
+				//sprintf(ErrorStr, "Error: udp client: OSC bundle emission not processed [%s]!", output_message_stack[0]); ReportError(ErrorStr);
 				continue;
 				/*
 				length = int(20 + strlen(Output_Message_OSC + 20));
@@ -744,7 +797,8 @@ void pg_IPClient::storeIP_output_message(char *commandLine,
 		}
 	}
 	else {
-		sprintf(ErrorStr, "Error: UDP output message stack overflow %d %d (%s)!", current_depth_output_stack, depth_output_stack, commandLine); ReportError(ErrorStr);
+		sprintf(ErrorStr, "Error: UDP output message stack overflow %d %d (%s) to IP %s:%d!", 
+			current_depth_output_stack, depth_output_stack, commandLine, Remote_server_IP.c_str(), Remote_server_port); ReportError(ErrorStr);
 	}
 }
 
@@ -773,6 +827,7 @@ pg_IPServer::pg_IPServer( void ) {
 
   // server stack: stores received input messages
   input_message_stack = NULL;
+  input_argc_stack = NULL;
   input_message_length_stack = NULL;
   depth_input_stack = 30;
   current_depth_input_stack = 0;
@@ -797,39 +852,38 @@ pg_IPServer::pg_IPServer( void ) {
   OSC_duplicate_removal = true;
 }
 
-pg_IPServer::~pg_IPServer( void ) {
-  id.clear();
+pg_IPServer::~pg_IPServer(void) {
+	id.clear();
 
-  if (input_message_stack)
-    {
-      for(int ind_stack = 0 ; ind_stack < depth_input_stack ; 
-	  ind_stack++ ) 
-	{
-	  if (input_message_stack[ind_stack])
-	    {
-	      delete [] input_message_stack[ind_stack];
-	      input_message_stack[ind_stack] = NULL;
-	    }
+	if (input_message_stack) {
+		for (int ind_stack = 0; ind_stack < depth_input_stack; ind_stack++) {
+			if (input_message_stack[ind_stack]) {
+				delete[] input_message_stack[ind_stack];
+				input_message_stack[ind_stack] = NULL;
+			}
+		}
+
+		delete[] input_message_stack;
+		input_message_stack = NULL;
+	}
+	if (input_argc_stack) {
+		delete[] input_argc_stack;
+		input_argc_stack = NULL;
 	}
 
-      delete [] input_message_stack;
-      input_message_stack = NULL;
-    }
+	if (input_message_length_stack) {
+		delete[] input_message_length_stack;
+		input_message_length_stack = NULL;
+	}
 
-  if (input_message_length_stack)
-    {
-      delete [] input_message_length_stack;
-      input_message_length_stack = NULL;
-    }
-
-  for( int ind = 0 ; ind < MAX_OSC_ARGUMENTS ; ind++ ) {
-    if( OSC_arguments[ind] ) {
-      delete [] OSC_arguments[ind];
-    }
-  }
+	for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
+		if (OSC_arguments[ind]) {
+			delete[] OSC_arguments[ind];
+		}
+	}
 
 #ifdef WIN32
-  closesocket(SocketToLocalServer);
+	closesocket(SocketToLocalServer);
 #endif
 }
 
@@ -913,10 +967,12 @@ void pg_IPServer::InitServer(void) {
 
 void pg_IPServer::IP_InputStackInitialization(void) {
 	// input message stack initializing
+	input_argc_stack = new int[depth_input_stack];
 	input_message_stack = new Pchar[depth_input_stack];
 	input_message_length_stack = new int[depth_input_stack];
 	for (int ind_stack = 0; ind_stack < depth_input_stack;
 		ind_stack++) {
+		input_argc_stack[ind_stack] = -1;
 		input_message_stack[ind_stack] = NULL;
 		input_message_length_stack[ind_stack] = 0;
 	}
@@ -964,7 +1020,7 @@ int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
 		printf("udp server: receive OSC message [%s]\n",
 			Input_Message_Local_Commande_String);
 	}
-	classInstance->storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String);
+	classInstance->storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String, argc);
 
 	return 1;
 }
@@ -1009,7 +1065,8 @@ void pg_IPServer::receiveIPMessages(void) {
 					printf("udp server: receive plain message [%s]\n",
 						Input_Message_String);
 				}
-				storeIP_input_messages_and_removes_duplicates(Input_Message_String);
+				// argc should be updated later for string message (non OSC)
+				storeIP_input_messages_and_removes_duplicates(Input_Message_String, 1);
 			}
 
 			memset(Input_Message_String, 0x0, max_network_message_length);
@@ -1027,7 +1084,7 @@ void pg_IPServer::receiveIPMessages(void) {
 	ProcessFilteredInputMessages();
 }
 
-void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message) {
+void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, int argc) {
 	if (receive_format != OSC && SocketToLocalServer < 0) {
 		return;
 	}
@@ -1052,10 +1109,11 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message) {
 			// same tag
 			// the current message is kept instead of the previous one with the same tag
 			if (input_message_length_stack[ind_mess] == tagLength
-				&& strncmp(input_message_stack[ind_mess],
-					messString, tagLength) == 0) {
+				&& strncmp(input_message_stack[ind_mess], messString, tagLength) == 0) {
 				// printf( "duplicate removed [%s] for [%s]\n" ,  input_message_stack[ ind_mess ] , messString );
+				input_argc_stack[ind_mess] = argc;
 				pg_CopyAndAllocString(&input_message_stack[ind_mess], messString);
+				input_argc_stack[ind_mess] = argc;
 				return;
 			}
 		}
@@ -1064,6 +1122,7 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message) {
 	// input message stack storing if no duplicate found
 	if (current_depth_input_stack < depth_input_stack - 1) {
 		pg_CopyAndAllocString(&input_message_stack[current_depth_input_stack], messString);
+		input_argc_stack[current_depth_input_stack] = argc;
 		input_message_length_stack[current_depth_input_stack] = tagLength;
 		current_depth_input_stack++;
 	}
@@ -1085,6 +1144,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 	// processes all the non duplicated messages
 	for (int ind_mess = 0; ind_mess < current_depth_input_stack; ind_mess++) {
 		messString = input_message_stack[ind_mess];
+		int argc = input_argc_stack[ind_mess];
 
 		if (IP_message_trace)
 		{
@@ -1191,7 +1251,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 			for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
 				args[ind] = (float)atof(OSC_arguments[ind]);
 			}
-			pg_aliasScript(OSCTag, OSC_arguments[0], args);
+			pg_aliasScript(OSCTag, OSC_arguments[0], args, argc);
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect external message syntax %s!", messString); ReportError(ErrorStr); break;

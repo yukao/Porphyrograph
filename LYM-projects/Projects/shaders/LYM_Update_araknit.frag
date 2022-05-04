@@ -37,6 +37,7 @@ const float weights_GaussianBlur[8][10] = {
 // TRACK CONST
 #define PG_NB_TRACKS 3
 #define PG_NB_PATHS 7
+#undef PG_WITH_CAMERA_CAPTURE
 
 // path data array structure
 #define PG_PATH_P_X              0
@@ -254,6 +255,7 @@ layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-
 #endif
 #else
 layout (binding = 2) uniform sampler3D uniform_Update_texture_fs_Brushes; // pen patterns
+#ifdef PG_WITH_CAMERA_CAPTURE
 layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
 layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
 layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
@@ -270,6 +272,23 @@ layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-
 #endif
 #if PG_NB_TRACKS >= 4
 layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+#endif
+#else
+layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
+layout (binding = 4) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 5) uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 6) uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 7) uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+#if PG_NB_TRACKS >= 2
+layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+#endif
+#if PG_NB_TRACKS >= 3
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+#endif
+#if PG_NB_TRACKS >= 4
+layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+#endif
 #endif
 #endif
 
@@ -1020,32 +1039,7 @@ void pixel_out( void ) {
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
 
-        // for the heaven's swirl, a specific texture for swirling the particles
-        if(currentScene == 2) {
-          vec2 acc = texture( uniform_Update_texture_fs_Trk1 , newDecalCoord ).gb 
-                             - texture( uniform_Update_texture_fs_Trk1 , newDecalCoord + vec2(10)).gb;
-          if(acc.x*acc.y != 0) {
-            pixel_acceleration = acc / 2.0 + vec2(0.5);
-          }
-          else {
-            pixel_acceleration = 1.5 * vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
-                              snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
-          }
-        }
-/*        else if(currentScene >= 7) {
-          vec2 acc = texture( uniform_Update_texture_fs_Trk2 , newDecalCoord ).gb 
-                             - texture( uniform_Update_texture_fs_Trk2 , newDecalCoord + vec2(5,-5)).rg;
-          if(acc.x*acc.y != 0) {
-            pixel_acceleration = acc / 2.0 + vec2(0.5);
-          }
-          else {
-            pixel_acceleration = randomCA.rg;
-          }
-        }
-*/        // generative noise
-        else {
-          pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT);
-        }
+        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT);
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
@@ -1120,32 +1114,7 @@ void pixel_out( void ) {
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
 
-        // for the heaven's swirl, a specific texture for swirling the particles
-        if(currentScene == 2) {
-          vec2 acc = texture( uniform_Update_texture_fs_Trk1 , newDecalCoord ).gb 
-                             - texture( uniform_Update_texture_fs_Trk1 , newDecalCoord + vec2(10)).gb;
-          if(acc.x*acc.y != 0) {
-            pixel_acceleration = acc / 2.0 + vec2(0.5);
-          }
-          else {
-            pixel_acceleration = 1.5 * vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
-                              snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
-          }
-        }
-/*        else if(currentScene >= 7) {
-          vec2 acc = texture( uniform_Update_texture_fs_Trk2 , newDecalCoord ).gb 
-                             - texture( uniform_Update_texture_fs_Trk2 , newDecalCoord + vec2(5,-5)).rg;
-          if(acc.x*acc.y != 0) {
-            pixel_acceleration = acc / 2.0 + vec2(0.5);
-          }
-          else {
-            pixel_acceleration = randomCA.rg;
-          }
-        }
-*/        // generative noise
-        else {
-          pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT);
-        }
+        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT);
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
@@ -1471,24 +1440,6 @@ void main() {
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
-  /*
-    // BLUR
-    if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
-      int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
-      vec3 valPixel = vec3(0);
-      float totWeight = 0;
-      for( int i = -blurRad ; i <= blurRad ; i++ ) {
-        for( int j = -blurRad ; j <= blurRad ; j++ ) {
-          int dist = min(int(length(vec2(i,j))),10);
-          float locWeight = weights_GaussianBlur[blurRad - 2][dist];
-          valPixel += texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                      * locWeight;
-          totWeight += locWeight;
-        }
-      }
-      out_track_FBO[1] = vec4(valPixel/totWeight, out_track_FBO[1].a);
-    }
-    */
   }
 #endif
 
@@ -1496,29 +1447,10 @@ void main() {
 #if PG_NB_TRACKS >= 3
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
-  // BLUR
-    /*
-  if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
-    int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
-    vec3 valPixel = vec3(0);
-    float totWeight = 0;
-    for( int i = -blurRad ; i <= blurRad ; i++ ) {
-      for( int j = -blurRad ; j <= blurRad ; j++ ) {
-        int dist = min(int(length(vec2(i,j))),10);
-        float locWeight = weights_GaussianBlur[blurRad - 2][dist];
-        valPixel += texture( uniform_Update_texture_fs_Trk2 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                    * locWeight;
-        totWeight += locWeight;
-      }
-    }
-    out_track_FBO[2] = vec4(valPixel/totWeight, out_track_FBO[1].a);
-  }
-  */
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
     = texture( uniform_Update_texture_fs_Trk3 , decalCoords );
-  // BLUR
 #endif
 
   // if freeze, just keep values as they are
@@ -1575,17 +1507,13 @@ void main() {
   cameraWH = uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw;
 
   // video texture used for drawing
-/*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
-               * cameraWH;
-     cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
-               * cameraWH;
- */
   cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
                * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 
+#ifdef PG_WITH_CAMERA_CAPTURE
   // image reading
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   // gamma correction
@@ -1596,12 +1524,30 @@ void main() {
   if( graylevel(cameraImage) < cameraThreshold ) {
     cameraImage = vec3(0.0);
   }
-
+#endif
   // cameraImage = vec3(1) - cameraImage;
 
-  movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
+  // double height of image, only on one screen
+  if(height > movieWH.y) {
+    if(decalCoordsPOT.y >= 0.5) {
+      movieImage = texture(uniform_Update_texture_fs_Movie_frame, vec2(movieCoord.x, movieCoord.y * 2) ).rgb;
+    }
+    else { 
+      if(currentScene <= 5) {
+        // mirror effect
+        movieImage = texture(uniform_Update_texture_fs_Movie_frame, vec2(movieCoord.x, (height - movieCoord.y * 2))).rgb;
+      }
+      else {
+        movieImage = vec3(0);
+      }
+    }
+  }
+  else {
+      movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
+  }
 
-  // Sobel on camera
+#ifdef PG_WITH_CAMERA_CAPTURE
+// Sobel on camera
   if( cameraSobel > 0 ) {
       vec3 samplerSobel;
       // sobel
@@ -1626,6 +1572,8 @@ void main() {
 
       cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
   }
+  #endif
+
   // Sobel on movie
   if( movieSobel > 0 ) {
       vec3 samplerSobel;
@@ -1656,9 +1604,13 @@ void main() {
       movieImage = vec3(1) - movieImage;
   }
 
-  // video image = mix of movie and camera
+#ifdef PG_WITH_CAMERA_CAPTURE
+// video image = mix of movie and camera
   videocolor = cameraWeight * cameraImage 
               + movieWeight * movieImage;
+#else
+  videocolor = movieWeight * movieImage;
+#endif
 
   // video_satur
   //  public-domain function by Darel Rex Finley
@@ -1668,6 +1620,12 @@ void main() {
                                (videocolor.b)*(videocolor.b) * .114 ) ;
     videocolor = clamp( powerColor 
       + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
+  }
+
+  if(video_white != 0) 
+  {
+    videocolor += vec3(video_white);
+    videocolor=clamp(videocolor,0,1);
   }
 
   ///////////////////////////////////////////////////
@@ -1793,6 +1751,7 @@ void main() {
         out_track_FBO[indCurTrack] 
           = vec4( clamp( videocolor , 0.0 , 1.0 ) ,  1.0 );
       }
+#ifdef PG_WITH_CAMERA_CAPTURE
       if( flashCameraTrkWght > 0 ) { // flash video
           // video image copy when there is a flash video
         out_track_FBO[indCurTrack].rgb = flashCameraTrkWght * cameraImage;
@@ -1801,6 +1760,7 @@ void main() {
         // flashCameraTrkWght = 0.0 <=> no flash video
         out_track_FBO[indCurTrack].rgb *= (1.0 - flashCameraTrkWght);
       }
+#endif
     }
 
     /////////////////
@@ -1923,34 +1883,9 @@ void main() {
     else {
       //  modifies speed according to acceleration
       vec2 pixel_acceleration;
-      // FLAT
-      // for the heaven's swirl, a specific texture for swirling the particles
-      if(currentScene == 2) {
-          vec2 acc = texture( uniform_Update_texture_fs_Trk1 , decalCoords ).gb 
-                             - texture( uniform_Update_texture_fs_Trk1 , decalCoords + vec2(10)).gb;
-          if(acc.x*acc.y != 0) {
-            pixel_acceleration = acc / 2.0 + vec2(0.5);
-          }
-          else {
-            pixel_acceleration = 1.5 * vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
+      // generative noise
+      pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
                               snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
-          }
-      }
-/*      else if(currentScene >= 7) {
-        vec2 acc = texture( uniform_Update_texture_fs_Trk2 , decalCoords ).rg 
-                           - texture( uniform_Update_texture_fs_Trk2 , decalCoords + vec2(5,-5)).rg;
-        if(acc.x*acc.y != 0) {
-          pixel_acceleration = acc / 2.0 + vec2(0.5);
-        }
-        else {
-          pixel_acceleration = randomCA.rg;
-        }
-      }
-*/      // generative noise
-      else {
-        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
-                              snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
-      }
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
@@ -1998,17 +1933,33 @@ void main() {
   //////////////////////////////////////////////
   // track decay and clear layer
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
+/*     if(trkDecay[indTrack] > 0) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
           out_track_FBO[indTrack].rgb 
                = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
       }
-      out_track_FBO[indTrack].rgb 
-        = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
-      // clear layer
-      if( currentDrawingTrack == indTrack 
-          && uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.x > 0 ) {
-        out_track_FBO[indTrack].rgb = vec3(0);
+    }
+    else if(trkDecay[indTrack] < 0) {
+      vec3 decayedColor = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
+      float maxDecayedColor = maxCol( decayedColor );
+      if( maxDecayedColor <= 1.0 ) {
+        out_track_FBO[indTrack].rgb = decayedColor;
       }
+    } 
+*/
+
+    if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
+        out_track_FBO[indTrack].rgb 
+             = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
+    }
+
+    out_track_FBO[indTrack].rgb 
+      = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
+    // clear layer
+    if( currentDrawingTrack == indTrack 
+        && uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.x > 0 ) {
+      out_track_FBO[indTrack].rgb = vec3(0);
+    }
   }
 
   //////////////////////////////////////////////

@@ -1,0 +1,4 @@
+questions to Jules
+why is recognition better with a shorter likelihood window (1 vs 40)?
+how can I have more than one training set for the same gmm?
+is the normalized_likelihood the best value to use for recognition?

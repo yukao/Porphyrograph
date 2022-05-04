@@ -15,8 +15,9 @@ import sys
 from signal import signal, SIGINT
 
 import re
+import math
 
-import vv_layer_compose
+import vv_const
 from vv_lib import force_num
 
 from scipy import signal
@@ -36,7 +37,9 @@ ARGUMENTS:
 
 DOWN_SCALE = 4
 SMOOTHING_WINDOW_SIZE = 5
-MAX_IMAGE_COUNT = 1490
+# MAX_IMAGE_COUNT = 1490
+MAX_IMAGE_COUNT = 5952
+# MAX_IMAGE_COUNT = 25
 
 resized_height = 0
 resized_width = 0
@@ -170,7 +173,7 @@ def opticalFlowSmoothing():
 ##################################################################
 # SMOOTHED OPTICAL FLOW TO HSV
 ##################################################################
-def smoothedOpticalFlowDisplay():
+def smoothedOpticalFlowDisplay(dir_in_path,dir_out_path):
 	global resized_height
 	global resized_width
 	global cap
@@ -187,8 +190,8 @@ def smoothedOpticalFlowDisplay():
 		count = "%04d" % indImage
 
 		# reloads the smoothed optical flow data
-		flow_1_reloaded = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth_1_'+count+'.exr', cv.IMREAD_UNCHANGED)
-		flow_2_reloaded = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth_2_'+count+'.exr', cv.IMREAD_UNCHANGED)
+		flow_1_reloaded = cv.imread(dir_in_path+'_1_'+count+'.exr', cv.IMREAD_UNCHANGED)
+		flow_2_reloaded = cv.imread(dir_in_path+'_2_'+count+'.exr', cv.IMREAD_UNCHANGED)
 		flow_reloaded = cv.merge((flow_1_reloaded,flow_2_reloaded));
 
 		# OF works on three frames the next one
@@ -205,10 +208,117 @@ def smoothedOpticalFlowDisplay():
 		# stores the non resizedframe
 		# cv.imwrite('../breathing_MRI/optical_flow_data/frames_CV/breathing_RMI_'+count+'.png',frame2)
 		# stores a colored version of the optical flow
-		cv.imwrite('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smoothed_hsv/breathing_RMI_OF_'+count+'.png',bgr)
+		cv.imwrite(dir_out_path+'_'+count+'.png',bgr)
 
 		indImage += 1
 		if(indImage >= MAX_IMAGE_COUNT):
+			break
+
+##################################################################
+# RETIME OPTICAL FLOW 
+##################################################################
+def opticalFlowRetime(factor):
+	global resized_height
+	global resized_width
+
+	retime_factor = int(factor)
+	indImageIn = 1
+	indImageOut = 1
+	count = "%04d" % indImageIn
+	flow_1_reloaded = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth_1_'+count+'.exr', cv.IMREAD_UNCHANGED)
+	flow_2_reloaded = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth_2_'+count+'.exr', cv.IMREAD_UNCHANGED)
+	flow_1_reloaded_out = flow_1_reloaded
+	flow_2_reloaded_out = flow_2_reloaded
+	while(1):
+		count_next = "%04d" % (indImageIn + 1)
+		# reloads the smoothed optical flow data
+		flow_1_reloaded_next = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth_1_'+count_next+'.exr', cv.IMREAD_UNCHANGED)
+		flow_2_reloaded_next = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth_2_'+count_next+'.exr', cv.IMREAD_UNCHANGED)
+
+		# loop over the image, pixel by pixel
+		for ind in range(retime_factor):
+			countOut = "%04d" % indImageOut
+			percent = float(ind)/float(retime_factor)
+			for y in range(0, resized_height):
+				for x in range(0, resized_width):
+					flow_1_reloaded_out[y, x] = (1 - percent) * flow_1_reloaded[y, x] + percent * flow_1_reloaded_next[y, x]
+					flow_2_reloaded_out[y, x] = (1 - percent) * flow_2_reloaded[y, x] + percent * flow_2_reloaded_next[y, x]
+
+			# stores the smoothed version of the optical flow
+			print("write retimed OF files "+countOut)
+			cv.imwrite('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_retimed/breathing_RMI_OF_smooth_retimed_1_'+countOut+'.exr',flow_1_reloaded_out)
+			cv.imwrite('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_retimed/breathing_RMI_OF_smooth_retimed_2_'+countOut+'.exr',flow_2_reloaded_out)
+			indImageOut += 1
+
+		# reloads the smoothed optical flow data
+		flow_1_reloaded = flow_1_reloaded_next
+		flow_2_reloaded = flow_2_reloaded_next
+
+		indImageIn += 1
+		if(indImageIn >= MAX_IMAGE_COUNT - 1):
+			break
+
+##################################################################
+# CENTER OPTICAL FLOW AND DIM ON EDGES FOR POSSIBLE DECENTERED ACCESS
+##################################################################
+def opticalFlowRecenterDimmOnEdges(center_x, center_y):
+	global resized_height
+	global resized_width
+
+	def attenuationFactor(loc_x,loc_y):
+		vecToCenter = [(loc_x - center_x)/float(resized_width)*resized_height, loc_y - center_y] # x coords is scaled to transform the circle into an ellipse for radial masking
+		dist_to_center = math.sqrt(vecToCenter[0]*vecToCenter[0] + vecToCenter[1]*vecToCenter[1])
+		if(dist_to_center <= min_rad * 0.8):
+			return 1.0
+		elif(dist_to_center <= min_rad):
+			percent = (dist_to_center - (min_rad * 0.8))/(min_rad * 0.2)
+			return (1.0 - percent)
+		else:
+			return 0.0
+
+	def coordsInNewSystem(loc_x, loc_y):
+		new_X = int(loc_x + center_x - (resized_width / 2))
+		new_Y = int(loc_y + center_y - (resized_height / 2))
+		return [new_X,new_Y]
+
+	min_h_rad = min(resized_width - center_x, center_x)
+	min_v_rad = min(resized_height - center_y, center_y)
+	min_rad = min(min_v_rad, min_h_rad)
+
+	print("size ", resized_width, " ", resized_height, "new center ", center_x, " ", center_y, " radius ", min_rad , " old coords ", resized_width/2, resized_height/2, " new coords ", coordsInNewSystem(resized_width/2, resized_height/2))
+
+	indImage = 1
+	while(1):
+		count = "%04d" % indImage
+		# reloads the smoothed optical flow data
+		flow_1_reloaded = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_retimed/breathing_RMI_OF_smooth_retimed_1_'+count+'.exr', cv.IMREAD_UNCHANGED)
+		flow_2_reloaded = cv.imread('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_retimed/breathing_RMI_OF_smooth_retimed_2_'+count+'.exr', cv.IMREAD_UNCHANGED)
+
+		flow_1_reloaded_out = flow_1_reloaded.copy()
+		flow_2_reloaded_out = flow_2_reloaded.copy()
+
+		# print("loaded data size ", flow_1_reloaded.shape, " resized ", resized_width, " ", resized_height, " value ",flow_1_reloaded[135, 170], " channels ", len(flow_1_reloaded.shape))
+
+		# loop over the image, pixel by pixel
+		for y in range(0, flow_1_reloaded.shape[0]):
+			for x in range(0, flow_1_reloaded.shape[1]):
+				att_fact = attenuationFactor(x,y)
+				new_X, new_Y = coordsInNewSystem(x,y)
+				if(att_fact > 0 and new_X >= 0 and new_X < resized_width and new_Y >= 0 and new_Y < resized_height):
+					flow_1_reloaded_out[y, x] = att_fact * flow_1_reloaded[new_Y, new_X]
+					flow_2_reloaded_out[y, x] = att_fact * flow_2_reloaded[new_Y, new_X]
+				else:
+					flow_1_reloaded_out[y, x] = 0.0
+					flow_2_reloaded_out[y, x] = 0.0
+
+		# stores the recentered version of the optical flow
+		# print("write recentered OF files "+count+" channels "+str(len(flow_1_reloaded_out.shape)))
+		print("write recentered OF files ",count)
+		cv.imwrite('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_recentered/breathing_RMI_OF_smooth_recentered_1_'+count+'.exr',flow_1_reloaded_out)
+		cv.imwrite('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_recentered/breathing_RMI_OF_smooth_recentered_2_'+count+'.exr',flow_2_reloaded_out)
+
+		indImage += 1
+		if(indImage >= MAX_IMAGE_COUNT - 1):
 			break
 
 ##################################################################
@@ -254,7 +364,30 @@ def main(main_args):
 	################################################
 	# SMOOTHED OPTICAL FLOW DISPLAY
 	if(0):
-		smoothedOpticalFlowDisplay()
+		smoothedOpticalFlowDisplay('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth/breathing_RMI_OF_smooth',\
+			'../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smoothed_hsv/breathing_RMI_OF')
+
+	################################################
+	# OPTICAL RETIME
+	if(0):
+		opticalFlowRetime(4)
+
+	################################################
+	# SMOOTHED OPTICAL FLOW DISPLAY
+	if(0):
+		smoothedOpticalFlowDisplay('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_retimed/breathing_RMI_OF_smooth_retimed',\
+			'../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smoothed_retimed_hsv/breathing_RMI_OF')
+
+	################################################
+	# CENTER OPTICAL FLOW AND DIM ON EDGES FOR POSSIBLE DECENTERED ACCESS
+	if(0):
+		opticalFlowRecenterDimmOnEdges((1100.0/float(vv_const.VV_MOVIE_IMAGE_WIDTH)) * resized_width, (600.0/float(vv_const.VV_MOVIE_IMAGE_HEIGHT)) * resized_height)
+
+	################################################
+	# CENTERED AN DIMMED OPTICAL FLOW DISPLAY
+	if(1):
+		smoothedOpticalFlowDisplay('../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_recentered/breathing_RMI_OF_smooth_recentered',\
+			'../breathing_MRI/optical_flow_data/breathing_RMI_opticalflow_smooth_recentered_hsv/breathing_RMI_OF')
 
 if __name__ == "__main__":
 	import sys

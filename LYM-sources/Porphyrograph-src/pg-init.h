@@ -38,22 +38,22 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
@@ -96,6 +96,9 @@ enum pg_FBO_Update_samplers
 #endif
 #ifdef GN
 	pg_Camera_BGIni_FBO_Update_sampler,
+#endif
+#ifdef WITH_BURST_MASK
+	pg_Burst_Mask_FBO_Update_sampler,
 #endif
 };
 enum pg_FBO_Update_attachments
@@ -165,6 +168,7 @@ enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
+	pg_Part_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
@@ -184,22 +188,22 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
@@ -238,6 +242,9 @@ enum pg_FBO_Update_samplers
 #endif
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
+#ifdef WITH_BURST_MASK
+	pg_Burst_Mask_FBO_Update_sampler,
+#endif
 };
 enum pg_FBO_Update_attachments
 {
@@ -309,6 +316,7 @@ enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
+	pg_Part_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
@@ -329,22 +337,22 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
@@ -368,6 +376,12 @@ enum pg_FBO_Update_samplers
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
+#if defined (RIVETS)
+	pg_CATable_Update_sampler,
+#endif
+#ifdef PG_WITH_BURST_MASK
+	pg_Burst_Mask_FBO_Update_sampler,
+#endif
 };
 enum pg_FBO_Update_attachments
 {
@@ -442,6 +456,7 @@ enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
+	pg_Part_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
@@ -463,22 +478,22 @@ enum pg_FBO_Update_samplers
 	pg_CA_FBO_Update_sampler = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
@@ -503,6 +518,9 @@ enum pg_FBO_Update_samplers
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
 	pg_Trk3_FBO_Update_sampler,
+#ifdef WITH_BURST_MASK
+	pg_Burst_Mask_FBO_Update_sampler,
+#endif
 };
 enum pg_FBO_Update_attachments
 {
@@ -578,6 +596,7 @@ enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
+	pg_Part_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
@@ -647,6 +666,9 @@ extern GLfloat pg_orthoWindowProjMatrix[16];
 extern GLfloat doubleProjMatrix[16];
 extern GLfloat pg_identityViewMatrix[16];
 extern GLfloat pg_identityModelMatrix[16];
+#if defined (PIERRES)
+extern GLfloat pg_homographyForTexture[9];
+#endif
 #ifdef PG_SENSORS
 extern GLfloat modelMatrixSensor[16];
 #endif
@@ -720,18 +742,14 @@ extern int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
 extern float sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 #endif
 
-// +++++++++++++++++++++++ Metawear boards ++++++++++++++++++++
+// +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
 #ifdef PG_METAWEAR
-#define PG_MW_NB_MAX_BOARDS 2
-struct metawear_board_data {
-	float mw_linAcc[3];   // x y z
-	float mw_euler[4];    // heading pitch roll yaw
-	float mss_pos[3];      // x y z
-	bool mw_linAcc_update;
-	bool mw_euler_update;
-	bool mss_pos_update;
+#define PG_MW_NB_MAX_SENSORS 2
+struct metawear_sensor_data {
+	float mw_mss_pos[3];		// x y z
+	bool  mw_mss_pos_update;
 };
-extern struct metawear_board_data pg_mw_boards[PG_MW_NB_MAX_BOARDS];
+extern struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
 #endif
 
 
@@ -824,7 +842,7 @@ void sensor_sample_setUp_interpolation(void);
 #endif
 
 #ifdef PG_METAWEAR
-void MetawearBoardInitialization();
+void MetawearSensorInitialization();
 #endif
 
 #ifdef PG_MESHES

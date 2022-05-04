@@ -1,7 +1,7 @@
 /***********************************************************************
-File: song/shaders/LYM_Master_song-VP.cg
+File: effe/shaders/LYM_Final_effe-VP.cg
 
-LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
+LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 

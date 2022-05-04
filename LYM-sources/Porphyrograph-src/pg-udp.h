@@ -32,7 +32,7 @@ typedef int SOCKET;
 #endif // !_WIN32
 
 
-#define MAX_OSC_ARGUMENTS 24
+#define MAX_OSC_ARGUMENTS 96
 
 #define _SpaceChar(c) (c == ' ' || c == '\n' || c == 13 || c == '\t')
 #define _Num(c) (c >= '0' && c <= '9')
@@ -141,6 +141,7 @@ public:
 	lo_server           lo_local_server;
 
 	// server reception stack
+	int          *input_argc_stack;
 	char          **input_message_stack;
 	int            *input_message_length_stack;
 	int             depth_input_stack;
@@ -177,7 +178,7 @@ public:
 	// stores IP messages before duplicate removal 
 	// in case of duplicated messages (with possibly different 
 	// numerical values), only the latest message is kept
-	void storeIP_input_messages_and_removes_duplicates(char *message);
+	void storeIP_input_messages_and_removes_duplicates(char *message, int argc);
 
 	// message interpretation according to alias script (predefined commands
 	// or scenario variables assignment)

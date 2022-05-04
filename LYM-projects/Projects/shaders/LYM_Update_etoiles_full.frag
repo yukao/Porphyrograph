@@ -1,75 +1,76 @@
 /***********************************************************************
 File: LYM_Update_etoiles.frag
 
-LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajim
-a
+LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 *************************************************************************/
 
 #version 430
 
-bool      camera_BG_subtr;
-float     CAdecay;
-float     trkDecay_0;
-float     trkDecay_1;
-float     trkDecay_2;
-int       currentDrawingTrack;
-int       currentVideoTrack;
-int       currentPhotoTrack;
-int       path_replay_trackNo_1;
-int       path_replay_trackNo_2;
-int       path_replay_trackNo_3;
-int       path_replay_trackNo_4;
-int       path_replay_trackNo_5;
-int       path_replay_trackNo_6;
-int       path_replay_trackNo_7;
-float     noiseScale;
-int       noiseType;
-float     noiseLineScale;
-float     noiseAngleScale;
-float     noiseCenterX;
-float     noiseCenterY;
-float     pixel_acc;
-float     pixel_acc_shiftX;
-float     pixel_acc_shiftY;
-float     pixel_radius;
-int       pixel_mode;
-float     repop_CA;
-float     repop_BG;
-int       repop_density;
-float     cameraGamma;
-int       activeClipArts;
-float     cameraThreshold;
-float     cameraWeight;
-float     cameraSobel;
-float     movieWeight;
-float     movieSobel;
-bool      invertMovie;
-float     video_satur;
-float     video_satur_pulse;
-float     video_value;
-float     photoWeight;
-float     photo_satur;
-float     photo_satur_pulse;
-float     photo_value;
-float     photo_value_pulse;
-float     photo_scale;
-float     photo_scale_pulse;
-float     mask_scale;
-float     photo_contrast;
-float     mask_contrast;
-float     CAParams1;
-float     CAParams2;
-float     CAParams3;
-float     CAParams4;
-float     CAParams5;
-float     CAParams6;
-float     CAParams7;
-float     CAParams8;
-int       cameraCumul;
-int       CAstep;
-bool      CAcolorSpread;
-bool      freeze;
-uniform float uniform_Update_scenario_var_data[62];
+bool	  camera_BG_subtr;
+float	 CAdecay;
+float	 trkDecay_0;
+float	 trkDecay_1;
+float	 trkDecay_2;
+int		currentDrawingTrack;
+int		currentVideoTrack;
+int		currentPhotoTrack;
+int		path_replay_trackNo_1;
+int		path_replay_trackNo_2;
+int		path_replay_trackNo_3;
+int		path_replay_trackNo_4;
+int		path_replay_trackNo_5;
+int		path_replay_trackNo_6;
+int		path_replay_trackNo_7;
+float	 noiseScale;
+int		noiseType;
+float	 noiseLineScale;
+float	 noiseAngleScale;
+float	 noiseCenterX;
+float	 noiseCenterY;
+float	 pixel_acc;
+float	 pixel_acc_shiftX;
+float	 pixel_acc_shiftY;
+float	 pixel_radius;
+int		pixel_mode;
+float	 repop_CA;
+float	 repop_BG;
+int		repop_density;
+float	 camera_gamma;
+float	 cameraGamma;
+int		activeClipArts;
+float	 cameraThreshold;
+float	 cameraWeight;
+float	 cameraSobel;
+float	 movieWeight;
+float	 movieSobel;
+bool	  invertMovie;
+bool	  invertCamera;
+float	 video_satur;
+float	 video_satur_pulse;
+float	 video_value;
+float	 photoWeight;
+float	 photo_satur;
+float	 photo_satur_pulse;
+float	 photo_value;
+float	 photo_value_pulse;
+float	 photo_scale;
+float	 photo_scale_pulse;
+float	 mask_scale;
+float	 photo_contrast;
+float	 mask_contrast;
+float	 CAParams1;
+float	 CAParams2;
+float	 CAParams3;
+float	 CAParams4;
+float	 CAParams5;
+float	 CAParams6;
+float	 CAParams7;
+float	 CAParams8;
+int		cameraCumul;
+int		CAstep;
+bool	  CAcolorSpread;
+bool	  freeze;
+uniform float uniform_Update_scenario_var_data[64];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -78,22 +79,10 @@ uniform float uniform_Update_scenario_var_data[62];
 ////////////////////////////////////////////////////////////////////
 
 const float PI = 3.1415926535897932384626433832795;
-/*
-// Gaussian blur
-const float weights_GaussianBlur[8][10] = {
-  { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
-  { 0.160943513523684, 0.0976171754339892, 0.0217813359878234, 0.00178792093458716, 0, 0, 0, 0, 0, 0, },
-  { 0.0906706626819157, 0.0684418069308968, 0.0294364543567006, 0.00721371337812935, 0.00100726007785354, 0, 0, 0, 0, 0, },
-  { 0.0578976290770481, 0.0483601648793973, 0.0281818015679868, 0.0114578654743735, 0.00325006967689874, 0.000643184560989364, 0, 0, 0, 0, },
-  { 0.0402440592208142, 0.0355152576097996, 0.0244092557887147, 0.0130653331225529, 0.0054464411532399, 0.00176820055872139, 0.000447071114568843, 0, 0, 0, },
-  { 0.0296130974533233, 0.0270146688793152, 0.0205091228908708, 0.0129576472196559, 0.00681297573282909, 0.00298111793949366, 0.0010855581688134, 0.000328971797095601, 0, 0, },
-  { 0.022659246945633, 0.0211207405530146, 0.0171040969458123, 0.0120342352127056, 0.00735638042938192, 0.00390694415457561, 0.00180275855491957, 0.000722711999073055, 0.000251721495878215, 0, },
-  { 0.0178892106047989, 0.0169224681628769, 0.0143245600399185, 0.0108503547098669, 0.00735447434710435, 0.00446071417758884, 0.00242104138407988, 0.00117583149116467, 0.000511014259566371, 0.000198731178680599, },
-};
-*/
 
 #define SPLAT_PARTICLES
 #define PG_BEZIER_PATHS
+#define PG_CAMERA_ACTIVE
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
@@ -190,7 +179,7 @@ vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
 
 /////////////////////////////////////
 // PG_NB_TRACKS TRACK COLOR FBO OUTPUT
- vec4 out_track_FBO[PG_NB_TRACKS];
+vec4 out_track_FBO[PG_NB_TRACKS];
 
 ////////////////////////////////////
 // PARTICLE UPDATE
@@ -1269,39 +1258,41 @@ void main() {
   repop_CA = uniform_Update_scenario_var_data[26];
   repop_BG = uniform_Update_scenario_var_data[27];
   repop_density = int(uniform_Update_scenario_var_data[28]);
-  cameraGamma = uniform_Update_scenario_var_data[29];
-  activeClipArts = int(uniform_Update_scenario_var_data[30]);
-  cameraThreshold = uniform_Update_scenario_var_data[31];
-  cameraWeight = uniform_Update_scenario_var_data[32];
-  cameraSobel = uniform_Update_scenario_var_data[33];
-  movieWeight = uniform_Update_scenario_var_data[34];
-  movieSobel = uniform_Update_scenario_var_data[35];
-  invertMovie = (uniform_Update_scenario_var_data[36] > 0 ? true : false);
-  video_satur = uniform_Update_scenario_var_data[37];
-  video_satur_pulse = uniform_Update_scenario_var_data[38];
-  video_value = uniform_Update_scenario_var_data[39];
-  photoWeight = uniform_Update_scenario_var_data[40];
-  photo_satur = uniform_Update_scenario_var_data[41];
-  photo_satur_pulse = uniform_Update_scenario_var_data[42];
-  photo_value = uniform_Update_scenario_var_data[43];
-  photo_value_pulse = uniform_Update_scenario_var_data[44];
-  photo_scale = uniform_Update_scenario_var_data[45];
-  photo_scale_pulse = uniform_Update_scenario_var_data[46];
-  mask_scale = uniform_Update_scenario_var_data[47];
-  photo_contrast = uniform_Update_scenario_var_data[48];
-  mask_contrast = uniform_Update_scenario_var_data[49];
-  CAParams1 = uniform_Update_scenario_var_data[50];
-  CAParams2 = uniform_Update_scenario_var_data[51];
-  CAParams3 = uniform_Update_scenario_var_data[52];
-  CAParams4 = uniform_Update_scenario_var_data[53];
-  CAParams5 = uniform_Update_scenario_var_data[54];
-  CAParams6 = uniform_Update_scenario_var_data[55];
-  CAParams7 = uniform_Update_scenario_var_data[56];
-  CAParams8 = uniform_Update_scenario_var_data[57];
-  cameraCumul = int(uniform_Update_scenario_var_data[58]);
-  CAstep = int(uniform_Update_scenario_var_data[59]);
-  CAcolorSpread = (uniform_Update_scenario_var_data[60] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[61] > 0 ? true : false);
+  camera_gamma = uniform_Update_scenario_var_data[29];
+  cameraGamma = uniform_Update_scenario_var_data[30];
+  activeClipArts = int(uniform_Update_scenario_var_data[31]);
+  cameraThreshold = uniform_Update_scenario_var_data[32];
+  cameraWeight = uniform_Update_scenario_var_data[33];
+  cameraSobel = uniform_Update_scenario_var_data[34];
+  movieWeight = uniform_Update_scenario_var_data[35];
+  movieSobel = uniform_Update_scenario_var_data[36];
+  invertMovie = (uniform_Update_scenario_var_data[37] > 0 ? true : false);
+  invertCamera = (uniform_Update_scenario_var_data[38] > 0 ? true : false);
+  video_satur = uniform_Update_scenario_var_data[39];
+  video_satur_pulse = uniform_Update_scenario_var_data[40];
+  video_value = uniform_Update_scenario_var_data[41];
+  photoWeight = uniform_Update_scenario_var_data[42];
+  photo_satur = uniform_Update_scenario_var_data[43];
+  photo_satur_pulse = uniform_Update_scenario_var_data[44];
+  photo_value = uniform_Update_scenario_var_data[45];
+  photo_value_pulse = uniform_Update_scenario_var_data[46];
+  photo_scale = uniform_Update_scenario_var_data[47];
+  photo_scale_pulse = uniform_Update_scenario_var_data[48];
+  mask_scale = uniform_Update_scenario_var_data[49];
+  photo_contrast = uniform_Update_scenario_var_data[50];
+  mask_contrast = uniform_Update_scenario_var_data[51];
+  CAParams1 = uniform_Update_scenario_var_data[52];
+  CAParams2 = uniform_Update_scenario_var_data[53];
+  CAParams3 = uniform_Update_scenario_var_data[54];
+  CAParams4 = uniform_Update_scenario_var_data[55];
+  CAParams5 = uniform_Update_scenario_var_data[56];
+  CAParams6 = uniform_Update_scenario_var_data[57];
+  CAParams7 = uniform_Update_scenario_var_data[58];
+  CAParams8 = uniform_Update_scenario_var_data[59];
+  cameraCumul = int(uniform_Update_scenario_var_data[60]);
+  CAstep = int(uniform_Update_scenario_var_data[61]);
+  CAcolorSpread = (uniform_Update_scenario_var_data[62] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[63] > 0 ? true : false);
 
   //////////////////////////
   // TRACK DECAY
@@ -1414,24 +1405,6 @@ void main() {
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
-  /*
-    // BLUR
-    if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
-      int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
-      vec3 valPixel = vec3(0);
-      float totWeight = 0;
-      for( int i = -blurRad ; i <= blurRad ; i++ ) {
-        for( int j = -blurRad ; j <= blurRad ; j++ ) {
-          int dist = min(int(length(vec2(i,j))),10);
-          float locWeight = weights_GaussianBlur[blurRad - 2][dist];
-          valPixel += texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                      * locWeight;
-          totWeight += locWeight;
-        }
-      }
-      out_track_FBO[1] = vec4(valPixel/totWeight, out_track_FBO[1].a);
-    }
-    */
   }
 #endif
 
@@ -1439,29 +1412,10 @@ void main() {
 #if PG_NB_TRACKS >= 3
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
-  // BLUR
-    /*
-  if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
-    int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
-    vec3 valPixel = vec3(0);
-    float totWeight = 0;
-    for( int i = -blurRad ; i <= blurRad ; i++ ) {
-      for( int j = -blurRad ; j <= blurRad ; j++ ) {
-        int dist = min(int(length(vec2(i,j))),10);
-        float locWeight = weights_GaussianBlur[blurRad - 2][dist];
-        valPixel += texture( uniform_Update_texture_fs_Trk2 , decalCoordsPrevStep + vec2(i,j)).rgb 
-                    * locWeight;
-        totWeight += locWeight;
-      }
-    }
-    out_track_FBO[2] = vec4(valPixel/totWeight, out_track_FBO[1].a);
-  }
-  */
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
     = texture( uniform_Update_texture_fs_Trk3 , decalCoords );
-  // BLUR
 #endif
 
   // if freeze, just keep values as they are
@@ -1551,7 +1505,7 @@ void main() {
  */
   cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
-               * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+               * cameraWH + vec2(max(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.x,0),max(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.y,0));
 #endif
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
@@ -1560,7 +1514,7 @@ void main() {
   // image reading
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   // gamma correction
-  // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
+  cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
   if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
@@ -1597,6 +1551,10 @@ void main() {
       sobelY = mix( samplerSobel , sobelY , cameraSobel );
 
       cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+  }
+  // color inversion
+  if( invertCamera ) {
+      cameraImage = vec3(1) - cameraImage;
   }
 #endif
   // Sobel on movie

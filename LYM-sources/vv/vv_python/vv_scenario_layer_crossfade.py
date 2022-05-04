@@ -18,6 +18,7 @@ import vv_layer_crossfade
 from vv_lib import clamp
 from vv_lib import to_num
 from vv_lib import force_num
+from vv_lib import interpolate
 
 def handler(signal_received, frame):
 	# Handle any cleanup here
@@ -172,20 +173,17 @@ def main(main_args) :
 		##################################################################
 		image_rank = 0
 		for indImageOutput in range(val_init["imageOutputIndex"], val_fin["imageOutputIndex"]+1, 1):
-			# 	scene_percentage = 0
-			# 	if((val_fin["imageOutputIndex"] - val_init["imageOutputIndex"]) > 0) :
-			# 		scene_percentage = (indImageOutput - val_init["imageOutputIndex"])/(val_fin["imageOutputIndex"] - val_init["imageOutputIndex"])
-				
-			# 	#clamping
-			# 	scene_percentage = clamp(scene_percentage)
+			# scene percentage at this frame 
+			scene_percentage = 0
+			if (val_fin["imageOutputIndex"] - val_init["imageOutputIndex"]) != 0 :
+				scene_percentage = float(indImageOutput - val_init["imageOutputIndex"])/(val_fin["imageOutputIndex"] - val_init["imageOutputIndex"])
+			#clamping
+			scene_percentage = clamp(scene_percentage)
 
-			# 	for var_name in var_names :
-			# 		val_interp[var_name] = interpolated_value_calculation(var_types[var_name], val_init[var_name], val_fin[var_name], interp[var_name], scene_percentage)
-				
-
-			# 	if(trace_only) :
-			# 		 printf("Ind image %d Scene percentage %.2f percent_transf1 %.2f" % indImageOutput, scene_percentage, val_interp["percent_transf1"])
-			
+			# interpolating all the variables
+			for var_name in var_names :
+				val_interp[var_name] = interpolate(var_types[var_name], val_init[var_name], val_fin[var_name], interp[var_name], scene_percentage)
+				# print( "var name [",var_name,"] value: ",val_init[var_name], " ", val_fin[var_name], " ", interp[var_name], " ", val_interp[var_name])
 
 			# scans all the files and collects the paths to compose them
 			string_all_input_files = ""
@@ -197,18 +195,92 @@ def main(main_args) :
 				if( indImageInput > val_fin["imageInputIndex_"+countInputFile]) :
 					indImageInput = val_fin["imageInputIndex_"+countInputFile]
 				
-				countInputImage = "%04d" % indImageInput
+				countInputImage = "%05d" % indImageInput
 				string_all_input_files = string_all_input_files + full_svg_input_file_name +"_"+countInputImage+".svg "
 			
 
-			countOutputImage = "%04d" % indImageOutput
+			countOutputImage = "%05d" % indImageOutput
 			full_svg_output_file_name = val_init["svg_output_directory"] + val_init["svg_output_file_name"] + "_" + countOutputImage + ".svg"
 
+			crossfade_argts_extension = []
+			# background rectangle when the layers do not cover the whole pictures
+			# as in a grayscale image where layers span from black to light gray
+			if("fill_color_bg" in val_interp) :
+				interp_fill_color_bg = val_interp["fill_color_bg"]
+				crossfade_argts_extension.extend(["--fill_color_bg", interp_fill_color_bg])
+			if("fill_color_l1" in val_interp) :
+				interp_fill_color_l1 = val_interp["fill_color_l1"]
+				crossfade_argts_extension.extend(["--fill_color_l1", interp_fill_color_l1])
+			if("fill_color_l2" in val_interp) :
+				interp_fill_color_l2 = val_interp["fill_color_l2"]
+				crossfade_argts_extension.extend(["--fill_color_l2", interp_fill_color_l2])
+			if("fill_color_l3" in val_interp) :
+				interp_fill_color_l3 = val_interp["fill_color_l3"]
+				crossfade_argts_extension.extend(["--fill_color_l3", interp_fill_color_l3])
+			if("fill_color_l4" in val_interp) :
+				interp_fill_color_l4 = val_interp["fill_color_l4"]
+				crossfade_argts_extension.extend(["--fill_color_l4", interp_fill_color_l4])
+			if("fill_color_l5" in val_interp) :
+				interp_fill_color_l5 = val_interp["fill_color_l5"]
+				crossfade_argts_extension.extend(["--fill_color_l5", interp_fill_color_l5])
+			if("fill_color_l6" in val_interp) :
+				interp_fill_color_l6 = val_interp["fill_color_l6"]
+				crossfade_argts_extension.extend(["--fill_color_l6", interp_fill_color_l6])
+			if("fill_color_l7" in val_interp) :
+				interp_fill_color_l7 = val_interp["fill_color_l7"]
+				crossfade_argts_extension.extend(["--fill_color_l7", interp_fill_color_l7])
+			if("fill_color_l8" in val_interp) :
+				interp_fill_color_l8 = val_interp["fill_color_l8"]
+				crossfade_argts_extension.extend(["--fill_color_l8", interp_fill_color_l8])
+			# stroke color, width and opacity can be provided as a single and unified value for all layers
+			# or in a layer by layer mode
+			if("stroke_color_l1" in val_interp) :
+				interp_stroke_color_l1 = val_interp["stroke_color_l1"]
+				crossfade_argts_extension.extend(["--stroke_color_l1", interp_stroke_color_l1])
+			if("stroke_color_l2" in val_interp) :
+				interp_stroke_color_l2 = val_interp["stroke_color_l2"]
+				crossfade_argts_extension.extend(["--stroke_color_l2", interp_stroke_color_l2])
+			if("stroke_color_l3" in val_interp) :
+				interp_stroke_color_l3 = val_interp["stroke_color_l3"]
+				crossfade_argts_extension.extend(["--stroke_color_l3", interp_stroke_color_l3])
+			if("stroke_color_l4" in val_interp) :
+				interp_stroke_color_l4 = val_interp["stroke_color_l4"]
+				crossfade_argts_extension.extend(["--stroke_color_l4", interp_stroke_color_l4])
+			if("stroke_color_l5" in val_interp) :
+				interp_stroke_color_l5 = val_interp["stroke_color_l5"]
+				crossfade_argts_extension.extend(["--stroke_color_l5", interp_stroke_color_l5])
+			if("stroke_color_l6" in val_interp) :
+				interp_stroke_color_l6 = val_interp["stroke_color_l6"]
+				crossfade_argts_extension.extend(["--stroke_color_l6", interp_stroke_color_l6])
+			if("stroke_color_l7" in val_interp) :
+				interp_stroke_color_l7 = val_interp["stroke_color_l7"]
+				crossfade_argts_extension.extend(["--stroke_color_l7", interp_stroke_color_l7])
+			if("stroke_color_l8" in val_interp) :
+				interp_stroke_color_l8 = val_interp["stroke_color_l8"]
+				crossfade_argts_extension.extend(["--stroke_color_l8", interp_stroke_color_l8])
+
+			# color interpolation for stroke and fill for 2 files
+			if("file1_file2_color_blend" in val_interp and nb_composed_files == 2) :
+				file1_file2_color_blend = val_interp["file1_file2_color_blend"]
+				crossfade_argts_extension.extend(["--file1_file2_color_blend", file1_file2_color_blend])
+
+			# old clip index
+			if("ind_old_clip" in val_interp and nb_composed_files == 2) :
+				ind_old_clip = val_interp["file1_file2_color_blend"]
+				crossfade_argts_extension.extend(["--ind_old_clip", ind_old_clip])
+
 			if(not trace_only) :
+				input_list = []
+				for indInputFile  in range(1, nb_composed_files + 1, 1) :
+					countInputFile = "%03d" % indInputFile
+					indImageInput = image_rank + val_init["imageInputIndex_"+countInputFile]
+					countInputImage = "%05d" % indImageInput
+					input_list.append(val_init["svg_input_file_name_"+countInputFile] +"_"+countInputImage+".svg ")
 				# print  "/mnt/d/sync.com/Sync/LYM-sources/SVG_movie/SVG_posterization-scenario/vv_layer_crossfade.pl --composition-mode :composition_mode_string --nb-files :nb_composed_files --nb-layers :nb_layers -o :full_svg_output_file_name -i :string_all_input_files\n"
+				print("vv_layer_crossfade", input_list, "->", val_init["svg_output_file_name"] + "_" + countOutputImage + ".svg")
 				if(vv_layer_crossfade.main(["--composition-mode", composition_mode_string,\
 					"--nb-files", nb_composed_files, "--nb-layers", nb_layers, \
-					"-o", full_svg_output_file_name, "-i", string_all_input_files]) == 0) :
+					"-o", full_svg_output_file_name, "-i", string_all_input_files]+crossfade_argts_extension) == 0) :
 					return 0
 
 			# moves forward on output frames

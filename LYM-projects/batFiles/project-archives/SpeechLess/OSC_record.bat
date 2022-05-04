@@ -1,0 +1,1 @@
+cmd.exe /c D:\sync.com\Sync\LYM-sources\OSC_InOutRecord-VC17\Release\OSC_RecordReplay\OSC_RecordReplay.exe record 10000  D:/sync.com/Sync/LYM-works/LYM_Annika_speakDance_2018/RecordReplayData/OSCcommands/OSC_commands.txt

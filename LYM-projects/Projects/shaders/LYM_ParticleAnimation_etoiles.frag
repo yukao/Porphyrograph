@@ -676,7 +676,7 @@ void particle_out( void ) {
   // PARTICLE: RANDOM MOTION
   if(partMove_rand) { // random motion
     // random motion
-    part_acceleration = dvec2(randomPart.zw - dvec2(0.5));
+    part_acceleration = dvec2(0); // PERF dvec2(randomPart.zw - dvec2(0.5));
   }
 
   if(length(part_acceleration) > 0) {
@@ -718,8 +718,8 @@ void particle_out( void ) {
     speed2D = dvec2(generativeNoise(pixelTextureCoordinatesXY));
   }
 
-  out_position_speed_particle.zw = vec2(speed2D);
-  out_position_speed_particle.xy += out_position_speed_particle.zw;
+  out_position_speed_particle.zw = vec2(0); // PERF vec2(speed2D);
+  out_position_speed_particle.xy += vec2(0); // PERF out_position_speed_particle.zw;
 
   //////////////////////////////////////////////////////////////////
   // EXIT MODE

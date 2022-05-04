@@ -16,7 +16,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 ////////////////////////////////////////////////////////////////////
 
 const float PI = 3.1415926535897932384626433832795;
-/*
 // Gaussian blur
 const float weights_GaussianBlur[8][10] = {
   { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
@@ -28,7 +27,7 @@ const float weights_GaussianBlur[8][10] = {
   { 0.022659246945633, 0.0211207405530146, 0.0171040969458123, 0.0120342352127056, 0.00735638042938192, 0.00390694415457561, 0.00180275855491957, 0.000722711999073055, 0.000251721495878215, 0, },
   { 0.0178892106047989, 0.0169224681628769, 0.0143245600399185, 0.0108503547098669, 0.00735447434710435, 0.00446071417758884, 0.00242104138407988, 0.00117583149116467, 0.000511014259566371, 0.000198731178680599, },
 };
-*/
+
 
 #define SPLAT_PARTICLES
 #define PG_BEZIER_PATHS
@@ -1471,7 +1470,7 @@ void main() {
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
-  /*
+
     // BLUR
     if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
       int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
@@ -1488,7 +1487,6 @@ void main() {
       }
       out_track_FBO[1] = vec4(valPixel/totWeight, out_track_FBO[1].a);
     }
-    */
   }
 #endif
 
@@ -1497,7 +1495,6 @@ void main() {
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
   // BLUR
-    /*
   if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
     int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
     vec3 valPixel = vec3(0);
@@ -1513,7 +1510,6 @@ void main() {
     }
     out_track_FBO[2] = vec4(valPixel/totWeight, out_track_FBO[1].a);
   }
-  */
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
@@ -1580,7 +1576,7 @@ void main() {
      cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
                * cameraWH;
  */
-  cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
+  cameraCoord = vec2((1.0 - decalCoordsPOT.x), decalCoordsPOT.y )
               // added for wide angle lens that covers more than the drawing surface
                * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )

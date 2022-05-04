@@ -52,9 +52,13 @@ def main(main_args):
 	output_file_name = ""
 	input_file_names = []
 	path_colors = []
+	fill_and_stroke_from_group = False
+	add_id = False
+	width = 3840
+	height = 2160
 
 	try:
-		opts, args = getopt.getopt(main_args,"i:o:c:",["inputfile=","outputfile=","nb-files=","output-format=","colors="])
+		opts, args = getopt.getopt(main_args,"i:o:c:",["inputfile=","outputfile=","nb-files=","output-format=","colors=","add_id=","width=","height=","fill_and_stroke_from_group="])
 	except getopt.GetoptError:
 		print(USAGE)
 		sys.exit(2)
@@ -69,6 +73,14 @@ def main(main_args):
 			output_file_name = arg
 		elif opt in ("--nb-files"):
 			nb_files = to_num(arg)
+		elif opt in ("--fill_and_stroke_from_group"):
+			fill_and_stroke_from_group = arg
+		elif opt in ("--add_id"):
+			add_id = arg
+		elif opt in ("--width"):
+			width = arg
+		elif opt in ("--height"):
+			height = arg
 		elif opt in ("--output-format"):
 			output_format_string = arg
 			if not(output_format_string in file_format.keys()) :
@@ -103,14 +115,15 @@ def main(main_args):
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\"
  \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <svg version=\"1.0\" xmlns=\"http://www.w3.org/2000/svg\"
- width=\"3840.000000pt\" height=\"2160.000000pt\" viewBox=\"0 0 3840.000000 2160.000000\"
+ width=\"{0}pt\" height=\"{1}pt\" viewBox=\"0 0 {0} {1}\"
  preserveAspectRatio=\"xMidYMid meet\">
 <metadata>
 Created by potrace 1.14, written by Peter Selinger 2001-2017
 </metadata>
-''')
+'''.format(width, height))
 	
 	line = ""
+	path_no = 1
 	for i in range(nb_files) :
 		try:
 			FILEin = open(input_file_names[i], "rt")
@@ -119,12 +132,29 @@ Created by potrace 1.14, written by Peter Selinger 2001-2017
 		
 		line = FILEin.readline()
 		line = line.rstrip()
+		group_fill = ''
+		group_stroke = ''
 		while(line):
 			if(re.search(r'<g', line) != None) :
+				group_fill = ''
+				group_stroke = ''
+
 				line = line.rstrip()
+
 				if(re.search(r'fill\=\"\#000000\"', line) != None) :
 					line = line.replace(r'fill="#000000"', ' style="fill:'+path_colors[i]+';"')
-				
+
+				result_fill = re.search(r'fill\=\"([^\"]*)\"', line)
+				if result_fill != None :
+					group_fill = 'style="fill:'+result_fill.group(1)+';"'
+				else :
+					result_fill = re.search(r'style\=\"fill\:([^\;]*)\;\"', line)
+					if result_fill != None :
+						group_fill = 'style="fill:'+result_fill.group(1)+';"'
+				result_stroke = re.search(r'\s(stroke=\"[^\"]*\")', line)
+				if result_stroke != None :
+					group_stroke = result_stroke.group(1)
+
 				if(output_format == SVG) :
 					if( re.search(r' ', line) == None) :
 						line = line + " "
@@ -133,18 +163,38 @@ Created by potrace 1.14, written by Peter Selinger 2001-2017
 				while( line and re.search(r'>', line) == None) :
 					line = FILEin.readline()
 					line = line.rstrip()
+
 					if(re.search(r'fill\=\"\#000000\"', line) != None) :
 						line = line.replace(r'fill="#000000"', ' style="fill:'+path_colors[i]+';"')
 					
+					result_fill = re.search(r'fill\=\"([^\"]*)\"', line)
+					if result_fill != None :
+						group_fill = 'style="fill:'+result_fill.group(1)+';"'
+					else :
+						result_fill = re.search(r'style\=\"fill\:([^\;]*)\;\"', line)
+						if result_fill != None :
+							group_fill = 'style="fill:'+result_fill.group(1)+';"'
+					result_stroke = re.search(r'\s(stroke=\"[^\"]*\")', line)
+					if result_stroke != None :
+						group_stroke = result_stroke.group(1)
+
 					if(output_format == SVG) :
 						FILEout.write(line)
-				
+								
 				FILEout.write("\n")
 			
 			elif(re.search(r'<path', line) != None) :
 				if(output_format == PATHS) :
 					line = line.replace(r'<path', '<path style="fill:'+path_colors[i]+';"')
-				
+
+				if fill_and_stroke_from_group == True :
+					separator = ' '
+					line = line.replace(r'<path', separator.join(['<path', group_fill, group_stroke]))
+
+				if add_id == True :
+					separator = ' '
+					line = line.replace(r'<path', separator.join(['<path', 'id="path_'+str(path_no)+'"']))
+
 				if(output_format == PATHS or output_format == SVG) :
 					line = line.rstrip()
 					FILEout.write(line)
@@ -158,6 +208,8 @@ Created by potrace 1.14, written by Peter Selinger 2001-2017
 
 				if(output_format == PATHS or output_format == SVG) :
 					FILEout.write("\n")
+
+				path_no += 1
 				
 			
 			elif(re.search(r'</g>', line) != None) :

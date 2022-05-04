@@ -17,11 +17,11 @@ public:
     //==============================================================================
     Application() {}
 
-    const String getApplicationName() override       { return "SimpleFFTTutorial"; }
+    const String getApplicationName() override       { return "porphyrograph-sound-JUCE"; }
     const String getApplicationVersion() override    { return "1.0.0"; }
 
 #ifndef PGS_WITHOUT_VISUALS
-    void initialise (const String&) override         { mainWindow.reset (new MainWindow ("SimpleFFTTutorial", new SpectrogramComponent(), *this)); }
+    void initialise (const String&) override         { mainWindow.reset (new MainWindow ("porphyrograph-sound-JUCE", new SpectrogramComponent(), *this)); }
 	void shutdown() override { mainWindow = nullptr; }
 #else
 	void initialise(const String&) override			 { mainComponent.reset(new MainComponent(*this)); }

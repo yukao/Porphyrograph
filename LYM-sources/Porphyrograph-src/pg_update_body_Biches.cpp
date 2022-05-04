@@ -35,7 +35,7 @@
  ParticleAnimation_scenario_var_data[32] = (GLfloat)repop_part * (1.f + pulse_average * repop_part_pulse);
  ParticleAnimation_scenario_var_data[33] = (GLfloat)repop_path * (1.f + pulse_average * repop_path_pulse);
  ParticleAnimation_scenario_var_data[34] = (GLfloat)freeze;
- glUniform1fv( uniform_ParticleAnimation_scenario_var_data, 35, ParticleAnimation_scenario_var_data);
+ glUniform1fv(uniform_ParticleAnimation_scenario_var_data, 35, ParticleAnimation_scenario_var_data);
 
  glUseProgram(shader_programme[pg_shader_Update]);
  Update_scenario_var_data[0] = (GLfloat)camera_BG_subtr;
@@ -100,18 +100,18 @@
  Update_scenario_var_data[59] = (GLfloat)CAstep;
  Update_scenario_var_data[60] = (GLfloat)CAcolorSpread;
  Update_scenario_var_data[61] = (GLfloat)freeze;
- glUniform1fv( uniform_Update_scenario_var_data, 62, Update_scenario_var_data);
+ glUniform1fv(uniform_Update_scenario_var_data, 62, Update_scenario_var_data);
 
  glUseProgram(shader_programme[pg_shader_Mixing]);
- Mixing_scenario_var_data[0] = (GLfloat)CAMixingWeight * (1.f + pulse_average * CAMixingWeight_pulse) ;
- Mixing_scenario_var_data[1] = (GLfloat)PartMixingWeight * (1.f + pulse_average * PartMixingWeight_pulse) ;
- Mixing_scenario_var_data[2] = (GLfloat)trackMixingWeight_0 * (1.f + pulse_average * trackMixingWeight_0_pulse) ;
- Mixing_scenario_var_data[3] = (GLfloat)trackMixingWeight_1 * (1.f + pulse_average * trackMixingWeight_1_pulse) ;
- Mixing_scenario_var_data[4] = (GLfloat)trackMixingWeight_2 * (1.f + pulse_average * trackMixingWeight_2_pulse) ;
- Mixing_scenario_var_data[5] = (GLfloat)trackMixingWeight_3 * (1.f + pulse_average * trackMixingWeight_3_pulse) ;
- Mixing_scenario_var_data[6] = (GLfloat)echo * (1.f + pulse_average * echo_pulse) ;
- Mixing_scenario_var_data[7] = (GLfloat)echoNeg * (1.f + pulse_average * echoNeg_pulse) ;
- glUniform1fv( uniform_Mixing_scenario_var_data, 8, Mixing_scenario_var_data);
+ Mixing_scenario_var_data[0] = (GLfloat)CAMixingWeight * (1.f + pulse_average * CAMixingWeight_pulse);
+ Mixing_scenario_var_data[1] = (GLfloat)PartMixingWeight * (1.f + pulse_average * PartMixingWeight_pulse);
+ Mixing_scenario_var_data[2] = (GLfloat)trackMixingWeight_0 * (1.f + pulse_average * trackMixingWeight_0_pulse);
+ Mixing_scenario_var_data[3] = (GLfloat)trackMixingWeight_1 * (1.f + pulse_average * trackMixingWeight_1_pulse);
+ Mixing_scenario_var_data[4] = (GLfloat)trackMixingWeight_2 * (1.f + pulse_average * trackMixingWeight_2_pulse);
+ Mixing_scenario_var_data[5] = (GLfloat)trackMixingWeight_3 * (1.f + pulse_average * trackMixingWeight_3_pulse);
+ Mixing_scenario_var_data[6] = (GLfloat)echo * (1.f + pulse_average * echo_pulse);
+ Mixing_scenario_var_data[7] = (GLfloat)echoNeg * (1.f + pulse_average * echoNeg_pulse);
+ glUniform1fv(uniform_Mixing_scenario_var_data, 8, Mixing_scenario_var_data);
 
  glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
@@ -127,4 +127,4 @@
  Master_scenario_var_data[8] = (GLfloat)trackMasterWeight_2 * (1.f + pulse_average * trackMasterWeight_2_pulse);
  Master_scenario_var_data[9] = (GLfloat)trackMasterWeight_3 * (1.f + pulse_average * trackMasterWeight_3_pulse);
  Master_scenario_var_data[10] = (GLfloat)interfaceOnScreen;
- glUniform1fv( uniform_Master_scenario_var_data, 11, Master_scenario_var_data);
+ glUniform1fv(uniform_Master_scenario_var_data, 11, Master_scenario_var_data);

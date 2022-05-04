@@ -14,22 +14,23 @@
 * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 * 02111-1307, USA.
 */
-/*
-based on Francesco Caruso GLSLParametricCurves
-https://github.com/fcaruso/GLSLParametricCurve
-*/
 
 #version 420
 
 // comet texture
-// uniform sampler2D fs_blurredDisk; // control point positions
+layout (binding = 2) uniform sampler2D uniform_ParticleSplat_BlurredDisk_texture_fs_decal; // splat texture
 
 in VertexData {
     vec3 color;
+    vec2 texCoord;
 } VertexIn;
  
 out vec4 fColor;
 
 void main() {
-	fColor =  vec4(VertexIn.color,1);//vec4( 1., 1., 1., 1. );
+	 fColor = texture(uniform_ParticleSplat_BlurredDisk_texture_fs_decal , VertexIn.texCoord);
+	// fColor.rgb = VertexIn.color;
+	fColor.rgb = VertexIn.color;
+	// fColor.rgb = vec3(1,0,0);
+	//fColor.a = 1;
 }

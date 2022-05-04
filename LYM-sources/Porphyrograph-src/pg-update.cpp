@@ -29,14 +29,17 @@
 float path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
 float path_data_ParticleAnimation[(PG_NB_PATHS + 1) * PG_MAX_PATH_ANIM_DATA * 4];
 
-float paths_x_next_0 = -1;
-float paths_y_next_0 = -1;
-float paths_x_prev_prev_0 = -1;
-float paths_y_prev_prev_0 = -1;
+float paths_x_next[PG_NB_PATHS + 1];
+float paths_y_next[PG_NB_PATHS + 1];
 
 // path variables
+float paths_time[PG_NB_PATHS + 1];
 float paths_x[PG_NB_PATHS + 1];
 float paths_y[PG_NB_PATHS + 1];
+float paths_time_prev_prev[PG_NB_PATHS + 1];
+float paths_x_prev_prev[PG_NB_PATHS + 1];
+float paths_y_prev_prev[PG_NB_PATHS + 1];
+float paths_time_prev[PG_NB_PATHS + 1];
 float paths_x_prev[PG_NB_PATHS + 1];
 float paths_y_prev[PG_NB_PATHS + 1];
 float paths_x_memory[PG_NB_PATHS + 1];
@@ -56,9 +59,8 @@ float paths_xL[PG_NB_PATHS + 1];
 float paths_yL[PG_NB_PATHS + 1];
 float paths_xR[PG_NB_PATHS + 1];
 float paths_yR[PG_NB_PATHS + 1];
-#else
-int paths_BrushID[PG_NB_PATHS + 1];
 #endif
+int paths_BrushID[PG_NB_PATHS + 1];
 
 float repop_ColorBG_r;
 float repop_ColorBG_g;
@@ -83,12 +85,25 @@ float				svg_translate_z = 0.f;
 // svg gpu scaling
 float				svg_scale = 1.f;
 
+// mobile cursor for cursor blinking in Master shader
+bool mobile_cursor = true;
+
 #ifdef PG_MESHES
 // MVP matrices
 glm::mat4 VP1perspMatrix;
 glm::mat4 VP1viewMatrix;
 glm::mat4 VP1modelMatrix;
 glm::mat4 VP1homographyMatrix;
+#ifdef PG_SECOND_CAMERA_VERTICAL
+glm::mat4 VP2perspMatrix;
+glm::mat4 VP2viewMatrix;
+glm::mat4 VP2modelMatrix;
+glm::mat4 VP2homographyMatrix;
+#endif
+#endif
+
+#ifdef ETOILES_TEASER
+float pen_x, pen_y, vec_x, vec_y;
 #endif
 
 #ifdef PG_SENSORS
@@ -191,6 +206,7 @@ float CameraCurrent_WB_R = 0.0f;
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 std::vector<GLuint> pg_particle_initial_pos_speed_texID;
 std::vector<GLuint> pg_particle_initial_color_radius_texID;
+std::vector<GLuint> pg_particle_acc_texID;
 #endif
 
 GLuint pg_screenMessageBitmap_texID = 0; // nb_attachments=1
@@ -203,7 +219,7 @@ GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
 GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
 GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
 
-#if defined (GN) || defined (CAAUDIO)
+#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
 #endif
@@ -217,7 +233,7 @@ GLuint Screen_Font_texture_Rectangle_texID = NULL_ID;
 GLuint Display_Font_texture_Rectangle_texID = NULL_ID;
 #endif
 
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 GLuint Pen_texture_3D_texID = NULL_ID;
 #endif
 GLuint Noise_texture_3D = NULL_ID;
@@ -227,6 +243,11 @@ std::vector<GLuint>  pg_RepopDensity_texture_texID;
 
 #ifdef PG_WITH_MASTER_MASK
 GLuint Master_Mask_texID = 0;
+GLuint Master_Multilayer_Mask_texID = 0;
+#endif
+
+#ifdef PG_WITH_BURST_MASK
+GLuint Burst_Mask_texID = 0;
 #endif
 
 #if defined (TVW)
@@ -289,6 +310,10 @@ int pg_movie_frame_height = 0;
 // video tracks
 vector<string> movieFileName;
 vector<string> movieShortName;
+vector<string> movieSoundtrackPeaksFileName;
+vector<string> movieSoundtrackOnsetsFileName;
+vector<vector<float>> movieSoundtrackPeaks;
+vector<vector<float>> movieSoundtrackOnsets;
 int nb_movies = 0;
 // soundtracks
 vector<string> trackFileName;
@@ -297,7 +322,21 @@ int nb_soundtracks = 0;
 // pen palettes presets
 int nb_pen_colorPresets = 0;
 vector<string> pen_colorPresets_names;
-float *pen_colorPreset_values = NULL;
+float* pen_colorPreset_values = NULL;
+// lights presets
+int nb_lights = 0;
+vector<string> lights_names;
+int* lights_group = NULL;
+int* lights_port = NULL;
+int* lights_address = NULL;
+int* lights_channels = NULL;
+int* lights_red = NULL;
+int* lights_green = NULL;
+int* lights_blue = NULL;
+int* lights_grey = NULL;
+int* lights_dimmer = NULL;
+int* lights_strobe = NULL;
+
 // pen palettes colors
 int nb_pen_palette_colors = 0;
 vector<string> pen_palette_colors_names;
@@ -308,16 +347,18 @@ int nb_photo_albums = 0;
 // pen brushes
 string pen_brushes_fileName;
 int nb_pen_brushes = 0;
-
+// textures with multiple layers
+int nb_layers_master_mask = 0;
 bool is_capture_diaporama = false;
 VideoCapture  pg_camera_capture;
 char pg_camera_capture_name[256];
 VideoCapture  pg_movie_capture;
-int pg_movie_nbFrames = 0;
-float lastFrameCaptureTime = -1.f;
-bool is_movieLooping = false;
+
+movie_status pg_movie_status = movie_status();
 bool is_movieLoading = false;
+bool is_movieLooping = false;
 bool secondCurrentBGCapture = false;
+
 #ifdef GN
 bool secondInitialBGCapture = false;
 bool initialBGCapture = false;
@@ -325,6 +366,128 @@ bool initialBGCapture = false;
 
 const char *TextureEncodingString[EmptyTextureEncoding + 1] = { "jpeg", "png", "pnga", "png_gray", "pnga_gray", "rgb", "raw", "emptyimagetype" };
 
+///////////////////////////////////////////////////////
+// MOVIE STATUS MANAGEMENT WHILE STREAMING
+movie_status::movie_status() {
+	nbFramesLeft = 0;
+	initialTime = 0.;
+	initialNbFrames = 0;
+
+	currentSoundPeakIndex = 0;
+	if (currentlyPlaying_movieNo >= 0) {
+		nbSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
+	}
+	else {
+		nbSoundPeakIndex = 0;
+	}
+	currentSoundOnsetIndex = 0;
+	if (currentlyPlaying_movieNo >= 0) {
+		nbSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
+	}
+	else {
+		nbSoundOnsetIndex = 0;
+	}
+}
+// number frames left until the end from current frame
+int movie_status::get_nbFramesLeft() {
+	return nbFramesLeft;
+}
+// number of frames read from the beginning of the movie
+int movie_status::get_nbFramesRead() {
+	return initialNbFrames - nbFramesLeft;
+}
+// current time when movie started
+float movie_status::get_initialTime() {
+	return initialTime;
+}
+// initial total number of frames in the movie
+int movie_status::get_initialNbFrames() {
+	return initialNbFrames;
+}
+// sets the movie at a position from beginning
+void movie_status::set_position(int nb_frames_from_beginning) {
+	if (nb_frames_from_beginning <= 0) {
+		reset_movie(initialNbFrames);
+		return;
+	}
+	if (nb_frames_from_beginning >= initialNbFrames) {
+		nb_frames_from_beginning = initialNbFrames - 1;
+	}
+	nbFramesLeft = initialNbFrames - nb_frames_from_beginning;
+	initialTime = CurrentClockTime - (nb_frames_from_beginning / movieCaptFreq);
+	printf("set position frames from start %d frames left %d initialTime %.5f\n", nb_frames_from_beginning, nbFramesLeft, initialTime);
+
+	currentSoundPeakIndex = 0;
+	currentSoundOnsetIndex = 0;
+	// sets the position for the onsets and peaks as well
+	updatePeakOrOnset();
+}
+
+// checks whether a peak or an onset are passed or closer than one frame
+void movie_status::updatePeakOrOnset() {
+	float timeFromBeginning = CurrentClockTime - initialTime;
+
+	pg_video_sound_peak = false;
+	if (currentSoundPeakIndex < nbSoundPeakIndex - 1) {
+		float nextPeak = movieSoundtrackPeaks[currentlyPlaying_movieNo][currentSoundPeakIndex + 1];
+		while (nextPeak < timeFromBeginning || nextPeak - timeFromBeginning < 1 / movieCaptFreq) {
+			pg_video_sound_peak = true;
+			//printf("peak next %.5f time from begin %.5f\n", nextPeak, timeFromBeginning);
+			currentSoundPeakIndex++;
+			if (currentSoundPeakIndex < nbSoundPeakIndex - 1) {
+				nextPeak = movieSoundtrackPeaks[currentlyPlaying_movieNo][currentSoundPeakIndex + 1];
+			}
+			else {
+				break;
+			}
+		}
+	}
+	pg_video_sound_onset = false;
+	if (currentSoundOnsetIndex < nbSoundOnsetIndex - 1) {
+		float nextOnset = movieSoundtrackOnsets[currentlyPlaying_movieNo][currentSoundOnsetIndex + 1];
+		while (nextOnset < timeFromBeginning || nextOnset - timeFromBeginning < 1 / movieCaptFreq) {
+			pg_video_sound_onset = true;
+			//printf("onset next %.5f time from begin %.5f\n", nextOnset, timeFromBeginning);
+			currentSoundOnsetIndex++;
+			if (currentSoundOnsetIndex < nbSoundOnsetIndex - 1) {
+				nextOnset = movieSoundtrackOnsets[currentlyPlaying_movieNo][currentSoundOnsetIndex + 1];
+			}
+			else {
+				break;
+			}
+		}
+	}
+}
+// reads one frame and updates the remaining number of frames in the movie
+void movie_status::read_one_frame() {
+	nbFramesLeft--;
+	updatePeakOrOnset();
+}
+// (re)starts the movie from begginning with its total number of frames
+void movie_status::reset_movie(int nbTotFramesLeft) {
+	// printf("movie restarted\n");
+	nbFramesLeft = nbTotFramesLeft;
+	initialNbFrames = nbFramesLeft;
+	initialTime = CurrentClockTime;
+
+	currentSoundPeakIndex = 0;
+	if (currentlyPlaying_movieNo >= 0) {
+		nbSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
+	}
+	else {
+		nbSoundPeakIndex = 0;
+	}
+	currentSoundOnsetIndex = 0;
+	if (currentlyPlaying_movieNo >= 0) {
+		nbSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
+	}
+	else {
+		nbSoundOnsetIndex = 0;
+	}
+}
+movie_status::~movie_status() {
+
+}
 
 ///////////////////////////////////////////////////////
 // GLUT draw function (from the viewpoint)
@@ -346,16 +509,18 @@ void window_display( void ) {
   // scenario update
   printOglError(466);
   pg_update_scenario();
+  printOglError(49);
 
   // recalculates pulsed colors and reads current paths
   pg_update_pulsed_colors_and_replay_paths(CurrentClockTime);
+  printOglError(50);
 
   // ships uniform variables
   pg_update_shader_uniforms();
   printOglError(51);
   
   // loads movie and/or camera frames
-  pg_update_camera_and_video_frame();
+  pg_update_camera_and_movie_frame();
 
 
   //////////////////////////////////////////////////
@@ -572,20 +737,6 @@ void readSensors(void) {
 	std::string float_string;
 	std::string int_string;
 
-	//printf("ON-OFF %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", sensor_onOff[0], sensor_onOff[1], sensor_onOff[2], sensor_onOff[3], sensor_onOff[4], sensor_onOff[5], sensor_onOff[6], sensor_onOff[7], 
-	//	sensor_onOff[8], sensor_onOff[9], sensor_onOff[10], sensor_onOff[11], sensor_onOff[12], sensor_onOff[13], sensor_onOff[14], sensor_onOff[15]);
-	//printf("ON %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", sensorOn[0], sensorOn[1], sensorOn[2], sensorOn[3], sensorOn[4], sensorOn[5], sensorOn[6], sensorOn[7], 
-	//	sensorOn[8], sensorOn[9], sensorOn[10], sensorOn[11], sensorOn[12], sensorOn[13], sensorOn[14], sensorOn[15]);
-	//printf("PLAY %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f\n", sample_play_start[0], sample_play_start[1], sample_play_start[2], sample_play_start[3], sample_play_start[4], sample_play_start[5], sample_play_start[6], sample_play_start[7], 
-	//	sample_play_start[8], sample_play_start[9], sample_play_start[10], sample_play_start[11], sample_play_start[12], sample_play_start[13], sample_play_start[14], sample_play_start[15]);
-	//printf("frameNo %d\n", pg_FrameNo);
-	//printf("VAL %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f\n", sensorLevel[0], sensorLevel[1], sensorLevel[2], sensorLevel[3], sensorLevel[4], sensorLevel[5], sensorLevel[6], sensorLevel[7],
-	//	sensorLevel[8], sensorLevel[9], sensorLevel[10], sensorLevel[11], sensorLevel[12], sensorLevel[13], sensorLevel[14], sensorLevel[15]);
-	//printf("COLOR  %d %d %d   %d %d %d   %d %d %d   %d %d %d\n", pixelColor[0], pixelColor[1], pixelColor[2], pixelColor[3], pixelColor[4], pixelColor[5], pixelColor[6], pixelColor[7],
-	//	pixelColor[8], pixelColor[9], pixelColor[10], pixelColor[11]);
-	//printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
-	//printf("FBO ANIMATION       %d %d      %d %d %d   %d %d %d \n", pg_FBO_ParticleAnimation[0], pg_FBO_ParticleAnimation[1], pg_FBO_ParticleAnimation_texID[0], pg_FBO_ParticleAnimation_texID[1], pg_FBO_ParticleAnimation_texID[2], pg_FBO_ParticleAnimation_texID[3], pg_FBO_ParticleAnimation_texID[4], pg_FBO_ParticleAnimation_texID[5]);
-
 	///////////////////////////////////////////////
 	// TRIGGERING THE SAMPLE
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
@@ -621,7 +772,7 @@ void readSensors(void) {
 			// message posting
 			pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
 			printf("send %s\n", message.c_str());
-			PlaySound(TEXT("D:/sync.com/Sync/LYM-projects/SoundData/soundYN-GN-data/samples-YN/samples_part1/sample_part1-002.wav"), NULL, SND_ASYNC);
+			PlaySound(TEXT("C:/sync.com/Sync/LYM-projects/SoundData/soundYN-GN-data/samples-YN/samples_part1/sample_part1-002.wav"), NULL, SND_ASYNC);
 #endif
 
 			// starts the clock for stopping the sample play after a certain time
@@ -857,16 +1008,6 @@ void playChord() {
 		}
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
-
-		//printf("More than 10 notes (%d)\n", indGreyNote);
-		//for (int indMetaNote = 0; indMetaNote < 10; indMetaNote++) {
-		//	printf("%.0f %.2f / ", metaNote[indMetaNote], metaGrey[indMetaNote]);
-		//}
-		//printf("\nPixels\n");
-		//for (int indNote = 0; indNote < min(100, nbGrey); indNote++) {
-		//	printf("%.2f ", rowGrey[indNote].grey);
-		//}
-		//printf("\n");
 	}
 	delete rowColor;
 	delete rowGrey;
@@ -915,12 +1056,11 @@ void one_frame_variables_reset(void) {
 #ifdef PG_WITH_PHOTO_FLASH
 	// flash photo reset
 	if (flashPhotoTrk_weight > 0.0f) {
-		if (flashPhotoTrk_nbFrames == 0) {
-			invertAllLayers = !invertAllLayers;
-			flashPhotoTrk_nbFrames++;
-		}
-		else if (flashPhotoTrk_weight - flashPhotoTrk_decay > 0) {
+		if (flashPhotoTrk_weight > 0) {
 			flashPhotoTrk_weight -= flashPhotoTrk_decay;
+			if (flashPhotoTrk_weight < 0) {
+				flashPhotoTrk_weight = 0.f;
+			}
 			flashPhotoTrk_nbFrames++;
 		}
 		else {
@@ -957,6 +1097,19 @@ void one_frame_variables_reset(void) {
 	// copy to layer above (+1) or to layer below (-1)
 	copyToNextTrack = 0;
 
+#ifdef PG_WITH_CAMERA_CAPTURE
+	// DELAYED CAMERA WEIGHT COUNTDOWN
+	if (delayedCameraWeight > 1) {
+		delayedCameraWeight--;
+	}
+	else if (delayedCameraWeight == 1) {
+		*((float*)ScenarioVarPointers[_cameraWeight]) = 1;
+		BrokenInterpolationVar[_cameraWeight] = true;
+		cameraWeight = 1;
+		delayedCameraWeight = 0;
+	}
+#endif
+
 #ifdef PG_WITH_BLUR
 	// blur reset
 	if (nb_blur_frames_1 > 0) {
@@ -973,7 +1126,7 @@ void one_frame_variables_reset(void) {
 	}
 #endif
 
-#ifdef CAAUDIO
+#if defined(CAAUDIO) || defined(RIVETS)
 	// CA seed
 	pg_CAseed_trigger = false;
 #endif
@@ -985,9 +1138,45 @@ void one_frame_variables_reset(void) {
 #endif
 }
 
-void pg_update_camera_and_video_frame(void) {
+///////////////////////////////////////
+// MOVIE STREAMING JUMPS
+
+void pg_movie_backward(int nb_frames_back) {
+	// calculates hypothetical new position
+	int posInMovie = int(pg_movie_capture.get(CV_CAP_PROP_POS_FRAMES));
+	int new_pos_in_movie = posInMovie - nb_frames_back;
+	// rewinds the movie
+	if (new_pos_in_movie > 0) {
+		pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, new_pos_in_movie);
+		pg_movie_status.set_position(new_pos_in_movie);
+		printf("rewinds %d frames %d frames left %.1f initial time\n", int(movieCaptFreq * 10), pg_movie_status.get_nbFramesLeft(), pg_movie_status.get_initialTime());
+	}
+	else {
+		pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+		pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
+		printf("starts from beginning\n");
+	}
+}
+
+void pg_movie_forward(int nb_frames_forth) {
+	// calculates hypothetical new position
+	int posInMovie = int(pg_movie_capture.get(CV_CAP_PROP_POS_FRAMES));
+	int new_pos_in_movie = posInMovie + nb_frames_forth;
+	// advances in the movie
+	if (new_pos_in_movie < pg_movie_status.get_initialNbFrames() ) {
+		printf("forward %d frames %d frames left %.1f initial time\n", int(movieCaptFreq * 10), pg_movie_status.get_nbFramesLeft(), pg_movie_status.get_initialTime());
+		pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, new_pos_in_movie);
+		pg_movie_status.set_position(new_pos_in_movie);
+	}
+	// else stays where it is
+}
+
+
+///////////////////////////////////////
+// MOVIE AND CAMERA FRAME CAPTURE
+void pg_update_camera_and_movie_frame(void) {
 	//////////////////////////////////////////////////////////////////////
-	// CAMERA AND VIDEO FRAME UPDATES BEFORE RENDERING
+	// CAMERA AND MOVIE FRAME UPDATES BEFORE RENDERING
 	// /////////////////////////
 	// reads next movie frame
 	if (currentVideoTrack >= 0 && movieCaptFreq > 0
@@ -995,86 +1184,80 @@ void pg_update_camera_and_video_frame(void) {
 		&& !is_movieLooping && !is_movieLoading
 		&& movie_on
 		) {
-		if (lastFrameCaptureTime < 0.f) { // first capture
-			lastFrameCaptureTime = CurrentClockTime - (1.0f / movieCaptFreq);
+
+		// non threaded video update according to fps and time since the beginning of the movie play
+		Mat pg_movie_frame;
+		bool new_movie_frame = false;
+
+		// tries to play in sync the whole movie, so counts the time from the 
+		// first frame and compares the actual frame no (actualMovieFrameNo)
+		// with the frame no expected to play with the correct frame rate (expectedMovieFrameNo)
+		int actualMovieFrameNo = (pg_movie_status.get_initialNbFrames() - pg_movie_status.get_nbFramesLeft());
+		int expectedMovieFrameNo = int((CurrentClockTime - pg_movie_status.get_initialTime()) * movieCaptFreq);
+
+		// either the first frame has not been captured and the movie should loop at the beginning
+		// or whe are coming close to the end of the movie
+		if (!pg_FirstMovieFrameIsAvailable || (movie_loop && pg_movie_status.get_nbFramesLeft() < 10)) {
+			printf("Full video loop %d\n", pg_FrameNo);
+			// Full video loop
+			if (pg_movie_status.get_nbFramesLeft() < 10) {
+				// resets the movie
+				pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, 0);
+				pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
+				// printf("movie restarted\n");
+			}
 		}
-		float elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
-		// printf("\nCurrent time %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
-//#ifndef TEMPETE
-//		while (elapsedTimeSinceLastCapture >= (1.0f / movieCaptFreq) ) { // frame capture
-//		// for La Tempete, we make the hypothesis that the frame rate is the same as the video 24FPS
-//			// a video frame is capture at each framebuffer generation
-//#endif
-			lastFrameCaptureTime = CurrentClockTime + (elapsedTimeSinceLastCapture - (1.0f / movieCaptFreq));
-//#ifndef TEMPETE
-//			if (pg_movie_nbFrames < 10 || !pg_movie_capture.grab()) {
-//				// loops unless a thread for looping has been launched
-//				// printf("movie loop %d\n", pg_movie_nbFrames);
-//				is_movieLooping = true;
-//#ifdef WIN32
-//				DWORD rc;
-//				HANDLE  hThread = CreateThread(
-//					NULL,                   // default security attributes
-//					0,                      // use default stack size  
-//					pg_movieLoop,		    // thread function name
-//					(void *)NULL,		    // argument to thread function 
-//					0,                      // use default creation flags 
-//					&rc);   // returns the thread identifier 
-//				if (hThread == NULL) {
-//					std::cout << "Error:unable to create thread pg_movieLoop" << std::endl;
-//					exit(-1);
-//				}
-//				CloseHandle(hThread);
-//#else
-//				pthread_t drawing_thread;
-//				int rc;
-//				rc = pthread_create(&drawing_thread, NULL,
-//					pg_movieLoop, (void *)NULL);
-//				if (rc) {
-//					std::cout << "Error:unable to create thread pg_movieLoop" << rc << std::endl;
-//					exit(-1);
-//				}
-//				pthread_exit(NULL);
-//#endif
-//			}
-//			else {
-//#endif
-				if (!pg_FirstMovieFrameIsAvailable) {
-					// printf("VideoPb Read frame \n");
+		// if looping is not on and movie is closed to the end, loops on the last 10 frames
+		else if(!movie_loop && pg_movie_status.get_nbFramesLeft() < 10) {
+			// Short end video loop
+			pg_movie_backward(int(movieCaptFreq * 10));
+			printf("Short end video loop at %d, posInMovie %d\n", 
+				pg_FrameNo, pg_movie_status.get_nbFramesLeft());
+		}
 
-					// video loop
-					if (pg_movie_nbFrames < 10){
-						// resets the movie
-						pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, 0);
-						pg_movie_nbFrames = int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT));
-						// printf("movie restarted\n");
-					}
-
-					// non threaded
-					Mat pg_movie_frame;
-
-					//Grabs and returns a frame from movie
-					pg_movie_capture >> pg_movie_frame;
-					if (!pg_movie_frame.data) {
-						printf("Movie frame not grabbed!\n");
-						return;
-					}
-					else {
-						pg_movie_nbFrames--;
-					}
-
-					//  transfer to GPU
-					pg_initMovieFrameTexture(&pg_movie_frame);
+		// skips frames if rendering is slower than movie fps
+		if (pg_FirstMovieFrameIsAvailable && expectedMovieFrameNo - actualMovieFrameNo > 2) {
+			while (expectedMovieFrameNo - actualMovieFrameNo > 2) {
+				if (pg_movie_capture.grab()) {
+					pg_movie_status.read_one_frame();
+					actualMovieFrameNo = pg_movie_status.get_nbFramesRead();
+					//printf("skip 1 frame\n");
 				}
 				else {
-					pg_FirstMovieFrameIsAvailable = false;
+					break;
 				}
-				elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
-				// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
-//#ifndef TEMPETE
-//			}
-//		}
-//#endif
+			}
+		}
+
+		//Grabs and returns a frame from movie if it is time for it
+		if (!pg_FirstMovieFrameIsAvailable || expectedMovieFrameNo - actualMovieFrameNo >= 1) {
+			if (pg_movie_capture.grab()) {
+				pg_movie_capture.retrieve(pg_movie_frame);
+				if (!pg_movie_frame.data) {
+					printf("Movie frame not grabbed!\n");
+					// has not succeeded to load the movie
+					if(!pg_FirstMovieFrameIsAvailable) {
+						pg_FirstMovieFrameIsAvailable = false;
+					}
+					return;
+				}
+				else {
+					pg_movie_status.read_one_frame();
+					actualMovieFrameNo = pg_movie_status.get_nbFramesRead();
+					if (!pg_FirstMovieFrameIsAvailable) {
+						pg_FirstMovieFrameIsAvailable = true;
+					}
+					new_movie_frame = true;
+				}
+			}
+		}
+
+		//  transfer to GPU
+		if (new_movie_frame) {
+			pg_initMovieFrameTexture(&pg_movie_frame);
+		}
+		//elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
+		// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
 	}
 
 	// /////////////////////////
@@ -1086,7 +1269,9 @@ void pg_update_camera_and_video_frame(void) {
 			// grabs at the beginning, otherwise the program is stuck if no camera frame reading takes place
 			|| (pg_FrameNo >= PG_CAMERA_REST_DELAY && pg_FrameNo <= PG_CAMERA_REST_DELAY + 1000 && pg_FrameNo % 3 == 0))
 		// a delay has to be let for camera to digest new parameter values
-		&& (pg_FrameNo - pg_LastCameraParameterChange_Frame) > PG_CAMERA_REST_DELAY) {
+		&& (pg_FrameNo - pg_LastCameraParameterChange_Frame) > PG_CAMERA_REST_DELAY
+		// the camera weight is positive
+		&& cameraWeight > 0) {
 		// currentVideoTrack <=> video off
 		// frame capture
 		// printf("frame capture\n");
@@ -1100,12 +1285,6 @@ void pg_update_camera_and_video_frame(void) {
 
 
 void pg_update_shader_uniforms(void) {
-	//#ifdef TVW
-	//	/////////////////////////////////////////////////////////////////////////
-	//	// TRANSFER OF LOADED BUFFER IMAGES TO GPU
-	//	GPUtransfer_Photo_buffer_dataTVW();
-	//#endif
-
 #ifdef GN
 #include "pg_update_body_GN.cpp"
 #endif
@@ -1124,17 +1303,29 @@ void pg_update_shader_uniforms(void) {
 #if defined (BICHES)
 #include "pg_update_body_Biches.cpp"
 #endif
+#if defined (ATELIERSENFANTS)
+#include "pg_update_body_AteliersEnfants.cpp"
+#endif
 #if defined (CAVERNEPLATON)
 #include "pg_update_body_CavernePlaton.cpp"
+#endif
+#if defined (PIERRES)
+#include "pg_update_body_Pierres.cpp"
 #endif
 #if defined (TEMPETE)
 #include "pg_update_body_Tempete.cpp"
 #endif
+#if defined (DAWN)
+#include "pg_update_body_Dawn.cpp"
+#endif
+#if defined (RIVETS)
+#include "pg_update_body_Rivets.cpp"
+#endif
 #if defined (ULM)
 #include "pg_update_body_Ulm.cpp"
 #endif
-#ifdef effe
-#include "pg_update_body_effe.cpp"
+#ifdef SONG
+#include "pg_update_body_Song.cpp"
 #endif
 #if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_update_body_demo.cpp"
@@ -1162,7 +1353,6 @@ void pg_update_shader_uniforms(void) {
 #endif
 	printOglError(510);
 
-
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	/////////////////////////////////////////////////////////////////////////
 	// PARTICLE ANIMATION SHADER UNIFORM VARIABLES
@@ -1172,23 +1362,30 @@ void pg_update_shader_uniforms(void) {
 	// at each frame a random repop channel is chosen among the available ones
 	bool repop_channels[PG_NB_PATHS + 1];
 	int nb_repop_channels = 0;
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 	nb_repop_channels += int(part_path_repop_0) + int(part_path_repop_1) + int(part_path_repop_2) + int(part_path_repop_3);
 	repop_channels[0] = part_path_repop_0;
 	repop_channels[1] = part_path_repop_1;
 	repop_channels[2] = part_path_repop_2;
 	repop_channels[3] = part_path_repop_3;
 #endif
-#if PG_NB_PATHS == 7
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 	nb_repop_channels += int(part_path_repop_4) + int(part_path_repop_5) + int(part_path_repop_6) + int(part_path_repop_7);
 	repop_channels[4] = part_path_repop_4;
 	repop_channels[5] = part_path_repop_5;
 	repop_channels[6] = part_path_repop_6;
 	repop_channels[7] = part_path_repop_7;
 #endif
+#if PG_NB_PATHS == 11
+	nb_repop_channels += int(part_path_repop_8) + int(part_path_repop_9) + int(part_path_repop_10) + int(part_path_repop_11);
+	repop_channels[8] = part_path_repop_8;
+	repop_channels[9] = part_path_repop_9;
+	repop_channels[10] = part_path_repop_10;
+	repop_channels[11] = part_path_repop_11;
+#endif
 	int selected_channel = int(floor(rand_0_1 * (nb_repop_channels - 0.00001)));
 	int nbActChannels = 0;
-	for (int indCh = 0; indCh < PG_NB_PATHS + 1; indCh++) {
+	for (int indCh = 0; indCh <= PG_NB_PATHS ; indCh++) {
 		if (repop_channels[indCh]) {
 			if (nbActChannels == selected_channel) {
 				selected_channel = indCh;
@@ -1200,7 +1397,6 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)selected_channel, GLfloat(pg_targetFrameNo));
 
-//#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
 	// pen paths positions
 #if defined (TVW)
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
@@ -1243,30 +1439,6 @@ void pg_update_shader_uniforms(void) {
 		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 2] = rand_0_1;
 	}
 	glUniform4fv(uniform_ParticleAnimation_path_data, (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_ParticleAnimation);
-
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_x, paths_x_memory[0], paths_x_memory[1], paths_x_memory[2], paths_x_memory[3]);
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_y, paths_y_memory[0], paths_y_memory[1], paths_y_memory[2], paths_y_memory[3]);
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_x_prev, paths_x_prev_memory[0], paths_x_prev_memory[1], paths_x_prev_memory[2], paths_x_prev_memory[3]);
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_y_prev, paths_y_prev_memory[0], paths_y_prev_memory[1], paths_y_prev_memory[2], paths_y_prev_memory[3]);
-
-	// pen paths brush & size
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths03_RadiusX, paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2], paths_RadiusX[3]);
-	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
-//#endif
-//
-//#if PG_NB_PATHS == 7
-	// pen paths positions
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_x, paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	//// printf("path 4-7 X %.f %.f %.f %.f\n", paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_y, paths_y[4], paths_y[5], paths_y[6], paths_y[7]);
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_x_prev, paths_x_prev[4], paths_x_prev[5], paths_x_prev[6], paths_x_prev[7]);
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_y_prev, paths_y_prev[4], paths_y_prev[5], paths_y_prev[6], paths_y_prev[7]);
-
-	// pen paths brush & size
-	//glUniform4f(uniform_ParticleAnimation_fs_4fv_paths47_RadiusX,
-	//	paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6], paths_RadiusX[7]);
-	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6] , paths_RadiusX[7] );
-//#endif
 
 #if PG_NB_TRACKS >= 4
 	// flash Trk -> Part weights
@@ -1317,16 +1489,15 @@ void pg_update_shader_uniforms(void) {
 #endif
 	printOglError(511);
 
-
 	/////////////////////////////////////////////////////////////////////////
 	// UPDATE SHADER UNIFORM VARIABLES
 	glUseProgram(shader_programme[pg_shader_Update]);
 
 	// time is only used in TVW
 	glUniform4f(uniform_Update_fs_4fv_W_H_time_currentScene,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)CurrentClockTime, (GLfloat)pg_CurrentScene);
+		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)CurrentClockTime, (GLfloat)pg_CurrentSceneIndex);
 	// printf("time %.2f\n", (GLfloat)CurrentClockTime);
-	// printf("scene %d\n", pg_CurrentScene);
+	//printf("scene %d\n", pg_CurrentSceneIndex);
 
 	// pixels acceleration
 	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift,
@@ -1337,7 +1508,7 @@ void pg_update_shader_uniforms(void) {
 		0.f);
 #endif
 
-#ifdef CAAUDIO
+#if defined(CAAUDIO) || defined(RIVETS)
 	if (pg_CAseed_trigger) {
 		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc,
 			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
@@ -1352,7 +1523,6 @@ void pg_update_shader_uniforms(void) {
 	}
 #endif
 
-
 	// position
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 0] = paths_x_prev[indPath];
@@ -1366,9 +1536,11 @@ void pg_update_shader_uniforms(void) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 2] = paths_yR[indPath];
 #endif
 	}
-	path_data_Update[0 * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x_0_forGPU;
-	path_data_Update[0 * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y_0_forGPU;
-	for (int indPath = 1; indPath < (PG_NB_PATHS + 1); indPath++) {
+	for (int indPath = 0; indPath < PG_NB_CURSORS_MAX; indPath++) {
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x_forGPU[indPath];
+		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y_forGPU[indPath];
+	}
+	for (int indPath = PG_NB_CURSORS_MAX; indPath < (PG_NB_PATHS + 1); indPath++) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y[indPath];
 	}
@@ -1380,11 +1552,18 @@ void pg_update_shader_uniforms(void) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_COLOR * 4 + 3] = paths_Color_a[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 0] = paths_RadiusX[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 1] = (isBegin[indPath] ? 1.f : (isEnd[indPath] ? -1.f : 0.f));
-#ifndef PG_BEZIER_PATHS
+		//if (indPath == 0) {
+		//	printf("Color RGBA %.1f %.1f %.1f %.1f\n", paths_Color_r[0], paths_Color_g[0], paths_Color_b[0], paths_Color_a[0] );
+		//}
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 2] = paths_RadiusY[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_RADIUS_BEGINEND * 4 + 3] = float(paths_BrushID[indPath]);
-#endif
+		// if (indPath == 0) {
+		//  	printf("Brush ID %d\n", paths_BrushID[indPath]);
+		// }
 	}
+	// printf("Radius %.2f %.2f\n", paths_RadiusX[0], paths_RadiusY[0]);
+	//printf("pos %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f \n", paths_x_prev[1], paths_y_prev[1],
+	//	paths_xR[1], paths_yR[1], paths_xL[1], paths_yL[1], paths_x[1], paths_y[1]);
 #ifdef PG_BEZIER_PATHS
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		build_bounding_box(indPath);
@@ -1398,40 +1577,9 @@ void pg_update_shader_uniforms(void) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_BOX * 4 + 3] = pg_BezierBox[indPath].w;
 	}
 #endif
+	//printf("pos %.1f %.1f %.1f %.1f bez %.1f %.1f %.1f %.1f beging./end %d %d \n", paths_Color_r[1], paths_Color_g[1], paths_Color_b[1], paths_Color_a[1],
+	//	pg_BezierBox[1].x, pg_BezierBox[1].y, pg_BezierBox[1].z, pg_BezierBox[1].w, isBegin[1], isEnd[1]);
 	glUniform4fv(uniform_Update_path_data, (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_Update);
-
-	//  checks the information shipped to GPU at beginning or ending of a stroke
-	// printf("path 4-7 X %.f %.f %.f %.f\n", paths_x[4], paths_x[5], paths_x[6], paths_x[7]);
-	// begin
-	//if (isBegin[0]) {
-	//	printf("Afer Begin %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
-	//}
-	//// end
-	//if (isEnd[0]) {
-	//	printf("Before End %.1f %.1f (%.1f %.1f %.1f %.1f) %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
-	//}
-	//if ((paths_x_prev[0] == PG_OUT_OF_SCREEN_CURSOR || paths_y_prev[0] == PG_OUT_OF_SCREEN_CURSOR) 
-	//	&& (paths_x_0_forGPU >= 0 && paths_x_0_forGPU >= 0)) {
-	//	printf("Current position BEGIN %.1f %.1f\n", paths_x_0_forGPU, paths_y_0_forGPU);
-	//}
-	//if ((paths_x_0_forGPU == PG_OUT_OF_SCREEN_CURSOR || paths_y[0] == PG_OUT_OF_SCREEN_CURSOR) 
-	//	&& (paths_x_prev[0] >= 0 && paths_y_prev[0] >= 0)) {
-	//	printf("Current position END %.1f %.1f\n", paths_x_prev[0], paths_y_prev[0]);
-	//}
-	//if (paths_x_0_forGPU >= 0 && paths_y_0_forGPU >= 0) {
-		// printf("Position %.1f %.1f\n\n", paths_x_0_forGPU, paths_y_0_forGPU);
-	//}
-	//if (isBegin[0] && isEnd[0]) {
-	//	printf("Point: %.1f %.1f (%.1f %.1f %.1f %.1f) % .1f %.1f\n\n", paths_x_prev[0], paths_y_prev[0], paths_xL[0], paths_yL[0], paths_xR[0], paths_yR[0], paths_x_0_forGPU, paths_y_0_forGPU);
-	//}
-	//printf("Track#0 color %.2f %.2f %.2f %.2f\n", paths_Color_r[0], paths_Color_g[0], paths_Color_b[0], paths_Color_a[0]);
-	//printf("Track#1 color %.2f %.2f %.2f %.2f\n", paths_Color_r[1], paths_Color_g[1], paths_Color_b[1], paths_Color_a[1]);
-	//printf("Track#2 color %.2f %.2f %.2f %.2f\n", paths_Color_r[2], paths_Color_g[2], paths_Color_b[2], paths_Color_a[2]);
-	//printf("Track#3 color %.2f %.2f %.2f %.2f\n", paths_Color_r[3], paths_Color_g[3], paths_Color_b[3], paths_Color_a[3]);
-	// printf("BrushID %.2f %.2f %.2f %.2f\n" , paths_BrushID[0] , paths_BrushID[1] , paths_BrushID[2] , paths_BrushID[3] );
-	//printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[0], paths_RadiusX[1], paths_RadiusX[2] , paths_RadiusX[3] );
-	// printf("Track radius x %.2f %.2f %.2f %.2f\n" , paths_RadiusX[4], paths_RadiusX[5], paths_RadiusX[6] , paths_RadiusX[7] );
-
 
 #ifdef CRITON
 	glUniform4f(uniform_Update_fs_4fv_fftLevels03,
@@ -1523,12 +1671,19 @@ void pg_update_shader_uniforms(void) {
 
 #ifdef PG_WITH_PHOTO_FLASH
 	// photo flash
-#if defined (ETOILES)
+#if defined (ETOILES_TEASER)
 	photo_offsetX = 0;
 	photo_offsetY = 0;
-	if (pg_CurrentScene == 0 || pg_CurrentScene == 1) {
-		photo_offsetY = 0.52f -pg_Translate_SVG_Text(pg_Ind_Current_DisplayText)/window_height;
+	if (pg_CurrentSceneIndex == 0 || pg_CurrentSceneIndex == 1) {
+		photo_offsetY = 0.52f - pg_Translate_SVG_Text(pg_Ind_Current_DisplayText) / window_height;
 	}
+#endif
+#if defined (PIERRES)
+	float angle = photoJitterAmpl * (pulse[0] - 0.5f) * float(M_PI);
+	float radius = photoJitterAmpl * (pulse[2] - 0.5f);
+	// offset for POT coordinates
+	photo_offsetX = radius * cos(angle) / window_width;
+	photo_offsetY = radius * sin(angle) / window_height;
 #endif
 	glUniform4f(uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY,
 		flashPhotoTrk_weight, flashPhotoTrk_threshold, photo_offsetX, photo_offsetY);
@@ -1541,6 +1696,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform3f(uniform_Update_fs_3fv_repop_ColorCA,
 		repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
 #endif
+
 	// clear layer, flash pixel, flash CA -> Part
 	glUniform3f(uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres,
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
@@ -1550,13 +1706,14 @@ void pg_update_shader_uniforms(void) {
 		(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
 		(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
 #endif
+
 #if defined (PG_WITH_PHOTO_DIAPORAMA)
 	glUniform4f(uniform_Update_fs_4fv_photo01_wh,
 		leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio,
 		leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio);
 	//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
-	//	(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
-	//	(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
+	//	leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio,
+	//	leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio);
 #endif
 
 #ifdef PG_WITH_PHOTO_DIAPORAMA
@@ -1636,12 +1793,6 @@ void pg_update_shader_uniforms(void) {
 			pg_Photo_mask_position_noises[ind] -= maskCoordOffest;
 		}
 	}
-	//printf("noises %.1f %.1f %.1f %.1f\n", pg_Photo_mask_position_noises[0], pg_Photo_mask_position_noises[1],
-	// pg_Photo_mask_position_noises[2], pg_Photo_mask_position_noises[3]);
-	//printf("noises %.1f %.1f %.1f %.1f\n", pg_Photo_mask_position_noises[4], pg_Photo_mask_position_noises[5],
-	// pg_Photo_mask_position_noises[6], pg_Photo_mask_position_noises[7]);
-	//printf("noises %.1f %.1f %.1f %.1f\n\n", pg_Photo_mask_position_noises[8], pg_Photo_mask_position_noises[9],
-	// pg_Photo_mask_position_noises[10], pg_Photo_mask_position_noises[11]);
 	glUniform4fv(uniform_Update_fs_4fv_image_noisesxy, 3, pg_Photo_position_noises);
 	glUniform4fv(uniform_Update_fs_4fv_mask_noisesxy, 3, pg_Photo_mask_position_noises);
 #endif
@@ -1693,6 +1844,7 @@ void pg_update_shader_uniforms(void) {
 		// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 	}
 #endif
+
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 	glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius,
 #ifdef PG_NB_CA_TYPES
@@ -1731,8 +1883,6 @@ void pg_update_shader_uniforms(void) {
 		CAInterpolatedType_prev = CAInterpolatedType;
 		CAInterpolatedSubType_prev = CAInterpolatedSubType;
 	}
-
-
 	printOglError(519);
 
 	/////////////////////////////////////////////////////////////////////////
@@ -1838,34 +1988,91 @@ void pg_update_shader_uniforms(void) {
 	// MASTER SHADER UNIFORM VARIABLES
 	glUseProgram(shader_programme[pg_shader_Master]);
 	// hoover cursor
+	//printf("cur %d %d prev %d %d\n", CurrentCursorHooverPos_x, CurrentCursorHooverPos_y, tablet_prec_x, tablet_prec_y);
+	mobile_cursor = ((tablet_prec_x != CurrentCursorHooverPos_x) || (tablet_prec_y != CurrentCursorHooverPos_y));
+	tablet_prec_x = CurrentCursorHooverPos_x;
+	tablet_prec_y = CurrentCursorHooverPos_y;
+#ifndef ATELIERSENFANTS
 	glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
 		(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
 		(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
+#else
+	//printf("curseur %d %d\n", int(paths_x_forGPU[0]), int(paths_y_forGPU[0]));
+	///////////////////////// cursor on first finger given up
+	/*
+	if (paths_x_forGPU[0] > 0 && paths_y_forGPU[0] > 0) {
+		glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
+			(GLfloat)paths_x_forGPU[0], (GLfloat)paths_y_forGPU[0],
+			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec)* track_x_transl_0_pulse);
+		paths_x_forGPU_prev[0] = paths_x_forGPU[0];
+		paths_y_forGPU_prev[0] = paths_y_forGPU[0];
+		paths_x_forGPU_last_pos_time[0] = CurrentClockTime;
+	}
+	else {
+		if (CurrentClockTime - paths_x_forGPU_last_pos_time[0] > 0.1) {
+			glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
+				(GLfloat)PG_OUT_OF_SCREEN_CURSOR, (GLfloat)PG_OUT_OF_SCREEN_CURSOR,
+				(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec)* track_x_transl_0_pulse);
+		}
+		else {
+			glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
+				(GLfloat)paths_x_forGPU_prev[0], (GLfloat)paths_y_forGPU_prev[0],
+				(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
+		}
+	}
+	*/
+	if (CurrentCursorStylusvsRubber == pg_Rubber) {
+		glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
+			(GLfloat)paths_x_forGPU[0], (GLfloat)paths_y_forGPU[0],
+			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
+		BrokenInterpolationVar[_cursorSize] = true;
+		*((int*)ScenarioVarPointers[_cursorSize]) = int(pen_radius * pen_radiusMultiplier);
+	}
+	else {
+		glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
+			(GLfloat)PG_OUT_OF_SCREEN_CURSOR, (GLfloat)PG_OUT_OF_SCREEN_CURSOR,
+			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
+	}
+
+#endif
+	
 	// screen size
 	glUniform4f(uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart,
 		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(rightWindowVMargin),
 		GLfloat(CurrentClockTime - InitialScenarioTime));
-	// printf("time from start %.2f\n", GLfloat(CurrentClockTime - InitialScenarioTime));
+	//printf("time from start %.2f\n", GLfloat(CurrentClockTime - InitialScenarioTime));
 
 	// draws the palette on screen
+#ifndef PEN_HSV
 	glUniform4f(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey,
 		pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pen_grey * (1.f + pulse_average * pen_grey_pulse));
+#else
+	glUniform4f(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey,
+		pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], 0);
+#endif
+	//printf("Pen grey pulse %.2f %.2f\n", pen_grey* (1.f + pulse_average * pen_grey_pulse), pen_grey_pulse);
 	// low bandpass color             pen_color, pen_color_pulse
 	glUniform4f(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene,
-		bandpass_3color_palette[0][0], bandpass_3color_palette[0][1], bandpass_3color_palette[0][2], (GLfloat)pg_CurrentScene);
-	//printf("Color pulse %.2f %.2f\n", pen_color, pen_color_pulse);
-	//printf("Low palette color update %.2f %.2f %.2f\n",
-	//	bandpass_3color_palette[0][0], bandpass_3color_palette[0][1], bandpass_3color_palette[0][2]);
+		pen_bandpass_3color_palette[0][0], pen_bandpass_3color_palette[0][1], pen_bandpass_3color_palette[0][2], (GLfloat)pg_CurrentSceneIndex);
+	//printf("Pen color pulse %.2f %.2f\n", pen_color, pen_color_pulse);
+	//printf("Pen Low palette color update %.2f %.2f %.2f\n",
+	//	pen_bandpass_3color_palette[0][0], pen_bandpass_3color_palette[0][1], pen_bandpass_3color_palette[0][2]);
 	//printf("medium palette color update %.2f %.2f %.2f\n",
-	//	bandpass_3color_palette[1][0], bandpass_3color_palette[1][1], bandpass_3color_palette[1][2]);
+	//	pen_bandpass_3color_palette[1][0], pen_bandpass_3color_palette[1][1], pen_bandpass_3color_palette[1][2]);
 	//printf("High palette color update %.2f %.2f %.2f\n",
-	//	bandpass_3color_palette[2][0], bandpass_3color_palette[2][1], bandpass_3color_palette[2][2]);
+	//	pen_bandpass_3color_palette[2][0], pen_bandpass_3color_palette[2][1], pen_bandpass_3color_palette[2][2]);
 	// medium bandpass color
-	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb,
-		bandpass_3color_palette[1][0], bandpass_3color_palette[1][1], bandpass_3color_palette[1][2]);
+	//printf("mobile cursor %.1f\n", (mobile_cursor ? 1.f : 0.f));
+	glUniform4f(uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor,
+		pen_bandpass_3color_palette[1][0], pen_bandpass_3color_palette[1][1], pen_bandpass_3color_palette[1][2], (mobile_cursor ? 1.f : 0.f));
 	// high bandpass color
 	glUniform3f(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb,
-		bandpass_3color_palette[2][0], bandpass_3color_palette[2][1], bandpass_3color_palette[2][3]);
+		pen_bandpass_3color_palette[2][0], pen_bandpass_3color_palette[2][1], pen_bandpass_3color_palette[2][2]);
+#ifdef CAVERNEPLATON
+	// high bandpass color
+	glUniform3f(uniform_Master_fs_3fv_Caverne_BackColor_rgb,
+		Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
+#endif
 #ifdef PG_SENSORS
 	/////////////////////////////////////////////////////////////////////////
 	// SENSOR SHADER UNIFORM VARIABLES
@@ -1923,6 +2130,7 @@ void pg_ParticleAnimationPass(void) {
 	// texture unit location
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, pg_Part_init_pos_speed_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad, pg_Part_init_col_rad_ParticleAnimation_sampler);
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_acc, pg_Part_acc_ParticleAnimation_sampler);
 #ifdef PG_NB_CA_TYPES
 	glUniform1i(uniform_ParticleAnimation_texture_fs_CA, pg_CA_FBO_ParticleAnimation_sampler);
 #endif
@@ -1957,16 +2165,16 @@ void pg_ParticleAnimationPass(void) {
 	if (part_initialization >= 0
 		&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_pos_speed_texID.at(part_initialization)); // pos - speed 
-		printf("particle initialization %d\n", part_initialization);
+		//printf("particle initialization %d\n", part_initialization);
 	}
 	// photo or video particles, position and speed are chosen from a random texture between 
 	// 0 & PG_NB_PARTICLE_INITIAL_IMAGES - 1
-	else if (part_initialization >= 0
-			&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
-		unsigned int indTex = unsigned int(floor(rand_0_1 * pg_particle_initial_pos_speed_texID.size())) % pg_particle_initial_pos_speed_texID.size();
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_pos_speed_texID.at(indTex)); // pos - speed 
-		printf("particle initialization %d texture %d\n", part_initialization, indTex);
-	}
+	//else if (part_initialization >= 0
+	//		&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
+	//	unsigned int indTex = unsigned int(floor(rand_0_1 * pg_particle_initial_pos_speed_texID.size())) % pg_particle_initial_pos_speed_texID.size();
+	//	glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_pos_speed_texID.at(indTex)); // pos - speed 
+	//	printf("particle initialization %d texture %d\n", part_initialization, indTex);
+	//}
 
 	glActiveTexture(GL_TEXTURE0 + pg_Part_init_col_rad_ParticleAnimation_sampler);
 	// TMP
@@ -1977,6 +2185,13 @@ void pg_ParticleAnimationPass(void) {
 		&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_color_radius_texID.at(part_initialization)); // color RGB - rad 
 	}
+	glActiveTexture(GL_TEXTURE0 + pg_Part_acc_ParticleAnimation_sampler);
+	// acceleration is taken from photo 
+	if (part_image_acceleration >= 0
+		&& part_image_acceleration < int(pg_particle_acc_texID.size())) {
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_acc_texID.at(part_image_acceleration)); // color RGB - rad 
+	}
+
 
 #ifdef PG_NB_CA_TYPES
 	// 2-cycle ping-pong CA step n step n (FBO attachment 0)
@@ -2068,6 +2283,34 @@ void pg_UpdatePass(void) {
 	glUniformMatrix4fv(uniform_Update_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
 	glUniformMatrix4fv(uniform_Update_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
+#if defined (PIERRES)
+	// homography for background texture distortion
+	// source points
+	std::vector<cv::Point2f> sourcePoints;
+	// destination points
+	std::vector<cv::Point2f> destinationPoints;
+
+	// the current image coordinates are given by the keystone variables
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomLeft, VP1KeystoneYBottomLeft));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight, VP1KeystoneYBottomRight));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight, VP1KeystoneYTopRight));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopLeft, VP1KeystoneYTopLeft));
+
+	// the initial texture coordinates are based on unit for the whole image
+	// they are then multiplied by the image ratio (wrt power of two uper dimensions)
+	// inside the shader to access only the part of the texture that corresponds to the image
+	destinationPoints.push_back(cv::Point2f(0.0f, 1.f));
+	destinationPoints.push_back(cv::Point2f(1.f, 1.f));
+	destinationPoints.push_back(cv::Point2f(1.f, 0.0f));
+	destinationPoints.push_back(cv::Point2f(0.0f, 0.0f));
+  
+	// initializes the homography matrices for the distortion of the projected image
+	pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, pg_homographyForTexture, 3);
+
+	// and transfer the matrix to the shader
+	glUniformMatrix3fv(uniform_Update_homographyForTexture, 1, GL_FALSE, pg_homographyForTexture);
+#endif
+
 	// texture unit location
 #ifdef PG_NB_CA_TYPES
 	glUniform1i(uniform_Update_texture_fs_CA, pg_CA_FBO_Update_sampler);
@@ -2075,7 +2318,7 @@ void pg_UpdatePass(void) {
 #ifdef PG_NB_PIXEL_MODES
 	glUniform1i(uniform_Update_texture_fs_Pixels, pg_Pixels_FBO_Update_sampler);
 #endif
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	glUniform1i(uniform_Update_texture_fs_Brushes, pg_Brushes_Update_sampler);
 #endif
 #ifdef PG_WITH_CAMERA_CAPTURE
@@ -2120,11 +2363,14 @@ void pg_UpdatePass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Update_texture_fs_Trk3, pg_Trk3_FBO_Update_sampler);
 #endif
-#if defined (GN) || defined (CAAUDIO)
+#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 	glUniform1i(uniform_Update_texture_fs_CATable, pg_CATable_Update_sampler);
 #endif
 #ifdef GN
 	glUniform1i(uniform_Update_texture_fs_Camera_BGIni, pg_Camera_BGIni_FBO_Update_sampler);
+#endif
+#ifdef PG_WITH_BURST_MASK
+	glUniform1i(uniform_Update_texture_fs_Burst_Mask, pg_Burst_Mask_FBO_Update_sampler);
 #endif
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -2144,7 +2390,7 @@ void pg_UpdatePass(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// pen patterns
-#ifndef PG_BEZIER_PATHS
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
 	glActiveTexture(GL_TEXTURE0 + pg_Brushes_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Pen_texture_3D_texID);
 #endif
@@ -2312,7 +2558,7 @@ void pg_UpdatePass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
 
-#if defined (GN) || defined (CAAUDIO)
+#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 	// CA Data table (FBO attachment 11)
 	glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
@@ -2322,6 +2568,12 @@ void pg_UpdatePass(void) {
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BGIni_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BGIni_texture_texID);
+#endif
+
+#ifdef PG_WITH_BURST_MASK
+	// Master mask texture
+	glActiveTexture(GL_TEXTURE0 + pg_Burst_Mask_FBO_Update_sampler);
+	glBindTexture(GL_TEXTURE_RECTANGLE, Burst_Mask_texID);
 #endif
 
 	// printf("photo IDs %d %d\n", pg_Photo_buffer_data[0].texBuffID, pg_Photo_buffer_data[1].texBuffID);
@@ -2342,10 +2594,10 @@ void pg_UpdatePass(void) {
 }
 
 /////////////////////////////////////
-// PASS #2: PARTICLE RENDERING PASS
+// PASS #2: PARTICLE, TEXT, SVG CLIP ART RENDERING PASS
 
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-void pg_ParticleRenderingPass(void) {
+void pg_SVGandParticleRenderingPass(void) {
 	// printf("nb paticles %d\^n", nb_particles);
 	// draws the Bezier curve
 
@@ -2358,27 +2610,35 @@ void pg_ParticleRenderingPass(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES)
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	//glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
-#endif
-
-	//glDisable(GL_BLEND);
-	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-#if defined (ETOILES)
-	if (pg_CurrentScene == 0) {
+	////////////////////////////////////////
+	// SVG TEXT OR CLIP ART RENDERING    
+	////////////////////////////////////////
+#if defined (ETOILES_TEASER)
+	if (pg_CurrentSceneIndex == 0) {
 		pg_Display_SVG_Text(&pg_Ind_Current_DisplayText, false);
 	}
-	else if (pg_CurrentScene == 5) {
+	else if (pg_CurrentSceneIndex == 5) {
 		pg_Display_SVG_Text(&pg_Ind_Current_DisplayText, true);
 	}
 #else
 	pg_Display_All_SVG_ClipArt(activeClipArts);
 #endif
 	printOglError(5256);
+
+	////////////////////////////////////////
+	// PARTICLE RENDERING    
+	////////////////////////////////////////
+#if defined (TEXTURED_QUAD_PARTICLES)
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+#endif
+
+	//glDisable(GL_BLEND);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	////////////////////////////////////////
 	// activate shaders and sets uniform variable values    
@@ -2734,7 +2994,12 @@ void pg_MasterPass(void) {
 #ifdef PG_WITH_MASTER_MASK
 	// Master mask texture
 	glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID);
+	if (nb_layers_master_mask > 0) {
+		glBindTexture(GL_TEXTURE_3D, Master_Multilayer_Mask_texID);
+	}
+	else {
+		glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID);
+	}
 #endif
 #if defined (GN)
 	// LYM logo
@@ -2846,15 +3111,9 @@ void pg_SensorPass(void) {
 }
 #endif
 
-
-#ifdef PG_MESHES
-//////////////////////////////////////////////////
-// PASS #6: MESH PASS
-
-
-#ifdef PG_WITH_HOMOGRAPHY
+#if defined (PIERRES)
 // initializes the homography matrices for the distortion of the projected image
-void pg_calculate_homography_matrices(void) {
+void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, std::vector<cv::Point2f> *destinationPoints, GLfloat matValues[], int dim) {
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (left display)
 
@@ -2862,49 +3121,51 @@ void pg_calculate_homography_matrices(void) {
 	// This homography transforms the points projected at near=1 into the four
 	// points measured experimetally corresponding to the 4 vertices of the
 	// quad projected at 1m with the projector axis orthogonal to the projection plane
-	// Read points
-	std::vector<cv::Point2f> sourcePoints;
-	std::vector<cv::Point2f> source2Points;
-	std::vector<cv::Point2f> destinationPoints;
 
-	sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
-		-VP1KeystoneYBottomLeft));
-	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
-		-VP1KeystoneYBottomRight));
-	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
-		VP1KeystoneYTopRight));
-	sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
-		VP1KeystoneYTopLeft));
-
-	destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
-	destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
-	destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
-	destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
-
-	cv::Mat homography = cv::findHomography(sourcePoints, destinationPoints, 0);
-	// printf("mat size %d %d\n", homography.size().width, homography.size().height);
+	cv::Mat homography = cv::findHomography(*sourcePoints, *destinationPoints, 0);
+	 //printf("mat size %d %d\n", homography.size().width, homography.size().height);
 	// in GLM Matrix types store their values in column - major order.
-	float matValues[16] = { (float)((double *)homography.data)[0],
-		(float)((double *)homography.data)[3],
-		0.0,
-		(float)((double *)homography.data)[6],
+	 if (dim == 4) {
+		 matValues[0] = (float)((double*)homography.data)[0];
+		 matValues[1] = (float)((double*)homography.data)[3];
+		 matValues[2] = 0.0;
+		 matValues[3] = (float)((double*)homography.data)[6];
 
-		(float)((double *)homography.data)[1],
-		(float)((double *)homography.data)[4],
-		0.0,
-		(float)((double *)homography.data)[7],
+		 matValues[4] = (float)((double*)homography.data)[1];
+		 matValues[5] = (float)((double*)homography.data)[4];
+		 matValues[6] = 0.0;
+		 matValues[7] = (float)((double*)homography.data)[7];
 
-		0.0, 0.0, 0.0, 0.0,
+		 matValues[8] = 0.0;
+		 matValues[9] = 0.0;
+		 matValues[10] = 0.0;
+		 matValues[11] = 0.0;
 
-		(float)((double *)homography.data)[2],
-		(float)((double *)homography.data)[5],
-		0.0,
-		(float)((double *)homography.data)[8] };
+		 matValues[12] = (float)((double*)homography.data)[2];
+		 matValues[13] = (float)((double*)homography.data)[5];
+		 matValues[14] = 0.0;
+		 matValues[15] = (float)((double*)homography.data)[8];
+	 }
+	 else if (dim == 3) {
+		 matValues[0] = (float)((double*)homography.data)[0];
+		 matValues[1] = (float)((double*)homography.data)[3];
+		 matValues[2] = (float)((double*)homography.data)[6];
 
-	VP1homographyMatrix = (glm::make_mat4(matValues));
+		 matValues[3] = (float)((double*)homography.data)[1];
+		 matValues[4] = (float)((double*)homography.data)[4];
+		 matValues[5] = (float)((double*)homography.data)[7];
+
+		 matValues[6] = (float)((double*)homography.data)[2];
+		 matValues[7] = (float)((double*)homography.data)[5];
+		 matValues[8] = (float)((double*)homography.data)[8];
+	 }
+	 else {
+		 sprintf(ErrorStr, "homography dimension should be 3 or 4, not %d", dim); ReportError(ErrorStr);
+	 }
 }
 #endif
 
+#ifdef PG_MESHES
 
 // initializes the transformation matrices related to the frustum
 // should only be called when the values are changed through pd or maxmsp
@@ -2914,9 +3175,14 @@ void pg_calculate_projection_matrices(void) {
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
-	VP1perspMatrix
-		= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-
+	if (double_window) {
+		VP1perspMatrix
+			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m * 2.0f, VP1TopAt1m * 2.0f, nearPlane, farPlane);
+	}
+	else {
+		VP1perspMatrix
+			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
 	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m );
 
 	// Camera matrix
@@ -2948,7 +3214,167 @@ void pg_calculate_projection_matrices(void) {
 			lookAtPoint, // and looks at lookAtPoint
 			glm::vec3(0, VP1UpY, (VP1Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP1UpY, 1 or 0, VP1UpY, -1 if projector is upside down)
 		);
+
+#ifdef PG_SECOND_CAMERA_VERTICAL
+	//////////////////////////////////////////////////////////////////////////////////
+	// left camera (right display)
+	VP2perspMatrix
+		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m * 2.0f, VP2TopAt1m * 2.0f, nearPlane, farPlane);
+
+	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m );
+
+	// Camera matrix
+	// float eyePosition[3] = {10.1f,4.6f,4.4f};
+	// the projection of the bottom of the screen is known
+	// we have to deduce the look at from this point and the measure of 
+	// the projector calibration
+	// the look at has to be recalculated because the targe point is above the axis of projection
+	// by an angle alpha
+	//printf("VP2BottomAt1m %.2f\n" , VP2BottomAt1m );
+
+	float VP2alpha = atan(VP2BottomAt1m);
+	vectorVPPositionToScreenBottom
+		= glm::vec4(VP2LookAtX - VP2LocX, VP2LookAtY - VP2LocY, VP2LookAtZ - VP2LocZ, 0.0);
+	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
+	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
+	rotationAxis = glm::cross(glm::vec3(0, 0, (VP2Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
+	glm::normalize(rotationAxis);
+	// shifts towards the bottom the actual lookat center according to VP2BottomAt1m
+	rotationMat = glm::rotate(rotationMat, VP2alpha, rotationAxis); // (VP2Reversed?-1.0f:1.0f) *
+	vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
+	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
+	lookAtPoint = glm::vec3(VP2LocX, VP2LocY, VP2LocZ) + vectorLookAt;
+	// printf("Look at real %.2f %.2f %.2f\n\n" , lookAtPoint.x , lookAtPoint.y , lookAtPoint.z );
+	VP2viewMatrix
+		= glm::lookAt(
+			glm::vec3(VP2LocX, VP2LocY, VP2LocZ), // Camera is at (VP2LocX, VP2LocY, VP2LocZ), in World Space
+			lookAtPoint, // and looks at lookAtPoint
+			glm::vec3(0, VP2UpY, (VP2Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP2UpY, 1 or 0, VP2UpY, -1 if projector is upside down)
+		);
+#endif
+
+
 }
+
+//////////////////////////////////////////////////
+// PASS #6: MESH PASS
+
+#ifdef ETOILES_TEASER
+bool mesh_guided_by_strokes(int indMeshFile) {
+	// meshes are guided by strokes
+	int path_no = indMeshFile + 1;
+	bool visible = false;
+
+	// brings the path coordinates to the normal cube
+	if (path_no <= PG_NB_PATHS) {
+		visible = (is_path_replay[path_no] && paths_x[path_no] > 0 && paths_y[path_no] > 0);
+		if (visible) {
+			// normal pen coordinates
+			pen_x = (paths_x[path_no] / leftWindowWidth) * 2.f - 1.f;
+			pen_y = (paths_y[path_no] / window_height) * 2.f - 1.f;
+		}
+		else {
+			bool isTrackRecord = false;
+			switch (path_no) {
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+			case 1:
+				isTrackRecord = path_record_1;
+				break;
+			case 2:
+				isTrackRecord = path_record_2;
+				break;
+			case 3:
+				isTrackRecord = path_record_3;
+				break;
+#endif
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+			case 4:
+				isTrackRecord = path_record_4;
+				break;
+			case 5:
+				isTrackRecord = path_record_5;
+				break;
+			case 6:
+				isTrackRecord = path_record_6;
+				break;
+			case 7:
+				isTrackRecord = path_record_7;
+				break;
+#endif
+#if PG_NB_PATHS == 11
+			case 8:
+				isTrackRecord = path_record_8;
+				break;
+			case 9:
+				isTrackRecord = path_record_9;
+				break;
+			case 10:
+				isTrackRecord = path_record_10;
+				break;
+			case 11:
+				isTrackRecord = path_record_11;
+				break;
+#endif
+			}
+			visible = isTrackRecord && paths_x[0] > 0 && paths_y[0] > 0;
+			if (visible) {
+				// normal pen coordinates
+				pen_x = (paths_x[0] / leftWindowWidth) * 2.f - 1.f;
+				pen_y = (paths_y[0] / window_height) * 2.f - 1.f;
+			}
+		}
+	}
+	return visible;
+}
+
+void ray_animation(int indMeshFile) {
+	// rotates and scales a ray so that it follows a pen
+	// vector from ray center to pen
+	vec_x = pen_x + pg_Mesh_Translation_X[indMeshFile];
+	vec_y = pen_y + pg_Mesh_Translation_Y[indMeshFile];
+	// angle from ray center to pen -> ray angle
+	if (vec_x != 0) {
+		pg_Mesh_Rotation_angle[indMeshFile] = atan(vec_y / vec_x);
+	}
+	else {
+		pg_Mesh_Rotation_angle[indMeshFile] = 0;
+	}
+	if (vec_x > 0) {
+		pg_Mesh_Rotation_angle[indMeshFile] += float(M_PI);
+	}
+	// ray size so that the tip of the ray coincides with the pen
+	float norm_vec = sqrt(vec_x * vec_x + vec_y * vec_y);
+	pg_Mesh_Scale[indMeshFile] = norm_vec;
+}
+#endif
+
+#ifdef CAVERNEPLATON
+void automatic_rotation(int indMeshFile) {
+	// rotation update
+	if (indMeshFile < 7) {
+		pg_Mesh_Rotation_angle[indMeshFile] += 0.03f;
+		pg_Mesh_Rotation_X[indMeshFile] += 0.01f;
+		pg_Mesh_Rotation_Y[indMeshFile] += 0.01f;
+		pg_Mesh_Rotation_Z[indMeshFile] += 0.01f;
+		// translation update
+		if (mobileMeshes & (1 << indMeshFile)) {
+			pg_Mesh_Translation_X[indMeshFile] += pg_Mesh_Motion_X[indMeshFile] * 2.f;
+			pg_Mesh_Translation_Y[indMeshFile] += pg_Mesh_Motion_Y[indMeshFile] * 2.f;
+			pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile] * 2.f;
+		}
+	}
+	else {
+		pg_Mesh_Rotation_angle[indMeshFile] += 0.06f * rand_0_1;
+		pg_Mesh_Rotation_X[indMeshFile] += (0.2f * rand_0_1 - 0.1f);
+		pg_Mesh_Rotation_Y[indMeshFile] += (0.2f * rand_0_1 - 0.1f);
+		pg_Mesh_Rotation_Z[indMeshFile] += (0.2f * rand_0_1 - 0.1f);
+		// translation update
+		pg_Mesh_Translation_X[indMeshFile] += pg_Mesh_Motion_X[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
+		pg_Mesh_Translation_Y[indMeshFile] += pg_Mesh_Motion_Y[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
+		pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
+	}
+}
+#endif
 
 void pg_MeshPass(void) {
 	float eyePosition[3] = { 20.f, 0.f, 0.f };
@@ -2987,133 +3413,96 @@ void pg_MeshPass(void) {
 	// activate shaders and sets uniform variable values    
 	glUseProgram(shader_programme[pg_shader_Mesh]);
 
-	// perspective matrices
-	//VP1perspMatrix
-	//	= glm::perspective(float(PI/4.f), 4.f/3.f, 0.1f, 100.f);
-	//VP1viewMatrix
-	//	= glm::lookAt(
-	//		glm::vec3(eyePosition[0], eyePosition[1], eyePosition[2]), // Camera in World Space
-	//		glm::vec3(lookat[0], lookat[1], lookat[2]), // and where it looks  at
-	//		glm::vec3(0, 0, 1)  // Head is up (set to 0,0,1)
-	//	);
-
 	// calculates the view and perspective matrices according to the parameters in the scenario file
+	// for one camera if single screen, and two otherwise
 	pg_calculate_projection_matrices();
 
 #ifdef PG_WITH_HOMOGRAPHY
+	// Read points
+	std::vector<cv::Point2f> sourcePoints;
+	//std::vector<cv::Point2f> source2Points;
+	std::vector<cv::Point2f> destinationPoints;
+
+	sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
+		-VP1KeystoneYBottomLeft));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
+		-VP1KeystoneYBottomRight));
+	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
+		VP1KeystoneYTopRight));
+	sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
+		VP1KeystoneYTopLeft));
+
+	destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
+	destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
+	destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
+	destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
+
 	// initializes the homography matrices for the distortion of the projected image
-	pg_calculate_homography_matrices();
+	pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, matValues, 4);
+	*homographyMatrix = (glm::make_mat4(matValues));
 #endif
 
-	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE, 
+	// sets viewport to single window
+	if (double_window) {
+		glViewport(0, window_height / 2, leftWindowWidth, window_height);
+	}
+	else {
+		glViewport(0, 0, leftWindowWidth, window_height);
+	}
+	// projection and view matrices
+	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE,
 		// glm::value_ptr(VP1homographyMatrix * VP1perspMatrix));
 		glm::value_ptr(VP1perspMatrix));
 	glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
 		glm::value_ptr(VP1viewMatrix));
 
 	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		// visibility
 		bool visible = false;
-#ifdef ETOILES
-		// meshes are guided by strokes
-		int path_no = indMeshFile + 1;
-		// brings the path coordinates to the normal cube
-		float pen_x, pen_y, vec_x, vec_y;
-		if (path_no < PG_NB_PATHS + 1) {
-			visible = (is_path_replay[path_no] && paths_x[path_no] > 0 && paths_y[path_no] > 0);
-			if (visible) {
-				// normal pen coordinates
-				pen_x = (paths_x[path_no] / leftWindowWidth) * 2.f - 1.f;
-				pen_y = (paths_y[path_no] / window_height) * 2.f - 1.f;
-			}
-			else {
-				bool isTrackRecord = false;
-				switch (path_no) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-				case 1:
-					isTrackRecord = path_record_1;
-					break;
-				case 2:
-					isTrackRecord = path_record_2;
-					break;
-				case 3:
-					isTrackRecord = path_record_3;
-					break;
-#endif
-#if PG_NB_PATHS == 7
-				case 4:
-					isTrackRecord = path_record_4;
-					break;
-				case 5:
-					isTrackRecord = path_record_5;
-					break;
-				case 6:
-					isTrackRecord = path_record_6;
-					break;
-				case 7:
-					isTrackRecord = path_record_7;
-					break;
-#endif
-				}
-				visible = isTrackRecord && paths_x[0] > 0 && paths_y[0] > 0;
-				if (visible) {
-					// normal pen coordinates
-					pen_x = (paths_x[0] / leftWindowWidth) * 2.f - 1.f;
-					pen_y = (paths_y[0] / window_height) * 2.f - 1.f;
-				}
-			}
-		}
+#ifdef ETOILES_TEASER
+		visible = mesh_guided_by_strokes(indMeshFile);
+#else
+#ifdef CAVERNEPLATON
+		visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_CaverneActveMesh[indMeshFile] 
+			&& (CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile] > pg_CaverneMeshWakeupTime[indMeshFile])
+			&& (CurrentClockTime < pg_CaverneMeshDeathTime[indMeshFile]));
 #else
 		visible = (activeMeshes & (1 << indMeshFile));
 #endif
+#endif
+		// visible mesh
 		if (visible) {
+			// mesh animation
 #ifdef CAVERNEPLATON
-			// rotation update
-			pg_Mesh_Rotation_angle[indMeshFile] += 0.1f;
-			pg_Mesh_Rotation_X[indMeshFile] += 0.01f;
-			pg_Mesh_Rotation_Y[indMeshFile] += 0.01f;
-			pg_Mesh_Rotation_Z[indMeshFile] += 0.01f;
-			// translation update
-			if (mobileMeshes & (1 << indMeshFile)) {
-				pg_Mesh_Translation_X[indMeshFile] += pg_Mesh_Motion_X[indMeshFile];
-				pg_Mesh_Translation_Y[indMeshFile] += pg_Mesh_Motion_Y[indMeshFile];
-				pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile];
-			}
+			automatic_rotation(indMeshFile);
+#endif
+#ifdef ETOILES_TEASER
+			ray_animation();
 #endif
 
-#ifdef ETOILES
-			// rotates and scales a ray so that it follows a pen
-			// vector from ray center to pen
-			vec_x = pen_x + pg_Mesh_Translation_X[indMeshFile];
-			vec_y = pen_y + pg_Mesh_Translation_Y[indMeshFile];
-			// angle from ray center to pen -> ray angle
-			if (vec_x != 0) {
-				pg_Mesh_Rotation_angle[indMeshFile] = atan(vec_y / vec_x);
-			}
-			else {
-				pg_Mesh_Rotation_angle[indMeshFile] = 0;
-			}
-			if (vec_x > 0) {
-				pg_Mesh_Rotation_angle[indMeshFile] += float(M_PI);
-			}
-			// ray size so that the tip of the ray coincides with the pen
-			float norm_vec = sqrt(vec_x * vec_x + vec_y * vec_y);
-			pg_Mesh_Scale[indMeshFile] = norm_vec;
-#endif
-
-			// transformed mesh according to configuration file
-			// Model matrix : a varying rotation matrix (around Oz)
-			glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile],
-				pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
+			// Model matrix 
+			// transformed mesh according to scenario file
+			// 1. a varying translation matrix
 			VP1modelMatrix = glm::translate(glm::mat4(1.0f),
 				glm::vec3(pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]));
+			// 2. a varying rotation matrix 
+			glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile],
+				pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
 			VP1modelMatrix = glm::rotate(VP1modelMatrix, pg_Mesh_Rotation_angle[indMeshFile], myRotationAxis);
-#ifdef ETOILES
-			VP1modelMatrix = glm::scale(VP1modelMatrix,	glm::vec3(pg_Mesh_Scale[indMeshFile],1,1));
+			// 3. a varying scaling matrix 
+#if defined (ETOILES_TEASER)
+			VP1modelMatrix = glm::scale(VP1modelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
+#elif defined (CAVERNEPLATON)
+			if (indMeshFile < 7) {
+				VP1modelMatrix = glm::scale(VP1modelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
+			}
+			else {
+				VP1modelMatrix = glm::scale(VP1modelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile] * min(2.0f, (CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile])/20.f)));
+			}
 #else
 			VP1modelMatrix = glm::scale(VP1modelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
 #endif
-			// forces no transformations on the volumes
-			// VP1modelMatrix = glm::mat4(1.0f);
+			// model matrix transfered to GPU
 			glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
 				glm::value_ptr(VP1modelMatrix));
 
@@ -3142,32 +3531,31 @@ void pg_MeshPass(void) {
 #endif
 				}
 #endif
-
-				// draw points from the currently bound VAO with current in-use shader
-				// glDrawArrays(GL_TRIANGLES, 0, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3);
+				// standard filled mesh drawing
+				// draw triangles from the currently bound VAO with current in-use shader
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
-
 				glUseProgram(shader_programme[pg_shader_Mesh]);
 
 				// updates this variable according whether triangles or lines are shown
-				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText, isDisplayLookAt, 0, with_blue, with_whiteText);
-
+				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 
-#if defined(CAVERNEPLATON) // draws the polygon contours
+#if defined(CAVERNEPLATON) 
+				// draws the polygon contours
 				// updates this variable according whether triangles or lines are shown
-				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText, isDisplayLookAt, 1, with_blue, with_whiteText);
+				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
 #ifdef TEMPETE
+				// optional additional drawing of the polygon contours for checking calibration in augmented reality
 				if (with_mesh) {
 					// no z-Buffer
 					glDisable(GL_DEPTH_TEST);
 					glLineWidth(3);
-					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_with_whiteText, isDisplayLookAt, 1, with_blue, with_whiteText);
+					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -3178,24 +3566,110 @@ void pg_MeshPass(void) {
 				//printf("Display mesh %d/%d size (nb faces) %d\n", indMeshFile, indMeshInFile,
 				//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
 
-				// duplicates the Meshs in case of double window
-				if (double_window) {
-					glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE,
-						glm::value_ptr(VP1homographyMatrix * VP1perspMatrix));
-					glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
-						glm::value_ptr(VP1viewMatrix));
 
-					// draw points from the currently bound VAO with current in-use shader
-					// glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
-					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-					printOglError(599);
-				} // double window
-				printOglError(597);
 			} // submeshes
 		} // visible mesh
 	} // all the meshes
+	printOglError(597);
+
+#ifdef PG_SECOND_CAMERA_VERTICAL
+	// sets viewport to second window
+	glViewport(0, 0, leftWindowWidth, window_height / 2);
+	// duplicates the Meshs in case of double window
+
+	glUniformMatrix4fv(uniform_Mesh_vp_proj, 1, GL_FALSE,
+		// glm::value_ptr(VP2homographyMatrix * VP2perspMatrix));
+		glm::value_ptr(VP2perspMatrix));
+	glUniformMatrix4fv(uniform_Mesh_vp_view, 1, GL_FALSE,
+		glm::value_ptr(VP2viewMatrix));
+
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		// visibility
+		bool visible = false;
+		visible = (activeMeshes & (1 << indMeshFile));
+
+		// visible mesh
+		if (visible) {
+
+			// Model matrix 
+			// transformed mesh according to scenario file
+			// 1. a varying translation matrix
+			VP1modelMatrix = glm::translate(glm::mat4(1.0f),
+				glm::vec3(pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]));
+			// 2. a varying rotation matrix 
+			glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile],
+				pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
+			VP1modelMatrix = glm::rotate(VP1modelMatrix, pg_Mesh_Rotation_angle[indMeshFile], myRotationAxis);
+			// 3. a varying scaling matrix 
+			VP1modelMatrix = glm::scale(VP1modelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
+
+			// model matrix transfered to GPU
+			glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
+				glm::value_ptr(VP1modelMatrix));
+
+			for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
+				// binds VAO
+				glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
+
+				// activate shaders and sets uniform variable values    
+				glUseProgram(shader_programme[pg_shader_Mesh]);
+
+				glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
+				glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+				// texture unit location
+				glUniform1i(uniform_Mesh_texture_fs_decal, 0);
+#ifdef PG_MESHES
+				glActiveTexture(GL_TEXTURE0 + 0);
+				if (pg_Mesh_TextureRank[indMeshFile] != -1) {
+					// specific texture
+					glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle[indMeshFile]);
+				}
+				else {
+					// previous pass output
+					// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
+#ifdef PG_AUGMENTED_REALITY
+					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
+#endif
+				}
+#endif
+				// standard filled mesh drawing
+				// draw triangles from the currently bound VAO with current in-use shader
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+				glUseProgram(shader_programme[pg_shader_Mesh]);
+
+				// updates this variable according whether triangles or lines are shown
+				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);
+
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+
+#ifdef TEMPETE
+				// optional additional drawing of the polygon contours for checking calibration in augmented reality
+				if (with_mesh) {
+					// no z-Buffer
+					glDisable(GL_DEPTH_TEST);
+					glLineWidth(3);
+					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					// no z-Buffer
+					glEnable(GL_DEPTH_TEST);
+				}
+#endif
+				//printf("Display mesh %d/%d size (nb faces) %d\n", indMeshFile, indMeshInFile,
+				//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
+
+
+			} // submeshes
+		} // visible mesh
+	} // all the meshes
+	printOglError(597);
+
+	// sets viewport to full window
+	glViewport(0, 0, leftWindowWidth, window_height);
+	printOglError(597);
+#endif
 
 	glDisable(GL_DEPTH_TEST);
 	// no transparency
@@ -3409,45 +3883,47 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 	glDisable(GL_BLEND);
 
 #if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
-	// particle pass #0
+	//////////////////////////////////////
+	// particle animation pass #0
 	pg_ParticleAnimationPass();
 #endif
 	printOglError(681);
 
-	// update pass #1
+	//////////////////////////////////////
+	// update pass #1 
+	// image layers update pass (CA, PIXELS, DRAWING, VIDEO AND PHOTO...)
 	pg_UpdatePass();
 	printOglError(682);
 
-//#ifndef TEMPETE
+	//////////////////////////////////////
+	// particle and SVG clip art pass #2a
 #if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
-	// particle rendering pass #2
-	// glEnable(GL_BLEND);
-	// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	// glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-	// glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-	pg_ParticleRenderingPass();
+	pg_SVGandParticleRenderingPass();
 	printOglError(683);
-
-	// glDisable(GL_BLEND);
 #endif
-//#endif
-  // the meshes are displayed together with the particles except for augmented reality
-	// where it is displayed last
+
+	//////////////////////////////////////
+	// mesh pass #2b
+	// the meshes are displayed together with the particles except for augmented reality
+	// where they are displayed last
 #if defined(PG_MESHES) && !defined(PG_AUGMENTED_REALITY)
 	if (activeMeshes > 0) {
 		pg_MeshPass();
 	}
 #endif
 
+	//////////////////////////////////////
 	// layer compositing & echo pass #3
 	pg_MixingPass();
 	printOglError(684);
 
+	//////////////////////////////////////
 	// final combination of echoed and non echoed rendering #4
 	pg_MasterPass();
 	printOglError(685);
 
+	//////////////////////////////////////
+	// additional sensor pass on top of final rendering
 #ifdef PG_SENSORS
 	bool oneSensorActiveMin = false;
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
@@ -3482,34 +3958,15 @@ void pg_draw_scene( DrawingMode mode, bool threaded ) {
 #endif
   }
 
-  // the meshes are displayed last for augmented reality
+  //////////////////////////////////////
+  // last mesh pass with final rendering texture
+  // for augmented reality
 #if defined(PG_MESHES) && defined(PG_AUGMENTED_REALITY)
   if (activeMeshes > 0) {
 	  pg_MeshPass();
   }
 #endif
 
-/*
-#ifdef TEMPETE
-#if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
-  // particle rendering pass #2
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-  glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  pg_ParticleRenderingPass();
-
-   glDisable(GL_BLEND);
-#endif
-#endif
-*/
-
   printOglError(686);
-
-
-  // // flushes OpenGL commands
-  // glFlush();
-
 }
 

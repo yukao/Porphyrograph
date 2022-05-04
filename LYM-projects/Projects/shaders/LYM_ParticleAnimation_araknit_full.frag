@@ -7,42 +7,43 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-float     partDecay;
-int       part_initialization;
-bool      part_path_follow_0;
-bool      part_path_follow_1;
-bool      part_path_follow_2;
-bool      part_path_follow_3;
-bool      part_path_follow_4;
-bool      part_path_follow_5;
-bool      part_path_follow_6;
-bool      part_path_follow_7;
-bool      part_path_repulse_0;
-bool      part_path_repulse_1;
-bool      part_path_repulse_2;
-bool      part_path_repulse_3;
-bool      part_path_repulse_4;
-bool      part_path_repulse_5;
-bool      part_path_repulse_6;
-bool      part_path_repulse_7;
-float     part_size;
-float     part_acc;
-float     part_damp;
-float     noiseScale;
-float     part_field_weight;
-float     part_damp_targtRad;
-float     part_timeToTargt;
-bool      partMove_target;
-bool      partMove_rand;
-int       partExit_mode;
-int       partStroke_mode;
-int       partColor_mode;
-float     pixel_acc_shiftX;
-float     pixel_acc_shiftY;
-float     repop_part;
-float     repop_path;
-bool      freeze;
-uniform float uniform_ParticleAnimation_scenario_var_data[35];
+float	 partDecay;
+int		part_initialization;
+bool	  part_path_follow_0;
+bool	  part_path_follow_1;
+bool	  part_path_follow_2;
+bool	  part_path_follow_3;
+bool	  part_path_follow_4;
+bool	  part_path_follow_5;
+bool	  part_path_follow_6;
+bool	  part_path_follow_7;
+bool	  part_path_repulse_0;
+bool	  part_path_repulse_1;
+bool	  part_path_repulse_2;
+bool	  part_path_repulse_3;
+bool	  part_path_repulse_4;
+bool	  part_path_repulse_5;
+bool	  part_path_repulse_6;
+bool	  part_path_repulse_7;
+float	 part_size;
+float	 part_acc;
+int		part_image_acceleration;
+float	 part_damp;
+float	 noiseScale;
+float	 part_field_weight;
+float	 part_damp_targtRad;
+float	 part_timeToTargt;
+bool	  partMove_target;
+bool	  partMove_rand;
+int		partExit_mode;
+int		partStroke_mode;
+int		partColor_mode;
+float	 pixel_acc_shiftX;
+float	 pixel_acc_shiftY;
+float	 repop_part;
+float	 repop_path;
+bool	  freeze;
+uniform float uniform_ParticleAnimation_scenario_var_data[36];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -199,7 +200,7 @@ uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_
 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
-uniform vec3 uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH; //
  
 uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   // 
@@ -211,25 +212,26 @@ uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   //
                       // particle initialization from images
 layout (binding = 0) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // couples of textures for particle initialization through photo or video: position/speed
 layout (binding = 1) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // couples of textures for particle initialization through photo: color/radius
-layout (binding = 2) uniform samplerRect uniform_ParticleAnimation_texture_fs_CA;         // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong ParticleAnimation pass position/speed of Particles step n (FBO attachment 2)
-layout (binding = 4) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong ParticleAnimation pass color/radius of Particles step n (FBO attachment 3)
-layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
+layout (binding = 2) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_acc;  // texture for particle acceleration shift through photo
+layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_CA;         // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 4) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong ParticleAnimation pass position/speed of Particles step n (FBO attachment 2)
+layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong ParticleAnimation pass color/radius of Particles step n (FBO attachment 3)
+layout (binding = 6) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
-layout (binding = 6) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
+layout (binding = 7) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
 #ifdef PG_VIDEO_ACTIVE
-layout (binding = 7) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
-layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
+layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
+layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
 #endif
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
+layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
+layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
+layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 
 /////////////////////////////////////
@@ -510,7 +512,7 @@ void particle_out( void ) {
                        texture( uniform_ParticleAnimation_texture_fs_Trk3 , out_position_speed_particle.xy ).rgb;
 #endif
   // CA flash on particles
-  flashToPartCumul += uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear.x
+  flashToPartCumul += uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.x
                     * texture( uniform_ParticleAnimation_texture_fs_CA , out_position_speed_particle.xy ).rgb;
 
   //////////////////////////////////////////////////////////////////
@@ -672,18 +674,29 @@ void particle_out( void ) {
   //////////////////////////////////////////////////////////////////
   // SPEED UPDATE FROM ACCELERATION AND DAMPING
   dvec2 speed2D;
-  // acceleration
+  // texture based acceleration shift
+  if(part_image_acceleration >= 0) {
+    float rot_angle = part_field_weight * texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).r;
+    float cosa = cos(rot_angle);
+    float sina = sin(rot_angle);
+    part_acceleration  
+      = dmat2(cosa, -sina, sina, cosa) * part_acceleration;
+  }
+  // speed update from acceleration vector part_acceleration 
+  // (with a factor equal to part_acc controlled by interface or scenario)
   speed2D 
     = out_position_speed_particle.zw + dvec2(part_acc * part_acceleration);
-  // damping
+  // damping with a factor equal to part_damp controlled by interface or scenario
   speed2D
     -= dvec2(part_damp * speed2D);
 
   // reading the noise value for acceleration 
   double speed = length(speed2D);
-  speed2D  
-    = normalize(speed2D 
-      + part_field_weight * dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center)) * speed;
+  if(part_image_acceleration < 0) {
+    speed2D  
+      = normalize(speed2D 
+        + part_field_weight * dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center)) * speed;
+  }
   // part_acceleration 
   //   += part_field_weight * (generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
   // }
@@ -816,21 +829,22 @@ void main() {
   part_path_repulse_7 = (uniform_ParticleAnimation_scenario_var_data[17] > 0 ? true : false);
   part_size = uniform_ParticleAnimation_scenario_var_data[18];
   part_acc = uniform_ParticleAnimation_scenario_var_data[19];
-  part_damp = uniform_ParticleAnimation_scenario_var_data[20];
-  noiseScale = uniform_ParticleAnimation_scenario_var_data[21];
-  part_field_weight = uniform_ParticleAnimation_scenario_var_data[22];
-  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[23];
-  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[24];
-  partMove_target = (uniform_ParticleAnimation_scenario_var_data[25] > 0 ? true : false);
-  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[26] > 0 ? true : false);
-  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[27]);
-  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[28]);
-  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[29]);
-  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[30];
-  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[31];
-  repop_part = uniform_ParticleAnimation_scenario_var_data[32];
-  repop_path = uniform_ParticleAnimation_scenario_var_data[33];
-  freeze = (uniform_ParticleAnimation_scenario_var_data[34] > 0 ? true : false);
+  part_image_acceleration = int(uniform_ParticleAnimation_scenario_var_data[20]);
+  part_damp = uniform_ParticleAnimation_scenario_var_data[21];
+  noiseScale = uniform_ParticleAnimation_scenario_var_data[22];
+  part_field_weight = uniform_ParticleAnimation_scenario_var_data[23];
+  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[24];
+  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[25];
+  partMove_target = (uniform_ParticleAnimation_scenario_var_data[26] > 0 ? true : false);
+  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[27] > 0 ? true : false);
+  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[28]);
+  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[29]);
+  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[30]);
+  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[31];
+  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[32];
+  repop_part = uniform_ParticleAnimation_scenario_var_data[33];
+  repop_path = uniform_ParticleAnimation_scenario_var_data[34];
+  freeze = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
 
   //////////////////////////
   // variables 
@@ -861,7 +875,7 @@ void main() {
   // noise for CA: random value
   randomPart = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
 
-  nbParticles = int(uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear.y);
+  nbParticles = int(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.y);
 
   
   
@@ -874,7 +888,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbPart_clear.z > 0) {
+  if(frameNo <= 10 || uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.z > 0) {
     out_ParticleAnimation_FBO_fs_Part_pos_speed = vec4(-10000,-10000,0,0);  // particle position / speed
     out_ParticleAnimation_FBO_fs_Part_col_rad = vec4(1,1,1,1);  // particle color / radius
     out_ParticleAnimation_FBO_fs_Part_Target_pos_col_rad = vec4(-10000,-10000,16646655,1);  // particle target position / color / radius
