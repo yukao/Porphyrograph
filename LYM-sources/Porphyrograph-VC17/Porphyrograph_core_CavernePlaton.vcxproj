@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\Porphyrograph-src\pg-conf.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-init.cpp" />
+    <ClCompile Include="..\Porphyrograph-src\pg-light.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-main.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-mesh.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-script.cpp" />
@@ -27,6 +28,7 @@
     <ClInclude Include="..\Porphyrograph-src\pg-all_include.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-conf.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-init.h" />
+    <ClInclude Include="..\Porphyrograph-src\pg-light.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-main.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-mesh.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-script.h" />
@@ -42,21 +44,21 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Porphyrograph</RootNamespace>
     <ProjectName>Porphyrograph_core_CavernePlaton</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -108,7 +110,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;CAVERNEPLATON;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\share\liblo-0.29;..\share\liblo-0.29\build;..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\glm\;..\share\dirent-1.21\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\share\liblo-0.29;..\share\liblo-0.29\build;..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\features2d\include;..\share\opencv\sources\modules\calib3d\include;..\share\opencv\sources\modules\flann\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\build;..\share\glew-1.11.0\include;..\share\glm\;..\share\dirent-1.21\include;..\share\ENTTECRDMLibrary</AdditionalIncludeDirectories>
       <FloatingPointModel>Precise</FloatingPointModel>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -119,8 +121,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>lo.lib;opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core341.lib;opencv_imgproc341.lib;opencv_imgcodecs341.lib;opencv_highgui341.lib;opencv_video341.lib;opencv_videoio341.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\share\liblo-0.29\build\Release;..\share\freeglut-wacom\VC17\lib\Release;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\buildvc17\lib\Release;..\share\freeglut-3.0.0\VC15\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lo.lib;opengl32.lib;vfw32.lib;ws2_32.lib;freeglut.lib;glew32.lib;opencv_core341.lib;opencv_imgproc341.lib;opencv_imgcodecs341.lib;opencv_highgui341.lib;opencv_calib3d341.lib;opencv_video341.lib;opencv_videoio341.lib;RDMController.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\share\liblo-0.29\build\Release;..\share\freeglut-wacom\VC17\lib\Release;..\share\glew-1.11.0\lib\Release\Win32;..\share\opencv\build\lib\Release;..\share\freeglut-3.0.0\VC15\lib\Release;..\share\ENTTECRDMLibrary;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>

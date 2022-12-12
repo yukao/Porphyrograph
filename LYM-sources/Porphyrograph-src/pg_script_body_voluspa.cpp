@@ -122,8 +122,13 @@ float pen_color_a_pulse   ;
 int   pen_brush           ;
 float pen_radius_replay   ;
 float pen_radius_replay_pulse;
-float pen_color_replay    ;
-float pen_color_replay_pulse;
+float pen_saturation_replay;
+float pen_saturation_replay_pulse;
+float pen_value_replay    ;
+float pen_value_replay_pulse;
+float pen_hue_replay      ;
+float pen_hue_replay_pulse;
+int   pen_brush_replay    ;
 int   currentDrawingTrack ;
 int   currentVideoTrack   ;
 int   currentPhotoTrack   ;
@@ -239,6 +244,7 @@ float cameraContrast      ;
 float cameraGamma         ;
 float cameraCaptFreq      ;
 int   playing_movieNo     ;
+int   cameraNo            ;
 float movieCaptFreq       ;
 int   photo_diaporama     ;
 float photo_diaporama_fade;
@@ -342,6 +348,12 @@ int   sensor_layout       ;
 int   sensor_activation   ;
 float sensor_vol          ;
 bool  movie_loop          ;
+bool  path_replay_loop    ;
+bool  MIDIwithBeat        ;
+bool  MIDIwithColor       ;
+bool  MIDIwithBrush       ;
+bool  MIDIwithCameraFlash ;
+bool  MIDIwithPhotoFlash  ;
 VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { 
 	_pg_bool,
 	_pg_bool,
@@ -411,6 +423,11 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
 	_pg_int,
 	_pg_int,
 	_pg_int,
@@ -525,6 +542,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_int,
 	_pg_int,
 	_pg_float,
 	_pg_int,
@@ -628,6 +646,12 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int ,
 	_pg_int ,
 	_pg_float,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
 	_pg_bool,
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
@@ -697,8 +721,13 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&pen_brush,
 	(void *)&pen_radius_replay,
 	(void *)&pen_radius_replay_pulse,
-	(void *)&pen_color_replay,
-	(void *)&pen_color_replay_pulse,
+	(void *)&pen_saturation_replay,
+	(void *)&pen_saturation_replay_pulse,
+	(void *)&pen_value_replay,
+	(void *)&pen_value_replay_pulse,
+	(void *)&pen_hue_replay,
+	(void *)&pen_hue_replay_pulse,
+	(void *)&pen_brush_replay,
 	(void *)&currentDrawingTrack,
 	(void *)&currentVideoTrack,
 	(void *)&currentPhotoTrack,
@@ -814,6 +843,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&cameraGamma,
 	(void *)&cameraCaptFreq,
 	(void *)&playing_movieNo,
+	(void *)&cameraNo,
 	(void *)&movieCaptFreq,
 	(void *)&photo_diaporama,
 	(void *)&photo_diaporama_fade,
@@ -917,6 +947,12 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&sensor_activation,
 	(void *)&sensor_vol,
 	(void *)&movie_loop,
+	(void *)&path_replay_loop,
+	(void *)&MIDIwithBeat,
+	(void *)&MIDIwithColor,
+	(void *)&MIDIwithBrush,
+	(void *)&MIDIwithCameraFlash,
+	(void *)&MIDIwithPhotoFlash,
 };
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
@@ -967,6 +1003,7 @@ void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, double 
 void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
+void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
@@ -976,6 +1013,11 @@ void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, double sce
 void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
+void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
+void MIDIwithColor_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
+void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
+void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
+void MIDIwithPhotoFlash_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) = { 
 	&auto_beat_callBack,
 	&auto_pulse_callBack,
@@ -1041,6 +1083,11 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	&pen_brush_callBack,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1160,6 +1207,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	&cameraGamma_callBack,
 	NULL,
 	&playing_movieNo_callBack,
+	&cameraNo_callBack,
 	NULL,
 	&photo_diaporama_callBack,
 	NULL,
@@ -1263,6 +1311,12 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	&MIDIwithBeat_callBack,
+	&MIDIwithColor_callBack,
+	&MIDIwithBrush_callBack,
+	&MIDIwithCameraFlash_callBack,
+	&MIDIwithPhotoFlash_callBack,
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
@@ -1331,8 +1385,13 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"pen_brush",
   (char *)"pen_radius_replay",
   (char *)"pen_radius_replay_pulse",
-  (char *)"pen_color_replay",
-  (char *)"pen_color_replay_pulse",
+  (char *)"pen_saturation_replay",
+  (char *)"pen_saturation_replay_pulse",
+  (char *)"pen_value_replay",
+  (char *)"pen_value_replay_pulse",
+  (char *)"pen_hue_replay",
+  (char *)"pen_hue_replay_pulse",
+  (char *)"pen_brush_replay",
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
@@ -1448,6 +1507,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"cameraGamma",
   (char *)"cameraCaptFreq",
   (char *)"playing_movieNo",
+  (char *)"cameraNo",
   (char *)"movieCaptFreq",
   (char *)"photo_diaporama",
   (char *)"photo_diaporama_fade",
@@ -1551,6 +1611,12 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"sensor_activation",
   (char *)"sensor_vol",
   (char *)"movie_loop",
+  (char *)"path_replay_loop",
+  (char *)"MIDIwithBeat",
+  (char *)"MIDIwithColor",
+  (char *)"MIDIwithBrush",
+  (char *)"MIDIwithCameraFlash",
+  (char *)"MIDIwithPhotoFlash",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1620,6 +1686,11 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1741,17 +1812,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -1765,6 +1825,18 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1784,6 +1856,12 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -1839,7 +1917,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
 };
-char *CmdString[_MaxInterpVarIDs] = { 
+char *ScenarioVarStrings[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
   (char *)"auto_pulse",
   (char *)"clearAllLayers",
@@ -1906,8 +1984,13 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"pen_brush",
   (char *)"pen_radius_replay",
   (char *)"pen_radius_replay_pulse",
-  (char *)"pen_color_replay",
-  (char *)"pen_color_replay_pulse",
+  (char *)"pen_saturation_replay",
+  (char *)"pen_saturation_replay_pulse",
+  (char *)"pen_value_replay",
+  (char *)"pen_value_replay_pulse",
+  (char *)"pen_hue_replay",
+  (char *)"pen_hue_replay_pulse",
+  (char *)"pen_brush_replay",
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
@@ -2023,6 +2106,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"cameraGamma",
   (char *)"cameraCaptFreq",
   (char *)"playing_movieNo",
+  (char *)"cameraNo",
   (char *)"movieCaptFreq",
   (char *)"photo_diaporama",
   (char *)"photo_diaporama_fade",
@@ -2126,4 +2210,10 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"sensor_activation",
   (char *)"sensor_vol",
   (char *)"movie_loop",
+  (char *)"path_replay_loop",
+  (char *)"MIDIwithBeat",
+  (char *)"MIDIwithColor",
+  (char *)"MIDIwithBrush",
+  (char *)"MIDIwithCameraFlash",
+  (char *)"MIDIwithPhotoFlash",
 };

@@ -7,7 +7,6 @@ int   window_y            ;
 float minimal_interframe_latency;
 float time_scale          ;
 float initial_time        ;
-int   camID               ;
 int   message_pixel_length;
 bool  trace_output_frame_number;
 bool  trace_time          ;
@@ -27,7 +26,6 @@ VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_int,
-	_pg_int,
 	_pg_bool,
 	_pg_bool,
 	_pg_int,
@@ -46,7 +44,6 @@ void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = {
 	(void *)&minimal_interframe_latency,
 	(void *)&time_scale,
 	(void *)&initial_time,
-	(void *)&camID,
 	(void *)&message_pixel_length,
 	(void *)&trace_output_frame_number,
 	(void *)&trace_time,
@@ -123,6 +120,13 @@ float pen_color_a_pulse   ;
 int   pen_brush           ;
 float pen_radius_replay   ;
 float pen_radius_replay_pulse;
+float pen_saturation_replay;
+float pen_saturation_replay_pulse;
+float pen_value_replay    ;
+float pen_value_replay_pulse;
+float pen_hue_replay      ;
+float pen_hue_replay_pulse;
+int   pen_brush_replay    ;
 int   currentDrawingTrack ;
 int   currentVideoTrack   ;
 int   currentPhotoTrack   ;
@@ -201,7 +205,8 @@ float part_acc            ;
 float part_acc_pulse      ;
 float part_damp           ;
 float part_damp_pulse     ;
-float pulsed_part_Hshift  ;
+float part_gravity        ;
+float part_gravity_pulse  ;
 float pulsed_part_Vshift  ;
 float noiseScale          ;
 float noiseScale_pulse    ;
@@ -237,7 +242,8 @@ float repop_BG            ;
 float repop_BG_pulse      ;
 float repop_path          ;
 float repop_path_pulse    ;
-int   repop_density       ;
+int   BG_CA_repop_density ;
+int   Part_repop_density  ;
 float repop_colorBG       ;
 float repop_colorBG_pulse ;
 float repop_greyBG        ;
@@ -261,6 +267,7 @@ float cameraGamma         ;
 float camera_gamma        ;
 float camera_gamma_pulse  ;
 float cameraCaptFreq      ;
+int   cameraNo            ;
 int   playing_movieNo     ;
 float movieCaptFreq       ;
 int   photo_diaporama     ;
@@ -280,14 +287,15 @@ float movieSobel          ;
 float movieSobel_pulse    ;
 bool  invertMovie         ;
 bool  invertCamera        ;
+bool  invertPhoto         ;
 float video_satur         ;
 float video_satur_pulse   ;
 float video_value         ;
 float video_value_pulse   ;
-float video_gamma         ;
-float video_gamma_pulse   ;
-float video_threshold     ;
-float video_threshold_pulse;
+float movie_gamma         ;
+float movie_gamma_pulse   ;
+float movie_threshold     ;
+float movie_threshold_pulse;
 float photoWeight         ;
 float photoWeight_pulse   ;
 float photo_satur         ;
@@ -372,17 +380,12 @@ float pen_radius_angleVer_coef;
 bool  tracksSync          ;
 int   cameraCumul         ;
 int   CAstep              ;
-bool  interfaceOnScreen   ;
 bool  CAcolorSpread       ;
 bool  freeze              ;
 float sound_env_min       ;
 float sound_env_max       ;
 float audioInput_weight   ;
 float soundtrack_weight   ;
-float sensor_sample_setUp ;
-int   sensor_layout       ;
-int   sensor_activation   ;
-float sensor_vol          ;
 float isDisplayLookAt     ;
 float with_mesh           ;
 float with_blue           ;
@@ -415,6 +418,10 @@ float textureFrontier_wmin_width;
 float textureFrontier_wmax_width;
 float textureFrontier_hmin_width;
 float textureFrontier_hmax_width;
+float textureScale_w      ;
+float textureScale_h      ;
+float textureTranslate_w  ;
+float textureTranslate_h  ;
 float meshFrontier_X      ;
 float meshFrontier_width  ;
 float nearPlane           ;
@@ -429,49 +436,7 @@ int   blurRadius_2        ;
 float video_white         ;
 float video_white_pulse   ;
 int   screen_drawing_no   ;
-float light1_color        ;
-float light1_color_pulse  ;
-float light1_grey         ;
-float light1_grey_pulse   ;
-float light1_dimmer_pulse ;
-float light1_dimmer       ;
-float light1_strobe       ;
-float light2_dimmer       ;
-float light3_dimmer       ;
-float light4_dimmer       ;
-float light5_dimmer       ;
-float light1_strobe_pulse ;
-float light2_color        ;
-float light2_color_pulse  ;
-float light2_grey         ;
-float light2_grey_pulse   ;
-float light2_dimmer_pulse ;
-float light2_strobe       ;
-float light2_strobe_pulse ;
-float light3_color        ;
-float light3_color_pulse  ;
-float light3_grey         ;
-float light3_grey_pulse   ;
-float light3_dimmer_pulse ;
-float light3_strobe       ;
-float light3_strobe_pulse ;
-float light4_color        ;
-float light4_color_pulse  ;
-float light4_grey         ;
-float light4_grey_pulse   ;
-float light4_dimmer_pulse ;
-float light4_strobe       ;
-float light4_strobe_pulse ;
-float light5_color        ;
-float light5_color_pulse  ;
-float light5_grey         ;
-float light5_grey_pulse   ;
-float light5_dimmer_pulse ;
-float light5_strobe       ;
-float light5_strobe_pulse ;
 float master_mask         ;
-int   activeMeshes        ;
-int   mobileMeshes        ;
 float master_mask_scale   ;
 float master_mask_scale_ratio;
 float master_mask_offsetX ;
@@ -486,6 +451,8 @@ bool  MIDIwithColor       ;
 bool  MIDIwithBrush       ;
 bool  MIDIwithCameraFlash ;
 bool  MIDIwithPhotoFlash  ;
+int   currentLightScene   ;
+bool  directRenderingwithoutMeshScreen1;
 VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { 
 	_pg_bool,
 	_pg_bool,
@@ -551,9 +518,16 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_int ,
+	_pg_int,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
 	_pg_int,
 	_pg_int,
 	_pg_int,
@@ -636,6 +610,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -669,6 +644,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_int,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -693,6 +669,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_int,
+	_pg_int,
 	_pg_float,
 	_pg_int,
 	_pg_float,
@@ -709,6 +686,101 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_bool,
+	_pg_int,
+	_pg_int,
 	_pg_bool,
 	_pg_bool,
 	_pg_float,
@@ -753,101 +825,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_bool,
-	_pg_int,
-	_pg_int,
-	_pg_bool,
-	_pg_bool,
-	_pg_bool,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int ,
-	_pg_int ,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_bool,
@@ -865,57 +842,17 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_bool,
 	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
 	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_bool,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_bool,
-	_pg_bool,
-	_pg_bool,
-	_pg_bool,
 	_pg_bool,
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
@@ -986,6 +923,13 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&pen_brush,
 	(void *)&pen_radius_replay,
 	(void *)&pen_radius_replay_pulse,
+	(void *)&pen_saturation_replay,
+	(void *)&pen_saturation_replay_pulse,
+	(void *)&pen_value_replay,
+	(void *)&pen_value_replay_pulse,
+	(void *)&pen_hue_replay,
+	(void *)&pen_hue_replay_pulse,
+	(void *)&pen_brush_replay,
 	(void *)&currentDrawingTrack,
 	(void *)&currentVideoTrack,
 	(void *)&currentPhotoTrack,
@@ -1064,7 +1008,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&part_acc_pulse,
 	(void *)&part_damp,
 	(void *)&part_damp_pulse,
-	(void *)&pulsed_part_Hshift,
+	(void *)&part_gravity,
+	(void *)&part_gravity_pulse,
 	(void *)&pulsed_part_Vshift,
 	(void *)&noiseScale,
 	(void *)&noiseScale_pulse,
@@ -1100,7 +1045,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&repop_BG_pulse,
 	(void *)&repop_path,
 	(void *)&repop_path_pulse,
-	(void *)&repop_density,
+	(void *)&BG_CA_repop_density,
+	(void *)&Part_repop_density,
 	(void *)&repop_colorBG,
 	(void *)&repop_colorBG_pulse,
 	(void *)&repop_greyBG,
@@ -1124,6 +1070,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&camera_gamma,
 	(void *)&camera_gamma_pulse,
 	(void *)&cameraCaptFreq,
+	(void *)&cameraNo,
 	(void *)&playing_movieNo,
 	(void *)&movieCaptFreq,
 	(void *)&photo_diaporama,
@@ -1143,14 +1090,15 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&movieSobel_pulse,
 	(void *)&invertMovie,
 	(void *)&invertCamera,
+	(void *)&invertPhoto,
 	(void *)&video_satur,
 	(void *)&video_satur_pulse,
 	(void *)&video_value,
 	(void *)&video_value_pulse,
-	(void *)&video_gamma,
-	(void *)&video_gamma_pulse,
-	(void *)&video_threshold,
-	(void *)&video_threshold_pulse,
+	(void *)&movie_gamma,
+	(void *)&movie_gamma_pulse,
+	(void *)&movie_threshold,
+	(void *)&movie_threshold_pulse,
 	(void *)&photoWeight,
 	(void *)&photoWeight_pulse,
 	(void *)&photo_satur,
@@ -1235,17 +1183,12 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&tracksSync,
 	(void *)&cameraCumul,
 	(void *)&CAstep,
-	(void *)&interfaceOnScreen,
 	(void *)&CAcolorSpread,
 	(void *)&freeze,
 	(void *)&sound_env_min,
 	(void *)&sound_env_max,
 	(void *)&audioInput_weight,
 	(void *)&soundtrack_weight,
-	(void *)&sensor_sample_setUp,
-	(void *)&sensor_layout,
-	(void *)&sensor_activation,
-	(void *)&sensor_vol,
 	(void *)&isDisplayLookAt,
 	(void *)&with_mesh,
 	(void *)&with_blue,
@@ -1278,6 +1221,10 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&textureFrontier_wmax_width,
 	(void *)&textureFrontier_hmin_width,
 	(void *)&textureFrontier_hmax_width,
+	(void *)&textureScale_w,
+	(void *)&textureScale_h,
+	(void *)&textureTranslate_w,
+	(void *)&textureTranslate_h,
 	(void *)&meshFrontier_X,
 	(void *)&meshFrontier_width,
 	(void *)&nearPlane,
@@ -1292,49 +1239,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&video_white,
 	(void *)&video_white_pulse,
 	(void *)&screen_drawing_no,
-	(void *)&light1_color,
-	(void *)&light1_color_pulse,
-	(void *)&light1_grey,
-	(void *)&light1_grey_pulse,
-	(void *)&light1_dimmer_pulse,
-	(void *)&light1_dimmer,
-	(void *)&light1_strobe,
-	(void *)&light2_dimmer,
-	(void *)&light3_dimmer,
-	(void *)&light4_dimmer,
-	(void *)&light5_dimmer,
-	(void *)&light1_strobe_pulse,
-	(void *)&light2_color,
-	(void *)&light2_color_pulse,
-	(void *)&light2_grey,
-	(void *)&light2_grey_pulse,
-	(void *)&light2_dimmer_pulse,
-	(void *)&light2_strobe,
-	(void *)&light2_strobe_pulse,
-	(void *)&light3_color,
-	(void *)&light3_color_pulse,
-	(void *)&light3_grey,
-	(void *)&light3_grey_pulse,
-	(void *)&light3_dimmer_pulse,
-	(void *)&light3_strobe,
-	(void *)&light3_strobe_pulse,
-	(void *)&light4_color,
-	(void *)&light4_color_pulse,
-	(void *)&light4_grey,
-	(void *)&light4_grey_pulse,
-	(void *)&light4_dimmer_pulse,
-	(void *)&light4_strobe,
-	(void *)&light4_strobe_pulse,
-	(void *)&light5_color,
-	(void *)&light5_color_pulse,
-	(void *)&light5_grey,
-	(void *)&light5_grey_pulse,
-	(void *)&light5_dimmer_pulse,
-	(void *)&light5_strobe,
-	(void *)&light5_strobe_pulse,
 	(void *)&master_mask,
-	(void *)&activeMeshes,
-	(void *)&mobileMeshes,
 	(void *)&master_mask_scale,
 	(void *)&master_mask_scale_ratio,
 	(void *)&master_mask_offsetX,
@@ -1349,98 +1254,343 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&MIDIwithBrush,
 	(void *)&MIDIwithCameraFlash,
 	(void *)&MIDIwithPhotoFlash,
+	(void *)&currentLightScene,
+	(void *)&directRenderingwithoutMeshScreen1,
 };
-void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void clearCA_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void clearLayer_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void pen_color_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_initialization_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_0_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_1_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_2_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_3_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_4_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_5_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_6_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_7_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_8_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_9_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_10_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_follow_11_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_0_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_1_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_2_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_3_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_4_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_5_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_6_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_7_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_8_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_9_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_10_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void part_path_repulse_11_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_1_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_2_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_3_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_4_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_5_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_6_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_7_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_8_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_9_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_10_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_record_11_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_1_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_2_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_3_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_4_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_5_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_6_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_7_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_8_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_9_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_10_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void path_replay_trackNo_11_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void partMove_target_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void partMove_rand_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void beat_delay_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void sensor_sample_setUp_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void MIDIwithColor_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void MIDIwithPhotoFlash_callBack(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);
-void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) = { 
-	&auto_beat_callBack,
-	&auto_pulse_callBack,
-	&clearAllLayers_callBack,
-	&clearCA_callBack,
-	&clearLayer_callBack,
+void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void auto_beat_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	auto_beat_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void auto_pulse_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	auto_pulse_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void clearAllLayers_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	clearAllLayers_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void clearCA_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void clearCA_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	clearCA_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void clearLayer_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void clearLayer_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	clearLayer_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void pen_color_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	pen_color_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void pen_brush_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	pen_brush_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void part_initialization_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void part_initialization_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_initialization_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_0_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_0_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_0_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_1_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_1_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_1_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_2_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_2_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_2_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_3_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_3_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_3_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_4_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_4_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_4_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_5_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_5_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_5_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_6_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_6_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_6_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_7_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_7_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_7_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_8_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_8_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_8_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_9_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_9_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_9_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_10_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_10_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_10_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_follow_11_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_follow_11_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_follow_11_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_0_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_0_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_0_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_1_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_1_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_1_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_2_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_2_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_2_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_3_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_3_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_3_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_4_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_4_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_4_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_5_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_5_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_5_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_6_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_6_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_6_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_7_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_7_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_7_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_8_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_8_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_8_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_9_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_9_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_9_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_10_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_10_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_10_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void part_path_repulse_11_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void part_path_repulse_11_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	part_path_repulse_11_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void path_record_1_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_1_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_1_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_2_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_2_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_2_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_3_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_3_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_3_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_4_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_4_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_4_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_5_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_5_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_5_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_6_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_6_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_6_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_7_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_7_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_7_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_8_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_8_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_8_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_9_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_9_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_9_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_10_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_10_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_10_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_record_11_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void path_record_11_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_record_11_callBack(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_1_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_1_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_1_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_2_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_2_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_2_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_3_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_3_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_3_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_4_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_4_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_4_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_5_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_5_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_5_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_6_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_6_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_6_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_7_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_7_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_7_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_8_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_8_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_8_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_9_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_9_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_9_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_10_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_10_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_10_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void path_replay_trackNo_11_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void path_replay_trackNo_11_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	path_replay_trackNo_11_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void partMove_target_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void partMove_target_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	partMove_target_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void partMove_rand_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void partMove_rand_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	partMove_rand_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraWB_R_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraWB_R_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraWB_B_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraWB_B_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraExposure_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraExposure_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraGain_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraGain_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraBrightness_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraBrightness_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraSaturation_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraSaturation_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraContrast_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraContrast_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraGamma_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraGamma_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void cameraNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraNo_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void playing_movieNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	playing_movieNo_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void photo_diaporama_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	photo_diaporama_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void playing_soundtrackNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	playing_soundtrackNo_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void flashCameraTrkLength_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	flashCameraTrkLength_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void flashPhotoTrkLength_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	flashPhotoTrkLength_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void beat_threshold_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	beat_threshold_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void beat_delay_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void beat_delay_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	beat_delay_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void sound_env_min_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	sound_env_min_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void sound_env_max_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	sound_env_max_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void audioInput_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	audioInput_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void soundtrack_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	soundtrack_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void MIDIwithBeat_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	MIDIwithBeat_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void MIDIwithColor_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void MIDIwithColor_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	MIDIwithColor_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void MIDIwithBrush_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	MIDIwithBrush_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void MIDIwithCameraFlash_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	MIDIwithCameraFlash_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void MIDIwithPhotoFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
+void MIDIwithPhotoFlash_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	MIDIwithPhotoFlash_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void currentLightScene_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void currentLightScene_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	currentLightScene_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
+}
+void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { 
+	&auto_beat_callBack_generic,
+	&auto_pulse_callBack_generic,
+	&clearAllLayers_callBack_generic,
+	&clearCA_callBack_generic,
+	&clearLayer_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -1476,6 +1626,15 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1485,22 +1644,22 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	&pen_color_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
+	&pen_brush_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	&pen_color_callBack,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	&pen_brush_callBack,
 	NULL,
 	NULL,
 	NULL,
@@ -1513,9 +1672,9 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	&part_initialization_callBack_generic,
 	NULL,
 	NULL,
-	&part_initialization_callBack,
 	NULL,
 	NULL,
 	NULL,
@@ -1527,54 +1686,54 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	&part_path_follow_0_callBack_generic,
+	&part_path_follow_1_callBack_generic,
+	&part_path_follow_2_callBack_generic,
+	&part_path_follow_3_callBack_generic,
+	&part_path_follow_4_callBack_generic,
+	&part_path_follow_5_callBack_generic,
+	&part_path_follow_6_callBack_generic,
+	&part_path_follow_7_callBack_generic,
+	&part_path_follow_8_callBack_generic,
+	&part_path_follow_9_callBack_generic,
+	&part_path_follow_10_callBack_generic,
+	&part_path_follow_11_callBack_generic,
+	&part_path_repulse_0_callBack_generic,
+	&part_path_repulse_1_callBack_generic,
+	&part_path_repulse_2_callBack_generic,
+	&part_path_repulse_3_callBack_generic,
+	&part_path_repulse_4_callBack_generic,
+	&part_path_repulse_5_callBack_generic,
+	&part_path_repulse_6_callBack_generic,
+	&part_path_repulse_7_callBack_generic,
+	&part_path_repulse_8_callBack_generic,
+	&part_path_repulse_9_callBack_generic,
+	&part_path_repulse_10_callBack_generic,
+	&part_path_repulse_11_callBack_generic,
+	&path_record_1_callBack_generic,
+	&path_record_2_callBack_generic,
+	&path_record_3_callBack_generic,
+	&path_record_4_callBack_generic,
+	&path_record_5_callBack_generic,
+	&path_record_6_callBack_generic,
+	&path_record_7_callBack_generic,
+	&path_record_8_callBack_generic,
+	&path_record_9_callBack_generic,
+	&path_record_10_callBack_generic,
+	&path_record_11_callBack_generic,
+	&path_replay_trackNo_1_callBack_generic,
+	&path_replay_trackNo_2_callBack_generic,
+	&path_replay_trackNo_3_callBack_generic,
+	&path_replay_trackNo_4_callBack_generic,
+	&path_replay_trackNo_5_callBack_generic,
+	&path_replay_trackNo_6_callBack_generic,
+	&path_replay_trackNo_7_callBack_generic,
+	&path_replay_trackNo_8_callBack_generic,
+	&path_replay_trackNo_9_callBack_generic,
+	&path_replay_trackNo_10_callBack_generic,
+	&path_replay_trackNo_11_callBack_generic,
 	NULL,
 	NULL,
-	&part_path_follow_0_callBack,
-	&part_path_follow_1_callBack,
-	&part_path_follow_2_callBack,
-	&part_path_follow_3_callBack,
-	&part_path_follow_4_callBack,
-	&part_path_follow_5_callBack,
-	&part_path_follow_6_callBack,
-	&part_path_follow_7_callBack,
-	&part_path_follow_8_callBack,
-	&part_path_follow_9_callBack,
-	&part_path_follow_10_callBack,
-	&part_path_follow_11_callBack,
-	&part_path_repulse_0_callBack,
-	&part_path_repulse_1_callBack,
-	&part_path_repulse_2_callBack,
-	&part_path_repulse_3_callBack,
-	&part_path_repulse_4_callBack,
-	&part_path_repulse_5_callBack,
-	&part_path_repulse_6_callBack,
-	&part_path_repulse_7_callBack,
-	&part_path_repulse_8_callBack,
-	&part_path_repulse_9_callBack,
-	&part_path_repulse_10_callBack,
-	&part_path_repulse_11_callBack,
-	&path_record_1_callBack,
-	&path_record_2_callBack,
-	&path_record_3_callBack,
-	&path_record_4_callBack,
-	&path_record_5_callBack,
-	&path_record_6_callBack,
-	&path_record_7_callBack,
-	&path_record_8_callBack,
-	&path_record_9_callBack,
-	&path_record_10_callBack,
-	&path_record_11_callBack,
-	&path_replay_trackNo_1_callBack,
-	&path_replay_trackNo_2_callBack,
-	&path_replay_trackNo_3_callBack,
-	&path_replay_trackNo_4_callBack,
-	&path_replay_trackNo_5_callBack,
-	&path_replay_trackNo_6_callBack,
-	&path_replay_trackNo_7_callBack,
-	&path_replay_trackNo_8_callBack,
-	&path_replay_trackNo_9_callBack,
-	&path_replay_trackNo_10_callBack,
-	&path_replay_trackNo_11_callBack,
 	NULL,
 	NULL,
 	NULL,
@@ -1594,9 +1753,9 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	&partMove_target_callBack_generic,
+	&partMove_rand_callBack_generic,
 	NULL,
-	&partMove_target_callBack,
-	&partMove_rand_callBack,
 	NULL,
 	NULL,
 	NULL,
@@ -1630,24 +1789,25 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
-	&cameraWB_R_callBack,
-	&cameraWB_B_callBack,
-	&cameraExposure_callBack,
-	&cameraGain_callBack,
-	&cameraBrightness_callBack,
-	&cameraSaturation_callBack,
-	&cameraContrast_callBack,
-	&cameraGamma_callBack,
+	&cameraWB_R_callBack_generic,
+	&cameraWB_B_callBack_generic,
+	&cameraExposure_callBack_generic,
+	&cameraGain_callBack_generic,
+	&cameraBrightness_callBack_generic,
+	&cameraSaturation_callBack_generic,
+	&cameraContrast_callBack_generic,
+	&cameraGamma_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
-	&playing_movieNo_callBack,
+	&cameraNo_callBack_generic,
+	&playing_movieNo_callBack_generic,
 	NULL,
-	&photo_diaporama_callBack,
+	&photo_diaporama_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
-	&playing_soundtrackNo_callBack,
+	&playing_soundtrackNo_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -1725,11 +1885,11 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
-	&flashCameraTrkLength_callBack,
 	NULL,
+	&flashCameraTrkLength_callBack_generic,
 	NULL,
-	&flashPhotoTrkLength_callBack,
 	NULL,
+	&flashPhotoTrkLength_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -1742,9 +1902,9 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
-	&beat_threshold_callBack,
-	&beat_delay_callBack,
 	NULL,
+	&beat_threshold_callBack_generic,
+	&beat_delay_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -1755,13 +1915,10 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
-	&sound_env_min_callBack,
-	&sound_env_max_callBack,
-	&audioInput_weight_callBack,
-	&soundtrack_weight_callBack,
-	&sensor_sample_setUp_callBack,
-	&sensor_layout_callBack,
-	&sensor_activation_callBack,
+	&sound_env_min_callBack_generic,
+	&sound_env_max_callBack_generic,
+	&audioInput_weight_callBack_generic,
+	&soundtrack_weight_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -1822,50 +1979,13 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) 
 	NULL,
 	NULL,
 	NULL,
+	&MIDIwithBeat_callBack_generic,
+	&MIDIwithColor_callBack_generic,
+	&MIDIwithBrush_callBack_generic,
+	&MIDIwithCameraFlash_callBack_generic,
+	&MIDIwithPhotoFlash_callBack_generic,
+	&currentLightScene_callBack_generic,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	&activeMeshes_callBack,
-	&mobileMeshes_callBack,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	&MIDIwithBeat_callBack,
-	&MIDIwithColor_callBack,
-	&MIDIwithBrush_callBack,
-	&MIDIwithCameraFlash_callBack,
-	&MIDIwithPhotoFlash_callBack,
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
@@ -1935,6 +2055,13 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"pen_brush",
   (char *)"pen_radius_replay",
   (char *)"pen_radius_replay_pulse",
+  (char *)"pen_saturation_replay",
+  (char *)"pen_saturation_replay_pulse",
+  (char *)"pen_value_replay",
+  (char *)"pen_value_replay_pulse",
+  (char *)"pen_hue_replay",
+  (char *)"pen_hue_replay_pulse",
+  (char *)"pen_brush_replay",
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
@@ -2013,7 +2140,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"part_acc_pulse",
   (char *)"part_damp",
   (char *)"part_damp_pulse",
-  (char *)"pulsed_part_Hshift",
+  (char *)"part_gravity",
+  (char *)"part_gravity_pulse",
   (char *)"pulsed_part_Vshift",
   (char *)"noiseScale",
   (char *)"noiseScale_pulse",
@@ -2049,7 +2177,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_density",
+  (char *)"BG_CA_repop_density",
+  (char *)"Part_repop_density",
   (char *)"repop_colorBG",
   (char *)"repop_colorBG_pulse",
   (char *)"repop_greyBG",
@@ -2073,6 +2202,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"camera_gamma",
   (char *)"camera_gamma_pulse",
   (char *)"cameraCaptFreq",
+  (char *)"cameraNo",
   (char *)"playing_movieNo",
   (char *)"movieCaptFreq",
   (char *)"photo_diaporama",
@@ -2092,14 +2222,15 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"movieSobel_pulse",
   (char *)"invertMovie",
   (char *)"invertCamera",
+  (char *)"invertPhoto",
   (char *)"video_satur",
   (char *)"video_satur_pulse",
   (char *)"video_value",
   (char *)"video_value_pulse",
-  (char *)"video_gamma",
-  (char *)"video_gamma_pulse",
-  (char *)"video_threshold",
-  (char *)"video_threshold_pulse",
+  (char *)"movie_gamma",
+  (char *)"movie_gamma_pulse",
+  (char *)"movie_threshold",
+  (char *)"movie_threshold_pulse",
   (char *)"photoWeight",
   (char *)"photoWeight_pulse",
   (char *)"photo_satur",
@@ -2184,17 +2315,12 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"tracksSync",
   (char *)"cameraCumul",
   (char *)"CAstep",
-  (char *)"interfaceOnScreen",
   (char *)"CAcolorSpread",
   (char *)"freeze",
   (char *)"sound_env_min",
   (char *)"sound_env_max",
   (char *)"audioInput_weight",
   (char *)"soundtrack_weight",
-  (char *)"sensor_sample_setUp",
-  (char *)"sensor_layout",
-  (char *)"sensor_activation",
-  (char *)"sensor_vol",
   (char *)"isDisplayLookAt",
   (char *)"with_mesh",
   (char *)"with_blue",
@@ -2227,6 +2353,10 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"textureFrontier_wmax_width",
   (char *)"textureFrontier_hmin_width",
   (char *)"textureFrontier_hmax_width",
+  (char *)"textureScale_w",
+  (char *)"textureScale_h",
+  (char *)"textureTranslate_w",
+  (char *)"textureTranslate_h",
   (char *)"meshFrontier_X",
   (char *)"meshFrontier_width",
   (char *)"nearPlane",
@@ -2241,49 +2371,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"video_white",
   (char *)"video_white_pulse",
   (char *)"screen_drawing_no",
-  (char *)"light1_color",
-  (char *)"light1_color_pulse",
-  (char *)"light1_grey",
-  (char *)"light1_grey_pulse",
-  (char *)"light1_dimmer_pulse",
-  (char *)"light1_dimmer",
-  (char *)"light1_strobe",
-  (char *)"light2_dimmer",
-  (char *)"light3_dimmer",
-  (char *)"light4_dimmer",
-  (char *)"light5_dimmer",
-  (char *)"light1_strobe_pulse",
-  (char *)"light2_color",
-  (char *)"light2_color_pulse",
-  (char *)"light2_grey",
-  (char *)"light2_grey_pulse",
-  (char *)"light2_dimmer_pulse",
-  (char *)"light2_strobe",
-  (char *)"light2_strobe_pulse",
-  (char *)"light3_color",
-  (char *)"light3_color_pulse",
-  (char *)"light3_grey",
-  (char *)"light3_grey_pulse",
-  (char *)"light3_dimmer_pulse",
-  (char *)"light3_strobe",
-  (char *)"light3_strobe_pulse",
-  (char *)"light4_color",
-  (char *)"light4_color_pulse",
-  (char *)"light4_grey",
-  (char *)"light4_grey_pulse",
-  (char *)"light4_dimmer_pulse",
-  (char *)"light4_strobe",
-  (char *)"light4_strobe_pulse",
-  (char *)"light5_color",
-  (char *)"light5_color_pulse",
-  (char *)"light5_grey",
-  (char *)"light5_grey_pulse",
-  (char *)"light5_dimmer_pulse",
-  (char *)"light5_strobe",
-  (char *)"light5_strobe_pulse",
   (char *)"master_mask",
-  (char *)"activeMeshes",
-  (char *)"mobileMeshes",
   (char *)"master_mask_scale",
   (char *)"master_mask_scale_ratio",
   (char *)"master_mask_offsetX",
@@ -2298,6 +2386,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"MIDIwithBrush",
   (char *)"MIDIwithCameraFlash",
   (char *)"MIDIwithPhotoFlash",
+  (char *)"currentLightScene",
+  (char *)"directRenderingwithoutMeshScreen1",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2366,6 +2456,13 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2444,6 +2541,14 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
@@ -2453,13 +2558,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2479,6 +2577,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_special,
@@ -2511,25 +2610,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -2544,10 +2624,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -2573,71 +2650,21 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2672,46 +2699,77 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_special,
   _pg_pulsed_none,
-  _pg_pulsed_special,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
-  _pg_pulsed_absolute,
-  _pg_pulsed_absolute,
-  _pg_pulsed_absolute,
-  _pg_pulsed_absolute,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2723,6 +2781,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2730,7 +2790,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
 };
-char *CmdString[_MaxInterpVarIDs] = { 
+char *ScenarioVarStrings[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
   (char *)"auto_pulse",
   (char *)"clearAllLayers",
@@ -2798,6 +2858,13 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"pen_brush",
   (char *)"pen_radius_replay",
   (char *)"pen_radius_replay_pulse",
+  (char *)"pen_saturation_replay",
+  (char *)"pen_saturation_replay_pulse",
+  (char *)"pen_value_replay",
+  (char *)"pen_value_replay_pulse",
+  (char *)"pen_hue_replay",
+  (char *)"pen_hue_replay_pulse",
+  (char *)"pen_brush_replay",
   (char *)"currentDrawingTrack",
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
@@ -2876,7 +2943,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"part_acc_pulse",
   (char *)"part_damp",
   (char *)"part_damp_pulse",
-  (char *)"pulsed_part_Hshift",
+  (char *)"part_gravity",
+  (char *)"part_gravity_pulse",
   (char *)"pulsed_part_Vshift",
   (char *)"noiseScale",
   (char *)"noiseScale_pulse",
@@ -2912,7 +2980,8 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"repop_BG_pulse",
   (char *)"repop_path",
   (char *)"repop_path_pulse",
-  (char *)"repop_density",
+  (char *)"BG_CA_repop_density",
+  (char *)"Part_repop_density",
   (char *)"repop_colorBG",
   (char *)"repop_colorBG_pulse",
   (char *)"repop_greyBG",
@@ -2936,6 +3005,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"camera_gamma",
   (char *)"camera_gamma_pulse",
   (char *)"cameraCaptFreq",
+  (char *)"cameraNo",
   (char *)"playing_movieNo",
   (char *)"movieCaptFreq",
   (char *)"photo_diaporama",
@@ -2955,14 +3025,15 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"movieSobel_pulse",
   (char *)"invertMovie",
   (char *)"invertCamera",
+  (char *)"invertPhoto",
   (char *)"video_satur",
   (char *)"video_satur_pulse",
   (char *)"video_value",
   (char *)"video_value_pulse",
-  (char *)"video_gamma",
-  (char *)"video_gamma_pulse",
-  (char *)"video_threshold",
-  (char *)"video_threshold_pulse",
+  (char *)"movie_gamma",
+  (char *)"movie_gamma_pulse",
+  (char *)"movie_threshold",
+  (char *)"movie_threshold_pulse",
   (char *)"photoWeight",
   (char *)"photoWeight_pulse",
   (char *)"photo_satur",
@@ -3047,17 +3118,12 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"tracksSync",
   (char *)"cameraCumul",
   (char *)"CAstep",
-  (char *)"interfaceOnScreen",
   (char *)"CAcolorSpread",
   (char *)"freeze",
   (char *)"sound_env_min",
   (char *)"sound_env_max",
   (char *)"audioInput_weight",
   (char *)"soundtrack_weight",
-  (char *)"sensor_sample_setUp",
-  (char *)"sensor_layout",
-  (char *)"sensor_activation",
-  (char *)"sensor_vol",
   (char *)"isDisplayLookAt",
   (char *)"with_mesh",
   (char *)"with_blue",
@@ -3090,6 +3156,10 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"textureFrontier_wmax_width",
   (char *)"textureFrontier_hmin_width",
   (char *)"textureFrontier_hmax_width",
+  (char *)"textureScale_w",
+  (char *)"textureScale_h",
+  (char *)"textureTranslate_w",
+  (char *)"textureTranslate_h",
   (char *)"meshFrontier_X",
   (char *)"meshFrontier_width",
   (char *)"nearPlane",
@@ -3104,49 +3174,7 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"video_white",
   (char *)"video_white_pulse",
   (char *)"screen_drawing_no",
-  (char *)"light1_color",
-  (char *)"light1_color_pulse",
-  (char *)"light1_grey",
-  (char *)"light1_grey_pulse",
-  (char *)"light1_dimmer_pulse",
-  (char *)"light1_dimmer",
-  (char *)"light1_strobe",
-  (char *)"light2_dimmer",
-  (char *)"light3_dimmer",
-  (char *)"light4_dimmer",
-  (char *)"light5_dimmer",
-  (char *)"light1_strobe_pulse",
-  (char *)"light2_color",
-  (char *)"light2_color_pulse",
-  (char *)"light2_grey",
-  (char *)"light2_grey_pulse",
-  (char *)"light2_dimmer_pulse",
-  (char *)"light2_strobe",
-  (char *)"light2_strobe_pulse",
-  (char *)"light3_color",
-  (char *)"light3_color_pulse",
-  (char *)"light3_grey",
-  (char *)"light3_grey_pulse",
-  (char *)"light3_dimmer_pulse",
-  (char *)"light3_strobe",
-  (char *)"light3_strobe_pulse",
-  (char *)"light4_color",
-  (char *)"light4_color_pulse",
-  (char *)"light4_grey",
-  (char *)"light4_grey_pulse",
-  (char *)"light4_dimmer_pulse",
-  (char *)"light4_strobe",
-  (char *)"light4_strobe_pulse",
-  (char *)"light5_color",
-  (char *)"light5_color_pulse",
-  (char *)"light5_grey",
-  (char *)"light5_grey_pulse",
-  (char *)"light5_dimmer_pulse",
-  (char *)"light5_strobe",
-  (char *)"light5_strobe_pulse",
   (char *)"master_mask",
-  (char *)"activeMeshes",
-  (char *)"mobileMeshes",
   (char *)"master_mask_scale",
   (char *)"master_mask_scale_ratio",
   (char *)"master_mask_offsetX",
@@ -3161,4 +3189,6 @@ char *CmdString[_MaxInterpVarIDs] = {
   (char *)"MIDIwithBrush",
   (char *)"MIDIwithCameraFlash",
   (char *)"MIDIwithPhotoFlash",
+  (char *)"currentLightScene",
+  (char *)"directRenderingwithoutMeshScreen1",
 };

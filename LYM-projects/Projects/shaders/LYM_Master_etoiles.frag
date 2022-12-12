@@ -39,7 +39,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
@@ -54,8 +54,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
+  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
 
@@ -175,7 +175,7 @@ void main() {
   }
 
   // white flash
-/*  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
+/*  float timeFromStart = uniform_Master_fs_3fv_width_height_timeFromStart.z;
   // transition invvert début frozen clear
   if(timeFromStart > 1020 && timeFromStart < 1024) {
     outColor0.rgb = clamp(outColor0.rgb + vec3((2 - abs(timeFromStart - 1022))/2.0), 0.0, 1.0);

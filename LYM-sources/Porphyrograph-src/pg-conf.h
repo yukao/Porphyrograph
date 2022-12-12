@@ -6,18 +6,18 @@
  * 
  *
  *
- * This program is free software; you can redistribute itisClearAllLayersnd/or
+ * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
- *isClearAllLayerss publifscenesshed by the Free Software Foundation; either version 2.1
- * of the License, or (at your option)isClearAllLayersny later version.
- * 
+ * as published by the Free Software Foundation; either version 2.1
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
- * You should have receivedisClearAllLayers copy of the GNU Lesser General Public
- * LicenseisClearAllLayerslong with this program; if not, write to the Free
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program; if not, write to the Free
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
@@ -47,21 +47,21 @@ class pg_Window {
 
 class Scene {
 public:
-	float                   scene_duration;
+	double                  scene_duration;
 	bool                    scene_change_when_ends;
-	float                   scene_originalDuration;
-	float                   scene_initial_time;
-	float                   scene_originalInitial_time;
-	float                   scene_final_time;
-	float                   scene_originalFinal_time;
+	double                  scene_originalDuration;
+	double                  scene_initial_time;
+	double                  scene_originalInitial_time;
+	double                  scene_final_time;
+	double                  scene_originalFinal_time;
 	string                  scene_IDs;
 	string                  scene_Msg1;
 	string                  scene_Msg2;
-	double*                 scene_initial_parameters;
-	double*                 scene_final_parameters;
+	ScenarioValue*          scene_initial_parameters;
+	ScenarioValue*          scene_final_parameters;
 	pg_Interpolation*       scene_interpolations;
 
-	void init(void) {
+	void init_scene(void) {
 		scene_duration = 0.0;
 		scene_change_when_ends = true;
 		scene_initial_time = 0.0;
@@ -70,11 +70,11 @@ public:
 		scene_originalInitial_time = 0.0;
 		scene_originalFinal_time = 0.0;
 
-		scene_initial_parameters = new double[_MaxInterpVarIDs];
-		scene_final_parameters = new double[_MaxInterpVarIDs];
+		scene_initial_parameters = new ScenarioValue[_MaxInterpVarIDs];
+		scene_final_parameters = new ScenarioValue[_MaxInterpVarIDs];
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			scene_initial_parameters[indP] = 0.0;
-			scene_final_parameters[indP] = 0.0;
+			scene_initial_parameters[indP] = ScenarioValue();
+			scene_final_parameters[indP] = ScenarioValue();
 		}
 		scene_interpolations = new pg_Interpolation[_MaxInterpVarIDs];
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
@@ -104,6 +104,62 @@ extern int                      endSvg;
 extern int                      stepSvg;
 extern bool                     outputSvg;
 extern int						indSvgSnapshot;
+
+// SVG PATHs from scenario
+extern int                      nb_svg_paths;
+class SVG_path {
+public:
+	int indPath;
+	int indTrack;
+	float pathRadius;
+	float path_r_color;
+	float path_g_color;
+	float path_b_color;
+	float path_readSpeedScale;
+	string path_ID;
+	string path_fileName;
+	int path_group;
+	bool with_color_radius_from_scenario;
+	SVG_path(void) {
+		indPath = 1;
+		indTrack = 1;
+		pathRadius = 1;
+		path_r_color = 1;
+		path_g_color = 1;
+		path_b_color = 1;
+		path_readSpeedScale = 1;
+		path_ID = "";
+		path_fileName = "";
+		path_group = 0;
+		with_color_radius_from_scenario = false;
+	}
+	void SVG_path_init(int p_indPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color, 
+		float p_path_b_color, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group, bool p_with_color__brush_radius_from_scenario) {
+		indPath = p_indPath;
+		indTrack = p_indTrack;
+		pathRadius = p_pathRadius;
+		path_r_color = p_path_r_color;
+		path_g_color = p_path_g_color;
+		path_b_color = p_path_b_color;
+		path_readSpeedScale = p_path_readSpeedScale;
+		path_ID = p_path_ID;
+		path_fileName = p_path_fileName;
+		// no path group provided in the scenario file
+		if (p_path_group <= 0) {
+			path_group = 0;
+		}
+		// path group number is provided inside the scenario
+		else {
+			path_group = p_path_group - 1;
+		}
+		with_color_radius_from_scenario = p_with_color__brush_radius_from_scenario;
+	}
+	~SVG_path() {
+		path_ID = "";
+	}
+};
+extern SVG_path *SVGpaths;
+extern int current_path_group;
 
 // JPG capture
 extern string                   Jpg_file_name;
@@ -246,6 +302,7 @@ extern GLuint *pg_Texture_texID;
 extern string                    font_file_encoding;
 extern TextureEncoding           font_texture_encoding;
 
+void light_channel_string_to_channel_no(string a_light_channel_string, int* light_channel, int* light_channel_fine);
 void saveInitialTimesAndDurations(void);
 void restoreInitialTimesAndDurations( void );
 void pg_update_scene_variables(Scene* cur_scene, float elapsed_time_from_start);
@@ -254,6 +311,7 @@ void setWindowDimensions(void);
 
 void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin);
 void LoadConfigurationFile( const char * confFileName , const char * scenarioFileName );
+void stringstreamStoreLine(std::stringstream* sstream, std::string* line);
 
 int FindSceneById(std::string * sceneID);
 

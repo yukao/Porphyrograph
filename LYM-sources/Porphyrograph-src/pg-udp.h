@@ -47,7 +47,7 @@ float    pg_ScanFloatString( int *p_c  ,
 		   char *charstring , int *ind );
 
 // string splitting into string vector by single char
-vector<string> split(string str, char token);
+vector<string> split_string(string str, char token);
 
 // alternate plain/OSC message format
 enum pg_UDPMessageFormat{ Plain = 0, OSC , Emptypg_UDPMessageFormat };
@@ -80,7 +80,7 @@ public:
 	int     depth_output_stack;
 	int     current_depth_output_stack;
 	float   maximal_IP_message_delay;
-	float  last_IP_message_time;
+	double  last_IP_message_time;
 
 	// emitted message format
 	pg_UDPMessageFormat   send_format;
@@ -121,7 +121,7 @@ public:
 
 	// OSC argument parsing
 	char *OSC_arguments[MAX_OSC_ARGUMENTS];
-	char *OSCTag;
+	char *OSC_address;
 
 	// local server socket
 	SOCKET              SocketToLocalServer;
@@ -141,7 +141,7 @@ public:
 	lo_server           lo_local_server;
 
 	// server reception stack
-	int          *input_argc_stack;
+	int            *input_argc_stack;
 	char          **input_message_stack;
 	int            *input_message_length_stack;
 	int             depth_input_stack;

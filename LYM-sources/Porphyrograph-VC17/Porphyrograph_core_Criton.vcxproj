@@ -40,21 +40,21 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Porphyrograph</RootNamespace>
     <ProjectName>Porphyrograph_core_Criton</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -106,7 +106,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;CRITON;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\dirent-1.21\include;..\share\liblo-0.29;..\share\liblo-0.29\build</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\features2d\include;..\share\opencv\sources\modules\calib3d\include;..\share\opencv\sources\modules\flann\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\dirent-1.21\include;..\share\liblo-0.29;..\share\liblo-0.29\build;..\share\glm\</AdditionalIncludeDirectories>
       <FloatingPointModel>Precise</FloatingPointModel>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

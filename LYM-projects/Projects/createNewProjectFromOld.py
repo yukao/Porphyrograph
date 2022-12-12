@@ -16,8 +16,8 @@ import sys
 
 
 def main():
-	old_project_name = "Biches"
-	new_project_name = "AteliersEnfants"
+	old_project_name = "Song"
+	new_project_name = "Core"
 	command = "cp shaders/LYM_Update_{0!s}.vert shaders/LYM_Update_{1!s}.vert".format(old_project_name, new_project_name)
 	os.system( command )
 	command = "cp shaders/LYM_Update_{0!s}.frag shaders/LYM_Update_{1!s}.frag".format(old_project_name, new_project_name)
@@ -56,8 +56,8 @@ def main():
 	os.system( command )
 	command = "cp ../batFiles/{0!s}.PG-single.bat ../batFiles/{1!s}.PG-single.bat".format(old_project_name, new_project_name)
 	os.system( command )
-	command = "cp ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{0!s}.user ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{1!s}.user".format(old_project_name, new_project_name)
-	os.system( command )
+	# command = "cp ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{0!s}.user ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{1!s}.user".format(old_project_name, new_project_name)
+	# os.system( command )
 	command = "cp ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{0!s}.vcxproj ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{1!s}.vcxproj".format(old_project_name, new_project_name)
 	os.system( command )
 	command = "cp ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{0!s}.vcxproj.user ../../LYM-sources/Porphyrograph-VC17/Porphyrograph_core_{1!s}.vcxproj.user".format(old_project_name, new_project_name)

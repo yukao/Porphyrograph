@@ -37,6 +37,7 @@ float	 part_size;
 float	 part_acc;
 int		part_image_acceleration;
 float	 part_damp;
+float	 part_gravity;
 float	 noiseScale;
 float	 part_field_weight;
 float	 part_damp_targtRad;
@@ -50,8 +51,9 @@ float	 pixel_acc_shiftX;
 float	 pixel_acc_shiftY;
 float	 repop_part;
 float	 repop_path;
+int		Part_repop_density;
 bool	  freeze;
-uniform float uniform_ParticleAnimation_scenario_var_data[44];
+uniform float uniform_ParticleAnimation_scenario_var_data[46];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -644,7 +646,7 @@ void particle_out( void ) {
    }
 #endif
 #if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_follow47[indPath - 8] ) {
+    else if( indPath >= 8 && path_follow811[indPath - 8] ) {
       // reaches for pen position
       part_acceleration 
         = dvec2(curPos - out_position_speed_particle.xy);
@@ -673,7 +675,7 @@ void particle_out( void ) {
     }
 #endif
 #if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_repulse47[indPath - 8] ) {
+    else if( indPath >= 8 && path_repulse811[indPath - 8] ) {
       // reaches for pen position
       // escapes from pen position
       part_acceleration 
@@ -887,20 +889,22 @@ void main() {
   part_acc = uniform_ParticleAnimation_scenario_var_data[27];
   part_image_acceleration = int(uniform_ParticleAnimation_scenario_var_data[28]);
   part_damp = uniform_ParticleAnimation_scenario_var_data[29];
-  noiseScale = uniform_ParticleAnimation_scenario_var_data[30];
-  part_field_weight = uniform_ParticleAnimation_scenario_var_data[31];
-  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[32];
-  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[33];
-  partMove_target = (uniform_ParticleAnimation_scenario_var_data[34] > 0 ? true : false);
-  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
-  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[36]);
-  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[37]);
-  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[38]);
-  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[39];
-  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[40];
-  repop_part = uniform_ParticleAnimation_scenario_var_data[41];
-  repop_path = uniform_ParticleAnimation_scenario_var_data[42];
-  freeze = (uniform_ParticleAnimation_scenario_var_data[43] > 0 ? true : false);
+  part_gravity = uniform_ParticleAnimation_scenario_var_data[30];
+  noiseScale = uniform_ParticleAnimation_scenario_var_data[31];
+  part_field_weight = uniform_ParticleAnimation_scenario_var_data[32];
+  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[33];
+  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[34];
+  partMove_target = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
+  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[36] > 0 ? true : false);
+  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[37]);
+  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[38]);
+  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[39]);
+  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[40];
+  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[41];
+  repop_part = uniform_ParticleAnimation_scenario_var_data[42];
+  repop_path = uniform_ParticleAnimation_scenario_var_data[43];
+  Part_repop_density = int(uniform_ParticleAnimation_scenario_var_data[44]);
+  freeze = (uniform_ParticleAnimation_scenario_var_data[45] > 0 ? true : false);
 
   //////////////////////////
   // variables 

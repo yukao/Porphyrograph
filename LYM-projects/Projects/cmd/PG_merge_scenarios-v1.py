@@ -13,6 +13,8 @@ import getopt
 import sys
 from signal import signal, SIGINT
 
+full_trace = False
+
 # control C break
 def handler(signal_received, frame):
 	# Handle any cleanup here
@@ -102,6 +104,7 @@ def read_scenario_header(scenarioCSV) :
 # MAIN SUB
 ##################################################################
 def main(main_args) :
+	global full_trace
 
 	##################################################################
 	# ARGUMENTS
@@ -139,21 +142,21 @@ def main(main_args) :
 	try:
 		input_list_scenes_fileCsv = open(input_list_scenes_file_name, "rt")
 	except IOError:
-		print("File not found:", input_list_scenes_file_name, " or path is incorrect")
+		print("Input file/scene list File not found:", input_list_scenes_file_name, " or path is incorrect")
 	try:
 		input_full_scenario_fileCsv = open(input_full_scenario_file_name, "rt")
 	except IOError:
-		print("File not found:", input_full_scenario_file_name, " or path is incorrect")
+		print("Input full scenario File not found:", input_full_scenario_file_name, " or path is incorrect")
 	try:
 		output_scenario_fileCsv = open(output_scenario_file_name, "wt", newline='')
 	except IOError:
-		print("File not found:", output_scenario_file_name, " or path is incorrect")
+		print("Output File not opened:", output_scenario_file_name, " or path is incorrect")
 
 	##################################################################
 	# READS THE FULL SCENARIO AND MEMORIZES THE HEADER
 	##################################################################
 	########### reads the header of the full scenario which is supposed to contain all the variables
-	print("reads the header of the full scenario")
+	# print("reads the header of the full scenario")
 	readFullCSV = csv.reader(input_full_scenario_fileCsv, delimiter=',')
 	variable_full_scenario_header_IDs, variable_full_scenario_verbatims, variable_full_scenario_types, variable_full_scenario_callBacks, variable_full_scenario_shaders, variable_full_scenario_pulses, variable_full_scenario_initial_values = read_scenario_header(readFullCSV)
 	input_full_scenario_fileCsv.close()
@@ -173,7 +176,8 @@ def main(main_args) :
 	while (True) :
 		try: 
 			line = next(readCSV)
-			print(line)
+			if (full_trace == True) :
+				print(line)
 			input_scenario_file = line[0]
 			input_scene_fileName = line[1]
 			output_scene_fileName = line[2]
@@ -200,7 +204,7 @@ def main(main_args) :
 		try:
 			input_scenario_fileCsv = open(input_scenario_file, "rt")
 		except IOError:
-			print("File not found:", input_scenario_file, " or path is incorrect")
+			print("Scenario File not found:", input_scenario_file, " or path is incorrect")
 		readScenarioCSV = csv.reader(input_scenario_fileCsv, delimiter=',')
 
 		########### reads the header of the current scenario
@@ -235,7 +239,8 @@ def main(main_args) :
 			scene_comment_2 = variable_scene_description[5]
 			scene_comment_3 = variable_scene_description[6]
 
-			print("scene", ind_scene, ":", scene_name)
+			if (full_trace == True) :
+				print("scene", ind_scene, ":", scene_name)
 
 			# scene_ID
 			lineScenario = next(readScenarioCSV)
@@ -373,11 +378,12 @@ def main(main_args) :
 		# for each variable sets the interpolation value if it is found in the scene, otherwise sets the default 's' fixed (default) value
 		CSVwriter.writerow([""] + list(map(lambda x: variable_scene_values_dictionary[x][2] if(x in variable_scene_values_dictionary.keys()) else 's' , variable_full_scenario_header_IDs)))
 		CSVwriter.writerow(["/scene"])
-		defaulted_vars = []
-		for varID in variable_full_scenario_header_IDs :
-			if not(varID in variable_scene_values_dictionary.keys()) :
-				defaulted_vars.append(varID)
-		print("defaulted variables in scene", ind_scene, defaulted_vars)
+		if (full_trace == True) :
+			defaulted_vars = []
+			for varID in variable_full_scenario_header_IDs :
+				if not(varID in variable_scene_values_dictionary.keys()) :
+					defaulted_vars.append(varID)
+			print("defaulted variables in scene", ind_scene, defaulted_vars)
 		ind_scene += 1
 	CSVwriter.writerow(["/scenario"])
 

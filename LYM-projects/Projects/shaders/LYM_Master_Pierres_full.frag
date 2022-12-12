@@ -13,7 +13,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 bool	  mute_second_screen;
 bool	  invertAllLayers;
-int		cursorSize;
+float	 cursorSize;
 float	 master;
 float	 CAMasterWeight;
 float	 PartMasterWeight;
@@ -32,11 +32,10 @@ float	 master_mask_opacity_2;
 float	 master_mask_opacity_3;
 float	 master_mask_opacity_4;
 float	 master_mask_opacity_5;
-bool	  interfaceOnScreen;
 float	 master_crop_x;
 float	 master_crop_y;
 float	 master_crop_width;
-uniform float uniform_Master_scenario_var_data[25];
+uniform float uniform_Master_scenario_var_data[24];
 
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
 
@@ -77,12 +76,15 @@ layout (binding = 7) uniform sampler3D uniform_Master_texture_fs_Mask;  // mask 
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
-uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+/*uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+*/
+
 uniform ivec4 uniform_Master_fs_4iv_master_mask_opacity1;
 uniform ivec4 uniform_Master_fs_4iv_master_mask_opacity2;
 
@@ -94,7 +96,7 @@ out vec4 outColor0;
 void main() {
   mute_second_screen = (uniform_Master_scenario_var_data[0] > 0 ? true : false);
   invertAllLayers = (uniform_Master_scenario_var_data[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_scenario_var_data[2]);
+  cursorSize = uniform_Master_scenario_var_data[2];
   master = uniform_Master_scenario_var_data[3];
   CAMasterWeight = uniform_Master_scenario_var_data[4];
   PartMasterWeight = uniform_Master_scenario_var_data[5];
@@ -113,13 +115,12 @@ void main() {
   master_mask_opacity_3 = uniform_Master_scenario_var_data[18];
   master_mask_opacity_4 = uniform_Master_scenario_var_data[19];
   master_mask_opacity_5 = uniform_Master_scenario_var_data[20];
-  interfaceOnScreen = (uniform_Master_scenario_var_data[21] > 0 ? true : false);
-  master_crop_x = uniform_Master_scenario_var_data[22];
-  master_crop_y = uniform_Master_scenario_var_data[23];
-  master_crop_width = uniform_Master_scenario_var_data[24];
+  master_crop_x = uniform_Master_scenario_var_data[21];
+  master_crop_y = uniform_Master_scenario_var_data[22];
+  master_crop_width = uniform_Master_scenario_var_data[23];
 
-  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
+  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
   // vertical mirror
@@ -137,7 +138,7 @@ void main() {
   vec2 coordsWRTcenter = (coords - centerCoords) / ratioed_scale;
   vec2 scaled_coords = coordsWRTcenter + (centerCoords + vec2(master_offsetX, master_offsetY) / ratioed_scale);
 
-  int currentScene = int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w);
+  int currentScene = uniform_Master_fs_2iv_mobile_cursor_currentScene.y;
 
 
   // mute screen
@@ -147,7 +148,7 @@ void main() {
   }
 
   // interface
-  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
@@ -165,7 +166,7 @@ void main() {
     }
     return;
   }
-
+*/
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights
   vec4 MixingColor = texture(uniform_Master_texture_fs_Render_curr, scaled_coords );
@@ -192,6 +193,8 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // mix of non echoed layers according to final weights
   // mask is used as a local change of the mix
+  // a track is used to mask other ones: can be used to reveal a
+  // track by drawing on another one
   float maskGrey = 1.0;
   if (currentMaskTrack == 0) {
     trackMasterWeight_0 = 0; maskGrey = graylevel(track0_color.rgb); 
@@ -312,10 +315,10 @@ void main() {
 //   coords.x = width - coords.x;
 
   // blinking cursor
-  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+  if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
       && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
-    outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
+    outColor0.rgb = mix( outColor0.rgb , (vec3(1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
   outColor0.rgb *= master;

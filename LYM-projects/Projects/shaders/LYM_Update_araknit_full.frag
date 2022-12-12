@@ -46,7 +46,6 @@ bool	  invertMovie;
 float	 video_satur;
 float	 video_satur_pulse;
 float	 video_value;
-float	 video_white;
 float	 photoWeight;
 float	 photo_satur;
 float	 photo_satur_pulse;
@@ -68,7 +67,7 @@ int		cameraCumul;
 int		CAstep;
 bool	  CAcolorSpread;
 bool	  freeze;
-uniform float uniform_Update_scenario_var_data[61];
+uniform float uniform_Update_scenario_var_data[60];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -1440,28 +1439,27 @@ void main() {
   video_satur = uniform_Update_scenario_var_data[36];
   video_satur_pulse = uniform_Update_scenario_var_data[37];
   video_value = uniform_Update_scenario_var_data[38];
-  video_white = uniform_Update_scenario_var_data[39];
-  photoWeight = uniform_Update_scenario_var_data[40];
-  photo_satur = uniform_Update_scenario_var_data[41];
-  photo_satur_pulse = uniform_Update_scenario_var_data[42];
-  photo_value = uniform_Update_scenario_var_data[43];
-  photo_value_pulse = uniform_Update_scenario_var_data[44];
-  photo_scale = uniform_Update_scenario_var_data[45];
-  mask_scale = uniform_Update_scenario_var_data[46];
-  photo_contrast = uniform_Update_scenario_var_data[47];
-  mask_contrast = uniform_Update_scenario_var_data[48];
-  CAParams1 = uniform_Update_scenario_var_data[49];
-  CAParams2 = uniform_Update_scenario_var_data[50];
-  CAParams3 = uniform_Update_scenario_var_data[51];
-  CAParams4 = uniform_Update_scenario_var_data[52];
-  CAParams5 = uniform_Update_scenario_var_data[53];
-  CAParams6 = uniform_Update_scenario_var_data[54];
-  CAParams7 = uniform_Update_scenario_var_data[55];
-  CAParams8 = uniform_Update_scenario_var_data[56];
-  cameraCumul = int(uniform_Update_scenario_var_data[57]);
-  CAstep = int(uniform_Update_scenario_var_data[58]);
-  CAcolorSpread = (uniform_Update_scenario_var_data[59] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[60] > 0 ? true : false);
+  photoWeight = uniform_Update_scenario_var_data[39];
+  photo_satur = uniform_Update_scenario_var_data[40];
+  photo_satur_pulse = uniform_Update_scenario_var_data[41];
+  photo_value = uniform_Update_scenario_var_data[42];
+  photo_value_pulse = uniform_Update_scenario_var_data[43];
+  photo_scale = uniform_Update_scenario_var_data[44];
+  mask_scale = uniform_Update_scenario_var_data[45];
+  photo_contrast = uniform_Update_scenario_var_data[46];
+  mask_contrast = uniform_Update_scenario_var_data[47];
+  CAParams1 = uniform_Update_scenario_var_data[48];
+  CAParams2 = uniform_Update_scenario_var_data[49];
+  CAParams3 = uniform_Update_scenario_var_data[50];
+  CAParams4 = uniform_Update_scenario_var_data[51];
+  CAParams5 = uniform_Update_scenario_var_data[52];
+  CAParams6 = uniform_Update_scenario_var_data[53];
+  CAParams7 = uniform_Update_scenario_var_data[54];
+  CAParams8 = uniform_Update_scenario_var_data[55];
+  cameraCumul = int(uniform_Update_scenario_var_data[56]);
+  CAstep = int(uniform_Update_scenario_var_data[57]);
+  CAcolorSpread = (uniform_Update_scenario_var_data[58] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[59] > 0 ? true : false);
 
   //////////////////////////
   // TRACK DECAY

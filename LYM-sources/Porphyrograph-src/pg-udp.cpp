@@ -128,7 +128,7 @@ float    pg_ScanFloatString( int *p_c  ,
 }
 
 // string splitting into string vector by single char
-vector<string> split(string str, char token) {
+vector<string> split_string(string str, char token) {
 	vector<string>result;
 	while (str.size()) {
 		int index = str.find(token);
@@ -286,8 +286,8 @@ void pg_IPClient::InitClient(void) {
 		lo_client = lo_address_new(Remote_server_IP.c_str(), Remote_server_port_string);
 		printf("Network client '%s': sending OSC to '%s' on port %d\n",
 			id.c_str(), Remote_server_IP.c_str(), Remote_server_port);
-		printf("Sending OSC packets to '%s'\n",
-			lo_address_get_url(lo_client));
+		//printf("Sending OSC packets to '%s'\n",
+		//	lo_address_get_url(lo_client));
 	}
 
 	// system initializing
@@ -330,7 +330,7 @@ void pg_IPClient::sendIPmessages(void) {
 
 		if (message_received
 			|| current_IP_message_number == first_IP_message_number
-			|| ((current_time - last_IP_message_time) / 1000.0f)
+			|| ((current_time - last_IP_message_time) / 1000.)
 				> maximal_IP_message_delay) {
 
 
@@ -351,7 +351,7 @@ void pg_IPClient::sendIPmessages(void) {
 			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
 				// splits the argument separated by space chars
 				std::vector<std::string> message_arguments;
-				message_arguments = split(String(output_message_stack[0]), ' ');
+				message_arguments = split_string(String(output_message_stack[0]), ' ');
 
 				// sends OSC message through OSC bundle
 				// message that begins by an OSC address #/aaaa/aaa 
@@ -391,7 +391,7 @@ void pg_IPClient::sendIPmessages(void) {
 							}
 							break;
 						default:
-							sprintf(ErrorStr, "Error: unknown OSC pattern element %c!", *(output_pattern_stack[0])); ReportError(ErrorStr);
+							sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", *(output_pattern_stack[0]), output_message_stack[0]); ReportError(ErrorStr);
 							break;
 						}
 					}
@@ -404,7 +404,7 @@ void pg_IPClient::sendIPmessages(void) {
 			else if (send_format == OSC && *(output_message_stack[0]) == '/') {
 				// splits the argument separated by space chars
 				std::vector<std::string> message_arguments;
-				message_arguments = split(String(output_message_stack[0]), ' ');
+				message_arguments = split_string(String(output_message_stack[0]), ' ');
 
 				// sends OSC message through OSC
 				// message that begins by an OSC address /aaaa/aaa 
@@ -438,7 +438,7 @@ void pg_IPClient::sendIPmessages(void) {
 								}
 								break;
 							default:
-								sprintf(ErrorStr, "Error: unknown OSC pattern element %c!", *(output_pattern_stack[0])); ReportError(ErrorStr); 
+								sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", *(output_pattern_stack[0]), output_message_stack[0]); ReportError(ErrorStr);
 								break;
 							}
 						}
@@ -447,28 +447,28 @@ void pg_IPClient::sendIPmessages(void) {
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
 									stof(message_arguments[1]), stof(message_arguments[2])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "sff") == 0) {
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
 									message_arguments[1].c_str(), stof(message_arguments[2]), stof(message_arguments[3])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fff") == 0) {
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
 									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffff") == 0) {
 								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
 									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffff") == 0) {
@@ -476,7 +476,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
 									stof(message_arguments[5])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffff") == 0) {
@@ -484,7 +484,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
 									stof(message_arguments[5]), stof(message_arguments[6])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffff") == 0) {
@@ -492,7 +492,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
 									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffff") == 0) {
@@ -500,7 +500,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
 									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffffff") == 0) {
@@ -509,7 +509,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]), 
 									stof(message_arguments[9])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffffff") == 0) {
@@ -518,7 +518,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
 									stof(message_arguments[9]), stof(message_arguments[10])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffffffff") == 0) {
@@ -527,7 +527,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
 									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffffffff") == 0) {
@@ -536,7 +536,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
 									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffffffffff") == 0) {
@@ -546,7 +546,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]), 
 									stof(message_arguments[13])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffffffffff") == 0) {
@@ -556,7 +556,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]), 
 									stof(message_arguments[13]), stof(message_arguments[14])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffffffffffff") == 0) {
@@ -566,7 +566,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
 									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffffffffffff") == 0) {
@@ -576,7 +576,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
 									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffffffffffffff") == 0) {
@@ -587,7 +587,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
 									stof(message_arguments[17])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffffffffffffff") == 0) {
@@ -598,7 +598,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
 									stof(message_arguments[17]), stof(message_arguments[18])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "fffffffffffffffffff") == 0) {
@@ -609,7 +609,7 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
 									stof(message_arguments[17]), stof(message_arguments[18]), stof(message_arguments[19])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else if (strcmp(output_pattern_stack[0], "ffffffffffffffffffff") == 0) {
@@ -620,25 +620,24 @@ void pg_IPClient::sendIPmessages(void) {
 									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
 									stof(message_arguments[17]), stof(message_arguments[18]), stof(message_arguments[19]), stof(message_arguments[20])) == -1) {
 									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
 								}
 							}
 							else {
 								// error: does not process message of more than one argument for the moment
-								sprintf(ErrorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[0], pattern_size); ReportError(ErrorStr); throw(100);
+								sprintf(ErrorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[0], pattern_size); ReportError(ErrorStr);
 							}
 						}
 					}
 					else {
 						// error : pattern and message size differ
-						sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %d)!", output_pattern_stack[0], output_message_stack[0], pattern_size, message_arguments.size() - 1); ReportError(ErrorStr); throw(100);
+						sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %d)!", output_pattern_stack[0], output_message_stack[0], pattern_size, message_arguments.size() - 1); ReportError(ErrorStr);
 					}
 				}
 				// no pattern, just an address
 				else {
 					if (lo_send(lo_client, output_message_stack[0], NULL) == -1) {
-						sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-							lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); throw(100);
+						sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client), lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
 					}
 				}
 			}
@@ -766,7 +765,7 @@ void pg_IPClient::sendIPmessages(void) {
 		else {
 			if (IP_message_trace) {
 				printf("udp client: delay %.5f / %.5f \n",
-					((current_time - last_IP_message_time) / 1000.0f),
+					((current_time - last_IP_message_time) / 1000.),
 					maximal_IP_message_delay);
 			}
 			return;
@@ -962,7 +961,7 @@ void pg_IPServer::InitServer(void) {
 		OSC_arguments[ind] = new char[StringLength];
 		*(OSC_arguments[ind]) = 0;
 	}
-	OSCTag = new char[StringLength];
+	OSC_address = new char[StringLength];
 }
 
 void pg_IPServer::IP_InputStackInitialization(void) {
@@ -990,6 +989,8 @@ int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
 	// string initialization to 0
 	memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
 
+	//printf("processLibloReceivedOSC\n");
+
 	strcpy(Input_Message_Local_Commande_String, path);
 	for (int indParam = 0; indParam < argc; indParam++) {
 		strcat(Input_Message_Local_Commande_String, " ");
@@ -1013,6 +1014,9 @@ int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
 			else {
 				strcat(Input_Message_Local_Commande_String, argtString);
 			}
+		}
+		else {
+			sprintf(ErrorStr, "Error: unknown OSC pattern element %c in received message!", types[indParam]); ReportError(ErrorStr);
 		}
 	}
 
@@ -1144,7 +1148,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 	// processes all the non duplicated messages
 	for (int ind_mess = 0; ind_mess < current_depth_input_stack; ind_mess++) {
 		messString = input_message_stack[ind_mess];
-		int argc = input_argc_stack[ind_mess];
+		int nb_arguments = input_argc_stack[ind_mess];
 
 		if (IP_message_trace)
 		{
@@ -1191,11 +1195,11 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 				p_c = 0;
 			}
 
-			strncpy(OSCTag, messString, tagLength);
-			OSCTag[tagLength] = 0;
+			strncpy(OSC_address, messString, tagLength);
+			OSC_address[tagLength] = 0;
 			messString += tagLength;
 			indChar += tagLength;
-			// printf( "message command [%s] length [%d]\n" , OSCTag , tagLength );
+			// printf( "message command [%s] length [%d]\n" , OSC_address , tagLength );
 
 			// printf( "OSC parameters %s\n" , pch );
 			int indOSCParam = 0;
@@ -1242,16 +1246,16 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d)!", MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
 			}
 
-			// printf("Alias command %s size %d :\n" , OSCTag , indOSCParam );
+			// printf("Alias command %s size %d :\n" , OSC_address , indOSCParam );
 			// for( int ind = 0 ; ind < indOSCParam ; ind++ ) {
 			// printf("%s \n" , OSC_arguments[ind] );
 			// }
 
-			float args[MAX_OSC_ARGUMENTS];
+			float OSC_float_arguments[MAX_OSC_ARGUMENTS];
 			for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
-				args[ind] = (float)atof(OSC_arguments[ind]);
+				OSC_float_arguments[ind] = (float)atof(OSC_arguments[ind]);
 			}
-			pg_aliasScript(OSCTag, OSC_arguments[0], args, argc);
+			pg_aliasScript(OSC_address, OSC_arguments[0], OSC_float_arguments, nb_arguments);
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect external message syntax %s!", messString); ReportError(ErrorStr); break;

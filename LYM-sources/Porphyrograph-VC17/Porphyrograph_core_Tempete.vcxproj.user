@@ -1,4 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>./Projects/configuration/LYM_demo_Tempete-head-single.txt ./Projects/scenarios/LYM_demo-Tempete-scenario-v1.txt</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>..\..\LYM-projects</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>./Projects/configuration/LYM_demo_Tempete-head-single.txt ./Projects/scenarios/LYM_demo-Tempete-scenario-v1.txt</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>..\..\LYM-projects</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
 </Project>

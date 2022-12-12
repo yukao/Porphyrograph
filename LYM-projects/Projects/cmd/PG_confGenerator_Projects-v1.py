@@ -370,7 +370,7 @@ def main(main_args) :
 
 			############################### configuration variable declarations
 			# extern configuration variable types % pointers declarations
-			ScriptHeader.write("enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path };\n")
+			ScriptHeader.write("enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };\n")
 			ScriptHeader.write("enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n")
 			ScriptHeader.write("extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];\n")
 			ScriptHeader.write("extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];\n")
@@ -528,6 +528,8 @@ def main(main_args) :
 
 	############################### constant declarations
 	# number of scene variables
+	for id_string in ids :
+		ScriptHeader.write(" #define var_%s\n" % id_string)
 	ScriptHeader.write("enum InterpVarIDs{ \n")
 	# scene variable initialization
 	ScriptHeader.write("  _%s = 0,\n" % ids[0])
@@ -559,7 +561,7 @@ def main(main_args) :
 	ScriptHeader.write("extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern void * ScenarioVarPointers[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern char *ScenarioVarMessages[_MaxInterpVarIDs];\n")
-	ScriptHeader.write("extern char *CmdString[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("extern char *ScenarioVarStrings[_MaxInterpVarIDs];\n")
 
 	# scenario variable types declarations
 	ScriptBody.write("VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { \n")
@@ -573,17 +575,51 @@ def main(main_args) :
 		ScriptBody.write("	(void *)&%s,\n" % id_string)
 	ScriptBody.write("};\n")
 
-	# variable callback pointers declarations
-	for id_string in callBacks :
-		if(id_string != "NULL") :
-			ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, double scenario_or_gui_command_value);\n" % id_string)
+	# ScriptBody.write("union scenarioValue {\n")
+	# ScriptBody.write("	double val_num;\n")
+	# ScriptBody.write("	string val_string;\n")
+	# ScriptBody.write("~ScenarioValue() {}};\n")
 
-	ScriptBody.write("void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, double) = { \n")
-	for id_string in callBacks :
-		if(id_string == "NULL") :
+	# variable callback pointers declarations
+	for callBack_id_string, type_string in zip(callBacks, types):
+		if(callBack_id_string != "NULL") :
+			callBack_generic_id_string = callBack_id_string + "_generic"
+			if(type_string == "bool") :
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n" % callBack_id_string)
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
+				ScriptBody.write("	%s(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+			elif(type_string == "sign") :
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n" % callBack_id_string)
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
+				ScriptBody.write("	%s(param_input_type, double_to_sign(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+			elif(type_string == "path") :
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n" % callBack_id_string)
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
+				ScriptBody.write("	%s(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+			elif(type_string == "float") :
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);\n" % callBack_id_string)
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
+				ScriptBody.write("	%s(param_input_type, float(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+			elif(type_string == "int") :
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n" % callBack_id_string)
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
+				ScriptBody.write("	%s(param_input_type, int(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+			elif(type_string == "string") :
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);\n" % callBack_id_string)
+				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
+				ScriptBody.write("	%s(param_input_type, scenario_or_gui_command_value.val_string);\n" % callBack_id_string)
+			else :
+				print("Unknown callback parameter type [%s]" % type_string)
+				sys.exit(0)
+			ScriptBody.write("}\n")
+
+	ScriptBody.write("void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { \n")
+	for callBack_id_string in callBacks :
+		callBack_generic_id_string = callBack_id_string + "_generic"
+		if(callBack_id_string == "NULL") :
 			ScriptBody.write("	NULL,\n")
 		else :
-			ScriptBody.write("	&%s,\n" % id_string)
+			ScriptBody.write("	&%s,\n" % callBack_generic_id_string)
 	ScriptBody.write("};\n")
 
 	ScriptBody.write("char *ScenarioVarMessages[_MaxInterpVarIDs] = { \n")
@@ -610,7 +646,7 @@ def main(main_args) :
 	ScriptBody.write("};\n")
 
 	# alias string list declarations (commands received from PD)
-	ScriptBody.write("char *CmdString[_MaxInterpVarIDs] = { \n")
+	ScriptBody.write("char *ScenarioVarStrings[_MaxInterpVarIDs] = { \n")
 	for idstring in ids :
 		ScriptBody.write("  (char *)\""+idstring+"\",\n")
 	ScriptBody.write("};\n")
@@ -675,8 +711,11 @@ def main(main_args) :
 						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + id_string + ";\n"
 					elif(type_string == "int") :
 						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + id_string + ";\n"
-					else :
+					elif(type_string == "float") :
 						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + id_string + ";\n"
+					else :
+						print("Unknown particle animation shader parameter type [%s]" % type_string)
+						sys.exit(0)
 					
 					if(ParticleAnimation_fs_index == 0) :
 						ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data;\n")
@@ -689,8 +728,11 @@ def main(main_args) :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] + " = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
 					elif(ParticleAnimation_fs_types[ParticleAnimation_fs_index] == "int") :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] + " = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n"
-					else :
+					elif(ParticleAnimation_fs_types[ParticleAnimation_fs_index] == "float") :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] + " = uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
+					else :
+						print("Unknown particle animation shader parameter type [%s]" % ParticleAnimation_fs_types[ParticleAnimation_fs_index])
+						sys.exit(0)
 					
 					pulsing_mode = pulsing_modes_dict[ParticleAnimation_fs_IDs[ParticleAnimation_fs_index]]
 					if(pulsing_mode == "*") :
@@ -702,7 +744,7 @@ def main(main_args) :
 					elif(pulsing_mode == "pulsed_differential") :
 						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] + " * (pulse_average - pulse_average_prec) * " + ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] + "_pulse;\n"
 					else :
-						print("Unknown pulsing mode [%s]" % pulsing_mode)
+						print("Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 						sys.exit(0)
 				 	
 					ParticleAnimation_fs_index  += 1
@@ -715,8 +757,11 @@ def main(main_args) :
 					Update_head_glsl = Update_head_glsl + "bool	  " + id_string + ";\n"
 				elif(type_string == "int") :
 					Update_head_glsl = Update_head_glsl + "int		" + id_string + ";\n"
-				else :
+				elif(type_string == "float") :
 					Update_head_glsl = Update_head_glsl + "float	 " + id_string + ";\n"
+				else :
+					print("Unknown update shader parameter type [%s]" % type_string)
+					sys.exit(0)
 
 				if(Update_fs_index == 0) :
 					ShaderHeader.write("extern GLint uniform_Update_scenario_var_data;\n")
@@ -728,8 +773,11 @@ def main(main_args) :
 					Update_body_glsl = Update_body_glsl + "  " + Update_fs_IDs[Update_fs_index] + " = (uniform_Update_scenario_var_data[" + str(Update_fs_index) + "] > 0 ? true : false);\n";
 				elif(Update_fs_types[Update_fs_index] == "int") :
 					Update_body_glsl = Update_body_glsl + "  " + Update_fs_IDs[Update_fs_index] + " = int(uniform_Update_scenario_var_data[" + str(Update_fs_index) + "]);\n"
-				else :
+				elif(Update_fs_types[Update_fs_index] == "float") :
 					Update_body_glsl = Update_body_glsl + "  " + Update_fs_IDs[Update_fs_index] + " = uniform_Update_scenario_var_data[" + str(Update_fs_index) + "];\n"
+				else :
+					print("Unknown update shader parameter type [%s]" % Update_fs_types[Update_fs_index])
+					sys.exit(0)
 				
 				pulsing_mode = pulsing_modes_dict[Update_fs_IDs[Update_fs_index]]
 				if(pulsing_mode == "*") :
@@ -741,7 +789,7 @@ def main(main_args) :
 				elif(pulsing_mode == "pulsed_differential") :
 					Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + Update_fs_IDs[Update_fs_index] + " * (pulse_average - pulse_average_prec) * " + Update_fs_IDs[Update_fs_index] + "_pulse;\n"
 				else :
-					print("Unknown pulsing mode [%s]" % pulsing_mode)
+					print("Unknown Update pulsing mode [%s]" % pulsing_mode)
 					sys.exit(0)
 				
 				Update_fs_index += 1
@@ -754,8 +802,11 @@ def main(main_args) :
 					Mixing_head_glsl = Mixing_head_glsl + "bool	  " + id_string + ";\n"
 				elif(type_string == "int") :
 					Mixing_head_glsl = Mixing_head_glsl + "int		" + id_string + ";\n"
-				else :
+				elif(type_string == "float") :
 					Mixing_head_glsl = Mixing_head_glsl + "float	 " + id_string + ";\n"
+				else :
+					print("Unknown mixing shader parameter type [%s]" % type_string)
+					sys.exit(0)
 
 				if(Mixing_fs_index == 0) :
 					ShaderHeader.write("extern GLint uniform_Mixing_scenario_var_data;\n")
@@ -767,8 +818,11 @@ def main(main_args) :
 					Mixing_body_glsl = Mixing_body_glsl + "  " + Mixing_fs_IDs[Mixing_fs_index] + " = (uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "] > 0 ? true : false);\n";
 				elif(Mixing_fs_types[Mixing_fs_index] == "int") :
 					Mixing_body_glsl = Mixing_body_glsl + "  " + Mixing_fs_IDs[Mixing_fs_index] + " = int(uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "]);\n"
-				else :
+				elif(Mixing_fs_types[Mixing_fs_index] == "float") :
 					Mixing_body_glsl = Mixing_body_glsl + "  " + Mixing_fs_IDs[Mixing_fs_index] + " = uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n"
+				else :
+					print("Unknown mixing shader parameter type [%s]" % Mixing_fs_types[Mixing_fs_index])
+					sys.exit(0)
 				
 				pulsing_mode = pulsing_modes_dict[Mixing_fs_IDs[Mixing_fs_index]]
 				if(pulsing_mode == "*") :
@@ -780,7 +834,7 @@ def main(main_args) :
 				elif(pulsing_mode == "pulsed_differential") :
 					Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + Update_fs_IDs[Mixing_fs_index] + " * (pulse_average - pulse_average_prec) * " + Mixing_fs_IDs[Mixing_fs_index] + "_pulse;\n"
 				else :
-					print("Unknown pulsing mode [%s]" % pulsing_mode)
+					print("Unknown Mixing pulsing mode [%s]" % pulsing_mode)
 					sys.exit(0)
 			 	
 				Mixing_fs_index += 1
@@ -795,8 +849,11 @@ def main(main_args) :
 						ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + id_string + ";\n"
 					elif(type_string == "int") :
 						ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + id_string + ";\n"
-					else :
+					elif(type_string == "float") :
 						ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + id_string + ";\n"
+					else :
+						print("Unknown particle shader parameter type [%s]" % type_string)
+						sys.exit(0)
 
 					if(ParticleRender_fs_index == 0) :
 						ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data\n")
@@ -809,8 +866,11 @@ def main(main_args) :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + ParticleRender_fs_IDs[ParticleRender_fs_index] + " = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
 					elif(ParticleRender_fs_types[ParticleRender_fs_index] == "int") :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + ParticleRender_fs_IDs[ParticleRender_fs_index] + " = int(uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n"
-					else :
+					elif(ParticleRender_fs_types[ParticleRender_fs_index] == "float") :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + ParticleRender_fs_IDs[ParticleRender_fs_index] + " = uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
+					else :
+						print("Unknown particle shader parameter type [%s]" % ParticleRender_fs_types[ParticleRender_fs_index])
+						sys.exit(0)
 					
 					pulsing_mode = pulsing_modes_dict[ParticleRender_fs_IDs[ParticleRender_fs_index]]
 					if(pulsing_mode == "*") :
@@ -822,7 +882,7 @@ def main(main_args) :
 					elif(pulsing_mode == "pulsed_differential") :
 						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + ParticleRender_fs_IDs[ParticleRender_fs_index] + " * (pulse_average - pulse_average_prec) * " + ParticleRender_fs_IDs[ParticleRender_fs_index] + "_pulse;\n"
 					else :
-						print("Unknown pulsing mode [%s]" % pulsing_mode)
+						print("Unknown ParticleRender pulsing mode [%s]" % pulsing_mode)
 						sys.exit(0)
 				 	
 					ParticleRender_fs_index += 1
@@ -835,8 +895,11 @@ def main(main_args) :
 					Master_head_glsl = Master_head_glsl + "bool	  " + id_string + ";\n"
 				elif(type_string == "int") :
 					Master_head_glsl = Master_head_glsl + "int		" + id_string + ";\n"
-				else :
+				elif(type_string == "float") :
 					Master_head_glsl = Master_head_glsl + "float	 " + id_string + ";\n"
+				else :
+					print("Unknown master shader parameter type [%s]" % type_string)
+					sys.exit(0)
 
 				if(Master_fs_index == 0) :
 					ShaderHeader.write("extern GLint uniform_Master_scenario_var_data;\n")
@@ -848,8 +911,11 @@ def main(main_args) :
 					Master_body_glsl = Master_body_glsl + "  " + Master_fs_IDs[Master_fs_index] + " = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "] > 0 ? true : false);\n";
 				elif(Master_fs_types[Master_fs_index] == "int") :
 					Master_body_glsl = Master_body_glsl + "  " + Master_fs_IDs[Master_fs_index] + " = int(uniform_Master_scenario_var_data[" + str(Master_fs_index) + "]);\n"
-				else :
+				elif(Master_fs_types[Master_fs_index] == "float") :
 					Master_body_glsl = Master_body_glsl + "  " + Master_fs_IDs[Master_fs_index] + " = uniform_Master_scenario_var_data[" + str(Master_fs_index) + "];\n"
+				else :
+					print("Unknown master shader parameter type [%s]" % Master_fs_types[Master_fs_index])
+					sys.exit(0)
 				
 				pulsing_mode = pulsing_modes_dict[Master_fs_IDs[Master_fs_index]]
 				if(pulsing_mode == "*") :
@@ -861,7 +927,7 @@ def main(main_args) :
 				elif(pulsing_mode == "pulsed_differential") :
 					Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + Master_fs_IDs[Master_fs_index] + " * (pulse_average - pulse_average_prec) * " + Master_fs_IDs[Master_fs_index] + "_pulse;\n"
 				else :
-					print("Unknown pulsing mode [%s]" % pulsing_mode)
+					print("Unknown Master pulsing mode [%s]" % pulsing_mode)
 					sys.exit(0)
 				
 				Master_fs_index += 1

@@ -46,13 +46,15 @@
 #X obj 317 20 netreceive 1980 1;
 #X obj 665 275 s soundtrack_weight;
 #X obj 665 252 s audioInput_weight;
+#X obj 671 368 s auto_pulse;
+#X msg 34 190 send /test 0;
 #X obj 317 42 route /connect /auto_beat /beat_delay /beat_threshold
 /sound_env_min /sound_env_max /soundtrack_onOff /soundtrack_fileName
 /audioInput_weight /soundtrack_weight /PD_connected /reset_sound /auto_pulse
-;
-#X obj 671 368 s auto_pulse;
+/disconnect;
+#X obj 314 370 s disconnect;
 #X connect 0 0 11 0;
-#X connect 3 0 9 0;
+#X connect 3 0 11 0;
 #X connect 4 0 33 0;
 #X connect 5 0 0 0;
 #X connect 7 0 0 0;
@@ -65,30 +67,31 @@
 #X connect 26 0 27 0;
 #X connect 30 0 29 0;
 #X connect 33 0 11 0;
-#X connect 34 0 13 0;
-#X connect 34 0 37 0;
-#X connect 37 0 16 0;
-#X connect 37 1 32 0;
-#X connect 37 2 31 0;
-#X connect 37 3 19 0;
-#X connect 37 3 30 0;
-#X connect 37 4 20 0;
-#X connect 37 4 24 0;
-#X connect 37 5 21 0;
-#X connect 37 5 26 0;
-#X connect 37 6 18 0;
-#X connect 37 7 17 0;
-#X connect 37 8 36 0;
-#X connect 37 9 35 0;
-#X connect 37 10 23 0;
-#X connect 37 11 28 0;
-#X connect 37 12 38 0;
+#X connect 34 0 39 0;
+#X connect 38 0 11 0;
+#X connect 39 0 16 0;
+#X connect 39 1 32 0;
+#X connect 39 2 31 0;
+#X connect 39 3 19 0;
+#X connect 39 3 30 0;
+#X connect 39 4 20 0;
+#X connect 39 4 24 0;
+#X connect 39 5 21 0;
+#X connect 39 5 26 0;
+#X connect 39 6 18 0;
+#X connect 39 7 17 0;
+#X connect 39 8 36 0;
+#X connect 39 9 35 0;
+#X connect 39 10 23 0;
+#X connect 39 11 28 0;
+#X connect 39 12 37 0;
+#X connect 39 13 40 0;
 #X coords 0 0 10 10 0 0 0;
 #X restore 23 145 pd UDPinOut;
-#X text 203 142 MUSIC CONTROL;
+#X text 204 142 MUSIC CONTROL;
 #X obj 205 159 bng 40 250 50 0 empty empty empty 0 -6 0 8 -4034 -1
 -1;
-#N canvas 205 147 1023 521 sound_analysis 0;
+#N canvas 205 147 1023 667 sound_analysis 0;
 #X obj 435 166 bonk~;
 #X text 671 161 ATTACK OUTPUT;
 #X obj 678 183 unpack f f f;
@@ -585,15 +588,15 @@
 #X connect 93 0 92 0;
 #X restore 205 199 pd sound_analysis;
 #X text 251 170 MIN MAX AUTOM;
-#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 20.3 0 18 1 36
+#X obj 22 258 cnv 15 150 35 empty autom_env_min_can 26.8 0 18 1 36
 -204800 -33289 0;
-#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 98.0 0 18 1 36
+#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 78.3 0 18 1 36
 -262130 -33289 0;
 #X obj 23 322 cnv 15 150 35 empty sound_env_min_can 25.0 0 18 1 48
 -4032 -33289 0;
-#X obj 186 319 cnv 15 150 35 empty sound_env_max_can 91.0 0 18 1 48
+#X obj 186 319 cnv 15 150 35 empty sound_env_max_can 85.0 0 18 1 48
 -257985 -33289 0;
-#X obj 24 188 cnv 15 150 35 empty beat_threshold_can 0.77 0 18 1 48
+#X obj 24 188 cnv 15 150 35 empty beat_threshold_can 0.19 0 18 1 48
 -232576 -33289 0;
 #X text 18 234 OBSERVED SOUND MIN AND MAX;
 #X text 21 302 DEFINED SOUND MIN AND MAX;
@@ -644,7 +647,7 @@
 #X connect 17 0 6 0;
 #X connect 17 0 9 0;
 #X restore 190 51 pd play_soundtrack;
-#X text 188 34 SOUNDTRACKS;
+#X text 196 34 SOUNDTRACKS;
 #X obj 280 11 bng 40 250 50 0 empty empty empty 0 -6 0 8 -258699 -1
 -1;
 #X connect 0 0 7 0;

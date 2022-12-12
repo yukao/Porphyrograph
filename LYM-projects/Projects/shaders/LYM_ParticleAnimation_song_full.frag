@@ -37,6 +37,7 @@ bool	  part_path_repulse_11;
 float	 part_size;
 float	 part_acc;
 float	 part_damp;
+float	 part_gravity;
 float	 noiseScale;
 float	 part_field_weight;
 float	 part_damp_targtRad;
@@ -50,8 +51,9 @@ float	 pixel_acc_shiftX;
 float	 pixel_acc_shiftY;
 float	 repop_part;
 float	 repop_path;
+int		Part_repop_density;
 bool	  freeze;
-uniform float uniform_ParticleAnimation_scenario_var_data[44];
+uniform float uniform_ParticleAnimation_scenario_var_data[46];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -183,6 +185,10 @@ vec4 out_target_position_color_radius_particle = vec4(1);
 // number of particles
 int nbParticles = 0;
 
+///////////////////////////////////////
+// REPOPULATION OF PARTICLES: DENSITY OF REPOPULATION
+float repop_density_weight = 1;
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // VARYINGS
@@ -222,19 +228,20 @@ layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Pa
 layout (binding = 6) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
 layout (binding = 7) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
+layout (binding = 8)  uniform samplerRect uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density texture
 #ifdef PG_VIDEO_ACTIVE
-layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
+layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
+layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
 #endif
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
+layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
+layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
+layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 14) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 
 /////////////////////////////////////
@@ -463,7 +470,7 @@ void particle_out( void ) {
     }
     return;
   }
-  // position update according to speed, acceleration and damping
+  // random initialization of the particle positions (initial speed is null currently)
 
   //////////////////////////////////////////////////////////////////////
   // REPOP ALONG PATHS (A RANDOM PATH AMONG THE ACTIVE ONES IS CHOSEN AT EACH FRAME)
@@ -504,8 +511,12 @@ void particle_out( void ) {
     
     vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.25 ) );
     vec4 radius_random = uniform_ParticleAnimation_path_data[0 * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
+    if( Part_repop_density >= 0 && repop_part > 0) {
+          repop_density_weight = texture(uniform_ParticleAnimation_texture_fs_RepopDensity,decalCoords).r;
+    }
+    // particle "ADDITION"
     if( repop_part > 0
-        && rand3D(vec3(decalCoordsPOT, radius_random.z), repop_part) != 0) {
+        && rand3D(vec3(decalCoordsPOT, radius_random.z), repop_part * repop_density_weight) != 0) {
          /////////////////////////////////////////////////////////////////////
         // RANDOM INITIALIZATION
         // head and tail are initialized with the same values
@@ -717,7 +728,14 @@ void particle_out( void ) {
   // PARTICLE: RANDOM MOTION
   if(partMove_rand) { // random motion
     // random motion
-    part_acceleration = dvec2(randomPart.zw - dvec2(0.5));
+    part_acceleration = dvec2(randomPart.xy - dvec2(0.55));
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  // PARTICLE: GRAVITY
+  if(part_gravity != 0) { // random motion
+    // random motion
+    part_acceleration += dvec2(0, part_gravity);
   }
 
   if(length(part_acceleration) > 0) {
@@ -890,20 +908,22 @@ void main() {
   part_size = uniform_ParticleAnimation_scenario_var_data[27];
   part_acc = uniform_ParticleAnimation_scenario_var_data[28];
   part_damp = uniform_ParticleAnimation_scenario_var_data[29];
-  noiseScale = uniform_ParticleAnimation_scenario_var_data[30];
-  part_field_weight = uniform_ParticleAnimation_scenario_var_data[31];
-  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[32];
-  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[33];
-  partMove_target = (uniform_ParticleAnimation_scenario_var_data[34] > 0 ? true : false);
-  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
-  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[36]);
-  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[37]);
-  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[38]);
-  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[39];
-  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[40];
-  repop_part = uniform_ParticleAnimation_scenario_var_data[41];
-  repop_path = uniform_ParticleAnimation_scenario_var_data[42];
-  freeze = (uniform_ParticleAnimation_scenario_var_data[43] > 0 ? true : false);
+  part_gravity = uniform_ParticleAnimation_scenario_var_data[30];
+  noiseScale = uniform_ParticleAnimation_scenario_var_data[31];
+  part_field_weight = uniform_ParticleAnimation_scenario_var_data[32];
+  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[33];
+  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[34];
+  partMove_target = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
+  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[36] > 0 ? true : false);
+  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[37]);
+  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[38]);
+  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[39]);
+  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[40];
+  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[41];
+  repop_part = uniform_ParticleAnimation_scenario_var_data[42];
+  repop_path = uniform_ParticleAnimation_scenario_var_data[43];
+  Part_repop_density = int(uniform_ParticleAnimation_scenario_var_data[44]);
+  freeze = (uniform_ParticleAnimation_scenario_var_data[45] > 0 ? true : false);
 
   //////////////////////////
   // variables 

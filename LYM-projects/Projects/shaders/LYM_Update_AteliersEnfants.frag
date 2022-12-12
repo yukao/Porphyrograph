@@ -20,6 +20,7 @@ const float PI = 3.1415926535897932384626433832795;
 #define SPLAT_PARTICLES
 
 #define PG_BEZIER_PATHS
+#define PG_WITH_CAMERA_CAPTURE
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
@@ -276,45 +277,45 @@ uniform mat3 fs_homographyForTexture;
 // INPUT
 layout (binding = 0)  uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
 layout (binding = 1)  uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
-layout (binding = 2) uniform sampler3D    uniform_Update_texture_fs_Brushes;  // pen patterns
+layout (binding = 2)  uniform sampler3D   uniform_Update_texture_fs_Brushes;  // pen patterns
 #ifdef PG_WITH_CAMERA_CAPTURE
 layout (binding = 3)  uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
 layout (binding = 4)  uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
 layout (binding = 5)  uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
 layout (binding = 6)  uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 8)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 9)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 10)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+//layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 7)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 8)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 9)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 15) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
+layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
 #else // without camera capture
 layout (binding = 3)  uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
 layout (binding = 4)  uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 5)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 6)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 7)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 8)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+// layout (binding = 5)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 5)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 6)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
+layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
 #endif
 
 /////////////////////////////////////
@@ -1870,10 +1871,10 @@ void main() {
   randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.0 ) );
   randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.5 ) );
   // CA or BG "REPOPULATION"
-  if( repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
+/*  if( BG_CA_repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
         repop_density_weight = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).r;
   }
-
+*/
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
   // RESETS CHANNELS AT BEGINNING 
@@ -1909,25 +1910,25 @@ void main() {
   // track colors FBO copy
   // track 0 (BG track)
   // possible horizontal or vertical translation of background texture
-  vec2 decalCoordsPrevStep = decalCoords 
-        + uniform_Update_fs_4fv_xy_transl_tracks_0_1.xy;
+  vec2 decalCoordsPrevStep = decalCoords + uniform_Update_fs_4fv_xy_transl_tracks_0_1.xy;
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[0] = texture( uniform_Update_texture_fs_Trk0 , decalCoordsPrevStep );
   }
   else {
-    out_track_FBO[0] = vec4( 0, 0, 0, 0 );
+    out_track_FBO[0] = vec4( 0, 0, 0, 1 );
   }
 
 #if PG_NB_TRACKS >= 2
   // track 1
   // possible horizontal or vertical translation of background texture
-  decalCoordsPrevStep = decalCoords 
-        + uniform_Update_fs_4fv_xy_transl_tracks_0_1.zw;
-
+  decalCoordsPrevStep = decalCoords + uniform_Update_fs_4fv_xy_transl_tracks_0_1.zw;
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
+  }
+  else {
+    out_track_FBO[1] = vec4( 0, 0, 0, 1 );
   }
 #endif
 
@@ -1970,7 +1971,7 @@ void main() {
   vec3 photoOriginal = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
   int selectedTexture = -1;
-  coordsImage = vec2(decalCoordsPOT.x, 1. - decalCoordsPOT.y);
+  coordsImage = vec2(decalCoordsPOT.x, decalCoordsPOT.y);
   if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
     coordsImage = coordsImage * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImageScaled = coordsImage;
@@ -1985,8 +1986,7 @@ void main() {
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
     photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
     selectedTexture = 1;
-    photocolor += uniform_Update_fs_4fv_photo01Wghts_randomValues.y * texture(uniform_Update_texture_fs_Photo1,  
-        coordsImageScaled ).rgb;
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
   }
   // Sobel on photo
   if( photoSobel > 0 ) {
@@ -2072,13 +2072,13 @@ void main() {
   cameraWH = uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw;
 
   // video texture used for drawing
-/*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
+/*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (decalCoordsPOT.y) )
                * cameraWH;
      cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
                * cameraWH;
  */
-  // cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
+  // cameraCoord = vec2((1 - decalCoordsPOT.x), (decalCoordsPOT.y) )
+  cameraCoord = vec2((decalCoordsPOT.x), (1. - decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
                * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
@@ -2088,9 +2088,10 @@ void main() {
   // image reading
   cameraOriginal = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   cameraImage = cameraOriginal;
-  cameraOriginal = vec3(1) - cameraOriginal;
+  // cameraOriginal = vec3(1) - cameraOriginal;
   // gamma correction
-  // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
+  cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
+  // BG subtraction
   if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
@@ -2130,6 +2131,10 @@ void main() {
       sobelY = mix( samplerSobel , sobelY , cameraSobel );
 
       cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+  }
+  // color inversion
+  if( invertCamera ) {
+      cameraImage = vec3(1) - cameraImage;
   }
 #endif
   
@@ -2341,9 +2346,7 @@ void main() {
 
     /////////////////
     // TRACK photo
-    if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x + photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 
-      ) {
+    if(currentPhotoTrack == indCurTrack) {
       // only photo (but not drawing or whatever memory from preceding tracks)
       if(!videoOn) {
         out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );

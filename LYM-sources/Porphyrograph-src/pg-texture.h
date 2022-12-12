@@ -50,61 +50,82 @@ public:
 	}
 };
 class PhotoDataStruct {
-	public:
-		char PhotoName[256];
-		int w;
-		int h;
-		GLenum format;
-		bool invert;
-		bool IDallocated;
-		GLuint texBuffID;
-		cv::Mat *imgPhotoOpenCV;
-		unsigned char *compressedPhotoBitmap;
-		unsigned int compressedFormat;
-		PhotoDataStruct(void) {
-			w = -1;
-			h = -1;
-			format = 0;
-			*PhotoName = 0;
-			IDallocated = false;
+public:
+	char PhotoName[256];
+	int w;
+	int h;
+	GLenum format;
+	bool invert;
+	bool IDallocated;
+	GLuint texBuffID;
+	cv::Mat* imgPhotoOpenCV;
+	unsigned char* compressedPhotoBitmap;
+	unsigned int compressedFormat;
+	PhotoDataStruct(void) {
+		w = -1;
+		h = -1;
+		format = 0;
+		*PhotoName = 0;
+		IDallocated = false;
+		imgPhotoOpenCV = NULL;
+		compressedPhotoBitmap = NULL;
+		compressedFormat = 0;
+		invert = false;
+		texBuffID = -1;
+	}
+	void release(void) {
+		w = -1;
+		h = -1;
+		format = 0;
+		*PhotoName = 0;
+		if (imgPhotoOpenCV) {
+			imgPhotoOpenCV->release();
 			imgPhotoOpenCV = NULL;
+		}
+		if (compressedPhotoBitmap) {
+			free(compressedPhotoBitmap);
 			compressedPhotoBitmap = NULL;
-			compressedFormat = 0;
-			invert = false;
-			texBuffID = -1;
 		}
-		void release(void) {
-			w = -1;
-			h = -1;
-			format = 0;
-			*PhotoName = 0;
-			if (imgPhotoOpenCV) {
-				imgPhotoOpenCV->release();
-				imgPhotoOpenCV = NULL;
-			}
-			if (compressedPhotoBitmap) {
-				free(compressedPhotoBitmap);
-				compressedPhotoBitmap = NULL;
-			}
-			compressedFormat = 0;
+		compressedFormat = 0;
+	}
+	~PhotoDataStruct(void) {
+		if (imgPhotoOpenCV) {
+			imgPhotoOpenCV->release();
+			imgPhotoOpenCV = NULL;
 		}
-		~PhotoDataStruct(void) {
-			if (imgPhotoOpenCV) {
-				imgPhotoOpenCV->release();
-				imgPhotoOpenCV = NULL;
-			}
-			if (compressedPhotoBitmap) {
-				free(compressedPhotoBitmap);
-				compressedPhotoBitmap = NULL;
-			}
+		if (compressedPhotoBitmap) {
+			free(compressedPhotoBitmap);
+			compressedPhotoBitmap = NULL;
 		}
-		bool pg_loadPhoto(
-			bool invert, int width, int height, bool verbose);
-		bool pg_toGPUPhoto(bool is_rectangle,
-			GLint components, 
-			GLenum datatype, GLenum texturefilter);
-	};
+	}
+	bool pg_loadPhoto(
+		bool invert, int width, int height, bool verbose);
+	bool pg_toGPUPhoto(bool is_rectangle,
+		GLint components,
+		GLenum datatype, GLenum texturefilter);
+};
 
+class ClipFramesDataStruct {
+public:
+	GLuint texBuffID;
+	GLenum format;
+	unsigned int compressedFormat;
+	unsigned char* compressedPhotoBitmap;
+	ClipFramesDataStruct(void) {
+		format = 0;
+		compressedPhotoBitmap = NULL;
+		compressedFormat = 0;
+		texBuffID = -1;
+	}
+	~ClipFramesDataStruct(void) {
+		format = 0;
+		compressedPhotoBitmap = NULL;
+		compressedFormat = 0;
+		texBuffID = -1;
+	}
+	bool pg_loadClipFrames(char* fileName, int width, int height, bool verbose);
+	bool pg_toGPUClipFrames(int w, int h, GLint components, GLenum datatype, GLenum texturefilter);
+};
 
 // additional contexts for threading transfer to GPU
 #define PG_MAX_NUMBER_OF_OPENGL_CONTEXTS  (4)
@@ -151,7 +172,7 @@ extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW];
 #else
 extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
 #endif
-extern PhotoDataStruct **pg_Photo_buffer_data;
+extern PhotoDataStruct** pg_Photo_buffer_data;
 
 /////////////////////////////////////////////////////////////////////
 // IMAGE FILES
@@ -161,6 +182,7 @@ extern PhotoDataStruct **pg_Photo_buffer_data;
 // according to image swap frequency and duration
 // and according to directory size
 extern int pg_CurrentDiaporamaDir;
+extern double pg_CurrentDiaporamaEnd;
 extern int pg_CurrentDiaporamaFile;
 
 ///////////////////////////////////////////////////////////////////
@@ -172,8 +194,8 @@ extern int pg_CurrentDiaporamaFile;
 // they are doubled by swap images used to smoothly change between images
 extern int pg_nbCompressedImages;
 extern int pg_nbCompressedImageDirs;
-extern int *pg_nbCompressedImagesPerFolder;
-extern int *pg_firstCompressedFileInFolder;
+extern int* pg_nbCompressedImagesPerFolder;
+extern int* pg_firstCompressedFileInFolder;
 
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
@@ -201,6 +223,8 @@ extern std::string pg_MaskDirectory;
 extern std::string pg_MessageDirectory;
 #endif
 
+extern std::string pg_ImageDirectory;
+
 ////////////////////////////////////////////////////////////////////
 // IMAGE FILES
 ////////////////////////////////////////////////////////////////////
@@ -211,6 +235,19 @@ extern std::string pg_MessageDirectory;
 extern int pg_CurrentDiaporamaFile;
 extern int pg_CurrentDiaporamaDir;
 extern bool ascendingDiaporama;
+
+
+////////////////////////////////////////////////////////////////////
+// SHORT CLIP IMAGE FILES
+////////////////////////////////////////////////////////////////////
+// clips are made of sequences of images loaded in GPU
+extern std::string pg_ClipDirectory;
+extern ClipFramesDataStruct** pg_ClipFrames_buffer_data;
+extern int pg_nbClips;
+extern int* pg_nbCompressedClipFramesPerFolder;
+extern int* pg_firstCompressedClipFramesInFolder;
+extern int pg_nbCompressedClipFrames;
+
 
 ////////////////////////////////////////////////////////////////////
 // PROTOTYPES
@@ -229,10 +266,10 @@ string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *cur
 	int maxFilesPerFolder);
 #endif
 // FUNCTIONS FOR TESTING SUBDIR FILES (MADE FOR SAMPLES AND IMAGES)
-bool is_substring_index(char * charstr, int ind);
-bool is_subdir_index(struct dirent *dirp, std::string *dirpath, int inddir);
-bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile);
-string * is_subdir_subfile_index(std::string *dirpath, int inddir, int indfile);
+//bool is_substring_index(char * charstr, int ind);
+//bool is_subdir_index(struct dirent *dirp, std::string *dirpath, int inddir);
+//bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile);
+//string * is_subdir_subfile_index(std::string *dirpath, int *inddir, int *indfile);
 int nextFileIndexMemoryLoop(int currentDirIndex, int *currentFileIndex, bool ascending);
 
 // TEXTURE INITIALIZATION
@@ -257,6 +294,9 @@ DWORD WINAPI writejpg(LPVOID lpParam);
 void* writejpg(void * lpParam);
 #endif
 
+// loading a dds format under its compressed form (contrary to other formats (png, jpg) which are decompressed)
+bool pg_load_compressed_photo(char* fileName, GLenum& photoFormat, unsigned int* compressedPhotoFormat, unsigned char** compressedPhotoRaster, int width, int height);
+	
 // TEXTURE LOADING
 bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	int nbTextures, int bytesperpixel,
@@ -274,9 +314,11 @@ bool pg_loadTexture(string fileName,
 
 /// NON THREADED LOAD CAMERA FRAME
 #ifdef PG_WITH_CAMERA_CAPTURE
-void loadCameraFrame(bool initial_capture);
-bool pg_initCameraFrameTexture(Mat *video_frame);
-int pg_initVideoCameraCapture(void);
+void loadCameraFrame(bool initial_capture, int IPCam_no);
+void pg_initCameraFrameTexture(Mat *video_frame);
+void pg_openCameraCaptureAndLoadFrame(void);
+void pg_releaseCameraCapture(void);
+void pg_initWebcamParameters(void);
 #endif
 
 // particle initialization from photography
@@ -286,7 +328,7 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName); // 2 textu
 bool storeParticleAccelerationfromImage(string fileName); 
 
 // VIDEO FRAME AND CAPTURE INITIALIZATION (CAMERA AND MOVIE)
-bool pg_initMovieFrameTexture(Mat *video_frame);
+void pg_initMovieFrameTexture(Mat *video_frame);
 
 #ifdef WIN32
 DWORD WINAPI pg_initVideoMoviePlayback(LPVOID lpParam);
@@ -323,3 +365,4 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 #endif
 
 bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder);
+bool  pg_ReadInitalClipFramesTextures(void);

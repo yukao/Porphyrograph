@@ -40,12 +40,7 @@ float	 pixel_radius;
 int		pixel_mode;
 float	 repop_CA;
 float	 repop_BG;
-int		repop_density;
-float	 cameraGamma;
-int		activeClipArts;
-float	 cameraThreshold;
-float	 cameraWeight;
-float	 cameraSobel;
+int		BG_CA_repop_density;
 float	 movieWeight;
 float	 movieSobel;
 bool	  invertMovie;
@@ -76,7 +71,7 @@ int		cameraCumul;
 int		CAstep;
 bool	  CAcolorSpread;
 bool	  freeze;
-uniform float uniform_Update_scenario_var_data[69];
+uniform float uniform_Update_scenario_var_data[64];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -347,21 +342,21 @@ layout (binding = 1)  uniform samplerRect uniform_Update_texture_fs_Pixels;   //
 layout (binding = 2) uniform sampler3D    uniform_Update_texture_fs_Brushes;  // pen patterns
 layout (binding = 3)  uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
 layout (binding = 4)  uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 5)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 6)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 7)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 8)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+// layout (binding = 4)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 5)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 6)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
+layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -505,30 +500,42 @@ vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
 // after (c) Ronja Böhringer
 //get a scalar random value from a 3d value
 // 2-step computation due to lack of precision
-int rand3D(vec3 value, float threshold){
-    if(threshold <= 0) {
-      return 0;
-    }
-    //make value smaller to avoid artefacts
-    vec3 smallValue = sin(value);
-    //get scalar value from 3d vector
-    double random = sin(dot(smallValue, vec3(12.9898, 78.233, 37.719))) * 1437.585453;
-    //make value more random by making it bigger and then taking teh factional part
-    random = 100 * fract(random);
-    if(random < threshold) {
-      //get scalar value from 3d vector
-      double random2 = sin(dot(smallValue, vec3(47.2903, 12.0989, 28.2381))) * 2639.832872;
-      //make value more random by making it bigger and then taking teh factional part
-      random2 = (100 * fract(random2));
-      if(random2 < threshold) {
-        return 1;
-      }
-      else {
-        return 0;
-      }
-    }
+/*int rand3D(vec3 value, float threshold){
+  if(threshold <= 0) {
     return 0;
   }
+  //make value smaller to avoid artefacts
+  vec3 smallValue = sin(value);
+  //get scalar value from 3d vector
+  double random = sin(dot(smallValue, vec3(12.9898, 78.233, 37.719))) * 1437.585453;
+  //make value more random by making it bigger and then taking teh factional part
+  random = 100 * fract(random);
+  if(random < threshold) {
+    //get scalar value from 3d vector
+    double random2 = sin(dot(smallValue, vec3(47.2903, 12.0989, 28.2381))) * 2639.832872;
+    //make value more random by making it bigger and then taking teh factional part
+    random2 = (100 * fract(random2));
+    if(random2 < threshold) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+  return 0;
+}*/
+
+//get a scalar random value from a 3d value
+int rand3D(vec3 p3, float threshold){
+    float random = fract(43757.5453*sin(dot(p3, vec3(12.9898,78.233,234.777883))));
+    if(random > threshold - 0.01) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+}
+
 
 float Line( float x1 , float y1 , 
 	    float mouse_x , float mouse_y , float interp_mouse_x ) {
@@ -1553,8 +1560,8 @@ void pixel_out( void ) {
           nb_cumultated_pixels++;
         }
         // radius pixel extension for (S,N,E,W) neighbors
-        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
+        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
           float dist = pixel_radius - length(surrpixel_nextPosition);
           out_color_pixel += surrpixel_localColor.rgb;
           // adds high frequency random speed to make them leave the initial pixel
@@ -1619,8 +1626,8 @@ void pixel_out( void ) {
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
         // the current step is added to the position
 
-        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
+        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
           // computes the position of the pixel
@@ -1905,42 +1912,37 @@ void main() {
   pixel_mode = int(uniform_Update_scenario_var_data[30]);
   repop_CA = uniform_Update_scenario_var_data[31];
   repop_BG = uniform_Update_scenario_var_data[32];
-  repop_density = int(uniform_Update_scenario_var_data[33]);
-  cameraGamma = uniform_Update_scenario_var_data[34];
-  activeClipArts = int(uniform_Update_scenario_var_data[35]);
-  cameraThreshold = uniform_Update_scenario_var_data[36];
-  cameraWeight = uniform_Update_scenario_var_data[37];
-  cameraSobel = uniform_Update_scenario_var_data[38];
-  movieWeight = uniform_Update_scenario_var_data[39];
-  movieSobel = uniform_Update_scenario_var_data[40];
-  invertMovie = (uniform_Update_scenario_var_data[41] > 0 ? true : false);
-  invertCamera = (uniform_Update_scenario_var_data[42] > 0 ? true : false);
-  video_satur = uniform_Update_scenario_var_data[43];
-  video_satur_pulse = uniform_Update_scenario_var_data[44];
-  video_gamma = uniform_Update_scenario_var_data[45];
-  video_threshold = uniform_Update_scenario_var_data[46];
-  photoWeight = uniform_Update_scenario_var_data[47];
-  photo_satur = uniform_Update_scenario_var_data[48];
-  photo_satur_pulse = uniform_Update_scenario_var_data[49];
-  photo_gamma = uniform_Update_scenario_var_data[50];
-  photo_gamma_pulse = uniform_Update_scenario_var_data[51];
-  photo_threshold = uniform_Update_scenario_var_data[52];
-  photo_scale = uniform_Update_scenario_var_data[53];
-  mask_scale = uniform_Update_scenario_var_data[54];
-  photo_contrast = uniform_Update_scenario_var_data[55];
-  mask_contrast = uniform_Update_scenario_var_data[56];
-  CAParams1 = uniform_Update_scenario_var_data[57];
-  CAParams2 = uniform_Update_scenario_var_data[58];
-  CAParams3 = uniform_Update_scenario_var_data[59];
-  CAParams4 = uniform_Update_scenario_var_data[60];
-  CAParams5 = uniform_Update_scenario_var_data[61];
-  CAParams6 = uniform_Update_scenario_var_data[62];
-  CAParams7 = uniform_Update_scenario_var_data[63];
-  CAParams8 = uniform_Update_scenario_var_data[64];
-  cameraCumul = int(uniform_Update_scenario_var_data[65]);
-  CAstep = int(uniform_Update_scenario_var_data[66]);
-  CAcolorSpread = (uniform_Update_scenario_var_data[67] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[68] > 0 ? true : false);
+  BG_CA_repop_density = int(uniform_Update_scenario_var_data[33]);
+  movieWeight = uniform_Update_scenario_var_data[34];
+  movieSobel = uniform_Update_scenario_var_data[35];
+  invertMovie = (uniform_Update_scenario_var_data[36] > 0 ? true : false);
+  invertCamera = (uniform_Update_scenario_var_data[37] > 0 ? true : false);
+  video_satur = uniform_Update_scenario_var_data[38];
+  video_satur_pulse = uniform_Update_scenario_var_data[39];
+  video_gamma = uniform_Update_scenario_var_data[40];
+  video_threshold = uniform_Update_scenario_var_data[41];
+  photoWeight = uniform_Update_scenario_var_data[42];
+  photo_satur = uniform_Update_scenario_var_data[43];
+  photo_satur_pulse = uniform_Update_scenario_var_data[44];
+  photo_gamma = uniform_Update_scenario_var_data[45];
+  photo_gamma_pulse = uniform_Update_scenario_var_data[46];
+  photo_threshold = uniform_Update_scenario_var_data[47];
+  photo_scale = uniform_Update_scenario_var_data[48];
+  mask_scale = uniform_Update_scenario_var_data[49];
+  photo_contrast = uniform_Update_scenario_var_data[50];
+  mask_contrast = uniform_Update_scenario_var_data[51];
+  CAParams1 = uniform_Update_scenario_var_data[52];
+  CAParams2 = uniform_Update_scenario_var_data[53];
+  CAParams3 = uniform_Update_scenario_var_data[54];
+  CAParams4 = uniform_Update_scenario_var_data[55];
+  CAParams5 = uniform_Update_scenario_var_data[56];
+  CAParams6 = uniform_Update_scenario_var_data[57];
+  CAParams7 = uniform_Update_scenario_var_data[58];
+  CAParams8 = uniform_Update_scenario_var_data[59];
+  cameraCumul = int(uniform_Update_scenario_var_data[60]);
+  CAstep = int(uniform_Update_scenario_var_data[61]);
+  CAcolorSpread = (uniform_Update_scenario_var_data[62] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[63] > 0 ? true : false);
 
   //////////////////////////
   // TRACK DECAY
@@ -1984,9 +1986,9 @@ void main() {
   randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.0 ) );
   randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.5 ) );
   // CA or BG "REPOPULATION"
-  if( repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
-        repop_density_weight = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).r;
-  }
+  // if( BG_CA_repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
+  //       repop_density_weight = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).r;
+  // }
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -2087,6 +2089,7 @@ void main() {
   if(coordsAfterHomography.z != 0) {
     coordsAfterHomography.xy /= coordsAfterHomography.z;
   }
+  coordsAfterHomography.xy = vec2(decalCoordsPOT.x, 1. - decalCoordsPOT.y);
   if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
     coordsImage = coordsAfterHomography.xy * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImageScaled = coordsImage;
@@ -2116,7 +2119,7 @@ void main() {
 
   // photo_satur
   //  public-domain function by Darel Rex Finley
-  if(photo_satur < 1) {
+  if(photo_satur >= 0) {
     float  powerColor = sqrt( (photocolor.r)*(photocolor.r) * .299 +
                                (photocolor.g)*(photocolor.g) * .587 +
                                (photocolor.b)*(photocolor.b) * .114 ) ;
@@ -2141,6 +2144,7 @@ void main() {
     photocolor.b = (photocolor.b > photo_threshold? photocolor.b : 0);
   }
 
+  // photocolor = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled ).rgb;
   vec3 videocolor = vec3( 0.0 );
 
 #ifdef CAMERA
@@ -2405,6 +2409,9 @@ void main() {
     bool videoOn = false;
 #ifdef CAMERA
     if( currentVideoTrack == indCurTrack && cameraWeight + movieWeight > 0) {
+#else
+    if( currentVideoTrack == indCurTrack && movieWeight > 0) {
+#endif
       videoOn = true;
       if( cameraCumul == 1 ) { // ADD
         out_track_FBO[indCurTrack] 
@@ -2430,6 +2437,8 @@ void main() {
           = vec4( clamp( videocolor , 0.0 , 1.0 ) ,  1.0 );
       }
     }
+
+#ifdef CAMERA
     if( currentVideoTrack == indCurTrack 
         && flashCameraTrkWght > 0 
         && graylevel(cameraImage) > flashCameraTrkWght ) { // flash camera
@@ -2451,7 +2460,7 @@ void main() {
       // cumul video + photo
       else {
         out_track_FBO[indCurTrack].rgb
-          = clamp( out_track_FBO[indCurTrack].rgb + photocolor , 0.0 , 1.0 );
+          = clamp( videocolor + photocolor , 0.0 , 1.0 );
       }
     }
     if( currentPhotoTrack == indCurTrack 
@@ -2777,6 +2786,8 @@ void main() {
   out_Update_FBO_fs_Trk0 = out_track_FBO[0];
 #if PG_NB_TRACKS >= 2
   out_Update_FBO_fs_Trk1 = out_track_FBO[1];
+  // float greycol = rand3D(vec3(decalCoordsPOT, movieSobel), movieWeight);
+  // out_Update_FBO_fs_Trk1 = vec4(vec3(greycol), 1.);
 #endif
 #if PG_NB_TRACKS >= 3
   out_Update_FBO_fs_Trk2 = out_track_FBO[2];

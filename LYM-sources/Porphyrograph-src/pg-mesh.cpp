@@ -537,8 +537,8 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
 					nbFacesMeshIni[indMesh]);
 
-				//printf("\nParsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-				//	indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
+				printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+					indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
 				transferMeshDataToGPU(indMeshFile, indMesh);
 
 				nbVertexTot += nbVerticesMeshIni[indMesh];
@@ -604,8 +604,8 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
 					nbFacesMeshIni[indMesh]);
 
-				//printf("Last parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-				//	indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
+				printf("Last parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+					indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
 				transferMeshDataToGPU(indMeshFile, indMesh);
 
 				nbVertexTot += nbVerticesMeshIni[indMesh];
@@ -662,8 +662,8 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 			indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
 			nbFacesMeshIni[indMesh]);
 
-		//printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-		//	indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
+		printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+			indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
 		transferMeshDataToGPU(indMeshFile, indMesh);
 
 		// printf("Copied mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);

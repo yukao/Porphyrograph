@@ -23,7 +23,7 @@ const float PI = 3.1415926535897932384626433832795;
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 #define PG_NB_PATHS 11
 
 // path data array structure
@@ -1472,8 +1472,8 @@ void pixel_out( void ) {
           nb_cumultated_pixels++;
         }
         // radius pixel extension for (S,N,E,W) neighbors
-        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
+        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
           float dist = pixel_radius - length(surrpixel_nextPosition);
           out_color_pixel += surrpixel_localColor.rgb;
           // adds high frequency random speed to make them leave the initial pixel
@@ -1538,8 +1538,8 @@ void pixel_out( void ) {
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
         // the current step is added to the position
 
-        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
+        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
           // computes the position of the pixel
@@ -1834,7 +1834,7 @@ void main() {
   randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.0 ) );
   randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.5 ) );
   // CA or BG "REPOPULATION"
-  if( repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
+  if( BG_CA_repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
         repop_density_weight = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).r;
   }
 
@@ -1957,6 +1957,9 @@ void main() {
     photocolor = clamp( powerColor 
       + (photocolor - vec3(powerColor)) * photo_satur , 0 , 1 );
   }
+  if( graylevel(photocolor) < photo_threshold ) {
+    photocolor = vec3(0.0);
+  }
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -1980,7 +1983,7 @@ void main() {
                * cameraWH;
  */
   // cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
+  cameraCoord = vec2((1 - decalCoordsPOT.x), (decalCoordsPOT.y) )
               // added for wide angle lens that covers more than the drawing surface
                * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
@@ -1989,9 +1992,11 @@ void main() {
   // image reading
   cameraOriginal = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   cameraImage = cameraOriginal;
-  cameraOriginal = vec3(1) - cameraOriginal;
+  // cameraOriginal = vec3(1) - cameraOriginal;
   // gamma correction
-  cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
+  if(camera_gamma != 1) {
+    cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
+  }
   if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
@@ -2002,10 +2007,16 @@ void main() {
   // cameraImage = vec3(1) - cameraImage;
 
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
+  // color inversion
+  if( invertMovie ) {
+      movieImage = vec3(1) - movieImage;
+  }
   // gamma correction
-  movieImage = vec3( pow(movieImage.r,video_gamma) , pow(movieImage.g,video_gamma) , pow(movieImage.b,video_gamma) );
-  if( graylevel(movieImage) < video_threshold ) {
-    movieImage = vec3(0.0);
+  if(movie_gamma != 1) {
+    movieImage = vec3( pow(movieImage.r,movie_gamma) , pow(movieImage.g,movie_gamma) , pow(movieImage.b,movie_gamma) );
+  }
+  if( graylevel(movieImage) <= movie_threshold ) {
+      movieImage = vec3(0.0);
   }
 
   // Sobel on camera
@@ -2163,7 +2174,7 @@ void main() {
                            Cursor < 0) {
             curTrack_grayLevel =  out_gray_drawing( 3 * radiusX_beginOrEnd_radiusY_brushID.x, 0 ); 
                                  // rubber radius is made 3 times larger than regular pen
-            out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
+            out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * pathColor.a);
             curTrack_color.rgb = vec3(0);
         }
         else { // normal stylus
@@ -2191,15 +2202,17 @@ void main() {
     /////////////////
     // TRACK video
     bool videoOn = false;
-    if( currentVideoTrack == indCurTrack) {
-      videoOn = true;
+    if( currentVideoTrack == indCurTrack
+      && cameraWeight + movieWeight > 0) {
       if( cameraCumul == 1 ) { // ADD
         out_track_FBO[indCurTrack] 
           = vec4( clamp( max(videocolor,out_track_FBO[indCurTrack].rgb) , 0.0 , 1.0 ) ,  1.0 );
+        videoOn = true;
       }
       else if( cameraCumul == 2 ) {
         if( graylevel(videocolor) > 0) { // STAMP
           out_track_FBO[indCurTrack] = vec4( videocolor ,  1.0 );
+          videoOn = true;
         }
       }
       else if( cameraCumul == 3 ) { // XOR
@@ -2211,10 +2224,12 @@ void main() {
         else if( gvid > 0 && gtrack > 0)  {
           out_track_FBO[indCurTrack] = vec4( vec3(0) ,  1.0 );
         }
+        videoOn = true;
       }
       else { // NORMAL
         out_track_FBO[indCurTrack] 
           = vec4( clamp( videocolor , 0.0 , 1.0 ) ,  1.0 );
+        videoOn = true;
       }
     }
     if( currentVideoTrack == indCurTrack 
@@ -2412,7 +2427,12 @@ void main() {
   
   //////////////////////////////////////////////
   // track 0 flashing of tracks >= 1 or particles
-  out_track_FBO[0].rgb = clamp(out_track_FBO[0].rgb + flashToBGCumul, 0 , 1);
+  vec3 cumCol = out_track_FBO[0].rgb + flashToBGCumul;
+  float max_cumCol = maxCol(cumCol);
+  if(max_cumCol > 1) {
+     cumCol = cumCol - vec3(1 - max_cumCol);
+  }
+  out_track_FBO[0].rgb = clamp(cumCol, 0 , 1);
 
   //////////////////////////////////////////////
   // track decay and clear layer

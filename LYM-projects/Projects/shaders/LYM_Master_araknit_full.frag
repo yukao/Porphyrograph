@@ -20,8 +20,7 @@ float	 trackMasterWeight_1;
 float	 trackMasterWeight_2;
 float	 trackMasterWeight_3;
 bool	  interfaceOnScreen;
-float	 master_mask;
-uniform float uniform_Master_scenario_var_data[12];
+uniform float uniform_Master_scenario_var_data[11];
 
 // Main shader.
 
@@ -60,13 +59,14 @@ layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_Mask;  // mas
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
-uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+/*uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
-
+*/
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
@@ -84,14 +84,13 @@ void main() {
   trackMasterWeight_2 = uniform_Master_scenario_var_data[8];
   trackMasterWeight_3 = uniform_Master_scenario_var_data[9];
   interfaceOnScreen = (uniform_Master_scenario_var_data[10] > 0 ? true : false);
-  master_mask = uniform_Master_scenario_var_data[11];
 
-  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
+  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
-  int currentScene = int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w);
-  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
+  int currentScene = uniform_Master_fs_2iv_mobile_cursor_currentScene.y;
+  float timeFromStart = uniform_Master_fs_3fv_width_height_timeFromStart.z;
 
   // vertical mirror
   // TO UNCOMMENT FOR CHATEAU  
@@ -112,7 +111,7 @@ void main() {
   }
 */
   // interface
-  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
@@ -130,7 +129,7 @@ void main() {
     }
     return;
   }
-
+*/
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights
   vec4 MixingColor = texture(uniform_Master_texture_fs_Render_curr, coords );
@@ -218,7 +217,7 @@ void main() {
   }
 
   // blinking cursor
-  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+  if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
       && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );

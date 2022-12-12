@@ -38,11 +38,11 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 
-uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+/*uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
-
+*/
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
 
@@ -61,7 +61,7 @@ void main() {
   }
 
   // interface
-  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
@@ -79,7 +79,7 @@ void main() {
     }
     return;
   }
-
+*/
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to composition weights
   vec4 CompositionColor = texture(uniform_Master_texture_fs_Render_curr, coords );

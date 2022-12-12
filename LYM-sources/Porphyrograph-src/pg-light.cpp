@@ -1,3 +1,27 @@
+/*! \file pg-light.cpp
+ *
+ *
+ *     File pg-light.cpp
+ *
+ *
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation; either version 2.1
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program; if not, write to the Free
+ * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ * 02111-1307, USA.
+ */
+/* based on ENTEC source code */
+
 #include "pg-all_include.h"
 
 // old school globals
@@ -378,52 +402,6 @@ void init_promk2()
 	printf("\nPRO Mk2 ... Ready for DMX on both ports ... ");
 }
 
-/* Function : SendDMX
- * Author	: ENTTEC
- * Purpose  : Send DMX via the USB PRO  
- * Parameters: PortLabel: the label tells which port to send DMX on 
- * Note     : Use the keys in your API to send DMX to Port 2  	
- **/
-void SendDMX(int PortLabel)
-{
-	unsigned char myDmx[513];
-	int counter = 1;
-	BOOL res =0; 
-	if (device_handle != NULL)
-	{
-		// Looping to Send DMX data
-		printf("\n Press Enter to Send DMX data :");
-		_getch();
-		for (int i = 0; i < counter ; i++)
-		{
-			// sets the channels to increasing value: 1=1, 2=2 etc ....
-			memset(myDmx,i,sizeof(myDmx));
-
-			// First byte has to be 0
-			myDmx[0] = 0;
-			for (int i = 1; i <= 512; i++) {
-				myDmx[i] = 0;
-			}
-
-			// send the array here
-			res = FTDI_SendData(PortLabel, myDmx, 513);
-			if (res < 0)
-			{
-				printf("\nFAILED to send DMX ... exiting");
-				FTDI_ClosePort();
-				break;
-			}
-			if (with_trace) {
-				printf("\nDMX Data from 0 to 8: ");
-				for (int j = 0; j <= 8; j++)
-					printf(" %d ", myDmx[j]);
-				printf("\nIteration: %d", i);
-			}
-				
-		}
-	}
-}
-
 /* Function : ReceiveDMX
  * Author	: ENTTEC
  * Purpose  : Recieve DMX via the USB PRO
@@ -477,43 +455,170 @@ void  pg_ResetDMX(void) {
 	DMX_message2_length = -1;
 }
 
-// light function discovery on 11 channels
-void pg_StoreDMX_11channels(int portNo, int light_address, float ch1, float ch2, float ch3, float ch4, float ch5, float ch6, float ch7, float ch8, float ch9, float ch10, float ch11)
+// stores the DMX messages of all lights in light groups
+bool pg_oneLightGroup_Changed(void) {
+	for (int ind_group = 1; ind_group <= pg_nb_light_groups; ind_group++) {
+		if (pg_light_groups[ind_group - 1].get_changed_since_last_DMX_update() || pg_light_groups[ind_group - 1].get_one_non_null_pulse()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// stores the DMX messages of all lights in light groups
+void pg_Reset_LightGroup_Changed(void) {
+	for (int ind_group = 1; ind_group <= pg_nb_light_groups; ind_group++) {
+		pg_light_groups[ind_group - 1].reset_changed_since_last_DMX_update();
+	}
+}
+
+// one light group has an active automation
+bool pg_oneLightGroup_Loops(void) {
+	for (int ind_group = 1; ind_group <= pg_nb_light_groups; ind_group++) {
+		if (pg_light_groups[ind_group - 1].get_group_is_looped()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// update light automations such as loops
+void pg_light_automation_update(void) {
+	for (int ind_group = 1; ind_group <= pg_nb_light_groups; ind_group++) {
+		if (pg_light_groups[ind_group - 1].get_group_is_looped()) {
+			pg_light_groups[ind_group - 1].update_group_loop();
+		}
+	}
+}
+
+void pg_Reset_allLightGroups_Changed(void) {
+	for (int ind_group = 1; ind_group <= pg_nb_light_groups; ind_group++) {
+		pg_light_groups[ind_group - 1].reset_changed_since_last_DMX_update();
+	}
+}
+
+// store the DMX messages for all the lights after an update of at least one value
+// all the values have to be set so that the unchanged values are not set to 0
+void pg_StoreDMXValues_AllLightGroups(void) {
+	for (int ind_group = 1; ind_group <= pg_nb_light_groups; ind_group++) {
+		for (int ind_light = 0; ind_light < pg_nb_lights; ind_light++) {
+			if (pg_lights[ind_light].light_group == ind_group) {
+				float null3[3] = { 0.f };
+				//printf("store DMX group %d Light %d\n", ind_group, ind_light);
+				pg_StoreDMX(ind_light,
+					(pg_light_groups[ind_group - 1].get_group_onOff(_dimmer) == true ? pg_light_groups[ind_group - 1].get_group_val(_dimmer, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_strobe) == true ? pg_light_groups[ind_group - 1].get_group_val(_strobe, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_zoom) == true ? pg_light_groups[ind_group - 1].get_group_val(_zoom, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_pan) == true ? pg_light_groups[ind_group - 1].get_group_val(_pan, pg_lights[ind_light].index_in_group) : 0.f), // onOff stops animation but does not reset to 0
+					(pg_light_groups[ind_group - 1].get_group_onOff(_tilt) == true ? pg_light_groups[ind_group - 1].get_group_val(_tilt, pg_lights[ind_light].index_in_group) : 0.f),  // onOff stops animation but does not reset to 0
+					(pg_light_groups[ind_group - 1].get_group_onOff(_hue) == true ? pg_light_groups[ind_group - 1].get_group_val(_hue, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_red) == true ? pg_light_groups[ind_group - 1].get_group_val(_red, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_green) == true ? pg_light_groups[ind_group - 1].get_group_val(_green, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_blue) == true ? pg_light_groups[ind_group - 1].get_group_val(_blue, pg_lights[ind_light].index_in_group) : 0.f),
+					(pg_light_groups[ind_group - 1].get_group_onOff(_grey) == true ? pg_light_groups[ind_group - 1].get_group_val(_grey, pg_lights[ind_light].index_in_group) : 0.f));
+				//printf("store DMX group %d Light %d h rgb grey %.2f %.2f %.2f %.2f %.2f\n", ind_group, ind_light,
+				//	pg_light_groups[ind_group - 1].get_group_val(_hue, pg_lights[ind_light].index_in_group),
+				//	pg_light_groups[ind_group - 1].get_group_val(_red, pg_lights[ind_light].index_in_group),
+				//	pg_light_groups[ind_group - 1].get_group_val(_green, pg_lights[ind_light].index_in_group),
+				//	pg_light_groups[ind_group - 1].get_group_val(_blue, pg_lights[ind_light].index_in_group),
+				//	pg_light_groups[ind_group - 1].get_group_val(_grey, pg_lights[ind_light].index_in_group));
+			}
+		}
+	}
+}
+
+void store_one_DMXvalue(unsigned char* myDmx, int DMX_light_address, int channel_no, int fine_channel_no, float value) {
+	if (fine_channel_no == 0) {
+		myDmx[DMX_light_address + channel_no - 1] = unsigned char(value * 255.f);
+	}
+	else {
+		int channel_value = int(max(0.f, min(1.f, value)) * 65535.f);
+		int high_value = channel_value / 256;
+		int low_value = channel_value - high_value * 256;
+		myDmx[DMX_light_address + channel_no - 1] = unsigned char(high_value);
+		myDmx[DMX_light_address + fine_channel_no - 1] = unsigned char(low_value);
+	}
+}
+
+// stores the part of a DMX message that corresponds to a light
+void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float zoom_value, float pan_value, float tilt_value,
+	float hue_value, float red_value, float green_value, float blue_value, float grey_value)
 {
 	unsigned char* myDmx = NULL;
-	BOOL res = 0;
+	int DMX_data_size = 0;
 
-	if (device_handle != NULL && light_address + 11 <= 513)
+	if (device_handle != NULL && light_rank < pg_nb_lights)
 	{
-		// buffer choice according to port and length update
-		if (portNo == 1) {
+		// buffer choice according to port
+		if (pg_lights[light_rank].light_port == 1) {
 			myDmx = DMX_message1;
-			DMX_message1_length = max(DMX_message1_length, light_address + 11);
 		}
-		else if (portNo == 2) {
+		else if (pg_lights[light_rank].light_port == 2) {
 			myDmx = DMX_message2;
-			DMX_message2_length = max(DMX_message2_length, light_address + 11);
 		}
 		else
 			return;
 
+		// light data in DMX message start at address and are channels long
+		DMX_data_size = pg_lights[light_rank].light_channels;
+		if (pg_lights[light_rank].light_address + DMX_data_size - 1 > 512) {
+			sprintf(ErrorStr, "Light no %d address %d and channel nb %d are beyond the capacity of DMX message!", light_rank, pg_lights[light_rank].light_address, pg_lights[light_rank].light_channels); ReportError(ErrorStr);
+		}
+
+		// sets the channels to 0
+		memset(myDmx + pg_lights[light_rank].light_address, 0, DMX_data_size * sizeof(unsigned char));
+
+		// length update
+		if (pg_lights[light_rank].light_port == 1) {
+			DMX_message1_length = max(DMX_message1_length, pg_lights[light_rank].light_address + DMX_data_size);
+		}
+		else if (pg_lights[light_rank].light_port == 2) {
+			// printf("send on port 2\n");
+			DMX_message2_length = max(DMX_message2_length, pg_lights[light_rank].light_address + DMX_data_size);
+		}
+
 		// First byte has to be 0
 		myDmx[0] = 0;
-
-		myDmx[light_address + 0] = unsigned char(ch1 * 255.f);
-		myDmx[light_address + 1] = unsigned char(ch2 * 255.f);
-		myDmx[light_address + 2] = unsigned char(ch3 * 255.f);
-		myDmx[light_address + 3] = unsigned char(ch4 * 255.f);
-		myDmx[light_address + 4] = unsigned char(ch5 * 255.f);
-		myDmx[light_address + 5] = unsigned char(ch6 * 255.f);
-		myDmx[light_address + 6] = unsigned char(ch7 * 255.f);
-		myDmx[light_address + 7] = unsigned char(ch8 * 255.f);
-		myDmx[light_address + 8] = unsigned char(ch9 * 255.f);
-		myDmx[light_address + 9] = unsigned char(ch10 * 255.f);
-		myDmx[light_address + 10] = unsigned char(ch11 * 255.f);
+		// null channel means no channel for this command
+		if (pg_lights[light_rank].light_red > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_red, pg_lights[light_rank].light_red_fine, red_value);
+			//printf("DMX add %d chann %d fine %d r %.3f\n", pg_lights[light_rank].light_address, pg_lights[light_rank].light_red, pg_lights[light_rank].light_red_fine, rgb_color_value[0]);
+		}
+		if (pg_lights[light_rank].light_green > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_green, pg_lights[light_rank].light_green_fine, green_value);
+			//printf("DMX add %d chann %d fine %d g %.3f\n", pg_lights[light_rank].light_address, pg_lights[light_rank].light_green, pg_lights[light_rank].light_green_fine, rgb_color_value[1]);
+		}
+		if (pg_lights[light_rank].light_blue > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_blue, pg_lights[light_rank].light_blue_fine, blue_value);
+			//printf("DMX add %d chann %d fine %d b %.3f\n", pg_lights[light_rank].light_address, pg_lights[light_rank].light_blue, pg_lights[light_rank].light_blue_fine, rgb_color_value[2]);
+		}
+		if (pg_lights[light_rank].light_dimmer > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_dimmer, pg_lights[light_rank].light_dimmer_fine, dimmer_value);
+			//printf("DMX add %d chann %d fine %d dimm %.3f\n", pg_lights[light_rank].light_address, pg_lights[light_rank].light_dimmer, pg_lights[light_rank].light_dimmer_fine, dimmer_value);
+		}
+		if (pg_lights[light_rank].light_grey > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_grey, pg_lights[light_rank].light_grey_fine, grey_value);
+			//printf("DMX add %d chann %d fine %d grey %.3f\n", pg_lights[light_rank].light_address, pg_lights[light_rank].light_grey, pg_lights[light_rank].light_grey_fine, grey_value);
+		}
+		if (pg_lights[light_rank].light_strobe > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_strobe, pg_lights[light_rank].light_strobe_fine, strobe_value);
+			//printf("DMX add %d chann %d fine %d strobe %.3f\n", pg_lights[light_rank].light_address, pg_lights[light_rank].light_strobe, pg_lights[light_rank].light_strobe_fine, strobe_value);
+		}
+		if (pg_lights[light_rank].light_zoom > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_zoom, pg_lights[light_rank].light_zoom_fine, zoom_value);
+		}	
+		if (pg_lights[light_rank].light_pan > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_pan, pg_lights[light_rank].light_pan_fine, pan_value);
+		}
+		if (pg_lights[light_rank].light_tilt > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_tilt, pg_lights[light_rank].light_tilt_fine, tilt_value);
+		}
+		if (pg_lights[light_rank].light_hue > 0) {
+			store_one_DMXvalue(myDmx, pg_lights[light_rank].light_address, pg_lights[light_rank].light_hue, pg_lights[light_rank].light_hue_fine, hue_value);
+		}
 		if (with_trace) {
-			printf("DMX Data from %d to %d: ", light_address, light_address + 10);
-			for (int j = light_address; j < light_address + 11; j++)
+			printf("DMX Data from %d to %d: ", pg_lights[light_rank].light_address, min(pg_lights[light_rank].light_address + DMX_data_size, 513) - 1);
+			for (int j = pg_lights[light_rank].light_address; j < min(pg_lights[light_rank].light_address + DMX_data_size, 513); j++)
 				printf(" %d ", myDmx[j]);
 			printf("\n");
 		}
@@ -521,59 +626,59 @@ void pg_StoreDMX_11channels(int portNo, int light_address, float ch1, float ch2,
 }
 
 // stores the part of a DMX message that corresponds to a light
-void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float rgb_color_value[3])
+void pg_StoreDMX(int channel, float channel_value, int light_port, bool has_fine_channel)
 {
 	unsigned char* myDmx = NULL;
 	int DMX_data_size = 0;
 
-	if (device_handle != NULL && light_rank < nb_lights)
+	if (device_handle != NULL && channel >= 1 && channel <= 512 && light_port == 1 || light_port == 2)
 	{
 		// buffer choice according to port
-		if (lights_port[light_rank] == 1) {
+		if (light_port == 1) {
 			myDmx = DMX_message1;
 		}
-		else if (lights_port[light_rank] == 2) {
+		else if (light_port == 2) {
 			myDmx = DMX_message2;
 		}
 		else
 			return;
 
 		// light data in DMX message start at address and are channels long
-		DMX_data_size = lights_channels[light_rank];
-		if (lights_address[light_rank] + DMX_data_size > 513) {
-			sprintf(ErrorStr, "Light no %d address %d and channel nb %d are beyond the capacity of DMX message!", light_rank, lights_address[light_rank], lights_channels[light_rank]); ReportError(ErrorStr);
+		if (!has_fine_channel) {
+			DMX_data_size = 1;
+		}
+		else {
+			DMX_data_size = 2;
+		}
+		if (channel + DMX_data_size - 1 > 512) {
+			sprintf(ErrorStr, "Store channel value: channel nb %d-%d is beyond the capacity of DMX message!", channel, channel + DMX_data_size - 1); ReportError(ErrorStr);
 		}
 
 		// sets the channels to 0
-		memset(myDmx + lights_address[light_rank], 0, DMX_data_size * sizeof(unsigned char));
+		memset(myDmx + channel, 0, DMX_data_size * sizeof(unsigned char));
 
 		// length update
-		if (lights_port[light_rank] == 1) {
-			DMX_message1_length = max(DMX_message1_length, lights_address[light_rank] + DMX_data_size);
+		if (light_port == 1) {
+			DMX_message1_length = max(DMX_message1_length, channel + DMX_data_size);
 		}
-		else if (lights_port[light_rank] == 2) {
+		else if (light_port == 2) {
 			// printf("send on port 2\n");
-			DMX_message2_length = max(DMX_message2_length, lights_address[light_rank] + DMX_data_size);
+			DMX_message2_length = max(DMX_message2_length, channel + DMX_data_size);
 		}
 
 		// First byte has to be 0
 		myDmx[0] = 0;
-		if(lights_red[light_rank] > 0)
-			myDmx[lights_address[light_rank] + lights_red[light_rank] - 1] = unsigned char(rgb_color_value[0] * 255.f);
-		if (lights_green[light_rank] > 0)
-			myDmx[lights_address[light_rank] + lights_green[light_rank] - 1] = unsigned char(rgb_color_value[1] * 255.f);
-		if (lights_blue[light_rank] > 0)
-			myDmx[lights_address[light_rank] + lights_blue[light_rank] - 1] = unsigned char(rgb_color_value[2] * 255.f);
-		if (lights_dimmer[light_rank] > 0)
-			myDmx[lights_address[light_rank] + lights_dimmer[light_rank] - 1] = unsigned char(dimmer_value * 255.f);
-		if (lights_grey[light_rank] > 0)
-			myDmx[lights_address[light_rank] + lights_grey[light_rank] - 1] = unsigned char(dimmer_value * 255.f);
-		if (lights_strobe[light_rank] > 0)
-			myDmx[lights_address[light_rank] + lights_strobe[light_rank] - 1] = unsigned char(strobe_value * 255.f);
+		if (!has_fine_channel) {
+			store_one_DMXvalue(myDmx, 1, channel, 0, channel_value);
+		}
+		else {
+			store_one_DMXvalue(myDmx, 1, channel, channel + 1, channel_value);
+		}
+
 		if (with_trace) {
-			printf("DMX Data from %d to %d: ", lights_address[light_rank], min(DMX_data_size, 513) - 1);
-			for (int j = lights_address[light_rank]; j < min(DMX_data_size, 513) ; j++)
-				printf(" %d ", myDmx[j]);
+			printf("DMX Data from %d to %d: ", channel, min(channel + DMX_data_size, 512));
+			for (int j = channel; j < min(channel + DMX_data_size, 512); j++)
+				printf(" %d ", int(myDmx[j]));
 			printf("\n");
 		}
 	}
@@ -581,10 +686,13 @@ void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float r
 
 // sends the message to the ports, when they are not empty
 void pg_SendDMXZeros() {
+	printf("reset DMX\n");
 	pg_ResetDMX();
 	DMX_message1_length = 513;
 	DMX_message2_length = 513;
 	pg_SendDMX();
+	//printf("Store DMX channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
+	//pg_SendDMX();
 }
 
 // sends the message to the ports, when they are not empty
@@ -598,8 +706,12 @@ void pg_SendDMX()
 			// First byte has to be 0
 			DMX_message1[0] = 0;
 			res = FTDI_SendData(SEND_DMX_PORT1, DMX_message1, DMX_message1_length);
-			if (with_trace)
+			if (with_trace) {
 				printf("Send DMX on port 1 size %d\n", DMX_message1_length);
+				for (int j = 0; j < min(DMX_message1_length, 512); j++)
+					printf(" %d ", int(DMX_message1[j]));
+				printf("\n");
+			}
 			if (res < 0)
 			{
 				printf("FAILED to send DMX on port 1 ... exiting\n");
@@ -611,8 +723,12 @@ void pg_SendDMX()
 			// First byte has to be 0
 			DMX_message2[0] = 0;
 			res = FTDI_SendData(SEND_DMX_PORT2, DMX_message2, DMX_message2_length);
-			if (with_trace)
+			if (with_trace) {
 				printf("Send DMX on port 2 size %d\n", DMX_message2_length);
+				for (int j = 0; j < min(DMX_message2_length, 512); j++)
+					printf(" %d ", int(DMX_message2[j]));
+				printf("\n");
+			}
 			if (res < 0)
 			{
 				printf("FAILED to send DMX on port 2 ... exiting\n");
@@ -621,11 +737,12 @@ void pg_SendDMX()
 		}
 
 		pg_ResetDMX();
+		pg_Reset_allLightGroups_Changed();
 	}
 }
 
 // initialization function with everything to do the test
-void light_init(void)
+void DMX_light_initialization(void)
 {
 	uint8_t Num_Devices =0;
 	uint16_t device_connected =0;
@@ -634,15 +751,6 @@ void light_init(void)
 	BOOL res = 0;
 	uint8_t hversion;
 
-	//printf("\nEnttec Pro - C - Windows - Sample Test\n");
-	//printf("\nLooking for USB PRO's connected to PC ... ");
-	
-	// If you face problems identifying the PRO: Use this code to reload device drivers: takes a few secs
-	//FTDI_Reload();
-
-	// Just to make sure the Device is correct
-	//printf("\n Press Enter to Intialize Device :");
-	//_getch();
 	Num_Devices = FTDI_ListDevices(); 
 	printf("Lighting: %d DMX USB PRO Devices\n", Num_Devices);
 	// Number of Found Devices
@@ -662,10 +770,6 @@ void light_init(void)
 			device_connected = FTDI_OpenDevice(device_num);		
 		 }
 
-		 //printf("\n Send DMX on PORT 1");
-		 //SendDMX(SEND_DMX_PORT1);
-		//ReceiveDMX(RECEIVE_DMX_PORT1);
-
 		// Clear the buffer
 		FTDI_PurgeBuffer();
 
@@ -679,20 +783,95 @@ void light_init(void)
 			printf("PRO Mk2 found ... Sending Init Messages ...");
 			init_promk2();
 
-			/*
-				// Send and Receive DMX on PORT2
-			SendDMX(SEND_DMX_PORT2);
-			ReceiveDMX(RECEIVE_DMX_PORT2);
-
-			// Send and Recieve MIDI 
-			enable_midi();
-			SendMIDI(SEND_MIDI_PORT,10,20,0x12);
-			ReceiveMIDI(RECEIVE_MIDI_PORT);
-			*/
+			// Send and Receive DMX on PORT2
+			// SendDMX(SEND_DMX_PORT2);
+			// ReceiveDMX(RECEIVE_DMX_PORT2);
 		}
 		printf("\n");
 	}
 
 	pg_ResetDMX();
 	pg_SendDMXZeros();
+}
+
+
+////////////////////////////////////////////////////////////////////
+// GUI UPDATE
+void pg_lightGUI_values_and_pulse_update(int light_param, int interface_light_group, string light_param_string) {
+	//printf("light group %d\n", pg_interface_light_group);
+	if (pg_nb_light_groups > 0) {
+		sprintf(AuxString, "/light/%d/%s %.4f", interface_light_group, light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_val(light_param, 0));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/onOff_%s %d %d", light_param_string.c_str(), interface_light_group,
+			pg_light_groups[pg_interface_light_group].get_group_onOff(light_param));
+		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_pulse/%d/%s %.4f", interface_light_group, light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_pulse(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/beatRandom_%s %d %d", light_param_string.c_str(), interface_light_group,
+			int(pg_light_groups[pg_interface_light_group].get_group_beatRandom(light_param)));
+		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/beatOnOff_%s %d %d", light_param_string.c_str(), interface_light_group,
+			int(pg_light_groups[pg_interface_light_group].get_group_beatOnOff(light_param)));
+		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
+	}
+}
+void pg_lightGUI_loop_update(int light_param, string light_param_string) {
+	if (pg_nb_light_groups > 0) {
+		sprintf(AuxString, "/light_control/loop_%s %d", light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_loop_is_looped(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/loop_curve_%s %d", light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_loop_curve_type(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/loop_parallel_%s %d", light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_loop_parallel(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/loop_min_%s %.4f", light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_loop_min(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/loop_max_%s %.4f", light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_loop_max(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/loop_speed_%s %.4f", light_param_string.c_str(),
+			pg_light_groups[pg_interface_light_group].get_group_loop_speed(light_param));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+	}
+}
+void pg_lightGUI_all_values_and_pulse_update(void) {
+	if (pg_nb_light_groups > 0) {
+		sprintf(AuxString, "/light_control/light_group %d", pg_interface_light_group);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		//printf("group %d id %s\n", pg_interface_light_group, pg_light_groups[pg_interface_light_group].get_group_id().c_str());
+		sprintf(AuxString, "/light_control/light_group_label %s", pg_light_groups[pg_interface_light_group].get_group_id().c_str());
+		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		for (const auto& myPair : pg_light_param_hashMap) {
+			int light_param = myPair.first;
+			string light_param_string = myPair.second;
+			//printf("lightpair %d\n", light_param);
+			pg_lightGUI_values_and_pulse_update(light_param, pg_interface_light_group, light_param_string);
+
+		}
+	}
+}
+void pg_lightGUI_all_loop_update(void) {
+	if (pg_nb_light_groups > 0) {
+		for (const auto& myPair : pg_light_loop_param_hashMap) {
+			int light_param = myPair.first;
+			string light_param_string = myPair.second;
+			pg_lightGUI_loop_update(light_param, light_param_string);
+
+		}
+	}
+}
+void pg_lightGUI_initialization(void) {
+	if (pg_nb_light_groups > 0) {
+		sprintf(AuxString, "/light_control/nb_light_groups %d", pg_nb_light_groups);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/light_control/light_group %d", pg_interface_light_group);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		pg_lightGUI_all_values_and_pulse_update();
+		pg_lightGUI_all_loop_update();
+	}
 }

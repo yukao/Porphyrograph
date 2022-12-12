@@ -600,7 +600,7 @@ void particle_out( void ) {
    }
 #endif
 #if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_follow47[indPath - 8] ) {
+    else if( indPath >= 8 && path_follow811[indPath - 8] ) {
       // reaches for pen position
       part_acceleration 
         = dvec2(curPos - out_position_speed_particle.xy);
@@ -629,7 +629,7 @@ void particle_out( void ) {
     }
 #endif
 #if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_repulse47[indPath - 8] ) {
+    else if( indPath >= 8 && path_repulse811[indPath - 8] ) {
       // reaches for pen position
       // escapes from pen position
       part_acceleration 

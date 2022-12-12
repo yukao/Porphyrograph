@@ -1,0 +1,64 @@
+DM version 1.27
+
+       initial_time=nitial_time="0"" time_step=ime_step="0.00001".00001" real_time=eal_time="true"rue"/>
+
+    <video_rendering_file ideo_rendering_file video_rendering_file ideo_rendering_file begin=egin="0"" end=nd="1000"000" step=tep="1"" id=d=""/>
+
+    <png_rendering_file ng_rendering_file png_rendering_file ng_rendering_file begin=egin="100"00" end=nd="90"0" step=tep="1"" 
+			 id=d="" shots=hots="pic/"ic/"/>
+    <jpg_rendering_file pg_rendering_file jpg_rendering_file pg_rendering_file begin=egin="110"10" end=nd="100"00" step=tep="1"" 
+			 id=d="LYM-session-27-3-2011-"YM-session-27-3-2011-" shots=hots="pic/"ic/"/>
+
+    <log_file og_file log_file og_file id=d="pic/LYM-session.log"ic/LYM-session.log" log_date_output=og_date_output="true"rue"/>
+
+    <udp_hostsdp_hostsudp_hostsdp_hosts
+       nb_udp_local_servers=b_udp_local_servers="1"" nb_udp_remote_clients=b_udp_remote_clients="1"">
+
+      <udp_local_server dp_local_server udp_local_server dp_local_server 
+	 id=d="" local_port=ocal_port="1978"978" UDP_message_acknowledgement=DP_message_acknowledgement="false"alse" 
+	 UDP_message_trace=DP_message_trace="false"alse" input_message_stack_depth=nput_message_stack_depth="300"00" 
+	 receive_format=eceive_format="OSC"SC" receive_prefix=eceive_prefix="sound "ound " 
+	 acknowledge_prefix=cknowledge_prefix="graphic "raphic " 
+	 offset_UDP_message_received=ffset_UDP_message_received="0"" carbon_copy=arbon_copy="" 
+	 OSC_duplicate_removal=SC_duplicate_removal="true"rue" OSC_endian_reversal=SC_endian_reversal="true"rue"/>
+      
+      <udp_remote_client dp_remote_client udp_remote_client dp_remote_client 
+	 id=d="udp_sound_client"dp_sound_client" remote_ip=emote_ip="127.0.0.1"27.0.0.1" remote_port=emote_port="1979"979" 
+	 UDP_message_acknowledgement=DP_message_acknowledgement="false"alse" first_UDP_message_number=irst_UDP_message_number="0"" 
+	 maximal_UDP_message_delay=aximal_UDP_message_delay="0.10000".10000" UDP_message_trace=DP_message_trace="false"alse"
+	 output_message_stack_depth=utput_message_stack_depth="300"00" 
+	 send_format=end_format="OSC"SC" send_prefix=end_prefix="" send_ID=end_ID="true"rue" 
+	 OSC_endian_reversal=SC_endian_reversal="true"rue" />
+      
+    <//udp_hosts>dp_hosts>
+
+    <traceracetracerace
+       trace_input_file=race_input_file="false"alse" trace_output_frame_number=race_output_frame_number="false"alse" 
+       trace_time=race_time="false"alse" first_frame_number=irst_frame_number="0"" 
+       last_frame_number=ast_frame_number="1000000"000000"/>
+
+    <display isplay display isplay  
+       with_splash_screen=ith_splash_screen="false"alse" splash_screen_encoding=plash_screen_encoding="pnga"nga" 
+       splash_screen_file=plash_screen_file="textures/splash_screen-petit.png"extures/splash_screen-petit.png" 
+       success_screen_encoding=uccess_screen_encoding="pnga"nga" 
+       success_screen_file=uccess_screen_file="textures/success_screen.png"extures/success_screen.png" 
+       defeat_screen_encoding=efeat_screen_encoding="pnga"nga" 
+       defeat_screen_file=efeat_screen_file="textures/defeat_screen.png"extures/defeat_screen.png" 
+       with_screen_time_display=ith_screen_time_display="false"alse" full_screen=ull_screen="false"alse" 
+       game_mode=ame_mode="true"rue"/>
+
+    <cursorursorcursorursor
+       shape=hape="no_cursor"o_cursor" /> <!-- left_arrow -->
+
+    <max_values ax_values max_values ax_values 
+       max_shaders=ax_shaders="200"00" max_textures=ax_textures="200"00" max_displays=ax_displays="8"" 
+       max_viewpoints=ax_viewpoints="100"00" max_embedded_parameters=ax_embedded_parameters="320"20" 
+       max_scenes=ax_scenes="300"00" max_targets=ax_targets="1000"000" max_selected_objects=ax_selected_objects="300"00"/>
+
+  <//environment>nvironment>
+<//node>ode>
+
+<!-- Global constant parameters -->
+<set et set et id=d="width"idth"              value=alue="1400"400"/>
+<set et set et id=d="height"eight"             value=alue="1050"050"/>
+<set et set et id=d="with_background"ith_background"    value=alu

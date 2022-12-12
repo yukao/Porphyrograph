@@ -29,9 +29,14 @@
 Mat pg_FirstMovieFrame; // First frame in a video (opening or looping) 
 bool pg_FirstMovieFrameIsAvailable = false; // Available first frame so as to avoid second reading  
 
+////////////////////////////////////////////////////////////////////
+// CAMERA FRAME
+////////////////////////////////////////////////////////////////////
+Mat pg_camera_frame;
+
 
 ////////////////////////////////////////////////////////////////////
-// IMAGE TEXTURES
+// ClipFrames TEXTURES
 ////////////////////////////////////////////////////////////////////
 // Images used for displaying or for blending
 // PhotoBufferDataStructOld describing a buffer of images stored in the GPU
@@ -63,6 +68,7 @@ PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES] = { PhotoSwa
 // and according to directory size
 int pg_CurrentDiaporamaFile = 0;
 int pg_CurrentDiaporamaDir = -1;
+double pg_CurrentDiaporamaEnd = -1;
 bool ascendingDiaporama = true;
 
 std::string pg_ImageDirectory;
@@ -72,6 +78,52 @@ std::string pg_MaskDirectory;
 #if defined (TVW) || defined(ETOILES)
 std::string pg_MessageDirectory;
 #endif
+
+////////////////////////////////////////////////////////////////////
+// IMAGE TEXTURES
+////////////////////////////////////////////////////////////////////
+// Images used for displaying or for swapping
+// PhotoDataStruct describing a buffer of images stored in the GPU
+// these images are used to make piled rendering 
+// they are doubled by swap images used to smoothly change between images
+PhotoDataStruct** pg_Photo_buffer_data = NULL;
+int pg_nbCompressedImageDirs = 0;
+int* pg_nbCompressedImagesPerFolder = NULL;
+int* pg_firstCompressedFileInFolder = NULL;
+int pg_nbCompressedImages = 0;
+#if defined (TVW)
+PhotoDataStruct pg_Photo_mask_buffer_data[PG_PHOTO_NB_TEXTURES_TVW / 3] = { PhotoDataStruct() };
+// interpolation weight between image buffer swap buffer in each layer
+GLfloat pg_Photo_alphaSwap02[PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
+GLfloat pg_Photo_alphaSwap35[PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
+// image buffer layer weights
+GLfloat pg_Photo_weightTVW[PG_PHOTO_NB_TEXTURES_TVW] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+GLfloat pg_Photo_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
+GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
+// GLfloat mask_inverse_buffer_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
+#endif
+// the index from which an image available for swapping is looked for
+int pg_IndInitialSwapPhoto = 0;
+
+
+////////////////////////////////////////////////////////////////////
+// SHORT CLIP IMAGE FILES
+////////////////////////////////////////////////////////////////////
+std::string pg_ClipDirectory;
+ClipFramesDataStruct** pg_ClipFrames_buffer_data = NULL;
+
+
+////////////////////////////////////////////////////////////////////
+// CLIP TEXTURES
+////////////////////////////////////////////////////////////////////
+int pg_nbClips = 0;
+int pg_nbCompressedClipFrames = 0;
+int* pg_nbCompressedClipFramesPerFolder = NULL;
+int* pg_firstCompressedClipFramesInFolder = NULL;
+//int pg_CurrentClipFramesFile = 0;
+//int pg_CurrentClipFramesDir = -1;
+
 
 // FUNCTION FOR CLEARING A DIRECTORY
 void remove_files_in_dir(std::string *dirpath) {
@@ -145,7 +197,7 @@ bool pg_initTextures(void) {
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 		else if (pg_Texture_usages[indTextureFile] == Texture_part_init
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
-			// printf("Loading particles initial images %s\n", fileName.c_str()); 
+			printf("Loading particles initial images %s\n", (pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str());
 			if (generateParticleInitialPosColorRadiusfromImage(pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile])) {
 				if (pg_Texture_Rank[indTextureFile] != pg_particle_initial_pos_speed_texID.size()
 					|| pg_Texture_Rank[indTextureFile] != pg_particle_initial_color_radius_texID.size()) {
@@ -196,7 +248,7 @@ bool pg_initTextures(void) {
 			Burst_Mask_texID = pg_Texture_texID[indTextureFile];
 		}
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
 		if (pg_Texture_usages[indTextureFile] == Texture_brush
 			&& pg_Texture_Dimension[indTextureFile] == 3) {
 			Pen_texture_3D_texID = pg_Texture_texID[indTextureFile];
@@ -268,7 +320,7 @@ bool pg_initTextures(void) {
 		sprintf(ErrorStr, "Error: burst mask texture not provided, check texture list with burst mask usage!\n"); ReportError(ErrorStr); throw 336;
 	}
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(CORE)
 	if (Pen_texture_3D_texID == NULL_ID) {
 		sprintf(ErrorStr, "Error: brush texture not provided, check texture list with sensor usage!\n"); ReportError(ErrorStr); throw 336;
 	}
@@ -278,7 +330,7 @@ bool pg_initTextures(void) {
 	}
 #ifdef PG_WITH_REPOP_DENSITY
 	if (pg_RepopDensity_texture_texID.size() == 0) {
-		sprintf(ErrorStr, "Error: repopulation texture density not provided, check texture list with repop_density usage!\n"); ReportError(ErrorStr); throw 336;
+		sprintf(ErrorStr, "Error: repopulation texture density not provided, check texture list with BG_CA_repop_density usage!\n"); ReportError(ErrorStr); throw 336;
 	}
 #endif
 #ifdef PG_MESHES
@@ -834,7 +886,7 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 		return false;
 	}
 	int nbChannels = imgOpenCV.channels();
-	// printf("File %s nb channels %d\n", fileName.c_str(), nbChannels);
+	//printf("File %s nb channels %d\n", fileName.c_str(), nbChannels);
 	int colorTransform = (nbChannels == 4) ? CV_BGRA2RGBA :
 		(nbChannels == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
 	// int glColorType = (nbChannels == 4) ? GL_RGBA : GL_RGB;
@@ -874,17 +926,19 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 #ifndef TEMPETE
 	int partic_height = int(floor(sqrt(nb_particles / image_ratio)));
 	int partic_width = int(floor(partic_height * image_ratio));
+	//printf("partic hxw %dx%d\n", partic_height, partic_width);
 #else
 	int partic_height = int(floor(sqrt(nb_particles / image_ratio)));
 	int partic_width = int(floor(partic_height * image_ratio));
 #endif
 	float ratioImgToPart = float(image.cols) / partic_width;
 	float partic_radius = 2.f * ratioImgToPart;
+	int intPartic_radius = int(floor(partic_radius));
+	//printf("partic radius %d ratioImgToPart %.2f\n", intPartic_radius, ratioImgToPart);
 	for (int indRow = 0; indRow < partic_height; indRow++) {
 		for (int indCol = 0; indCol < partic_width; indCol++) {
 			int indPixelCol = int(round(indCol * ratioImgToPart));
 			int indPixelRow = int(round(indRow * ratioImgToPart));
-			int intPartic_radius = int(floor(partic_radius));
 			int nbPixels = 0;
 			float r = 0.f, g = 0.f, b = 0.f;
 			for (int indLocCol = -intPartic_radius; indLocCol <= intPartic_radius; indLocCol++) {
@@ -892,6 +946,7 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 					if ((indPixelRow + indLocRow) >= 0 && (indPixelRow + indLocRow) < image.rows
 						&& (indPixelCol + indLocCol) >= 0 && (indPixelCol + indLocCol) < image.cols) {
 						Point3_<uchar>* p = image.ptr<Point3_<uchar> >(image.rows - (indPixelRow + indLocRow) - 1, (indPixelCol + indLocCol));
+						//Point3_<uchar>* p = image.ptr<Point3_<uchar> >(image.rows - indPixelRow - 1, indPixelCol);
 						r += p->x / 255.f;
 						g += p->y / 255.f;
 						b += p->z / 255.f;
@@ -1068,7 +1123,7 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 	//	image.cols, image.rows,
 	//	partic_width * partic_height, partic_width, partic_height, nb_particles,
 	//	partic_radius);
-	printf("Loading particle accceleration shift %s\n", fileName.c_str());
+	//printf("Loading particles acceleration shift %s\n", fileName.c_str());
 
 	free(acceleration_shift);
 
@@ -1080,64 +1135,109 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 //////////////////////////////////////////////
 /// NON THREADED LOAD CAMERA FRAME
 #ifdef PG_WITH_CAMERA_CAPTURE
-void loadCameraFrame(bool initial_capture) {
-#ifdef KOMPARTSD
+void loadCameraFrame(bool initial_capture, int IPCam_no) {
+#if defined(KOMPARTSD) || defined(LIGHT)
 	return;
 #endif
 	//Grabs and returns a frame from camera
-	Mat pg_camera_frame;
-	pg_camera_capture >> pg_camera_frame;
-	// cv::Mat pg_camera_frame;
+	if (IPCam_no < 0) {
+		if (pg_webCam_capture.grab()) {
+			pg_webCam_capture.retrieve(pg_camera_frame);
+		}
+	}
+	else if (IPCam_no < nb_IPCam) {
+		pg_IPCam_capture[IPCam_no] >> pg_camera_frame;
+	}
+	
+	// if it is an initial capture defines image size and allocates frame texture
 	if (initial_capture) {
 		//Grabs and returns a frame from camera
 		if (!pg_camera_frame.data) {
-			printf("**************** Camera frame not grabbed! ****************\n");
-			exit( 0 );
+			if (IPCam_no < 0) {
+				sprintf(ErrorStr, "WebCam initial frame not grabbed! \n"); ReportError(ErrorStr); throw 425;
+			}
+			else if (IPCam_no < nb_IPCam) {
+				sprintf(ErrorStr, "IPCam #%d initial frame not grabbed! \n", IPCam_no); ReportError(ErrorStr); throw 425;
+			}
 		}
-		if (!pg_initCameraFrameTexture(&pg_camera_frame)) {
-			printf("**************** Camera frame not initialized! **************** \n");
-			return;
+		if (!pg_camera_texture_texID) {
+			pg_initCameraFrameTexture(&pg_camera_frame);
 		}
 
-		// tries to preserve ratio
-		float window_ratio = float(leftWindowWidth) / window_height;
-		if ( pg_camera_frame.rows * window_ratio < pg_camera_frame.cols) {
-			printf("camera size height leading\n");
-			pg_camera_frame_width = int(pg_camera_frame.rows * window_ratio);
-			pg_camera_frame_height = pg_camera_frame.rows;
-			pg_camera_x_offset = (pg_camera_frame.rows - pg_camera_frame_width) / 2;
-			pg_camera_y_offset = 0;
+		int camera_x_offset = -1;
+		int camera_frame_width = -1;
+		int camera_y_offset = -1;
+		int camera_frame_height = -1;
+		if (pg_camera_frame.cols == 1920 && pg_camera_frame.rows == 1080) {
+			// camera frame dimensions and offset
+			camera_x_offset = 0;
+			camera_frame_width = pg_camera_frame.cols;
+			camera_y_offset = 0;
+			camera_frame_height = pg_camera_frame.rows;
 		}
 		else {
-			printf("camera size width leading\n");
-			pg_camera_frame_width = pg_camera_frame.cols;
-			pg_camera_frame_height = pg_camera_frame.rows;
-			if (pg_camera_frame.cols / window_ratio < pg_camera_frame.rows) {
-				// printf("horizontal offset\n");
-				pg_camera_x_offset = (int(pg_camera_frame.rows * window_ratio) - pg_camera_frame.cols) / 2;
-				pg_camera_y_offset = 0;
+			// tries to preserve ratio
+		float window_ratio = float(leftWindowWidth) / window_height;
+			if (pg_camera_frame.rows * window_ratio < pg_camera_frame.cols) {
+				//printf("camera size height leading\n");
+				camera_frame_width = int(pg_camera_frame.rows * window_ratio);
+				camera_frame_height = pg_camera_frame.rows;
+				camera_x_offset = (pg_camera_frame.rows - camera_frame_width) / 2;
+				camera_y_offset = 0;
 			}
 			else {
-				// printf("camera height respecting\n");
-				pg_camera_frame_height = pg_camera_frame.rows;
-				pg_camera_x_offset = 0;
-				pg_camera_y_offset = 0;
+				//printf("camera size width leading\n");
+				camera_frame_width = pg_camera_frame.cols;
+				camera_frame_height = pg_camera_frame.rows;
+				if (pg_camera_frame.cols / window_ratio < pg_camera_frame.rows) {
+					// printf("horizontal offset\n");
+					camera_x_offset = (int(pg_camera_frame.rows * window_ratio) - pg_camera_frame.cols) / 2;
+					camera_y_offset = 0;
+				}
+				else {
+					// printf("camera height respecting\n");
+					camera_frame_height = pg_camera_frame.rows;
+					camera_x_offset = 0;
+					camera_y_offset = 0;
+				}
+			}
+			float ratioSubImage = 1.0f;
+			camera_x_offset = camera_x_offset + int(camera_frame_width * (1.f - ratioSubImage) * 0.5);
+			camera_frame_width = int(camera_frame_width * ratioSubImage);
+			camera_y_offset = camera_y_offset + int(camera_frame_height * (1.f - ratioSubImage) * 0.5);
+			camera_frame_height = int(camera_frame_height * ratioSubImage);
+		}
+
+		// first camera frame allocation
+		if (pg_camera_x_offset == -1 && pg_camera_frame_width == -1 && pg_camera_y_offset == -1 && pg_camera_frame_height == -1) {
+			pg_camera_x_offset = camera_x_offset;
+			pg_camera_frame_width = camera_frame_width;
+			pg_camera_y_offset = camera_y_offset;
+			pg_camera_frame_height = camera_frame_height;
+		}
+		else {
+			if (pg_camera_x_offset != camera_x_offset || pg_camera_frame_width != camera_frame_width || pg_camera_y_offset != camera_y_offset || pg_camera_frame_height != camera_frame_height) {
+				sprintf(ErrorStr, "Camera frames differ in size: wxh %dx%d / %dx%d offset xy %dx%d / %dx%d\n", 
+					pg_camera_frame_width, pg_camera_frame_height, camera_frame_width, camera_frame_height, pg_camera_x_offset, pg_camera_y_offset, camera_x_offset, camera_y_offset); ReportError(ErrorStr); throw 425;
 			}
 		}
-		// DASEIN float ratioSubImage = 0.5f;
-		float ratioSubImage = 1.0f;
-		pg_camera_x_offset = pg_camera_x_offset + int(pg_camera_frame_width * (1.f - ratioSubImage) * 0.5);
-		pg_camera_frame_width = int(pg_camera_frame_width * ratioSubImage);
-		pg_camera_y_offset = pg_camera_y_offset + int(pg_camera_frame_height * (1.f - ratioSubImage) * 0.5);
-		pg_camera_frame_height = int(pg_camera_frame_height * ratioSubImage);
 
-		printf("Camera frame %dx%d (before ratio %dx%d) offset (%dx%d) ch %d size %d\n",
-			pg_camera_frame_width, pg_camera_frame_height,
-			pg_camera_frame.cols, pg_camera_frame.rows,
-			pg_camera_x_offset, pg_camera_y_offset, 
-			pg_camera_frame.channels(), int(pg_camera_frame.total() * pg_camera_frame.elemSize()));
+		if (IPCam_no < 0) {
+			printf("WebCam frame %dx%d (before ratio %dx%d) offset (%dx%d) ch %d size %d\n",
+				pg_camera_frame_width, pg_camera_frame_height,
+				pg_camera_frame.cols, pg_camera_frame.rows,
+				pg_camera_x_offset, pg_camera_y_offset,
+				pg_camera_frame.channels(), int(pg_camera_frame.total() * pg_camera_frame.elemSize()));
+		}
+		else if (IPCam_no < nb_IPCam) {
+			printf("IPCam #%d frame %dx%d (before ratio %dx%d) offset (%dx%d) ch %d size %d\n", IPCam_no,
+				pg_camera_frame_width, pg_camera_frame_height,
+				pg_camera_frame.cols, pg_camera_frame.rows,
+				pg_camera_x_offset, pg_camera_y_offset,
+				pg_camera_frame.channels(), int(pg_camera_frame.total() * pg_camera_frame.elemSize()));
+		}
 	}
-	
+	// end of initial capture
 
 	if (pg_camera_frame.data) {
 		glEnable(GL_TEXTURE_RECTANGLE);
@@ -1153,15 +1253,19 @@ void loadCameraFrame(bool initial_capture) {
 			pg_camera_frame.data);        // The actual image data itself
 												// /////////////////////////
 												// reads BG camera frame for image subtraction
-		if (reset_camera || secondCurrentBGCapture) { // currentVideoTrack <=> video off
-			printf("*** non threaded current BG video capture frame %d\n", pg_FrameNo);
+		if (reset_camera || initialSecondBGCapture == 1) { // currentVideoTrack <=> video off
+			printf("Non threaded current BG video capture frame %d\n", pg_FrameNo);
 			reset_camera = false;
 
 			// makes a second video capture 
-			secondCurrentBGCapture = !secondCurrentBGCapture;
+			if (initialSecondBGCapture == 0) {
+				initialSecondBGCapture = 1;
+			}
+			else if (initialSecondBGCapture == 1) {
+				initialSecondBGCapture = 2;
+			}
 
 			// current background memory
-			// printf("Threaded Transfer of camera BG to GPU (%s)\n", texData->photo_buffer_data->fname);
 			glEnable(GL_TEXTURE_RECTANGLE);
 			glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BG_texture_texID);
 			glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
@@ -1206,7 +1310,7 @@ void loadCameraFrame(bool initial_capture) {
 // VIDEO FRAME AND CAPTURE INITIALIZATION (CAMERA AND MOVIE)
 /////////////////////////////////////////////////////////////////
 
-bool pg_initCameraFrameTexture(Mat *video_frame) {
+void pg_initCameraFrameTexture(Mat *camera_frame) {
 	glEnable(GL_TEXTURE_RECTANGLE);
 
 	// camera image
@@ -1217,12 +1321,12 @@ bool pg_initCameraFrameTexture(Mat *video_frame) {
 	glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 		GL_RGB,            // Internal colour format to convert to
-		video_frame->cols,          // Image width  i.e. 640 for Kinect in standard mode
-		video_frame->rows,          // Image height i.e. 480 for Kinect in standard mode
+		camera_frame->cols,          // Image width  i.e. 640 for Kinect in standard mode
+		camera_frame->rows,          // Image height i.e. 480 for Kinect in standard mode
 		0,                 // Border width in pixels (can either be 1 or 0)
 		GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 		GL_UNSIGNED_BYTE,  // Image data type
-		video_frame->data);        // The actual image data itself
+		camera_frame->data);        // The actual image data itself
 
 								   // current background
 	if (!pg_camera_BG_texture_texID) {
@@ -1232,12 +1336,12 @@ bool pg_initCameraFrameTexture(Mat *video_frame) {
 	glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 		GL_RGB,            // Internal colour format to convert to
-		video_frame->cols,          // Image width  i.e. 640 for Kinect in standard mode
-		video_frame->rows,          // Image height i.e. 480 for Kinect in standard mode
+		camera_frame->cols,          // Image width  i.e. 640 for Kinect in standard mode
+		camera_frame->rows,          // Image height i.e. 480 for Kinect in standard mode
 		0,                 // Border width in pixels (can either be 1 or 0)
 		GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 		GL_UNSIGNED_BYTE,  // Image data type
-		video_frame->data);        // The actual image data itself
+		camera_frame->data);        // The actual image data itself
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1253,32 +1357,79 @@ bool pg_initCameraFrameTexture(Mat *video_frame) {
 	glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 		GL_RGB,            // Internal colour format to convert to
-		video_frame->cols,          // Image width  i.e. 640 for Kinect in standard mode
-		video_frame->rows,          // Image height i.e. 480 for Kinect in standard mode
+		camera_frame->cols,          // Image width  i.e. 640 for Kinect in standard mode
+		camera_frame->rows,          // Image height i.e. 480 for Kinect in standard mode
 		0,                 // Border width in pixels (can either be 1 or 0)
 		GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 		GL_UNSIGNED_BYTE,  // Image data type
-		video_frame->data);        // The actual image data itself
+		camera_frame->data);        // The actual image data itself
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// glGenerateMipmap(GL_TEXTURE_2D);
 #endif
-	return true;
 }
 
-int pg_initVideoCameraCapture(void) {
+void pg_openCameraCaptureAndLoadFrame(void) {
 	// video loading openCV
 	//Allocates and initializes cvCapture structure
 	// for reading a video stream from the camera.
 	//Index of camera is -1 since only one camera
 	// connected to the computer or it does not
 	// matter what camera to use.
-	pg_camera_capture.open(camID);
-	sprintf(pg_camera_capture_name, "Camera_%d", camID);
+	if (cameraNo < 0 && -cameraNo - 1 < nb_webCam) {
+		// cv::CAP_FFMPEG or cv::CAP_IMAGES or cv::CAP_DSHOW.
+		pg_webCam_capture.open(pg_webCams[-cameraNo - 1].cameraID, cv::CAP_DSHOW);
+		if (!pg_webCam_capture.isOpened()) {
+			sprintf(ErrorStr, "Error: webcam ID #%d not opened!\n", pg_webCams[-cameraNo - 1].cameraID); ReportError(ErrorStr); throw 336;
+		}
 
-	// to be checked in real time
+		pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, pg_webCams[-cameraNo - 1].cameraWidth);
+		pg_webCam_capture.set(CV_CAP_PROP_FRAME_HEIGHT, pg_webCams[-cameraNo - 1].cameraHeight);
+
+		// initial webcam frame reading
+		loadCameraFrame(true, cameraNo);
+		pg_current_active_cameraNo = cameraNo;
+
+		if (!initializedWebcam) {
+			pg_initWebcamParameters();
+			initializedWebcam = true;
+		}
+	}
+	else if (cameraNo >= 0 && cameraNo < nb_IPCam) {
+		pg_IPCam_capture[cameraNo].open(pg_IPCam_capture_address[cameraNo]);
+		if (!pg_IPCam_capture[cameraNo].isOpened()) {
+			sprintf(ErrorStr, "Error: IPCam #%d (%s) not opened!\n", cameraNo, pg_IPCam_capture_address[cameraNo].c_str()); ReportError(ErrorStr); throw 336;
+		}
+
+		pg_IPCam_capture[cameraNo].set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+		pg_IPCam_capture[cameraNo].set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+
+		// initial IPCam #0 frame reading
+		loadCameraFrame(true, cameraNo);
+		pg_current_active_cameraNo = cameraNo;
+	}
+}
+
+void pg_releaseCameraCapture(void) {
+	// video loading openCV
+	//Allocates and initializes cvCapture structure
+	// for reading a video stream from the camera.
+	//Index of camera is -1 since only one camera
+	// connected to the computer or it does not
+	// matter what camera to use.
+	if (pg_current_active_cameraNo == -1) {
+		pg_webCam_capture.release();
+	}
+	else if (pg_current_active_cameraNo >= 0 && pg_current_active_cameraNo < nb_IPCam) {
+		pg_IPCam_capture[pg_current_active_cameraNo].release();
+	}
+	pg_current_active_cameraNo = -2;
+}
+
+void pg_initWebcamParameters(void) {
+		// to be checked in real time
 	// SHARPNESS
 	// minimum                 : 0
 	// maximum                 : 255
@@ -1310,95 +1461,92 @@ int pg_initVideoCameraCapture(void) {
 	// default_value           : 4000
 
 	/* cvSetCaptureProperty comment for see3cam */
-	float window_ratio = float(leftWindowWidth) / window_height;
-	const float ratio_16_9 = 16.0f / 9.0f;
-	if (window_ratio >= ratio_16_9 || ratio_16_9 - window_ratio < window_ratio - 4.0 / 3.0) {
-		 //pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-		 pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 960);
-		 //pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
-		 pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 540);
-		//pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
-	}
-	else {
-		pg_camera_capture.set(CV_CAP_PROP_FRAME_WIDTH, 960);
-		pg_camera_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
-	}
+	//float window_ratio = float(leftWindowWidth) / window_height;
+	//const float ratio_16_9 = 16.0f / 9.0f;
+	//if (window_ratio >= ratio_16_9 || ratio_16_9 - window_ratio < window_ratio - 4.0 / 3.0) {
+	//	 //pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+	//	 pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, 960);
+	//	 //pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+	//	 pg_webCam_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 540);
+	//	//pg_webCam_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+	//}
+	//else {
+	//	pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, 960);
+	//	pg_webCam_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	//}
 	// higher values could be tried for width, fx 1280 x 720 (16:9) 960x720 (4:3)
-	//pg_camera_capture.set(CV_CAP_PROP_FPS, 60);
+	//pg_webCam_capture.set(CV_CAP_PROP_FPS, 60);
 
-	// initial camera frame reading
-	loadCameraFrame(true);
+	CameraCurrent_exposure = (float)pg_webCam_capture.get(CV_CAP_PROP_EXPOSURE);
+	CameraCurrent_gain = (float)pg_webCam_capture.get(CV_CAP_PROP_GAIN);
+	CameraCurrent_brightness = (float)pg_webCam_capture.get(CV_CAP_PROP_BRIGHTNESS);
+	CameraCurrent_saturation = (float)pg_webCam_capture.get(CV_CAP_PROP_SATURATION);
+	CameraCurrent_contrast = (float)pg_webCam_capture.get(CV_CAP_PROP_CONTRAST);
+	//CameraCurrent_FPS = (float)pg_webCam_capture.get(CV_CAP_PROP_FPS);
+	CameraCurrent_focus = (float)pg_webCam_capture.get(CV_CAP_PROP_FOCUS);
+	CameraCurrent_gamma = (float)pg_webCam_capture.get(CV_CAP_PROP_GAMMA);
+	CameraCurrent_WB_B = (float)pg_webCam_capture.get(CV_CAP_PROP_WHITE_BALANCE_BLUE_U);
+	CameraCurrent_WB_R = (float)pg_webCam_capture.get(CV_CAP_PROP_WHITE_BALANCE_RED_V);
 
-	CameraCurrent_exposure = (float)pg_camera_capture.get(CV_CAP_PROP_EXPOSURE);
-	CameraCurrent_gain = (float)pg_camera_capture.get(CV_CAP_PROP_GAIN);
-	CameraCurrent_brightness = (float)pg_camera_capture.get(CV_CAP_PROP_BRIGHTNESS);
-	CameraCurrent_saturation = (float)pg_camera_capture.get(CV_CAP_PROP_SATURATION);
-	CameraCurrent_contrast = (float)pg_camera_capture.get(CV_CAP_PROP_CONTRAST);
-	CameraCurrent_FPS = (float)pg_camera_capture.get(CV_CAP_PROP_FPS);
-	CameraCurrent_focus = (float)pg_camera_capture.get(CV_CAP_PROP_FOCUS);
-	CameraCurrent_gamma = (float)pg_camera_capture.get(CV_CAP_PROP_GAMMA);
-	CameraCurrent_WB_B = (float)pg_camera_capture.get(CV_CAP_PROP_WHITE_BALANCE_BLUE_U);
-	CameraCurrent_WB_R = (float)pg_camera_capture.get(CV_CAP_PROP_WHITE_BALANCE_RED_V);
+	printf("Current Cam exposure   %.2f\n", CameraCurrent_exposure);
+	printf("Current Cam gain       %.2f\n", CameraCurrent_gain);
+	printf("Current Cam brightness %.2f\n", CameraCurrent_brightness);
+	printf("Current Cam contrast   %.2f\n", CameraCurrent_contrast);
+	printf("Current Cam FPS        %.2f\n", CameraCurrent_FPS);
+	printf("Current Cam focus      %.2f\n", CameraCurrent_focus);
+	printf("Current Cam gamma      %.2f\n", CameraCurrent_gamma);
+	printf("Current Cam WB_B       %.2f\n", CameraCurrent_WB_B);
+	printf("Current Cam WB_R       %.2f\n", CameraCurrent_WB_R);
 
-	//printf("Current Cam exposure   %.2f\n", CameraCurrent_exposure);
-	//printf("Current Cam gain       %.2f\n", CameraCurrent_gain);
-	//printf("Current Cam brightness %.2f\n", CameraCurrent_brightness);
-	//printf("Current Cam contrast   %.2f\n", CameraCurrent_contrast);
-	//printf("Current Cam FPS        %.2f\n", CameraCurrent_FPS);
-	//printf("Current Cam focus      %.2f\n", CameraCurrent_focus);
-	//printf("Current Cam gamma      %.2f\n", CameraCurrent_gamma);
-	//printf("Current Cam WB_B       %.2f\n", CameraCurrent_WB_B);
-	//printf("Current Cam WB_R       %.2f\n", CameraCurrent_WB_R);
-
-	//printf("Current Cam saturation %.2f\n", CameraCurrent_saturation);
+	printf("Current Cam saturation %.2f\n", CameraCurrent_saturation);
 	//printf("Current Cam WB         %.2f %.2f\n", CameraCurrent_WB_B, CameraCurrent_WB_R);
 
 	if (*((float *)ScenarioVarPointers[_cameraExposure]) != CameraCurrent_exposure) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_EXPOSURE, (*((float *)ScenarioVarPointers[_cameraExposure])));
+		printf("cv VideoCapture set exposure new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraExposure]), CameraCurrent_exposure);
+		//pg_webCam_capture.set(CV_CAP_PROP_EXPOSURE, (*((float *)ScenarioVarPointers[_cameraExposure])));
 		CameraCurrent_exposure = *((float *)ScenarioVarPointers[_cameraExposure]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraGain]) != CameraCurrent_gain) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_GAIN, *((float *)ScenarioVarPointers[_cameraGain]));
+		printf("cv VideoCapture set gain new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraGain]), CameraCurrent_gain);
+		pg_webCam_capture.set(CV_CAP_PROP_GAIN, *((float *)ScenarioVarPointers[_cameraGain]));
 		CameraCurrent_gain = *((float *)ScenarioVarPointers[_cameraGain]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraBrightness]) != CameraCurrent_brightness) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_BRIGHTNESS, *((float *)ScenarioVarPointers[_cameraBrightness]));
+		printf("cv VideoCapture set brightness new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraBrightness]), CameraCurrent_brightness);
+		pg_webCam_capture.set(CV_CAP_PROP_BRIGHTNESS, *((float *)ScenarioVarPointers[_cameraBrightness]));
 		CameraCurrent_brightness = *((float *)ScenarioVarPointers[_cameraBrightness]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraSaturation]) != CameraCurrent_saturation) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_SATURATION, *((float *)ScenarioVarPointers[_cameraSaturation]));
+		printf("cv VideoCapture set saturation new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraSaturation]), CameraCurrent_saturation);
+		pg_webCam_capture.set(CV_CAP_PROP_SATURATION, *((float *)ScenarioVarPointers[_cameraSaturation]));
 		CameraCurrent_saturation = *((float *)ScenarioVarPointers[_cameraSaturation]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float*)ScenarioVarPointers[_cameraContrast]) != CameraCurrent_contrast) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_CONTRAST, *((float*)ScenarioVarPointers[_cameraContrast]));
+		printf("cv VideoCapture set contrast new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraContrast]), CameraCurrent_contrast);
+		pg_webCam_capture.set(CV_CAP_PROP_CONTRAST, *((float*)ScenarioVarPointers[_cameraContrast]));
 		CameraCurrent_contrast = *((float*)ScenarioVarPointers[_cameraContrast]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float*)ScenarioVarPointers[_cameraGamma]) != CameraCurrent_gamma) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_GAMMA, *((float*)ScenarioVarPointers[_cameraGamma]));
+		printf("cv VideoCapture set gamma new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraGamma]), CameraCurrent_gamma);
+		pg_webCam_capture.set(CV_CAP_PROP_GAMMA, *((float*)ScenarioVarPointers[_cameraGamma]));
 		CameraCurrent_contrast = *((float*)ScenarioVarPointers[_cameraGamma]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraWB_R]) != CameraCurrent_WB_R
 		&& *((float *)ScenarioVarPointers[_cameraWB_R]) >= 0) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_WHITE_BALANCE_RED_V, *((float *)ScenarioVarPointers[_cameraWB_R]));
+		printf("cv VideoCapture set wbR new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraWB_R]), CameraCurrent_WB_R);
+		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_RED_V, *((float *)ScenarioVarPointers[_cameraWB_R]));
 		CameraCurrent_WB_R = *((float *)ScenarioVarPointers[_cameraWB_R]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraWB_B]) != CameraCurrent_WB_B) {
-		// cvSetCaptureProperty comment for see3cam
-		pg_camera_capture.set(CV_CAP_PROP_WHITE_BALANCE_BLUE_U, *((float *)ScenarioVarPointers[_cameraWB_B]));
+		printf("cv VideoCapture set wbB new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraWB_B]), CameraCurrent_WB_B);
+		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_BLUE_U, *((float *)ScenarioVarPointers[_cameraWB_B]));
 		CameraCurrent_WB_B = *((float *)ScenarioVarPointers[_cameraWB_B]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
@@ -1412,12 +1560,10 @@ int pg_initVideoCameraCapture(void) {
 	//printf("Initial Cam focus      %.2f\n", CameraCurrent_focus);
 	//printf("Initial Cam gamma      %.2f\n", CameraCurrent_gamma);
 	//printf("Initial Cam WB         %.2f %.2f\n", CameraCurrent_WB_B, CameraCurrent_WB_R);
-
-	return 1;
 }
 #endif
 
-bool pg_initMovieFrameTexture(Mat *movie_frame) {
+void pg_initMovieFrameTexture(Mat *movie_frame) {
 	glEnable(GL_TEXTURE_RECTANGLE);
 
 	// movie image
@@ -1436,7 +1582,6 @@ bool pg_initMovieFrameTexture(Mat *movie_frame) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	return true;
 }
 
 
@@ -1449,17 +1594,21 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 	// printf("VideoPb Init movie playback and capture first frame \n");
 
 	// film loading openCV
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-	pg_movie_capture.open(("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
-	pg_movie_capture.open((movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
+	if (movieFileName[currentlyPlaying_movieNo].find(':') == std::string::npos) {
+		pg_movie_capture.open(("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
+	}
+	else {
+		sprintf(AuxString, "/soundtrack_fileName %s",
+			movieFileName[currentlyPlaying_movieNo].c_str());
+		pg_movie_capture.open(movieFileName[currentlyPlaying_movieNo].c_str());
+	}
 	if (!pg_movie_capture.isOpened()) {
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-		printf("Movie file %s not loaded!\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
-		printf("Movie file %s is not loaded!\n", (movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
+		if (movieFileName[currentlyPlaying_movieNo].find(':') == std::string::npos) {
+			printf("Movie file %s not loaded!\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
+		}
+		else {
+			printf("Movie file %s is not loaded!\n", (movieFileName[currentlyPlaying_movieNo]).c_str());
+		}
 		return NULL;
 	}
 #if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
@@ -1483,10 +1632,9 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 	}
 
 	//  transfer to GPU
-	pg_initMovieFrameTexture(&pg_FirstMovieFrame);
-
 	pg_movie_frame_width = pg_FirstMovieFrame.cols;
 	pg_movie_frame_height = pg_FirstMovieFrame.rows;
+	pg_initMovieFrameTexture(&pg_FirstMovieFrame);
 
 	printf("Movie frame to GPU %dx%d\n", pg_movie_frame_width, pg_movie_frame_height);
 	pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
@@ -1495,7 +1643,7 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 }
 
 
-void* pg_initVideoMoviePlayback_nonThreaded(string * fileName) {
+void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 	// printf("VideoPb Init movie playback and capture first frame non threaded\n");
 
 	// film loading openCV
@@ -1541,16 +1689,10 @@ void* pg_initVideoMoviePlayback_nonThreaded(string * fileName) {
 #endif
 		return NULL;
 	}
-	if (!pg_initMovieFrameTexture(&pg_FirstMovieFrame)) {
-		printf("Movie frame not initialized!\n");
-		return NULL;
-	}
-	else {
-		pg_FirstMovieFrameIsAvailable = true;
-	}
-
 	pg_movie_frame_width = pg_FirstMovieFrame.cols;
 	pg_movie_frame_height = pg_FirstMovieFrame.rows;
+	pg_initMovieFrameTexture(&pg_FirstMovieFrame);
+	pg_FirstMovieFrameIsAvailable = true;
 
 	printf("Movie frame initialisation %dx%d\n", pg_movie_frame_width, pg_movie_frame_height);
 	pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
@@ -1600,7 +1742,7 @@ void pg_launch_diaporama(void) {
 				//printf("curr diap %d curr file %d asc %d next img %d\n", pg_CurrentDiaporamaDir,
 				//	pg_CurrentDiaporamaFile, ascendingDiaporama, nextCompressedImage);
 				// launches blending of the first image
-				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].blendStart = CurrentClockTime;
+				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].blendStart = float(CurrentClockTime);
 			}
 		}
 		// printf("ama initial files #%d\n", indPhoto);
@@ -1609,7 +1751,7 @@ void pg_launch_diaporama(void) {
 	printOglError(469);
 
 	// launches blending of the first image
-	pg_Photo_swap_buffer_data[0].blendStart = CurrentClockTime;
+	pg_Photo_swap_buffer_data[0].blendStart = float(CurrentClockTime);
 	for (int indPhoto = 1; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
 		pg_Photo_swap_buffer_data[1].blendStart = -1.0f;
 	}
@@ -1625,7 +1767,7 @@ bool pg_update_diaporama(void) {
 	// achieved while loading the new photos
 	if (pg_Photo_swap_buffer_data[0].blendStart < 0.0f
 		&& pg_Photo_swap_buffer_data[1].blendStart < 0.0f) {
-		pg_Photo_swap_buffer_data[0].blendStart = CurrentClockTime;
+		pg_Photo_swap_buffer_data[0].blendStart = float(CurrentClockTime);
 	}
 
 	for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
@@ -1649,7 +1791,7 @@ bool pg_update_diaporama(void) {
 		}
 
 		// ongoing blending
-		float playingTime = CurrentClockTime - pg_Photo_swap_buffer_data[indPhoto].blendStart;
+		double playingTime = CurrentClockTime - pg_Photo_swap_buffer_data[indPhoto].blendStart;
 		*photoWeightPtr = 0.0f;
 		// incay and decay are 0 if is_capture_diaporama
 		float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
@@ -1659,7 +1801,7 @@ bool pg_update_diaporama(void) {
 		if (playingTime < (incay + photo_diaporama_plateau + decay)) {
 			if (playingTime < incay) {
 				if (incay > 0.0f) {
-					*photoWeightPtr = playingTime / incay;
+					*photoWeightPtr = float(playingTime) / incay;
 				}
 				else {
 					*photoWeightPtr = 1.0f;
@@ -1670,7 +1812,7 @@ bool pg_update_diaporama(void) {
 			}
 			else {
 				if (decay > 0.0f) {
-					*photoWeightPtr = 1.0f - (playingTime - incay - photo_diaporama_plateau)
+					*photoWeightPtr = 1.0f - (float(playingTime) - incay - photo_diaporama_plateau)
 						/ decay;
 				}
 				else {
@@ -1728,130 +1870,7 @@ bool pg_update_diaporama(void) {
 	return valRet;
 }
 
-////////////////////////////////////////////////////////////////////
-// IMAGE TEXTURES
-////////////////////////////////////////////////////////////////////
-// Images used for displaying or for swapping
-// PhotoDataStruct describing a buffer of images stored in the GPU
-// these images are used to make piled rendering 
-// they are doubled by swap images used to smoothly change between images
-PhotoDataStruct **pg_Photo_buffer_data = NULL;
-int pg_nbCompressedImageDirs = 0;
-int *pg_nbCompressedImagesPerFolder = NULL;
-int *pg_firstCompressedFileInFolder = NULL;
-int pg_nbCompressedImages = 0;
-#if defined (TVW)
-PhotoDataStruct pg_Photo_mask_buffer_data[PG_PHOTO_NB_TEXTURES_TVW / 3] = { PhotoDataStruct() };
-// interpolation weight between image buffer swap buffer in each layer
-GLfloat pg_Photo_alphaSwap02[PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
-GLfloat pg_Photo_alphaSwap35[PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
-// image buffer layer weights
-GLfloat pg_Photo_weightTVW[PG_PHOTO_NB_TEXTURES_TVW] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
-GLfloat pg_Photo_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
-GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
-// GLfloat mask_inverse_buffer_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
-#endif
-// the index from which an image available for swapping is looked for
-int pg_IndInitialSwapPhoto = 0;
-
-//////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS FOR TESTING SUBDIR FILES (MADE FOR SAMPLES AND IMAGES)
-
-bool is_substring_index(char * char_string_subdir, int ind) {
-	std::string string_subdir(char_string_subdir);
-	char string_number[16];
-	sprintf(string_number, "_%03d", ind);
-	std::string string_number_s(string_number);
-
-	// std::cout << "subdir index: " + string_number_s << std::endl;
-
-	if (string_subdir.find(string_number_s) != std::string::npos) {
-		// std::cout << "*** FOUND: " + std::string(string_subdir) << " index " << ind << std::endl;
-		return true;
-	}
-	return false;
-}
-
-bool is_subdir_index(struct dirent *dirp, std::string *dirpath, int inddir) {
-	string filepath = *dirpath + dirp->d_name;
-	struct stat filestat;
-	// std::cout << "subdir path: " + filepath << std::endl;
-
-	// If the file is a directory and the name contains the integer 
-	if (stat(filepath.c_str(), &filestat)) {
-		std::cout << "subdir error: " + filepath << std::endl;
-		return false; // colleccts file status and returns 0 on success
-	}
-	if (S_ISDIR(filestat.st_mode) 
-		&& is_substring_index(dirp->d_name, inddir)) { // the file is a directory 
-													   // and contains the integer substring
-		// std::cout << "subdir found: " + filepath << std::endl;
-		return true;
-	}
-	// std::cout << "subdir not found: " + filepath << std::endl;
-	return false;
-}
-
-bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile) {
-	string filepath = *dirpath + "/" + dirp->d_name;
-	struct stat filestat;
-	// std::cout << "file path looking for: " + filepath << std::endl;
-
-	// If the file is a directory (or is in some way invalid) we'll skip it 
-	if (stat(filepath.c_str(), &filestat)) return false; // colleccts file status and returns 0 on success
-	if (S_ISDIR(filestat.st_mode)) { // the file is a directory 
-									 // and contains the integer substring
-		return false;
-	}
-	ifstream fin;
-	fin.open(filepath.c_str());
-	if (fin) {
-		if (is_substring_index(dirp->d_name, indfile)) {
-			fin.close();
-			return true;
-		}
-		fin.close();
-	}
-	return false;
-}
-
-string * is_subdir_subfile_index(std::string *dirpath, int inddir, int indfile) {
-	DIR *dp = opendir(dirpath->c_str());
-	// std::cout << "opening dir : (" << *dirpath << ")" << std::endl;
-	if (dp == NULL)
-	{
-		std::cout << "is_subdir_subfile_index 1 Error(" << errno << ") opening " << *dirpath << std::endl;
-		return NULL;
-	}
-	// std::cout << std::endl << "dir to get files of: " + *dirpath << std::endl;
-	struct dirent *dirp;
-	while ((dirp = readdir(dp))) {
-		if (is_subdir_index(dirp, dirpath, inddir)) {
-			string subdirpath(*dirpath + dirp->d_name);
-			// std::cout << std::endl << "reading files number " << indfile << " from subdir: " + subdirpath << std::endl;
-			DIR *subdp = opendir(subdirpath.c_str());
-			if (subdp == NULL)
-			{
-				// std::cout << "is_subdir_subfile_index 2 Error(" << errno << ") opening " << subdirpath << std::endl;
-				return NULL;
-			}
-			struct dirent *subdirp;
-			while ((subdirp = readdir(subdp))) {
-				if (is_subfile_index(subdirp, &subdirpath, indfile)) {
-					string * subdirfilepath = new string(subdirpath + "/" + subdirp->d_name);
-					// std::cout << "found: (" << inddir << "," << indfile << ") in " << *subdirfilepath << std::endl;
-					closedir(subdp);
-					closedir(dp);
-					return subdirfilepath;
-				}
-			}
-			closedir(subdp);
-		}
-	}
-	closedir(dp);
-	return NULL;
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // AFTER LOADING IN MEMORY, FOR DISPLAY: TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
@@ -1900,47 +1919,47 @@ int nextFileIndexMemoryLoop(int currentDirIndex, int *currentFileIndex, bool asc
 // ON THE DISK TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
 // AND POSSIBLY JUMPS TO NEXT DIRECTORY IF ALL IMAGES ARE USED
 // AND POSSIBLY JUMPS TO THE FIRST DIRECTORY IF ALL IMAGES ARE USED
-std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
-	int *currentFileIndex) {
-	// printf("dir path %s cur dir index %d cur file index %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex);
-	string * returnedString;
-	// next file in the same dir
-	if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-		(*currentFileIndex)++;
-		return returnedString;
-	}
-	else {
-		// first file in the same dir
-		(*currentFileIndex) = 0;
-		if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-			(*currentFileIndex)++;
-			return returnedString;
-		}
-		else {
-			// first file in the next dir
-			(*currentDirIndex)++;
-			(*currentFileIndex) = 0;
-			if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-				(*currentFileIndex)++;
-				return returnedString;
-			}
-			else {
-				// first file in the first dir
-				(*currentDirIndex) = 0;
-				(*currentFileIndex) = 0;
-				if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-					(*currentFileIndex)++;
-					return returnedString;
-				}
-				else {
-					std::cout << "nextFileIndexDiskLoop Error(" << errno << ") opening " << dirpath << std::endl;
-					return NULL;
-				}
-			}
-
-		}
-	}
-}
+//std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
+//	int *currentFileIndex) {
+//	// printf("dir path %s cur dir index %d cur file index %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex);
+//	string * returnedString;
+//	// next file in the same dir
+//	if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
+//		(*currentFileIndex)++;
+//		return returnedString;
+//	}
+//	else {
+//		// first file in the same dir
+//		(*currentFileIndex) = 0;
+//		if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
+//			(*currentFileIndex)++;
+//			return returnedString;
+//		}
+//		else {
+//			// first file in the next dir
+//			(*currentDirIndex)++;
+//			(*currentFileIndex) = 0;
+//			if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
+//				(*currentFileIndex)++;
+//				return returnedString;
+//			}
+//			else {
+//				// first file in the first dir
+//				(*currentDirIndex) = 0;
+//				(*currentFileIndex) = 0;
+//				if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
+//					(*currentFileIndex)++;
+//					return returnedString;
+//				}
+//				else {
+//					std::cout << "nextFileIndexDiskLoop Error(" << errno << ") opening " << dirpath << std::endl;
+//					return NULL;
+//				}
+//			}
+//
+//		}
+//	}
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // ON THE DISK TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
@@ -1948,150 +1967,149 @@ std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
 // USED FOR LOADING ALL IMAGES
 // STOPS AT THE LAST DIRECTORY
 // SUBDIRECTORY AND FILE NAMES SHOULD END WITH 000, 001, 002...
-string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex,
-	int maxFilesPerFolder) {
-	// printf("dir path %s cur dir index %d cur file index %d maxFilesPerFolder %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex, maxFilesPerFolder);
-	string * returnedString;
-	// next file in the same dir
-	if ((*currentFileIndex) < maxFilesPerFolder
-		&& (returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-		(*currentFileIndex)++;
-		return returnedString;
-	}
-	else {
-		// first file in the next dir
-		(*currentFileIndex) = 0;
-		(*currentDirIndex)++;
-		if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-			(*currentFileIndex)++;
-			return returnedString;
-		}
-		else {
-			// finishes
-			return NULL;
-		}
-	}
-}
+//string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex, int maxFilesPerFolder) {
+//	// printf("dir path %s cur dir index %d cur file index %d maxFilesPerFolder %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex, maxFilesPerFolder);
+//	string * returnedString;
+//	// next file in the same dir
+//	if ((maxFilesPerFolder < 0 || (*currentFileIndex) < maxFilesPerFolder)
+//		&& (returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
+//		//printf("dir %d file %d\n", *currentDirIndex, *currentFileIndex);
+//		(*currentFileIndex)++;
+//		return returnedString;
+//	}
+//	else {
+//		// first file in the next dir
+//		(*currentFileIndex) = 0;
+//		(*currentDirIndex)++;
+//		if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
+//			//printf("dir %d file %d\n", *currentDirIndex, *currentFileIndex);
+//			(*currentFileIndex)++;
+//			return returnedString;
+//		}
+//		else {
+//			// finishes
+//			return NULL;
+//		}
+//	}
+//}
 
 
 /////////////////////////////////////////////
 // 2D image loading
-bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
-	int height, bool verbose) {
-	int flieNameLenght = int(strlen(PhotoName));
+bool pg_load_compressed_photo(char * fileName, GLenum * photoFormat, unsigned int * compressedPhotoFormat, unsigned char** compressedPhotoRaster, int width, int height) {
+	FILE* fp;
+	unsigned char header[124];
+
+	/* try to open the file */
+	fp = fopen(fileName, "rb");
+
+	// Check for invalid input
+	if (fp == NULL) {
+		sprintf(ErrorStr, "Could not open or find the 2D image %s!", fileName); ReportError(ErrorStr);
+		return false;
+	}
+
+	/* verify the type of file */
+	char filecode[5];
+	fread(filecode, 1, 4, fp);
+	filecode[4] = 0;
+	if (strncmp(filecode, "DDS ", 4) != 0) {
+		sprintf(ErrorStr, "Incorrect compressed file type %s!", filecode); ReportError(ErrorStr);
+		fclose(fp);
+		return false;
+	}
+
+	/* get the surface desc */
+	fread(&header, 124, 1, fp);
+
+	unsigned int height_from_header = *(unsigned int*)&(header[8]);
+	unsigned int width_from_header = *(unsigned int*)&(header[12]);
+	unsigned int linearSize = *(unsigned int*)&(header[16]);
+	unsigned int mipMapCount = *(unsigned int*)&(header[24]);
+	unsigned int fourCC = *(unsigned int*)&(header[80]);
+	unsigned int ratio_h = 1;
+	unsigned int ratio_v = 1;
+
+	// Check for image size
+	if (width_from_header != u_int(width)) {
+		sprintf(ErrorStr, "Unexpected dds diaporama image width %s %d instead of %d!",
+			fileName, width_from_header, width); ReportError(ErrorStr);
+		//ratio_h = u_int(w) / width_from_header;
+		//ratio_v = u_int(h) / height_from_header;
+		return false;
+	}
+	if (height_from_header != u_int(height)) {
+		sprintf(ErrorStr, "Unexpected dds diaporama image height %s %d instead of %d!",
+			fileName, height_from_header, height); ReportError(ErrorStr);
+		//ratio_h = u_int(w) / width_from_header;
+		//ratio_v = u_int(h) / height_from_header;
+		return false;
+	}
+	*photoFormat = GL_RGB;
+
+	// Check for image size
+	if (mipMapCount > 1) {
+		sprintf(ErrorStr, "Unexpected number of mipmaps %s %d!",
+			fileName, mipMapCount); ReportError(ErrorStr);
+		return false;
+	}
+
+	// allocates memory
+	*compressedPhotoRaster
+		= (unsigned char*)malloc(linearSize * sizeof(unsigned char));
+	fread(*compressedPhotoRaster, 1, linearSize, fp);
+	//printf("linear size %d\n", linearSize);
+	/* close the file pointer */
+	fclose(fp);
+
+	switch (fourCC)
+	{
+	case FOURCC_DXT1:
+		*compressedPhotoFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+		//printf("compressed format DTX1\n");
+		break;
+	case FOURCC_DXT3:
+		*compressedPhotoFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+		//printf("compressed format DTX3\n");
+		break;
+	case FOURCC_DXT5:
+		*compressedPhotoFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+		//printf("compressed format DTX5\n");
+		break;
+	default:
+		sprintf(ErrorStr, "Unexpected compression format %s %d!",
+			fileName, fourCC); ReportError(ErrorStr);
+		free(compressedPhotoRaster);
+		compressedPhotoRaster = NULL;
+		return false;
+	}
+	//printf("Loaded photo %s compressed format %d\n", fileName, *compressedPhotoFormat);
+	return true;
+}
+bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, bool verbose) {
+	int fileNameLength = int(strlen(PhotoName));
 	char * extension;
 
-	h = height;
 	w = width;
+	h = height;
 	invert = toBeInverted;
 
 	const char * ptr = strrchr(PhotoName, '/');
 
-	if (verbose) {
-		printf("Loading [%s]\n", (ptr ? ptr + 1 : PhotoName));
-	}
-
-	if (flieNameLenght < 4) {
+	if (fileNameLength < 4) {
 		printf("Incorrect photo file name [%s]\n", PhotoName);
 		return false;
 	}
-	extension = PhotoName + flieNameLenght - 4;
+	extension = PhotoName + fileNameLength - 4;
 
-	// DXT1 FILE
+	if (verbose) {
+		printf("Loading [%s] extension %s \n", (ptr ? ptr + 1 : PhotoName), extension);
+	}
+
+	// DDS FILE
 	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
-		unsigned char header[124];
-
-		FILE *fp;
-
-		/* try to open the file */
-		fp = fopen(PhotoName, "rb");
-
-		// Check for invalid input
-		if (fp == NULL) {
-			sprintf(ErrorStr, "Could not open or find the 2D image %s!", PhotoName); ReportError(ErrorStr);
+		if (!pg_load_compressed_photo(PhotoName, &format, &compressedFormat, &compressedPhotoBitmap, w, h)) {
 			*(PhotoName) = 0;
-			return false;
-		}
-
-		/* verify the type of file */
-		char filecode[5];
-		fread(filecode, 1, 4, fp);
-		filecode[4] = 0;
-		if (strncmp(filecode, "DDS ", 4) != 0) {
-			sprintf(ErrorStr, "Incorrect compressed file type %s!", filecode); ReportError(ErrorStr);
-			*(PhotoName) = 0;
-			fclose(fp);
-			return false;
-		}
-
-		/* get the surface desc */
-		fread(&header, 124, 1, fp);
-
-		unsigned int height_from_header = *(unsigned int*)&(header[8]);
-		unsigned int width_from_header = *(unsigned int*)&(header[12]);
-		unsigned int linearSize = *(unsigned int*)&(header[16]);
-		unsigned int mipMapCount = *(unsigned int*)&(header[24]);
-		unsigned int fourCC = *(unsigned int*)&(header[80]);
-		unsigned int ratio_h = 1;
-		unsigned int ratio_v = 1;
-
-		// Check for image size
-		if (w > 0 && width_from_header != u_int(w)) {
-			sprintf(ErrorStr, "Unexpected dds diaporama image width %s %d instead of %d!",
-				(ptr ? ptr + 1 : PhotoName), width_from_header, w); ReportError(ErrorStr);
-			//ratio_h = u_int(w) / width_from_header;
-			//ratio_v = u_int(h) / height_from_header;
-			//*(PhotoName) = 0;
-			//return false;
-		}
-		if (h > 0 && height_from_header != u_int(h)) {
-			sprintf(ErrorStr, "Unexpected dds diaporama image height %s %d instead of %d!",
-				(ptr ? ptr + 1 : PhotoName), height_from_header, h); ReportError(ErrorStr);
-			//ratio_h = u_int(w) / width_from_header;
-			//ratio_v = u_int(h) / height_from_header;
-			//*(PhotoName) = 0;
-			//return false;
-		}
-		h = height_from_header;
-		w = width_from_header;
-		format = GL_RGB;
-
-		// Check for image size
-		if (mipMapCount > 1) {
-			sprintf(ErrorStr, "Unexpected number of mipmaps %s %d!",
-				PhotoName, mipMapCount); ReportError(ErrorStr);
-			*(PhotoName) = 0;
-			return false;
-		}
-
-		// allocates memory
-		compressedPhotoBitmap
-			= (unsigned char*)malloc(linearSize * sizeof(unsigned char));
-		fread(compressedPhotoBitmap, 1, linearSize, fp);
-		/* close the file pointer */
-		fclose(fp);
-
-		switch (fourCC)
-		{
-		case FOURCC_DXT1:
-			compressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-			// printf("compressed format #1\n");
-			break;
-		case FOURCC_DXT3:
-			compressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-			// printf("compressed format #2\n");
-			break;
-		case FOURCC_DXT5:
-			compressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-			// printf("compressed format #3\n");
-			break;
-		default:
-			sprintf(ErrorStr, "Unexpected compression format %s %d!",
-				PhotoName, fourCC); ReportError(ErrorStr);
-			*(PhotoName) = 0;
-			free(compressedPhotoBitmap);
-			compressedPhotoBitmap = NULL;
-			return false;
 		}
 	}
 	// JPEG FILE
@@ -2183,12 +2201,50 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width,
 	return true;
 }
 
+// only loads DDs in HD format width and height are power of two
+bool ClipFramesDataStruct::pg_loadClipFrames(char * fileName, int width, int height, bool verbose) {
+	int fileNameLength = int(strlen(fileName));
+	char* extension = fileName + fileNameLength - 4;
+	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
+		if (pg_load_compressed_photo(fileName, &format, &compressedFormat, &compressedPhotoBitmap, width, height)) {
+			return true;
+		}
+	}
+	*(fileName) = 0;
+	return false;
+}
+
+
 //////////////////////////////////////////////////////////////////
 // TRANSFERS BUFFER TO GPU
 
-bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle,
-	GLint components,
-	GLenum datatype, GLenum texturefilter) {
+bool pg_toGPUCompressedPhoto(unsigned int compressedPhotoFormat, int width, int height, unsigned char * compressedPhotoRaster, GLuint textureID, GLenum textureFilter) {
+	unsigned int blockSize
+		= (compressedPhotoFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
+	unsigned int size = ((width + 3) / 4) * ((height + 3) / 4) * blockSize;
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (float)textureFilter);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (float)textureFilter);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glCompressedTexImage2D(GL_TEXTURE_2D,     // Type of texture
+		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
+		compressedPhotoFormat,  // compression format
+		width,                 // Image width
+		height,                 // Image height
+		0,                 // Border width in pixels (can either be 1 or 0)
+		size,              // Image data type
+		compressedPhotoRaster);        // The actual image data itself
+
+	free(compressedPhotoRaster);
+	compressedPhotoRaster = NULL;
+	printOglError(6);
+	//printf("To GPU photo ID %d size %dx%d block size %d compressed format %d filter %d\n", textureID, width, height, blockSize, compressedPhotoFormat, textureFilter);
+	return false;
+}
+
+bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum datatype, GLenum texturefilter) {
 	/* // components GL_RGB8,
 	// datatype GL_UNSIGNED_BYTE
 	// format GL_RGB
@@ -2200,6 +2256,8 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle,
 	bool valret = true;
 
 	printOglError(6);
+
+	//printf("texture rect %d ID indCompressedImage %d compression %d\n", is_rectangle, texBuffID, compressedFormat);
 
 	// glActiveTexture (GL_TEXTURE0 + index);
 	if (is_rectangle && !compressedFormat) {
@@ -2243,33 +2301,16 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle,
 			valret = false;
 		}
 		else {
-			unsigned int blockSize
-				= (compressedFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
-			unsigned int size = ((w + 3) / 4)*((h + 3) / 4)*blockSize;
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, texBuffID);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (float)texturefilter);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (float)texturefilter);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-			glCompressedTexImage2D(GL_TEXTURE_2D,     // Type of texture
-				0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-				compressedFormat,  // compression format
-				w,                 // Image width
-				h,                 // Image height
-				0,                 // Border width in pixels (can either be 1 or 0)
-				size,              // Image data type
-				compressedPhotoBitmap);        // The actual image data itself
-
-			free(compressedPhotoBitmap);
-			compressedPhotoBitmap = NULL;
-			printOglError(6);
-			valret = false;
+			valret = pg_toGPUCompressedPhoto(compressedFormat, w, h, compressedPhotoBitmap, texBuffID, texturefilter);
 		}
 	}
 
 	// glGenerateMipmap(GL_TEXTURE_2D);
 	return valret;
+}
+
+bool ClipFramesDataStruct::pg_toGPUClipFrames(int w, int h, GLint components, GLenum datatype, GLenum texturefilter) {
+	return pg_toGPUCompressedPhoto(compressedFormat, w, h, compressedPhotoBitmap, texBuffID, texturefilter);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -2350,25 +2391,6 @@ bool update_image_buffer_swapping(void) {
 		}
 	}
 
-
-	/*
-	printf("swap %.1f %.1f %.1f %.1f %.1f %.1f \n", pg_Photo_alphaSwap02[0], pg_Photo_alphaSwap02[1], pg_Photo_alphaSwap02[2], pg_Photo_alphaSwap35[0], pg_Photo_alphaSwap35[1], pg_Photo_alphaSwap35[2]);
-
-	char * ptr[6];
-	for (int indImage = 0; indImage < PG_PHOTO_NB_TEXTURES_TVW;
-	indImage++) {
-	ptr[indImage] = strrchr(pg_Photo_buffer_data[indImage]->PhotoName, '/');
-	ptr[indImage] = (ptr[indImage] ? ptr[indImage] + 1 : pg_Photo_buffer_data[indImage]->PhotoName);
-	}
-	printf("img %s %s %s %s %s %s \n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
-	for (int indImage = 0; indImage < PG_PHOTO_NB_TEXTURES_TVW;
-	indImage++) {
-	ptr[indImage] = strrchr(pg_Photo_swap_buffer_data[indImage].PhotoName, '/');
-	ptr[indImage] = (ptr[indImage] ? ptr[indImage] + 1 : pg_Photo_swap_buffer_data[indImage].PhotoName);
-	}
-	printf("swap [%s] [%s] [%s] [%s] [%s] [%s] \n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
-	*/
-
 	return valRet;
 }
 
@@ -2410,7 +2432,8 @@ int available_swap_image_buffer(int indInitialImage) {
 // LOADS BUFFER IMAGE FROM FILE
 
 // threaded upload of the free swap image from a randomly chosen available layer
-bool pg_swap_image(int indcomprImage) {
+bool pg_swap_image(int indcomprImage) 
+
 	if (pg_Photo_buffer_data[indcomprImage]->texBuffID == NULL_ID) {
 		return false;
 	}
@@ -2604,7 +2627,6 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 
 
 bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder) {
-	std::string * fileName;
 	bool valret = true;
 
 	///////////////////////////////////////////////
@@ -2612,12 +2634,12 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	pg_nbCompressedImagesPerFolder = NULL;
 	pg_firstCompressedFileInFolder = NULL;
 	pg_Photo_buffer_data = NULL;
-	pg_CurrentDiaporamaDir = 0;
-	pg_CurrentDiaporamaFile = 0;
+	//pg_CurrentDiaporamaDir = 0;
+	//pg_CurrentDiaporamaFile = 0;
 
 	////////////////////////////////////////////
 	// CAPTURE DIAPORAMA
-	std::cout << "Directory name " << pg_ImageDirectory << std::endl;
+	//std::cout << "Directory name " << pg_ImageDirectory << std::endl;
 	if (pg_ImageDirectory.compare("captures") == 0) {
 		std::cout << "Multilayer Diaporama loading completed 0 files." << std::endl;
 		return false;
@@ -2625,19 +2647,29 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 
 	////////////////////////////////////////////
 	// COUNTS IMAGES AND FOLDERS
-	pg_CurrentDiaporamaDir = 0;
-	pg_CurrentDiaporamaFile = 0;
 	if (nbImages <= 0 || nbFolders <= 0) {
 		pg_nbCompressedImages = 0;
 		pg_nbCompressedImageDirs = 0;
-		std::cout << "Counting Diaporama Images " << std::endl;
-		while ((fileName
-			= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
-				&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))) {
-			// std::cout << "Image " << *fileName << " dir " << pg_CurrentDiaporamaDir << " file " << pg_CurrentDiaporamaFile << std::endl;
-			pg_nbCompressedImages++;
+		std::cout << "Counting Diaporama Images " << pg_ImageDirectory << std::endl;
+		if (fs::is_directory(pg_ImageDirectory)) {
+			auto dirIter = fs::directory_iterator(pg_ImageDirectory);
+			for (auto& dir_entry : dirIter)
+			{
+				if (dir_entry.is_directory())
+				{
+					++pg_nbCompressedImageDirs;
+
+					auto subDirIter = fs::directory_iterator(dir_entry);
+					for (auto& subdir_entry : subDirIter)
+					{
+						if (subdir_entry.is_regular_file())
+						{
+							++pg_nbCompressedImages;
+						}
+					}
+				}
+			}
 		}
-		pg_nbCompressedImageDirs = pg_CurrentDiaporamaDir;
 	}
 	else {
 		pg_nbCompressedImages = nbImages;
@@ -2652,7 +2684,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	}
 	pg_nbCompressedImagesPerFolder = new int[pg_nbCompressedImageDirs];
 	pg_firstCompressedFileInFolder = new int[pg_nbCompressedImageDirs];
-	pg_Photo_buffer_data = new PhotoDataStruct *[pg_nbCompressedImages];
+	pg_Photo_buffer_data = new PhotoDataStruct * [pg_nbCompressedImages];
 	for (int ind = 0; ind < pg_nbCompressedImages; ind++) {
 		pg_Photo_buffer_data[ind] = new PhotoDataStruct();
 	}
@@ -2661,49 +2693,94 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 		pg_firstCompressedFileInFolder[ind] = -1;
 	}
 	int indCompressedImage = 0;
+	int indCompressedImageDirs = 0;
 	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages << " images from " << pg_nbCompressedImageDirs << " folders" << std::endl;
-	pg_CurrentDiaporamaDir = 0;
-	pg_CurrentDiaporamaFile = 0;
-	while ((fileName
-		= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
-			&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
-		&& indCompressedImage < pg_nbCompressedImages
-		&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
-		// std::cout << "file " << *fileName << std::endl;
-		// counts files in dir
-		pg_nbCompressedImagesPerFolder[pg_CurrentDiaporamaDir] = pg_CurrentDiaporamaFile;
-		// if first file, stores the pointer to the file index, so that ID can be retrived 
-		// later from index in folder
-		if (pg_CurrentDiaporamaFile == 1) {
-			pg_firstCompressedFileInFolder[pg_CurrentDiaporamaDir] = indCompressedImage;
-		}
-		if (*(pg_Photo_buffer_data[indCompressedImage]->PhotoName) == 0) {
-			if (!pg_Photo_buffer_data[indCompressedImage]->IDallocated) {
-				glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
-				pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
+	//pg_CurrentDiaporamaDir = 0;
+	//pg_CurrentDiaporamaFile = 0;
+	if (fs::is_directory(pg_ImageDirectory)) {
+		auto dirIter = fs::directory_iterator(pg_ImageDirectory);
+		for (auto& dir_entry : dirIter)
+		{
+			pg_firstCompressedFileInFolder[indCompressedImageDirs] = indCompressedImage;
 
-				// stores the photo file name
-				strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName,
-					fileName->c_str());
+			if (indCompressedImageDirs < pg_nbCompressedImageDirs && dir_entry.is_directory())
+			{
+				int initialFileIndex = indCompressedImage;
+				auto subDirIter = fs::directory_iterator(dir_entry);
+				for (auto& subdir_entry : subDirIter)
+				{
+					if (indCompressedImage < pg_nbCompressedImages && subdir_entry.is_regular_file())
+					{
+						if (pg_Photo_buffer_data[indCompressedImage]->texBuffID == -1) {
+							// allocates a texture ID for the image
+							glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
+							pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
 
-				// loads the images with a size that corresponds to the screen size
-				valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
+							// stores the photo file name
+							strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName, (char*)(subdir_entry.path().string().c_str()));
+
+							// loads the images with a size that corresponds to the screen size
+							valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
 					true, leftWindowWidth_powerOf2, window_height_powerOf2, false);
 
-				// frees file name string memory
-				delete fileName;
-				fileName = NULL;
+							// loads the compressed image into GPU
+							pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
+							// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
 
-				pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false,
-					GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
-				// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
+							printOglError(8);
 
-				printOglError(8);
+							++indCompressedImage;
+						}
+					}
+				}
+				pg_nbCompressedImagesPerFolder[indCompressedImageDirs] = indCompressedImage - initialFileIndex;
+				++indCompressedImageDirs;
 			}
 		}
-		indCompressedImage++;
 	}
+	//while ((fileName
+	//	= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
+	//		&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
+	//	&& indCompressedImage < pg_nbCompressedImages
+	//	&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
+	//	//std::cout << "file " << *fileName << " dir " << pg_CurrentDiaporamaDir << std::endl;
+	//	// counts files in dir
+	//	pg_nbCompressedImagesPerFolder[pg_CurrentDiaporamaDir] = pg_CurrentDiaporamaFile;
+	//	// if first file, stores the pointer to the file index, so that ID can be retrived 
+	//	// later from index in folder
+	//	if (pg_CurrentDiaporamaFile == 1) {
+	//		pg_firstCompressedFileInFolder[pg_CurrentDiaporamaDir] = indCompressedImage;
+	//	}
+	//	if (*(pg_Photo_buffer_data[indCompressedImage]->PhotoName) == 0) {
+	//		if (!pg_Photo_buffer_data[indCompressedImage]->IDallocated) {
+	//			// allocates a texture ID for the image
+	//			glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
+	//			pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
+
+	//			// stores the photo file name
+	//			strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName, fileName->c_str());
+
+	//			// loads the images with a size that corresponds to the screen size
+	//			valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
+	//				true, window_width_powerOf2, window_height_powerOf2, false);
+
+	//			// frees file name string memory
+	//			delete fileName;
+	//			fileName = NULL;
+
+	//			// loads the compressed image into GPU
+	//			pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
+	//			// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
+
+	//			printOglError(8);
+	//		}
+	//	}
+	//	indCompressedImage++;
+	//}
 	std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages << " files." << std::endl;
+	//for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
+	//	printf("Diaporama No %d, first image %d Nb images %d\n", ind + 1, pg_firstCompressedFileInFolder[ind], pg_nbCompressedImagesPerFolder[ind]);
+	//}
 	//std::cout << "Folders index/nbFiles/1stFileIndex";
 	//for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
 	//	std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
@@ -2719,3 +2796,186 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	}
 	return valret;
 }
+
+#ifdef PG_WITH_CLIPS
+
+std::string get_stem(const fs::path& p) { return (p.stem().string()); }
+bool  pg_ReadInitalClipFramesTextures(void) {
+	bool valret = true;
+
+	///////////////////////////////////////////////
+	// NULL INITIALIZATIONS
+	pg_nbCompressedClipFramesPerFolder = NULL;
+	pg_firstCompressedClipFramesInFolder = NULL;
+	pg_ClipFrames_buffer_data = NULL;
+
+	////////////////////////////////////////////
+	// COUNTS IMAGES AND FOLDERS
+	pg_nbCompressedClipFrames = 0;
+	pg_nbClips = 0;
+
+	std::cout << "Clip Directory: " << pg_ClipDirectory << std::endl;
+	if (pg_ClipDirectory == "") {
+		return false;
+	}
+
+	std::cout << "Counting ClipFrames " << std::endl;
+	if (fs::is_directory(pg_ClipDirectory)) {
+		auto dirIter = fs::directory_iterator(pg_ClipDirectory);
+		for (auto& dir_entry : dirIter)
+		{
+			if (dir_entry.is_directory())
+			{
+				++pg_nbClips;
+				
+				auto subDirIter = fs::directory_iterator(dir_entry);
+				for (auto& subdir_entry : subDirIter)
+				{
+					if (subdir_entry.is_regular_file())
+					{
+						++pg_nbCompressedClipFrames;
+					}
+				}
+			}
+		}
+	}
+	//while ((fileName
+	//	= nextFileIndexDiskNoLoop(&pg_ClipDirectory, &pg_CurrentClipFramesDir, &pg_CurrentClipFramesFile, -1))) {
+	//	//std::cout << "ClipFrames " << *fileName << " dir " << pg_CurrentDiaporamaDir << " file " << pg_CurrentDiaporamaFile << std::endl;
+	//	pg_nbCompressedClipFrames++;
+	//}
+	//pg_nbClips = pg_CurrentClipFramesDir;
+
+	////////////////////////////////////////////
+	// LOADS IMAGES FROM FOLDERS
+	if (pg_nbClips <= 0) {
+		std::cout << "Clip frames loading completed 0 files." << std::endl;
+		return false;
+	}
+	std::cout << "Clip frames loading completed " << pg_nbClips << " dirs." << std::endl;
+
+	// allocates first frame indices and number of frames for each clip
+	pg_nbCompressedClipFramesPerFolder = new int[pg_nbClips];
+	pg_firstCompressedClipFramesInFolder = new int[pg_nbClips];
+	for (int ind = 0; ind < pg_nbClips; ind++) {
+		pg_nbCompressedClipFramesPerFolder[ind] = 0;
+		pg_firstCompressedClipFramesInFolder[ind] = -1;
+	}
+
+	// allocates clip data
+	pg_ClipFrames_buffer_data = new ClipFramesDataStruct * [pg_nbCompressedClipFrames];
+	for (int ind = 0; ind < pg_nbCompressedClipFrames; ind++) {
+		pg_ClipFrames_buffer_data[ind] = new ClipFramesDataStruct();
+	}
+
+	int indCompressedClipFrames = 0;
+	int indCompressedClipDirs = 0;
+	std::cout << "Loading Clip Frames " << pg_nbCompressedClipFrames << " images from " << pg_nbClips << " folders" << std::endl;
+	//pg_CurrentClipFramesDir = 0;
+	//pg_CurrentClipFramesFile = 0;
+	//std::cout << "Counting ClipFrames " << std::endl;
+	if (fs::is_directory(pg_ClipDirectory)) {
+		auto dirIter = fs::directory_iterator(pg_ClipDirectory);
+		for (auto& dir_entry : dirIter)
+		{
+			string dir_path = dir_entry.path().string();
+			size_t last_separator = max(dir_path.find_last_of('/'), dir_path.find_last_of('\\'));
+			string dir_name = dir_path;
+			if (last_separator != string::npos) {
+				dir_name = dir_path.substr(last_separator + 1);
+			}
+			std::cout << "dir " << "(" << indCompressedClipDirs << ")" << dir_path << ", name: " << dir_name << std::endl;
+			pg_firstCompressedClipFramesInFolder[indCompressedClipDirs] = indCompressedClipFrames;
+
+			if (indCompressedClipDirs < pg_nbClips  && dir_entry.is_directory())
+			{
+				int initialClipFrameIndex = indCompressedClipFrames;
+				auto subDirIter = fs::directory_iterator(dir_entry);
+				for (auto& subdir_entry : subDirIter)
+				{
+					if (indCompressedClipFrames < pg_nbCompressedClipFrames && subdir_entry.is_regular_file())
+					{
+						if (pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID == -1) {
+							// allocates a texture ID for the image
+							glGenTextures(1, &(pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID));
+
+							// loads the images with a size that corresponds to the screen size
+							//printf("file %s\n", (char *)subdir_entry.path().string().c_str());
+							//std::cout << "file " << subdir_entry.path() << std::endl;
+							valret &= pg_ClipFrames_buffer_data[indCompressedClipFrames]
+								->pg_loadClipFrames((char*)(subdir_entry.path().string().c_str()), clip_image_width, clip_image_height, false);
+
+							// loads the compressed image into GPU
+							pg_ClipFrames_buffer_data[indCompressedClipFrames]->pg_toGPUClipFrames(clip_image_width, clip_image_height, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
+							// printf("texture ID indCompressedClipFrames %d\n", pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID);
+
+							printOglError(8);
+							++indCompressedClipFrames;
+						}
+					}
+				}
+				pg_nbCompressedClipFramesPerFolder[indCompressedClipDirs] = indCompressedClipFrames - initialClipFrameIndex;
+				pg_clip_tracks.push_back(clip_track(indCompressedClipDirs, indCompressedClipFrames - initialClipFrameIndex, dir_name));
+				++indCompressedClipDirs;
+			}
+		}
+	}
+	std::cout << "Clip Frames loading completed " << pg_nbCompressedClipFrames << " frames." << std::endl;
+	//for (int ind = 0; ind < pg_nbClips; ind++) {
+	//	printf("Clip No %d, first frame %d Nb frames %d\n", ind + 1, pg_firstCompressedClipFramesInFolder[ind], pg_nbCompressedClipFramesPerFolder[ind]);
+	//}
+
+	// stores predefined cues if there are some
+	fs::path dir(pg_ClipDirectory);
+	fs::path file("cues.txt");
+	fs::path full_path = dir / file;
+	printf("cues file path %ls\n", full_path.c_str());
+	if (fs::is_regular_file(full_path)) {
+		std::ifstream cuesFile(full_path);
+		std::stringstream  sstream;
+		string line;
+		int clipNo;
+		int cue0 = -1, cue1 = -1, cue2 = -1;
+		if (!cuesFile) {
+			sprintf(ErrorStr, "Error: cues file [%ls] not opened!", full_path.c_str()); ReportError(ErrorStr); 
+		}
+		while (std::getline(cuesFile, line)) {
+			stringstreamStoreLine(&sstream, &line);
+			sstream >> clipNo;
+			clipNo--;
+			int cues[_NbMaxCues] = { -1 };
+			if (_NbMaxCues >= 3 && clipNo < pg_nbClips) {
+				sstream >> cues[0];
+				sstream >> cues[1];
+				sstream >> cues[2];
+
+				for (int ind = 0; ind < 3; ind++) {
+					if (cues[ind] >= 0) {
+						pg_clip_tracks[clipNo].set_cue(ind, cues[ind]);
+						//printf("Cue for clip %d #%d at frame %d\n", clipNo, ind, cues[ind]);
+					}
+				}
+			}
+		}
+	}
+	else {
+		sprintf(ErrorStr, "Error: cues file [%ls] not provided - automatic cues!", full_path.c_str()); ReportError(ErrorStr); 
+		for (int clipNo = 0; clipNo < pg_nbClips; clipNo++) {
+			printf("Clip No %d, first frame %d Nb frames %d\n", clipNo + 1, pg_firstCompressedClipFramesInFolder[clipNo], pg_nbCompressedClipFramesPerFolder[clipNo]);
+			//cues[ind] = rand_0_1 * pg_nbCompressedClipFramesPerFolder[ind]
+			int cues[_NbMaxCues] = { -1 };
+			cues[0] = 0;
+			cues[1] = int(floor(rand_0_1 * pg_nbCompressedClipFramesPerFolder[clipNo])) % pg_nbCompressedClipFramesPerFolder[clipNo];
+			cues[2] = int(floor(rand_0_1 * pg_nbCompressedClipFramesPerFolder[clipNo])) % pg_nbCompressedClipFramesPerFolder[clipNo];
+			pg_clip_tracks[clipNo].set_cue(0, 0);
+			pg_clip_tracks[clipNo].set_cue(1, cues[1]);
+			pg_clip_tracks[clipNo].set_cue(2, cues[2]);
+			printf("Clip No %d, first frame %d Nb frames %d cues (%d, %d, %d)\n", 
+				clipNo + 1, pg_firstCompressedClipFramesInFolder[clipNo], pg_nbCompressedClipFramesPerFolder[clipNo],
+				cues[0], cues [1], cues[2]);
+		}
+	}
+
+	return valret;
+}
+#endif

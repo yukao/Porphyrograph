@@ -69,6 +69,11 @@ int                      stepSvg;
 bool                     outputSvg;
 int						 indSvgSnapshot;
 
+// SVG PATHs from scenario
+int                      nb_svg_paths = 0;
+SVG_path                 *SVGpaths = NULL;
+int						 current_path_group = 0;
+
 // JPG capture
 string                    Jpg_file_name;
 int                      beginJpg;
@@ -215,8 +220,8 @@ void stringstreamStoreLine(std::stringstream *sstream, std::string *line) {
 	(*sstream).str((*line));
 }
 
-float stringToDuration(string percentOrAbsoluteDuration, float full_length, int ind_scene, int ind_var) {
-	float returnedPercent = 0.f;
+double stringToDuration(string percentOrAbsoluteDuration, double full_length, int ind_scene, int ind_var) {
+	double returnedPercent = 0.f;
 	if (percentOrAbsoluteDuration.back() == 's') {
 		percentOrAbsoluteDuration.resize(size_t(percentOrAbsoluteDuration.size() - 1));
 		returnedPercent = std::stof(percentOrAbsoluteDuration);
@@ -233,8 +238,39 @@ float stringToDuration(string percentOrAbsoluteDuration, float full_length, int 
 			sprintf(ErrorStr, "Error: in scene %d var %d relative duration %s negative or greater than 1.\n", ind_scene, ind_var, percentOrAbsoluteDuration.c_str()); ReportError(ErrorStr); throw 50;
 		}
 	}
-	return min(max(returnedPercent, 0.f), 1.f);
+	return min(max(float(returnedPercent), 0.f), 1.f);
 }
+
+void light_channel_string_to_channel_no(string a_light_channel_string, int* light_channel, int* light_channel_fine, int nb_channels) {
+	if (a_light_channel_string.find('/') != std::string::npos) {
+		vector<string> two_light_channels_string = split_string(a_light_channel_string, '/');
+		// double light channel
+		if (two_light_channels_string.size() == 2 && std::all_of(two_light_channels_string[0].begin(), two_light_channels_string[0].end(), ::isdigit)
+			&& std::all_of(two_light_channels_string[1].begin(), two_light_channels_string[1].end(), ::isdigit)) {
+			*light_channel = stoi(two_light_channels_string[0]);
+			if (*light_channel > nb_channels || *light_channel <= 0) {
+				sprintf(ErrorStr, "Unregistered light group %s/%d in light command (max: %d)!", two_light_channels_string[0].c_str(), *light_channel, nb_channels); ReportError(ErrorStr);
+			}
+			*light_channel_fine = stoi(two_light_channels_string[1]);
+			if (*light_channel_fine > nb_channels || *light_channel_fine <= 0) {
+				sprintf(ErrorStr, "Unregistered light group %s/%d in light command (max: %d)!", two_light_channels_string[1].c_str(), *light_channel_fine, nb_channels); ReportError(ErrorStr);
+			}
+		}
+	}
+	else {
+		// single light channel
+		if (std::all_of(a_light_channel_string.begin(), a_light_channel_string.end(), ::isdigit)) {
+			*light_channel = stoi(a_light_channel_string);
+			// 0: no light channel for this command
+			// 1-nb_channels: one of the available channels
+			if (*light_channel > nb_channels || *light_channel < 0) {
+				sprintf(ErrorStr, "Out of range light channel %s/%d in light command (max: %d)!", a_light_channel_string.c_str(), *light_channel, nb_channels); ReportError(ErrorStr);
+			}
+			*light_channel_fine = 0;
+		}
+	}
+}
+
 
 void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin) {
 	CurrentWindow = new pg_Window();
@@ -245,6 +281,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	string ID;
 	string temp;
 	string temp2;
+	string temp3;
 	std::stringstream  sstream;
 
 	/////////////////////////////////////////////////////////////////
@@ -412,7 +449,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// ID
 	std::getline(confFin, line);
 
-	IP_Clients = new pg_IPClient *[nb_IP_Clients];
+	IP_Clients = new pg_IPClient * [nb_IP_Clients];
 	for (int ind_IP_Client = 0; ind_IP_Client < nb_IP_Clients; ind_IP_Client++) {
 		IP_Clients[ind_IP_Client] = new pg_IPClient();
 
@@ -443,6 +480,104 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// /udp_remote_client
 	std::getline(confFin, line);
+
+#ifdef PG_WITH_CAMERA_CAPTURE
+	// webCam Number of cameras
+	std::getline(confFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("webCam") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"webCam\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_webCam;
+	 std::cout << "Nb webCams: " << nb_webCam << "\n";
+
+	// VERBATIM
+	std::getline(confFin, line);
+	// TYPE
+	std::getline(confFin, line);
+	// ID
+	std::getline(confFin, line);
+
+	pg_webCams = new webCam[nb_webCam];
+	for (int ind_webCam = 0; ind_webCam < nb_webCam; ind_webCam++) {
+		std::getline(confFin, line);
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> temp; // string "camera"
+		sstream >> pg_webCams[ind_webCam].cameraString; // string "cameraString"
+
+		sstream >> temp; // string "cameraID"
+		try {
+			pg_webCams[ind_webCam].cameraID = stoi(temp);
+		}
+		catch (...) {
+			sprintf(ErrorStr, "Error: webcam configuration incorrect cameraID \"%s\"\n", temp.c_str()); ReportError(ErrorStr); throw 50;
+		}
+		
+		sstream >> temp2; // string "cameraWidth"
+		try {
+			pg_webCams[ind_webCam].cameraWidth = stoi(temp2);
+		}
+		catch (...) {
+			sprintf(ErrorStr, "Error: webcam configuration incorrect cameraWidth \"%s\"\n", temp2.c_str()); ReportError(ErrorStr); throw 50;
+		}
+
+		sstream >> temp3; // string "cameraHeight"
+		try {
+			pg_webCams[ind_webCam].cameraHeight = stoi(temp3);
+		}
+		catch (...) {
+			sprintf(ErrorStr, "Error: webcam configuration incorrect cameraHeight \"%s\"\n", temp3.c_str()); ReportError(ErrorStr); throw 50;
+		}		//std::cout << temp2 << "\n";
+	}
+
+	// /webCam
+	std::getline(confFin, line);
+
+
+	// remote_IPCam Number of cameras
+	std::getline(confFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("remote_IPCam") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"remote_IPCam\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_IPCam;
+	// std::cout << "Nb clients: " << nb_IP_Clients << "\n";
+
+	// VERBATIM
+	std::getline(confFin, line);
+	// TYPE
+	std::getline(confFin, line);
+	// ID
+	std::getline(confFin, line);
+
+	pg_IPCam_capture = new VideoCapture[nb_IPCam];
+	pg_IPCam_capture_address = new String[nb_IPCam];
+	for (int ind_IPCam = 0; ind_IPCam < nb_IPCam; ind_IPCam++) {
+		std::getline(confFin, line);
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string "ID"
+		sstream >> temp; // string "IPCam_IP"
+		sstream >> temp2; // string "IPCam_Port"
+		sstream >> temp3; // string "IPCam_Device"
+		//String fulllAddress = "http://" + temp + ":" + temp2;
+		// "rtsp://[username]:[pass]@[ip address]/media/video1"
+		// fulllAddress = "rtsp://" + temp + "/H264?ch=1&subtype=0";
+		// fulllAddress = "rtsp://" + temp + "/H264?ch=1&subtype=0";
+		//fulllAddress = "rtsp://" + temp + "/H264";
+		//fulllAddress = "rtsp://" + temp + "/mjpeg.cgi?user=yukao.nagemi@gmail.com&password=Fire5432_&channel=0&.mjpg";
+		//fulllAddress = "rtsp://yukao.nagemi@gmail.com:Fire5432_@" + temp + ":" + temp2 + "/onvif1";
+		//fulllAddress = "rtsp://" + temp + ":" + temp2 + "/onvif1";
+		//fulllAddress = "rtsp://" + temp + "/onvif1";
+		// rtsp://192.168.1.65:8554/main
+		//fulllAddress = "rtsp://192.168.1.65:8554/main";
+		pg_IPCam_capture_address[ind_IPCam] = "rtsp://" + temp + ":" + temp2 + "/" + temp3;
+	}
+
+	// /remote_IPCam
+	std::getline(confFin, line);
+#endif
 
 	// shader_files Number of files
 	std::getline(confFin, line);
@@ -597,12 +732,17 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			sprintf(ErrorStr, "Error: missing initial value %s %d\n", temp.c_str(), indP); ReportError(ErrorStr); throw 50;
 		}
 		sstream >> temp;
-		bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
-		if (!has_only_digits) {
-			sprintf(ErrorStr, "Error: non numeric variable initial value for var %d (%s)\n", indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+		if (ScenarioVarTypes[indP] != _pg_string) {
+			bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
+			if (!has_only_digits) {
+				sprintf(ErrorStr, "Error: non numeric variable initial value for var %d (%s)\n", indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			}
+			InitialValuesInterpVar[indP].val_num = std::stod(temp);
 		}
-		InitialValuesInterpVar[indP] = std::stod(temp);
-		//std::cout << InitialValuesInterpVar[indP] << " ";
+		else {
+			InitialValuesInterpVar[indP].val_string = temp;
+		}
+		//std::cout << indP << " " << InitialValuesInterpVar[indP] << " \n";
 		LastGUIShippedValuesInterpVar[indP] = MAXFLOAT;
 	}
 	// checks that the number of variables is what is expected
@@ -628,9 +768,17 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_Scenario = new Scene[pg_NbScenes];
 
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
-		pg_Scenario[indScene].init();
+		pg_Scenario[indScene].init_scene();
 	}
-	pg_InterpolationScene.init();
+	pg_InterpolationScene.init_scene();
+	pg_variable_updated = new bool[_MaxInterpVarIDs];
+	pg_variable_param_input_type = new pg_Parameter_Input_Type[_MaxInterpVarIDs];
+	pg_variable_scenario_or_gui_command_value = new ScenarioValue[_MaxInterpVarIDs];
+	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
+		pg_variable_updated[indVar] = false;
+		pg_variable_param_input_type[indVar] = _PG_SCENARIO;
+		pg_variable_scenario_or_gui_command_value[indVar] = ScenarioValue();
+	}
 
 	printf("Loading %d scenes with %d variables\n", pg_NbScenes, _MaxInterpVarIDs);
 	for (int indScene = 0; indScene < pg_NbScenes; indScene++) {
@@ -683,6 +831,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		// verbatim
 		std::getline(scenarioFin, line);
 		// std::cout << "verbatim: " << line << "\n";
+		stringstreamStoreLine(&sstream, &line);
+		int sceneNo;
+		sstream >> sceneNo; // string scene
+		if (sceneNo != indScene + 1) {
+			sprintf(ErrorStr, "Error: scene number not set for scene [%d], run RenumberScenesScenario macro!", indScene + 1); ReportError(ErrorStr); throw 50;
+		}
+		//printf("scene %d: %s\n", sceneNo, pg_Scenario[indScene].scene_IDs.c_str());
 		// var comment
 		std::getline(scenarioFin, line);
 		// std::cout << "var comment: " << line << "\n";
@@ -692,15 +847,22 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		stringstreamStoreLine(&sstream, &line);
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 			if (sstream.eof()) {
-				sprintf(ErrorStr, "Error: missing initial value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+				sprintf(ErrorStr, "Error: missing initial value in scene %d var %d (%s)\n", 
+					indScene + 1, indP, ScenarioVarMessages[indP]); ReportError(ErrorStr); throw 50;
 			}
 			sstream >> temp;
-			bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
-			if (!has_only_digits) {
-				sprintf(ErrorStr, "Error: non numeric variable initial value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			if (ScenarioVarTypes[indP] == _pg_string) {
+				pg_Scenario[indScene].scene_initial_parameters[indP].val_string = temp;
 			}
 			else {
-				pg_Scenario[indScene].scene_initial_parameters[indP] = std::stod(temp);
+				bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
+				if (!has_only_digits) {
+					sprintf(ErrorStr, "Error: non numeric variable initial value in scene %d var %d (%s) type %d (%s)\n", 
+						indScene + 1, indP, ScenarioVarMessages[indP], ScenarioVarTypes[indP], ScenarioVarMessages[indP]); ReportError(ErrorStr); throw 50;
+				}
+				else {
+					pg_Scenario[indScene].scene_initial_parameters[indP].val_num = std::stod(temp);
+				}
 			}
 		}
 		// checks that the number of variables is what is expected
@@ -719,12 +881,19 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				sprintf(ErrorStr, "Error: missing final value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
 			}
 			sstream >> temp;
-			bool has_only_digits = (temp.find_first_not_of("0123456789-.") == string::npos);
-			if (!has_only_digits) {
-				sprintf(ErrorStr, "Error: non numeric variable final value in scene %d var %d (%s)\n", indScene + 1, indP, temp.c_str()); ReportError(ErrorStr); throw 50;
+			if (ScenarioVarTypes[indP] == _pg_string) {
+				pg_Scenario[indScene].scene_final_parameters[indP].val_string = temp;
 			}
-			pg_Scenario[indScene].scene_final_parameters[indP] = std::stod(temp);
-			// std::cout << scene_final_parameters[indScene][indP] << " ";
+			else {
+				bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
+				if (!has_only_digits) {
+					sprintf(ErrorStr, "Error: non numeric variable final value in scene %d var %d type %d (%s)\n", indScene + 1, indP, ScenarioVarTypes[indP], temp.c_str()); ReportError(ErrorStr); throw 50;
+				}
+				else {
+					pg_Scenario[indScene].scene_final_parameters[indP].val_num = std::stod(temp);
+				}
+			}
+			// std::cout << scene_final_parameters[indScene][indP].val_num << " ";
 		}
 		// checks that the number of variables is what is expected
 		//sstream >> ID;
@@ -734,6 +903,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
+		//printf("line %s\n", line.c_str());
 		// sstream = std::stringstream(line);
 
 		// storing the interpolation mode
@@ -745,14 +915,16 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			pg_Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
 			pg_Scenario[indScene].scene_interpolations[indP].duration = 1.0;
 			pg_Scenario[indScene].scene_interpolations[indP].midTermValue
-				= 0.5 * (pg_Scenario[indScene].scene_initial_parameters[indP]
-					+ pg_Scenario[indScene].scene_final_parameters[indP]);
+				= 0.5 * (pg_Scenario[indScene].scene_initial_parameters[indP].val_num
+					+ pg_Scenario[indScene].scene_final_parameters[indP].val_num);
 
 			if (sstream.eof()) {
-				sprintf(ErrorStr, "Error: missing interpolation value in scene %d var %d (%s)\n", indScene + 1, indP + 1, temp.c_str()); ReportError(ErrorStr); throw 50;
+				sprintf(ErrorStr, "Error: missing interpolation value in scene %d (%s) var %d (%s)\n", 
+					indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, ScenarioVarMessages[indP]); ReportError(ErrorStr); throw 50;
 			}
 
-			sstream >> std::skipws >> valCh;
+			sstream >> std::skipws >> temp;
+			valCh = temp[0];
 			// printf("valch %d\n" , (int)valCh );
 
 			switch (valCh) {
@@ -767,8 +939,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				if (valCh == 'L') {
 					sstream >> vals;
 					sstream >> val2s;
-					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
-					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of L(inear) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -807,8 +979,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				if (valCh == 'C') {
 					sstream >> vals;
 					sstream >> val2s;
-					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
-					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of C(osine) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -844,8 +1016,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				if (valCh == 'Z') {
 					sstream >> vals;
 					sstream >> val2s;
-					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
-					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of Z(Bezier) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -883,8 +1055,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				if (valCh == 'E') {
 					sstream >> vals;
 					sstream >> val2s;
-					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
-					float val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0 || val2 < 0.0) {
 						sprintf(ErrorStr, "Error: one of values of E(exponential) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
 					}
@@ -912,9 +1084,43 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				// b: bell curve interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
 				// BELL INTERPOLATION
 			case 'b':
+			case 'B':
 				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
 					= pg_bell_interpolation;
 				sstream >> pg_Scenario[indScene].scene_interpolations[indP].midTermValue;
+				//printf("Bell interpolation mode in scene %d (%s) parameter %d [%d] [%c] mid term value %.2f!\n",
+				//	indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, int(valCh), valCh, 
+				//	pg_Scenario[indScene].scene_interpolations[indP].midTermValue);
+				if (valCh == 'B') {
+					sstream >> vals;
+					sstream >> val2s;
+					double val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val2 = stringToDuration(val2s, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					if (val < 0.0 || val2 < 0.0) {
+						sprintf(ErrorStr, "Error: one of values of B(ell) in scene %d var %d lower than 0.0: %.3f %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+					}
+					if (val <= 1.0) {
+						pg_Scenario[indScene].scene_interpolations[indP].offSet = val;
+						if (float(val + val2) <= 1.00001f) {
+							// deals with approximate values that can summ above 1.0
+							if (float(val + val2) > 1.0f) {
+								val2 = 1.0f - val;
+							}
+							pg_Scenario[indScene].scene_interpolations[indP].duration = val2;
+							if (pg_Scenario[indScene].scene_interpolations[indP].duration <= 0.0) {
+								sprintf(ErrorStr, "Error: null B(ell) in scene %d var %d duration [%f]!", indScene + 1, indP + 1, pg_Scenario[indScene].scene_interpolations[indP].duration); ReportError(ErrorStr); throw 50;
+							}
+						}
+						else {
+							sprintf(ErrorStr, "Error: total duration of B(ell) in scene %d var %d greater than 1.0: %.3f + %.3f\n", indScene + 1, indP + 1, val, val2); ReportError(ErrorStr); throw 50;
+						}
+					}
+					else {
+						sprintf(ErrorStr, "Error: offset value L(inear) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
+					}
+					// std::cout << "L " << val << " " << val2 << " ";
+
+				}
 				break;
 				// b: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
 				// SAW TOOTH INTERPOLATION
@@ -931,7 +1137,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 				pg_Scenario[indScene].scene_interpolations[indP].duration = 1.0;
 				if (valCh == 'S') {
 					sstream >> vals;
-					float val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
+					double val = stringToDuration(vals, pg_Scenario[indScene].scene_duration, indScene + 1, indP + 1);
 					if (val < 0.0) {
 						sprintf(ErrorStr, "Error: offset values of S(tepwise) in scene %d (%s) var %d lower than 0.0: %.3f\n", indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
@@ -1092,6 +1298,55 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	}
 
 	////////////////////////////
+	////// SHORT VIDEO CLIPS ALBUMS
+	nb_clip_albums = 0;
+	// Number of photo albums
+	std::getline(scenarioFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string videos
+	if (ID.compare("clips") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"clips\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+	sstream >> nb_clip_albums;
+
+	if (nb_clip_albums > 1) {
+		sprintf(ErrorStr, "Error: incorrect configuration file: Only clip photo album with subdirectories is expected! (instead of \"%d\" dirs)", nb_clip_albums); ReportError(ErrorStr); throw 100;
+	}
+	//printf("Clip album Number %d\n", nb_clip_albums);
+
+	if (nb_clip_albums > 0) {
+		std::getline(scenarioFin, line);
+		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string album
+		sstream >> clipAlbumDirName;
+		std::cout << "Clip album directory: " << clipAlbumDirName << "\n";
+		sstream >> clip_image_width;
+		sstream >> clip_image_height;
+		sstream >> clip_crop_width;
+		sstream >> clip_crop_height;
+		if (clip_image_width == 0 || clip_image_height == 0 || clip_crop_width == 0 || clip_crop_height == 0) {
+			sprintf(ErrorStr, "Error: incorrect configuration file: missing dimension data for clip image size %dx%d cropped size %dx%d\n", clip_image_width, clip_image_height, clip_crop_width, clip_crop_height); ReportError(ErrorStr); throw 100;
+		}
+	}
+	else {
+		clipAlbumDirName = "";
+	}
+	if (nb_clip_albums > 0) {
+		pg_ClipDirectory = clipAlbumDirName;
+	}
+	else {
+		pg_ClipDirectory = "";
+	}
+
+	// /clips
+	std::getline(scenarioFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string /photos
+	if (ID.compare("/clips") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/clips\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
+
+	////////////////////////////
 	////// PHOTO ALBUMS
 	nb_photo_albums = 0;
 	// Number of photo albums
@@ -1107,13 +1362,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file: Only one photo album with subdirectories is expected! (instead of \"%d\" dirs)", nb_photo_albums); ReportError(ErrorStr); throw 100;
 	}
 
-	if( nb_photo_albums > 0) {
+	if (nb_photo_albums > 0) {
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string album
 		sstream >> photoAlbumDirName;
-		std::cout << "album : " << photoAlbumDirName << "\n";
+		//std::cout << "photo album : " << photoAlbumDirName << "\n";
 	}
 	else {
 		photoAlbumDirName = "";
@@ -1126,7 +1381,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else {
 			pg_ImageDirectory += "images/";
 		}
-		std::cout << "Photo album directory " << pg_ImageDirectory << std::endl;
+		std::cout << "Photo album directory: " << pg_ImageDirectory << std::endl;
 	}
 	else {
 		pg_ImageDirectory = "captures";
@@ -1212,15 +1467,18 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	if (ID.compare("svg_paths") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	int nb_svg_paths = 0;
+	nb_svg_paths = 0;
+	current_path_group = 0;
 	sstream >> nb_svg_paths;
 	//printf("nb svg paths %d\n", nb_svg_paths);
+	SVGpaths = new SVG_path[nb_svg_paths]();
 
 	for (int indPrerecPath = 0; indPrerecPath < nb_svg_paths; indPrerecPath++) {
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string svg_path
-		sstream >> temp;
+		sstream >> temp; // file name
+		string fileName = "Data/" + project_name + "-data/SVGs/" + temp;
 		sstream >> temp2;
 		int indPath = std::stoi(temp2);
 		sstream >> temp2;
@@ -1237,17 +1495,33 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		float path_readSpeedScale = std::stof(temp2);
 		string path_ID = "";
 		sstream >> path_ID;
+		sstream >> temp2;
+		int path_group = std::stoi(temp2);
+		sstream >> temp2;
+		bool with_color_radius_from_scenario = (std::stoi(temp2) != 0);
+
+		SVGpaths[indPrerecPath].SVG_path_init(indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale, path_ID, fileName, path_group, with_color_radius_from_scenario);
+		//printf("path no %d group %d\n", SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].path_group);
+		// checks whether the paths are not duplicated
+		for (int indAux = 0; indAux < indPrerecPath; indAux++) {
+			if (SVGpaths[indAux].indPath == SVGpaths[indPrerecPath].indPath && SVGpaths[indAux].path_group == SVGpaths[indPrerecPath].path_group) {
+				sprintf(ErrorStr, "Error: incorrect configuration file paths %d and %d have the same path index %d and same path group %d", indAux, indPrerecPath, SVGpaths[indAux].indPath, SVGpaths[indAux].path_group); ReportError(ErrorStr); throw 100;
+			}
+		}
+
 		//printf("Path ID [%s]\n", path_ID.c_str());
 		//printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
 			//indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (indTrack >= 0 && indTrack < PG_NB_TRACKS && indPath >= 1 && indPath <= PG_NB_PATHS) {
-			//printf("Loading SVG path %s track %d\n", (char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(), indTrack);
-			load_svg_path((char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(),
-				indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale, path_ID);
+			if (path_group - 1 == current_path_group) {
+				//printf("Loading SVG path %s track %d\n", (char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(), indTrack);
+				load_svg_path((char*)fileName.c_str(),
+					indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale, path_ID, with_color_radius_from_scenario);
+			}
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path %d number (\"%s\")",
-				indTrack, indPath, temp2.c_str()); ReportError(ErrorStr); throw 100;
+				indTrack, indPath, fileName.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
 	}
@@ -1360,6 +1634,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// number of obj files in the configuration file
 	sstream >> pg_nb_Mesh_files;
+
+#ifdef PG_AUGMENTED_REALITY
+	if (pg_nb_Mesh_files <= 0) {
+		sprintf(ErrorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); ReportError(ErrorStr); throw 100;
+	}
+#endif
 
 	pg_Mesh_fileNames = new string[pg_nb_Mesh_files];
 
@@ -1599,7 +1879,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> pg_Texture_Dimension[indTextureFile];
 		if(pg_Texture_Dimension[indTextureFile] != 2 
 			&& pg_Texture_Dimension[indTextureFile] != 3) {
-			sprintf(ErrorStr, "Error: 2D or 3D texture dimension expected, not %d\n", pg_Texture_Dimension[indTextureFile]); ReportError(ErrorStr); throw 100;
+			sprintf(ErrorStr, "Error: 2D or 3D texture dimension expected, not %d for texture %d (%s)\n", pg_Texture_Dimension[indTextureFile], indTextureFile, pg_Texture_fileNames[indTextureFile].c_str()); ReportError(ErrorStr); throw 100;
 		}
 		// number of piled textures in case of 3D texture or tif format
 		sstream >> pg_Texture_Nb_Layers[indTextureFile];
@@ -1613,6 +1893,41 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		// image initial geometry
 		sstream >> pg_Texture_Size_X[indTextureFile];
 		sstream >> pg_Texture_Size_Y[indTextureFile];
+		if (pg_Texture_usages[indTextureFile] == Texture_master_mask &&
+			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: master mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_burst_mask &&
+			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: burst mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_multilayer_master_mask &&
+			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: multilayer master mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_noise &&
+			(pg_Texture_Size_X[indTextureFile] < window_width_powerOf2 || pg_Texture_Size_Y[indTextureFile] < window_height_powerOf2)) {
+			sprintf(ErrorStr, "Error: noise texture should be minimlally %dx%d (%dx%d)\n", window_width_powerOf2, window_height_powerOf2,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_part_init &&
+			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: particle initialization texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_part_acc &&
+			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: particle acceleration texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_repop_density &&
+			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error:  repopulation density texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
 
 		// image color depth
 		sstream >> pg_Texture_Nb_Bytes_per_Pixel[indTextureFile];
@@ -1674,6 +1989,10 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
 		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string palette
+		if (ID.compare("palette") != 0) {
+			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"palette\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
 		sstream >> ID; // palette ID
 		for (int indColorBandpass = 0; indColorBandpass < 3; indColorBandpass++) {
 			for (int indColorChannel = 0; indColorChannel < 3; indColorChannel++) {
@@ -1712,6 +2031,10 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
 		stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string preset
+		if (ID.compare("preset") != 0) {
+			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"preset\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
 		sstream >> ID; // palette ID
 		sstream >> pen_colorPreset_values[indPalette];
 		pen_colorPresets_names.push_back(ID.c_str());
@@ -1725,10 +2048,10 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/color_presets\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-#ifdef PG_LIGHTS
+#if defined(PG_LIGHTS_CONTROL_IN_PG) || defined(PG_LIGHTS_CONTROL_IN_PYTHON)
 	////////////////////////////
 	////// LIGHTS
-	nb_lights = 0;
+	pg_nb_lights = 0;
 	// Number of palettes
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
@@ -1736,60 +2059,107 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	if (ID.compare("lights") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"lights\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	sstream >> nb_lights;
+	sstream >> pg_nb_lights;
+	pg_lights = new Light[pg_nb_lights];
+	int *indexes_in_group = new int[pg_nb_lights];
+	for (int ind = 0; ind < pg_nb_lights; ind++) {
+		indexes_in_group[ind] = 0;
+	}
 
 	// std::cout << "line: " << line << "\n";
-	// std::cout << "Nb lights : " << nb_lights <<  "\n";
+	// std::cout << "Nb lights : " << pg_nb_lights <<  "\n";
 
 	// lights presets
-	lights_group = new int[nb_lights];
-	lights_port = new int[nb_lights];
-	lights_address = new int[nb_lights];
-	lights_channels = new int[nb_lights];
-	lights_red = new int[nb_lights];
-	lights_green = new int[nb_lights];
-	lights_blue = new int[nb_lights];
-	lights_grey = new int[nb_lights];
-	lights_dimmer = new int[nb_lights];
-	lights_strobe = new int[nb_lights];
-	for (int indLight = 0; indLight < nb_lights; indLight++) {
+	pg_nb_light_groups = 0;
+	for (int indLight = 0; indLight < pg_nb_lights; indLight++) {
+		string a_light_name;
+		int a_light_group;
+		int a_light_port;
+		int a_light_address;
+		int a_light_channels;
+		string a_light_red;
+		string a_light_green;
+		string a_light_blue;
+		string a_light_grey;
+		string a_light_dimmer;
+		string a_light_strobe;
+		string a_light_zoom;
+		string a_light_pan;
+		string a_light_tilt;
+		string a_light_hue;
+
 		std::getline(scenarioFin, line);
 		// std::cout << "scene: " << line << "\n";
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // "light"
-		sstream >> ID; // light ID
-		sstream >> lights_group[indLight];
-		if (lights_group[indLight] < 1 || lights_group[indLight] > PG_LIGHTS) {
-			sprintf(ErrorStr, "Error: incorrect configuration file light group (%d) should be a value between 1 and %d for light %d\n", lights_group[indLight], PG_LIGHTS, indLight); ReportError(ErrorStr); throw 100;
+		sstream >> a_light_name; // light ID
+		sstream >> a_light_group;
+//#ifdef PG_NB_LIGHTS_GROUPS_IN_PG_VARS
+//		if (a_light_group > PG_NB_LIGHTS_GROUPS_IN_PG_VARS) {
+//			sprintf(ErrorStr, "Error: incorrect configuration file light group of light #%d should be <= %d\n", indLight, PG_NB_LIGHTS_GROUPS_IN_PG_VARS); ReportError(ErrorStr); throw 100;
+//		}
+//#endif
+		if (a_light_group < 1) {
+			sprintf(ErrorStr, "Error: incorrect configuration file light group (%d) should be a value >= 1 for light %d\n", a_light_group, indLight); ReportError(ErrorStr); throw 100;
 		}
-		sstream >> lights_port[indLight];
-		if (lights_port[indLight] != 1 && lights_port[indLight] != 2) {
-			sprintf(ErrorStr, "Error: incorrect configuration file light port should be equal to 1 or 2 not %d for light %d\n", lights_port[indLight], indLight); ReportError(ErrorStr); throw 100;
+		pg_nb_light_groups = max(pg_nb_light_groups, a_light_group);
+
+		sstream >> a_light_port;
+		if (a_light_port != 1 && a_light_port != 2) {
+			sprintf(ErrorStr, "Error: incorrect configuration file light port should be equal to 1 or 2 not %d for light %d\n", a_light_port, indLight); ReportError(ErrorStr); throw 100;
 		}
-		sstream >> lights_address[indLight];
-		sstream >> lights_channels[indLight];
-		sstream >> lights_red[indLight];
-		sstream >> lights_green[indLight];
-		sstream >> lights_blue[indLight];
-		sstream >> lights_grey[indLight];
-		sstream >> lights_dimmer[indLight];
-		sstream >> lights_strobe[indLight];
-		if (lights_red[indLight] > lights_channels[indLight]
-			|| lights_red[indLight] > lights_channels[indLight]
-			|| lights_green[indLight] > lights_channels[indLight]
-			|| lights_blue[indLight] > lights_channels[indLight]
-			|| lights_grey[indLight] > lights_channels[indLight]
-			|| lights_dimmer[indLight] > lights_channels[indLight]
-			|| lights_strobe[indLight] > lights_channels[indLight] ) {
-			sprintf(ErrorStr, "Error: incorrect configuration file rgb, dimmer, strobe and grey should lower or equal to channel number %d for light %d\n", lights_channels[indLight], indLight); ReportError(ErrorStr); throw 100;
+		sstream >> a_light_address;
+		sstream >> a_light_channels;
+		sstream >> a_light_red;
+		sstream >> a_light_green;
+		sstream >> a_light_blue;
+		sstream >> a_light_grey;
+		sstream >> a_light_dimmer;
+		sstream >> a_light_strobe;
+		sstream >> a_light_zoom;
+		sstream >> a_light_pan;
+		sstream >> a_light_tilt;
+		sstream >> a_light_hue;
+		int an_index_in_group = 0;
+		if (a_light_group < pg_nb_lights) {
+			an_index_in_group = indexes_in_group[a_light_group];
+			indexes_in_group[a_light_group] += 1;
 		}
-		lights_names.push_back(ID.c_str());
-		//std::cout << "light : " << indLight << " id " <<  lights_names[indLight] << " port " 
-		//	<< lights_port[indLight] << " rank " << lights_group[indLight] << " add " << lights_address[indLight] << " ch " << lights_channels[indLight] << " r "
-		//	<< lights_red[indLight] << " g " << lights_green[indLight] << " b " << lights_blue[indLight] 
-		//	<< " dimm " << lights_dimmer[indLight] <<" strobe " << lights_strobe[indLight] << "\n";
+		pg_lights[indLight].set_light_values(a_light_name, a_light_group, an_index_in_group, a_light_port, a_light_address, a_light_channels,
+			a_light_red, a_light_green, a_light_blue, a_light_grey, a_light_dimmer, a_light_strobe, a_light_zoom, a_light_pan, a_light_tilt, a_light_hue);
+		//std::cout << "light : " << indLight << " id " <<  a_light_names << " port " 
+		//	<< a_light_port << " rank " << a_light_group << " add " << a_light_address << " ch " << a_light_channels << " r "
+		//	<< a_light_red << " g " << a_light_green << " b " << a_light_blue 
+		//	<< " dimm " << a_light_dimmer <<" strobe " << a_light_strobe << "\n";
 	}
-	// /palettes
+
+//#ifdef PG_NB_LIGHTS_GROUPS_IN_PG_VARS
+//	if (pg_nb_light_groups != PG_NB_LIGHTS_GROUPS_IN_PG_VARS) {
+//		sprintf(ErrorStr, "Error: incorrect configuration file expected %d lights instead of %d\n", PG_NB_LIGHTS_GROUPS_IN_PG_VARS, pg_nb_lights); ReportError(ErrorStr); throw 100;
+//	}
+//#endif
+	// classes of light groups initialized to default values
+	if (pg_nb_light_groups > 0) {
+		pg_light_groups = new LightGroup[pg_nb_light_groups];
+		for (int ind = 0; ind < pg_nb_light_groups; ind++) {
+			pg_light_groups[ind].set_group_no(ind + 1);
+			for (int ind_light = 0; ind_light < pg_nb_lights; ind_light++) {
+				if (pg_lights[ind_light].light_group == ind + 1) {
+					pg_light_groups[ind].set_group_id(pg_lights[ind_light].light_name);
+					//printf("group ind %d id %s\n", ind , pg_light_groups[ind].get_group_id().c_str());
+					break;
+				}
+			}
+		}
+	}
+	// Iterate over an unordered_map using range based for loop
+	// builds pg_inverse_light_param_hashMap from pg_light_param_hashMap
+	// by exchanging keys and values
+	for (const auto& myPair : pg_light_param_hashMap) {
+		pg_inverse_light_param_hashMap[myPair.second] = myPair.first;
+	}
+
+	// /lights
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string /palettes
@@ -1837,6 +2207,9 @@ void setWindowDimensions(void) {
 	window_height_powerOf2 = 1;
 	while (window_height_powerOf2 < window_height)
 		window_height_powerOf2 *= 2;
+	window_width_powerOf2 = 1;
+	while (window_width_powerOf2 < window_width)
+		window_width_powerOf2 *= 2;
 	leftWindowWidth_powerOf2_ratio =
 		float(leftWindowWidth) / float(leftWindowWidth_powerOf2);
 	window_height_powerOf2_ratio =

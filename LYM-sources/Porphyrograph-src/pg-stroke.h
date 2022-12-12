@@ -50,7 +50,7 @@ struct pg_Path_Data_Struct {
 	float Pos_yL;
 	float Pos_xR;
 	float Pos_yR;
-	float TimeStamp;
+	double TimeStamp;
 };
 struct pg_Path_Status_Struct {
 	bool isFirstFrame;
@@ -58,10 +58,10 @@ struct pg_Path_Status_Struct {
 	bool isNormalized;
 	int nbRecordedFrames;
 	int indReading;
-	float initialTimeRecording;
-	float finalTimeRecording;
-	float initialTimeReading;
-	float readSpeedScale;
+	double initialTimeRecording;
+	double finalTimeRecording;
+	double initialTimeReading;
+	double readSpeedScale;
 };
 extern struct pg_Path_Status_Struct *pg_Path_Status;
 extern int *pg_indPreviousFrameReading;
@@ -102,15 +102,15 @@ void CatmullRom_Evaluate(vec2* pOut_result, vec2* p0, vec2* p1, vec2* p2, vec2* 
 void pg_initStrokes( void );
 
 // loads a track from a path string
-void LoadPathPointsFromXML( char *pathString , int indPath , float *translation , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
-					  int * indCurve, float precedingCurrentPoint[2], float  currentPoint[2]);
+void LoadPathPointsFromXML( char *pathString , int indPath , glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+					  int * indCurve, float precedingCurrentPoint[2], float  currentPoint[2], bool with_color__brush_radius_from_scenario);
 void LoadPathColorsFromXML(string pathString, int indPath, int nbRecordedFrames);
 void LoadPathBrushesFromXML(string pathString, int indPath, int nbRecordedFrames);
 void LoadPathTimeStampsFromXML(string pathString, int indPath, int nbRecordedFrames);
 
 // loads a track from a svg file
-void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID);
-void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID);
+void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario);
+void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario);
 
 // CONVEX HULL 
 #ifdef PG_BEZIER_PATHS
@@ -128,9 +128,9 @@ void test_hull(void);
 // calculation of tangents from successive locations of the pen
 void stroke_geometry_calculation(int indPath, int curr_position_x, int curr_position_y);
 // REPLAY PATHS  
-void pg_replay_paths(float theTime);
+void pg_replay_paths(double theTime);
 // update of the tables that contain the stroke parameters
-void pg_update_pulsed_colors_and_replay_paths( float theTime );
+void pg_update_pulsed_colors_and_replay_paths( double theTime );
 
 
 #endif

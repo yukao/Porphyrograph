@@ -9,10 +9,10 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 1
 
-float     CAMixingWeight;
-float     trackMixingWeight_0;
-float     echo;
-float     echoNeg;
+float	 CAMixingWeight;
+float	 trackMixingWeight_0;
+float	 echo;
+float	 echoNeg;
 uniform float uniform_Mixing_scenario_var_data[4];
 
 // Main shader.

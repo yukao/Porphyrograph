@@ -52,6 +52,13 @@
 // track loops 
 #define PG_LOOP_SIZE 8  // standrd 8 beats/loop size
 
+enum pg_Parameter_Input_Type { _PG_KEYSTROKE = 0, _PG_GUI_COMMAND, _PG_SCENARIO, _PG_INPUT_VOID };
+enum pg_Keystroke_Input_Type {
+	_PG_KEYSTROKE_MINUS = 0, _PG_KEYSTROKE_PLUS, _PG_KEYSTROKE_VOID
+};
+
+
+
 //////////////////////////////////////////////
 // SCENARIO AND CONFIGURATION VARIABLES
 // changed to true when a value is changed manually during scenario
@@ -59,11 +66,25 @@ extern bool BrokenInterpolationVar[_MaxInterpVarIDs];
 // stepwise interpolation made only once
 extern bool StepwiseInterpolationEffective[_MaxInterpVarIDs];
 // initial values in the scenario (before first scene)
-extern double InitialValuesInterpVar[_MaxInterpVarIDs];
+class ScenarioValue {
+public:
+	double val_num;
+	string val_string;
+	ScenarioValue() { val_num = 0; val_string = ""; }
+	ScenarioValue(double d, string s) { val_num = d; val_string = s; }
+	~ScenarioValue() {}
+};
+extern ScenarioValue InitialValuesInterpVar[_MaxInterpVarIDs];
 // last value shipped to the GUI (PD)
 extern float LastGUIShippedValuesInterpVar[_MaxInterpVarIDs];
 // initial values in the configuration file
 extern float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
+
+//////////////////////////////////////////////
+// MIDI event creates a local stroke
+extern int FourFrameStrokeNb;
+extern int FourFrameStroke_x;
+extern int FourFrameStroke_y;
 
 //////////////////////////////////////////////
 // Cuurent palette after interpolation
@@ -105,6 +126,8 @@ extern std::string project_name;
 // ++++++++++++++++++++++ SCENARIO +++++++++++++++++++++++++ 
 extern int pg_CurrentSceneIndex;
 extern float pg_setup_interpolation_duration;
+class Scene;
+extern Scene* pg_CurrentScene;
 
 // +++++++++++++++++++++ CLEAR +++++++++++++++++++++++++++
 extern int isClearCA;
@@ -135,23 +158,6 @@ extern float pulsed_pen_color[4];
 extern float pulsed_repop_colorBG[3];
 extern float pulsed_repop_colorCA[3];
 extern float pulsed_repop_colorPart[3];
-// addtion of color for light based on palette
-extern float pulsed_light1_color[3];
-extern float pulsed_light1_dimmer;
-extern float pulsed_light2_color[3];
-extern float pulsed_light2_dimmer;
-extern float pulsed_light3_color[3];
-extern float pulsed_light3_dimmer;
-extern float pulsed_light4_color[3];
-extern float pulsed_light4_dimmer;
-extern float pulsed_light5_color[3];
-extern float pulsed_light5_dimmer;
-extern float pulsed_light6_color[3];
-extern float pulsed_light6_dimmer;
-extern float pulsed_light7_color[3];
-extern float pulsed_light7_dimmer;
-extern float pulsed_light8_color[3];
-extern float pulsed_light8_dimmer;
 
 // factor increasing the acceleration weight of particles
 // based on sound volume attacks
@@ -167,7 +173,6 @@ extern bool soundTrack_on;
 
 // movie playing
 extern int currentlyPlaying_movieNo;
-extern bool movie_on;
 extern float current_extern_movieNo;
 
 // movie soundtrack passes over an onset or a peak before next frame
@@ -179,25 +184,34 @@ extern int current_pen_colorPreset;
 
 // +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
 extern float pulse[3];
-extern float seed_pulsePerlinNoise[3 * 2];
+extern float seed_pulsePerlinNoise[4 * 2];
 
 // ++++++++++++++++++++++ FLASHES +++++++++++++++++++++++++
 // flash: Trk->CA  
 extern float flashTrkCA_weights[PG_NB_TRACKS];
+extern int flashTrkCA_weights_duration[PG_NB_TRACKS];
 // flash: Trk->Part
 extern float flashTrkPart_weights[PG_NB_TRACKS];
+extern int flashTrkPart_weights_duration[PG_NB_TRACKS];
 // flash: CA->BG
 extern float flashCABG_weight;
+extern int flashCABG_weight_duration;
 // flash: CA->Part
 extern float flashCAPart_weight;
+extern int flashCAPart_weight_duration;
 // flash: Part->BG
 extern float flashPartBG_weight;
+extern int flashPartBG_weight_duration;
 // flash: Part->CA
 extern float flashPartCA_weight;
+extern int flashPartCA_weight_duration;
 // flash: extension of pixel reproduction  
 extern int flashPixel;
+// one-frame master flashing  
+extern int flashMaster;
 // flash: Trk->BG  
 extern float flashTrkBG_weights[PG_NB_TRACKS];
+extern int flashTrkBG_weights_duration[PG_NB_TRACKS];
 
 // +++++++++++++++++++++ VIDEO FLASH +++++++++++++++++++++
 extern bool is_flashCameraTrk;
@@ -226,7 +240,7 @@ extern float fftPhases[8];
 
 // scene management
 extern bool pg_FirstFrameInScene;
-extern float remainingTimeInScene;
+extern double remainingTimeInScene;
 
 // interpolation scene between two discontinuous scenes so that there is no visual gap inbetween
 extern int pg_SceneIndexAfterInterpolation;
@@ -234,9 +248,17 @@ extern int pg_SceneIndexBeforeInterpolation;
 extern float pg_SceneInterpolationDuration;
 class Scene;
 extern Scene pg_InterpolationScene;
+extern bool* pg_variable_updated;
+extern pg_Parameter_Input_Type* pg_variable_param_input_type;
+extern ScenarioValue* pg_variable_scenario_or_gui_command_value;
+bool double_to_bool(double param);
+bool double_to_path(double param);
+int double_to_sign(double param);
 
 // resend all values (fx after interface crash)
 extern bool resend_all_variables;
+// resend all light values (fx after interface crash)
+extern bool resend_all_light_variables;
 
 extern bool synchr_start_recording_path[PG_NB_PATHS + 1];
 extern int synchr_start_path_replay_trackNo[PG_NB_PATHS + 1];
@@ -248,7 +270,6 @@ extern int currentSVGTrack;
 
 // working variables 
 extern int drawing_start_frame;
-extern int backtrack_begin_time;
 
 extern bool frozen;
 
@@ -256,12 +277,15 @@ extern bool frozen;
 extern int curentNbOSCParams;
 
 // scenario launching time
-extern float InitialScenarioTime;
-extern float AbsoluteInitialScenarioTime;
+extern double InitialScenarioTime;
+extern double AbsoluteInitialScenarioTime;
 
 // +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
-extern int BeatNo;
-extern float lastBeatTime;
+extern double lastBeatTime;
+
+//////////////////////////////////////////////
+// beat no
+extern int pg_BeatNo;
 
 // +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
 #if defined(CAAUDIO) || defined(RIVETS)
@@ -310,11 +334,6 @@ extern char AuxString[1024];
 // current working directory
 extern std::string cwd;
 
-enum pg_Parameter_Input_Type { _PG_KEYSTROKE = 0, _PG_GUI_COMMAND, _PG_SCENARIO, _PG_INPUT_VOID };
-enum pg_Keystroke_Input_Type {
-	_PG_KEYSTROKE_MINUS = 0, _PG_KEYSTROKE_PLUS, _PG_KEYSTROKE_VOID
-};
-
 // MANAGES EXCLUSIVE BUTTONS IN INTERFACE
 template <typename T>
 void ExclusiveButtonsAndLabelsOnOff(vector<string> ButtonPaths, vector<string> ButtonLabelPaths, vector<T> ButtonValues, bool withDefault, T value);
@@ -344,7 +363,7 @@ void pg_process_key( int key );
 void pg_process_special_key( int key );
 void setup(int scene_ind);
 void setup_minus(int decay);
-void StartNewScene(int ind_scene);
+void StartNewScene(int ind_scene, double delta_time);
 void pg_keyStrokeScripts( int key );
 bool flash_beat_generation(int flash_frequency);
 bool flash_continuous_generation(int flash_frequency);
@@ -354,8 +373,8 @@ void pg_non_beat_controlled_flashes(void);
 #ifdef PG_WITH_PHOTO_FLASH
 void pg_Make_flashPhoto(void);
 #endif
-void pg_aliasScript( char * command_pattern , char * string_argument_0 ,
-		     float arguments[MAX_OSC_ARGUMENTS], int argc);
+void pg_aliasScript( char *address , char *string_argument_0 ,
+					 float float_arguments[MAX_OSC_ARGUMENTS], int nb_arguments);
 void ClipArt_OnOff(int indImage);
 void ClipArt_Off(int indImage);
 void ClipArt_On(int indImage);
@@ -371,12 +390,13 @@ void ClipArt_SubPathOnOff(int indPath);
 void pg_update_pulsed_colors(void);
 void compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], bool is_pen_color);
 void HSVtoRGB(float h, float s, float v, float* r, float* g, float* b);
+void RGBtoHSV(float r, float g, float b, float* h, float* s, float* v);
 void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_pulse, float value, float value_pulse, float pulsed_color[3], bool is_pen_color);
 void pg_path_recording_onOff(int indPath);
 // playing track onoff
 void pg_path_replay_trackNo_onOff( int indPath, int trackNo);
-void path_replay_trackNo_callBack( int indPath, pg_Parameter_Input_Type param_input_type , double scenario_or_gui_command_value );
-void path_record_callBack( int indPath, pg_Parameter_Input_Type param_input_type , double scenario_or_gui_command_value );
+void path_replay_trackNo_callBack( int indPath, pg_Parameter_Input_Type param_input_type , int scenario_or_gui_command_value );
+void path_record_callBack( int indPath, pg_Parameter_Input_Type param_input_type , int scenario_or_gui_command_value );
 void pg_path_recording_start( int indPath );
 // recording on off
 void pg_path_recording_stop( int indPath );
@@ -389,8 +409,11 @@ void NumberOfInteractionFingers(int nb_fingers);
 
 void pg_writeMessageOnScreen( char *text );
 void pg_snapshot( char * type );
+void pg_run_callBacks(void);
 
 void pg_play_movie_no(void);
 void setup_plus(int incay);
+
+void pg_play_clip_no(int indClipRank, int clipSide, int clipNo);
 
 #endif

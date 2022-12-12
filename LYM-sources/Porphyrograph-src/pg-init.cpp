@@ -158,7 +158,7 @@ GLuint drawBuffers[16] = {
 
 /////////////////////////////////////////////
 // FBO 
-GLuint pg_FBO_Update[2]; // PG_FBO_UPDATE_NBATTACHTS
+GLuint pg_FBO_Update[PG_FBO_PINGPONG_SIZE]; // PG_FBO_UPDATE_NBATTACHTS
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 
 GLuint pg_FBO_ParticleAnimation[2]; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
@@ -173,7 +173,7 @@ GLuint pg_FBO_Master_capturedFB_prec = 0; // master output memory for mapping on
 #endif
 
 						  // FBO texture
-GLuint pg_FBO_Update_texID[2 * PG_FBO_UPDATE_NBATTACHTS]; // Update
+GLuint pg_FBO_Update_texID[PG_FBO_PINGPONG_SIZE * PG_FBO_UPDATE_NBATTACHTS]; // Update
 GLuint pg_FBO_Mixing_capturedFB_prec_texID[2] = { 0,0 }; // drawing memory on odd and even frames for echo 
 // GLuint FBO_CameraFrame_texID = 0; // video preprocessing outcome 
 #ifdef PG_AUGMENTED_REALITY
@@ -592,25 +592,36 @@ int stb__arial_50_usascii_a[95] = { 199,199,254,398,398,637,478,137,
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 void InterfaceInitializations(void) {
+#if !defined (LIGHT)
 	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
 	for (int ind = 0; ind < nb_pen_colorPresets; ind++) {
 		sprintf(AuxString, "/pen_colorPreset_name%d %s",
-			ind, pen_colorPresets_names[ind].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
-	}
-	// SVG GPU INTERFACE VARIABLE INITIALIZATION
-	for (int indImage = 0; indImage < pg_nb_ClipArt; indImage++) {
-		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, ((activeClipArts == -1) || (activeClipArts & (1 << (indImage - 1))))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+			ind, pen_colorPresets_names[ind].c_str()); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 	// interpolation duration initial value (0.f)
 	sprintf(AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+
+#ifdef PG_WITH_CLIP_ART
+	// SVG GPU INTERFACE VARIABLE INITIALIZATION
+	for (int indImage = 0; indImage < pg_nb_ClipArt; indImage++) {
+		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, ((activeClipArts == -1) || (activeClipArts & (1 << (indImage - 1))))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+	}
+#endif
+
 #ifdef PG_MESHES
 	// MESH INTERFACE VARIABLE INITIALIZATION
 	for (int indImage = 0; indImage < pg_nb_Mesh_files; indImage++) {
-		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 	for (int indImage = 0; indImage < pg_nb_Mesh_files; indImage++) {
-		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage + 1, (mobileMeshes & (1 << (indImage)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage + 1, (mobileMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+	}
+#endif
+#if defined(PG_LIGHTS_DMX_IN_PG)
+	if (pg_nb_light_groups > 0) {
+		pg_lightGUI_initialization();
 	}
 #endif
 }
@@ -732,14 +743,14 @@ int gettimeofday(struct timeval* tp, void* tzp) {
 #endif
 
 double pg_TimeAtApplicationLaunch = -1.;
-float RealTime(void) {
+double RealTime(void) {
 	struct timeval time;
 	gettimeofday(&time, 0);
 	double realtime = (double)time.tv_sec + ((double)time.tv_usec / 1000000.);
 	if (pg_TimeAtApplicationLaunch < 0) {
 		pg_TimeAtApplicationLaunch = realtime;
 	}
-	return (float(realtime - pg_TimeAtApplicationLaunch) - InitialRealTime) * time_scale;
+	return ((realtime - pg_TimeAtApplicationLaunch) - InitialRealTime) * time_scale;
 }
 
 void MemoryUsage(void) {
@@ -800,6 +811,17 @@ void pg_initGeometry_quads(void) {
 	quadDraw_texCoords[6] = (float)leftWindowWidth;
 	quadDraw_texCoords[7] = (float)window_height;
 
+#ifdef PG_MIRRORED_SECOND_SCREEN
+	quadMaster_points[1] = (float)window_height;
+	quadMaster_points[3] = (float)doubleWindowWidth * 1.5f;
+	quadMaster_points[9] = (float)doubleWindowWidth * 1.5f;
+	quadMaster_points[10] = (float)window_height;
+
+	quadMaster_texCoords[1] = (float)window_height;
+	quadMaster_texCoords[2] = (float)doubleWindowWidth * 1.5f;
+	quadMaster_texCoords[6] = (float)doubleWindowWidth * 1.5f;
+	quadMaster_texCoords[7] = (float)window_height;
+#else
 	quadMaster_points[1] = (float)window_height;
 	quadMaster_points[3] = (float)doubleWindowWidth;
 	quadMaster_points[9] = (float)doubleWindowWidth;
@@ -809,6 +831,7 @@ void pg_initGeometry_quads(void) {
 	quadMaster_texCoords[2] = (float)doubleWindowWidth;
 	quadMaster_texCoords[6] = (float)doubleWindowWidth;
 	quadMaster_texCoords[7] = (float)window_height;
+#endif
 	printOglError(21);
 
 	/////////////////////////////////////////////////////////////////////
@@ -1239,15 +1262,12 @@ void SensorInitialization(void) {
 #endif
 	for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
 #ifdef PG_RENOISE
-		std::string message = "/renoise/song/track/";
-		std::string int_string = std::to_string(indSample + 1);
-		message += int_string + "/mute";
-
-		// message format
-		std::string format = "";
-
-		// message posting
-		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_RN_send");
+		// Renoise message format && message posting
+		sprintf(AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
+		// Renoise message format && message posting
+		sprintf(AuxString, "/renoise/song/track/%d/prostx_volume %.2f", indSample + 1, 3.f);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
 #endif
 #ifdef PG_PORPHYROGRAPH_SOUND
 		std::string message = "/track_";
@@ -1295,6 +1315,7 @@ void assignSensorActivations(void) {
 	// incremental sensor activation
 	if (sensor_activation == 5) {
 		sensor_last_activation_time = CurrentClockTime;
+		//printf("initial activ %f %d\n", CurrentClockTime, sensor_activation);
 	}
 }
 
@@ -1469,14 +1490,14 @@ bool pg_initFBO(void) {
 	*/
 
 	// FBO: multi-attachment for update 
-	glGenFramebuffers(2, pg_FBO_Update);
+	glGenFramebuffers(PG_FBO_PINGPONG_SIZE, pg_FBO_Update);
 	// initializations to NULL
-	for (int indAttachedFB = 0; indAttachedFB < 2 * PG_FBO_UPDATE_NBATTACHTS; indAttachedFB++) {
+	for (int indAttachedFB = 0; indAttachedFB < PG_FBO_PINGPONG_SIZE * PG_FBO_UPDATE_NBATTACHTS; indAttachedFB++) {
 		pg_FBO_Update_texID[indAttachedFB] = 0;
 	}
-	glGenTextures(2 * PG_FBO_UPDATE_NBATTACHTS, pg_FBO_Update_texID);
+	glGenTextures(PG_FBO_PINGPONG_SIZE * PG_FBO_UPDATE_NBATTACHTS, pg_FBO_Update_texID);
 	printf("FBO Update size %d %d attachments %d\n", leftWindowWidth, window_height, PG_FBO_UPDATE_NBATTACHTS);
-	for (int indFB = 0; indFB < 2; indFB++) {
+	for (int indFB = 0; indFB < PG_FBO_PINGPONG_SIZE; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Update[indFB]);
 		pg_initFBOTextures(pg_FBO_Update_texID + indFB * PG_FBO_UPDATE_NBATTACHTS, 
 			PG_FBO_UPDATE_NBATTACHTS, false);

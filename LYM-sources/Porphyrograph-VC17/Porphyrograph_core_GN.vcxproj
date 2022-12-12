@@ -17,7 +17,6 @@
     <ClCompile Include="..\Porphyrograph-src\pg-script.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-shader.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-stroke.cpp" />
-    <ClCompile Include="..\Porphyrograph-src\pg-svg-clip-art.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-texture.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-udp.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-update.cpp" />
@@ -30,7 +29,6 @@
     <ClInclude Include="..\Porphyrograph-src\pg-script.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-shader.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-stroke.h" />
-    <ClInclude Include="..\Porphyrograph-src\pg-svg-clip-art.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-texture.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-udp.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-update.h" />
@@ -40,21 +38,21 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Porphyrograph</RootNamespace>
     <ProjectName>Porphyrograph_core_GN</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -107,11 +105,12 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_VISUAL_STUDIO;_WIN32;GN
 ;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\share\liblo-0.29;..\share\liblo-0.29\build;..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\dirent-1.21\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\share\liblo-0.29;..\share\liblo-0.29\build;..\share\opencv\sources\modules\highgui\include;..\share\opencv\sources\modules\imgcodecs\include;..\share\opencv\sources\modules\videoio\include;..\share\opencv\sources\modules\features2d\include;..\share\opencv\sources\modules\calib3d\include;..\share\opencv\sources\modules\flann\include;..\share\opencv\sources\modules\imgproc\include;..\share\opencv\sources\modules\core\include;..\share\opencv\buildvc17;..\share\glew-1.11.0\include;..\share\glm\;..\share\dirent-1.21\include;..\share\ENTTECRDMLibrary</AdditionalIncludeDirectories>
       <FloatingPointModel>Precise</FloatingPointModel>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WholeProgramOptimization>false</WholeProgramOptimization>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

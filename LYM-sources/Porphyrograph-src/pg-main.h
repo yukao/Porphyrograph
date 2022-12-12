@@ -49,9 +49,8 @@ extern int Step;
 
 extern bool DisplayFramePerSecond;
 
-extern float CurrentClockTime;
+extern double CurrentClockTime;
 extern int FramePerSecond;
-extern float LastFrameTime;
 extern float LastImageSwap;
 
 extern std::stringstream  date_stringStream;
@@ -79,6 +78,7 @@ extern int rightWindowVMargin;
 extern int doubleWindowWidth;
 // the smallest powers of 2 for width and height
 extern int leftWindowWidth_powerOf2;
+extern int window_width_powerOf2;
 extern int window_height_powerOf2;
 extern float leftWindowWidth_powerOf2_ratio;
 extern float window_height_powerOf2_ratio;
@@ -117,8 +117,8 @@ extern float tabletAzimutRadius;
 extern float tabletInclinationRadius;
 
 /// initial time
-extern float InitialRealTime;
-extern float LastDecayTime;
+extern double InitialRealTime;
+extern double LastScreenMessageDecayTime;
 
 /*! \name Group size_view_volume
  *  \brief size of the view volume

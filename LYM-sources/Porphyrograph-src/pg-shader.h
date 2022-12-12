@@ -38,6 +38,9 @@
 #if defined (KOMPARTSD)
 #include "pg_shader_header_KompartSD.h"
 #endif
+#if defined (LIGHT)
+#include "pg_shader_header_Light.h"
+#endif
 #if defined (REUTLINGEN)
 #include "pg_shader_header_Reutlingen.h"
 #endif
@@ -53,6 +56,9 @@
 #if defined (PIERRES)
 #include "pg_shader_header_Pierres.h"
 #endif
+#if defined (ENSO)
+#include "pg_shader_header_Enso.h"
+#endif
 #if defined (TEMPETE)
 #include "pg_shader_header_Tempete.h"
 #endif
@@ -67,6 +73,18 @@
 #endif
 #ifdef SONG
 #include "pg_shader_header_Song.h"
+#endif
+#ifdef CORE
+#include "pg_shader_header_Core.h"
+#endif
+#ifdef FORET
+#include "pg_shader_header_Foret.h"
+#endif
+#ifdef SOUNDINITIATIVE
+#include "pg_shader_header_SoundInitiative.h"
+#endif
+#ifdef ALKEMI
+#include "pg_shader_header_alKemi.h"
 #endif
 #if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_shader_header_demo.h"
@@ -118,7 +136,9 @@ enum ShaderFileTypes {
 #ifdef PG_SENSORS
 	pg_shader_Sensor,
 #endif
+#ifdef PG_WITH_CLIP_ART
 	pg_ClipArt,
+#endif
 #ifdef PG_MESHES
 	pg_shader_Mesh,
 #endif
@@ -175,6 +195,9 @@ extern GLint uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera frame
 #endif
 extern GLint uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_ParticleAnimation_texture_fs_Noise;  // 3D noise
+#ifdef PG_WITH_REPOP_DENSITY
+extern GLint uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density
+#endif
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // particle initialization pairs of textures color/radius
 extern GLint uniform_ParticleAnimation_texture_fs_Part_acc;  // particle acceleration texture
@@ -186,7 +209,7 @@ extern GLint uniform_ParticleAnimation_texture_fs_Part_acc;  // particle acceler
 extern GLint uniform_Update_vp_model;
 extern GLint uniform_Update_vp_view;
 extern GLint uniform_Update_vp_proj;
-#if defined (PIERRES)
+#if defined (PG_WITH_PHOTO_HOMOGRAPHY)
 extern GLint uniform_Update_homographyForTexture;
 #endif
 extern GLint uniform_Update_vp_2fv_width_height;
@@ -213,7 +236,7 @@ extern GLint uniform_Update_fs_4fv_fftPhases47;
 #endif
 extern GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 extern GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
-#if defined(PG_NB_CA_TYPES) && !defined (GN)
+#if defined(PG_NB_CA_TYPES) && !defined (GN) && !defined (ALKEMI)
 extern GLint uniform_Update_fs_3fv_repop_ColorCA;
 #endif
 extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
@@ -226,12 +249,18 @@ extern GLint uniform_Update_fs_4fv_photo01_wh;
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 extern GLint uniform_Update_fs_4fv_photo01Wghts_randomValues;
 #endif
+#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+extern GLint uniform_Update_fs_2fv_clip01Wghts;
+#endif
 #ifdef PG_WITH_CAMERA_CAPTURE
 extern GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 #endif
 extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
+#endif
+#ifdef PG_WITH_CLIPS
+extern GLint uniform_Update_fs_3fv_photo_rgb;
 #endif
 #if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 extern GLint uniform_Update_texture_fs_CATable;
@@ -261,7 +290,7 @@ extern GLint uniform_Update_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Update_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
 extern GLint uniform_Update_texture_fs_Brushes;  // pen patterns
 #endif
 #ifdef PG_WITH_CAMERA_CAPTURE
@@ -276,6 +305,10 @@ extern GLint uniform_Update_texture_fs_RepopDensity;  // repop density
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 extern GLint uniform_Update_texture_fs_Photo0;  // photo[0]
 extern GLint uniform_Update_texture_fs_Photo1;  // photo[1]
+#endif
+#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+extern GLint uniform_Update_texture_fs_Clip0;  // clip[0]
+extern GLint uniform_Update_texture_fs_Clip1;  // clip[1]
 #endif
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering used for flashing layers with particles
@@ -386,11 +419,16 @@ extern GLint uniform_Master_vp_model;
 extern GLint uniform_Master_vp_view;
 extern GLint uniform_Master_vp_proj;
 extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
+#if defined(GN) || defined(TVW) || defined(ALKEMI)
 extern GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
-extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
-extern GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-extern GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
-extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+#else
+extern GLint uniform_Master_fs_3fv_width_height_timeFromStart;
+#endif
+//extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+//extern GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
+//extern GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
+//extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+extern GLint uniform_Master_fs_2iv_mobile_cursor_currentScene;
 #ifdef CAVERNEPLATON
 extern GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb;
 #endif
@@ -442,7 +480,7 @@ extern GLint uniform_Mesh_vp_model;
 extern GLint uniform_Mesh_vp_view;
 extern GLint uniform_Mesh_vp_proj;
 extern GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene;
-#ifndef TEMPETE
+#if !defined(TEMPETE) && !defined(ENSO) && !defined(SONG) && !defined(CORE)
 extern GLint uniform_Mesh_fs_3fv_light;
 #endif
 #ifdef PG_AUGMENTED_REALITY

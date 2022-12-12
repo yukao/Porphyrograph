@@ -1,0 +1,115 @@
+DM version 1.27
+begin window_display 0.4380002022
+Snapshot jpg step 0 (pic/LYM-session-27-3-2011-.0000000.jpg)
+Mon Mar  5 00:49:22 2018	0.729	frameNo 0
+Mon Mar  5 00:49:22 2018	0.729	
+Mon Mar  5 00:49:22 2018	0.729	-----------------------------
+Mon Mar  5 00:49:22 2018	0.729	
+Mon Mar  5 00:49:22 2018	0.729	MAJOR PARAMETERS
+Mon Mar  5 00:49:22 2018	0.729	
+Mon Mar  5 00:49:22 2018	0.729	  Drawing Parameters
+Mon Mar  5 00:49:22 2018	0.729	local_color 1 1 1 1 
+Mon Mar  5 00:49:22 2018	0.729	radius 3
+Mon Mar  5 00:49:22 2018	0.729	
+Mon Mar  5 00:49:22 2018	0.729	  Rendering Parameters
+Mon Mar  5 00:49:22 2018	0.730	echo 0
+Mon Mar  5 00:49:22 2018	0.730	dcONT decay 0
+Mon Mar  5 00:49:22 2018	0.730	drawing decay 0
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	particle_acceleration_factor 0
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	  Music Control
+Mon Mar  5 00:49:22 2018	0.730	xy_spectrum_coef 0
+Mon Mar  5 00:49:22 2018	0.730	color_spectrum_coef 0
+Mon Mar  5 00:49:22 2018	0.730	brush_radius_vol_coef 0
+Mon Mar  5 00:49:22 2018	0.730	particle_acc_attack_coef 0
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	  dcONT Parameters
+Mon Mar  5 00:49:22 2018	0.730	dcONT radius nb neighbors 10 0
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	pattern weights 0 0
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	scale 1
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	dcONT weight 1
+Mon Mar  5 00:49:22 2018	0.730	drawing weight 1
+Mon Mar  5 00:49:22 2018	0.730	-----------------------------
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	ADDITIONAL PARAMETERS
+Mon Mar  5 00:49:22 2018	0.730	freqDots 1
+Mon Mar  5 00:49:22 2018	0.730	blendTransp 1
+Mon Mar  5 00:49:22 2018	0.730	pixellization 0
+Mon Mar  5 00:49:22 2018	0.730	draw contamtination mode 0
+Mon Mar  5 00:49:22 2018	0.730	-----------------------------
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	PRESET
+Mon Mar  5 00:49:22 2018	0.730	
+Mon Mar  5 00:49:22 2018	0.730	1 drawingMode 0
+Mon Mar  5 00:49:22 2018	0.730	2 flash contamtination mode 0
+Mon Mar  5 00:49:22 2018	0.730	3 brushID 0
+Mon Mar  5 00:49:22 2018	0.730	4 particle texture 0
+Mon Mar  5 00:49:22 2018	0.730	5 dcONT decay sign 1
+Mon Mar  5 00:49:22 2018	0.731	6 drawing decay sign 1
+Mon Mar  5 00:49:22 2018	0.731	7 color palette 0
+Mon Mar  5 00:49:22 2018	0.731	8 dcONT preset 0
+Mon Mar  5 00:49:22 2018	0.731	9 particle mode 0
+Mon Mar  5 00:49:22 2018	0.731	10 scale 1
+Mon Mar  5 00:49:22 2018	0.731	
+Mon Mar  5 00:49:22 2018	0.731	0,0,0,0,1,1,0,0,0,1
+begin window_display 0.7310001850
+begin window_display 0.7460000515
+begin window_display 0.7510001659
+begin window_display 0.7680001259
+begin window_display 0.7840001583
+begin window_display 0.8010001183
+begin window_display 0.8170001507
+begin window_display 0.8340001106
+begin window_display 0.8510000706
+begin window_display 0.8670001030
+begin window_display 0.8840000629
+begin window_display 0.9010000229
+begin window_display 0.9170000553
+begin window_display 0.9340000153
+begin window_display 0.9500000477
+begin window_display 0.9670000076
+begin window_display 0.9839999676
+begin window_display 1.0020000935
+begin window_display 1.0180001259
+begin window_display 1.0350000858
+begin window_display 1.0520000458
+begin window_display 1.0680000782
+begin window_display 1.0850000381
+begin window_display 1.1019999981
+begin window_display 1.1180000305
+begin window_display 1.1349999905
+begin window_display 1.1520001888
+begin window_display 1.1679999828
+begin window_display 1.1840000153
+begin window_display 1.2009999752
+begin window_display 1.2180001736
+begin window_display 1.2350001335
+begin window_display 1.2510001659
+begin window_display 1.2680001259
+begin window_display 1.2840001583
+begin window_display 1.3020000458
+begin window_display 1.3180000782
+begin window_display 1.3340001106
+begin window_display 1.3510000706
+begin window_display 1.3680000305
+begin window_display 1.3849999905
+begin window_display 1.4020001888
+begin window_display 1.4179999828
+begin window_display 1.4350001812
+begin window_display 1.4520001411
+begin window_display 1.4700000286
+begin window_display 1.4850001335
+begin window_display 1.5020000935
+begin window_display 1.5180001259
+begin window_display 1.5350000858
+begin window_display 1.5510001183
+begin window_display 1.5680000782
+begin window_display 1.5850000381
+begin window_display 1.6010000706
+begin window_display 1.6180000305
+begin window_display 1.6349999905
+begin window_display 1.6510000229

@@ -9,14 +9,19 @@ LYM alKemi & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 1
 
-bool      mute_second_screen;
-bool      invertAllLayers;
-int       cursorSize;
-float     master;
-float     CAMasterWeight;
-float     trackMasterWeight_0;
-bool      interfaceOnScreen;
-uniform float uniform_Master_scenario_var_data[7];
+bool	  mute_second_screen;
+bool	  invertAllLayers;
+int		cursorSize;
+float	 master;
+float	 CAMasterWeight;
+float	 trackMasterWeight_0;
+bool	  interfaceOnScreen;
+float	 master_scale;
+float	 master_scale_pulse;
+float	 master_scale_ratio;
+float	 master_offsetX;
+float	 master_offsetY;
+uniform float uniform_Master_scenario_var_data[12];
 
 // Main shader.
 
@@ -64,6 +69,11 @@ void main() {
   CAMasterWeight = uniform_Master_scenario_var_data[4];
   trackMasterWeight_0 = uniform_Master_scenario_var_data[5];
   interfaceOnScreen = (uniform_Master_scenario_var_data[6] > 0 ? true : false);
+  master_scale = uniform_Master_scenario_var_data[7];
+  master_scale_pulse = uniform_Master_scenario_var_data[8];
+  master_scale_ratio = uniform_Master_scenario_var_data[9];
+  master_offsetX = uniform_Master_scenario_var_data[10];
+  master_offsetY = uniform_Master_scenario_var_data[11];
 
   vec2 coords = decalCoords;
   float leftWindowWidth = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;

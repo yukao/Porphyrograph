@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>./Projects/configuration/LYM_araknit-head-double.csv ./Projects/scenarios/LYM_araknit-scenario-double-v2.csv</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>..\..\LYM-projects</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>./Projects/configuration/LYM_araknit-head-single.csv ./Projects/scenarios/LYM_araknit-scenario-v1.csv</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>..\..\LYM-projects</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+</Project>

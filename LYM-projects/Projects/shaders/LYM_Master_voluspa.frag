@@ -52,13 +52,14 @@ layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_Mask;  // mas
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
-uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+/*uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
-
+*/
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
@@ -67,8 +68,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
+  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
 
@@ -81,14 +82,14 @@ void main() {
   vec2 initialCoords = coords;
   vec2 centerCoords = vec2(width/2, height/2);
 
-  int currentScene = int(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.w);
+  int currentScene = uniform_Master_fs_2iv_mobile_cursor_currentScene.y;
 
   // vertical mirror
   // TO UNCOMMENT FOR CHATEAU  
-  //    coords.y = height - coords.y;
+  coords.x = width - coords.x;
+   coords.y = height - coords.y;
 #ifdef MIRRORED_PROJECTION
   // ST OUEN horizontal mirror
-  coords.x = width - coords.x;
   //coords.y = height - coords.y;
 #endif
   // double mirror
@@ -102,7 +103,7 @@ void main() {
   }
 */
   // interface
-  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
@@ -120,7 +121,7 @@ void main() {
     }
     return;
   }
-
+*/
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights
   vec4 MixingColor = texture(uniform_Master_texture_fs_Render_curr, coords );
@@ -184,10 +185,10 @@ void main() {
 
 // vertical mirror
 //   coords.y = height - coords.y
+mouse_x = width - mouse_x;
 #ifdef MIRRORED_PROJECTION
 // ST OUEN horizontal mirror
  // coordX = width - coordX;
-  mouse_x = width - mouse_x;
 #endif
 // double mirror
 //   coords.y = height - coords.y;
@@ -199,7 +200,7 @@ void main() {
   }
 
   // white flash
-  float timeFromStart = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.w;
+  float timeFromStart = uniform_Master_fs_3fv_width_height_timeFromStart.z;
   // transition invvert début frozen clear
 #ifdef FULL_VERSION
   if(timeFromStart > 1020 && timeFromStart < 1024) {
@@ -256,8 +257,8 @@ void main() {
   vec2 ratioed_scale = vec2(master_mask_scale, master_mask_scale * master_mask_scale_ratio);
   vec2 coordsWRTcenter = (initialCoords - centerCoords) / ratioed_scale;
   vec4 maskColor;
-/*  if(currentScene >= 0) {
-*/    maskColor = texture(uniform_Master_texture_fs_Mask, 
+/*  if(currentScene >= 0) {*/
+    maskColor = texture(uniform_Master_texture_fs_Mask, 
           coordsWRTcenter + (centerCoords + vec2(master_mask_offsetX, master_mask_offsetY) / ratioed_scale));
     outColor0.rgb *= maskColor.r;
 /*  }
@@ -265,14 +266,14 @@ void main() {
 
   // cursor
 #ifndef ROTATED_PROJECTION
-  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+  if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
       && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 #else
-  if( uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.w != 0 
+  if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
       && mouse_x < width && mouse_x > 0 
       && length(vec2(coords.x - mouse_x , height - coords.y - mouse_y)) 
       < cursorSize ) { 

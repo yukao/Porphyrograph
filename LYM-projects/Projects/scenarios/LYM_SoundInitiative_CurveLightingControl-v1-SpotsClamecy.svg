@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1920"
+   height="1080"
+   viewBox="0 0 508 285.75"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="LYM_SoundInitiative_CurveLightingControl-v1-SpotsClamecy.svg"
+   inkscape:label="Curves"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata
+     id="metadata91">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="1.8887094"
+     inkscape:cx="161.2212"
+     inkscape:cy="213.90267"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg5"
+     inkscape:object-paths="true"
+     inkscape:snap-smooth-nodes="true"
+     showguides="true"
+     units="px">
+    <inkscape:grid
+       type="xygrid"
+       id="grid1753"
+       spacingx="1"
+       spacingy="1"
+       units="mm" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="backgrouind"
+     style="display:inline">
+    <rect
+       style="fill:#e9e6fa;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect2402"
+       width="330"
+       height="10"
+       x="0"
+       y="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="85.379753"
+       id="text1619"><tspan
+         sodipodi:role="line"
+         id="tspan1617"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-22.140623"
+         y="85.379753">Light 2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-11.004169"
+       y="85.370964"
+       id="text1623"><tspan
+         sodipodi:role="line"
+         id="tspan1621"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-11.004169"
+         y="85.370964">Dimmer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="105.99882"
+       id="text1627"><tspan
+         sodipodi:role="line"
+         id="tspan1625"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-22.140623"
+         y="105.99882">Light 2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-10.922138"
+       y="106.02665"
+       id="text1631"><tspan
+         sodipodi:role="line"
+         id="tspan1629"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-10.922138"
+         y="106.02665">Color</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="125.12444"
+       id="text6437"><tspan
+         sodipodi:role="line"
+         id="tspan6435"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-22.140623"
+         y="125.12444">Light 2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-10.90749"
+       y="125.15227"
+       id="text6441"><tspan
+         sodipodi:role="line"
+         id="tspan6439"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-10.90749"
+         y="125.15227">green</tspan></text>
+    <rect
+       style="fill:#e9e6fa;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect853"
+       width="330"
+       height="10"
+       x="-1.925097e-12"
+       y="20" />
+    <rect
+       style="fill:#ffe9ff;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect855"
+       width="330"
+       height="10"
+       x="3.1433228e-12"
+       y="80" />
+    <rect
+       style="fill:#ffe9ff;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect857"
+       width="330"
+       height="10"
+       x="3.1433228e-12"
+       y="100" />
+    <rect
+       style="fill:#ffe9ff;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect859"
+       width="330"
+       height="10"
+       x="3.1433228e-12"
+       y="120" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="145.37976"
+       id="text3140"><tspan
+         sodipodi:role="line"
+         id="tspan3493"
+         x="-22.140623"
+         y="145.37976">Light 3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-11.004169"
+       y="145.37096"
+       id="text3144"><tspan
+         sodipodi:role="line"
+         id="tspan3142"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-11.004169"
+         y="145.37096">Dimmer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="165.99883"
+       id="text3148"><tspan
+         sodipodi:role="line"
+         id="tspan3513"
+         x="-22.140623"
+         y="165.99883">Light 3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-10.922138"
+       y="166.02666"
+       id="text3152"><tspan
+         sodipodi:role="line"
+         id="tspan3150"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-10.922138"
+         y="166.02666">Color</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="185.12444"
+       id="text3156"><tspan
+         sodipodi:role="line"
+         id="tspan4261"
+         x="-22.140623"
+         y="185.12444">Light 3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-10.90749"
+       y="185.15227"
+       id="text3160"><tspan
+         sodipodi:role="line"
+         id="tspan3158"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-10.90749"
+         y="185.15227">Strobe</tspan></text>
+    <rect
+       style="fill:#e9ffee;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect3162"
+       width="330"
+       height="10"
+       x="2.6921282e-12"
+       y="140" />
+    <rect
+       style="fill:#e9ffee;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect3164"
+       width="330"
+       height="10"
+       x="2.6921282e-12"
+       y="160" />
+    <rect
+       style="fill:#e9ffee;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect3166"
+       width="330"
+       height="10"
+       x="2.6921282e-12"
+       y="180" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="205.37975"
+       id="text3182"><tspan
+         sodipodi:role="line"
+         id="tspan7337"
+         x="-22.140623"
+         y="205.37975">Light 4</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-11.004169"
+       y="205.37096"
+       id="text3186"><tspan
+         sodipodi:role="line"
+         id="tspan3184"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-11.004169"
+         y="205.37096">Dimmer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-22.140623"
+       y="225.99881"
+       id="text3190"><tspan
+         sodipodi:role="line"
+         id="tspan9173"
+         x="-22.140623"
+         y="225.99881">Light 4</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-10.922138"
+       y="226.02664"
+       id="text3194"><tspan
+         sodipodi:role="line"
+         id="tspan3192"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-10.922138"
+         y="226.02664">Color</tspan></text>
+    <rect
+       style="fill:#ffffe9;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect3204"
+       width="330"
+       height="10"
+       x="2.2409336e-12"
+       y="200" />
+    <rect
+       style="fill:#ffffe9;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect3206"
+       width="330"
+       height="10"
+       x="2.2409336e-12"
+       y="220" />
+    <rect
+       style="fill:#ffffe9;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect3208"
+       width="330"
+       height="10"
+       x="2.2409336e-12"
+       y="240" />
+    <rect
+       style="fill:#e9e6fa;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect1190"
+       width="330"
+       height="10"
+       x="-1.925099e-12"
+       y="40" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+       x="-21.944788"
+       y="5.8543625"
+       id="text1202"><tspan
+         sodipodi:role="line"
+         id="tspan1200"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+         x="-21.944788"
+         y="5.8543625">Light 1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="-10.726305"
+       y="5.8821945"
+       id="text1206"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+         x="-10.726305"
+         y="5.8821945"
+         id="tspan3076">dimmer</tspan></text>
+    <rect
+       style="fill:#e9e6fa;fill-opacity:1;stroke:none;stroke-width:3.43303"
+       id="rect1208"
+       width="330"
+       height="10"
+       x="-1.925099e-12"
+       y="60" />
+  </g>
+  <path
+     style="fill:none;stroke:#ff00be;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 50,90 70,80 H 75"
+     id="path6273"
+     inkscape:label="/light/2/dimmer"
+     sodipodi:nodetypes="ccc"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#ff00be;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 50,104.76253 H 65"
+     id="path6275"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/2/palette_color"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#ff00be;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 50,120 C 52.648307,120 53.074954,130 55,130 56.705193,130 58.88167,120 61.46211,120 L 65,130"
+     id="path6443"
+     sodipodi:nodetypes="cscc"
+     inkscape:label="/light/2/grey"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#ff00be;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 80,102 H 95"
+     id="path1414"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/2/palette_color"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#ff00be;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 80,80 95,90"
+     id="path1587"
+     inkscape:label="/light/2/dimmer"
+     sodipodi:nodetypes="cc"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#00ff27;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 100,150 120,140 H 125"
+     id="path3168"
+     inkscape:label="/light/3/dimmer"
+     sodipodi:nodetypes="ccc"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#00ff27;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 100,160 H 115"
+     id="path3170"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/3/palette_color"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#00ff27;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 100.11667,190 H 117.65457 C 122.64873,190 118.6231,180 124.11668,180 L 125.11668,190"
+     id="path3172"
+     sodipodi:nodetypes="cccc"
+     inkscape:label="/light/3/strobe"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#00ff27;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 130.11668,190 H 142.11668 145.11668"
+     id="path3174"
+     sodipodi:nodetypes="ccc"
+     inkscape:label="/light/3/strobe"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#00ff27;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 130,162 H 145"
+     id="path3176"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/3/palette_color"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#00ff27;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 130,140 145,150"
+     id="path3178"
+     inkscape:label="/light/3/dimmer"
+     sodipodi:nodetypes="cc"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#fbff00;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 150,210 170,200 H 175"
+     id="path3210"
+     inkscape:label="/light/4/dimmer"
+     sodipodi:nodetypes="ccc"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#fbff00;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 150,220 H 165"
+     id="path3212"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/4/palette_color"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#fbff00;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 150,230 H 167.53789 C 172.53205,230 168.50642,220 174,220 L 175,230"
+     id="path3214"
+     sodipodi:nodetypes="cccc"
+     inkscape:label="/light/4/strobe" />
+  <path
+     style="fill:none;stroke:#fbff00;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 180,230 H 192 195"
+     id="path3216"
+     sodipodi:nodetypes="ccc"
+     inkscape:label="/light/4/strobe" />
+  <path
+     style="fill:none;stroke:#fbff00;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 180,222 H 195"
+     id="path3218"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/4/palette_color"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#fbff00;stroke-width:0.707107;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 180,200 195,210"
+     id="path3220"
+     inkscape:label="/light/4/dimmer"
+     sodipodi:nodetypes="cc"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;fill-opacity:1;stroke:#001fff;stroke-width:0.57735;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 25,5 28,0 45,10"
+     id="path1212"
+     inkscape:label="/light/1/dimmer"
+     sodipodi:nodetypes="ccc" />
+  <path
+     style="fill:none;fill-opacity:1;stroke:#001fff;stroke-width:0.57735;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 15,5 8,2.75 C 5.195834,2.75 0,10 0,10"
+     id="path1216"
+     inkscape:label="/light/1/dimmer"
+     sodipodi:nodetypes="czc"
+     inkscape:connector-curvature="0" />
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="5"
+     y="74.631927"
+     id="text2527"><tspan
+       sodipodi:role="line"
+       id="tspan2525"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="5"
+       y="74.631927">TT-in</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="29.884565"
+     y="74.166794"
+     id="text2527-1"><tspan
+       sodipodi:role="line"
+       id="tspan2525-8"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="29.884565"
+       y="74.166794">TT-out</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="55.001698"
+     y="110.56653"
+     id="text11262"><tspan
+       sodipodi:role="line"
+       id="tspan11260"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="55.001698"
+       y="110.56653">Ma-in</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="82.444489"
+     y="110.56653"
+     id="text12568"><tspan
+       sodipodi:role="line"
+       id="tspan12566"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="82.444489"
+       y="110.56653">Ma-out</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="106.63136"
+     y="170.10344"
+     id="text13922"><tspan
+       sodipodi:role="line"
+       id="tspan13920"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="106.63136"
+       y="170.10344">La-in</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="134.07414"
+     y="170.10344"
+     id="text13926"><tspan
+       sodipodi:role="line"
+       id="tspan13924"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="134.07414"
+       y="170.10344">La-out</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="156.86563"
+     y="227.31468"
+     id="text17110"><tspan
+       sodipodi:role="line"
+       id="tspan17108"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="156.86563"
+       y="227.31468">Ve-in</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+     x="184.30841"
+     y="227.31468"
+     id="text17114"><tspan
+       sodipodi:role="line"
+       id="tspan17112"
+       style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4px;font-family:Arial;-inkscape-font-specification:'Arial, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
+       x="184.30841"
+       y="227.31468">Ve-out</tspan></text>
+  <path
+     style="fill:none;stroke:#001fff;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 0,28.691666 10,28.279167 C 11.666667,28.416667 12,27 15,27.75"
+     id="path6275-5"
+     sodipodi:nodetypes="ccc"
+     inkscape:label="/light/1/strobe"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#001fff;stroke-width:0.70710701;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 25,28.395835 19.999998,0"
+     id="path1414-9"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/1/strobe"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#001fff;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 0,46.75 C 3.5513201,48.854074 10,49 15,46.75"
+     id="path6275-5-1"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/1/hue"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#001fff;stroke-width:0.70710701;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 25,47.866668 20,0"
+     id="path1414-9-9"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/1/hue"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#001fff;stroke-width:0.499708;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 0,61.75 c 1.6610091,2.865879 7.132697,2.461026 15,0"
+     id="path6275-5-1-5"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/1/tilt"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:none;stroke:#001fff;stroke-width:0.70710701;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 25,65.75 20,0"
+     id="path1414-9-9-2"
+     sodipodi:nodetypes="cc"
+     inkscape:label="/light/1/tilt"
+     inkscape:connector-curvature="0" />
+</svg>

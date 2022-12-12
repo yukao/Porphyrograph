@@ -1576,7 +1576,7 @@ void main() {
      cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
                * cameraWH;
  */
-  cameraCoord = vec2((1.0 - decalCoordsPOT.x), decalCoordsPOT.y )
+  cameraCoord = vec2((1. - decalCoordsPOT.x), decalCoordsPOT.y )
               // added for wide angle lens that covers more than the drawing surface
                * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
@@ -1593,7 +1593,10 @@ void main() {
     cameraImage = vec3(0.0);
   }
 
-  // cameraImage = vec3(1) - cameraImage;
+  // color inversion
+  if( invertCamera ) {
+    cameraImage = vec3(1) - cameraImage;
+  }
 
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
 

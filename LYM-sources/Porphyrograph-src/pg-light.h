@@ -1,3 +1,27 @@
+/*! \file pg-light.h
+ *
+ *
+ *     File pg-light.h
+ *
+ *
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation; either version 2.1
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program; if not, write to the Free
+ * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ * 02111-1307, USA.
+ */
+ /* based on ENTEC source code */
+
 #ifndef _PRO_DRIVER_H
 #define _PRO_DRIVER_H
 
@@ -110,14 +134,24 @@ void FTDI_PurgeBuffer();
 void ReceiveMIDI(int PortLabel);
 void SendMIDI(int PortLabel, unsigned char channel, unsigned char note, unsigned char velocity);
 void ReceiveDMX(int PortLabel);
-void SendDMX(int PortLabel);
-void pg_StoreDMX_11channels(int portNo, int light_address, float ch1, float ch2, float ch3, float ch4, float ch5, float ch6, float ch7, float ch8, float ch9, float ch10, float ch11);
+bool pg_oneLightGroup_Changed(void);
+void pg_Reset_LightGroup_Changed(void);
+bool pg_oneLightGroup_Loops(void);
+void pg_light_automation_update(void);
+void store_one_DMXvalue(unsigned char* myDmx, int DMX_light_address, int channel_no, int fine_channel_no, float value);
+void pg_StoreDMXValues_AllLightGroups(void);
 void pg_SendDMX(void);
 void pg_SendDMXZeros(void);
-void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float rgb_color_value[3]);
+void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float zoom_value, float pan_value, float tilt_value, float hue_value, float red_value, float green_value, float blue_value, float grey_value);
+void pg_StoreDMX(int channel, float channel_value, int light_port, bool has_fine_channel);
 void enable_midi();
 void init_promk2();
 void FTDI_Reload();
 void FTDI_Reload();
-void light_init(void);
+void DMX_light_initialization(void);
+void pg_lightGUI_values_and_pulse_update(int light_param, string light_param_string);
+void pg_lightGUI_loop_update(int light_param, string light_param_string);
+void pg_lightGUI_all_values_and_pulse_update(void);
+void pg_lightGUI_all_loop_update(void);
+void pg_lightGUI_initialization(void);
 #endif

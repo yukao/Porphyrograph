@@ -36,6 +36,9 @@
 #if defined (KOMPARTSD)
 #include "pg_shader_body_decl_KompartSD.cpp"
 #endif
+#if defined (LIGHT)
+#include "pg_shader_body_decl_Light.cpp"
+#endif
 #if defined (REUTLINGEN)
 #include "pg_shader_body_decl_Reutlingen.cpp"
 #endif
@@ -51,6 +54,9 @@
 #if defined (PIERRES)
 #include "pg_shader_body_decl_Pierres.cpp"
 #endif
+#if defined (ENSO)
+#include "pg_shader_body_decl_Enso.cpp"
+#endif
 #if defined (TEMPETE)
 #include "pg_shader_body_decl_Tempete.cpp"
 #endif
@@ -65,6 +71,18 @@
 #endif
 #ifdef SONG
 #include "pg_shader_body_decl_Song.cpp"
+#endif
+#ifdef CORE
+#include "pg_shader_body_decl_Core.cpp"
+#endif
+#ifdef FORET
+#include "pg_shader_body_decl_Foret.cpp"
+#endif
+#ifdef SOUNDINITIATIVE
+#include "pg_shader_body_decl_SoundInitiative.cpp"
+#endif
+#ifdef ALKEMI
+#include "pg_shader_body_decl_alKemi.cpp"
 #endif
 #if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_shader_body_decl_demo.cpp"
@@ -109,7 +127,9 @@ std::unordered_map<int, std::string> pg_stringShaders = {
 #ifdef PG_SENSORS
 	{ pg_shader_Sensor, "pg_shader_Sensor" },
 #endif
+#ifdef PG_WITH_CLIP_ART
 	{ pg_ClipArt, "pg_ClipArt" },
+#endif
 #ifdef PG_MESHES
 	{ pg_shader_Mesh, "pg_shader_Mesh" },
 #endif
@@ -140,6 +160,9 @@ GLint uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera frame
 #endif
 GLint uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie frame
 GLint uniform_ParticleAnimation_texture_fs_Noise;  // 3D noise
+#ifdef PG_WITH_REPOP_DENSITY
+GLint uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density
+#endif
 GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
 GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // particle initialization pairs of textures color/radius
 GLint uniform_ParticleAnimation_texture_fs_Part_acc;  // particle acceleration texture
@@ -160,7 +183,7 @@ GLint uniform_ParticleAnimation_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 GLint uniform_Update_vp_model;
 GLint uniform_Update_vp_view;
 GLint uniform_Update_vp_proj;
-#if defined (PIERRES)
+#if defined (PG_WITH_PHOTO_HOMOGRAPHY)
 GLint uniform_Update_homographyForTexture;
 #endif
 GLint uniform_Update_vp_2fv_width_height;
@@ -188,7 +211,7 @@ GLint uniform_Update_fs_4fv_fftPhases47;
 #endif
 GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
-#if defined(PG_NB_CA_TYPES) && !defined (GN)
+#if defined(PG_NB_CA_TYPES) && !defined (GN) && !defined (ALKEMI)
 GLint uniform_Update_fs_3fv_repop_ColorCA;
 #endif
 GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
@@ -201,12 +224,18 @@ GLint uniform_Update_fs_4fv_photo01_wh;
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 GLint uniform_Update_fs_4fv_photo01Wghts_randomValues;
 #endif
+#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+GLint uniform_Update_fs_2fv_clip01Wghts;
+#endif
 #ifdef PG_WITH_CAMERA_CAPTURE
 GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 #endif
 GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
+#endif
+#ifdef PG_WITH_CLIPS
+GLint uniform_Update_fs_3fv_photo_rgb;
 #endif
 #if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
 GLint uniform_Update_texture_fs_CATable;
@@ -236,7 +265,7 @@ GLint uniform_Update_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 GLint uniform_Update_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
 GLint uniform_Update_texture_fs_Brushes;  // pen patterns
 #endif
 #ifdef PG_WITH_CAMERA_CAPTURE
@@ -251,6 +280,10 @@ GLint uniform_Update_texture_fs_RepopDensity;  // repop density
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 GLint uniform_Update_texture_fs_Photo0;  // photo[0]
 GLint uniform_Update_texture_fs_Photo1;  // photo[1]
+#endif
+#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+GLint uniform_Update_texture_fs_Clip0;  // clip[0]
+GLint uniform_Update_texture_fs_Clip1;  // clip[1]
 #endif
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 GLint uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering used for flashing layers with particles
@@ -359,11 +392,16 @@ GLint uniform_Master_vp_model;
 GLint uniform_Master_vp_view;
 GLint uniform_Master_vp_proj;
 GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
+#if defined(GN) || defined(TVW) || defined(ALKEMI)
 GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
-GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
-GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
-GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
-GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+#else
+GLint uniform_Master_fs_3fv_width_height_timeFromStart;
+#endif
+//GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+//GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
+//GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
+//GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
+GLint uniform_Master_fs_2iv_mobile_cursor_currentScene;
 #ifdef CAVERNEPLATON
 GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb;
 #endif
@@ -415,7 +453,7 @@ GLint uniform_Mesh_vp_model;
 GLint uniform_Mesh_vp_view;
 GLint uniform_Mesh_vp_proj;
 GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene;
-#ifndef TEMPETE
+#if !defined(TEMPETE) && !defined(ENSO) && !defined(SONG) && !defined(CORE)
 GLint uniform_Mesh_fs_3fv_light;
 #endif
 #ifdef PG_AUGMENTED_REALITY
@@ -594,6 +632,9 @@ void pg_loadAllShaders(void) {
 #if defined (KOMPARTSD)
 #include "pg_shader_body_bind_KompartSD.cpp"
 #endif
+#if defined (KOMPARTSD)
+#include "pg_shader_body_bind_Light.cpp"
+#endif
 #if defined (REUTLINGEN)
 #include "pg_shader_body_bind_Reutlingen.cpp"
 #endif
@@ -609,6 +650,9 @@ void pg_loadAllShaders(void) {
 #if defined (PIERRES)
 #include "pg_shader_body_bind_Pierres.cpp"
 #endif
+#if defined (ENSO)
+#include "pg_shader_body_bind_Enso.cpp"
+#endif
 #if defined (TEMPETE)
 #include "pg_shader_body_bind_Tempete.cpp"
 #endif
@@ -623,6 +667,18 @@ void pg_loadAllShaders(void) {
 #endif
 #ifdef SONG
 #include "pg_shader_body_bind_Song.cpp"
+#endif
+#ifdef CORE
+#include "pg_shader_body_bind_Core.cpp"
+#endif
+#ifdef FORET
+#include "pg_shader_body_bind_Foret.cpp"
+#endif
+#ifdef SOUNDINITIATIVE
+#include "pg_shader_body_bind_SoundInitiative.cpp"
+#endif
+#ifdef ALKEMI
+#include "pg_shader_body_bind_alKemi.cpp"
 #endif
 #if defined (DEMO) || defined (DEMO_BEZIER)
 #include "pg_shader_body_bind_demo.cpp"
@@ -692,6 +748,9 @@ void pg_loadAllShaders(void) {
 
 	bindAndCheckUniform(&uniform_ParticleAnimation_texture_fs_Noise, "uniform_ParticleAnimation_texture_fs_Noise", pg_shader_ParticleAnimation);  // 3D noise
 
+#ifdef PG_WITH_REPOP_DENSITY
+	bindAndCheckUniform(&uniform_ParticleAnimation_texture_fs_RepopDensity, "uniform_ParticleAnimation_texture_fs_RepopDensity", pg_shader_ParticleAnimation);  // repop density
+#endif
 	bindAndCheckUniform(&uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, "uniform_ParticleAnimation_texture_fs_Part_init_pos_speed", pg_shader_ParticleAnimation);  // particle initialization pairs of textures position/speed
 	bindAndCheckUniform(&uniform_ParticleAnimation_texture_fs_Part_init_col_rad, "uniform_ParticleAnimation_texture_fs_Part_init_col_rad", pg_shader_ParticleAnimation);  // particle initialization pairs of textures color/radius
 	bindAndCheckUniform(&uniform_ParticleAnimation_texture_fs_Part_acc, "uniform_ParticleAnimation_texture_fs_Part_acc", pg_shader_ParticleAnimation);  // particle acceleration texture
@@ -703,7 +762,7 @@ void pg_loadAllShaders(void) {
 	bindAndCheckUniform(&uniform_Update_vp_model, "vp_modelMatrix", pg_shader_Update);
 	bindAndCheckUniform(&uniform_Update_vp_view, "vp_viewMatrix", pg_shader_Update);
 	bindAndCheckUniform(&uniform_Update_vp_proj, "vp_projMatrix", pg_shader_Update);
-#if defined (PIERRES)
+#if defined (PG_WITH_PHOTO_HOMOGRAPHY)
 	bindAndCheckUniform(&uniform_Update_homographyForTexture, "fs_homographyForTexture", pg_shader_Update);
 #endif
 
@@ -731,7 +790,7 @@ void pg_loadAllShaders(void) {
 #endif
 	bindAndCheckUniform(&uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, "uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack", pg_shader_Update);
 	bindAndCheckUniform(&uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght, "uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght", pg_shader_Update);
-#if defined(PG_NB_CA_TYPES) && !defined (GN)
+#if defined(PG_NB_CA_TYPES) && !defined (GN) && !defined (ALKEMI)
 	bindAndCheckUniform(&uniform_Update_fs_3fv_repop_ColorCA, "uniform_Update_fs_3fv_repop_ColorCA", pg_shader_Update);
 #endif
 	bindAndCheckUniform(&uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, "uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres", pg_shader_Update);
@@ -744,8 +803,14 @@ void pg_loadAllShaders(void) {
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 	bindAndCheckUniform(&uniform_Update_fs_4fv_photo01Wghts_randomValues, "uniform_Update_fs_4fv_photo01Wghts_randomValues", pg_shader_Update);
 #endif
+#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+	bindAndCheckUniform(&uniform_Update_fs_2fv_clip01Wghts, "uniform_Update_fs_2fv_clip01Wghts", pg_shader_Update);
+#endif
 #ifdef PG_WITH_CAMERA_CAPTURE
 	bindAndCheckUniform(&uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H, "uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H", pg_shader_Update);
+#endif
+#ifdef PG_WITH_CLIPS
+	bindAndCheckUniform(&uniform_Update_fs_3fv_photo_rgb, "uniform_Update_fs_3fv_photo_rgb", pg_shader_Update);
 #endif
 	bindAndCheckUniform(&uniform_Update_fs_4fv_xy_transl_tracks_0_1, "uniform_Update_fs_4fv_xy_transl_tracks_0_1", pg_shader_Update);
 #if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
@@ -780,7 +845,7 @@ void pg_loadAllShaders(void) {
 	bindAndCheckUniform(&uniform_Update_texture_fs_Trk3, "uniform_Update_texture_fs_Trk3", pg_shader_Update);  // ping-pong track 3 (FBO)
 #endif
 																									   // textures
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(SONG)
+#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
 	bindAndCheckUniform(&uniform_Update_texture_fs_Brushes, "uniform_Update_texture_fs_Brushes", pg_shader_Update);  // pen patterns
 #endif
 
@@ -801,6 +866,10 @@ void pg_loadAllShaders(void) {
 #ifdef PG_WITH_PHOTO_DIAPORAMA
 	bindAndCheckUniform(&uniform_Update_texture_fs_Photo0, "uniform_Update_texture_fs_Photo0", pg_shader_Update);  // photo[0] frame
 	bindAndCheckUniform(&uniform_Update_texture_fs_Photo1, "uniform_Update_texture_fs_Photo1", pg_shader_Update);  // photo[1] frame
+#endif
+#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+	bindAndCheckUniform(&uniform_Update_texture_fs_Clip0, "uniform_Update_texture_fs_Clip0", pg_shader_Update);  // clip[0]
+	bindAndCheckUniform(&uniform_Update_texture_fs_Clip1, "uniform_Update_texture_fs_Clip1", pg_shader_Update);  // clip[1]
 #endif
 #if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 	bindAndCheckUniform(&uniform_Update_texture_fs_Part_render, "uniform_Update_texture_fs_Part_render", pg_shader_Update);  // particle rendering capture
@@ -917,11 +986,16 @@ void pg_loadAllShaders(void) {
 	bindAndCheckUniform(&uniform_Master_vp_view, "vp_viewMatrix", pg_shader_Master);
 	bindAndCheckUniform(&uniform_Master_vp_proj, "vp_projMatrix", pg_shader_Master);
 	bindAndCheckUniform(&uniform_Master_fs_4fv_xy_frameno_pulsedShift, "uniform_Master_fs_4fv_xy_frameno_pulsedShift", pg_shader_Master);
+#if defined(GN) || defined(TVW) || defined(ALKEMI)
 	bindAndCheckUniform(&uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart, "uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart", pg_shader_Master);
-	bindAndCheckUniform(&uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey, "uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey", pg_shader_Master);
-	bindAndCheckUniform(&uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene, "uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene", pg_shader_Master);
-	bindAndCheckUniform(&uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor, "uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor", pg_shader_Master);
-	bindAndCheckUniform(&uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, "uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb", pg_shader_Master);
+#else
+	bindAndCheckUniform(&uniform_Master_fs_3fv_width_height_timeFromStart, "uniform_Master_fs_3fv_width_height_timeFromStart", pg_shader_Master);
+#endif
+	//bindAndCheckUniform(&uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey, "uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey", pg_shader_Master);
+	//bindAndCheckUniform(&uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene, "uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene", pg_shader_Master);
+	//bindAndCheckUniform(&uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor, "uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor", pg_shader_Master);
+	//bindAndCheckUniform(&uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, "uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb", pg_shader_Master);
+	bindAndCheckUniform(&uniform_Master_fs_2iv_mobile_cursor_currentScene, "uniform_Master_fs_2iv_mobile_cursor_currentScene", pg_shader_Master);
 #ifdef CAVERNEPLATON
 	bindAndCheckUniform(&uniform_Master_fs_3fv_Caverne_BackColor_rgb, "uniform_Master_fs_3fv_Caverne_BackColor_rgb", pg_shader_Master);
 #endif
@@ -971,7 +1045,7 @@ void pg_loadAllShaders(void) {
 	bindAndCheckUniform(&uniform_Mesh_vp_view, "vp_viewMatrix", pg_shader_Mesh);
 	bindAndCheckUniform(&uniform_Mesh_vp_proj, "vp_projMatrix", pg_shader_Mesh);
 	bindAndCheckUniform(&uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, "uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene", pg_shader_Mesh);
-#ifndef TEMPETE
+#if !defined(TEMPETE) && !defined(ENSO) && !defined(SONG) && !defined(CORE)
 	bindAndCheckUniform(&uniform_Mesh_fs_3fv_light, "uniform_Mesh_fs_3fv_light", pg_shader_Mesh);
 #endif
 #ifdef PG_AUGMENTED_REALITY
