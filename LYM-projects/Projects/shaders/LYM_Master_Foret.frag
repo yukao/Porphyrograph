@@ -52,7 +52,7 @@ layout (binding = 7) uniform samplerRect uniform_Master_texture_fs_Mask;  // mas
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform vec4 uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
 
@@ -71,8 +71,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
-  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
+  float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
+  float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
   // NEMOURS: overlay between two videoprojectors
@@ -109,30 +109,10 @@ void main() {
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
+  if(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.w != 0 && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
-
-  // interface
-/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
-    if(decalCoords.x < 100) {
-      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
-    }
-    else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor.rgb, 1);
-    }
-    else if(decalCoords.x < 300) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
-    }
-    else if(decalCoords.x > 320 && decalCoords.x < 420) {
-      outColor0 = vec4(vec3(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.w), 1);
-    }
-    else if(decalCoords.x > 440 && decalCoords.x < 540) {
-      outColor0 = vec4(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.rgb, 1);
-    }
-    return;
-  }*/
 
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights

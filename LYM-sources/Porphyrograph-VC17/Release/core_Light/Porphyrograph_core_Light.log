@@ -1,0 +1,88 @@
+﻿  pg-conf.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(282,1): error C2011: 'pg_FBO_Update_attachments': 'enum' type redefinition
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(261): message : see declaration of 'pg_FBO_Update_attachments'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(769,33): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(888,34): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(918,34): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(1223,36): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(1229,41): error C2065: '_pg_string': undeclared identifier
+  pg-init.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(282,1): error C2011: 'pg_FBO_Update_attachments': 'enum' type redefinition
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(261): message : see declaration of 'pg_FBO_Update_attachments'
+  pg-light.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(282,1): error C2011: 'pg_FBO_Update_attachments': 'enum' type redefinition
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(261): message : see declaration of 'pg_FBO_Update_attachments'
+  pg-main.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(282,1): error C2011: 'pg_FBO_Update_attachments': 'enum' type redefinition
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(261): message : see declaration of 'pg_FBO_Update_attachments'
+  pg-script.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(282,1): error C2011: 'pg_FBO_Update_attachments': 'enum' type redefinition
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(261): message : see declaration of 'pg_FBO_Update_attachments'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1252,40): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1668,80): error C2664: 'void (pg_Parameter_Input_Type,double)': cannot convert argument 2 from 'ScenarioValue' to 'double'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1668,79): message : No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1997,40): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(2879,7): error C3861: 'pg_path_replay_trackNo_stop': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(2909,7): error C3861: 'pg_path_replay_trackNo_start': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3879,128): error C2664: 'void (pg_Parameter_Input_Type,double)': cannot convert argument 2 from 'ScenarioValue' to 'double'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3879,127): message : No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4053,39): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4374,35): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4401,35): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4773,22): error C2601: 'StopTrack': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4802,43): error C2601: 'pg_launch_performance': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4850,27): error C2601: 'setup': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4859,28): error C2601: 'setup_plus': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4881,29): error C2601: 'setup_minus': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4886,35): error C2601: 'pg_keyStrokeScripts': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4985,49): error C2601: 'flash_beat_generation': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4994,55): error C2601: 'flash_continuous_generation': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5013,54): error C2601: 'pg_flash_control': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5183,24): error C2601: 'ReceiveBeat': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5405,32): error C2601: 'pg_Make_flashCamera': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5415,6): error C2601: 'pg_aliasScript': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8401,40): error C2601: 'ClipArt_SubPathOnOff': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8411,139): error C2601: 'compute_pulsed_palette_color': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8539,72): error C2601: 'HSVtoRGB': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8576,72): error C2601: 'RGBtoHSV': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8612,161): error C2601: 'compute_pulsed_HSV_color': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8885,36): error C2601: 'pg_update_pulsed_colors': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9031,44): error C2601: 'pg_path_recording_onOff': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9130,61): error C2601: 'pg_path_replay_trackNo_onOff': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9270,43): error C2601: 'pg_path_recording_start': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9336,42): error C2601: 'pg_path_recording_stop': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9402,61): error C2601: 'pg_path_replay_trackNo_start': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9478,47): error C2601: 'pg_path_replay_trackNo_stop': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9567,44): error C2601: 'pg_writeMessageOnScreen': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9575,33): error C2601: 'pg_snapshot': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4665): fatal error C1075: '{': no matching token found
+  pg-shader.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(282,1): error C2011: 'pg_FBO_Update_attachments': 'enum' type redefinition
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(261): message : see declaration of 'pg_FBO_Update_attachments'
+  pg-stroke.cpp

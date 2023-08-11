@@ -37,21 +37,21 @@ typedef int SOCKET;
 #define _SpaceChar(c) (c == ' ' || c == '\n' || c == 13 || c == '\t')
 #define _Num(c) (c >= '0' && c <= '9')
 
-void pg_CopyAndAllocString( char **target , const char *source );
-
-long     pg_ScanIntegerString( int *p_c  ,
-		      int withTrailingSpaceChars , 
-		      char *charstring , int *ind );
-float    pg_ScanFloatString( int *p_c  ,
-		   int withTrailingSpaceChars , 
-		   char *charstring , int *ind );
-
 // string splitting into string vector by single char
 vector<string> split_string(string str, char token);
 
 // alternate plain/OSC message format
 enum pg_UDPMessageFormat{ Plain = 0, OSC , Emptypg_UDPMessageFormat };
 extern const char *pg_UDPMessageFormatString[Emptypg_UDPMessageFormat + 1];
+
+class UDP_Transport
+{
+public:
+	int transport_recv(SOCKET serverSocket, void* buffer, size_t size_max);
+
+private:
+	char m_buffer[max_network_message_length];
+};
 
 // IP client (remote server)
 class pg_IPClient {
@@ -68,16 +68,16 @@ public:
 	SOCKET SocketToRemoteServer;
 	struct sockaddr_in remoteServAddr;
 
-	// liblo client
-	lo_address lo_client;
+	//// liblo client
+	//lo_address lo_client;
 
 	// client stack: stores pending output messages
 	// OSC pattern
-	char  **output_pattern_stack;
+	string *output_pattern_stack;
 	// the message: string (Plain format), OSC encoding (OSC format)
-	char  **output_message_stack;
+	string *output_message_stack;
 
-	int     depth_output_stack;
+	int     max_depth_output_stack;
 	int     current_depth_output_stack;
 	float   maximal_IP_message_delay;
 	double  last_IP_message_time;
@@ -102,6 +102,7 @@ public:
 	void IP_OutputStackInitialization(void);
 
 	// send IP messages to IP client (Plain or OSC formats)
+	size_t makePacket(void* buffer, size_t size);
 	void sendIPmessages(void);
 
 	// message processing
@@ -110,18 +111,14 @@ public:
 };
 
 // IP server (local server)
-// liblo message processing 
-void liblo_error_handling(int num, const char *m, const char *path);
-int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
-	int argc, void *data, void *user_data);
 class pg_IPServer {
 public:
 	// local server ID
 	string       id;
 
 	// OSC argument parsing
-	char *OSC_arguments[MAX_OSC_ARGUMENTS];
-	char *OSC_address;
+	string OSC_arguments[MAX_OSC_ARGUMENTS];
+	string OSC_address;
 
 	// local server socket
 	SOCKET              SocketToLocalServer;
@@ -137,12 +134,9 @@ public:
 	unsigned int        Remote_client_port;
 	struct hostent     *Remote_client_host;
 
-	// liblo server
-	lo_server           lo_local_server;
-
 	// server reception stack
 	int            *input_argc_stack;
-	char          **input_message_stack;
+	string         *input_message_stack;
 	int            *input_message_length_stack;
 	int             depth_input_stack;
 	int             current_depth_input_stack;
@@ -172,8 +166,11 @@ public:
 	// void processReceivedOSC(char *localCommandLine, char *message, int n);
 
 	/// message processing
-	int receiveOneMessage(char *message);
+	void recvPacket(UDP_Transport* t);
 	void receiveIPMessages(void);
+
+	// OSC message decoding
+	int handlePacket(const OSCPP::Server::Packet& packet);
 
 	// stores IP messages before duplicate removal 
 	// in case of duplicated messages (with possibly different 
@@ -184,5 +181,7 @@ public:
 	// or scenario variables assignment)
 	void ProcessFilteredInputMessages(void);
 };
+
+UDP_Transport* newUDP_Transport();
 
 #endif

@@ -7,17 +7,26 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 #define ATELIERS_PORTATIFS
 
+#define var_CAMixingWeight
 float	 CAMixingWeight;
+#define var_PartMixingWeight
 float	 PartMixingWeight;
+#define var_trackMixingWeight_0
 float	 trackMixingWeight_0;
+#define var_trackMixingWeight_1
 float	 trackMixingWeight_1;
+#define var_trackMixingWeight_2
 float	 trackMixingWeight_2;
+#define var_trackMixingWeight_3
+float	 trackMixingWeight_3;
+#define var_echo
 float	 echo;
+#define var_echoNeg
 float	 echoNeg;
-uniform float uniform_Mixing_scenario_var_data[7];
+uniform float uniform_Mixing_scenario_var_data[8];
 
 // Main shader.
 
@@ -67,8 +76,9 @@ void main() {
   trackMixingWeight_0 = uniform_Mixing_scenario_var_data[2];
   trackMixingWeight_1 = uniform_Mixing_scenario_var_data[3];
   trackMixingWeight_2 = uniform_Mixing_scenario_var_data[4];
-  echo = uniform_Mixing_scenario_var_data[5];
-  echoNeg = uniform_Mixing_scenario_var_data[6];
+  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[5];
+  echo = uniform_Mixing_scenario_var_data[6];
+  echoNeg = uniform_Mixing_scenario_var_data[7];
 
   float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
 

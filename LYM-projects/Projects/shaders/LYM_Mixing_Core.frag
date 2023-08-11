@@ -8,7 +8,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 #define PG_NB_TRACKS 4
-#define ATELIERS_PORTATIFS
 
 #include_declarations
 
@@ -66,12 +65,13 @@ void main() {
   if( CA_color.a < 0 ) {
     CA_color = vec4(0.0);
   }
-
+   
   // brigher CA at the beginning of a flash
   float flashCameraCoef = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.y;
   float flashPhotoCoef = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.z;
   if( flashCameraCoef > 0 && flashCameraCoef > flashPhotoCoef) { // flash camera
-    if(flashCameraCoef < 0.3) {
+    if(
+      flashCameraCoef < 0.3) {
       CAMixingWeight += (1.0 - CAMixingWeight) * flashCameraCoef / 0.3;          
     }
     else {
@@ -104,17 +104,19 @@ void main() {
   // mix of current layers according to composition weights
   vec3 localColor
     = vec3(track0_color.rgb) * trackMixingWeight_0
-#if PG_NB_TRACKS >= 2
+#if PG_NB_TRACKS >= 2 && defined(var_trackMixingWeight_1)
     + vec3(track1_color.rgb) * trackMixingWeight_1
 #endif
-#if PG_NB_TRACKS >= 3
+#if PG_NB_TRACKS >= 3 && defined(var_trackMixingWeight_2)
     + vec3(track2_color.rgb) * trackMixingWeight_2
 #endif
-#if PG_NB_TRACKS >= 4
+#if PG_NB_TRACKS >= 4 && defined(var_trackMixingWeight_3)
     + vec3(track3_color.rgb) * trackMixingWeight_3
 #endif
     + CA_color.rgb * CAMixingWeight
+#if defined(var_PartMixingWeight)
     + particle_color.rgb * PartMixingWeight * particle_color.a
+#endif
     ;
 
   // clamping

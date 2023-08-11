@@ -26,89 +26,35 @@
 #ifndef PG_SHADER_H
 #define PG_SHADER_H
 
-#ifdef GN
-#include "pg_shader_header_GN.h"
-#endif
 #ifdef TVW
 #include "pg_shader_header_TVW.h"
 #endif
 #ifdef CRITON
 #include "pg_shader_header_Criton.h"
 #endif
-#if defined (KOMPARTSD)
+#if defined(KOMPARTSD)
 #include "pg_shader_header_KompartSD.h"
 #endif
-#if defined (LIGHT)
+#if defined(LIGHT)
 #include "pg_shader_header_Light.h"
 #endif
-#if defined (REUTLINGEN)
-#include "pg_shader_header_Reutlingen.h"
-#endif
-#if defined (BICHES)
-#include "pg_shader_header_Biches.h"
-#endif
-#if defined (ATELIERSENFANTS)
-#include "pg_shader_header_AteliersEnfants.h"
-#endif
-#if defined (CAVERNEPLATON)
-#include "pg_shader_header_CavernePlaton.h"
-#endif
-#if defined (PIERRES)
-#include "pg_shader_header_Pierres.h"
-#endif
-#if defined (ENSO)
-#include "pg_shader_header_Enso.h"
-#endif
-#if defined (TEMPETE)
-#include "pg_shader_header_Tempete.h"
-#endif
-#if defined (DAWN)
-#include "pg_shader_header_Dawn.h"
-#endif
-#if defined (RIVETS)
+#if defined(RIVETS)
 #include "pg_shader_header_Rivets.h"
 #endif
-#if defined (ULM)
-#include "pg_shader_header_Ulm.h"
-#endif
-#ifdef SONG
-#include "pg_shader_header_Song.h"
-#endif
-#ifdef CORE
+#if defined(CORE)
 #include "pg_shader_header_Core.h"
 #endif
-#ifdef FORET
+#if defined(FORET)
 #include "pg_shader_header_Foret.h"
 #endif
-#ifdef SOUNDINITIATIVE
-#include "pg_shader_header_SoundInitiative.h"
-#endif
-#ifdef ALKEMI
-#include "pg_shader_header_alKemi.h"
-#endif
-#if defined (DEMO) || defined (DEMO_BEZIER)
-#include "pg_shader_header_demo.h"
-#endif
-#ifdef VOLUSPA
+#if defined(VOLUSPA)
 #include "pg_shader_header_voluspa.h"
 #endif
-#ifdef ARAKNIT
+#if defined(ARAKNIT)
 #include "pg_shader_header_araknit.h"
 #endif
-#if defined (ETOILES)
-#include "pg_shader_header_etoiles.h"
-#endif
-#ifdef INTERFERENCE
-#include "pg_shader_header_interference.h"
-#endif
-#ifdef CAAUDIO
+#if defined(CAAUDIO)
 #include "pg_shader_header_CAaudio.h"
-#endif
-#ifdef DASEIN
-#include "pg_shader_header_dasein.h"
-#endif
-#ifdef BONNOTTE
-#include "pg_shader_header_bonnotte.h"
 #endif
 
 unsigned long pg_getFileLength(ifstream& file);
@@ -122,24 +68,24 @@ void pg_initializeScenearioVariables( void );
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
 enum ShaderFileTypes {
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_shader_ParticleAnimation = 0,
 	pg_shader_Update,
 #else
 	pg_shader_Update = 0,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_shader_ParticleRender,
 #endif
 	pg_shader_Mixing,
 	pg_shader_Master, 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 	pg_shader_Sensor,
 #endif
-#ifdef PG_WITH_CLIP_ART
+#if defined(var_activeClipArts)
 	pg_ClipArt,
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	pg_shader_Mesh,
 #endif
 	pg_NbShaderTotal
@@ -160,7 +106,7 @@ extern std::unordered_map<int, std::string> pg_stringShaders;
 //extern GLint uniform_Camera_texture_fs_decal;         // camera capture
 //extern GLint uniform_Camera_texture_fs_lookupTable1;  // current background video frame
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
@@ -190,14 +136,10 @@ extern GLint uniform_ParticleAnimation_texture_fs_CA;         // ping-pong CA (F
 extern GLint uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong position/speed of particles (FBO)
 extern GLint uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong color/radius of particles (FBO)
 extern GLint uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong target position/color/radius of particles (FBO)
-#ifdef PG_WITH_CAMERA_CAPTURE
 extern GLint uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera frame
-#endif
 extern GLint uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_ParticleAnimation_texture_fs_Noise;  // 3D noise
-#ifdef PG_WITH_REPOP_DENSITY
 extern GLint uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density
-#endif
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // particle initialization pairs of textures color/radius
 extern GLint uniform_ParticleAnimation_texture_fs_Part_acc;  // particle acceleration texture
@@ -209,7 +151,7 @@ extern GLint uniform_ParticleAnimation_texture_fs_Part_acc;  // particle acceler
 extern GLint uniform_Update_vp_model;
 extern GLint uniform_Update_vp_view;
 extern GLint uniform_Update_vp_proj;
-#if defined (PG_WITH_PHOTO_HOMOGRAPHY)
+#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 extern GLint uniform_Update_homographyForTexture;
 #endif
 extern GLint uniform_Update_vp_2fv_width_height;
@@ -218,11 +160,11 @@ extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 #if defined(CAAUDIO) || defined(RIVETS)
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc;
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) || PG_NB_TRACKS >= 2
+#if defined(var_part_initialization) || PG_NB_TRACKS >= 2
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;
 #endif
 extern GLint uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts;
 #endif
 extern GLint uniform_Update_path_data;
@@ -236,46 +178,49 @@ extern GLint uniform_Update_fs_4fv_fftPhases47;
 #endif
 extern GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 extern GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght;
-#if defined(PG_NB_CA_TYPES) && !defined (GN) && !defined (ALKEMI)
+#if defined(var_nb_CATypes) && !defined(var_alKemi)
 extern GLint uniform_Update_fs_3fv_repop_ColorCA;
 #endif
 extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 extern GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
 #endif
-#if defined (PG_WITH_PHOTO_DIAPORAMA) || defined (TVW)
+#if defined(var_photo_diaporama) || defined(TVW)
 extern GLint uniform_Update_fs_4fv_photo01_wh;
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
+#ifdef var_photo_diaporama
 extern GLint uniform_Update_fs_4fv_photo01Wghts_randomValues;
 #endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 extern GLint uniform_Update_fs_2fv_clip01Wghts;
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 extern GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 #endif
 extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1;
-#if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
+#if defined(var_nb_CATypes) || defined(PG_WITH_BLUR)
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 #endif
-#ifdef PG_WITH_CLIPS
+#if defined(var_clipCaptFreq)
 extern GLint uniform_Update_fs_3fv_photo_rgb;
 #endif
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined(var_CATable)
 extern GLint uniform_Update_texture_fs_CATable;
 #endif
-#if defined (PG_WITH_BURST_MASK)
-extern GLint uniform_Update_texture_fs_Burst_Mask;
-#endif
-#ifdef GN
+#if defined(var_GenerativeNights_planes)
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
+#endif
+#if defined(var_camera_BG_ini_subtr)
 extern GLint uniform_Update_texture_fs_Camera_BGIni;
 #endif
+extern GLint uniform_Update_texture_fs_pixel_acc;
 
 // UPDATE SHADER TEXTURE IDS
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 extern GLint uniform_Update_texture_fs_CA;         // ping-pong CA (FBO)
+#endif
+#ifdef var_alKemi
+extern GLint uniform_Update_texture_fs_PreviousCA;         // ping-pong CA (FBO)
 #endif
 #ifdef PG_NB_PIXEL_MODES
 extern GLint uniform_Update_texture_fs_Pixels;  // 2-cycle ping-pong speed/position of pixels (FBO)
@@ -290,27 +235,21 @@ extern GLint uniform_Update_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Update_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 extern GLint uniform_Update_texture_fs_Brushes;  // pen patterns
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 extern GLint uniform_Update_texture_fs_Camera_frame;  // camera frame
 extern GLint uniform_Update_texture_fs_Camera_BG;  // camera BG capture
-#endif
 extern GLint uniform_Update_texture_fs_Movie_frame;  // movie frame
 extern GLint uniform_Update_texture_fs_Noise;  // 3D noise
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 extern GLint uniform_Update_texture_fs_RepopDensity;  // repop density
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 extern GLint uniform_Update_texture_fs_Photo0;  // photo[0]
 extern GLint uniform_Update_texture_fs_Photo1;  // photo[1]
-#endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
 extern GLint uniform_Update_texture_fs_Clip0;  // clip[0]
 extern GLint uniform_Update_texture_fs_Clip1;  // clip[1]
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined(var_part_initialization) 
 extern GLint uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering used for flashing layers with particles
 #endif
 extern GLint uniform_Update_texture_fs_Part_init_pos_speed;  // particle initialization pairs of textures position/speed
@@ -319,7 +258,7 @@ extern GLint uniform_Update_texture_fs_Part_init_col_rad;  // particle initializ
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE RENDERING SHADER
 // PARTICLE RENDERING SHADER UNIFORM VARIABLES
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
+#if defined(var_part_initialization) 
 extern GLint uniform_ParticleSplat_vp_model;
 extern GLint uniform_ParticleSplat_vp_view;
 extern GLint uniform_ParticleSplat_vp_proj;
@@ -330,7 +269,7 @@ extern GLint uniform_ParticleSplat_vp_3fv_trackReplay_xy_height;
 extern GLint uniform_ParticleSplat_texture_vp_Part_pos_speed;				 // Particle position/speed update
 extern GLint uniform_ParticleSplat_texture_vp_Part_col_rad;          // Particle color/radius update
 #endif
-#if defined (CURVE_PARTICLES) 
+#if defined(CURVE_PARTICLES) 
 extern GLint uniform_ParticleCurve_vp_model;
 extern GLint uniform_ParticleCurve_vp_view;
 extern GLint uniform_ParticleCurve_vp_proj;
@@ -345,9 +284,9 @@ extern GLint uniform_ParticleCurve_texture_vp_Part_col_rad;          // Particle
 // color texture
 extern GLint uniform_ParticleCurve_Comet_texture_fs_decal;  // comet texture
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES)
+#if defined(TEXTURED_QUAD_PARTICLES)
 // color texture
-extern GLint uniform_ParticleSplat_BlurredDisk_texture_fs_decal;  // blurred disk texture
+extern GLint uniform_ParticleSplat_texture_fs_decal;  // blurred disk texture
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -356,7 +295,7 @@ extern GLint uniform_ParticleSplat_BlurredDisk_texture_fs_decal;  // blurred dis
 extern GLint uniform_Mixing_vp_model;
 extern GLint uniform_Mixing_vp_view;
 extern GLint uniform_Mixing_vp_proj;
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 extern GLint uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght;
 #else
 extern GLint uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
@@ -364,10 +303,10 @@ extern GLint uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
 extern GLint uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 // MIXING SHADER TEXTURE IDS
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 extern GLint uniform_Mixing_texture_fs_CA; // ping-pong BG track (FBO)
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined(var_part_initialization)
 extern GLint uniform_Mixing_texture_fs_Part_render;  // Particles (FBO)
 #endif
 extern GLint uniform_Mixing_texture_fs_Trk0;  // ping-pong track 0 (FBO)
@@ -380,7 +319,7 @@ extern GLint uniform_Mixing_texture_fs_Trk2;  // ping-pong track 2 (FBO)
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Mixing_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #endif
-#if defined (TVW)
+#if defined(TVW)
 extern GLint uniform_Mixing_texture_fs_Display_Font;  // message Font
 extern GLint uniform_Mixing_texture_fs_Display_Message1; // tweets at the bottom of the screen
 extern GLint uniform_Mixing_texture_fs_Display_Message2; // tweets at the bottom of the screen
@@ -388,7 +327,7 @@ extern GLint uniform_Mixing_texture_fs_Display_Message2; // tweets at the bottom
 extern GLint uniform_Mixing_texture_fs_Render_prec;  // preceding snapshot
 extern GLint uniform_Mixing_texture_fs_Screen_Font;  // message Font
 extern GLint uniform_Mixing_texture_fs_Screen_Message;  // message string
-#if defined (TVW)
+#if defined(TVW)
 extern GLint uniform_Update_fs_4fv_weights03;
 extern GLint uniform_Update_fs_2fv_weights45;
 extern GLint uniform_Update_fs_3fv_alphaSwap02;
@@ -419,28 +358,29 @@ extern GLint uniform_Master_vp_model;
 extern GLint uniform_Master_vp_view;
 extern GLint uniform_Master_vp_proj;
 extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-#if defined(GN) || defined(TVW) || defined(ALKEMI)
+#if defined(TVW) || defined(var_alKemi)
 extern GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
 #else
-extern GLint uniform_Master_fs_3fv_width_height_timeFromStart;
+extern GLint uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 #endif
 //extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 //extern GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 //extern GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor;
 //extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 extern GLint uniform_Master_fs_2iv_mobile_cursor_currentScene;
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 extern GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb;
+#endif
+#if defined(var_flashchange_BGcolor_freq)
+extern GLint uniform_Master_fs_3fv_BG_color_rgb;
 #endif
 
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_Render_curr;         // previous pass output
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 extern GLint uniform_Master_texture_fs_CA;  // ping-pong CA (FBO)
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
 extern GLint uniform_Master_texture_fs_Part_render;  // Particles
-#endif
 extern GLint uniform_Master_texture_fs_Trk0;  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2
 extern GLint uniform_Master_texture_fs_Trk1;  // ping-pong track 1 (FBO)
@@ -454,11 +394,8 @@ extern GLint uniform_Master_texture_fs_Trk3;  // ping-pong track 3 (FBO)
 #ifdef PG_WITH_MASTER_MASK
 extern GLint uniform_Master_texture_fs_Mask;  // mask for master output
 #endif
-#if defined (GN) || defined (INTERFERENCE)
-extern GLint uniform_Master_texture_fs_LYMlogo;  // LYM logo (texture)
-#endif
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
   /////////////////////////////////////////////////////////////////////////
 // SENSOR SHADER
 // SENSOR SHADER UNIFORM VARIABLES
@@ -468,11 +405,11 @@ extern GLint uniform_Sensor_vp_proj;
 
 // SENSOR SHADER TEXTURE IDS
 extern GLint uniform_Sensor_texture_fs_decal;         // sensor texture
-extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency;
+extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency;
 // extern GLint uniform_Sensor_fs_2fv_frameno_invert;
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 /////////////////////////////////////////////////////////////////////////
 // MESH SHADER
 // MESH SHADER UNIFORM VARIABLES
@@ -480,16 +417,31 @@ extern GLint uniform_Mesh_vp_model;
 extern GLint uniform_Mesh_vp_view;
 extern GLint uniform_Mesh_vp_proj;
 extern GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene;
-#if !defined(TEMPETE) && !defined(ENSO) && !defined(SONG) && !defined(CORE)
 extern GLint uniform_Mesh_fs_3fv_light;
+#if defined(var_Contact_mesh_expand)
+extern GLint uniform_Mesh_vp_2fv_dilate_explode;
 #endif
-#ifdef PG_AUGMENTED_REALITY
+#if defined(var_Contact_mesh_anime)
+extern GLint uniform_Mesh_bones_matrices;
+#endif
+#if defined(var_MmeShanghai_brokenGlass)
+extern GLint uniform_Mesh_fs_4fv_color;
+extern GLint uniform_Mesh_fs_4fv_color_master_photo_weight_bg;
+#endif
+// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 extern GLint uniform_Mesh_fs_4fv_textureFrontier;
 extern GLint uniform_Mesh_fs_4fv_textureFrontier_width;
 extern GLint uniform_Mesh_fs_4fv_textureScaleTransl;
 #endif
 // Mesh SHADER TEXTURE IDS
 extern GLint uniform_Mesh_texture_fs_decal;         // Mesh texture
+#if defined(var_Contact_mesh_palette)
+extern GLint uniform_Mesh_fs_4fv_color_palette;         // Mesh color
+#endif
+#if defined(var_MmeShanghai_brokenGlass)
+extern GLint uniform_Mesh_texture_fs_BG;         // Mesh texture
+#endif
 #endif
 
 #endif

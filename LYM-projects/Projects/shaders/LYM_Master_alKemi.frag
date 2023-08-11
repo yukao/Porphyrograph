@@ -7,7 +7,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 // #define ATELIERS_PORTATIFS
 #define CAVERNEPLATON
 
@@ -83,12 +83,6 @@ void main() {
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
-
-  // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
-    outColor0 = vec4(0, 0, 0, 1);
-    return;
-  }
 
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights

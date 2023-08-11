@@ -1,15 +1,1 @@
-﻿  pg-conf.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  pg-draw.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  pg-main.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  pg-script.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  pg-shader.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  pg-stroke.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  pg-udp.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\SourcesBerfore18\Porphyrograph-alKemi-src\pg-all_include.h(150,10): fatal error C1083: Cannot open include file: 'opencv2/core.hpp': No such file or directory
-  Generating Code...
+﻿

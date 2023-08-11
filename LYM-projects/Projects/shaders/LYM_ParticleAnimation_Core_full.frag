@@ -7,53 +7,101 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
+#define var_partDecay
 float	 partDecay;
+#define var_part_initialization
 int		part_initialization;
+#define var_part_image_acceleration
 int		part_image_acceleration;
+#define var_part_path_follow_0
 bool	  part_path_follow_0;
+#define var_part_path_follow_1
 bool	  part_path_follow_1;
+#define var_part_path_follow_2
 bool	  part_path_follow_2;
+#define var_part_path_follow_3
 bool	  part_path_follow_3;
+#define var_part_path_follow_4
 bool	  part_path_follow_4;
+#define var_part_path_follow_5
 bool	  part_path_follow_5;
+#define var_part_path_follow_6
 bool	  part_path_follow_6;
+#define var_part_path_follow_7
 bool	  part_path_follow_7;
+#define var_part_path_follow_8
 bool	  part_path_follow_8;
+#define var_part_path_follow_9
 bool	  part_path_follow_9;
+#define var_part_path_follow_10
 bool	  part_path_follow_10;
+#define var_part_path_follow_11
 bool	  part_path_follow_11;
+#define var_part_path_repulse_0
 bool	  part_path_repulse_0;
+#define var_part_path_repulse_1
 bool	  part_path_repulse_1;
+#define var_part_path_repulse_2
 bool	  part_path_repulse_2;
+#define var_part_path_repulse_3
 bool	  part_path_repulse_3;
+#define var_part_path_repulse_4
 bool	  part_path_repulse_4;
+#define var_part_path_repulse_5
 bool	  part_path_repulse_5;
+#define var_part_path_repulse_6
 bool	  part_path_repulse_6;
+#define var_part_path_repulse_7
 bool	  part_path_repulse_7;
+#define var_part_path_repulse_8
 bool	  part_path_repulse_8;
+#define var_part_path_repulse_9
 bool	  part_path_repulse_9;
+#define var_part_path_repulse_10
 bool	  part_path_repulse_10;
+#define var_part_path_repulse_11
 bool	  part_path_repulse_11;
+#define var_part_size
 float	 part_size;
+#define var_part_acc
 float	 part_acc;
+#define var_part_damp
 float	 part_damp;
+#define var_part_gravity
 float	 part_gravity;
-float	 noiseScale;
+#define var_noiseParticleScale
+float	 noiseParticleScale;
+#define var_part_field_weight
 float	 part_field_weight;
+#define var_part_damp_targtRad
 float	 part_damp_targtRad;
+#define var_part_timeToTargt
 float	 part_timeToTargt;
+#define var_partMove_target
 bool	  partMove_target;
+#define var_partMove_rand
 bool	  partMove_rand;
+#define var_partExit_mode
 int		partExit_mode;
+#define var_partStroke_mode
 int		partStroke_mode;
+#define var_partColor_mode
 int		partColor_mode;
+#define var_pixel_acc_shiftX
 float	 pixel_acc_shiftX;
+#define var_pixel_acc_shiftY
 float	 pixel_acc_shiftY;
+#define var_repop_part
 float	 repop_part;
+#define var_repop_path
 float	 repop_path;
+#define var_Part_repop_density
 int		Part_repop_density;
+#define var_Part_repop_color_mode
+int		Part_repop_color_mode;
+#define var_freeze
 bool	  freeze;
-uniform float uniform_ParticleAnimation_scenario_var_data[46];
+uniform float uniform_ParticleAnimation_scenario_var_data[47];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -61,7 +109,6 @@ uniform float uniform_ParticleAnimation_scenario_var_data[46];
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 #define PG_WITH_CAMERA_CAPTURE
-#define PG_REPOP_DENSITY
 #define PG_NB_TRACKS 4
 #define PG_NB_PATHS 11
 
@@ -189,6 +236,7 @@ int nbParticles = 0;
 ///////////////////////////////////////
 // REPOPULATION OF PARTICLES: DENSITY OF REPOPULATION
 float repop_density_weight = 1;
+vec3 textureDensityValue = vec3(0);
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -229,9 +277,7 @@ layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Pa
 layout (binding = 6) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
 layout (binding = 7) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
-#ifdef PG_REPOP_DENSITY
 layout (binding = 8)  uniform samplerRect uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density texture
-#ifdef PG_WITH_CAMERA_CAPTURE
 layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
 layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
 layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
@@ -243,8 +289,6 @@ layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_T
 #endif
 #if PG_NB_TRACKS >= 4
 layout (binding = 14) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
-#endif
-#endif
 #endif
 
 /////////////////////////////////////
@@ -276,8 +320,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseParticleScale) {
+  v *= noiseParticleScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -338,8 +382,8 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
   // FLAT
-  return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+  return vec2(snoise( texCoordLoc , noiseParticleScale * 100 ),
+                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseParticleScale * 100 ));
 }
 
 // random noise
@@ -370,7 +414,7 @@ int rand3D(vec3 value, float threshold){
 }
 
 int rand3D_new(vec3 value, float threshold){
-  if( snoise( value.xy + vec2(2.0937,9.4872) , noiseScale * 100 )  < threshold) {
+  if( snoise( value.xy + vec2(2.0937,9.4872) , noiseParticleScale * 100 )  < threshold) {
     return 1;
   }
   else {
@@ -501,18 +545,20 @@ void particle_out( void ) {
       vec2 pen_prev = vec2( pen_pos_prev_cur.x, height - pen_pos_prev_cur.y);
       vec2 pen_curr = vec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w);
       vec2 orth = pen_prev - pen_curr;
-      if(length(orth) != 0) {
-        orth.xy = orth.yx;
-        orth.y *= -1;
-        orth = normalize(orth);
+      if(length(orth) < 10) {
+        if(length(orth) != 0) {
+          orth.xy = orth.yx;
+          orth.y *= -1;
+          orth = normalize(orth);
+        }
+        out_position_speed_particle.xy 
+          = mix(pen_curr, pen_prev, randomPart.z ); // linear position
+        out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius_random.x; // thickness
+        out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+        out_color_radius_particle 
+            = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
+                    part_size);
       }
-      out_position_speed_particle.xy 
-        = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius_random.x; // thickness
-      out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-      out_color_radius_particle 
-          = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
-                  part_size);
     }
   }
 
@@ -521,28 +567,41 @@ void particle_out( void ) {
   // Uniform repopulation
   if( out_position_speed_particle.x == -10000) {
     // if the pixel noise is equal to frame % 8500 the cell is repopulated with a pixel
-    
+    /////////////////////////////////////////////////////////////////////
+    // RANDOM VALUES FOR POSITION
     vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.25 ) );
     vec4 radius_random = uniform_ParticleAnimation_path_data[0 * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
-#ifdef PG_REPOP_DENSITY
-    if( Part_repop_density >= 0 && repop_part > 0) {
-          repop_density_weight = texture(uniform_ParticleAnimation_texture_fs_RepopDensity,decalCoords).r;
+    repop_density_weight = repop_part;
+
+    /////////////////////////////////////////////////////////////////////
+    // RANDOM INITIALIZATION
+    // head and tail are initialized with the same values
+    // reaches for regular grid position
+    float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+    int rankGrid = int(rank * width * height);
+    vec2 part_pos = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
+    vec3 part_color = uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz;
+
+#ifdef var_Part_repop_density
+    if( Part_repop_density >= 0 && repop_density_weight > 0) {
+      // ponderates the weight with the luminance of the pixel
+      vec2 texCoords = ivec2(part_pos / vec2(width, height) * vec2(width,height));
+      textureDensityValue = texture(uniform_ParticleAnimation_texture_fs_RepopDensity,texCoords).xyz;
+      repop_density_weight *= graylevel(textureDensityValue.rgb);
+#ifdef var_Part_repop_color_mode
+      if(Part_repop_color_mode == 1) {
+        part_color = textureDensityValue;
+      }
+#endif
     }
 #endif
+
     // particle "ADDITION"
-    if( repop_part > 0
-        && rand3D(vec3(decalCoordsPOT, radius_random.z), repop_part * repop_density_weight) != 0) {
-         /////////////////////////////////////////////////////////////////////
-        // RANDOM INITIALIZATION
-        // head and tail are initialized with the same values
-        // reaches for regular grid position
-        float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
-        int rankGrid = int(rank * width * height);
-        out_position_speed_particle.xy 
-          = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
+    if( rand3D(vec3(decalCoordsPOT, radius_random.z), repop_density_weight) != 0) {
+        out_position_speed_particle.xy = part_pos; // position
         out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-        out_color_radius_particle 
-          = vec4(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz,part_size);
+        out_color_radius_particle = vec4(part_color, part_size);
+        // out_color_radius_particle = vec4(textureDensityValue,part_size);
     }
   }
 
@@ -762,11 +821,18 @@ void particle_out( void ) {
   dvec2 speed2D;
   // texture based acceleration shift
   if(part_image_acceleration >= 0) {
-    float rot_angle = part_field_weight * texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).r;
-    float cosa = cos(rot_angle);
-    float sina = sin(rot_angle);
-    part_acceleration  
-      = dmat2(cosa, -sina, sina, cosa) * part_acceleration;
+    float grey_center = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).rgb);
+    float greyX = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy  + vec2(1,0)).rgb);
+    float greyY = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy  + vec2(0,1)).rgb);
+    float gradX = greyX - grey_center;
+    float gradY = greyY - grey_center;
+    float norm = length(vec2(gradX, gradY));
+    if(norm != 0) {
+      float cosa = gradX / norm;
+      float sina = gradY / norm;
+      part_acceleration  
+        = vec2(dmat2(cosa, -sina, sina, cosa) * part_acceleration);
+    }
   }
   // speed update from acceleration vector part_acceleration 
   // (with a factor equal to part_acc controlled by interface or scenario)
@@ -778,27 +844,28 @@ void particle_out( void ) {
 
   // reading the noise value for acceleration 
   double speed = length(speed2D);
-  if(part_image_acceleration < 0) {
+  if(part_image_acceleration < 0 && speed > 0) {
     speed2D  
       = normalize(speed2D 
         + part_field_weight * dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center)) * speed;
+      speed = length(speed2D);
   }
 
   // speed damping to reach a target
-  if( dist_to_target < part_damp_targtRad ) {
+  if(partMove_target && speed > 0 && dist_to_target < part_damp_targtRad) {
       speed2D -= 0.01 * dvec2((part_damp_targtRad - dist_to_target) / part_damp_targtRad) * speed2D;
+      speed = length(speed2D);
   }
 
   // position update from new speed value
   // with speed limit
-  speed =length(speed2D);
   if(speed > 50) {
     speed2D *= double(50/speed);
   }
-  if(speed < 0.0001) {
+/*if(speed < 0.0001) {
     speed2D = dvec2(generativeNoise(pixelTextureCoordinatesXY));
   }
-
+*/
   out_position_speed_particle.zw = vec2(speed2D);
   out_position_speed_particle.xy += out_position_speed_particle.zw;
 
@@ -873,7 +940,7 @@ void particle_out( void ) {
     out_position_speed_particle.zw = headCurrentSpeed * (0.3 * index) * normalizedLookAt;
     // oscillation of non tail or head points
     // if(index ==1 || index==2) {
-    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseScale * 100 ) - 0.5)
+    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseParticleScale * 100 ) - 0.5)
     //     * vec2(lookatHead.y,-lookatHead.x);
     // }
 
@@ -922,7 +989,7 @@ void main() {
   part_acc = uniform_ParticleAnimation_scenario_var_data[28];
   part_damp = uniform_ParticleAnimation_scenario_var_data[29];
   part_gravity = uniform_ParticleAnimation_scenario_var_data[30];
-  noiseScale = uniform_ParticleAnimation_scenario_var_data[31];
+  noiseParticleScale = uniform_ParticleAnimation_scenario_var_data[31];
   part_field_weight = uniform_ParticleAnimation_scenario_var_data[32];
   part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[33];
   part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[34];
@@ -936,7 +1003,8 @@ void main() {
   repop_part = uniform_ParticleAnimation_scenario_var_data[42];
   repop_path = uniform_ParticleAnimation_scenario_var_data[43];
   Part_repop_density = int(uniform_ParticleAnimation_scenario_var_data[44]);
-  freeze = (uniform_ParticleAnimation_scenario_var_data[45] > 0 ? true : false);
+  Part_repop_color_mode = int(uniform_ParticleAnimation_scenario_var_data[45]);
+  freeze = (uniform_ParticleAnimation_scenario_var_data[46] > 0 ? true : false);
 
   //////////////////////////
   // variables 
@@ -960,7 +1028,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseParticleScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   vec2  pixelTextureCoordinatesXY = decalCoordsPOT + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
 

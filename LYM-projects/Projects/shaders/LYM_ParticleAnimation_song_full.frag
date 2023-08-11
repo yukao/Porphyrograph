@@ -7,51 +7,97 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
+#define var_partDecay
 float	 partDecay;
+#define var_part_initialization
 int		part_initialization;
+#define var_part_image_acceleration
 int		part_image_acceleration;
+#define var_part_path_follow_0
 bool	  part_path_follow_0;
+#define var_part_path_follow_1
 bool	  part_path_follow_1;
+#define var_part_path_follow_2
 bool	  part_path_follow_2;
+#define var_part_path_follow_3
 bool	  part_path_follow_3;
+#define var_part_path_follow_4
 bool	  part_path_follow_4;
+#define var_part_path_follow_5
 bool	  part_path_follow_5;
+#define var_part_path_follow_6
 bool	  part_path_follow_6;
+#define var_part_path_follow_7
 bool	  part_path_follow_7;
+#define var_part_path_follow_8
 bool	  part_path_follow_8;
+#define var_part_path_follow_9
 bool	  part_path_follow_9;
+#define var_part_path_follow_10
 bool	  part_path_follow_10;
+#define var_part_path_follow_11
 bool	  part_path_follow_11;
+#define var_part_path_repulse_0
 bool	  part_path_repulse_0;
+#define var_part_path_repulse_1
 bool	  part_path_repulse_1;
+#define var_part_path_repulse_2
 bool	  part_path_repulse_2;
+#define var_part_path_repulse_3
 bool	  part_path_repulse_3;
+#define var_part_path_repulse_4
 bool	  part_path_repulse_4;
+#define var_part_path_repulse_5
 bool	  part_path_repulse_5;
+#define var_part_path_repulse_6
 bool	  part_path_repulse_6;
+#define var_part_path_repulse_7
 bool	  part_path_repulse_7;
+#define var_part_path_repulse_8
 bool	  part_path_repulse_8;
+#define var_part_path_repulse_9
 bool	  part_path_repulse_9;
+#define var_part_path_repulse_10
 bool	  part_path_repulse_10;
+#define var_part_path_repulse_11
 bool	  part_path_repulse_11;
+#define var_part_size
 float	 part_size;
+#define var_part_acc
 float	 part_acc;
+#define var_part_damp
 float	 part_damp;
+#define var_part_gravity
 float	 part_gravity;
-float	 noiseScale;
+#define var_noiseParticleScale
+float	 noiseParticleScale;
+#define var_part_field_weight
 float	 part_field_weight;
+#define var_part_damp_targtRad
 float	 part_damp_targtRad;
+#define var_part_timeToTargt
 float	 part_timeToTargt;
+#define var_partMove_target
 bool	  partMove_target;
+#define var_partMove_rand
 bool	  partMove_rand;
+#define var_partExit_mode
 int		partExit_mode;
+#define var_partStroke_mode
 int		partStroke_mode;
+#define var_partColor_mode
 int		partColor_mode;
+#define var_pixel_acc_shiftX
 float	 pixel_acc_shiftX;
+#define var_pixel_acc_shiftY
 float	 pixel_acc_shiftY;
+#define var_repop_part
 float	 repop_part;
+#define var_repop_path
 float	 repop_path;
+#define var_Part_repop_density
 int		Part_repop_density;
+#define var_freeze
 bool	  freeze;
 uniform float uniform_ParticleAnimation_scenario_var_data[46];
 
@@ -273,8 +319,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseParticleScale) {
+  v *= noiseParticleScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -335,8 +381,8 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
   // FLAT
-  return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+  return vec2(snoise( texCoordLoc , noiseParticleScale * 100 ),
+                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseParticleScale * 100 ));
 }
 
 // random noise
@@ -860,7 +906,7 @@ void particle_out( void ) {
     out_position_speed_particle.zw = headCurrentSpeed * (0.3 * index) * normalizedLookAt;
     // oscillation of non tail or head points
     // if(index ==1 || index==2) {
-    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseScale * 100 ) - 0.5)
+    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseParticleScale * 100 ) - 0.5)
     //     * vec2(lookatHead.y,-lookatHead.x);
     // }
 
@@ -909,7 +955,7 @@ void main() {
   part_acc = uniform_ParticleAnimation_scenario_var_data[28];
   part_damp = uniform_ParticleAnimation_scenario_var_data[29];
   part_gravity = uniform_ParticleAnimation_scenario_var_data[30];
-  noiseScale = uniform_ParticleAnimation_scenario_var_data[31];
+  noiseParticleScale = uniform_ParticleAnimation_scenario_var_data[31];
   part_field_weight = uniform_ParticleAnimation_scenario_var_data[32];
   part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[33];
   part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[34];
@@ -947,7 +993,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseParticleScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   vec2  pixelTextureCoordinatesXY = decalCoordsPOT + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
 

@@ -1,5 +1,23 @@
+// CONFIGURATION CONSTANTS
 // RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17
 // VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles
+constexpr auto double_window                  = false     ;
+constexpr auto wide_screen                    = false     ;
+constexpr auto window_width                   = 1920      ;
+constexpr auto window_height                  = 1080      ;
+constexpr auto window_x                       = 0         ;
+constexpr auto window_y                       = 0         ;
+constexpr auto minimal_interframe_latency     = 0.01      ;
+constexpr auto time_scale                     = 1         ;
+constexpr auto initial_time                   = 0         ;
+constexpr auto message_pixel_length           = 2048      ;
+constexpr auto trace_output_frame_number      = false     ;
+constexpr auto trace_time                     = false     ;
+constexpr auto first_frame_number             = 0         ;
+constexpr auto last_frame_number              = 1000000   ;
+constexpr auto max_mouse_recording_frames     = 16384     ;
+constexpr auto max_network_message_length     = 65535     ;
+constexpr auto nb_particles                   = 2000      ;
 enum ConfigurationVarIDs {
   _double_window = 0,
   _wide_screen,
@@ -19,29 +37,9 @@ enum ConfigurationVarIDs {
   _max_network_message_length,
   _nb_particles,
   _MaxConfigurationVarIDs};
-extern bool  double_window       ;
-extern bool  wide_screen         ;
-extern int   window_width        ;
-extern int   window_height       ;
-extern int   window_x            ;
-extern int   window_y            ;
-extern float minimal_interframe_latency;
-extern float time_scale          ;
-extern float initial_time        ;
-extern int   message_pixel_length;
-extern bool  trace_output_frame_number;
-extern bool  trace_time          ;
-extern int   first_frame_number  ;
-extern int   last_frame_number   ;
-extern int   max_mouse_recording_frames;
-extern int   max_network_message_length;
-extern int   nb_particles        ;
-enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };
-enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
-extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];
-extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
-// RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
-// VERBATIM,auto_beat,auto_pulse,clear,clear,clear,mute screen,invert,snapshot onOff,cursor size,beat duration,Blend Transparency,CA mixing weight,ID comment,CA Mixing weight,ID comment,track0 mixing weight,ID comment,track1 mixing weight,ID comment,track2 mixing weight,ID comment,CA Master weight,ID comment,CA Master weight,ID comment,track0 Master weight,ID comment,track1 Master weight,ID comment,track2 Master weight,ID comment,echo,echo_pulse,echo neg,echoNeg_pulse,CA decay,CA decay pulse,track0 decay,ID comment,track1 decay,ID comment,track2 decay,ID comment,track2 decay,ID comment,pen_radius,pen radius pulse,palette for pen,palette for pen,color music,Grey level for pen,Grey level for pen,A color,A color,pen brush,pen radius replay,pen radius replay pulse,pen_color_replay,pen_color_replay_pulse,pen saturation replay,pen saturation replay pulse,pen value replay,pen value replay pulse,pen hue replay,pen hue replay pulse,pen brush replay,current drawing track,current video track,current photo track,track_x_transl_0,track_x_transl_0_pulse,track_y_transl_0,track_y_transl_0_pulse,track_x_transl_1,track_x_transl_1_pulse,track_y_transl_1,track_y_transl_1_pulse,path0 repop on/off,path1 repop on/off,path2 repop on/off,path3 repop on/off,path4 repop on/off,path5 repop on/off,path6 repop on/off,path7 repop on/off,path8 repop on/off,path9 repop on/off,path10 repop on/off,path11 repop on/off,path1 record on/off,path2 record on/off,path3 record on/off,path4 record on/off,path5 record on/off,path3 record on/off,path7 record on/off,path8 record on/off,path9 record on/off,path10 record on/off,path11 record on/off,path1 replay track,path2 replay track,path3 replay track,path4 replay track,path5 replay track,path6 replay track,path7 replay track,path8 replay track,path9 replay track,path10 replay track,path11 replay track,ID comment,particle motion shift pulse,noise scale,ID comment,part noise type,part noise line scale,part noise angle scale,pixel noise center-x,pixel noise center-y,pixel acc,pixel acc pulse,pixel acc center-x,ID comment,pixel acc center-y,ID comment,radius pixel,pixel radius pulse,pixel_mode,repopuplating CA,ID comment,repopuplating track0,ID comment,repopuplating Path,ID comment,repop_colorBG,repop_colorBG_pulse,repop_greyBG,repop_greyBG_pulse,repop_colorPart,repop_colorPart_pulse,repop_greyPart,repop_greyPart_pulse,repop_colorCA,repop_colorCA_pulse,repop_greyCA,repop_greyCA_pulse,movie no,movie capture frequency,photo diaporama index,photo diaporama fade dur,photo diaporama plateau dur,current SvgGpu images,soundtrack on/off,movie weight,ID comment,Sobel movie,ID comment,invert movie,ID comment,video saturation ,video saturation pulse,ID comment,ID comment,photo satur,photo satur pulse,photo value,photo value pulse,photo gamma,photo gamma pulse,photo_threshold,photo_threshold_pulse,photo jitter amplitude,mask jitter amplitude,photo weight,ID comment,photo scale,photo rot,photo x_transl,photo y_transl,mask scale,mask contrast,CA cell proliferation,ID comment,CA cancer proliferation,ID comment,CA cancer cell ratio,ID comment,CAParams4,ID comment,CAParams5,ID comment,CAParams6,ID comment,CAParams7,ID comment,CAParams8,ID comment,CA1 type,CA1 subtype,CA2 type,CA2 subtype,CA1/CA2 weight, Flash track0->CA freq, Flash track1->CA freq, Flash track2->CA freq,Flash CA->BG freq, Flash track1->BG freq, Flash track2->BG freq,Flash pixel freq,Flash pixel duration,beat threshold,beat min duration (ms),input volume,Min input volume,pen pressure coef,pen angleH coef,pen angleV coef,tracks sync on/off,cumul video,CA step,color interface display,fast vs slow CA color spreading,master scale,master scale pulse,master scale ratio,master offsetX,master offsetY,freeze on/off,sound enveloppe min,sound envelope max,adc weight (eg microphone),soundtrack weight,MIDIwithBeat,MIDIwithColor,MIDIwithBrush,MIDIwithPhotoFlash,path_replay loop,movie loop
+// SCENARIO VARIABLES
+// RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,114,115,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,233,234,235,236,237,238,239,364,365,366,367
+// VERBATIM,auto_beat,auto_pulse,clear,clear,clear,mute screen,invert,snapshot onOff,cursor size,beat duration,Blend Transparency,CA mixing weight,ID comment,CA Mixing weight,ID comment,track0 mixing weight,ID comment,track1 mixing weight,ID comment,track2 mixing weight,ID comment,CA Master weight,ID comment,CA Master weight,ID comment,track0 Master weight,ID comment,track1 Master weight,ID comment,track2 Master weight,ID comment,echo,echo_pulse,echo neg,echoNeg_pulse,CA decay,CA decay pulse,track0 decay,ID comment,track1 decay,ID comment,track2 decay,ID comment,track2 decay,ID comment,pen_radius,pen radius pulse,palette for pen,palette for pen,color music,Grey level for pen,Grey level for pen,A color,A color,pen brush,pen radius replay,pen radius replay pulse,pen_color_replay,pen_color_replay_pulse,pen saturation replay,pen saturation replay pulse,pen value replay,pen value replay pulse,pen hue replay,pen hue replay pulse,pen brush replay,current drawing track,current video track,current photo track,track_x_transl_0,track_x_transl_0_pulse,track_y_transl_0,track_y_transl_0_pulse,track_x_transl_1,track_x_transl_1_pulse,track_y_transl_1,track_y_transl_1_pulse,path0 repop on/off,path1 repop on/off,path2 repop on/off,path3 repop on/off,path4 repop on/off,path5 repop on/off,path6 repop on/off,path7 repop on/off,path8 repop on/off,path9 repop on/off,path10 repop on/off,path11 repop on/off,path1 record on/off,path2 record on/off,path3 record on/off,path4 record on/off,path5 record on/off,path3 record on/off,path7 record on/off,path8 record on/off,path9 record on/off,path10 record on/off,path11 record on/off,path1 replay track,path2 replay track,path3 replay track,path4 replay track,path5 replay track,path6 replay track,path7 replay track,path8 replay track,path9 replay track,path10 replay track,path11 replay track,ID comment,particle motion shift pulse,noise scale,ID comment,noise scale,ID comment,pixel acc,pixel acc pulse,pixel acc center-x,ID comment,pixel acc center-y,ID comment,radius pixel,pixel radius pulse,pixel_mode,repopuplating CA,ID comment,repopuplating track0,ID comment,repopuplating Path,ID comment,repop_colorBG,repop_colorBG_pulse,repop_greyBG,repop_greyBG_pulse,repop_colorPart,repop_colorPart_pulse,repop_greyPart,repop_greyPart_pulse,repop_colorCA,repop_colorCA_pulse,repop_greyCA,repop_greyCA_pulse,movie no,movie capture frequency,photo diaporama index,photo diaporama fade dur,photo diaporama plateau dur,current SvgGpu images,soundtrack on/off,movie weight,ID comment,Sobel movie,ID comment,invert movie,ID comment,video saturation ,video saturation pulse,ID comment,ID comment,photo satur,photo satur pulse,photo value,photo value pulse,photo gamma,photo gamma pulse,photo_threshold,photo_threshold_pulse,photo jitter amplitude,mask jitter amplitude,photo weight,ID comment,photo scale,photo rot,photo x_transl,photo y_transl,mask scale,mask contrast,CA cell proliferation,ID comment,CA cancer proliferation,ID comment,CA cancer cell ratio,ID comment,CAParams4,ID comment,CAParams5,ID comment,CAParams6,ID comment,CAParams7,ID comment,CAParams8,ID comment,CA1 type,CA1 subtype,CA2 type,CA2 subtype,CA1/CA2 weight, Flash track0->CA freq, Flash track1->CA freq, Flash track2->CA freq,Flash CA->BG freq, Flash track1->BG freq, Flash track2->BG freq,Flash pixel freq,Flash pixel duration,beat threshold,beat min duration (ms),input volume,Min input volume,pen pressure coef,pen angleH coef,pen angleV coef,tracks sync on/off,cumul video,CA step,color interface display,fast vs slow CA color spreading,master scale,master scale pulse,master scale ratio,master offsetX,master offsetY,freeze on/off,sound enveloppe min,sound envelope max,adc weight (eg microphone),soundtrack PD_weight,soundtrack PA_weight,MIDIwithBeat,MIDIwithColor,MIDIwithBrush,MIDIwithPhotoFlash,path_replay loop,movie loop,sample setUp,sensor spatial pattern,sensor activation,sensor volume
  #define var_auto_beat
  #define var_auto_pulse
  #define var_clearAllLayers
@@ -155,13 +153,10 @@ extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
  #define var_path_replay_trackNo_11
  #define var_pulsed_part_Hshift
  #define var_pulsed_part_Vshift
- #define var_noiseScale
- #define var_noiseScale_pulse
- #define var_noiseType
- #define var_noiseLineScale
- #define var_noiseAngleScale
- #define var_noiseCenterX
- #define var_noiseCenterY
+ #define var_noiseUpdateScale
+ #define var_noiseUpdateScale_pulse
+ #define var_noiseParticleScale
+ #define var_noiseParticleScale_pulse
  #define var_pixel_acc
  #define var_pixel_acc_pulse
  #define var_pixel_acc_shiftX
@@ -274,13 +269,18 @@ extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];
  #define var_sound_env_min
  #define var_sound_env_max
  #define var_audioInput_weight
- #define var_soundtrack_weight
+ #define var_soundtrack_PD_weight
+ #define var_soundtrack_PA_weight
  #define var_MIDIwithBeat
  #define var_MIDIwithColor
  #define var_MIDIwithBrush
  #define var_MIDIwithPhotoFlash
  #define var_path_replay_loop
  #define var_movie_loop
+ #define var_sensor_sample_setUp
+ #define var_sensor_layout
+ #define var_sensor_activation
+ #define var_sensor_vol
 enum InterpVarIDs{ 
   _auto_beat = 0,
   _auto_pulse,
@@ -395,13 +395,10 @@ enum InterpVarIDs{
   _path_replay_trackNo_11,
   _pulsed_part_Hshift,
   _pulsed_part_Vshift,
-  _noiseScale,
-  _noiseScale_pulse,
-  _noiseType,
-  _noiseLineScale,
-  _noiseAngleScale,
-  _noiseCenterX,
-  _noiseCenterY,
+  _noiseUpdateScale,
+  _noiseUpdateScale_pulse,
+  _noiseParticleScale,
+  _noiseParticleScale_pulse,
   _pixel_acc,
   _pixel_acc_pulse,
   _pixel_acc_shiftX,
@@ -514,13 +511,18 @@ enum InterpVarIDs{
   _sound_env_min,
   _sound_env_max,
   _audioInput_weight,
-  _soundtrack_weight,
+  _soundtrack_PD_weight,
+  _soundtrack_PA_weight,
   _MIDIwithBeat,
   _MIDIwithColor,
   _MIDIwithBrush,
   _MIDIwithPhotoFlash,
   _path_replay_loop,
   _movie_loop,
+  _sensor_sample_setUp,
+  _sensor_layout,
+  _sensor_activation,
+  _sensor_vol,
   _MaxInterpVarIDs};
 extern bool  auto_beat           ;
 extern bool  auto_pulse          ;
@@ -530,7 +532,7 @@ extern bool  clearLayer          ;
 extern bool  mute_second_screen  ;
 extern bool  invertAllLayers     ;
 extern bool  take_snapshots      ;
-extern float cursorSize          ;
+extern int   cursorSize          ;
 extern float auto_beat_duration  ;
 extern float master              ;
 extern float CAMixingWeight      ;
@@ -635,13 +637,10 @@ extern int   path_replay_trackNo_10;
 extern int   path_replay_trackNo_11;
 extern float pulsed_part_Hshift  ;
 extern float pulsed_part_Vshift  ;
-extern float noiseScale          ;
-extern float noiseScale_pulse    ;
-extern int   noiseType           ;
-extern float noiseLineScale      ;
-extern float noiseAngleScale     ;
-extern float noiseCenterX        ;
-extern float noiseCenterY        ;
+extern float noiseUpdateScale    ;
+extern float noiseUpdateScale_pulse;
+extern float noiseParticleScale  ;
+extern float noiseParticleScale_pulse;
 extern float pixel_acc           ;
 extern float pixel_acc_pulse     ;
 extern float pixel_acc_shiftX    ;
@@ -754,13 +753,20 @@ extern bool  freeze              ;
 extern float sound_env_min       ;
 extern float sound_env_max       ;
 extern float audioInput_weight   ;
-extern float soundtrack_weight   ;
+extern float soundtrack_PD_weight;
+extern float soundtrack_PA_weight;
 extern bool  MIDIwithBeat        ;
 extern bool  MIDIwithColor       ;
 extern bool  MIDIwithBrush       ;
 extern bool  MIDIwithPhotoFlash  ;
 extern bool  path_replay_loop    ;
 extern bool  movie_loop          ;
+extern float sensor_sample_setUp ;
+extern int   sensor_layout       ;
+extern int   sensor_activation   ;
+extern float sensor_vol          ;
+enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };
+enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];
 extern void * ScenarioVarPointers[_MaxInterpVarIDs];
 extern char *ScenarioVarMessages[_MaxInterpVarIDs];

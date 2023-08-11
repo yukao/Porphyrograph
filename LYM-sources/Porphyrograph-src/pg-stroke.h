@@ -35,33 +35,34 @@
 //extern float **pg_Path_Pos_yR;
 //extern float **pg_Path_TimeStamp;
 struct pg_Path_Data_Struct {
-	float Color_r;
-	float Color_g;
-	float Color_b;
-	float Color_a;
-	int BrushID;
-	float RadiusX;
-	float RadiusY;
+	float path_Color_r;
+	float path_Color_g;
+	float path_Color_b;
+	float path_Color_a;
+	int path_BrushID;
+	float path_RadiusX;
+	float path_RadiusY;
 	float Pos_x_prev;
 	float Pos_y_prev;
-	float Pos_x;
-	float Pos_y;
-	float Pos_xL;
-	float Pos_yL;
-	float Pos_xR;
-	float Pos_yR;
+	float path_Pos_x;
+	float path_Pos_y;
+	float path_Pos_xL;
+	float path_Pos_yL;
+	float path_Pos_xR;
+	float path_Pos_yR;
 	double TimeStamp;
 };
 struct pg_Path_Status_Struct {
 	bool isFirstFrame;
 	bool isActiveRecording;
 	bool isNormalized;
-	int nbRecordedFrames;
+	int path_nbRecordedFrames;
 	int indReading;
 	double initialTimeRecording;
 	double finalTimeRecording;
 	double initialTimeReading;
-	double readSpeedScale;
+	double readSpeedScale; // speed from the scenario file
+	double lastPlayedFrameTime;
 };
 extern struct pg_Path_Status_Struct *pg_Path_Status;
 extern int *pg_indPreviousFrameReading;
@@ -88,11 +89,12 @@ void AddScaledVec2_Self(vec2* pOut_result, vec2* p0, float c0);
 
 
 /// SAVE IMAGE
-#ifdef WIN32
-DWORD WINAPI writesvg(LPVOID lpParam);
-#else
-void* writesvg(void * lpParam);
-#endif
+//#ifdef WIN32
+//DWORD WINAPI writesvg(LPVOID lpParam);
+//#else
+//void* writesvg(void * lpParam);
+//#endif
+void writesvg(cv::String imageFileName);
 
 //The base Catmull-Rom evaluation function which requires 4 points
 // 
@@ -101,28 +103,62 @@ void CatmullRom_Evaluate(vec2* pOut_result, vec2* p0, vec2* p1, vec2* p2, vec2* 
 // initialization of the tables that contain the stroke parameters
 void pg_initStrokes( void );
 
+// char array to integer or float
+long     pg_ScanIntegerString(int* p_c,
+	int withTrailingSpaceChars,
+	char* charstring, int* ind);
+float    pg_ScanFloatString(int* p_c,
+	int withTrailingSpaceChars,
+	char* charstring, int* ind);
+
 // loads a track from a path string
-void LoadPathPointsFromXML( char *pathString , int indPath , glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
-					  int * indCurve, float precedingCurrentPoint[2], float  currentPoint[2], bool with_color__brush_radius_from_scenario);
-void LoadPathColorsFromXML(string pathString, int indPath, int nbRecordedFrames);
-void LoadPathBrushesFromXML(string pathString, int indPath, int nbRecordedFrames);
-void LoadPathTimeStampsFromXML(string pathString, int indPath, int nbRecordedFrames);
+int LoadPathPointsFromXML(char* pathString, int indPath,
+	glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+	float precedingCurrentPoint[2], float  currentPoint[2],
+	bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario,
+	float* path_length, double p_secondsforwidth, int *nb_timeStamps);
+void LoadPathColorsFromXML(string pathString, int indPath, int* nbRecordedFrames);
+void LoadPathBrushesFromXML(string pathString, int indPath, int* nbRecordedFrames);
+void LoadPathTimeStampsFromXML(string pathString, int indPath, int* nbRecordedFrames);
 
 // loads a track from a svg file
-void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario);
-void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario);
+#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
+void load_svg_path( char *fileName , int indPath , int indTrack , float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+	float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth);
+#endif
+void readsvg( int *fileDepth , int indPath , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
+	float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth);
 
 // CONVEX HULL 
 #ifdef PG_BEZIER_PATHS
-bool pointEquals(glm::vec2 p, glm::vec2 q);
-float distance(glm::vec2 p, glm::vec2 q);
-bool left_oriented(glm::vec2 p1, glm::vec2 p2, glm::vec2 candidate);
-void convex_hull(glm::vec2 control_points[4], int *hull);
-void hull_expanded_by_radius(glm::vec2 control_points[4], int *hull, float radius, glm::vec2 hull_points[4]);
-void boundingBox_expanded_by_radius(glm::vec2 control_points[4], float radius, glm::vec4 *boundingBox);
+bool pointEquals(glm::vec2 *p, glm::vec2 *q);
+bool left_oriented(glm::vec2 *p1, glm::vec2 *p2, glm::vec2 *candidate);
+void cubicBezier(glm::vec2 control_points[4], glm::vec2* curve_point, float alphaBezier);
+void cubicBezier(glm::vec3 control_points[4], glm::vec3* curve_point, float alphaBezier);
+void Bezier_hull_expanded_by_radius(glm::vec2 control_points[4], int *hull, float radius, glm::vec2 hull_points[4]);
+void Bezier_boundingBox_expanded_by_radius(glm::vec2 control_points[4], float radius, glm::vec4 *boundingBox);
+float Bezier_length(glm::vec2 control_points[4], int nb_steps);
 void build_bounding_box(int indPath);
 void build_expanded_hull(int indPath);
 void test_hull(void);
+#endif
+
+#if defined(var_Novak_flight_on)
+#define PG_NB_FLIGHTS 11
+extern glm::vec3     prev_Novak_flight_control_points[PG_NB_FLIGHTS][4];
+extern glm::vec3     cur_Novak_flight_control_points[PG_NB_FLIGHTS][4];
+extern glm::vec3     cur_Novak_flight_points[PG_NB_FLIGHTS];
+extern glm::vec2     cur_Novak_flight_2D_points[PG_NB_FLIGHTS];
+extern float         prev_Novak_flightTime[PG_NB_FLIGHTS];
+extern double        prev_Novak_flightCurrentCLockTime[PG_NB_FLIGHTS];
+extern float         cur_Novak_flightTime[PG_NB_FLIGHTS];
+extern int           cur_Novak_flightIndex[PG_NB_FLIGHTS];
+extern glm::vec3     Novak_flight_deviation[PG_NB_FLIGHTS];
+extern float         cur_Novak_flightPerlinNoise[PG_NB_FLIGHTS][3][2];
+void             Novak_flight_next_control_points(int indFlight);
+void             Novak_flight_init_control_points(void);
+void             Novak_flight_update_coordinates(int indFlight);
+void             cur_Novak_flight_2D_coordinates(void);
 #endif
 
 // calculation of tangents from successive locations of the pen

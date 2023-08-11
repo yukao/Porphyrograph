@@ -17,25 +17,34 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 const float PI = 3.1415926535897932384626433832795;
 
+#define PG_VIDEO_ACTIVE
+// #define CURVE_PARTICLES
 #define SPLAT_PARTICLES
+
+// #define GENERATIVE_MOVIE
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
-#define PG_NB_TRACKS 4
+#define PG_NB_TRACKS 3
 #define PG_NB_PATHS 7
 
 ///////////////////////////////////////////////////////////////////
-const uint pg_FBO_fs_CA_attacht = 0;
-const uint pg_FBO_fs_Pixels_attacht = 1;
+// PARTICLE IMAGE INITIALIZATION
+#define PG_NB_PARTICLE_INITIAL_IMAGES 6
+
+const uint pg_CA_FBO_attcht = 0;
+const uint pg_Pixel_FBO_attcht = 1;
+const uint pg_ParticlePosSpeed_FBO_attcht = 2;
+const uint pg_ParticleColRadius_FBO_attcht = 3;
+const uint pg_ParticleTargetPosColRadius_FBO_attcht = 4;
 
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-const uint CA_DISLOCATION = 0;
+const uint CA_CYCLIC = 0;
 const uint CA_CYCLIC_1 = 1;
 const uint GOL_1 = 2;
 const uint CA_PROTOCELLS = 3;
-const uint CA_CYCLIC = 4;
 // const uint CA_PATHS = 4;
 // const uint CA_COLOR = 5;
 // const uint CA_NOTYPE = 6;
@@ -54,10 +63,44 @@ const float shadeProtocell[4] = {0,               // empty
                                  0.4,0.8,         // X Y
                                  1.0};            // Z
 
-const float shadeDisloc[5] = {0,0.4,              // empty new/old border
-                                 0.6, 0.8,  1.0};       // new/old nucleus
-const float inverseShadeDisloc[5] = {0.0,2.5,              // empty new/old border
-                                 1.67,1.25,  1.0};       // new/old nucleus
+
+////////////////////////////////////////////////////////////////////
+// PARTICLES
+
+// MOTION
+// const uint PARTMOVE_NONE = 0;
+// const uint PARTMOVE_REACH_GRID = 1; // reaches grid positions (regular grid over the image)
+// const uint PARTMOVE_RANDOM = 2; // random motion
+// const uint PARTMOVE_FIELD = 1; // follows the noise field (cf pixels)
+// const uint PARTMOVE_PARALLEL = 2; // all move same direction (pen direction)
+// const uint PARTMOVE_DIVERGENT = 3; // reaches nearest edge
+// const uint PARTMOVE_CONVERGENT = 4; // reaches for screen center
+// const uint PARTMOVE_FOLLOW_ONE = 5; // follow the first particle
+// const uint PARTMOVE_FOLLOW_NEXT = 6; // follow the next particle
+// const uint PARTMOVE_FOLLOW_RANDOM = 7; // follow a random particle
+// const uint PARTMOVE_REACH_RANDOM = 12; // reaches random (but fixed) positions
+
+// REPOP
+const uint PARTREPOP_NONE = 0;
+const uint PARTREPOP_GRID = 1; // random repopulation according to a certain threshold
+// from PARTREPOP_GRID + 1 to PARTREPOP_GRID + 2 PG_NB_PATHS
+
+// EXIT
+const uint PARTEXIT_NONE = 0; // lost when exits
+const uint PARTEXIT_OPPOSITE = 1; // when going out right/left/top/bottom reappers left/right/bottom/top
+const uint PARTEXIT_BOUNCE = 2; // bounces on edges
+
+// DRAWING INTERACTION
+const uint PARTSTROKE_NONE = 0; 
+const uint PARTSTROKE_AGGREG = 1; // aggregates on drawing
+const uint PARTSTROKE_BOUNCE = 2; // bounces on drawing
+const uint PARTSTROKE_DAMP = 3; // slows down on drawing
+
+// COLOR MODE
+const uint PARTCOLOR_WHITE = 0; // white particles
+const uint PARTCOLOR_MAX = 1; // maximum of flash color and particle
+const uint PARTCOLOR_COPY = 2; // copy flash color
+
 
 ////////////////////////////////////////////////////////////////////
 // pixel mode
@@ -90,16 +133,17 @@ float width;
 
 // frame number
 int frameNo;
-
-// CA Type
-int CAType;
-int CASubType;
+// target frame number
+int targetFrameNo;
 
 /////////////////////////////////////
 // 3 FBO OUTPUT: CA, PIXELS AND PARTICLES
-// const uint pg_FBO_fs_CA_attacht = 0;
-// const uint pg_FBO_fs_Pixels_attacht = 1;
-vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
+// const uint pg_CA_FBO_attcht = 0;
+// const uint pg_Pixel_FBO_attcht = 1;
+// const uint pg_ParticlePosSpeed_FBO_attcht = 2;
+// const uint pg_ParticleColRadius_FBO_attcht = 3;
+// const uint pg_ParticleTargetPosColRadius_FBO_attcht = 4;
+vec4 out_attachment_FBO[pg_ParticleTargetPosColRadius_FBO_attcht + 1];
 
 
 /////////////////////////////////////
@@ -111,6 +155,22 @@ vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
 
 // PARTICLE PASS OUTPUT
 vec4 out_particlesRendering;
+
+// PARTICLE FLASH CUMUL
+vec3 flashToPartCumul = vec3(0);
+
+// out particle returned values
+vec4 out_position_speed_particle = vec4(0);
+vec4 out_color_radius_particle = vec4(1);
+vec4 out_target_position_color_radius_particle = vec4(1);
+
+// number of particles
+int nbParticles = 0;
+
+// part acc & damp
+float part_acc_factor;
+float part_damp_factor;
+
 
 ////////////////////////////////////
 // PEN STROKE CALCULATION
@@ -133,12 +193,14 @@ vec2 out_speed_pixel = vec2(0,0);
 
 ////////////////////////////////////
 // VIDEO UPDATE
+#ifdef PG_VIDEO_ACTIVE
   vec3 cameraImage = vec3( 0.0 );
   vec2 cameraCoord = vec2(0.0);
   vec2 cameraWH;
   vec3 movieImage = vec3( 0.0 );
   vec2 movieCoord = vec2(0.0);
   vec2 movieWH;
+#endif
 
 // SOBEL OFFSETS
 vec2 offsetsVideo[9] = {vec2( -1, 1 ),vec2( 0, 1 ),vec2( 1, 1 ),
@@ -150,7 +212,7 @@ float sobelMatrixY[9] = {1,2,1,0,0,0,-1,-2,-1};
 ////////////////////////////////////
 // CA UPDATE
 vec4 out4_CA;
-
+float CAdecay = 0.0;
 bool CA_on_off;
 
 vec4 neighborValues[8]=vec4[8](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0));
@@ -160,9 +222,9 @@ vec4 neighborValuesDiag[16]=vec4[16](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec
 vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
 // pixel texture + z offset according to the chosen texture
 vec2 noisepixels;
-
+float radiuspixel;
 vec4 randomCA;
-vec4 randomCA2;
+vec3 randomCA2;
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -204,63 +266,80 @@ uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
-
-uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
-uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
+uniform vec4 uniform_Update_fs_4fv_flashTrkPartWghts;  
+uniform vec4 uniform_Update_fs_4fv_trkDecay_partDecay;
+uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
+uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pixelRadius;
 uniform vec4 uniform_Update_fs_4fv_pulse;
-uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
-uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
+uniform vec4 uniform_Update_fs_4fv_mouseTracks_xy_transl;
+uniform vec4 uniform_Update_fs_4fv_W_H_repopChannel_targetFrameNo;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
-uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
+uniform vec4 uniform_Update_fs_4fv_isClearLayer_flashPixel_flashCAPartWght_nbParticles;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
-uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
-uniform vec2 uniform_Update_fs_2fv_CAType_SubType;
+uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
+uniform vec3 uniform_Update_fs_3fv_part_repop_acc_damp_factor;
 
 /////////////////////////////////////
 // INPUT
-layout (binding = 0) uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 1) uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
-layout (binding = 2) uniform sampler3D   uniform_Update_texture_fs_Brushes;  // pen patterns
-layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
-layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
-layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
-layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 7) uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 8) uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 0) uniform samplerRect fs_decal;         // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 1) uniform samplerRect fs_lookupTable1;  // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
+layout (binding = 2) uniform samplerRect fs_lookupTable2;  // 2-cycle ping-pong Update pass position/speed of Particles step n (FBO attachment 2)
+layout (binding = 3) uniform samplerRect fs_lookupTable3;  // 2-cycle ping-pong Update pass color/radius of Particles step n (FBO attachment 3)
+layout (binding = 4) uniform samplerRect fs_lookupTable4;  // 2-cycle ping-pong Update pass target position/color/radius of Particles step n (FBO attachment 4)
+layout (binding = 5) uniform samplerRect fs_lookupTable5;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 6) uniform samplerRect fs_lookupTable6;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 7) uniform samplerRect fs_lookupTable7;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 8) uniform samplerRect fs_lookupTable8;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
+layout (binding = 8) uniform sampler3D   fs_lookupTable8;  // pen patterns
+#ifdef PG_VIDEO_ACTIVE
+layout (binding = 9) uniform samplerRect fs_lookupTable9;  // camera texture
+layout (binding = 10) uniform samplerRect fs_lookupTable10;  // camera BG texture
+layout (binding = 11) uniform samplerRect fs_lookupTable11;  // movie texture
+#endif
+layout (binding = 12) uniform sampler3D   fs_lookupTable12;  // noise texture
+layout (binding = 13) uniform samplerRect fs_lookupTable13;  // photo_0 texture
+layout (binding = 14) uniform samplerRect fs_lookupTable14;  // photo_1 texture
+layout (binding = 15) uniform samplerRect fs_lookupTable15;  // FBO capture of particle rendering
+layout (binding = 16) uniform samplerRect fs_lookupTable16;  // couples of textures for particle initialization through photo or video: position/speed
+layout (binding = 17) uniform samplerRect fs_lookupTable17;  // couples of textures for particle initialization through photo: color/radius
+                      // particle initialization from images
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
-layout (location = 0) out vec4 out_Update_FBO_fs_CA;
+layout (location = 0) out vec4 outColor0;
 
 /////////////////////////////////////
 // PIXEL OUTPUT
-layout (location = 1) out vec4 out_Update_FBO_fs_Pixels;
+layout (location = 1) out vec4 outColor1;
+
+/////////////////////////////////////
+// PARTICLE OUTPUT
+// POSITION / SPEED
+layout (location = 2) out vec4 outColor2;
+// COLOR / RADIUS
+layout (location = 3) out vec4 outColor3;
+// TARGET POSITION / COLOR / RADIUS
+layout (location = 4) out vec4 outColor4;
 
 /////////////////////////////////////
 // TRACK COLOR OUTPUT
 // the RGB channels contain the track Color
-layout (location = 2) out vec4 out_Update_FBO_fs_Trk0;
+layout (location = 5) out vec4 outColor5;
 #if PG_NB_TRACKS >= 2
-layout (location = 3) out vec4 out_Update_FBO_fs_Trk1;
+layout (location = 6) out vec4 outColor6;
 #endif
 #if PG_NB_TRACKS >= 3
-layout (location = 4) out vec4 out_Update_FBO_fs_Trk2; 
+layout (location = 7) out vec4 outColor7; 
 #endif
 #if PG_NB_TRACKS >= 4
-layout (location = 5) out vec4 out_Update_FBO_fs_Trk3;
+layout (location = 8) out vec4 outColor8;
 #endif
 
 ////////////////////////////////////////////////////////////////////
@@ -284,93 +363,70 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  https://github.com/ashima/webgl-noise
 // 
 float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+    v *= noiseScale;
 
-  // Precompute values for skewed triangular grid
-  const vec4 C = vec4(0.211324865405187,
-                      // (3.0-sqrt(3.0))/6.0
-                      0.366025403784439,  
-                      // 0.5*(sqrt(3.0)-1.0)
-                      -0.577350269189626,  
-                      // -1.0 + 2.0 * C.x
-                      0.024390243902439); 
-                      // 1.0 / 41.0
+    // Precompute values for skewed triangular grid
+    const vec4 C = vec4(0.211324865405187,
+                        // (3.0-sqrt(3.0))/6.0
+                        0.366025403784439,  
+                        // 0.5*(sqrt(3.0)-1.0)
+                        -0.577350269189626,  
+                        // -1.0 + 2.0 * C.x
+                        0.024390243902439); 
+                        // 1.0 / 41.0
 
-  // First corner (x0)
-  vec2 i  = floor(v + dot(v, C.yy));
-  vec2 x0 = v - i + dot(i, C.xx);
+    // First corner (x0)
+    vec2 i  = floor(v + dot(v, C.yy));
+    vec2 x0 = v - i + dot(i, C.xx);
 
-  // Other two corners (x1, x2)
-  vec2 i1 = vec2(0.0);
-  i1 = (x0.x > x0.y)? vec2(1.0, 0.0):vec2(0.0, 1.0);
-  vec2 x1 = x0.xy + C.xx - i1;
-  vec2 x2 = x0.xy + C.zz;
+    // Other two corners (x1, x2)
+    vec2 i1 = vec2(0.0);
+    i1 = (x0.x > x0.y)? vec2(1.0, 0.0):vec2(0.0, 1.0);
+    vec2 x1 = x0.xy + C.xx - i1;
+    vec2 x2 = x0.xy + C.zz;
 
-  // Do some permutations to avoid
-  // truncation effects in permutation
-  i = mod289(i);
-  vec3 p = permute(
-          permute( i.y + vec3(0.0, i1.y, 1.0))
-              + i.x + vec3(0.0, i1.x, 1.0 ));
+    // Do some permutations to avoid
+    // truncation effects in permutation
+    i = mod289(i);
+    vec3 p = permute(
+            permute( i.y + vec3(0.0, i1.y, 1.0))
+                + i.x + vec3(0.0, i1.x, 1.0 ));
 
-  vec3 m = max(0.5 - vec3(
-                      dot(x0,x0), 
-                      dot(x1,x1), 
-                      dot(x2,x2)
-                      ), 0.0);
+    vec3 m = max(0.5 - vec3(
+                        dot(x0,x0), 
+                        dot(x1,x1), 
+                        dot(x2,x2)
+                        ), 0.0);
 
-  m = m*m ;
-  m = m*m ;
+    m = m*m ;
+    m = m*m ;
 
-  // Gradients: 
-  //  41 pts uniformly over a line, mapped onto a diamond
-  //  The ring size 17*17 = 289 is close to a multiple 
-  //      of 41 (41*7 = 287)
+    // Gradients: 
+    //  41 pts uniformly over a line, mapped onto a diamond
+    //  The ring size 17*17 = 289 is close to a multiple 
+    //      of 41 (41*7 = 287)
 
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
 
-  // Normalise gradients implicitly by scaling m
-  // Approximation of: m *= inversesqrt(a0*a0 + h*h);
-  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0+h*h);
+    // Normalise gradients implicitly by scaling m
+    // Approximation of: m *= inversesqrt(a0*a0 + h*h);
+    m *= 1.79284291400159 - 0.85373472095314 * (a0*a0+h*h);
 
-  // Compute final noise value at P
-  vec3 g = vec3(0.0);
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * vec2(x1.x,x2.x) + h.yz * vec2(x1.y,x2.y);
-  return (130.0 * dot(m, g) + 1.0) / 2.0;
+    // Compute final noise value at P
+    vec3 g = vec3(0.0);
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * vec2(x1.x,x2.x) + h.yz * vec2(x1.y,x2.y);
+    return (130.0 * dot(m, g) + 1.0) / 2.0;
 }
 
 vec2 generativeNoise(vec2 texCoordLoc) {
-// FLAT
-return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
-}
-
-vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   // FLAT
-  if(noiseType == 0 )  {
     return vec2(snoise( texCoordLoc , noiseScale * 100 ),
                             snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
   }
-  // SUN RAYS
-  else if(noiseType == 1 ) {
-    vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
-                     length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
-    return vec2(snoise( pos , noiseScale * 10 ) ,
-                            snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
-  }
-  // CAMERA
-  else if(noiseType == 2 ) {
-    return texture(uniform_Update_texture_fs_Camera_frame, decalCoords + usedNeighborOffset ).rg;
-  }
-  // MOVIE
-  else {
-    return texture(uniform_Update_texture_fs_Movie_frame, movieCoord + usedNeighborOffset/ movieWH ).rg;
-  }
-}
 
 
 float Line( float x1 , float y1 , 
@@ -385,24 +441,24 @@ float Line( float x1 , float y1 ,
 ////////////////////////////////////////////////////////////////////
 
 void CA_out( vec4 currentCA ) {
-  // the ALPHA canal of uniform_Update_texture_fs_CA contains > 0 if it is a live cell
+  // the ALPHA canal of fs_decal contains > 0 if it is a live cell
 
   // gets Moore neighbor values
-  neighborValues[0] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[0] = texture(fs_decal, 
             decalCoords + neighborOffsets[0] );
-  neighborValues[1] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[1] = texture(fs_decal, 
             decalCoords + neighborOffsets[1] );
-  neighborValues[2] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[2] = texture(fs_decal, 
             decalCoords + neighborOffsets[2] );
-  neighborValues[3] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[3] = texture(fs_decal, 
             decalCoords + neighborOffsets[3] );
-  neighborValues[4] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[4] = texture(fs_decal, 
             decalCoords + neighborOffsets[4] );
-  neighborValues[5] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[5] = texture(fs_decal, 
             decalCoords + neighborOffsets[5] );
-  neighborValues[6] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[6] = texture(fs_decal, 
             decalCoords + neighborOffsets[6] );
-  neighborValues[7] = texture(uniform_Update_texture_fs_CA, 
+  neighborValues[7] = texture(fs_decal, 
             decalCoords + neighborOffsets[7] );
 
   //////////////////////////////////////////////////////
@@ -683,12 +739,12 @@ void CA_out( vec4 currentCA ) {
     uint newState = 0;
 
     // CAParams optimal values from Composites/soundinitiative²
-/*     float CAParams1 = 0.480315;
+    float CAParams1 = 0.480315;
     float CAParams2 = 0.511811;
     float CAParams3 = 0.637795;
     float CAParams4 = 0.472441;
     float CAParams5 = 0.244094;
- */
+
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
@@ -779,181 +835,6 @@ void CA_out( vec4 currentCA ) {
   }
 
   //////////////////////////////////////////////////////
-  // DISLOCATION
-  // parameter values: 0.314  0.606 0.354 0.409
-  else if( CAType == CA_DISLOCATION ) {
-    // CAParams optimal values from effe
-/*     float CAParams1 = 0.393673;
-    float CAParams2 = 0.102449;
-    float CAParams3 = 0.53551;
-    float CAParams4 = 0.165306;
-    float CAParams5 = 0.196939;
-    float CAParams6 = 0.322857;
- */
-    int nbSurroundingNewBorders =
-      (neighborValues[0].a == 1? 1:0) +
-      (neighborValues[1].a == 1? 1:0) +
-      (neighborValues[2].a == 1? 1:0) +
-      (neighborValues[3].a == 1? 1:0) +
-      (neighborValues[4].a == 1? 1:0) +
-      (neighborValues[5].a == 1? 1:0) +
-      (neighborValues[6].a == 1? 1:0) +
-      (neighborValues[7].a == 1? 1:0);
-    
-    int nbSurroundingOldBorders =
-      (neighborValues[0].a == 2? 1:0) +
-      (neighborValues[1].a == 2? 1:0) +
-      (neighborValues[2].a == 2? 1:0) +
-      (neighborValues[3].a == 2? 1:0) +
-      (neighborValues[4].a == 2? 1:0) +
-      (neighborValues[5].a == 2? 1:0) +
-      (neighborValues[6].a == 2? 1:0) +
-      (neighborValues[7].a == 2? 1:0);
-
-    vec3 gatherColorFactors =
-      (neighborValues[0].rgb * inverseShadeDisloc[int(max(0,neighborValues[0].a))]) +
-      (neighborValues[1].rgb * inverseShadeDisloc[int(max(0,neighborValues[1].a))]) +
-      (neighborValues[2].rgb * inverseShadeDisloc[int(max(0,neighborValues[2].a))]) +
-      (neighborValues[3].rgb * inverseShadeDisloc[int(max(0,neighborValues[3].a))]) +
-      (neighborValues[4].rgb * inverseShadeDisloc[int(max(0,neighborValues[4].a))]) +
-      (neighborValues[5].rgb * inverseShadeDisloc[int(max(0,neighborValues[5].a))]) +
-      (neighborValues[6].rgb * inverseShadeDisloc[int(max(0,neighborValues[6].a))]) +
-      (neighborValues[7].rgb * inverseShadeDisloc[int(max(0,neighborValues[7].a))]) ;
-
-    vec3 maxColorFactors =
-      //(currentCA.rgb * inverseShadeDisloc[int(max(0,currentCA.a))]) +
-      (neighborValues[0].rgb * inverseShadeDisloc[int(max(0,neighborValues[0].a))]);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb 
-                          * inverseShadeDisloc[int(max(0,neighborValues[ind].a))];
-      if( graylevel(newColorFactor) > graylevel(maxColorFactors) ) {
-        maxColorFactors = newColorFactor;
-      }
-    }
-
-    vec3 averageSurrounding;
-    int nbNeighbors = nbSurroundingNewBorders + nbSurroundingOldBorders;
-    if( nbNeighbors > 0 ) {
-      if( CAcolorSpread ) {
-        averageSurrounding = maxColorFactors;
-      }
-      else {
-        averageSurrounding = gatherColorFactors / nbNeighbors;
-      }
-      // averageSurrounding = gatherSurroundingLives;
-      // averageSurrounding = vec3(0.4);
-    }
-    else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
-    }
-
-    // 0 empty
-    // 1 new border
-    // 2 old border: border at preceding state
-    // 3 new nucleus
-    // 4 new nucleus at preceding step
-    uint nbStates = 5;
-    uint newState = 0;
-
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    if( currentCA.a < 0 ) {
-      out4_CA.a = randomCA.x * (nbStates+1); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      // newState = 3;
-      out4_CA.rgb = shadeDisloc[newState].r * currentCA.rgb;
-    }
-    else {
-      int indexOld = -1;
-      int firstindex = int(randomCA.x * 8);
-      // looks for an old border around
-      for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-        if( neighborValues[ind % 8].a == 2 ) {
-          indexOld = ind;
-        }
-      }
-      int indexNew = -1;
-      firstindex = int(randomCA.y * 8);
-      // looks for a new border around
-      for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-        if( neighborValues[ind % 8].a == 1 ) {
-          indexNew = ind;
-        }
-      }
-
-      uint state = int(clamp(currentCA.a,0,nbStates));
-      // parameters
-      // w: fluidity (penetration of old borders between cells)
-      // z : celle density
-      // y : permeability
-      // x : freezing/dissolve
-
-      // empty cell transformation
-      if( state ==  0 ) {
-        newState = 0; // stays empty
-        // found a new border at indexNew
-        if( nbSurroundingNewBorders == 1  ) {
-          // prolongs the border
-          newState = 1; // new border
-        }
-        else if( nbSurroundingOldBorders == 1 
-                && randomCA.y < CAParams2 ) {
-          // prolongs the border
-          newState = 2; // old border
-        }
-        else if( nbSurroundingNewBorders >= CAParams1 * 8.0  ) {
-          // creates a nucleus
-          newState = 3; // nucleus
-        }
-      }
-      // new border growth: new border pushed by old border
-      else if( state ==  1 ) {
-        newState = 1; // stays a border
-        if( nbSurroundingNewBorders >= CAParams5 * 10.0 ) {
-          newState = 3; //makes a nucleus
-        }
-        // found an old border at indexOld
-        else if( indexOld >= 0 && neighborValues[(indexOld + 4) % 8].a == 0 ) {
-          // a new border can be established in diametrically opposed cell
-          newState = 2; // becomes an old border
-        }
-      }
-      // border growth: old border pulled by new border
-      else if( state ==  2 ) {
-        newState = 2; // stays old border
-        if( nbSurroundingOldBorders >= CAParams6 * 10.0 ) {
-          newState = 0; //makes a hole
-        }
-        else if( indexNew >= 0 ) {
-          newState = 0; // becomes an empty cell
-        }
-      }
-       // nucleus
-      else if( state ==  3 ) {
-        newState = 3; // stays a nucleus
-        if( nbSurroundingOldBorders + nbSurroundingNewBorders 
-             >= CAParams4 * 16.0 ) {
-          newState = 0; //makes a hole
-        }
-        else 
-          if( randomCA.y < CAParams3 ) {
-          newState = 1; // becomes a border
-        }
-      }
-      // newState = state;
-      out4_CA.a = float(newState);
-      averageSurrounding = clamp( averageSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-      out4_CA.rgb = shadeDisloc[newState] * averageSurrounding;
-      // out4_CA.rgb = colorDisloc[newState];
-    }
-    // const vec3 colorDisloc[5] = {{0.3,0.3,0.3},     // emptry
-    //                              {0,1,0},{0,0,1},   // new/old border
-    //                              {1,0,0},{1,1,0}};  // new/old nucleus
-  }
-
-  //////////////////////////////////////////////////////
   // NO CA
   else {
     out4_CA = clamp(vec4(currentCA.rgb-vec3(CAdecay),currentCA.a),0,1); // ready
@@ -969,7 +850,7 @@ void CA_out( vec4 currentCA ) {
 
 void pixel_out( void ) {
   // fills by cumulating the neighboring pixels that
-  // can reach the pixel at this frame (come into a circle of radius pixel_radius)
+  // can reach the pixel at this frame (come into a circle of radius radiuspixel)
   // with the pixel seen as length unit.
   out_color_pixel = vec3(0,0,0);
   int nb_cumultated_pixels = 0;
@@ -984,20 +865,20 @@ void pixel_out( void ) {
     if( newDecalCoord.x >= 0 && newDecalCoord.y >= 0 
         && newDecalCoord.x < width && newDecalCoord.y < height ) {
       vec4 surrpixel_localColor;
-      surrpixel_localColor = texture( uniform_Update_texture_fs_Trk0, newDecalCoord );
+      surrpixel_localColor = texture( fs_lookupTable5, newDecalCoord );
 
       // if the pixel is graphically active, its local 
       // displacement is computed by using its speed, and
       // the acceleration found in the continuous texture
       // and the position corresponding to the loclation of the
       // pixel in the coordinates system of the current pixel
-      // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
+      // expected to be in [-radiuspixel,+radiuspixel]x[-radiuspixel,+radiuspixel]
       if( graylevel(surrpixel_localColor) >  0 ) {
         vec2 surrpixel_speed;
         vec2 surrpixel_position;
         vec2 surrpixel_nextPosition;
 
-        vec4 surrpixel_speed_position = texture( uniform_Update_texture_fs_Pixels,
+        vec4 surrpixel_speed_position = texture( fs_lookupTable1,
                 newDecalCoord );
         surrpixel_speed = surrpixel_speed_position.xy;
         surrpixel_position = surrpixel_speed_position.zw;
@@ -1005,19 +886,19 @@ void pixel_out( void ) {
         vec2 pixelTexCoordLoc = pixelTextureCoordinatesXY
                        + usedNeighborOffset / vec2(width,height);
 
-        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLoc, usedNeighborOffset);
+        pixel_acceleration = generativeNoise(pixelTexCoordLoc);
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc > 0 ) {
+        if( pixel_acc_factor > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc * acceleration;
+            += pixel_acc_factor * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc * surrpixel_speed;
+            += pixel_acc_factor * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -1032,9 +913,9 @@ void pixel_out( void ) {
           nb_cumultated_pixels++;
         }
         // radius pixel extension for (S,N,E,W) neighbors
-        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
-          float dist = pixel_radius - length(surrpixel_nextPosition);
+        else if( abs(surrpixel_nextPosition.x) <= (radiuspixel - randomCA.z)
+                  && abs(surrpixel_nextPosition.y) <= (radiuspixel - randomCA.w) ) {
+          float dist = radiuspixel - length(surrpixel_nextPosition);
           out_color_pixel += surrpixel_localColor.rgb;
           // adds high frequency random speed to make them leave the initial pixel
           out_speed_pixel += dist * (randomCA.xy - vec2(0.5,0.5));
@@ -1056,7 +937,7 @@ void pixel_out( void ) {
        && newDecalCoord.x < width && newDecalCoord.y < height ) {
 
       vec4 surrpixel_localColor;
-      surrpixel_localColor = texture( uniform_Update_texture_fs_Trk0,
+      surrpixel_localColor = texture( fs_lookupTable5,
            newDecalCoord );
 
       // if the pixel is graphically active, its local 
@@ -1064,14 +945,14 @@ void pixel_out( void ) {
       // the acceleration found in the continuous texture
       // and the position corresponding to the location of the
       // pixel in the coordinates system of the current pixel
-      // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
+      // expected to be in [-radiuspixel,+radiuspixel]x[-radiuspixel,+radiuspixel]
       if( graylevel(surrpixel_localColor) >  0 ) {
         vec2 surrpixel_speed;
         vec2 surrpixel_position;
         vec2 surrpixel_nextPosition;
 
         vec4 surrpixel_speed_position
-          = texture( uniform_Update_texture_fs_Pixels,
+          = texture( fs_lookupTable1,
                newDecalCoord );
               surrpixel_speed = surrpixel_speed_position.xy;
               surrpixel_position = surrpixel_speed_position.zw;
@@ -1080,26 +961,26 @@ void pixel_out( void ) {
         vec2 pixelTexCoordLoc = pixelTextureCoordinatesXY
                        + usedNeighborOffset / vec2(width,height);
 
-        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLoc, usedNeighborOffset);
+        pixel_acceleration = generativeNoise(pixelTexCoordLoc);
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc > 0 ) {
+        if( pixel_acc_factor > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc * acceleration;
+            += pixel_acc_factor * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc * surrpixel_speed;
+            += pixel_acc_factor * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
         // the current step is added to the position
 
-        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
+        if( abs(surrpixel_nextPosition.x) <= (radiuspixel - randomCA.z)
+                  && abs(surrpixel_nextPosition.y) <= (radiuspixel - randomCA.w) ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
           // computes the position of the pixel
@@ -1121,6 +1002,495 @@ void pixel_out( void ) {
   else {
     out_color_pixel = vec3(0,0,0);
   }
+}
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// ANIMATED PARTICLES UPDATE
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
+
+void particle_out( void ) {
+#ifdef CURVE_PARTICLES
+  // index of the control point: 0 for the head and 1, 2, or 3 for the tail
+  int index = int(decalCoords.x) % 4;
+#endif
+
+#ifdef CURVE_PARTICLES
+  ////////////////////////////////////////////////////////////////////
+  // FIRST VERTEX OF THE PRIMITIVE
+  // for the head of the curve, takes acceleration from noise strength field
+  if( index == 0 ) {
+#endif
+
+    //////////////////////////////////////////////////////////////////
+    // COLOR AND RADIUS UPDATE VARIABLE
+    // copies color and radius at preceding frame
+    out_color_radius_particle = out_attachment_FBO[pg_ParticleColRadius_FBO_attcht];
+    out_target_position_color_radius_particle = out_attachment_FBO[pg_ParticleTargetPosColRadius_FBO_attcht];
+
+    //////////////////////////////////////////////////////////////////
+    // SPPED AND POSITION UPDATE VARIABLE
+    // copies position and speed at preceding frame
+    out_position_speed_particle = out_attachment_FBO[pg_ParticlePosSpeed_FBO_attcht];
+
+    ////////////////////////////////////////////////////////////////////
+    // INITIALIZATION
+    // random initialization of the particle positions (initial speed is null currently)
+    if(part_initialization >= 0) {
+      /////////////////////////////////////////////////////////////////////
+      // RANDOM INITIALIZATION
+      // head and tail are initialized with the same values
+      // reaches for regular grid position
+      // fs_lookupTable16
+      // float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+      // int rankGrid = int(rank * width * height);
+
+      if(part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES) {
+          vec4 target_color_radius = texture( fs_lookupTable17 , decalCoords );
+          if(partMove_target) { // reaches a target in several steps
+              out_target_position_color_radius_particle.xy
+                    = texture( fs_lookupTable16 , decalCoords ).xy;
+              out_target_position_color_radius_particle.z
+                = target_color_radius.r * 255. + target_color_radius.g * 65025. + target_color_radius.b * 16581375.;
+              out_target_position_color_radius_particle.w = partRepopRadius;
+          }
+          else { // instant positioning on the target
+              out_position_speed_particle
+                    = texture( fs_lookupTable16 , decalCoords );
+              out_color_radius_particle = vec4(target_color_radius.rgb, partRepopRadius);
+          }
+      }
+      // camera
+      else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES ) {
+          if(partMove_target) { // reaches a target in several steps
+              out_target_position_color_radius_particle.xy
+                    = texture( fs_lookupTable16 , decalCoords ).xy;
+              vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
+              vec4 target_color = texture( fs_lookupTable9 , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
+              out_target_position_color_radius_particle.z
+                = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
+              out_target_position_color_radius_particle.w = partRepopRadius;
+          }
+          else { // instant positioning on the target
+              out_position_speed_particle
+                    = texture( fs_lookupTable16 , decalCoords );
+              out_position_speed_particle.zw = vec2(0,0);
+              vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
+              vec4 target_color = texture( fs_lookupTable9 , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
+              out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
+          }
+      }
+      // movie
+      else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES + 1 ) {
+          if(partMove_target) { // reaches a target in several steps
+              out_target_position_color_radius_particle.xy
+                    = texture( fs_lookupTable16 , decalCoords ).xy;
+              vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
+              vec4 target_color = texture( fs_lookupTable11 , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
+              out_target_position_color_radius_particle.z
+                = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
+              out_target_position_color_radius_particle.w = partRepopRadius;
+          }
+          else { // instant positioning on the target
+              out_position_speed_particle
+                    = texture( fs_lookupTable16 , decalCoords );
+              out_position_speed_particle.zw = vec2(0,0);
+              vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
+              vec4 target_color = texture( fs_lookupTable11 , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
+              out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
+          }
+      }
+      return;
+    }
+    // position update according to speed, acceleration and damping
+
+    //////////////////////////////////////////////////////////////////
+    // // REPOP
+    // const uint PARTREPOP_NONE = 0;
+    // const uint PARTREPOP_GRID = 1; // random repopulation according to a certain threshold
+    // from 0 to PG_NB_PATHS + PARTREPOP_GRID
+    if( out_position_speed_particle.x == -10000) {
+      // if the pixel noise is equal to frame % 8500 the cell is repopulated with a pixel
+      vec4 randomValue = texture( fs_lookupTable12 , vec3( decalCoordsPOT , 0.25 ) );
+      float repop_part = uniform_Update_fs_3fv_part_repop_acc_damp_factor.x;
+      if( int(frameNo * randomValue.w ) % int(765 *(1-repop_part)) == int((randomValue.x * 255.0
+          + randomValue.y * 255.0 + randomValue.z * 255.0 ) *(1-repop_part)) ) {
+        int indRepopChannel = int(uniform_Update_fs_4fv_W_H_repopChannel_targetFrameNo.z);
+        if(indRepopChannel == PG_NB_PATHS + PARTREPOP_GRID) {
+
+           /////////////////////////////////////////////////////////////////////
+          // RANDOM INITIALIZATION
+          // head and tail are initialized with the same values
+          // reaches for regular grid position
+          float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+          int rankGrid = int(rank * width * height);
+          out_position_speed_particle.xy 
+            = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
+          out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+          out_color_radius_particle 
+            = vec4(uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz,partRepopRadius);
+          return;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+        // REPOP ALONG PATHS (A RANDOM PATH AMONG THE ACTIVE ONES IS CHOSEN AT EACH FRAME)
+        // SINCE REPOPULATION IS AN ADDITIVE PROCESS, SEVERAL SOURCES OF PARTICLES CAN
+        // EXIST SIMULTANEOUSLY
+        int indPath = indRepopChannel;
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+        if( indPath >= 0 && indPath < 4 
+          && uniform_Update_fs_4fv_paths03_x[indPath] > 0
+          && uniform_Update_fs_4fv_paths03_y[indPath] > 0 ) {
+         /////////////////////////////////////////////////////////////////////
+          vec2 pen_prev = vec2( uniform_Update_fs_4fv_paths03_x_prev[indPath],
+                    height - uniform_Update_fs_4fv_paths03_y_prev[indPath]);
+          vec2 pen_curr = vec2( uniform_Update_fs_4fv_paths03_x[indPath],
+                    height - uniform_Update_fs_4fv_paths03_y[indPath]);
+          vec2 orth = pen_prev - pen_curr;
+          if(length(orth) != 0) {
+            orth.xy = orth.yx;
+            orth.y *= -1;
+            orth = normalize(orth);
+          }
+          out_position_speed_particle.xy 
+            = mix(pen_curr, pen_prev, randomCA.z ); // linear position
+          out_position_speed_particle.xy += orth * 2 * (randomCA.w - 0.5) 
+                  * uniform_Update_fs_4fv_paths03_RadiusX[indPath]; // thickness
+          out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+          out_color_radius_particle 
+              = vec4( uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz , 
+                      partRepopRadius);
+        }
+#endif
+#if PG_NB_PATHS == 7
+        else if( indPath >= 4 
+                  && uniform_Update_fs_4fv_paths47_x[indPath - 4] > 0
+                  && uniform_Update_fs_4fv_paths47_y[indPath - 4] > 0 ) {
+         /////////////////////////////////////////////////////////////////////
+          vec2 pen_prev = vec2( uniform_Update_fs_4fv_paths47_x_prev[indPath - 4],
+                    height - uniform_Update_fs_4fv_paths47_y_prev[indPath - 4]);
+          vec2 pen_curr = vec2( uniform_Update_fs_4fv_paths47_x[indPath - 4],
+                    height - uniform_Update_fs_4fv_paths47_y[indPath - 4]);
+          vec2 orth = pen_prev - pen_curr;
+          if(length(orth) != 0) {
+            orth.xy = orth.yx;
+            orth.y *= -1;
+            orth = normalize(orth);
+          }
+          out_position_speed_particle.xy 
+            = mix(pen_curr, pen_prev, randomCA.z ); // linear position
+          out_position_speed_particle.xy += orth * 2 * (randomCA.w - 0.5) 
+                  * uniform_Update_fs_4fv_paths47_RadiusX[indPath - 4]; // thickness
+          out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+          out_color_radius_particle 
+              = vec4( vec3( uniform_Update_fs_4fv_paths47_r[indPath - 4] , 
+                            uniform_Update_fs_4fv_paths47_g[indPath - 4] , 
+                            uniform_Update_fs_4fv_paths47_b[indPath - 4] ) , 
+                      partRepopRadius);
+        }
+#endif
+      }
+      return;
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // FLASH CALCULATION AT PARTICLE PRECEDING POSITION
+    // track 0 flash on particles
+    flashToPartCumul = uniform_Update_fs_4fv_flashTrkPartWghts[0] *
+                         texture( fs_lookupTable5 , out_position_speed_particle.xy ).rgb;
+#if PG_NB_TRACKS >= 2
+    // track 1 flash on particles
+    flashToPartCumul += uniform_Update_fs_4fv_flashTrkPartWghts[1] *
+                         texture( fs_lookupTable6 , out_position_speed_particle.xy ).rgb;
+#endif
+#if PG_NB_TRACKS >= 3
+    // track 2 flash on particles
+    flashToPartCumul += uniform_Update_fs_4fv_flashTrkPartWghts[2] *
+                         texture( fs_lookupTable7 , out_position_speed_particle.xy ).rgb;
+#endif
+#if PG_NB_TRACKS >= 4
+    // track 3 flash on particles
+    flashToPartCumul += uniform_Update_fs_4fv_flashTrkPartWghts[3] *
+                         texture( fs_lookupTable8 , out_position_speed_particle.xy ).rgb;
+#endif
+    // CA flash on particles
+    flashToPartCumul += uniform_Update_fs_4fv_isClearLayer_flashPixel_flashCAPartWght_nbParticles.z
+                      * texture( fs_decal , out_position_speed_particle.xy ).rgb;
+
+    //////////////////////////////////////////////////////////////////
+    // // COLOR MODE
+    // const uint PARTCOLOR_WHITE = 0; // white particles
+    // const uint PARTCOLOR_MAX = 1; // maximum of flash color and particle
+    // const uint PARTCOLOR_COPY = 2; // copy flash color
+    float grayFlash = graylevel(flashToPartCumul);
+    if(partColor_mode == PARTCOLOR_WHITE) { // white particles
+      out_color_radius_particle.rgb = vec3(1);
+    }
+    else if(partColor_mode == PARTCOLOR_MAX && grayFlash > 0) { // maximum of flash color and particle
+      out_color_radius_particle.rgb = max(flashToPartCumul,out_color_radius_particle.rgb);
+    }
+    else if(partColor_mode == PARTCOLOR_COPY && grayFlash > 0) { // copy flash color
+      out_color_radius_particle.rgb = flashToPartCumul;
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // STROKE MODE (DRAWING INTERACTION)
+    // const uint PARTSTROKE_NONE = 0; 
+    // const uint PARTSTROKE_AGGREG = 1; // aggregates on drawing
+    // const uint PARTSTROKE_BOUNCE = 2; // bounces on drawing
+    // const uint PARTSTROKE_DAMP = 3; // slows down on drawing
+
+    // flash management
+    // if(partStroke_mode == PARTSTROKE_NONE) { // no stroke effect
+    // }
+    // else 
+    if(partStroke_mode == PARTSTROKE_AGGREG) { // aggregation
+      if(grayFlash > 0.01)  {
+          out_position_speed_particle.zw = vec2(0); 
+          return;
+      }
+    }
+    else if(partStroke_mode == PARTSTROKE_BOUNCE) { // repulses
+      if(grayFlash > 0.01)  {
+          out_position_speed_particle.zw *= vec2(-1); 
+      }
+    }
+    else if(partStroke_mode == PARTSTROKE_DAMP) { // slows down on drawing
+      if(grayFlash > 0.01)  {
+          out_position_speed_particle.zw 
+            -= grayFlash * 0.1 * out_position_speed_particle.zw;
+      }
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // MOTION MODE
+    // particle speed and position management (complemented by instructions in the 
+    // geometry shader that allow for a coherent positioning of head and tail)    
+
+    // THERE IS A UNIQUE TARGET FOR EACH PARTICLE 
+    // THE TARGET CAN BE COLLECTIVE (EG THE PEN) AND EACH PARTICLE JOINS THE SAME TARGET
+    // OR THE TARGET CAN BE INDIVIDUAL (EG AN INDIVIDUAL LOCATION ON A SCREEN GRID)
+    // THE TIME TO REACH THE TARGET IS COUNTED DOWN
+
+    vec2 part_acceleration = vec2(0);
+    float dist_to_target = 1000;
+
+    ///////////////////////////////////////////////////////////////////
+    // builds a path_follow or repulse vector so that it can be used in the for loop
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+    bvec4 path_follow03 = bvec4(part_path_follow_0,part_path_follow_1,part_path_follow_2,part_path_follow_3);
+    bvec4 path_repulse03 = bvec4(part_path_repulse_0,part_path_repulse_1,part_path_repulse_2,part_path_repulse_3);
+#endif
+#if PG_NB_PATHS == 7
+    bvec4 path_follow47 = bvec4(part_path_follow_4,part_path_follow_5,part_path_follow_6,part_path_follow_7);
+    bvec4 path_repulse47 = bvec4(part_path_repulse_4,part_path_repulse_5,part_path_repulse_6,part_path_repulse_7);
+#endif
+
+    ///////////////////////////////////////////////////////////////////
+    // PARTICLE: PATH FOLLOW OR REPULSE
+    for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+      if( indPath < 4 && path_follow03[indPath] ) {
+        // reaches for pen position
+        part_acceleration 
+          = (vec2( uniform_Update_fs_4fv_paths03_x[indPath] , 
+                            height - uniform_Update_fs_4fv_paths03_y[indPath] )
+                      - out_position_speed_particle.xy);
+        dist_to_target = length(part_acceleration);
+        // adds some field disturbance
+        part_acceleration += (generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+      }
+#endif
+#if PG_NB_PATHS == 7
+      else if( indPath >= 4 && path_follow47[indPath - 4] ) {
+        // reaches for pen position
+        part_acceleration 
+          = (vec2( uniform_Update_fs_4fv_paths47_x[indPath - 4] , 
+                            height - uniform_Update_fs_4fv_paths47_y[indPath - 4] )
+                      - out_position_speed_particle.xy);
+        dist_to_target = length(part_acceleration);
+        // adds some field disturbance
+        part_acceleration += (generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+     }
+#endif
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+      if( indPath < 4 && path_repulse03[indPath] ) {
+        // escapes from pen position
+        part_acceleration 
+          = (out_position_speed_particle.xy 
+               - vec2( (uniform_Update_fs_4fv_paths03_x[indPath]) , 
+                       height - uniform_Update_fs_4fv_paths03_y[indPath] ));
+      }
+#endif
+#if PG_NB_PATHS == 7
+      else if( indPath >= 4 && path_repulse47[indPath - 4] ) {
+        // reaches for pen position
+        // escapes from pen position
+        part_acceleration 
+          = (out_position_speed_particle.xy 
+               - vec2( (uniform_Update_fs_4fv_paths47_x[indPath - 4]) , 
+                       height - uniform_Update_fs_4fv_paths47_y[indPath - 4] ));
+      }
+#endif
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    // PARTICLE: MOTION TOWARDS A TARGET
+    if(partMove_target && frameNo < targetFrameNo && part_initialization < 0) { // reaches a grid
+      // reaches for a target in a certain number of steps
+      // float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+      // int rankGrid = int(rank * width * height);
+      part_acceleration 
+        = (out_target_position_color_radius_particle.xy
+                    - out_position_speed_particle.xy);// * (1. - (targetFrameNo - frameNo)/part_timeToTargt);
+      dist_to_target = length(part_acceleration);
+
+      int color = int(out_target_position_color_radius_particle.z);
+
+      vec4 targetColorRadius 
+            = vec4((color%255)/255.,((color/255)%255)/255.,((color/65025)%255)/255.,
+                    out_target_position_color_radius_particle.w);
+      out_color_radius_particle 
+            = mix(targetColorRadius,out_color_radius_particle,(targetFrameNo - frameNo)/part_timeToTargt);
+
+      // ALSO INTERPOLATE COLOR
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    // PARTICLE INITIALIZATION TOWARDS A TARGET OR AN INSTANT POSITIONING
+    // NO INITIAL ACCELERATION
+    if(part_initialization >= 0) {
+      part_acceleration = vec2(0);
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    // PARTICLE: RANDOM MOTION
+    if(partMove_rand) { // random motion
+      // random motion
+      part_acceleration = (randomCA.zw - vec2(0.5));
+    }
+
+    if(length(part_acceleration) > 0) {
+      part_acceleration = normalize(part_acceleration);
+    }
+
+    // acceleration
+    out_position_speed_particle.zw 
+      += part_acc_factor * part_acceleration;
+    // damping
+    out_position_speed_particle.zw 
+      -= part_damp_factor * out_position_speed_particle.zw;
+
+
+    //////////////////////////////////////////////////////////////////
+    // SPEED UPDATE FROM ACCELERATION AND DAMPING
+    // reading the noise value for acceleration 
+    float speed = length(out_position_speed_particle.zw);
+    out_position_speed_particle.zw  
+      = normalize(out_position_speed_particle.zw + part_field_weight * (generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center)) * speed;
+    // part_acceleration 
+    //   += part_field_weight * (generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+    // }
+
+
+    // speed damping to reach a target
+    if( dist_to_target < part_damp_targtRad ) {
+        out_position_speed_particle.zw 
+        -= 0.01 * ((part_damp_targtRad - dist_to_target) / part_damp_targtRad) * out_position_speed_particle.zw;
+    }
+
+    // position update from new speed value
+    // with speed limit
+    float l =length(out_position_speed_particle.zw);
+    if(l > 50) {
+      out_position_speed_particle.zw *= (50/l);
+    }
+    if(l < 0.0001) {
+      out_position_speed_particle.zw = generativeNoise(pixelTextureCoordinatesXY);
+    }
+    out_position_speed_particle.xy += out_position_speed_particle.zw;
+
+    //////////////////////////////////////////////////////////////////
+    // EXIT MODE
+    // const uint PARTEXIT_NONE = 0; // lost when exits
+    // const uint PARTEXIT_OPPOSITE = 1; // when going out right/left/top/bottom reappers left/right/bottom/top
+    // const uint PARTEXIT_BOUNCE = 2; // bounces on edges
+    // off screen particle management (complemented by instructions in the geometry shader
+    // that allow for a coherent positioning of head and tail)    
+    if(partExit_mode == PARTEXIT_NONE) { // lost when exits
+      if(out_position_speed_particle.x < -3000 || out_position_speed_particle.x > width + 2000
+        || out_position_speed_particle.y < -3000  || out_position_speed_particle.y > height + 2000) {
+        out_position_speed_particle.xy = vec2(-10000); 
+        out_position_speed_particle.zw = vec2(0); 
+        return;
+      }
+    }
+    if(partExit_mode == PARTEXIT_OPPOSITE) { // reflection on the edge of the screen
+      if(out_position_speed_particle.x < 1) {
+        out_position_speed_particle.x = width - 2;
+      }
+      if(out_position_speed_particle.x > width - 2) {
+        out_position_speed_particle.x = 1;
+      }
+      if(out_position_speed_particle.y < 1) {
+        out_position_speed_particle.y = height - 2;
+      }
+      if(out_position_speed_particle.y > height - 2) {
+        out_position_speed_particle.y = 1;
+      }
+    }
+    if(partExit_mode == PARTEXIT_BOUNCE) { // enters the opposite side of where it leaves
+      if(out_position_speed_particle.x < 1) {
+          out_position_speed_particle.z *= -1;
+          out_position_speed_particle.x = 1;
+      }
+      if(out_position_speed_particle.x > width - 2) {
+          out_position_speed_particle.z *= -1;
+          out_position_speed_particle.x = width - 2;
+      }
+      if(out_position_speed_particle.y < 1) {
+          out_position_speed_particle.w *= -1;
+          out_position_speed_particle.y = 1;
+      }
+      if(out_position_speed_particle.y > height - 2) {
+          out_position_speed_particle.w *= -1;
+          out_position_speed_particle.y = height - 2;
+      }
+      return;
+    }
+
+  ////////////////////////////////////////////////////////////////////
+  // NON HEAD VERTICES POSITION UPDATE ACCORDING TO HEAD POSITION 
+  // IN THE SAME PRIMITIVE (CURVE)
+#ifdef CURVE_PARTICLES
+  }
+  // for the rest of the curve, it follows the head
+  else {
+    vec4 headout_position_speed_particle 
+          = texture(fs_lookupTable2, decalCoords-vec2(index,0));
+
+    float headCurrentSpeed = length( headout_position_speed_particle.zw);
+    vec2  lookatHead = headout_position_speed_particle.xy - out_position_speed_particle.xy;
+    vec2 normalizedLookAt = normalize(lookatHead);
+
+    // particle cannot be stretched too much
+    if( length(lookatHead) > 10) {
+      out_position_speed_particle.xy += normalizedLookAt * (length(lookatHead) - 10);
+    }
+    // speed calculation from head speed and position
+    out_position_speed_particle.zw = headCurrentSpeed * (0.3 * index) * normalizedLookAt;
+    // oscillation of non tail or head points
+    // if(index ==1 || index==2) {
+    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseScale * 100 ) - 0.5)
+    //     * vec2(lookatHead.y,-lookatHead.x);
+    // }
+
+    // position update
+    out_position_speed_particle.xy += out_position_speed_particle.zw;
+  }
+#endif
 }
 
 
@@ -1146,7 +1516,7 @@ float stroke_out( float current_Brush_RadiusX , float current_Brush_RadiusY , in
   float penOutGrayLevel = 0.0;
   if( current_brushID >= 0 ) {
     penOutGrayLevel
-      = texture(uniform_Update_texture_fs_Brushes,
+      = texture(fs_lookupTable8,
             		vec3( normalized_vector_to_mousePosition.x/2.0+0.5,
             		      0.5 - normalized_vector_to_mousePosition.y/2.0,
                       (current_brushID / 3) * 0.5 + 0.250))[current_brushID % 3];
@@ -1252,35 +1622,33 @@ void main() {
 #include_initializations
 
   //////////////////////////
-  // TRACK DECAY
-  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
-
-  //////////////////////////
   // variables 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
+  float average_pulse = uniform_Update_fs_4fv_pulse.a;
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
+  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
 
+  // target Frame number
+  targetFrameNo = int(round(uniform_Update_fs_4fv_W_H_repopChannel_targetFrameNo.w));
+
+  // decay of drawing and CA layers
+  CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x  * (1.0 - CAdecay_pulse * average_pulse);
+  
   // cellular automata
   CA_on_off = (CASubType > 0);
 
   // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
+  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
-  
+  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
+  radiuspixel = uniform_Update_fs_3fv_clearAllLayers_clearCA_pixelRadius.z;
 
   // working variables for screen dimension
-  width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
-  height = uniform_Update_fs_4fv_W_H_time_currentScene.y;
-
-  // CAType
-  CAType = int(uniform_Update_fs_2fv_CAType_SubType.x);
-  CASubType = int(uniform_Update_fs_2fv_CAType_SubType.y);
+  width = uniform_Update_fs_4fv_W_H_repopChannel_targetFrameNo.x;
+  height = uniform_Update_fs_4fv_W_H_repopChannel_targetFrameNo.y;
 
   // 2 noise texture: a binary one and a continous one
   // the POT coordinates of the
@@ -1289,12 +1657,18 @@ void main() {
                         1.0 + cos(frameNo/37000.0));
   vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
-  pixelTextureCoordinatesXY = decalCoordsPOT 
-                  + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
+  pixelTextureCoordinatesXY = decalCoordsPOT + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
   
   // noise for CA: random value
-  randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
-  randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.5 ) );
+  randomCA = texture( fs_lookupTable12 , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
+  randomCA2 = texture( fs_lookupTable12 , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.5 ) ).rgb;
+
+  nbParticles = int(uniform_Update_fs_4fv_isClearLayer_flashPixel_flashCAPartWght_nbParticles.w);
+
+  // part acc and dâmp
+  part_acc_factor = uniform_Update_fs_3fv_part_repop_acc_damp_factor.y;
+  part_damp_factor = uniform_Update_fs_3fv_part_repop_acc_damp_factor.z;
+
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -1303,18 +1677,21 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
-    out_Update_FBO_fs_CA = vec4(0);  // CA
-    out_Update_FBO_fs_Pixels = vec4(0);  // pixel speed / position
-    out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
+  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pixelRadius.x > 0) {
+    outColor0 = vec4(0);  // CA
+    outColor1 = vec4(0);  // pixel speed / position
+    outColor2 = vec4(-10000,-10000,0,0);  // particle position / speed
+    outColor3 = vec4(1,1,1,1);  // particle color / radius
+    outColor4 = vec4(-10000,-10000,16646655,1);  // particle target position / color / radius
+    outColor5 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
 #if PG_NB_TRACKS >= 2
-    out_Update_FBO_fs_Trk1 = vec4(0,0,0,1);
+    outColor6 = vec4(0,0,0,1);
 #endif
 #if PG_NB_TRACKS >= 3
-    out_Update_FBO_fs_Trk2 = vec4(0,0,0,1);
+    outColor7 = vec4(0,0,0,1);
 #endif
 #if PG_NB_TRACKS >= 4
-    out_Update_FBO_fs_Trk3 = vec4(0,0,0,1);
+    outColor8 = vec4(0,0,0,1);
 #endif
     return;
   }
@@ -1323,64 +1700,72 @@ void main() {
   // COPY OF PRECEDING FRAME FBO VALUES
 
   // CA, pixels and particle parameters FBO copy
-  out_attachment_FBO[pg_FBO_fs_CA_attacht]
-    = texture( uniform_Update_texture_fs_CA , decalCoords );
-  out_attachment_FBO[pg_FBO_fs_Pixels_attacht]
-    = texture( uniform_Update_texture_fs_Pixels , decalCoords );
+  out_attachment_FBO[pg_CA_FBO_attcht]
+    = texture( fs_decal , decalCoords );
+  out_attachment_FBO[pg_Pixel_FBO_attcht]
+    = texture( fs_lookupTable1 , decalCoords );
+  out_attachment_FBO[pg_ParticlePosSpeed_FBO_attcht]
+    = texture( fs_lookupTable2 , decalCoords );
+  out_attachment_FBO[pg_ParticleColRadius_FBO_attcht]
+    = texture( fs_lookupTable3 , decalCoords );
+  out_attachment_FBO[pg_ParticleTargetPosColRadius_FBO_attcht]
+    = texture( fs_lookupTable4 , decalCoords );
 
 
   // track colors FBO copy
   // track 0 (BG track)
   // possible horizontal or vertical translation of background texture
   vec2 decalCoordsPrevStep = decalCoords 
-        + uniform_Update_fs_4fv_xy_transl_tracks_0_1.xy;
+        + uniform_Update_fs_4fv_mouseTracks_xy_transl.xy;
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
-    out_track_FBO[0] = texture( uniform_Update_texture_fs_Trk0 , decalCoordsPrevStep );
+    out_track_FBO[0] = texture( fs_lookupTable5 , decalCoordsPrevStep );
   }
   else {
-    out_track_FBO[0] = vec4( 0, 0, 0, 0 );
+    out_track_FBO[0] = vec4( 0, 0, 0, 0 );;
   }
 
 #if PG_NB_TRACKS >= 2
   // track 1
   // possible horizontal or vertical translation of background texture
   decalCoordsPrevStep = decalCoords 
-        + uniform_Update_fs_4fv_xy_transl_tracks_0_1.zw;
-
+        + uniform_Update_fs_4fv_mouseTracks_xy_transl.zw;
   if( decalCoordsPrevStep.x < width && decalCoordsPrevStep.x >= 0 && 
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
-    out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
+    out_track_FBO[1] = texture( fs_lookupTable6 , decalCoordsPrevStep );
   }
   else {
-    out_track_FBO[1] = vec4( 0, 0, 0, 0 );
+    out_track_FBO[1] = vec4( 0, 0, 0, 0 );;
   }
 #endif
 
   // track colors FBO copy
 #if PG_NB_TRACKS >= 3
   out_track_FBO[2] 
-    = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
+    = texture( fs_lookupTable7 , decalCoords );
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
-    = texture( uniform_Update_texture_fs_Trk3 , decalCoords );
+    = texture( fs_lookupTable8 , decalCoords );
 #endif
 
   // if freeze, just keep values as they are
   if( freeze ) {
     // FBO OUTPUTS
-    out_Update_FBO_fs_CA = out_attachment_FBO[pg_FBO_fs_CA_attacht];
-    out_Update_FBO_fs_Pixels = out_attachment_FBO[pg_FBO_fs_Pixels_attacht];
-    out_Update_FBO_fs_Trk0 = out_track_FBO[0];
+    outColor0 = out_attachment_FBO[pg_CA_FBO_attcht];
+    outColor1 = out_attachment_FBO[pg_Pixel_FBO_attcht];
+    outColor2 = out_attachment_FBO[pg_ParticlePosSpeed_FBO_attcht];
+    outColor3 = out_attachment_FBO[pg_ParticleColRadius_FBO_attcht];
+    outColor4 = out_attachment_FBO[pg_ParticleTargetPosColRadius_FBO_attcht];
+    outColor5 = out_track_FBO[0];
 #if PG_NB_TRACKS >= 2
-    out_Update_FBO_fs_Trk1 = out_track_FBO[1];
+    outColor6 = out_track_FBO[1];
 #endif
 #if PG_NB_TRACKS >= 3
-    out_Update_FBO_fs_Trk2 = out_track_FBO[2];
+    outColor7 = out_track_FBO[2];
 #endif
 #if PG_NB_TRACKS >= 4
-    out_Update_FBO_fs_Trk3 = out_track_FBO[3];
+    outColor8 = out_track_FBO[3];
 #endif
       return;
   }
@@ -1390,24 +1775,21 @@ void main() {
   // VIDEO UPDATE
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
+  // manages the gray level of each track
+  vec4 track_grayLevel = vec4(0);
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y);
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
-    coordsImage *= uniform_Update_fs_4fv_photo01_wh.xy;
-    vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
-        coordsImageScaled ).rgb;
+  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(fs_lookupTable13, 
+      vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy ).rgb;
   }
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
-    coordsImage *= uniform_Update_fs_4fv_photo01_wh.zw;
-    vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
-        coordsImageScaled ).rgb;
+  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(fs_lookupTable14,  
+      vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw ).rgb;
   }
-  photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
 
+#ifdef PG_VIDEO_ACTIVE
   vec3 videocolor = vec3( 0.0 );
 
   float flashCameraTrkWght = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.z;
@@ -1418,22 +1800,22 @@ void main() {
   // movie size
   movieWH = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   // camera size
-  cameraWH = uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw;
+  cameraWH = uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw;
 
   // video texture used for drawing
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
                * cameraWH;
  */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
-               * cameraWH + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+               * cameraWH;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 
   // image reading
-  cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
+  cameraImage = texture(fs_lookupTable9, cameraCoord ).rgb;
   // gamma correction
   cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( camera_BG_subtr ) {
-    cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
+  if( BGSubtr ) {
+    cameraImage = abs(cameraImage - texture(fs_lookupTable10, cameraCoord ).rgb); // initial background subtraction
   }
   if( graylevel(cameraImage) < cameraThreshold ) {
     cameraImage = vec3(0.0);
@@ -1441,7 +1823,7 @@ void main() {
 
   // cameraImage = vec3(1) - cameraImage;
 
-  movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
+  movieImage = texture(fs_lookupTable11, movieCoord ).rgb;
 
   // Sobel on camera
   if( cameraSobel > 0 ) {
@@ -1452,12 +1834,12 @@ void main() {
 
       // samples the center pixel and its Moore neighborhood
       for( int i = 0 ; i < 4 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
+          samplerSobel = texture(fs_lookupTable9 , cameraCoord + offsetsVideo[i]).rgb;
           sobelX += sobelMatrixX[i] * samplerSobel;
           sobelY += sobelMatrixY[i] * samplerSobel;
       }
       for( int i = 5 ; i < 9 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
+          samplerSobel = texture(fs_lookupTable9 , cameraCoord + offsetsVideo[i]).rgb;
           sobelX += sobelMatrixX[i] * samplerSobel;
           sobelY += sobelMatrixY[i] * samplerSobel;
       }
@@ -1477,12 +1859,12 @@ void main() {
 
       // samples the center pixel and its Moore neighborhood
       for( int i = 0 ; i < 4 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Movie_frame , movieCoord + offsetsVideo[i]).rgb;
+          samplerSobel = texture(fs_lookupTable11 , movieCoord + offsetsVideo[i]).rgb;
           sobelX += sobelMatrixX[i] * samplerSobel;
           sobelY += sobelMatrixY[i] * samplerSobel;
       }
       for( int i = 5 ; i < 9 ; i++ ) {
-          samplerSobel = texture(uniform_Update_texture_fs_Movie_frame , movieCoord + offsetsVideo[i]).rgb;
+          samplerSobel = texture(fs_lookupTable11 , movieCoord + offsetsVideo[i]).rgb;
           sobelX += sobelMatrixX[i] * samplerSobel;
           sobelY += sobelMatrixY[i] * samplerSobel;
       }
@@ -1503,9 +1885,10 @@ void main() {
               + movieWeight * movieImage;
 
   // image_satur image_satur_pulse
+  /*
   vec3 pulsed_satur = vec3(1);
   if(video_satur_pulse > 0) {
-    pulsed_satur = video_satur + video_satur_pulse * pulse;
+    pulsed_satur = video_satur_pulse * pulse;
   }
   //  public-domain function by Darel Rex Finley
   float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
@@ -1517,6 +1900,8 @@ void main() {
     + (videocolor.g - powerColor) * pulsed_satur.g , 0 , 1 );
   videocolor.b = clamp( powerColor 
     + (videocolor.b - powerColor) * pulsed_satur.b , 0 , 1 );
+    */
+#endif
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -1528,6 +1913,7 @@ void main() {
   //  FLASH BG - FLASH CA - FLASH PART
   vec3 flashToBGCumul = vec3(0.0);
   vec4 flashToCACumul = vec4(0.0);
+  flashToPartCumul = vec3(0.0);
 
   /////////////////////////////////////
   // builds a path_replay_trackNo vector so that it can be used in the for loop
@@ -1541,104 +1927,100 @@ void main() {
   #endif
 
   /////////////////////////////////////
-  // TRACK indTrack between 1 and PG_NB_TRACKS - 1 + track 0 in the end
+  // TRACK indTrack between 1 and PG_NB_TRACKS - 1
   for( int indTrack = 1 ; indTrack <= PG_NB_TRACKS ; indTrack++ ) {
     // track 0 is processed last
     int indCurTrack = indTrack % PG_NB_TRACKS;
-    // manages the gray level of each track
-    vec4 curTrack_color = vec4(0);
-    float path0_grayLevel = 0;
-    float curTrack_grayLevel = 0;
 
     /////////////////
     // PEN OR PATH color
     for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
       uint pathStroke = DRAWING_VOID;
-      // pen drawing on the current track (comes last)
       if( indPath == 0 && currentDrawingTrack == indCurTrack ) {
         pathStroke = DRAWING_LINE;
       }
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-      // path drawing on current track
       else if( indPath > 0 && indPath < 4 && path_replay_trackNo03[indPath - 1] == indCurTrack ) {
         pathStroke = DRAWING_LINE;
       }
 #endif
 #if PG_NB_PATHS == 7
-      // path drawing on current track
       else if( indPath >= 4 && path_replay_trackNo47[indPath - 4] == indCurTrack ) {
         pathStroke = DRAWING_LINE;
       }
 #endif
-      // drawing occurs
+
       if( pathStroke > 0 ) {
         if(indPath < 4) {
-            if(indPath == 0 && // rubber stylus
-                               Cursor < 0) {
-                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y[indPath] , 
-                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                    3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                    3 * uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                    pathStroke );
-                out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
-                curTrack_color.rgb = vec3(0);
-            }
-            else { // normal stylus
-                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y[indPath] , 
-                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                    uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                    uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                    pathStroke );
-                curTrack_color.rgb
-                  += curTrack_grayLevel
-                    * uniform_Update_fs_4fv_paths03_a[indPath]
-                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
-                                uniform_Update_fs_4fv_paths03_g[indPath] , 
-                                uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
-            }
+          track_grayLevel[indCurTrack] 
+          += out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
+                uniform_Update_fs_4fv_paths03_y[indPath] , 
+                uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
+                uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
+                uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
+                uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
+                int(uniform_Update_fs_4fv_paths03_BrushID[indPath]) ,
+                pathStroke ) 
+                * uniform_Update_fs_4fv_paths03_a[indPath];  // brush opacity is combined with color opacity
         }
         else {
-            curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths47_x[indPath - 4] , 
+          track_grayLevel[indCurTrack] 
+          += out_gray_drawing( uniform_Update_fs_4fv_paths47_x[indPath - 4] , 
                 uniform_Update_fs_4fv_paths47_y[indPath - 4] , 
                 uniform_Update_fs_4fv_paths47_x_prev[indPath - 4] , 
                 uniform_Update_fs_4fv_paths47_y_prev[indPath - 4] ,
                 uniform_Update_fs_4fv_paths47_RadiusX[indPath - 4] ,
                 uniform_Update_fs_4fv_paths47_RadiusY[indPath - 4] ,
                 int(uniform_Update_fs_4fv_paths47_BrushID[indPath - 4]) ,
-                pathStroke );
-            curTrack_color.rgb
-            += curTrack_grayLevel
-                * uniform_Update_fs_4fv_paths47_a[indPath - 4]
-                * vec3( uniform_Update_fs_4fv_paths47_r[indPath - 4] , 
-                            uniform_Update_fs_4fv_paths47_g[indPath - 4] , 
-                            uniform_Update_fs_4fv_paths47_b[indPath - 4] );  // brush opacity is combined with color opacity
+                pathStroke ) 
+                * uniform_Update_fs_4fv_paths47_a[indPath - 4];  // brush opacity is combined with color opacity
         }
-      }
-    }
-    float curTrackCumulatedGrayLevel = graylevel(curTrack_color.rgb);
-    // drawing occurs on track indCurTrack
-    if( curTrackCumulatedGrayLevel > 0 ) {
-      out_track_FBO[indCurTrack].rgb 
-          = out_track_FBO[indCurTrack].rgb * clamp((1 - curTrackCumulatedGrayLevel),0,1)
-            + curTrack_color.rgb;
-      if(indCurTrack != 0) {
-        out_track_FBO[indCurTrack].a = 1.0;//track_grayLevel[indCurTrack];
+
+        // drawing occurs on track indCurTrack
+        if( track_grayLevel[indCurTrack] > 0 ) {
+          // normal stylus
+          if( Cursor  > 0 ) {  // -1 for rubber and +1 for Stylus
+            if(indPath < 4) {
+              out_track_FBO[indCurTrack].rgb 
+                = out_track_FBO[indCurTrack].rgb * clamp((1 - track_grayLevel[indCurTrack]),0,1)
+                  + track_grayLevel[indCurTrack]
+                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
+                            uniform_Update_fs_4fv_paths03_g[indPath] , 
+                            uniform_Update_fs_4fv_paths03_b[indPath] );
+            }
+            else {
+              out_track_FBO[indCurTrack].rgb 
+                = out_track_FBO[indCurTrack].rgb * clamp((1 - track_grayLevel[indCurTrack]),0,1)
+                  + track_grayLevel[indCurTrack]
+                    * vec3( uniform_Update_fs_4fv_paths47_r[indPath - 4] , 
+                            uniform_Update_fs_4fv_paths47_g[indPath - 4] , 
+                            uniform_Update_fs_4fv_paths47_b[indPath - 4] );
+            }
+          }
+          // rubber stylus
+          else {
+            out_track_FBO[indCurTrack].rgb *= (1 - track_grayLevel[indCurTrack]);
+          }
+          if(indCurTrack != 0) {
+            out_track_FBO[indCurTrack].a = 1.0;//track_grayLevel[indCurTrack];
+          }
+        }
       }
     }
     out_track_FBO[indCurTrack] = clamp( out_track_FBO[indCurTrack] , 0.0 , 1.0 );
     // out_track_FBO[1].rgb = 0.001 * out_track_FBO[1].rgb + .999 * vec3(1,0,0);
 
     /////////////////
+    // TRACK photo
+    if(currentPhotoTrack == indCurTrack 
+      && uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x + uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0 ) {
+       out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
+    }
+
+    /////////////////
     // TRACK video
-    bool videoOn = false;
+#ifdef PG_VIDEO_ACTIVE
     if( currentVideoTrack == indCurTrack && cameraWeight + movieWeight > 0) {
-      videoOn = true;
       if( cameraCumul == 1 ) { // ADD
         out_track_FBO[indCurTrack] 
           = vec4( clamp( max(videocolor,out_track_FBO[indCurTrack].rgb) , 0.0 , 1.0 ) ,  1.0 );
@@ -1666,26 +2048,12 @@ void main() {
           // video image copy when there is a flash video
         out_track_FBO[indCurTrack].rgb = flashCameraTrkWght * cameraImage;
       }
-      else {
-        // flashCameraTrkWght = 0.0 <=> no flash video
-        out_track_FBO[indCurTrack].rgb *= (1.0 - flashCameraTrkWght);
-      }
     }
-
-    /////////////////
-    // TRACK photo
-    if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
-      // only photo (but not drawing or whatever memory from preceding tracks)
-      if(!videoOn) {
-       out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
-      }
-      // cumul video + photo
-      else {
-       out_track_FBO[indCurTrack].rgb
-       = clamp( out_track_FBO[indCurTrack].rgb + photocolor , 0.0 , 1.0 );
-      }
+    else {
+      // flashCameraTrkWght = 0.0 <=> no flash video
+      out_track_FBO[indCurTrack].rgb *= (1.0 - flashCameraTrkWght);
     }
+#endif
 
     // non BG track flash on BG track (only concerns tracks >= 1)
     if( indCurTrack != 0 ) {
@@ -1706,10 +2074,10 @@ void main() {
   // PARTICLE FLASHES ON CA & TRACKS
   // copies particle rendering at preceding step (for particle flashes)
   out_particlesRendering 
-    = texture( uniform_Update_texture_fs_Part_render , decalCoords );
+    = texture( fs_lookupTable15 , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
+  flashToCACumul += uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.w
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track
@@ -1723,7 +2091,7 @@ void main() {
   ///////////////////////////////////////////////////
   if( CA_on_off && (frameNo % CAstep == 0) ) {
     out4_CA = vec4(0.0);
-    vec4 currentCA = out_attachment_FBO[pg_FBO_fs_CA_attacht]; // RGB: CA color ALPHA: CA state (ALPHA negative 
+    vec4 currentCA = out_attachment_FBO[pg_CA_FBO_attcht]; // RGB: CA color ALPHA: CA state (ALPHA negative 
               // when first time writing on CA for skipping the first frame for CA update)
 
     // COPY of one of the tracks on CA layer
@@ -1732,35 +2100,56 @@ void main() {
     // will disappear through the updating rule of the automaton)
     if( flashToCACumul.a > 0 ) { // gray level of copy color (in case of flash)
       currentCA.a = -1;
-      // currentCA.rgb = clamp( currentCA.rgb + out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 0.0 , 1.0 );
+      // currentCA.rgb = clamp( currentCA.rgb + out_attachment_FBO[pg_CA_FBO_attcht].rgb , 0.0 , 1.0 );
       currentCA.rgb = clamp( flashToCACumul.rgb , 0.0 , 1.0 );
       // currentCA.rgb = out_track_FBO[1].rgb;
       // currentCA.rgb = vec3(1,0,0);
     }
 
+/*
+    if( CAType == CA_COLOR ) {
+      vec4 composedColor = out_track_FBO[0]
+#if PG_NB_TRACKS >= 2
+        + out_track_FBO[1]
+#endif
+#if PG_NB_TRACKS >= 3
+        + out_track_FBO[2]
+#endif
+#if PG_NB_TRACKS >= 4
+        + out_track_FBO[3]
+#endif
+        ;
+      composedColor = clamp( composedColor , 0.0 , 1.0 );
+      float hue = atan(sqrt(3)*(composedColor.g - composedColor.b),
+                        2 * composedColor.r - composedColor.g - composedColor.b) / (2 * PI);
+      hue = (hue > 0 ? hue : hue + 1);
+      CAType = int(floor(4 * hue));
+    }
+*/
      // calculates the new state of the automaton
     CA_out( currentCA );
 
 
     // CA "REPOPULATION"
     if( repop_CA > 0 ) {
-      if( int(frameNo * randomCA2.w ) % int(15000 *(1-repop_CA)) == int((randomCA2.z * 5000.0
-        + randomCA2.x * 5000.0 + randomCA2.y * 5000.0 ) *(1-repop_CA)) ) {
+      // if the pixel noise is equal to frame % 8500 the cell is repopulated with a pixel
+      vec4 randomValue = texture( fs_lookupTable12 , vec3( decalCoordsPOT , 0.0 ) );
+      if( int(frameNo * randomValue.w ) % int(765 *(1-repop_CA)) == int((randomValue.x * 255.0
+          + randomValue.y * 255.0 + randomValue.z * 255.0 ) *(1-repop_CA)) ) {
         out4_CA.a = -1.0;
         out4_CA.rgb  = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
       }
     }
 
     // outputs the color from CA (average surrounding color if birth)
-    out_attachment_FBO[pg_FBO_fs_CA_attacht] = out4_CA;
+    out_attachment_FBO[pg_CA_FBO_attcht] = out4_CA;
   }
 
   //////////////////////////////////////
   // FLASH BACK FROM CA LAYER TO BG LAYER
   // if no flashback uniform_Update_fs_4fv_repop_Color_flashCABGWght.w == 0
   out_track_FBO[0].rgb = clamp( out_track_FBO[0].rgb 
-				    + uniform_Update_fs_4fv_repop_Color_flashCABGWght.w 
-            * out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb , 
+				    + uniform_Update_fs_4fv_repop_Color_flashCABGWght.w * out_attachment_FBO[pg_CA_FBO_attcht].rgb , 
             0 , 1 );
 
   ///////////////////////////////////////////////////
@@ -1774,8 +2163,8 @@ void main() {
     //  FLASH pixel: increase radius for pixel capture
     //////////////////////////////////////
     //////////////////////////////////////
-    if( uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.y > 0 ) {
-      pixel_radius = 1;
+    if( uniform_Update_fs_4fv_isClearLayer_flashPixel_flashCAPartWght_nbParticles.y > 0 ) {
+      radiuspixel = 1;
     }
 
     pixel_out();
@@ -1784,7 +2173,7 @@ void main() {
     if( graylevel(out_color_pixel) > 0 ) {
       // outputs the color from pixel move at drawing layer
       out_track_FBO[0].rgb = out_color_pixel;
-      out_attachment_FBO[pg_FBO_fs_Pixels_attacht] 
+      out_attachment_FBO[pg_Pixel_FBO_attcht] 
 	     = vec4( out_speed_pixel , out_position_pixel );
     }
     // update of the current pixel
@@ -1795,25 +2184,40 @@ void main() {
         pixel_acceleration = vec2(snoise( pixelTextureCoordinatesXY , noiseScale * 100 ),
                                 snoise( pixelTextureCoordinatesXY + vec2(2.0937,9.4872) , noiseScale * 100 ));
       // }
+      // // SUN RAYS
+      // else if(noiseType == 1 ) {
+      //   vec2 pos = vec2( atan((noiseCenter_0-pixelTextureCoordinatesXY.x)/(noiseCenter_1-pixelTextureCoordinatesXY.y)) * (noiseAngleScale * 10),
+      //                    length(vec2(noiseCenter_0,noiseCenter_1) - pixelTextureCoordinatesXY) / (noiseLineScale) );
+      //   pixel_acceleration = vec2(snoise( pos , noiseScale * 10 ) ,
+      //                           snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
+      // }
+      // // CAMERA
+      // else if(noiseType == 2 ) {
+      //   pixel_acceleration = cameraImage.rg;
+      // }
+      // // MOVIE
+      // else {
+      //   pixel_acceleration = movieImage.rg;
+      // }
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
-      if( pixel_acc > 0 ) {
+      if( pixel_acc_factor > 0 ) {
       	// acceleration
-      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
-          += pixel_acc * acceleration;
+      	out_attachment_FBO[pg_Pixel_FBO_attcht].xy 
+          += pixel_acc_factor * acceleration;
       }
       else {
       	// damping
-      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
-          += pixel_acc * out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy;
+      	out_attachment_FBO[pg_Pixel_FBO_attcht].xy 
+          += pixel_acc_factor * out_attachment_FBO[pg_Pixel_FBO_attcht].xy;
       }
       // updates the position of the current pixel
-      out_attachment_FBO[pg_FBO_fs_Pixels_attacht].zw += out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy; 
+      out_attachment_FBO[pg_Pixel_FBO_attcht].zw += out_attachment_FBO[pg_Pixel_FBO_attcht].xy; 
 
       // if the pixel leaves the cell, it is erased
-      if( abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].z ) > 0.5
-      	  || abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].w ) > 0.5 ) {
+      if( abs( out_attachment_FBO[pg_Pixel_FBO_attcht].z ) > 0.5
+      	  || abs( out_attachment_FBO[pg_Pixel_FBO_attcht].w ) > 0.5 ) {
       	if( pixel_mode == PIXEL_UNIQUE ) {
       	  out_track_FBO[0].rgb = vec3(0);
       	}
@@ -1823,10 +2227,43 @@ void main() {
 
   // pixel "ADDITION"
   if( repop_BG > 0 ) {
-    if( int(frameNo * randomCA2.z ) % int(15000 *(1-repop_BG)) == int((randomCA2.x * 5000.0
-        + randomCA2.y * 5000.0 + randomCA2.w * 5000.0 ) *(1-repop_BG)) ) {
+    // if the pixel noise is equal to frame % 8500 the cell is repopulated with a pixel
+    vec4 randomValue = texture( fs_lookupTable12 , vec3( decalCoordsPOT , 0.5 ) );
+    if( int(frameNo * randomValue.w ) % int(765 *(1-repop_BG)) == int((randomValue.x * 255.0
+        + randomValue.y * 255.0 + randomValue.z * 255.0 ) *(1-repop_BG)) ) {
         out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_Color_flashCABGWght.xyz;
     }
+  }
+
+  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+  // PARTICLE POSITION/SPEED UPDATE
+  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+  if(decalCoords.y * width + decalCoords.x < nbParticles) {
+    // updates particle according to mode of updating
+    // flashes of track and CA on Particles
+    particle_out();
+
+    //////////////////////////////////////////////
+    // particle decay
+    if( graylevel(out_color_radius_particle.rgb) > 0 ) {
+      out_color_radius_particle.rgb 
+           = out_color_radius_particle.rgb - vec3(uniform_Update_fs_4fv_trkDecay_partDecay.w);
+    }
+    out_color_radius_particle.rgb 
+      = clamp( out_color_radius_particle.rgb , 0.0 , 1.0 );
+
+    //////////////////////////////////////////////
+    // resets pixel speed and position if trackO returns to black
+    if( graylevel(out_color_radius_particle.rgb) <= 0 ) {
+      out_position_speed_particle.xy = vec2(-10000); 
+      out_position_speed_particle.zw = vec2(0); 
+    }
+
+    out_attachment_FBO[pg_ParticlePosSpeed_FBO_attcht] = out_position_speed_particle;
+    out_attachment_FBO[pg_ParticleColRadius_FBO_attcht] = out_color_radius_particle;
+    out_attachment_FBO[pg_ParticleTargetPosColRadius_FBO_attcht] = out_target_position_color_radius_particle;
   }
 
   ///////////////////////////////////////////////////
@@ -1843,14 +2280,14 @@ void main() {
   // track decay and clear layer
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
-          out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
+        out_track_FBO[indTrack].rgb 
+             = out_track_FBO[indTrack].rgb - vec3(uniform_Update_fs_4fv_trkDecay_partDecay[indTrack]);
       }
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
       // clear layer
       if( currentDrawingTrack == indTrack 
-          && uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.x > 0 ) {
+          && uniform_Update_fs_4fv_isClearLayer_flashPixel_flashCAPartWght_nbParticles.x > 0 ) {
         out_track_FBO[indTrack].rgb = vec3(0);
       }
   }
@@ -1859,7 +2296,7 @@ void main() {
   // resets pixel speed and position if trackO returns to black
   if( graylevel(out_track_FBO[0].rgb) <= 0 ) {
     out_track_FBO[0].rgb = vec3(0);
-    out_attachment_FBO[pg_FBO_fs_Pixels_attacht] = vec4(0);
+    out_attachment_FBO[pg_Pixel_FBO_attcht] = vec4(0);
   }
 
   //////////////////////////////////////////////
@@ -1878,8 +2315,8 @@ void main() {
 
   //////////////////////////////////////////////
   // CA LAYER CLEAR
-  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
-      out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
+  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pixelRadius.y > 0 ) {
+      out_attachment_FBO[pg_CA_FBO_attcht] = vec4(0);
   }
 
   //////////////////////////////////////////////
@@ -1887,16 +2324,19 @@ void main() {
   // FBO OUTPUTS 
   //////////////////////////////////////////////
   //////////////////////////////////////////////
-  out_Update_FBO_fs_CA = out_attachment_FBO[pg_FBO_fs_CA_attacht];
-  out_Update_FBO_fs_Pixels = out_attachment_FBO[pg_FBO_fs_Pixels_attacht];
-  out_Update_FBO_fs_Trk0 = out_track_FBO[0];
+  outColor0 = out_attachment_FBO[pg_CA_FBO_attcht];
+  outColor1 = out_attachment_FBO[pg_Pixel_FBO_attcht];
+  outColor2 = out_attachment_FBO[pg_ParticlePosSpeed_FBO_attcht];
+  outColor3 = out_attachment_FBO[pg_ParticleColRadius_FBO_attcht];
+  outColor4 = out_attachment_FBO[pg_ParticleTargetPosColRadius_FBO_attcht];
+  outColor5 = out_track_FBO[0];
 #if PG_NB_TRACKS >= 2
-  out_Update_FBO_fs_Trk1 = out_track_FBO[1];
+  outColor6 = out_track_FBO[1];
 #endif
 #if PG_NB_TRACKS >= 3
-  out_Update_FBO_fs_Trk2 = out_track_FBO[2];
+  outColor7 = out_track_FBO[2];
 #endif
 #if PG_NB_TRACKS >= 4
-  out_Update_FBO_fs_Trk3 = out_track_FBO[3];
+  outColor8 = out_track_FBO[3];
 #endif
 }

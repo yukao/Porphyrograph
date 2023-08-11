@@ -25,7 +25,7 @@
 
 #include "pg-all_include.h"
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 
 ////////////////////////////////////////
 // geometrical data of mesh
@@ -35,6 +35,8 @@ GLfloat *vertexBuffer = NULL;
 GLfloat *texCoordBuffer = NULL;
 GLfloat *normalBuffer = NULL;
 GLuint  *indexBuffer = NULL;
+GLint* boneIndexBuffer = NULL;
+GLfloat* boneWeightBuffer = NULL;
 
 // shader variable pointers
 GLint *uniform_mesh_model = NULL;
@@ -42,26 +44,40 @@ GLint *uniform_mesh_view = NULL;
 GLint *uniform_mesh_proj = NULL;
 GLint *uniform_mesh_light = NULL;
 
-#ifndef TEMPETE
 // mesh lighting
 GLfloat mesh_light_x = 0.56f;
 GLfloat mesh_light_y = 0.35f;
-GLfloat mesh_light_z = -1.f;
-#endif
+GLfloat mesh_light_z = 3.f;
+
+// mesh anim data
+double *mesh_startAnime = NULL;
+double *mesh_anime_precTime = NULL;
+int *mesh_precedingAnime = NULL;
+double* mesh_startMotion = NULL;
+double* mesh_motion_precTime = NULL;
+int* mesh_precedingMotion = NULL;
+bool* mesh_positiveChange = NULL;
+bool* mesh_negativeChange = NULL;
+int chosen_mesh_LibraryPose1 = 0;
+int chosen_mesh_LibraryPose2 = 0;
+int chosen_mesh_LibraryPose3 = 0;
 
 
 //////////////////////////////////////////////////////////////////
-// MESH AND KEYPOINT FILE PARSING
+// MESH FILE PARSING
 //////////////////////////////////////////////////////////////////
 
 // the linearization for OpenGL replaces indices associated with each face in obj format
 // by coordinates copied from these temporary buffers (through copyMeshData)
-void copyMeshData(  int indMeshInFile , GLfloat *vertexBufferIni , GLfloat *texCoordBufferIni , GLfloat *normalBufferIni ,
+void copyMeshData(  int indObjectInMesh , GLfloat *vertexBufferIni , GLfloat *texCoordBufferIni , GLfloat *normalBufferIni ,
+					GLint* boneIndexBufferIni, GLfloat* boneWeightBufferIni,
 					GLuint  *indexPointBufferIni, GLuint  *indexTexCoordBufferIni, GLuint  *indexNormalBufferIni,
 					int nbFacesInThisMesh) {
   	vertexBuffer = (GLfloat *)malloc( nbFacesInThisMesh * 3 * 3 * sizeof(GLfloat));
 	texCoordBuffer = (GLfloat *)malloc( nbFacesInThisMesh * 3 * 2 * sizeof(GLfloat));
-	normalBuffer = (GLfloat *)malloc(nbFacesInThisMesh * 3 * 3 * sizeof(GLfloat));
+	normalBuffer = (GLfloat*)malloc(nbFacesInThisMesh * 3 * 3 * sizeof(GLfloat));
+	boneIndexBuffer = (GLint*)malloc(nbFacesInThisMesh * 3 * 4 * sizeof(GLint));
+	boneWeightBuffer = (GLfloat*)malloc(nbFacesInThisMesh * 3 * 4 * sizeof(GLfloat));
 	indexBuffer = (GLuint *)malloc( nbFacesInThisMesh * 3 * sizeof(GLuint));
 	for( int indFace = 0 ; indFace < nbFacesInThisMesh ; indFace++ ) {
 	  // copies the indices in the index table
@@ -73,7 +89,9 @@ void copyMeshData(  int indMeshInFile , GLfloat *vertexBufferIni , GLfloat *texC
 	  int indVertex1 = indexPointBufferIni[ indFace * 3 ];
 	  int indVertex2 = indexPointBufferIni[ indFace * 3 + 1 ];
 	  int indVertex3 = indexPointBufferIni[ indFace * 3 + 2 ];
-	  // printf("Face indPoint %d %d %d %d\n" , indFace ,indVertex1,indVertex2,indVertex3);
+	  //if (indFace == 10) {
+		 // printf("Face ind vertices %d %d %d %d\n", indFace, indVertex1, indVertex2, indVertex3);
+	  //}
 	  vertexBuffer[ indFace * 3 * 3 ]     = vertexBufferIni[ indVertex1 * 3 ];
 	  vertexBuffer[ indFace * 3 * 3 + 1 ] = vertexBufferIni[ indVertex1 * 3 + 1 ];
 	  vertexBuffer[ indFace * 3 * 3 + 2 ] = vertexBufferIni[ indVertex1 * 3 + 2 ];
@@ -122,6 +140,38 @@ void copyMeshData(  int indMeshInFile , GLfloat *vertexBufferIni , GLfloat *texC
 		//texCoordBuffer[ indFace * 3 * 2  ] , texCoordBuffer[ indFace * 3 * 2 + 1 ] ,
 		//texCoordBuffer[ (indFace * 3 + 1) * 2 ] , texCoordBuffer[ (indFace * 3 + 1) * 2 + 1 ] ,
 		//texCoordBuffer[ (indFace * 3 + 2) * 2 ] , texCoordBuffer[ (indFace * 3 + 2) * 2 + 1 ]  );
+
+	  // copies the bone indices and weights from the initial buffer to the final one
+	  //if (indFace == 10) {
+		 // printf("Face %d vertex %d ind object %d faces %d bone index & weights second vertex %d %d %d %d %f %f %f %f\n\n", indFace, indVertex2, indObjectInMesh, nbFacesInThisMesh,
+			//  boneIndexBufferIni[indVertex2 * 4], boneIndexBufferIni[indVertex2 * 4 + 1], boneIndexBufferIni[indVertex2 * 4 + 2], boneIndexBufferIni[indVertex2 * 4 + 3],
+			//  boneWeightBufferIni[indVertex2 * 4], boneWeightBufferIni[indVertex2 * 4 + 1], boneWeightBufferIni[indVertex2 * 4 + 2], boneWeightBufferIni[indVertex2 * 4 + 3]);
+	  //}
+	  boneIndexBuffer[indFace * 3 * 4] = boneIndexBufferIni[indVertex1 * 4];
+	  boneIndexBuffer[indFace * 3 * 4 + 1] = boneIndexBufferIni[indVertex1 * 4 + 1];
+	  boneIndexBuffer[indFace * 3 * 4 + 2] = boneIndexBufferIni[indVertex1 * 4 + 2];
+	  boneIndexBuffer[indFace * 3 * 4 + 3] = boneIndexBufferIni[indVertex1 * 4 + 3];
+	  boneIndexBuffer[(indFace * 3 + 1) * 4] = boneIndexBufferIni[indVertex2 * 4];
+	  boneIndexBuffer[(indFace * 3 + 1) * 4 + 1] = boneIndexBufferIni[indVertex2 * 4 + 1];
+	  boneIndexBuffer[(indFace * 3 + 1) * 4 + 2] = boneIndexBufferIni[indVertex2 * 4 + 2];
+	  boneIndexBuffer[(indFace * 3 + 1) * 4 + 3] = boneIndexBufferIni[indVertex2 * 4 + 3];
+	  boneIndexBuffer[(indFace * 3 + 2) * 4] = boneIndexBufferIni[indVertex3 * 4];
+	  boneIndexBuffer[(indFace * 3 + 2) * 4 + 1] = boneIndexBufferIni[indVertex3 * 4 + 1];
+	  boneIndexBuffer[(indFace * 3 + 2) * 4 + 2] = boneIndexBufferIni[indVertex3 * 4 + 2];
+	  boneIndexBuffer[(indFace * 3 + 2) * 4 + 3] = boneIndexBufferIni[indVertex3 * 4 + 3];
+
+	  boneWeightBuffer[indFace * 3 * 4] = boneWeightBufferIni[indVertex1 * 4];
+	  boneWeightBuffer[indFace * 3 * 4 + 1] = boneWeightBufferIni[indVertex1 * 4 + 1];
+	  boneWeightBuffer[indFace * 3 * 4 + 2] = boneWeightBufferIni[indVertex1 * 4 + 2];
+	  boneWeightBuffer[indFace * 3 * 4 + 3] = boneWeightBufferIni[indVertex1 * 4 + 3];
+	  boneWeightBuffer[(indFace * 3 + 1) * 4] = boneWeightBufferIni[indVertex2 * 4];
+	  boneWeightBuffer[(indFace * 3 + 1) * 4 + 1] = boneWeightBufferIni[indVertex2 * 4 + 1];
+	  boneWeightBuffer[(indFace * 3 + 1) * 4 + 2] = boneWeightBufferIni[indVertex2 * 4 + 2];
+	  boneWeightBuffer[(indFace * 3 + 1) * 4 + 3] = boneWeightBufferIni[indVertex2 * 4 + 3];
+	  boneWeightBuffer[(indFace * 3 + 2) * 4] = boneWeightBufferIni[indVertex3 * 4];
+	  boneWeightBuffer[(indFace * 3 + 2) * 4 + 1] = boneWeightBufferIni[indVertex3 * 4 + 1];
+	  boneWeightBuffer[(indFace * 3 + 2) * 4 + 2] = boneWeightBufferIni[indVertex3 * 4 + 2];
+	  boneWeightBuffer[(indFace * 3 + 2) * 4 + 3] = boneWeightBufferIni[indVertex3 * 4 + 3];
 	}
 	//printf("\n");
 }
@@ -138,25 +188,12 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 	int     nbNormalsInEachMeshTmp[MAX_MESHES];
 	int     nbFacesInEachMeshTmp[MAX_MESHES];
 
-	// Two comment lines
-	// # Blender3D v244 OBJ File: Anime_Girl.blend
-	// # www.blender3d.org
+	// jumps until the first object
 	if (!fgets(line, 256, file)) { return; }
-	if (!fgets(line, 256, file)) { return; }
-
-	if (!fgets(line, 256, file)) { return; }
-	// material name
-	// or mesh ID
 	sscanf(line, "%s", tag);
-	if (strcmp(tag, "mtllib") == 0) {
-		sscanf(line, "%s", tag);
-		// reads next line: object
+	while (strcmp(tag, "o") != 0) {
 		if (!fgets(line, 256, file)) { return; }
-		// mesh ID
 		sscanf(line, "%s", tag);
-	}
-	else {
-		// we are on object line
 	}
 
 	*meshNo = 0;
@@ -173,6 +210,7 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 
 		// mesh ID
 		sscanf(line, "%s", tag);
+		//printf("VH mesh ID %s\n", line);
 
 		// next tag
 		if (!fgets(line, 256, file)) { return; }
@@ -183,6 +221,12 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 			sscanf(line, "%s", tag);
 			nbVerticesInEachMeshTmp[*meshNo]++;
 
+			if (!fgets(line, 256, file)) { return; }
+			sscanf(line, "%s", tag);
+		}
+
+		// Skips Verts Weights in this mesh
+		while (strcmp(tag, "vw") == 0) {
 			if (!fgets(line, 256, file)) { return; }
 			sscanf(line, "%s", tag);
 		}
@@ -263,53 +307,69 @@ void count_faces_mesh_obj(FILE *file, int *meshNo,
 	}
 }
 
-void transferMeshDataToGPU(int indMeshFile, int indMeshInFile) {
+void transferMeshDataToGPU(int indMeshFile, int indObjectInMesh) {
 	///////////////////////////////////////////////////////////
 	// vertex buffer objects and vertex array for the mesh
 	unsigned int mesh_points_vbo;
 	unsigned int mesh_texCoords_vbo;
 	unsigned int mesh_normals_vbo;
+	unsigned int mesh_boneIndex_vbo;
+	unsigned int mesh_boneWeight_vbo;
 
 	// 3 VBOs
-	//printf("GPU transfer %d mesh %d faces %d\n", indMeshFile, indMeshInFile, nbFacesPerMesh[indMeshFile][indMeshInFile]);
+	//printf("GPU transfer %d mesh %d faces %d\n", indMeshFile, indObjectInMesh, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]);
 	glGenBuffers(1, &mesh_points_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		3 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
+		3 * 3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * sizeof(GLfloat),
 		vertexBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_texCoords_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		2 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
+		2 * 3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * sizeof(GLfloat),
 		texCoordBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_normals_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		3 * 3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLfloat),
+		3 * 3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * sizeof(GLfloat),
 		normalBuffer,
 		GL_STATIC_DRAW);
 
-	glGenBuffers(1, &(mesh_index_vbo[indMeshFile][indMeshInFile]));
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+	glGenBuffers(1, &mesh_boneIndex_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneIndex_vbo);
+	glBufferData(GL_ARRAY_BUFFER,
+		4 * 3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * sizeof(GLint),
+		boneIndexBuffer,
+		GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mesh_boneWeight_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneWeight_vbo);
+	glBufferData(GL_ARRAY_BUFFER,
+		4 * 3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * sizeof(GLfloat),
+		boneWeightBuffer,
+		GL_STATIC_DRAW);
+
+	glGenBuffers(1, &(mesh_index_vbo[indMeshFile][indObjectInMesh]));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indObjectInMesh]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		3 * nbFacesPerMesh[indMeshFile][indMeshInFile] * sizeof(GLuint),
+		3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * sizeof(GLuint),
 		indexBuffer,
 		GL_STATIC_DRAW);
 
 	//printf("Index Buffer mesh %d: ", indMeshFile);
-	//for (int ind = 0; ind < 3 * nbFacesPerMesh[indMeshFile][indMeshInFile]; ind++) {
+	//for (int ind = 0; ind < 3 * pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]; ind++) {
 	//	printf("%d ", indexBuffer[ind]);
 	//}
 	//printf("\n");
 
 	// VAO
-	mesh_vao[indMeshFile][indMeshInFile] = 0;
-	glGenVertexArrays(1, &(mesh_vao[indMeshFile][indMeshInFile]));
-	glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
+	mesh_vao[indMeshFile][indObjectInMesh] = 0;
+	glGenVertexArrays(1, &(mesh_vao[indMeshFile][indObjectInMesh]));
+	glBindVertexArray(mesh_vao[indMeshFile][indObjectInMesh]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
 	// vertex positions are at location 0
@@ -318,17 +378,28 @@ void transferMeshDataToGPU(int indMeshFile, int indMeshInFile) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
 	// texCoord positions are at location 1
-	glEnableVertexAttribArray(1); // don't forget this!
+	glEnableVertexAttribArray(1); 
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
-	// texCoord positions are at location 1
-	glEnableVertexAttribArray(2); // don't forget this!
+	// normals are at location 2
+	glEnableVertexAttribArray(2); 
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneIndex_vbo);
+	// bone indices are at location 3
+	glEnableVertexAttribArray(3); 
+	// use glVertexAttribIPointer instead glVertexAttribPointer if the variable is an ivec and not a vec
+	glVertexAttribIPointer(3, 4, GL_INT, 0, (GLubyte*)NULL);
 
-	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indMeshInFile , mesh_vao[indMeshFile][indMeshInFile], mesh_index_vbo[indMeshFile][indMeshInFile], nbFacesPerMesh[indMeshFile][indMeshInFile]);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneWeight_vbo);
+	// bone indices are at location 3
+	glEnableVertexAttribArray(4); 
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indObjectInMesh]);
+
+	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indObjectInMesh , mesh_vao[indMeshFile][indObjectInMesh], mesh_index_vbo[indMeshFile][indObjectInMesh], pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]);
 	glBindVertexArray(0); // Disable our Vertex Buffer Object
 
 	printOglError(23);
@@ -336,16 +407,197 @@ void transferMeshDataToGPU(int indMeshFile, int indMeshInFile) {
 	free(vertexBuffer);
 	free(texCoordBuffer);
 	free(normalBuffer);
+	free(boneIndexBuffer);
+	free(boneWeightBuffer);
 	free(indexBuffer);
 }
 
+void parseArmatureObj(FILE* file, char * line, char * tag, char * id, int indMeshFile) {
+	int nbBonesLoc = 0;
+
+	// next tag
+	sscanf(line, "%s %s", tag, id);
+
+	//printf("VH Armature level %d tag %s nb bones %d line %s\n", 1, tag, nbBonesLoc, line);
+	while (strcmp(tag, "transl") == 0) {
+		parseOneBoneObj(file, 1, line, tag, id, &nbBonesLoc, indMeshFile);
+	}
+}
+
+void parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int * nbBonesLoc, int indMeshFile) {
+	//printf("VH Bone object level %d tag %s nb bones %d line %s\n", level, tag, *nbBonesLoc, line);
+	while (strcmp(tag, "transl") == 0) {
+		float w, x, y, z;
+
+		// Scan for Bones in this mesh
+		if ((*nbBonesLoc) >= pg_nb_bones[indMeshFile]) {
+			printf("Error: Excessive number of Bones\n");
+			throw 0;
+		}
+
+		// has read the transl/ID line
+
+		// stores the translation values
+		fgets(line, 512, file);
+		sscanf(line, "%f %f %f", &x, &y, &z);
+		TabBones[indMeshFile][(*nbBonesLoc)].boneInitialTranslationMatrix
+			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+		TabBones[indMeshFile][(*nbBonesLoc)].boneAnimationTranslationMatrix
+			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+
+		// initialRotation tag
+		fgets(line, 512, file);
+		// stores the initialRotation values
+		fgets(line, 512, file);
+
+		sscanf(line, "%f %f %f %f", &w, &x, &y, &z);
+		glm::quat initialRotation
+			= glm::quat(w, x, y, z);
+		TabBones[indMeshFile][(*nbBonesLoc)].boneInitialRotationMatrix
+			= glm::mat4_cast(initialRotation);
+		TabBones[indMeshFile][(*nbBonesLoc)].boneAnimationRotationMatrix
+			= glm::mat4_cast(initialRotation);
+
+		// bone
+		fgets(line, 512, file);
+		char boneID[256];
+		sscanf(line, "%s %256s",
+			tag, boneID);
+		if (TabBones[indMeshFile][(*nbBonesLoc)].id != string(boneID)) {
+			printf("Error: Incorrect Bone ID\n");
+			throw 0;
+		}
+
+		// length
+		fgets(line, 512, file);
+		sscanf(line, "%f",
+			&(TabBones[indMeshFile][(*nbBonesLoc)].length));
+		TabBones[indMeshFile][(*nbBonesLoc)].points[2 * 3 + 1] = TabBones[indMeshFile][(*nbBonesLoc)].length;
+		TabBones[indMeshFile][(*nbBonesLoc)].points[5 * 3 + 1] = TabBones[indMeshFile][(*nbBonesLoc)].length;
+
+		///////////////////////////////////////////////////////////
+		// vertex buffer objects and vertex array for the bones
+		TabBones[indMeshFile][(*nbBonesLoc)].vbo = 0;
+		glGenBuffers(1, &(TabBones[indMeshFile][(*nbBonesLoc)].vbo));
+
+		TabBones[indMeshFile][(*nbBonesLoc)].vao = 0;
+		glGenVertexArrays(1, &(TabBones[indMeshFile][(*nbBonesLoc)].vao));
+
+		// vertex buffer objects and vertex array
+		glBindBuffer(GL_ARRAY_BUFFER, TabBones[indMeshFile][(*nbBonesLoc)].vbo);
+		glBufferData(GL_ARRAY_BUFFER,
+			2 * 3 * 3 * sizeof(float),
+			TabBones[indMeshFile][(*nbBonesLoc)].points,
+			GL_STATIC_DRAW);
+
+		glBindVertexArray(TabBones[indMeshFile][(*nbBonesLoc)].vao);
+		glBindBuffer(GL_ARRAY_BUFFER, TabBones[indMeshFile][(*nbBonesLoc)].vbo);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+		glEnableVertexAttribArray(0);
+
+		// parent
+		fgets(line, 512, file);
+		sscanf(line, "%s %256s", tag, boneID);
+		//printf("Bone %s (parent: %s) (prof: %d)\n",
+		//	TabBones[indMeshFile][(*nbBonesLoc)].id.c_str(), boneID, level);
+
+		// associates the parent bone with the current bone
+		if (strcmp(boneID, "NULL") != 0) {
+			bool parentfound = false;
+			for (int ind = 0; ind < (*nbBonesLoc); ind++) {
+				if (TabBones[indMeshFile][ind].id == string(boneID)) {
+					TabBones[indMeshFile][(*nbBonesLoc)].parentBone = TabBones[indMeshFile] + ind;
+					if (!TabBones[indMeshFile][ind].daughterBone) {
+						TabBones[indMeshFile][ind].daughterBone = TabBones[indMeshFile] + (*nbBonesLoc);
+					}
+					else {
+						Bone* currentBone = TabBones[indMeshFile][ind].daughterBone;
+						while (currentBone->sisterBone) {
+							currentBone = currentBone->sisterBone;
+						}
+						currentBone->sisterBone = TabBones[indMeshFile] + (*nbBonesLoc);
+					}
+					parentfound = true;
+					break;
+				}
+			}
+			if (!parentfound) {
+				printf("Parent of bone %s (%s) not found!\n",
+					TabBones[indMeshFile][(*nbBonesLoc)].id.c_str(), id);
+			}
+		}
+		// no parent chains with the root node
+		else {
+			// it is not the root node
+			if ((*nbBonesLoc) > 0) {
+				Bone* currentBone = TabBones[indMeshFile];
+				while (currentBone->sisterBone) {
+					currentBone = currentBone->sisterBone;
+				}
+				currentBone->sisterBone = TabBones[indMeshFile] + (*nbBonesLoc);
+			}
+		}
+
+		// next tag
+		fgets(line, 512, file);
+		sscanf(line, "%s %s", tag, id);
+
+		(*nbBonesLoc)++;
+
+		// daughter bone
+		if (strcmp(tag, "transl") == 0) {
+			parseOneBoneObj(file, level + 1, line, tag, id, nbBonesLoc, indMeshFile);
+			if (strcmp(tag, "end") == 0) { strcpy(tag, "end"); return; }
+
+			// if empty line: end of file
+			if (!fgets(line, 512, file)) { strcpy(tag, "end"); return; }
+			// non empty line: reads further (possible sister node)
+			sscanf(line, "%s %s", tag, id);
+		}
+
+		// end_bone tag
+		else if (strcmp(tag, "bone_end") == 0) {
+			// if empty line: end of file
+			if (!fgets(line, 512, file)) { strcpy(tag, "end"); return; }
+			// non empty line: reads further (possible sister node)
+			sscanf(line, "%s %s", tag, id);
+		}
+	}
+}
+
+void copy_mesh_data_and_ship_to_GPU(int indMeshFile, int indObjectInMesh, GLfloat* vertexBufferIni, 
+	GLfloat* texCoordBufferIni, GLfloat* normalBufferIni,
+	GLint* boneIndexBufferIni, GLfloat* boneWeightBufferIni,
+	GLuint* indexPointBufferIni, GLuint* indexTexCoordBufferIni, GLuint* indexNormalBufferIni, int nbFacesInThisMesh, 
+	int * nbVertexTot, int * nbCoordTexTot, int * nbNormalTot, int nbVertices, int nbTexCoords, int nbNormals, vector <string> mesh_IDs_current_mesh) {
+	copyMeshData(indObjectInMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+		boneIndexBufferIni, boneWeightBufferIni,
+		indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
+		nbFacesInThisMesh);
+
+	//printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+	//	indObjectInMesh, mesh_IDs_current_mesh[indObjectInMesh].c_str(), nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh], nbFacesInEachMesh[indObjectInMesh]);
+	transferMeshDataToGPU(indMeshFile, indObjectInMesh);
+
+	(*nbVertexTot) += nbVertices;
+	(*nbCoordTexTot) += nbTexCoords;
+	(*nbNormalTot) += nbNormals;
+
+	(indObjectInMesh)++;
+
+	// stores the mesh vector inside the mesh vector of vectors
+	mesh_IDs.push_back(mesh_IDs_current_mesh);
+}
+
 // OBJ file parsing (Alias Wavefront ASCII format)
-void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
+void parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 	int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
 	int *nbFacesInEachMesh) {
 	char    tag[256];
+	char    tag2[256];
 	char    meshString[1024];
 	char    line[256];
+	char    id[256];
 
 	// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
 	// the buffers of vertices, tex coords, and normals, and the associated counts are temporary
@@ -354,20 +606,22 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 	// by coordinates copied from these temporary buffers (through copyMeshData)
 	GLfloat *vertexBufferIni = NULL;
 	GLfloat *texCoordBufferIni = NULL;
-	GLfloat *normalBufferIni = NULL;
+	GLfloat* normalBufferIni = NULL;
+	GLint* boneIndexBufferIni = NULL;
+	GLfloat* boneWeightBufferIni = NULL;
 	GLuint  *indexPointBufferIni = NULL;
 	GLuint  *indexTexCoordBufferIni = NULL;
-	GLuint  *indexNormalBufferIni = NULL;
+	GLuint* indexNormalBufferIni = NULL;
 
 	vector <string> mesh_IDs_current_mesh;
 
 	// local size of mesh
 	// initial count of mesh elements, before linearization by copyMeshData for OpenGL
 	// after linearization there are 3 vertices, texCoords, and normals per face
-	int *nbVerticesMeshIni = new int[nbMeshes];
-	int *nbTexCoordsMeshIni = new int[nbMeshes];
-	int *nbNormalsMeshIni = new int[nbMeshes];
-	int *nbFacesMeshIni = new int[nbMeshes];
+	int *nbVerticesMeshIni = new int[nbMeshObjects];
+	int *nbTexCoordsMeshIni = new int[nbMeshObjects];
+	int* nbNormalsMeshIni = new int[nbMeshObjects];
+	int *nbFacesMeshIni = new int[nbMeshObjects];
 
 	// Two comment lines
 	// # Blender3D v244 OBJ File: Anime_Girl.blend
@@ -375,10 +629,9 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 	if (!fgets(line, 256, file)) { return; }
 	if (!fgets(line, 256, file)) { return; }
 
+	// optional material name
 	if (!fgets(line, 256, file)) { return; }
-	// material name
-	// or mesh ID
-	sscanf(line, "%s", tag);
+		sscanf(line, "%s", tag);
 	if (strcmp(tag, "mtllib") == 0) {
 		sscanf(line, "%s", tag);
 		// reads next line: object
@@ -387,32 +640,147 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 		sscanf(line, "%s", tag);
 	}
 	else {
-		// we are on object line
+		// we are on object or armature line
 	}
+
+	// optional armature
+	// Bone list
+	string str(line);
+	if (str.find(string("Bones")) != string::npos) {
+		// line with bone number
+		if (!fgets(line, 256, file)) { return; }
+		sscanf(line, "%s %d", tag, &(pg_nb_bones[indMeshFile]));
+		TabBones[indMeshFile] = new Bone[pg_nb_bones[indMeshFile]];
+		//printf("VH %d bones to parse\n", pg_nb_bones[indMeshFile]);
+
+		if (pg_nb_bones[indMeshFile] > 0) {
+			// bone ID line
+			if (!fgets(line, 256, file)) { return; }
+			sscanf(line, "%s", tag);
+			int nbBonesLoc = 0;
+			while (strcmp(tag, "bone") == 0) {
+				if (nbBonesLoc >= pg_nb_bones[indMeshFile]) {
+					printf("Error: Excessive number of bones in object\n");
+					throw 0;
+				}
+				char boneID[256];
+				sscanf(line, "%s %256s", tag, boneID);
+				TabBones[indMeshFile][nbBonesLoc].id = string(boneID);
+				nbBonesLoc++;
+
+				if (!fgets(line, 512, file)) { return; }
+				sscanf(line, "%s", tag);
+			}
+		}
+
+		parseArmatureObj(file, line, tag, id, indMeshFile);
+		printf("Armature ind Mesh %d Nb bones %d\n", indMeshFile, pg_nb_bones[indMeshFile]);
+
+		pg_nb_LibraryPoses[indMeshFile] = 0;
+		// possible list of poses
+		if (strcmp(tag, "POSES") == 0) {
+			sscanf(line, "%s %d", tag, &(pg_nb_LibraryPoses[indMeshFile]));
+			printf("Nb poses %d\n", pg_nb_LibraryPoses[indMeshFile]);
+
+			// allocates the pose keyframe transformations (quaternion for rotation, and 3D vector for translation)
+			for (int indBone = 0; indBone < pg_nb_bones[indMeshFile]; indBone++) {
+				TabBones[indMeshFile][indBone].boneLibraryPoseRotationQuat = new glm::quat[pg_nb_LibraryPoses[indMeshFile]];
+				TabBones[indMeshFile][indBone].boneLibraryPoseTranslationVector = new glm::vec3[pg_nb_LibraryPoses[indMeshFile]];
+				TabBones[indMeshFile][indBone].boneAnimationPoseRotationQuat = new glm::quat[PG_MAX_ANIMATION_POSES];
+				TabBones[indMeshFile][indBone].boneAnimationPoseTranslationVector = new glm::vec3[PG_MAX_ANIMATION_POSES];
+			}
+
+			// reads the keyframes for the bones, 
+			// no assumption about the order in which the transformations are given
+			if (!fgets(line, 512, file)) { return; }
+			sscanf(line, "%s", tag);
+			int nbPoses = 0;
+			while (strcmp(tag, "POSE") == 0) {
+				int indPose = -1;
+				int indFrame = -1;
+				sscanf(line, "%s %d", tag, &indPose);
+				if (indPose < pg_nb_LibraryPoses[indMeshFile] && indPose == nbPoses) {
+					//printf("scanning pose #%d\n", indPose);
+					// first transformation (or next pose or next object if no transformation given)
+					if (!fgets(line, 256, file)) { return; }
+					sscanf(line, "%s", tag);
+					// reads each pose
+					while (strcmp(tag, "POSE") != 0 && strcmp(tag, "o") != 0) {
+						float val1 = 0.f, val2 = 0.f, val3 = 0.f, val4 = 1.f;
+						sscanf(line, "%s %s %f %f %f %f", tag, tag2, &val1, &val2, &val3, &val4);
+						bool found = false;
+						for (int indBone = 0; indBone < pg_nb_bones[indMeshFile]; indBone++) {
+							if (TabBones[indMeshFile][indBone].id == string(tag)) {
+								if (strcmp(tag2, "transl") == 0) {
+									TabBones[indMeshFile][indBone].boneLibraryPoseTranslationVector[indPose]
+										= glm::vec3(val1, val2, val3);
+									//printf("transl mesh #%d, bone #%d,%s %.4f %.4f %.4f\n", indMeshFile, indBone, TabBones[indMeshFile][indBone].id.c_str(), val1, val2, val3);
+								}
+								else if (strcmp(tag2, "rot") == 0) {
+									// CAUTION: W is the first coordinate in the quat constructor
+									TabBones[indMeshFile][indBone].boneLibraryPoseRotationQuat[indPose]
+										= glm::quat(val4, val1, val2, val3);
+									//printf("rot mesh #%d, bone #%d,%s %.4f %.4f %.4f %.4f\n", indMeshFile, indBone, TabBones[indMeshFile][indBone].id.c_str(), val1, val2, val3, val4);
+								}
+								else {
+									printf("Error: incorrect transformation tag for pose %d: %s\n", indPose, tag);
+									throw 0;
+								}
+								found = true;
+								break;
+							}
+						}
+						if (!found) {
+							printf("Error: unknown bone ID %s for pose %d\n", tag2, indPose);
+							throw 0;
+						}
+
+						// next transformation or next pose or first object
+						if (!fgets(line, 512, file)) { return; }
+						sscanf(line, "%s", tag);
+					}
+				}
+				else {
+					printf("Error: incorrect pose number %d maximum for this mesh %d expected rank %d\n", indPose, pg_nb_LibraryPoses[indMeshFile], nbPoses - 1);
+					throw 0;
+				}
+				nbPoses++;
+			}
+			// next pose
+		}
+		// else no pose
+	}
+	// else no armature
 
 	int nbVertexTot = 0;
 	int nbCoordTexTot = 0;
 	int nbNormalTot = 0;
-	int indMesh = 0;
+	int indObjectInMesh = 0;
+	//printf("VH tag before parsing object %s line %s\n", tag, line);
 	while (strcmp(tag, "o") == 0) {
-		if (indMesh >= nbMeshes) {
-			printf("Error: Excessive number of Meshes, max %d\n", nbMeshes);
+		if (indObjectInMesh >= nbMeshObjects) {
+			printf("Error: Excessive number of Meshes, max %d\n", nbMeshObjects);
 			throw 0;
 		}
 
 		// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
-		vertexBufferIni = (GLfloat *)malloc(nbVerticesInEachMesh[indMesh] * 3 * sizeof *vertexBufferIni);
-		texCoordBufferIni = (GLfloat *)malloc(nbTextCoordsInEachMesh[indMesh] * 2 * sizeof *texCoordBufferIni);
-		normalBufferIni = (GLfloat *)malloc(nbNormalsInEachMesh[indMesh] * 3 * sizeof *normalBufferIni);
-		indexTexCoordBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indMesh] * 3 * sizeof *indexTexCoordBufferIni);
-		indexPointBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indMesh] * 3 * sizeof *indexPointBufferIni);
-		indexNormalBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indMesh] * 3 * sizeof *indexNormalBufferIni);
+		vertexBufferIni = (GLfloat *)malloc(nbVerticesInEachMesh[indObjectInMesh] * 3 * sizeof *vertexBufferIni);
+		texCoordBufferIni = (GLfloat *)malloc(nbTextCoordsInEachMesh[indObjectInMesh] * 2 * sizeof *texCoordBufferIni);
+		normalBufferIni = (GLfloat*)malloc(nbNormalsInEachMesh[indObjectInMesh] * 3 * sizeof * normalBufferIni);
+		boneIndexBufferIni = (GLint*)malloc(nbVerticesInEachMesh[indObjectInMesh] * 4 * sizeof * boneIndexBufferIni);
+		boneWeightBufferIni = (GLfloat*)malloc(nbVerticesInEachMesh[indObjectInMesh] * 4 * sizeof * boneWeightBufferIni);
+		indexTexCoordBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indObjectInMesh] * 3 * sizeof *indexTexCoordBufferIni);
+		indexPointBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indObjectInMesh] * 3 * sizeof *indexPointBufferIni);
+		indexNormalBufferIni = (GLuint *)malloc(nbFacesInEachMesh[indObjectInMesh] * 3 * sizeof *indexNormalBufferIni);
+
+		// barycenter
+		float barycenter[3] = { 0.f, 0.f, 0.f};
 
 		// initial count of mesh elements, before linearization by copyMeshData for OpenGL, local value
-		nbVerticesMeshIni[indMesh] = 0;
-		nbTexCoordsMeshIni[indMesh] = 0;
-		nbNormalsMeshIni[indMesh] = 0;
-		nbFacesMeshIni[indMesh] = 0;
+		nbVerticesMeshIni[indObjectInMesh] = 0;
+		nbTexCoordsMeshIni[indObjectInMesh] = 0;
+		nbNormalsMeshIni[indObjectInMesh] = 0;
+		nbFacesMeshIni[indObjectInMesh] = 0;
 
 		// mesh ID
 		sscanf(line, "%s %s", tag, meshString);
@@ -424,15 +792,81 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 		// Scan for Verts in this mesh
 		while (strcmp(tag, "v") == 0) {
-			if (nbVerticesMeshIni[indMesh] >= nbVerticesInEachMesh[indMesh]) {
+			if (nbVerticesMeshIni[indObjectInMesh] >= nbVerticesInEachMesh[indObjectInMesh]) {
 				printf("Error: Excessive number of vertices\n");
 				throw 0;
 			}
 			sscanf(line, "%s %f %f %f",
-				tag, &vertexBufferIni[nbVerticesMeshIni[indMesh] * 3],
-				&vertexBufferIni[nbVerticesMeshIni[indMesh] * 3 + 1],
-				&vertexBufferIni[nbVerticesMeshIni[indMesh] * 3 + 2]);
-			nbVerticesMeshIni[indMesh]++;
+				tag, &vertexBufferIni[nbVerticesMeshIni[indObjectInMesh] * 3],
+				&vertexBufferIni[nbVerticesMeshIni[indObjectInMesh] * 3 + 1],
+				&vertexBufferIni[nbVerticesMeshIni[indObjectInMesh] * 3 + 2]);
+			barycenter[0] += vertexBufferIni[nbVerticesMeshIni[indObjectInMesh] * 3 + 0];
+			barycenter[1] += vertexBufferIni[nbVerticesMeshIni[indObjectInMesh] * 3 + 1];
+			barycenter[2] += vertexBufferIni[nbVerticesMeshIni[indObjectInMesh] * 3 + 2];
+			nbVerticesMeshIni[indObjectInMesh]++;
+
+			if (!fgets(line, 256, file)) { return; }
+			sscanf(line, "%s", tag);
+		}
+		if (nbVerticesMeshIni[indObjectInMesh] != 0) {
+			barycenter[0] /= nbVerticesMeshIni[indObjectInMesh];
+			barycenter[1] /= nbVerticesMeshIni[indObjectInMesh];
+			barycenter[2] /= nbVerticesMeshIni[indObjectInMesh];
+		}
+		mesh_barycenter[indMeshFile][3 * indObjectInMesh + 0] = barycenter[0];
+		mesh_barycenter[indMeshFile][3 * indObjectInMesh + 1] = barycenter[1];
+		mesh_barycenter[indMeshFile][3 * indObjectInMesh + 2] = barycenter[2];
+		//printf("Object %d/%d barycenter %.2f %.2f %.2f\n", indMeshFile, indObjectInMesh, barycenter[0], barycenter[1], barycenter[2]);
+
+		if (nbVerticesMeshIni[indObjectInMesh] != nbVerticesInEachMesh[indObjectInMesh]) {
+			printf("Error: Vertices counted number and Vertices parsed number discrepancy (%d vs %d) in Mesh %d / Object %d\n",
+				nbVerticesMeshIni[indObjectInMesh], nbVerticesInEachMesh[indObjectInMesh], indMeshFile, indObjectInMesh);
+			throw 0;
+		}
+
+		// Scan for vertex weights in this mesh
+		// first fills the weights with null values since all the vertices might not be weighted
+		for (int indVertex = 0; indVertex < nbVerticesMeshIni[indObjectInMesh]; indVertex++) {
+			boneIndexBufferIni[indVertex * 4 + 0] = -1;
+			boneIndexBufferIni[indVertex * 4 + 1] = -1;
+			boneIndexBufferIni[indVertex * 4 + 2] = -1;
+			boneIndexBufferIni[indVertex * 4 + 3] = -1;
+
+			boneWeightBufferIni[indVertex * 4 + 0] = 0.f;
+			boneWeightBufferIni[indVertex * 4 + 1] = 0.f;
+			boneWeightBufferIni[indVertex * 4 + 2] = 0.f;
+			boneWeightBufferIni[indVertex * 4 + 3] = 0.f;
+		}
+		while (strcmp(tag, "vw") == 0) {
+			int indVertex = 0;
+			int indBone1 = -1, indBone2 = -1, indBone3 = -1, indBone4 = -1;
+			float boneW1 = -1, boneW2 = -1, boneW3 = -1, boneW4 = -1;
+			// output is normalized with four weight (possibly padded with null weights and negative indices)
+			sscanf(line, "%s %d %d %f %d %f %d %f %d %f",
+				tag, &indVertex, &indBone1, &boneW1, &indBone2, &boneW2, &indBone3, &boneW3, &indBone4, &boneW4);
+			indVertex--;
+			indBone1--; indBone2--; indBone3--; indBone4--;
+			if (indVertex < 0 || indVertex >= nbVerticesMeshIni[indObjectInMesh]) {
+				printf("Error: Incorrect vertex index in bone weights %d (not int %d-%d)\n", indVertex, 0, nbVerticesMeshIni[indObjectInMesh] - 1);
+				throw 0;
+			}
+			if (indBone1 < -1 || indBone1 >= pg_nb_bones[indMeshFile]|| indBone2 < -1 || indBone2 >= pg_nb_bones[indMeshFile] 
+				|| indBone3 < -1 || indBone3 >= pg_nb_bones[indMeshFile] || indBone4 < -1 || indBone4 >= pg_nb_bones[indMeshFile]) {
+				printf("Error: Incorrect vertex index in bone weights %d/%d/%d/%d (not int %d-%d)\n", indBone1, indBone2, indBone3, indBone4, -1, pg_nb_bones[indMeshFile] - 1);
+				throw 0;
+			}
+			//printf("vw %s %d %d %f %d %f %d %f %d % f\n",
+			//	tag, indVertex, indBone1, float(boneW1), indBone2, float(boneW2), indBone3, float(boneW3), indBone4, float(boneW4));
+
+			boneIndexBufferIni[indVertex * 4 + 0] = indBone1;
+			boneIndexBufferIni[indVertex * 4 + 1] = indBone2;
+			boneIndexBufferIni[indVertex * 4 + 2] = indBone3;
+			boneIndexBufferIni[indVertex * 4 + 3] = indBone4;
+
+			boneWeightBufferIni[indVertex * 4 + 0] = boneW1;
+			boneWeightBufferIni[indVertex * 4 + 1] = boneW2;
+			boneWeightBufferIni[indVertex * 4 + 2] = boneW3;
+			boneWeightBufferIni[indVertex * 4 + 3] = boneW4;
 
 			if (!fgets(line, 256, file)) { return; }
 			sscanf(line, "%s", tag);
@@ -440,15 +874,15 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 		// Scan for text coords in this mesh
 		while (strcmp(tag, "vt") == 0) {
-			if (nbTexCoordsMeshIni[indMesh] > nbTextCoordsInEachMesh[indMesh]) {
+			if (nbTexCoordsMeshIni[indObjectInMesh] > nbTextCoordsInEachMesh[indObjectInMesh]) {
 				printf("Error: Excessive number of texCoords\n");
 				throw 0;
 			}
-			sscanf(line, "%s %f %f", tag, &texCoordBufferIni[nbTexCoordsMeshIni[indMesh] * 2],
-				&texCoordBufferIni[nbTexCoordsMeshIni[indMesh] * 2 + 1]);
-			//printf("vt %d %.2f %.2f\n",nbTexCoordsMeshIni[indMesh],texCoordBufferIni[nbTexCoordsMeshIni[indMesh] * 2],
-				  //	texCoordBufferIni[nbTexCoordsMeshIni[indMesh] * 2+1]);
-			nbTexCoordsMeshIni[indMesh]++;
+			sscanf(line, "%s %f %f", tag, &texCoordBufferIni[nbTexCoordsMeshIni[indObjectInMesh] * 2],
+				&texCoordBufferIni[nbTexCoordsMeshIni[indObjectInMesh] * 2 + 1]);
+			//printf("vt %d %.2f %.2f\n",nbTexCoordsMeshIni[indObjectInMesh],texCoordBufferIni[nbTexCoordsMeshIni[indObjectInMesh] * 2],
+				  //	texCoordBufferIni[nbTexCoordsMeshIni[indObjectInMesh] * 2+1]);
+			nbTexCoordsMeshIni[indObjectInMesh]++;
 
 			if (!fgets(line, 256, file)) { return; }
 			sscanf(line, "%s", tag);
@@ -456,26 +890,30 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 		// Scan for normals in this mesh
 		while (strcmp(tag, "vn") == 0) {
-			if (nbNormalsMeshIni[indMesh] > nbNormalsInEachMesh[indMesh]) {
+			if (nbNormalsMeshIni[indObjectInMesh] > nbNormalsInEachMesh[indObjectInMesh]) {
 				printf("Error: Excessive number of texCoords\n");
 				throw 0;
 			}
-			sscanf(line, "%s %f %f %f", tag, &normalBufferIni[nbNormalsMeshIni[indMesh] * 3],
-				&normalBufferIni[nbNormalsMeshIni[indMesh] * 3 + 1], &normalBufferIni[nbNormalsMeshIni[indMesh] * 3 + 2]);
-			//printf("vt %d %.2f %.2f\n",nbNormalsMeshIni[indMesh],normalBufferIni[nbNormalsMeshIni[indMesh] * 3],
-				  //	normalBufferIni[nbNormalsMeshIni[indMesh] * 3+1] , normalBufferIni[nbNormalsMeshIni[indMesh] * 3+2]);
-			nbNormalsMeshIni[indMesh]++;
+			sscanf(line, "%s %f %f %f", tag, &normalBufferIni[nbNormalsMeshIni[indObjectInMesh] * 3],
+				&normalBufferIni[nbNormalsMeshIni[indObjectInMesh] * 3 + 1], &normalBufferIni[nbNormalsMeshIni[indObjectInMesh] * 3 + 2]);
+			//printf("vt %d %.2f %.2f\n",nbNormalsMeshIni[indObjectInMesh],normalBufferIni[nbNormalsMeshIni[indObjectInMesh] * 3],
+				  //	normalBufferIni[nbNormalsMeshIni[indObjectInMesh] * 3+1] , normalBufferIni[nbNormalsMeshIni[indObjectInMesh] * 3+2]);
+			nbNormalsMeshIni[indObjectInMesh]++;
 
 			if (!fgets(line, 256, file)) { return; }
 			sscanf(line, "%s", tag);
 		}
 
-		// Scan for Faces in this mesh
+		// Scan for Faces in this mesh and what possibly follows before a new object or the end of the file
 		while (strcmp(tag, "f") == 0
 			|| strcmp(tag, "usemtl") == 0
-			|| strcmp(tag, "s") == 0) {
+			|| strcmp(tag, "s") == 0
+			|| strcmp(tag, "o") == 0) {
+			//printf("VH tag after reading vn %s mesh %d object %d line %s\n", tag, indMeshFile, indObjectInMesh, line);
+
+			// scans faces and stops at file end or new object
 			if (strcmp(tag, "f") == 0) {
-				if (nbFacesMeshIni[indMesh] >= nbFacesInEachMesh[indMesh]) {
+				if (nbFacesMeshIni[indObjectInMesh] >= nbFacesInEachMesh[indObjectInMesh]) {
 					printf("Error: Excessive number of faces\n");
 					throw 0;
 				}
@@ -506,69 +944,43 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 				// copies the texCoords from the initial buffer to the final one
 				// pointBufferIniPtr should be used because vertexBufferIni has been
 				// incremented during texCoords scanning
-				indexPointBufferIni[nbFacesMeshIni[indMesh]  * 3] = indVertex1 - nbVertexTot;
-				indexPointBufferIni[nbFacesMeshIni[indMesh]  * 3 + 1] = indVertex2 - nbVertexTot;
-				indexPointBufferIni[nbFacesMeshIni[indMesh]  * 3 + 2] = indVertex3 - nbVertexTot;
+				indexPointBufferIni[nbFacesMeshIni[indObjectInMesh]  * 3] = indVertex1 - nbVertexTot;
+				indexPointBufferIni[nbFacesMeshIni[indObjectInMesh]  * 3 + 1] = indVertex2 - nbVertexTot;
+				indexPointBufferIni[nbFacesMeshIni[indObjectInMesh]  * 3 + 2] = indVertex3 - nbVertexTot;
 
-				indexTexCoordBufferIni[nbFacesMeshIni[indMesh]  * 3] = indexTexCoord1 - nbCoordTexTot;
-				indexTexCoordBufferIni[nbFacesMeshIni[indMesh]  * 3 + 1] = indexTexCoord2 - nbCoordTexTot;
-				indexTexCoordBufferIni[nbFacesMeshIni[indMesh]  * 3 + 2] = indexTexCoord3 - nbCoordTexTot;
+				indexTexCoordBufferIni[nbFacesMeshIni[indObjectInMesh]  * 3] = indexTexCoord1 - nbCoordTexTot;
+				indexTexCoordBufferIni[nbFacesMeshIni[indObjectInMesh]  * 3 + 1] = indexTexCoord2 - nbCoordTexTot;
+				indexTexCoordBufferIni[nbFacesMeshIni[indObjectInMesh]  * 3 + 2] = indexTexCoord3 - nbCoordTexTot;
 
-				indexNormalBufferIni[nbFacesMeshIni[indMesh]  * 3] = indexNormal1 - nbNormalTot;
-				indexNormalBufferIni[nbFacesMeshIni[indMesh]  * 3 + 1] = indexNormal2 - nbNormalTot;
-				indexNormalBufferIni[nbFacesMeshIni[indMesh]  * 3 + 2] = indexNormal3 - nbNormalTot;
+				indexNormalBufferIni[nbFacesMeshIni[indObjectInMesh] * 3] = indexNormal1 - nbNormalTot;
+				indexNormalBufferIni[nbFacesMeshIni[indObjectInMesh] * 3 + 1] = indexNormal2 - nbNormalTot;
+				indexNormalBufferIni[nbFacesMeshIni[indObjectInMesh] * 3 + 2] = indexNormal3 - nbNormalTot;
 
-				nbFacesMeshIni[indMesh]++;
+				nbFacesMeshIni[indObjectInMesh]++;
+
 			}
 
 			// last line of the obj file, last mesh in this file
 			// copies the data (and possibly duplicate them)
 			if (!fgets(line, 256, file)) {
-				if (indMesh != nbMeshes - 1) {
-					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indMesh, nbMeshes - 1);
-					throw 0;
-				}
-				if (nbFacesMeshIni[indMesh] != nbFacesInEachMesh[indMesh]) {
-					printf("Error: Face counted number and face parsed number discrepancy\n");
-					throw 0;
-				}
+				//printf("Last parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+				//	indObjectInMesh, mesh_IDs_current_mesh[indObjectInMesh].c_str(), nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh], nbFacesMeshIni[indObjectInMesh]);
 
-				copyMeshData(indMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+				copy_mesh_data_and_ship_to_GPU(indMeshFile, indObjectInMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+					boneIndexBufferIni, boneWeightBufferIni,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
-					nbFacesMeshIni[indMesh]);
+					nbFacesMeshIni[indObjectInMesh], &nbVertexTot, &nbCoordTexTot, &nbNormalTot,
+					nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh], 
+					mesh_IDs_current_mesh);
 
-				printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-					indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesInEachMesh[indMesh]);
-				transferMeshDataToGPU(indMeshFile, indMesh);
-
-				nbVertexTot += nbVerticesMeshIni[indMesh];
-				nbCoordTexTot += nbTexCoordsMeshIni[indMesh];
-				nbNormalTot += nbNormalsMeshIni[indMesh];
-
-				 //if (indMeshFile == 0) {
-					// printf("Copied first mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);
-					// for (int indF = 0; indF < nbFacesMeshIni[indMesh]; indF++) {
-					//	printf("indices %d %d %d\n", indexBuffer[3 * indF], indexBuffer[3 * indF + 1], indexBuffer[3 * indF + 2]);
-					//	printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
-					//		vertexBuffer[(3 * indF) * 3], vertexBuffer[(3 * indF) * 3 + 1], vertexBuffer[(3 * indF) * 3 + 2],
-					//		vertexBuffer[(3 * indF + 1) * 3], vertexBuffer[(3 * indF + 1) * 3 + 1], vertexBuffer[(3 * indF + 1) * 3 + 2],
-					//		vertexBuffer[(3 * indF + 2) * 3], vertexBuffer[(3 * indF + 2) * 3 + 1], vertexBuffer[(3 * indF + 2) * 3 + 2]);
-					//	printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
-					//		texCoordBuffer[(3 * indF) * 2], texCoordBuffer[(3 * indF) * 2 + 1],
-					//		texCoordBuffer[(3 * indF + 1) * 2], texCoordBuffer[(3 * indF + 1) * 2 + 1],
-					//		texCoordBuffer[(3 * indF + 2) * 2], texCoordBuffer[(3 * indF + 2) * 2 + 1]);
-					//	printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
-					//		normalBuffer[(3 * indF) * 3], normalBuffer[(3 * indF) * 3 + 1], normalBuffer[(3 * indF) * 3 + 2],
-					//		normalBuffer[(3 * indF + 1) * 3], normalBuffer[(3 * indF + 1) * 3 + 1], normalBuffer[(3 * indF + 1) * 3 + 2],
-					//		normalBuffer[(3 * indF + 2) * 3], normalBuffer[(3 * indF + 2) * 3 + 1], normalBuffer[(3 * indF + 2) * 3 + 2]);
-					//}
-					// printf("\n");
-				 //}
-
-				(indMesh)++;
-
-				// stores the mesh vector inside the mesh vector of vectors
-				mesh_IDs.push_back(mesh_IDs_current_mesh);
+				if (indObjectInMesh != nbMeshObjects - 1) {
+					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indObjectInMesh, nbMeshObjects - 1);
+					throw 0;
+				}
+				if (nbFacesMeshIni[indObjectInMesh] != nbFacesInEachMesh[indObjectInMesh]) {
+					printf("Error: Face counted number and face parsed number discrepancy 1\n");
+					throw 0;
+				}
 
 				// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
 				free(vertexBufferIni);
@@ -591,48 +1003,26 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 			sscanf(line, "%s", tag);
 			// last mesh in the obj file
 			if (!tag) {
-				if (indMesh != nbMeshes - 1) {
-					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indMesh, nbMeshes - 1);
-					throw 0;
-				}
-				if (nbFacesMeshIni[indMesh] != nbFacesInEachMesh[indMesh]) {
-					printf("Error: Face counted number and face parsed number discrepancy\n");
-					throw 0;
-				}
+				//printf("Last parsed mesh -2- %d %s Vertices %d texCoords %d normals %d faces %d\n",
+				//	indObjectInMesh, mesh_IDs_current_mesh[indObjectInMesh].c_str(), nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh], nbFacesMeshIni[indObjectInMesh]);
 
-				copyMeshData(indMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+				copy_mesh_data_and_ship_to_GPU(indMeshFile, indObjectInMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+					boneIndexBufferIni, boneWeightBufferIni,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
-					nbFacesMeshIni[indMesh]);
+					nbFacesMeshIni[indObjectInMesh], &nbVertexTot, &nbCoordTexTot, &nbNormalTot,
+					nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh],
+					mesh_IDs_current_mesh);
 
-				printf("Last parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-					indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
-				transferMeshDataToGPU(indMeshFile, indMesh);
+				if (indObjectInMesh != nbMeshObjects - 1) {
+					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indObjectInMesh, nbMeshObjects - 1);
+					throw 0;
+				}
+				if (nbFacesMeshIni[indObjectInMesh] != nbFacesInEachMesh[indObjectInMesh]) {
+					printf("Error: Face counted number and face parsed number discrepancy 2\n");
+					throw 0;
+				}
 
-				nbVertexTot += nbVerticesMeshIni[indMesh];
-				nbCoordTexTot += nbTexCoordsMeshIni[indMesh];
-				nbNormalTot += nbNormalsMeshIni[indMesh];
-				//printf("Copied last mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);
-				//if (indMeshFile == 0) {
-				//	for (int indF = 0; indF < nbFacesMeshIni[indMesh]; indF++) {
-				//		printf("indices %d %d %d\n", indexBuffer[3 * indF], indexBuffer[3 * indF + 1], indexBuffer[3 * indF + 2]);
-				//		printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
-				//			vertexBuffer[(3 * indF) * 3], vertexBuffer[(3 * indF) * 3 + 1], vertexBuffer[(3 * indF) * 3 + 2],
-				//			vertexBuffer[(3 * indF + 1) * 3], vertexBuffer[(3 * indF + 1) * 3 + 1], vertexBuffer[(3 * indF + 1) * 3 + 2],
-				//			vertexBuffer[(3 * indF + 2) * 3], vertexBuffer[(3 * indF + 2) * 3 + 1], vertexBuffer[(3 * indF + 2) * 3 + 2]);
-				//		printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
-				//			texCoordBuffer[(3 * indF) * 2], texCoordBuffer[(3 * indF) * 2 + 1],
-				//			texCoordBuffer[(3 * indF + 1) * 2], texCoordBuffer[(3 * indF + 1) * 2 + 1],
-				//			texCoordBuffer[(3 * indF + 2) * 2], texCoordBuffer[(3 * indF + 2) * 2 + 1]);
-				//		printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
-				//			normalBuffer[(3 * indF) * 3], normalBuffer[(3 * indF) * 3 + 1], normalBuffer[(3 * indF) * 3 + 2],
-				//			normalBuffer[(3 * indF + 1) * 3], normalBuffer[(3 * indF + 1) * 3 + 1], normalBuffer[(3 * indF + 1) * 3 + 2],
-				//			normalBuffer[(3 * indF + 2) * 3], normalBuffer[(3 * indF + 2) * 3 + 1], normalBuffer[(3 * indF + 2) * 3 + 2]);
-				//	}
-				//}
-				(indMesh)++;
-
-				// stores the mesh vector inside the mesh vector of vectors
-				mesh_IDs.push_back(mesh_IDs_current_mesh);
+				(indObjectInMesh)++;
 
 				// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
 				free(vertexBufferIni);
@@ -650,48 +1040,30 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 
 				return;
 			}
+
+			if (strcmp(tag, "o") == 0) {
+				break;
+			}
 		}
 
-		if (nbFacesMeshIni[indMesh] != nbFacesInEachMesh[indMesh]) {
-			printf("Error: Face counted number and face parsed number discrepancy\n");
+		// about to read a new object should store the current object and continue reading objects
+		if (nbFacesMeshIni[indObjectInMesh] != nbFacesInEachMesh[indObjectInMesh]) {
+			printf("Error: Face counted number and face parsed number discrepancy (%d vs %d) in Mesh %d / Object %d\n", 
+				nbFacesMeshIni[indObjectInMesh], nbFacesInEachMesh[indObjectInMesh], indMeshFile, indObjectInMesh);
 			throw 0;
 		}
 
+		//printf("Parsed non last mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
+		//	indObjectInMesh, mesh_IDs_current_mesh[indObjectInMesh].c_str(), nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh], nbFacesMeshIni[indObjectInMesh]);
+
 		// another mesh follows in the same obj file
-		copyMeshData(indMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+		copy_mesh_data_and_ship_to_GPU(indMeshFile, indObjectInMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
+			boneIndexBufferIni, boneWeightBufferIni,
 			indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
-			nbFacesMeshIni[indMesh]);
-
-		printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
-			indMesh, mesh_IDs_current_mesh[indMesh].c_str(), nbVerticesMeshIni[indMesh], nbTexCoordsMeshIni[indMesh], nbNormalsMeshIni[indMesh], nbFacesMeshIni[indMesh]);
-		transferMeshDataToGPU(indMeshFile, indMesh);
-
-		// printf("Copied mesh data %d faces %d\n", indMesh, nbFacesMeshIni[indMesh]);
-		nbVertexTot += nbVerticesMeshIni[indMesh];
-		nbCoordTexTot += nbTexCoordsMeshIni[indMesh];
-		nbNormalTot += nbNormalsMeshIni[indMesh];
-		// if (indMeshFile == 0) {
-		//	for (int indF = 0; indF < nbFacesMeshIni[indMesh]; indF++) {
-		//		printf("indices %d %d %d\n", indexBuffer[3 * indF], indexBuffer[3 * indF + 1], indexBuffer[3 * indF + 2]);
-		//		printf("vertices %.2f %.2f %.2f        %.2f %.2f %.2f        %.2f %.2f %.2f\n",
-		//			vertexBuffer[(3 * indF) * 3], vertexBuffer[(3 * indF) * 3 + 1], vertexBuffer[(3 * indF) * 3 + 2],
-		//			vertexBuffer[(3 * indF + 1) * 3], vertexBuffer[(3 * indF + 1) * 3 + 1], vertexBuffer[(3 * indF + 1) * 3 + 2],
-		//			vertexBuffer[(3 * indF + 2) * 3], vertexBuffer[(3 * indF + 2) * 3 + 1], vertexBuffer[(3 * indF + 2) * 3 + 2]);
-		//		printf("texCoords %.2f %.2f         %.2f %.2f        %.2f %.2f\n",
-		//			texCoordBuffer[(3 * indF) * 2], texCoordBuffer[(3 * indF) * 2 + 1],
-		//			texCoordBuffer[(3 * indF + 1) * 2], texCoordBuffer[(3 * indF + 1) * 2 + 1],
-		//			texCoordBuffer[(3 * indF + 2) * 2], texCoordBuffer[(3 * indF + 2) * 2 + 1]);
-		//		printf("normals %.2f %.2f %.2f         %.2f %.2f %.2f        %.2f %.2f %.2f\n\n",
-		//			normalBuffer[(3 * indF) * 3], normalBuffer[(3 * indF) * 3 + 1], normalBuffer[(3 * indF) * 3 + 2],
-		//			normalBuffer[(3 * indF + 1) * 3], normalBuffer[(3 * indF + 1) * 3 + 1], normalBuffer[(3 * indF + 1) * 3 + 2],
-		//			normalBuffer[(3 * indF + 2) * 3], normalBuffer[(3 * indF + 2) * 3 + 1], normalBuffer[(3 * indF + 2) * 3 + 2]);
-		//	}
-		// }
-		// printf ( "%s", line );
-		(indMesh)++;
-
-		// stores the mesh vector inside the mesh vector of vectors
-		mesh_IDs.push_back(mesh_IDs_current_mesh);
+			nbFacesMeshIni[indObjectInMesh], &nbVertexTot, &nbCoordTexTot, &nbNormalTot,
+			nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh],
+			mesh_IDs_current_mesh);
+		(indObjectInMesh)++;
 
 		// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
 		free(vertexBufferIni);
@@ -704,55 +1076,654 @@ void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
 }
 
 // OBJ file parsing (Alias Wavefront ASCII format)
-// nbMeshesInFile: number of meshes inside the obj file
-void load_mesh_obj(string obj_file_name, int indMeshFile) {
+// nbMeshObjectsInFile: number of mesh objects inside the obj file
+void load_mesh_objects(string mesh_file_name, int indMeshFile) {
 	int *nbVerticesPerMesh = NULL;
 	int *nbTexCoordsPerMesh = NULL;
 	int *nbNormalsPerMesh = NULL;
 
 	///////////////////////////////////////////////////////////
 	// opens the obj file
-	FILE * fileMesh = fopen(obj_file_name.c_str(), "r");
+	FILE * fileMesh = fopen(mesh_file_name.c_str(), "r");
 	if (!fileMesh) {
-		printf("Object file %s not found\n", obj_file_name.c_str());
+		printf("Mesh file %s not found\n", mesh_file_name.c_str());
 		exit(0);
 	}
 
 	///////////////////////////////////////////////////////////
 	// parses the mesh (obj format) 
 	// and loads the data of the meshes in the obj file
-	printf("Loading %s\n", obj_file_name.c_str());
-	int nbMeshesInFile = 0;
-	count_faces_mesh_obj(fileMesh, &nbMeshesInFile, &nbVerticesPerMesh,
-		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(nbFacesPerMesh[indMeshFile]));
-	if (nbMeshesInFile > 0) {
-		//printf("File mesh counts Nb meshes %d Nb faces %d vertices %d tex coord %d normals %d\n", nbMeshesInFile,
-		//	nbFacesPerMesh[indMeshFile][0], nbVerticesPerMesh[0],
-		//	nbTexCoordsPerMesh[0], nbNormalsPerMesh[0]);
+	printf("Loading %s\n", mesh_file_name.c_str());
+	int nbMeshObjectsInFile = 0;
+	count_faces_mesh_obj(fileMesh, &nbMeshObjectsInFile, &nbVerticesPerMesh,
+		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(pg_nbFacesPerMeshFile[indMeshFile]));
+	printf("File mesh %s has %d objects\n", mesh_file_name.c_str(), nbMeshObjectsInFile);
+	if (nbMeshObjectsInFile > 0) {
+		//for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
+		//	printf("   Object %d Nb faces %d vertices %d tex coord %d normals %d\n", ind,
+		//		pg_nbFacesPerMeshFile[indMeshFile][ind], nbVerticesPerMesh[ind],
+		//		nbTexCoordsPerMesh[ind], nbNormalsPerMesh[ind]);
+		//}
 	}
 	else {
-		printf("File mesh withouth meshes\n");
+		printf("File mesh withouth objects\n");
 		exit(0);
 	}
 
 	///////////////////////////////////////////////////////////
 	// vertex buffer objects and vertex array for the mesh
-	mesh_vao[indMeshFile] = new unsigned int[nbMeshesInFile];
-	mesh_index_vbo[indMeshFile] = new unsigned int[nbMeshesInFile];
-	for (int ind = 0; ind < nbMeshesInFile; ind++) {
+	mesh_vao[indMeshFile] = new unsigned int[nbMeshObjectsInFile];
+	mesh_index_vbo[indMeshFile] = new unsigned int[nbMeshObjectsInFile];
+	mesh_barycenter[indMeshFile] = new float[nbMeshObjectsInFile * 3];
+	for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
 		mesh_vao[indMeshFile][ind] = NULL_ID;
 		mesh_index_vbo[indMeshFile][ind] = NULL_ID;
+		mesh_barycenter[indMeshFile][3 * ind + 0] = 0.f;
+		mesh_barycenter[indMeshFile][3 * ind + 1] = 0.f;
+		mesh_barycenter[indMeshFile][3 * ind + 2] = 0.f;
 	}
 
-	nbMeshesPerMeshFile[indMeshFile] = nbMeshesInFile;
+	pg_nbObjectsPerMeshFile[indMeshFile] = nbMeshObjectsInFile;
 	rewind(fileMesh);
-	parse_mesh_obj(fileMesh, indMeshFile, nbMeshesInFile, nbVerticesPerMesh,
-		nbTexCoordsPerMesh, nbNormalsPerMesh, nbFacesPerMesh[indMeshFile]);
+	parseMeshObj(fileMesh, indMeshFile, nbMeshObjectsInFile, nbVerticesPerMesh,
+		nbTexCoordsPerMesh, nbNormalsPerMesh, pg_nbFacesPerMeshFile[indMeshFile]);
 	fclose(fileMesh);
 
 	free(nbVerticesPerMesh);
 	free(nbTexCoordsPerMesh);
 	free(nbNormalsPerMesh);
 }
+
+#if defined(var_MmeShanghai_brokenGlass)
+void loadMeshSubParts(string meshPart_fileName, bool* ObjectsInSubPart, int nbObjectsInMesh) {
+	///////////////////////////////////////////////////////////
+	// opens the text file (one object rank per line)
+	FILE* fileMeshPart = fopen(meshPart_fileName.c_str(), "r");
+	if (!fileMeshPart) {
+		printf("Mesh part file %s not found\n", meshPart_fileName.c_str());
+		exit(0);
+	}
+	char line[256];
+
+	for (int indObj = 0; indObj < nbObjectsInMesh; indObj++) {
+		ObjectsInSubPart[indObj] = false;
+	}
+	while (fgets(line, 256, fileMeshPart)) {
+		int indObject = 0;
+		sscanf(line, "%d", &indObject);
+		if (indObject < nbObjectsInMesh) {
+			ObjectsInSubPart[indObject] = true;
+		}
+		else {
+			printf("Object rank in part incorrect %d (nb objetcs in part %d)\n", indObject, nbObjectsInMesh);
+		}
+	}
+
+	fclose(fileMeshPart);
+}
+#endif
+
+//////////////////////////////////////////////////////////////////
+// MESH ARMATURE RENDERING
+//////////////////////////////////////////////////////////////////
+
+
+void render_one_bone(Bone* bone, glm::mat4 parentModelMatrix) {
+	if (!bone)
+		return;
+	//printf("render bone %s\n", bone->id.c_str());
+
+	// OpenGL transformations for drawing (structure)
+	glm::mat4 localModelMatrix
+		= parentModelMatrix
+		* bone->boneInitialTranslationMatrix
+		* bone->boneInitialRotationMatrix;
+
+	// OpenGL transformations for drawing (animation)
+	// combination of local model matrix and bone animation matrix
+	localModelMatrix = localModelMatrix * bone->boneAnimationRotationMatrix;
+
+	// bone graphical rendering
+	glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
+		glm::value_ptr(localModelMatrix));
+	// to be checked
+	//glUniformMatrix4fv(uniform_Mesh_vp_inverseModel, 1, GL_FALSE,
+	//	glm::value_ptr(glm::inverse(localModelMatrix)));
+	//GLfloat boneColor[3] = { 1,1,1 };
+	//glUniform3fv(bodyShader->uniform_object_objectColor,
+	//	1, boneColor);
+
+	// draw triangle strips from the currently bound VAO
+	// with current in-use shader
+	glBindVertexArray(bone->vao);
+	glDrawArrays(GL_TRIANGLES, 0, 2 * 3);
+
+	// recursive call
+	render_one_bone(bone->daughterBone, localModelMatrix);
+
+	// recursive call
+	render_one_bone(bone->sisterBone, parentModelMatrix);
+}
+
+void render_bones(glm::mat4 modelMatrix, int indMeshFile) {
+	// calls rendering on the root bone (the first in the table of bones)
+	render_one_bone(TabBones[indMeshFile], modelMatrix);
+}
+
+
+//////////////////////////////////////////////////////////////////
+// MESH ARMATURE ANIMATION
+//////////////////////////////////////////////////////////////////
+void copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose, int mesh_AnimationPose) {
+	if (indMeshFile < pg_nb_Mesh_files && chosen_mesh_LibraryPose < pg_nb_LibraryPoses[indMeshFile] && mesh_AnimationPose < PG_MAX_ANIMATION_POSES) {
+		for (int indBone = 0; indBone < pg_nb_bones[indMeshFile]; indBone++) {
+			Bone* curBone = &TabBones[indMeshFile][indBone];
+			curBone->boneAnimationPoseRotationQuat[mesh_AnimationPose] = curBone->boneLibraryPoseRotationQuat[chosen_mesh_LibraryPose];
+			curBone->boneAnimationPoseTranslationVector[mesh_AnimationPose] = curBone->boneLibraryPoseTranslationVector[chosen_mesh_LibraryPose];
+		}
+	}
+	else {
+		sprintf(ErrorStr, "Error: incorrect mesh index %d (max %d) library pose index %d (max %d)  animation pose index %d (max %d) !",
+			indMeshFile, pg_nb_Mesh_files, chosen_mesh_LibraryPose, pg_nb_LibraryPoses[indMeshFile], mesh_AnimationPose, PG_MAX_ANIMATION_POSES); ReportError(ErrorStr);
+	}
+}
+
+
+void update_anim(int indMeshFile) {
+#if defined(var_Contact_mesh_anime)
+	if (Contact_mesh_anime < 0) {
+		mesh_anime_precTime[indMeshFile] = pg_CurrentClockTime;
+	}
+	bool new_anim = Contact_mesh_anime != mesh_precedingAnime[indMeshFile];
+	if (new_anim) {
+		mesh_startAnime[indMeshFile] = pg_CurrentClockTime;
+		mesh_precedingAnime[indMeshFile] = Contact_mesh_anime;
+	}
+	switch (Contact_mesh_anime) {
+		// frozen
+	case 0: {
+		mesh_startAnime[indMeshFile] += pg_CurrentClockTime - mesh_anime_precTime[indMeshFile];
+	}
+		  break;
+		  // binary 0 - n
+	case 1: {
+		if (new_anim) {
+			chosen_mesh_LibraryPose1 = 0;
+			chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			pg_nb_AnimationPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		pg_interpolation_weight_AnimationPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startAnime[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_AnimationPose[indMeshFile][1] = 1.f - pg_interpolation_weight_AnimationPose[indMeshFile][0];
+		break;
+	}
+		  // binary n1 / n2
+	case 2: {
+		if (new_anim) {
+			chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			pg_nb_AnimationPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		float Pose0 = float((sin((pg_CurrentClockTime - mesh_startAnime[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_AnimationPose[indMeshFile][0] = Pose0;
+		pg_interpolation_weight_AnimationPose[indMeshFile][1] = 1.f - Pose0;
+		break;
+	}
+		  // ternary n1 / n2 / n3
+	case 3: {
+		if (new_anim) {
+			chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			chosen_mesh_LibraryPose3 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose3, 2);
+			pg_nb_AnimationPoses[indMeshFile] = min(3, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		float pose = float((sin((pg_CurrentClockTime - mesh_startAnime[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		float Pose1, Pose2, Pose3;
+		if (pose < 1.f / 3.f) {
+			Pose1 = 3.f * pose;
+			Pose2 = 1.f - Pose1;
+			Pose3 = 0.f;
+		}
+		else if (pose < 2.f / 3.f) {
+			Pose1 = 3.f * (2.f / 3.f - pose);
+			Pose2 = 0.f;
+			Pose3 = 1.f - Pose1;
+		}
+		else {
+			Pose1 = 0.f;
+			Pose2 = 1.f - 3.f * (1.f - pose);
+			Pose3 = 1.f - Pose2;
+		}
+		pg_interpolation_weight_AnimationPose[indMeshFile][0] = Pose1;
+		pg_interpolation_weight_AnimationPose[indMeshFile][1] = Pose2;
+		pg_interpolation_weight_AnimationPose[indMeshFile][2] = Pose3;
+		break;
+	}
+		  // binary rand(n) / rand(n')
+	case 4: {
+		if (new_anim) {
+			chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			mesh_positiveChange[indMeshFile] = false;
+			mesh_negativeChange[indMeshFile] = false;
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			pg_nb_AnimationPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		float Pose0 = float((sin((pg_CurrentClockTime - mesh_startAnime[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		if (Pose0 > 1.f - 0.01f && mesh_positiveChange[indMeshFile] == false) {
+			chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			//printf("pose %.2f new anim1 %d anim2 %d\n", Pose0, chosen_mesh_LibraryPose1, chosen_mesh_LibraryPose2);
+			mesh_positiveChange[indMeshFile] = true;
+			mesh_negativeChange[indMeshFile] = false;
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		if (Pose0 < 0.01f && mesh_negativeChange[indMeshFile] == false) {
+			chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			//printf("pose %.2f anim1 %d new anim2 %d\n", Pose0, chosen_mesh_LibraryPose1, chosen_mesh_LibraryPose2);
+			mesh_negativeChange[indMeshFile] = true;
+			mesh_positiveChange[indMeshFile] = false;
+			for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		pg_interpolation_weight_AnimationPose[indMeshFile][0] = Pose0;
+		pg_interpolation_weight_AnimationPose[indMeshFile][1] = 1.f - Pose0;
+		break;
+	}
+		  // binary n1 / n2 wo interpolation
+	case 5: {
+		float pose = float((sin((pg_CurrentClockTime - mesh_startAnime[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		if (new_anim || (pose > 1.f - 0.01f && mesh_positiveChange[indMeshFile] == false)) {
+			mesh_positiveChange[indMeshFile] = true;
+			chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			pg_nb_AnimationPoses[indMeshFile] = min(1, PG_MAX_ANIMATION_POSES);
+			pg_interpolation_weight_AnimationPose[indMeshFile][chosen_mesh_LibraryPose1] = 1.f;
+		}
+		if (pose < 0.01f && mesh_positiveChange[indMeshFile] == true) {
+			mesh_positiveChange[indMeshFile] = false;
+		}
+		break;
+	}
+		  // fingers counting
+	case _lastMesh_Anime: {
+		if (new_anim) {
+			chosen_mesh_LibraryPose1 = min(7, pg_nb_LibraryPoses[indMeshFile]);
+			chosen_mesh_LibraryPose2 = min(8, pg_nb_LibraryPoses[indMeshFile]);
+			mesh_positiveChange[indMeshFile] = false;
+			mesh_negativeChange[indMeshFile] = false;
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			pg_nb_AnimationPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		float Pose0 = float((sin((pg_CurrentClockTime - mesh_startAnime[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		if (Pose0 > 1.f - 0.01f && mesh_positiveChange[indMeshFile] == false) {
+			chosen_mesh_LibraryPose2 = (chosen_mesh_LibraryPose2 + 1);
+			if (chosen_mesh_LibraryPose2 > min(12, pg_nb_LibraryPoses[indMeshFile])) {
+				chosen_mesh_LibraryPose2 = min(7, pg_nb_LibraryPoses[indMeshFile]);
+			}
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose2, 1);
+			//printf("pose %.2f new anim1 %d anim2 %d\n", Pose0, chosen_mesh_LibraryPose1, chosen_mesh_LibraryPose2);
+			mesh_positiveChange[indMeshFile] = true;
+			mesh_negativeChange[indMeshFile] = false;
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		if (Pose0 < 0.01f && mesh_negativeChange[indMeshFile] == false) {
+			chosen_mesh_LibraryPose1 = (chosen_mesh_LibraryPose1 + 1);
+			if (chosen_mesh_LibraryPose1 > min(12, pg_nb_LibraryPoses[indMeshFile])) {
+				chosen_mesh_LibraryPose1 = min(7, pg_nb_LibraryPoses[indMeshFile]);
+			}
+			copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose1, 0);
+			//printf("pose %.2f anim1 %d new anim2 %d\n", Pose0, chosen_mesh_LibraryPose1, chosen_mesh_LibraryPose2);
+			mesh_negativeChange[indMeshFile] = true;
+			mesh_positiveChange[indMeshFile] = false;
+			for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+				pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+			}
+		}
+		pg_interpolation_weight_AnimationPose[indMeshFile][0] = Pose0;
+		pg_interpolation_weight_AnimationPose[indMeshFile][1] = 1.f - Pose0;
+		break;
+	}
+	}
+#endif
+	mesh_anime_precTime[indMeshFile] = pg_CurrentClockTime;
+}
+
+#if defined(var_Contact_mesh_motion)
+void Contact_update_motion(int indMeshFile) {
+	//pg_Mesh_Translation_X[indMesh] = (Contact_mesh_translation_X + Contact_mesh_translation_X_pulse * (pulse_average - 0.5f)) * (indMesh % 2 == 0 ? 1 : -1);
+	//pg_Mesh_Translation_Y[indMesh] = Contact_mesh_translation_Y + Contact_mesh_translation_Y_pulse * (pulse_average - 0.5f);
+	//pg_Mesh_Rotation_angle[indMesh] = (Contact_mesh_rotation + Contact_mesh_rotation_pulse * (pulse_average - 0.5f)) * (indMesh % 2 == 0 ? 1 : -1);
+	//pg_Mesh_Scale[indMesh] = Contact_mesh_scale + Contact_mesh_scale_pulse * (pulse_average - 0.5f);
+
+	if (Contact_mesh_motion < 0) {
+		mesh_motion_precTime[indMeshFile] = pg_CurrentClockTime;
+	}
+	bool new_motion = Contact_mesh_motion != mesh_precedingMotion[indMeshFile];
+	bool with_motion = false;
+	if (new_motion) {
+		mesh_startMotion[indMeshFile] = pg_CurrentClockTime;
+		mesh_precedingMotion[indMeshFile] = Contact_mesh_motion;
+	}
+	switch (Contact_mesh_motion) {
+		// frozen
+	case 0: {
+		mesh_startMotion[indMeshFile] += pg_CurrentClockTime - mesh_motion_precTime[indMeshFile];
+	}
+		  break;
+		  // binary n1 / n2 // clapping hands
+	case 1: {
+		if (new_motion) {
+			pg_nb_MotionPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_MotionPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_MotionPose[indMeshFile][indPose] = 0.f;
+			}
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X = 30.f * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X = 5.f * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle = 0.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 4) * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X = pg_Mesh_Rotation_Ini_X[indMeshFile];
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X = pg_Mesh_Rotation_Ini_X[indMeshFile];
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y = pg_Mesh_Rotation_Ini_Y[indMeshFile];
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y = pg_Mesh_Rotation_Ini_Y[indMeshFile];
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z = pg_Mesh_Rotation_Ini_Z[indMeshFile];
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z = pg_Mesh_Rotation_Ini_Z[indMeshFile];
+		}
+		pg_interpolation_weight_MotionPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startMotion[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_MotionPose[indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[indMeshFile][0];
+		with_motion = true;
+		break;
+	}
+	case 2: {
+		if (new_motion) {
+			pg_nb_MotionPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_MotionPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_MotionPose[indMeshFile][indPose] = 0.f;
+			}
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 30.f : -5.f);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 5.f : -30.f);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle = 0.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 4);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X = pg_Mesh_Rotation_Ini_X[indMeshFile];
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X = pg_Mesh_Rotation_Ini_X[indMeshFile];
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y = pg_Mesh_Rotation_Ini_Y[indMeshFile];
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y = pg_Mesh_Rotation_Ini_Y[indMeshFile];
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z = pg_Mesh_Rotation_Ini_Z[indMeshFile];
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z = pg_Mesh_Rotation_Ini_Z[indMeshFile];
+		}
+		pg_interpolation_weight_MotionPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startMotion[indMeshFile]) * Contact_anim_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_MotionPose[indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[indMeshFile][0];
+		with_motion = true;
+		break;
+	}
+	case 3: {
+		if (new_motion) {
+			pg_nb_MotionPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_MotionPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_MotionPose[indMeshFile][indPose] = 0.f;
+			}
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X = Contact_mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X = Contact_mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle = float(-PI / 6);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 6);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X = 0.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X = 0.f;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y = 0.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y = 0.f;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z = 1.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z = 1.f;
+		}
+		pg_interpolation_weight_MotionPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startMotion[indMeshFile]) * Contact_motion_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_MotionPose[indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[indMeshFile][0];
+		with_motion = true;
+		break;
+	}
+	case 4: {
+		if (new_motion) {
+			pg_nb_MotionPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_MotionPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_MotionPose[indMeshFile][indPose] = 0.f;
+			}
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y = Contact_mesh_translation_Y;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+		}
+		pg_interpolation_weight_MotionPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startMotion[indMeshFile]) * Contact_motion_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_MotionPose[indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[indMeshFile][0];
+		with_motion = true;
+		break;
+	}
+	case 5: {
+		if (new_motion) {
+			pg_nb_MotionPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_MotionPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_MotionPose[indMeshFile][indPose] = 0.f;
+			}
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X = Contact_mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X = Contact_mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle = float(-PI / 6);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 6);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X = 0.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X = 0.f;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y = 1.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y = 1.f;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z = 0.f;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z = 0.f;
+		}
+		pg_interpolation_weight_MotionPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startMotion[indMeshFile]) * Contact_motion_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_MotionPose[indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[indMeshFile][0];
+		with_motion = true;
+		break;
+	}
+	case _lastMesh_Motion: {
+		if (new_motion) {
+			pg_nb_MotionPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_nb_MotionPoses[indMeshFile]; indPose++) {
+				pg_interpolation_weight_MotionPose[indMeshFile][indPose] = 0.f;
+			}
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Scale = Contact_mesh_scale;
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+			pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+		}
+		pg_interpolation_weight_MotionPose[indMeshFile][0] = float((sin((pg_CurrentClockTime - mesh_startMotion[indMeshFile]) * Contact_motion_speed) + 1.f) / 2.f);
+		pg_interpolation_weight_MotionPose[indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[indMeshFile][0];
+		with_motion = true;
+		break;
+	}
+	}
+	mesh_motion_precTime[indMeshFile] = pg_CurrentClockTime;
+
+	// updates the rotation and translations of the mesh from the motion poses and interpolation coeficients
+	if (with_motion) {
+		pg_Mesh_Translation_X[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_X
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_X;
+		pg_Mesh_Translation_Y[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Translation_Y
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Translation_Y;
+		pg_Mesh_Rotation_angle[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_angle
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_angle;
+		pg_Mesh_Scale[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Scale
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Scale;
+		pg_Mesh_Rotation_X[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_X
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_X;
+		pg_Mesh_Rotation_Y[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Y
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Y;
+		pg_Mesh_Rotation_Z[indMeshFile] = pg_interpolation_weight_MotionPose[indMeshFile][0] * pg_motionPoses[indMeshFile][0].pose_Mesh_Rotation_Z
+			+ pg_interpolation_weight_MotionPose[indMeshFile][1] * pg_motionPoses[indMeshFile][1].pose_Mesh_Rotation_Z;
+	}
+	else {
+		pg_Mesh_Translation_X[indMeshFile] = Contact_mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+		pg_Mesh_Translation_Y[indMeshFile] = Contact_mesh_translation_Y;
+		pg_Mesh_Rotation_angle[indMeshFile] = Contact_mesh_rotation * (indMeshFile % 2 == 0 ? 1 : -1);
+		pg_Mesh_Scale[indMeshFile] = Contact_mesh_scale;
+		pg_Mesh_Rotation_X[indMeshFile] = pg_Mesh_Rotation_Ini_X[indMeshFile];
+		pg_Mesh_Rotation_Y[indMeshFile] = pg_Mesh_Rotation_Ini_Y[indMeshFile];
+		pg_Mesh_Rotation_Z[indMeshFile] = pg_Mesh_Rotation_Ini_Z[indMeshFile];
+	}
+	// pulse update
+	pg_Mesh_Translation_X[indMeshFile] = (pg_Mesh_Translation_X[indMeshFile] + Contact_mesh_translation_X_pulse * (pulse_average - 0.5f));
+	pg_Mesh_Translation_Y[indMeshFile] = pg_Mesh_Translation_Y[indMeshFile] + Contact_mesh_translation_Y_pulse * (pulse_average - 0.5f);
+	pg_Mesh_Rotation_angle[indMeshFile] = (pg_Mesh_Rotation_angle[indMeshFile] + Contact_mesh_rotation_pulse * (pulse_average - 0.5f));
+	pg_Mesh_Scale[indMeshFile] = pg_Mesh_Scale[indMeshFile] + Contact_mesh_scale_pulse * (pulse_average - 0.5f);
+
+}
+#endif
+
+void update_bones(int indMeshFile) {
+	// calls rendering on the root bone (the first in the table of bones)
+	for (int indBone = 0; indBone < pg_nb_bones[indMeshFile]; indBone++) {
+		Bone* curBone = &TabBones[indMeshFile][indBone];
+
+		// rotation interpolation for poses
+		if (pg_nb_AnimationPoses[indMeshFile] > 0) {
+			glm::quat animQuat(1.0, 0.0, 0.0, 0.0);
+			float weight_sum = 0.f;
+			for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+				weight_sum += pg_interpolation_weight_AnimationPose[indMeshFile][indPose];
+				if (indPose == 0) {
+					animQuat = curBone->boneAnimationPoseRotationQuat[0];
+				}
+				else {
+					if (pg_interpolation_weight_AnimationPose[indMeshFile][indPose] > 0 && weight_sum > 0) {
+						animQuat = glm::mix(animQuat,
+							curBone->boneAnimationPoseRotationQuat[indPose], pg_interpolation_weight_AnimationPose[indMeshFile][indPose] / weight_sum);
+					}
+				}
+			}
+			curBone->boneAnimationRotationMatrix = glm::toMat4(animQuat);
+		}
+		else {
+			curBone->boneAnimationRotationMatrix = curBone->boneInitialRotationMatrix;
+		}
+
+		// only root bone(s) have variable translations
+		if (curBone->parentBone == NULL) {
+			if (pg_nb_AnimationPoses[indMeshFile] > 0) {
+				glm::vec3 animTransl(0);
+				float weight_sum = 0.f;
+				for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+					weight_sum += pg_interpolation_weight_AnimationPose[indMeshFile][indPose];
+					if (indPose == 0) {
+						animTransl = curBone->boneAnimationPoseTranslationVector[0];
+					}
+					else {
+						if (pg_interpolation_weight_AnimationPose[indMeshFile][indPose] > 0 && weight_sum > 0) {
+							animTransl = glm::mix(animTransl,
+								curBone->boneAnimationPoseTranslationVector[indPose], pg_interpolation_weight_AnimationPose[indMeshFile][indPose] / weight_sum);
+						}
+					}
+				}
+				curBone->boneAnimationTranslationMatrix = glm::translate(glm::mat4(1.0f), animTransl);
+			}
+			else {
+				curBone->boneAnimationTranslationMatrix = curBone->boneInitialTranslationMatrix;
+			}
+		}
+
+		// computes the initial joint transformation matrices from
+		// the initial rotation and translation matrices (should be 
+		// made once and for all in the future)
+		if (curBone->parentBone) {
+			// initial joint transformation
+			// should be computed only once in an independent function call
+			glm::mat4 m1 = curBone->boneInitialTranslationMatrix
+				* curBone->boneInitialRotationMatrix;
+
+			curBone->initialJointTransformation =
+				curBone->parentBone->initialJointTransformation
+				* m1;
+
+			// current joint transformation
+			curBone->currentJointTransformation =
+				curBone->parentBone->currentJointTransformation
+				* m1
+				* curBone->boneAnimationRotationMatrix;
+		}
+		else {
+			// initial joint transformation
+			// should be computed only once in an independent function call
+			curBone->initialJointTransformation =
+				curBone->boneInitialTranslationMatrix * curBone->boneInitialRotationMatrix;
+
+			// current joint transformation
+			curBone->currentJointTransformation =
+				curBone->initialJointTransformation * curBone->boneAnimationRotationMatrix;
+		}
+
+		// the point coordinates are in the mesh local coordinate system
+		glm::mat4 mj_1;
+		mj_1 = glm::inverse(curBone->initialJointTransformation);
+		// updates the matrix used to animate points
+		curBone->pointAnimationMatrix = curBone->currentJointTransformation * mj_1;
+	}
+}
+
+
 
 #endif

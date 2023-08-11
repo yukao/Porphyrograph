@@ -5,69 +5,39 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 430
 
 #include_declarations
 
-#define PG_NB_TRACKS 1
-#define PG_NB_PATHS 3
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// CONST
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
+const float PI = 3.1415926535897932384626433832795;
+
+#define PG_BEZIER_PATHS
+
+////////////////////////////////////////////////////////////////////
+// TRACK CONST
+#define PG_NB_TRACKS 4
+#define PG_NB_PATHS 11
+
+// path data array structure
 #define PG_PATH_P_X              0
 #define PG_PATH_P_Y              1
-#ifdef PG_BEZIER_PATHS
 #define PG_PATH_BOX              2
 #define PG_PATH_COLOR            3
 #define PG_PATH_RADIUS_BEGINEND  4
 #define PG_MAX_PATH_DATA         5
-#else
-#define PG_PATH_COLOR            2
-#define PG_PATH_RADIUS_BEGINEND  3
-#define PG_MAX_PATH_DATA         4
-#endif
 
+///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
 const uint pg_FBO_fs_Pixels_attacht = 1;
 
-////////////////////////////////////
-// PEN STROKE CALCULATION
-float dist_to_mousePos = 0;
-float unsigned_rx;
-float unsigned_ry;
-float signed_rx;
-float signed_ry;
-vec3 out_drawn_filled;
-
-// out_pixel returned values
-vec3 out_color_pixel;
-vec2 out_position_pixel = vec2(0,0);
-vec2 out_speed_pixel = vec2(0,0);
-
-/////////////////////////////////////
-// 3 FBO OUTPUT: CA, PIXELS AND PARTICLES
-// const uint pg_FBO_fs_CA_attacht = 0;
-// const uint pg_FBO_fs_Pixels_attacht = 1;
-vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
-
-
-/////////////////////////////////////
-// PG_NB_TRACKS TRACK COLOR FBO OUTPUT
- vec4 out_track_FBO[PG_NB_TRACKS];
-
-vec4 out4_CA; // RGB: CA color ALPHA: CA state (ALPHA negative 
-              // when first time writing on CA for skipping the first frame for CA update)
-
-vec4 noiseCA = vec4(0);
-
-// indicates whether this area is impacted
-// by pen drawing to generate new CA and/or pixels
-bool newly_drawn = false;
-
-/*
-  vec3 out_color_gol;
-*/
-
-bool CA_on_off;
-
+////////////////////////////////////////////////////////////////////
+// CELLULAR AUTOMATA
 // CA types
 #define CA_GOL                    0
 #define CA_TOTALISTIC             1
@@ -79,15 +49,75 @@ bool CA_on_off;
 #define CA_WORM                   7
 /* #define CA_MIXED          3 */
 
+const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+                                 {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+const vec2 oppositeNeighborOffsets[8] = {{-1,0},{1,0},{0,-1},{0,1},      // E W N S
+                                         {-1,-1},{1,1},{-1,1},{1,-1},};  // NE SW SE NW
+
+////////////////////////////////////////////////////////////////////
+// pixel mode
+const uint PIXEL_NONE = 0;
+const uint PIXEL_UNIQUE = 1;
+const uint PIXEL_FUR = 2;
+const uint PIXEL_MULTIPLY = 3;
+
+////////////////////////////////////////////////////////////////////
+// drawing modes
+const uint DRAWING_VOID = 0;
+const uint DRAWING_LINE = 1;
+const uint DRAWING_POINT = 2;
+const uint DRAWING_BEZIER = 3;
+
+////////////////////////////////////////////////////////////////////
+// MACROS
+#define graylevel(col) ((col.r+col.g+col.b)/3.0)
+#define maxCol(col) (max(col.r,max(col.g,col.b)))
+#define minCol(col) (min(col.r,min(col.g,col.b)))
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// GLOBAL VARIABLES
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////
+// screen & FBO size
+float height;
+float width;
+
+// frame number
+int frameNo;
+
 // CA Type
 int CAType;
 int CASubType;
 
-// pixel variables
-float radius_pixel = 0.5;
+/////////////////////////////////////
+// 3 FBO OUTPUT: CA, PIXELS AND PARTICLES
+// const uint pg_FBO_fs_CA_attacht = 0;
+// const uint pg_FBO_fs_Pixels_attacht = 1;
+vec4 out_attachment_FBO[pg_FBO_fs_Pixels_attacht + 1];
 
-float height;
-float width;
+/////////////////////////////////////
+// PG_NB_TRACKS TRACK COLOR FBO OUTPUT
+ vec4 out_track_FBO[PG_NB_TRACKS];
+
+
+////////////////////////////////////
+// PEN STROKE CALCULATION
+float signed_rx;
+float signed_ry;
+
+// Bezier control points 
+vec2 BezierControl[4];
+vec4 BezierControlX;
+vec4 BezierControlY;
+vec4 BezierBox;
+bool isBegin;
+bool isEnd;
+
+float Cursor = 1;
+
 
 ////////////////////////////////////
 // PIXEL UPDATE
@@ -95,22 +125,13 @@ float width;
 // used for shifting pixel motion in a direction
 vec2 pixel_acc_center = vec2(0.5,0.5);
 
-vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
-// pixel texture 
+// out_pixel returned values
+vec3 out_color_pixel;
+vec2 out_position_pixel = vec2(0,0);
+vec2 out_speed_pixel = vec2(0,0);
 
-#define graylevel(col) ((col.r+col.g+col.b)/3.0)
-#define maxCol(col) (max(col.r,max(col.g,col.b)))
-#define minCol(col) (min(col.r,min(col.g,col.b)))
-
-const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
-                                 {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
-const vec2 oppositeNeighborOffsets[8] = {{-1,0},{1,0},{0,-1},{0,1},      // E W N S
-                                         {-1,-1},{1,1},{-1,1},{1,-1},};  // NE SW SE NW
-
-vec4 neighborValues[8]=vec4[8](vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),
-                               vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0));
-
-// camera image
+////////////////////////////////////
+// VIDEO UPDATE
 vec3 cameraImage = vec3(0.0);
 vec3 videocolor = vec3(0.0);
 vec3 photocolor = vec3(0.0);
@@ -119,28 +140,43 @@ vec3 movieImage = vec3(0.0);
 vec2 movieCoord = vec2(0.0);
 vec2 movieWH;
 
-// frame number
-int frameNo;
+////////////////////////////////////
+// CA UPDATE
+vec4 out4_CA; // RGB: CA color ALPHA: CA state (ALPHA negative 
+              // when first time writing on CA for skipping the first frame for CA update)
 
-// PIXEL mode
-#define PIXEL_NONE   0
-#define PIXEL_UNIQUE 1
-#define PIXEL_FUR    2
-#define PIXEL_MULTIPLY    3
+vec4 noiseCA = vec4(0);
 
-// drawing modes
-#define DRAWING_VOID   0
-#define DRAWING_LINE   1
-#define DRAWING_POINT  2
-#define DRAWING_BEZIER 3
+bool CA_on_off;
+
+vec4 neighborValues[8]=vec4[8](vec4(0),vec4(0),vec4(0),vec4(0),
+                               vec4(0),vec4(0),vec4(0),vec4(0));
+
+
+// pixel variables
+float radius_pixel = 0.5;
+
+
+vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
+// pixel texture 
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// VARYINGS
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 // obtained from Vertex Program
 in vec2 decalCoords;     // texture coordinates
 in vec2 decalCoordsPOT;  // normalized texture coordinates
 
-/////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 // UNIFORMS
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 // passed by the C program
+// pen Bezier curve control points
 uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
 
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  // *
@@ -161,28 +197,30 @@ uniform vec2 uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
 
 /////////////////////////////////////
 // INPUT
-layout (binding = 0) uniform samplerRect  uniform_Update_texture_fs_CA;  // 3-cycle ping-pong CA step n (FBO attachment 3)
-layout (binding = 1) uniform samplerRect  uniform_Update_texture_fs_Pixels;  // 3-cycle ping-pong speed/position of pixels step n (FBO attachment 2)
+layout (binding = 0) uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 1) uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
 layout (binding = 2) uniform sampler3D    uniform_Update_texture_fs_Brushes;  // pen patterns
-layout (binding = 3) uniform samplerRect  uniform_Update_texture_fs_Camera_frame;  // 
-layout (binding = 4) uniform samplerRect  uniform_Update_texture_fs_Camera_BG;     // current background camera texture
+layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
 layout (binding = 5) uniform samplerRect  uniform_Update_texture_fs_Movie_frame;  // movie textures
-layout (binding = 6) uniform sampler3D    uniform_Update_texture_fs_Noise;  // noise texture for pixel acceleration 
+layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
 layout (binding = 7) uniform sampler2D    uniform_Update_texture_fs_Photo0;  // photo_0 texture
 layout (binding = 8) uniform sampler2D    uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 9) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
+layout (binding = 9)  uniform sampler2D   uniform_Update_texture_fs_Clip0;  // second clip left texture
+layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Clip1;  // second clip right texture
+layout (binding = 11) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
 #if PG_NB_TRACKS >= 2
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 7)
+layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 // layout (binding = 8) uniform samplerRect  fs_lookupTable8;  // initial background video texture
-layout (binding = 10) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
-layout (binding = 11) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 15) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
 
 /////////////////////////////////////
 // CA & TRACK COLOR OUTPUT
@@ -209,30 +247,6 @@ layout (location = 4) out vec4 out_Update_FBO_fs_Trk2;
 layout (location = 5) out vec4 out_Update_FBO_fs_Trk3;
 #endif
 
-vec2 Bezier( float x1 , float y1 , float x2 , float y2 , 
-	     float mouse_x , float mouse_y , float interp_mouse_x ) {
-  float a = (mouse_x - 2 * x1 + x2);
-  float deltaprime = (x1 - mouse_x) * (x1 - mouse_x) 
-    - a * (mouse_x - interp_mouse_x);
-  if( deltaprime < 0 ) {
-    return vec2( -10000 , -10000 );
-  }
-  else {
-    float t1 = (mouse_x - x1 + sqrt( deltaprime ))/a;
-    float t2 = (mouse_x - x1 - sqrt( deltaprime ))/a;
-    float out_y1 = -10000;
-    float out_y2 = -10000;
-    if( t1 >= 0 && t1 <= 1 ) {
-      out_y1 = (1-t1)*(1-t1)*mouse_y + 2*t1*(1-t1)*y1 + t1*t1*y2;
-    }
-    if( t2 >= 0 && t2 <= 1 ) {
-      out_y2 = (1-t2)*(1-t2)*mouse_y + 2*t2*(1-t2)*y1 + t2*t2*y2;
-    }
-    return vec2( out_y1 , out_y2 );
-  }
-}
-
-
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // PERLIN NOISE
@@ -253,8 +267,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseUpdateScale) {
+  v *= noiseUpdateScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -315,22 +329,22 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
 // FLAT
-return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
 }
 
 vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   // FLAT
   if(noiseType == 0 )  {
-    return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+    return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
   }
   // SUN RAYS
   else if(noiseType == 1 ) {
     vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
                      length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
-    return vec2(snoise( pos , noiseScale * 10 ) ,
-                            snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
+    return vec2(snoise( pos , noiseUpdateScale * 10 ) ,
+                            snoise( pos + vec2(2.0937,9.4872) , noiseUpdateScale * 10 ));
   }
   // CAMERA
   else if(noiseType == 2 ) {
@@ -348,6 +362,12 @@ float Line( float x1 , float y1 ,
   return mouse_y + (y1 - mouse_y)/(x1 - mouse_x) * (interp_mouse_x - mouse_x);
 }
 
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// CELLULAR AUTOMATA UPDATE
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 void CA_out( vec2 decalCoords , vec4 currentCAValue ) {
   // the ALPHA canal of uniform_Update_texture_fs_CA contains > 0 if it is a live cell
@@ -899,6 +919,12 @@ void CA_out( vec2 decalCoords , vec4 currentCAValue ) {
   }
 }
 
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// ANIMATED PIXELS UPDATE
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
 void pixel_out( vec2 decalCoords ) {
   // fills by cumulating the neighboring pixels that
   // can reach the pixel at this frame (come into a circle of radius radius_pixel)
@@ -1040,119 +1066,227 @@ void pixel_out( vec2 decalCoords ) {
 }
 
 
-float stroke_out( float current_Brush_RadiusX , float current_Brush_RadiusY , int current_brushID ) {
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// PEN STROKE UPDATE
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
+float OneMinusT;
+float OneMinusT_sqare;
+float T_sqare;
+
+float stroke_out( float current_Brush_Radius , int current_brushID ) {
 
   // drawing mode: writes under the cursor
   // tries to avoid artefacts at the junction between two segments
   // vector from the pen center to the current position
   vec2 vector_to_mousePosition = vec2(signed_rx,signed_ry);
   vec2 normalized_vector_to_mousePosition 
-    = vector_to_mousePosition/vec2(current_Brush_RadiusX,current_Brush_RadiusY);
+    = vector_to_mousePosition/vec2(current_Brush_Radius);
 
   // it is blended with preceding pen color at this position
   // gray level 
   // horizontal texture coordinate shift according to pen number
   float penOutGrayLevel = 0.0;
-  if( current_brushID >= 0 ) {
+  if( current_brushID > 0 ) {
     penOutGrayLevel
       = texture(uniform_Update_texture_fs_Brushes,
                 vec3( normalized_vector_to_mousePosition.x/2.0+0.5,
                       0.5 - normalized_vector_to_mousePosition.y/2.0,
-                      (current_brushID / 3) * 0.5 + 0.250))[current_brushID % 3];
+                      (current_brushID / 3) * 0.33333 + 0.16667))[current_brushID % 3];
   }
 
   // pen gray level
   return penOutGrayLevel;
 }
 
-float out_gray_drawing( float current_mouse_x , float current_mouse_y , 
-			float prev_mouse_x , float prev_mouse_y ,
-			float current_Brush_RadiusX , float current_Brush_RadiusY , 
-			int current_brushID ,
-			uint p_track_drawingStroke ) {
-
-  float interp_mouse_x = current_mouse_x;
-  float interp_mouse_y = current_mouse_y;
-
-  // gets the previous mouse position prev_mouse_x prev_mouse_y 
-  // and the current one current_mouse_x icurrent_mouse_y 
-
-  /////////////////////////////////////////////////
-  // line based rendering
-  if( p_track_drawingStroke == DRAWING_LINE ) {
-    if( prev_mouse_x > 0 && prev_mouse_y > 0 ) {
-      // angle of line wrt Ox is between -45deg and +45deg: drawing
-      // is controlled by x and interpolated y is a function of x
-      if( abs(current_mouse_x - prev_mouse_x) > 
-          abs(current_mouse_y - prev_mouse_y) ) {
-        if( ( prev_mouse_x < current_mouse_x 
-	      && decalCoords.x > prev_mouse_x 
-	      && decalCoords.x <= current_mouse_x ) 
-	    || ( prev_mouse_x > current_mouse_x 
-		 && decalCoords.x >= current_mouse_x 
-		 && decalCoords.x < prev_mouse_x ) ) {
-          interp_mouse_x = decalCoords.x;
-          interp_mouse_y 
-            = Line( prev_mouse_x , prev_mouse_y , 
-		    current_mouse_x , current_mouse_y , 
-		    interp_mouse_x );
-        } 
-      } 
-      // angle of line wrt Ox is under -45deg or above +45deg: drawing
-      // is controlled by y and interpolated x is a function of y
-      else {
-        if( ( prev_mouse_y < current_mouse_y 
-	      && (height - decalCoords.y) > prev_mouse_y 
-	      && (height - decalCoords.y) <= current_mouse_y ) 
-	    || ( prev_mouse_y > current_mouse_y  
-		 && (height - decalCoords.y) >= current_mouse_y 
-		 && (height - decalCoords.y) < prev_mouse_y ) ) {
-          interp_mouse_y = (height - decalCoords.y);
-          interp_mouse_x
-            = Line( prev_mouse_y , prev_mouse_x , 
-		    current_mouse_y , current_mouse_x , 
-		    interp_mouse_y );
-        } 
-      }
-    }
-  }
-
-  /////////////////////////////////////////////////
-  // point or line stroke
-  float return_out_gray_drawing = 0.0;
-  float unsigned_rx = 10000.0;
-  float unsigned_ry = 10000.0;
-  if( p_track_drawingStroke == DRAWING_LINE ) {
-
-    //////////////////////////////////////
-    // GRAY LEVEL OUTPUT
-    //////////////////////////////////////
-
-    /////////////////////////////////////////////////
-    // WRITING POSITION
-    // distance from pen center
-    signed_rx = decalCoords.x - interp_mouse_x;
-    signed_ry = height - decalCoords.y - interp_mouse_y;
-    unsigned_rx = abs( signed_rx );
-    unsigned_ry = abs( signed_ry );
-
-    if( current_mouse_x >= 0
-	&& current_mouse_y >= 0
-	&& (prev_mouse_x != current_mouse_x
-	    || prev_mouse_y != current_mouse_y)
-    	// doesnt redraw on previously drawn place
-	&& unsigned_rx < current_Brush_RadiusX 
-	&& unsigned_ry < current_Brush_RadiusY ) {
-      // out_rendered_fluidDynamics_FBO.a = 1;
-      return_out_gray_drawing 
-        = stroke_out( current_Brush_RadiusX , current_Brush_RadiusY , current_brushID );
-      newly_drawn = true;
-    }
-  }
-  return return_out_gray_drawing;
+// Found in nvidia sdk
+vec2 BezierVal(float T )
+{
+    OneMinusT = 1.0 - T;
+    OneMinusT_sqare = OneMinusT*OneMinusT;
+    T_sqare = T*T;
+    float b0 = OneMinusT*OneMinusT_sqare;
+    float b1 = 3.0*T*OneMinusT_sqare;
+    float b2 = 3.0*T_sqare*OneMinusT;
+    float b3 = T*T_sqare;
+    return b0*BezierControl[0] + b1*BezierControl[1] + b2*BezierControl[2] + b3*BezierControl[3];
+}
+// should always be called after BezierVal because of variable initialization
+vec2 TangentVal(float T )
+{
+    float d0 = 3.0*OneMinusT_sqare;
+    float d1 = 6.0*T*OneMinusT;
+    float d2 = 3.0*T_sqare;
+    return d0*(BezierControl[1] - BezierControl[0]) + d1*(BezierControl[2] - BezierControl[1]) + d2*(BezierControl[3] - BezierControl[2]);
 }
 
-// Main shader.
+// BezierControl the coordinates of the four control points
+// uniform_Update_fs_4iv_path0_next_in_hull the next index for the convex hull
+// grey color return value (a mask)
+float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
+
+  /////////////////////////////////////////////////
+  // point in screen coordinates
+  vec2 PixelLocation = vec2(decalCoords.x , height - decalCoords.y);
+
+  /////////////////////////////////////////////////
+  // just a point
+  if(isBegin && isEnd) {
+      /////////////////////////////////////////////////
+      // WRITING POSITION
+      // distance from pen center
+      signed_rx = PixelLocation.x - BezierControl[3].x;
+      signed_ry = PixelLocation.y - BezierControl[3].y;
+      float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+      if( // doesnt redraw on previously drawn place
+          distanceToCurve < current_Brush_Radius ) {
+        if(current_brushID > 0) {
+            // reads the pen texture at this position
+            return stroke_out( current_Brush_Radius , current_brushID );
+        }
+        else {
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
+        }
+      }
+  }
+
+  /////////////////////////////////////////////////
+  // The cubic Bezier curve hasfour control points BezierControl
+  // from the previous mouse position BezierControl[0].x BezierControl[0].y 
+  // to the current one BezierControl[3].x BezierControl[3].y 
+
+  /////////////////////////////////////////////////
+  // a segment made of 2 distinct real points 
+  if( BezierControlX[0] >= 0 && BezierControlY[0] >= 0 
+      && BezierControlX[3] >= 0 && BezierControlY[3] >= 0
+      && (BezierControlX[0] != BezierControlX[3]
+          || BezierControlY[0] != BezierControlY[3]) ) {
+
+    // Bezier curve based rendering
+
+    // BOUNDING SOLUTION
+    // simple bounding box around the stroke
+/*    if( (PixelLocation.x <= BezierBox.x) || (PixelLocation.x >= BezierBox.y)
+       || (PixelLocation.y <= BezierBox.z) || (PixelLocation.y >= BezierBox.w) ) {
+      return  0.f; 
+    }
+*/
+    // marching along the Bezier curve
+    // 3-pixel steps
+    int nb_steps = int( length(BezierControl[1]-BezierControl[0])
+                      + length(BezierControl[2]-BezierControl[1])
+                      + length(BezierControl[3]-BezierControl[2]) ) / 3 + 1;
+    // not more than 10 steps
+    nb_steps = max(10, nb_steps);
+
+    // marching along the curve and stopping when the point is between the frontiers of the 
+    // line trapeze (slab) delimited by lines orthogonal to tangents
+    float step = 1. / nb_steps;
+
+    // first point in the subdivision (preceding point)
+    float param_prec = 0.;
+    vec2 P_prec = BezierVal(param_prec); // is BezierControl[0] but has to be calculated to initialize the values for TangentVal
+    float T_prec = dot(vec2(PixelLocation - P_prec),normalize(TangentVal(param_prec)));
+    vec2 P_cur;
+    float T_cur;
+
+    /////////////////////////////////////////////////
+    // a segment beginning
+    if( isBegin && T_prec < 0) {
+      /////////////////////////////////////////////////
+      // WRITING POSITION
+      // distance from pen center
+      signed_rx = PixelLocation.x - BezierControlX[3];
+      signed_ry = PixelLocation.y - BezierControlY[3];
+      float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+      if( // doesnt redraw on previously drawn place
+          distanceToCurve < current_Brush_Radius ) {
+        if(current_brushID > 0) {
+            // reads the pen texture at this position
+            return stroke_out( current_Brush_Radius , current_brushID );
+        }
+        else {
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
+        }
+      }
+    }    
+
+    // loop on all the ponts in the subdivision
+    for(int ind_step = 1 ; ind_step <= nb_steps ; ind_step++) {
+      // current point in the subdivision
+      float param_cur = ind_step * step;
+      P_cur = BezierVal(param_cur);
+      T_cur = dot(vec2(PixelLocation - P_cur) , normalize(TangentVal(param_cur)));
+      // inside the slab delimited by two points and their normals
+      if(T_prec >= 0 && T_cur <= 0) {
+        float interpolatedParam = (-T_cur * param_prec + T_prec * param_cur)/(T_prec - T_cur);
+
+        /////////////////////////////////////////////////
+        // WRITING POSITION
+        // distance from pen center
+        vec2 PointOnCurve = BezierVal(interpolatedParam);
+        signed_rx = PixelLocation.x - PointOnCurve.x;
+        signed_ry = PixelLocation.y - PointOnCurve.y;
+        float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+        if( // doesnt redraw on previously drawn place
+            distanceToCurve < current_Brush_Radius ) {
+          if(current_brushID > 0) {
+              // reaads the pen texture at this position
+              return stroke_out( current_Brush_Radius , current_brushID );
+          }
+          else {
+          // reads the gray level of the brush at this position
+          return 1.0f - distanceToCurve / current_Brush_Radius;
+          }
+        }
+        break;
+      }
+
+      // memorization of the current point
+      param_prec = param_cur;
+      T_prec = T_cur;
+      P_prec = P_cur;
+    }
+
+    /////////////////////////////////////////////////
+    // a segment ending
+    if( isEnd && T_cur < 0) {
+      /////////////////////////////////////////////////
+      // WRITING POSITION
+      // distance from pen center
+      signed_rx = PixelLocation.x - BezierControlX[0];
+      signed_ry = PixelLocation.y - BezierControlY[0];
+      float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
+      if( // doesnt redraw on previously drawn place
+          distanceToCurve < current_Brush_Radius ) {
+        if(current_brushID > 0) {
+            // reads the pen texture at this position
+            return stroke_out( current_Brush_Radius , current_brushID );
+        }
+        else {
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
+        }
+      }
+    }    
+  }
+
+  return 0.f;
+}
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// MAIN OF UPDATE PASS
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 void main() {
 #include_initializations
@@ -1165,6 +1299,7 @@ void main() {
   // variables 
   // frame number
   frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
+  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
   
   // CAType
   CAType = int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.x);
@@ -1252,15 +1387,12 @@ void main() {
     out_track_FBO[0] = texture( uniform_Update_texture_fs_Trk0 , decalCoordsPrevStep );
   }
   else {
-    out_track_FBO[0] = vec4( 0, 0, 0, 0 );;
+    out_track_FBO[0] = vec4( 0, 0, 0, 0 );
   }
   out_attachment_FBO[pg_FBO_fs_Pixels_attacht]
     = texture( uniform_Update_texture_fs_Pixels , decalCoords );
   out_attachment_FBO[pg_FBO_fs_CA_attacht]
     = texture( uniform_Update_texture_fs_CA , decalCoords );
-
-  // PREVIOUS GRAY LEVEL
-  vec3 previous_out_drawing = out_track_FBO[0].rgb;
 
   //////////////////////////////////////
   //////////////////////////////////////
@@ -1272,30 +1404,11 @@ void main() {
   vec4 flashToCACumul = vec4(0.0);  // RGB + GRAY
   // vec3 flashToCACumul = vec3(0.0);
 
-  /////////////////////////////////////
-  // builds a path_replay_trackNo vector so that it can be used in the for loop
-  #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo_1,path_replay_trackNo_2,
-                                      path_replay_trackNo_3);
-  #endif
-  #if PG_NB_PATHS == 7
-  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo_4,path_replay_trackNo_5,
-                                      path_replay_trackNo_6,path_replay_trackNo_7);
-  #endif
-
-  /////////////////////////////////////////////////
-  // void drawing, copies the previous pixel, just manages decay
-  // at the end of this code
-  // nothing needs to be done here
-  // if( drawingStroke == DRAWING_VOID ) {
-  // }
-
   //////////////////////////////////////////////
   // STROKE INTERPOLATION FOR LINE
   // int newtrack = -1;
   float track_0_opacity = 0.0;
-  float track_tablet1_opacty = 0.0;
-  float tracks_opacity = 0.0;
+  vec4 pathColor = vec4(1,1,1,1);
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -1325,10 +1438,14 @@ void main() {
                * uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw
                + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
-
-  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
+  vec4 cameraImageIni = vec4(cameraImage, 1);
+/*  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
              * uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
+*/
+  if(camera_gamma != 1) {
+    cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
+  }
 
   if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage 
@@ -1350,9 +1467,15 @@ void main() {
     cameraImage = vec3(cameraGray);
   }
 
+  float correctionFactor =  1.016 * (camera_contrast + 1.0) 
+                              / (1.016 - camera_contrast);
+  cameraImage = clamp( vec3(correctionFactor)
+    * (cameraImage - vec3(0.5)) + vec3(0.5) , 0 , 1 );
+
+
   // video image = mix of movie and camera
-  videocolor = cameraWeight * cameraImage 
-            + movieWeight * movieImage;
+  videocolor = cameraWeight * cameraImage;
+  //         + movieWeight * movieImage;
 
 
   // each track possibly covers the previous color
@@ -1361,44 +1484,41 @@ void main() {
   // TRACK 0
   // background drawing
   uint pathStroke = DRAWING_VOID;
-  for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
-    // pen drawing on the current track (comes last)
-    if( indPath == 0 && currentDrawingTrack == 0 ) {
-      pathStroke = DRAWING_LINE;
-    }
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-    // path drawing on current track
-    else if( indPath > 0 && indPath < 4 && path_replay_trackNo03[indPath - 1] == 0 ) {
-      pathStroke = DRAWING_LINE;
-    }
-#endif
-#if PG_NB_PATHS == 7
-    // path drawing on current track
-    else if( indPath >= 4 && path_replay_trackNo47[indPath - 4] == 0 ) {
-      pathStroke = DRAWING_LINE;
-    }
-#endif
+  // pen drawing on the current track (comes last)
+  if( currentDrawingTrack == 0 ) {
+    pathStroke = DRAWING_LINE;
   }
 
   // pathStroke = DRAWING_LINE;
   if( pathStroke > 0 ) {
     int indPath = 0;
-    vec4 pathX
-     = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];
-    vec4 pathY
-     = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_Y];
-    vec4 radius_beginOrEnd 
+    BezierControlX = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];
+    BezierControlY = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_Y];
+    BezierControl[0] = vec2(BezierControlX[0], BezierControlY[0]);
+    BezierControl[1] = vec2(BezierControlX[1], BezierControlY[1]);
+    BezierControl[2] = vec2(BezierControlX[2], BezierControlY[2]);
+    BezierControl[3] = vec2(BezierControlX[3], BezierControlY[3]);
+    BezierBox = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_BOX];
+    vec4 radiusX_beginOrEnd_radiusY_brushID 
      = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_RADIUS_BEGINEND];
-    vec4 pathColor
+    pathColor
      = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_COLOR];
-    track_0_opacity 
-      += out_gray_drawing(
-                pathX[3] , pathY[3], // current position
-                pathX[0] , pathY[0], // previous position
-                3 * radius_beginOrEnd.x ,
-                3 * radius_beginOrEnd.z ,
-                int(radius_beginOrEnd.w), pathStroke );
-    tracks_opacity += track_0_opacity;
+    float isBeginOrEnd = radiusX_beginOrEnd_radiusY_brushID.y;
+    int current_brushID = int(radiusX_beginOrEnd_radiusY_brushID.w);
+    isBegin = (isBeginOrEnd > 0);
+    isEnd = (isBeginOrEnd < 0);
+
+    if(Cursor < 0) {
+      float curTrack_grayLevel
+        = out_gray_drawing(
+                 3 * radiusX_beginOrEnd_radiusY_brushID.x, current_brushID );
+      out_track_FBO[0].rgb *= (1 - curTrack_grayLevel);
+   }
+    else {
+      track_0_opacity 
+        += out_gray_drawing(
+                  radiusX_beginOrEnd_radiusY_brushID.x, current_brushID );
+    }
 
     // drawing occurs on background
     if( track_0_opacity > 0 ) {
@@ -1407,12 +1527,12 @@ void main() {
       track_0_opacity *= pathColor.a;
       out_track_FBO[0].rgb = 
       	out_track_FBO[0].rgb * (1 - track_0_opacity)
-      	+ track_0_opacity
-      	* pathColor.rgb;
+      	+ track_0_opacity * pathColor.rgb;
     }
   }
   
-  if(cameraWeight + movieWeight > 0) {
+  // if(cameraWeight + movieWeight > 0) {
+  if(cameraWeight > 0) {
      out_track_FBO[0].rgb = clamp( videocolor + photocolor, 0.0 , 1.0 );
   }
 
@@ -1445,12 +1565,6 @@ void main() {
      // outputs the color from CA (average surrounding color if birth)
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = out4_CA;
     }
-
-    // frontier through drawing to restrict CA expansion
-    // if( track_0_opacity > 0.5 ) {
-    //  out4_CA = vec4(0,0,0,1);
-    // }
-
   }
 
   //////////////////////////////////////
@@ -1487,8 +1601,8 @@ void main() {
       //  modifies speed according to acceleration
       vec2 pixel_acceleration;
       // FLAT
-      pixel_acceleration = vec2(snoise( pixelTextureCoordinatesXY , noiseScale * 100 ),
-                                snoise( pixelTextureCoordinatesXY + vec2(2.0937,9.4872) , noiseScale * 100 ));
+      pixel_acceleration = vec2(snoise( pixelTextureCoordinatesXY , noiseUpdateScale * 100 ),
+                                snoise( pixelTextureCoordinatesXY + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
@@ -1504,11 +1618,11 @@ void main() {
       out_attachment_FBO[pg_FBO_fs_Pixels_attacht].zw += out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy; 
 
       // if the pixel leaves the cell, it is erased
-      if( abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].z ) > 0.5
-    	  || abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].w ) > 0.5 ) {
-      	if( pixel_mode == PIXEL_UNIQUE ) {
-      	  out_track_FBO[0].rgb = vec3(0,0,0);
-      	}
+      if( pixel_mode == PIXEL_UNIQUE ) {
+        if( abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].z ) > 0.5
+          || abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].w ) > 0.5 ) {
+          out_track_FBO[0].rgb = vec3(0,0,0);
+        }
       }
     }
   }
@@ -1532,6 +1646,7 @@ void main() {
   }
   out_track_FBO[0].rgb 
     = clamp( out_track_FBO[0].rgb , 0.0 , 1.0 );
+
 
   //////////////////////////////////////////////
   // rebuilds output for the gray/drawing buffer after decay
@@ -1611,8 +1726,8 @@ void main() {
 
   // launching airstrike 
   if( CAType == CA_NEUMANN_BINARY
-     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 1800
-     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 1800 < 10
+     && frameNo < uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y + 4 * 2600 
+     && int(frameNo - uniform_Update_fs_2fv_initCA_1stPlaneFrameNo.y) % 2600 < 10
      && abs(decalCoords.x - width + 10) < 3.2  
      && abs(decalCoords.y - height/2) < 3.2 ) {
     out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(1,1,1,1);
@@ -1625,6 +1740,7 @@ void main() {
   out_Update_FBO_fs_Trk0 = out_track_FBO[0];
 #if PG_NB_TRACKS >= 2
   out_Update_FBO_fs_Trk1 = out_track_FBO[1];
+  out_Update_FBO_fs_Trk1 = cameraImageIni;
 #endif
 #if PG_NB_TRACKS >= 3
   out_Update_FBO_fs_Trk2 = out_track_FBO[2];
@@ -1632,27 +1748,4 @@ void main() {
 #if PG_NB_TRACKS >= 4
   out_Update_FBO_fs_Trk3 = out_track_FBO[3];
 #endif
-  // float state = texelFetch(uniform_Update_texture_fs_CATable, ivec2( 2 , 52 ) ).r;
-  // if( state == 1.0/255.0 ) {
-  //    out_Update_FBO_fs_Trk0.rgb = 0.1 * out_Update_FBO_fs_Trk0.rgb + 0.9 * vec3(1,0,0);
-  //  }
-  // else if( state == 2.0/255.0 ) {
-  //    out_Update_FBO_fs_Trk0.rgb = 0.1 * out_Update_FBO_fs_Trk0.rgb + 0.9 * vec3(1,1,0);
-  //  }
-  // else if( state == 3.0/255.0 ) {
-  //    out_Update_FBO_fs_Trk0.rgb = 0.1 * out_Update_FBO_fs_Trk0.rgb + 0.9 * vec3(0,1,1);
-  //  }
-  // else if( state == 0.0 ) {
-  //    out_Update_FBO_fs_Trk0.rgb = 0.1 * out_Update_FBO_fs_Trk0.rgb + 0.9 * vec3(0,1,0);
-  //  }
-  // else {
-  //    out_Update_FBO_fs_Trk0.rgb = 0.1 * out_Update_FBO_fs_Trk0.rgb + 0.9 * vec3(0,0,1);
-  //  }
-  //vec2 cameraCoord = vec2(1.0-decalCoordsPOT.x , decalCoordsPOT.y )
-  //                   * uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw;
-  //out_Update_FBO_fs_Trk0=mix(out_track_FBO[0],texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ),0.9);
-  // out_Update_FBO_fs_Trk0 = vec4(1,0,0,1);
-
-  // out_Update_FBO_fs_Trk0 = mix( out_track_FBO[0] , texture(uniform_Update_texture_fs_Camera_BG, 
-  //                 decalCoordsPOT * uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw ) , 0.9 );
 }

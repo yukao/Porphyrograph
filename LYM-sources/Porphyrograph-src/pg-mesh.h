@@ -29,11 +29,108 @@
 #ifndef PG_MESH_H
 #define PG_MESH_H
 
+class Bone {
+public:
+    // bone ID
+    string id;
+    // bone length (along y axis)
+    float length;
+    // parent bone if there's one
+    Bone* daughterBone;
+    Bone* parentBone;
+    Bone* sisterBone;
+
+    ////////////////////////////////////////
+    // geometrical data
+    float points[2 * 3 * 3];
+    unsigned int vbo;
+    unsigned int vao;
+
+    // initial translation matrix computed from translation vector
+    glm::mat4      boneAnimationTranslationMatrix;
+    glm::mat4      boneInitialTranslationMatrix;
+    glm::vec3*     boneLibraryPoseTranslationVector;
+    glm::vec3*     boneAnimationPoseTranslationVector;
+
+    // initial and animation rotation computed from axis and angle
+    glm::mat4      boneAnimationRotationMatrix;
+    glm::mat4      boneInitialRotationMatrix;
+    glm::quat      *boneLibraryPoseRotationQuat;
+    glm::quat      *boneAnimationPoseRotationQuat;
+
+    // joint Transformation Matrices (initial and current)
+    glm::mat4      initialJointTransformation;
+    glm::mat4      currentJointTransformation;
+
+    // current point Transformation Matrices (initial and current)
+    glm::mat4      pointAnimationMatrix;
+
+    Bone(void) {
+        id = "";
+        length = 0;
+        daughterBone = NULL;
+        parentBone = NULL;
+        sisterBone = NULL;
+
+        boneInitialTranslationMatrix = glm::mat4(1.0f);
+        boneAnimationTranslationMatrix = glm::mat4(1.0f);
+        boneLibraryPoseTranslationVector = NULL;
+
+        boneInitialRotationMatrix = glm::mat4(1.0f);
+        boneAnimationRotationMatrix = glm::mat4(1.0f);
+        boneLibraryPoseRotationQuat = NULL;
+
+        initialJointTransformation = glm::mat4(1.0f);
+        currentJointTransformation = glm::mat4(1.0f);
+
+        pointAnimationMatrix = glm::mat4(1.0f);
+
+        // 1st triangle
+        points[0] = 0.05f;
+        points[1] = 0.0f;
+        points[2] = 0.05f;
+        points[3] = -0.05f;
+        points[4] = 0.0f;
+        points[5] = -0.05f;
+        points[6] = 0.0f;
+        points[7] = 1.0f;
+        points[8] = 0.0f;
+        // 2nd triangle
+        points[9] = -0.05f;
+        points[10] = 0.0f;
+        points[11] = 0.05f;
+        points[12] = 0.05f;
+        points[13] = 0.0f;
+        points[14] = -0.05f;
+        points[15] = 0.0f;
+        points[16] = 1.0f;
+        points[17] = 0.0f;
+    }
+    ~Bone(void) {
+    }
+};
+
+// mesh anim data
+extern double *mesh_startAnime;
+extern double *mesh_anime_precTime;
+extern int *mesh_precedingAnime;
+extern bool* mesh_positiveChange;
+extern bool* mesh_negativeChange;
+#define _lastMesh_Anime 6
+#define _lastMesh_Motion 6
+
+// mesh motion data
+extern double* mesh_startMotion;
+extern double* mesh_motion_precTime;
+extern int* mesh_precedingMotion;
+
 // mesh data
 extern GLfloat *vertexBuffer;
 extern GLfloat *texCoordBuffer;
 extern GLfloat *normalBuffer;
 extern GLuint  *indexBuffer;
+extern GLint* boneIndexBuffer;
+extern GLfloat* boneWeightBuffer;
 
 // shader variable pointers
 extern GLint *uniform_mesh_model;
@@ -41,23 +138,35 @@ extern GLint *uniform_mesh_view;
 extern GLint *uniform_mesh_proj;
 extern GLint *uniform_mesh_light;
 
-#ifndef TEMPETE
 // mesh lighting
 extern GLfloat mesh_light_x;
 extern GLfloat mesh_light_y;
 extern GLfloat mesh_light_z;
-#endif
 
-void copyMeshData(int indMeshInFile, GLfloat *vertexBufferIni, GLfloat *texCoordBufferIni, GLfloat *normalBufferIni,
+void copyMeshData(int indObjectInMesh, GLfloat *vertexBufferIni, GLfloat *texCoordBufferIni, GLfloat *normalBufferIni,
 	GLuint  *indexPointBufferIni, GLuint  *indexTexCoordBufferIni, GLuint  *indexNormalBufferIni,
 	int nbFacesInThisMesh);
-void count_faces_mesh_obj(FILE *file, int *meshNo,
+void copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose, int mesh_AnimationPose);
+void count_faces_mesh_obj(FILE* file, int* meshNo,
 	int **nbVerticesInEachMesh, int **nbTextCoordsInEachMesh, int **nbNormalsInEachMesh,
 	int **nbFacesInEachMesh);
-void parse_mesh_obj(FILE *file, int indMeshFile, int nbMeshes,
-	int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
-	int *nbFacesInEachMesh);
-void transferMeshDataToGPU(int indMeshFile, int indMeshInFile);
-void load_mesh_obj(string obj_file_name, int indMeshFile);
+void parseArmatureObj(FILE* file, char* line, char* tag, char* id, int indMeshFile);
+void parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc, int indMeshFile);
+void parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
+int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
+int *nbFacesInEachMesh);
+void transferMeshDataToGPU(int indMeshFile, int indObjectInMesh);
+void load_mesh_objects(string mesh_file_name, int indMeshFile);
+#if defined(var_MmeShanghai_brokenGlass)
+void loadMeshSubParts(string meshPart_fileName, bool* ObjectsInSubPart, int nbObjectsInMesh);
+#endif
 
+void render_one_bone(Bone* bone, glm::mat4 parentModelMatrix);
+void render_bones(glm::mat4 modelMatrix, int indMeshFile);
+
+void update_anim(int indMeshFile);
+void update_bones(int indMeshFile);
+#if defined(var_Contact_mesh_rotation) && defined(var_Contact_mesh_translation_X) && defined(var_Contact_mesh_translation_Y) && defined(var_Contact_mesh_motion)
+void Contact_update_motion(int indMeshFile);
+#endif
 #endif

@@ -71,32 +71,6 @@ void main() {
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
 
-  // mute screen
-/*  if(mute_second_screen && decalCoords.x > width) {
-    outColor0 = vec4(0, 0, 0, 1);
-    return;
-  }
-*/
-  // interface
-/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
-    if(decalCoords.x < 100) {
-      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
-    }
-    else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
-    }
-    else if(decalCoords.x < 300) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
-    }
-    else if(decalCoords.x > 320 && decalCoords.x < 420) {
-      outColor0 = vec4(vec3(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.w), 1);
-    }
-    else if(decalCoords.x > 440 && decalCoords.x < 540) {
-      outColor0 = vec4(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.rgb, 1);
-    }
-    return;
-  }
-*/
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights
   vec4 MixingColor = texture(uniform_Master_texture_fs_Render_curr, coords );

@@ -32,6 +32,11 @@
 // This is passed by void pointer so it can be any data type
 // that can be passed using a single void pointer (LPVOID).
 
+extern unsigned int imgPhotoCompressedFormat;
+extern unsigned char* imgPhotoCompressedBitmap;
+extern cv::Mat imgPhotoBGRInit;
+extern cv::Mat imgPhotoRGB;
+
 class PhotoSwapDataStruct {
 public:
 	int indSwappedPhoto;
@@ -54,50 +59,30 @@ public:
 	char PhotoName[256];
 	int w;
 	int h;
-	GLenum format;
+	GLenum photoFormat;
 	bool invert;
 	bool IDallocated;
 	GLuint texBuffID;
-	cv::Mat* imgPhotoOpenCV;
-	unsigned char* compressedPhotoBitmap;
-	unsigned int compressedFormat;
 	PhotoDataStruct(void) {
 		w = -1;
 		h = -1;
-		format = 0;
+		photoFormat = 0;
 		*PhotoName = 0;
 		IDallocated = false;
-		imgPhotoOpenCV = NULL;
-		compressedPhotoBitmap = NULL;
-		compressedFormat = 0;
 		invert = false;
 		texBuffID = -1;
 	}
 	void release(void) {
 		w = -1;
 		h = -1;
-		format = 0;
+		photoFormat = 0;
 		*PhotoName = 0;
-		if (imgPhotoOpenCV) {
-			imgPhotoOpenCV->release();
-			imgPhotoOpenCV = NULL;
-		}
-		if (compressedPhotoBitmap) {
-			free(compressedPhotoBitmap);
-			compressedPhotoBitmap = NULL;
-		}
-		compressedFormat = 0;
+		imgPhotoCompressedFormat = 0;
 	}
 	~PhotoDataStruct(void) {
-		if (imgPhotoOpenCV) {
-			imgPhotoOpenCV->release();
-			imgPhotoOpenCV = NULL;
-		}
-		if (compressedPhotoBitmap) {
-			free(compressedPhotoBitmap);
-			compressedPhotoBitmap = NULL;
-		}
 	}
+	// calls to pg_loadPhoto should be immediately followed by pg_toGPUPhoto
+	// due to global storage variables imgPhotoCompressedFormat, imgPhotoCompressedBitmap, imgPhotoBGRInit, imgPhotoRGB;
 	bool pg_loadPhoto(
 		bool invert, int width, int height, bool verbose);
 	bool pg_toGPUPhoto(bool is_rectangle,
@@ -108,21 +93,17 @@ public:
 class ClipFramesDataStruct {
 public:
 	GLuint texBuffID;
-	GLenum format;
-	unsigned int compressedFormat;
-	unsigned char* compressedPhotoBitmap;
+	GLenum clipImgFormat;
 	ClipFramesDataStruct(void) {
-		format = 0;
-		compressedPhotoBitmap = NULL;
-		compressedFormat = 0;
+		clipImgFormat = 0;
 		texBuffID = -1;
 	}
 	~ClipFramesDataStruct(void) {
-		format = 0;
-		compressedPhotoBitmap = NULL;
-		compressedFormat = 0;
+		clipImgFormat = 0;
 		texBuffID = -1;
 	}
+	// calls to pg_loadClipFrames should be immediately followed by pg_toGPUClipFrames
+	// due to global storage variables imgPhotoCompressedFormat, imgPhotoCompressedBitmap, imgPhotoBGRInit, imgPhotoRGB;
 	bool pg_loadClipFrames(char* fileName, int width, int height, bool verbose);
 	bool pg_toGPUClipFrames(int w, int h, GLint components, GLenum datatype, GLenum texturefilter);
 };
@@ -130,6 +111,30 @@ public:
 // additional contexts for threading transfer to GPU
 #define PG_MAX_NUMBER_OF_OPENGL_CONTEXTS  (4)
 	
+////////////////////////////////////////////////////////////////////
+// OPENCV MATRICES TO STORE IMAGES
+extern cv::Mat pngImgMatRGBInitial;
+extern cv::Mat pngImgMatRGBFlipped;
+extern cv::Mat pngImgMatBGR;
+extern cv::Mat jpgImgMatRGBInitial;
+extern cv::Mat jpgImgMatRGBFlipped;
+extern cv::Mat jpgImgMatBGR;
+extern cv::Mat tiffLayerMatRGBInit;
+extern cv::Mat tiffLayerMatBGR;
+extern cv::Mat tiffLayerMatBGRFlipped;
+extern cv::Mat image3DLayerBGRInit;
+extern cv::Mat image3DLayerRGB;
+extern cv::Mat image3DLayerRGBFlipped;
+extern cv::Mat textureImgMatBGRInit;
+extern cv::Mat textureImgMatRGB;
+extern cv::Mat textureImgMatRGBFlipped;
+extern cv::Mat particleImgMatBGRInit;
+extern cv::Mat particleImgMatRGB;
+extern cv::Mat particleImgMatRGBFlipped;
+extern cv::Mat particleAccImgMatBGRInit;
+extern cv::Mat particleAccImgMatRGB;
+extern cv::Mat particleAccImgMatRGBFlipped;
+
 ////////////////////////////////////////////////////////////////////
 // FIRST FRAME IN A MOVIE
 ////////////////////////////////////////////////////////////////////
@@ -161,7 +166,6 @@ enum pg_TextureFormat { pg_byte_tex_format = 0, pg_float_tex_format, Emptypg_Tex
 #define PG_PHOTO_NB_TEXTURES_TVW                 (6)
 #endif
 
-// cv::Mat imgPhotoBuffer[PG_PHOTO_NB_TEXTURES];
 extern PhotoDataStruct pg_CameraFrame_buffer_data;
 extern PhotoDataStruct pg_MovieFrame_buffer_data;
 
@@ -181,9 +185,11 @@ extern PhotoDataStruct** pg_Photo_buffer_data;
 // image index management for progessive image turnover
 // according to image swap frequency and duration
 // and according to directory size
+#ifdef var_photo_diaporama
 extern int pg_CurrentDiaporamaDir;
 extern double pg_CurrentDiaporamaEnd;
 extern int pg_CurrentDiaporamaFile;
+#endif
 
 ///////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
@@ -232,10 +238,11 @@ extern std::string pg_ImageDirectory;
 // image index management for progessive image turnover
 // according to image blend frequency and duration
 // and according to directory size
+#ifdef var_photo_diaporama
 extern int pg_CurrentDiaporamaFile;
 extern int pg_CurrentDiaporamaDir;
 extern bool ascendingDiaporama;
-
+#endif
 
 ////////////////////////////////////////////////////////////////////
 // SHORT CLIP IMAGE FILES
@@ -248,6 +255,15 @@ extern int* pg_nbCompressedClipFramesPerFolder;
 extern int* pg_firstCompressedClipFramesInFolder;
 extern int pg_nbCompressedClipFrames;
 
+
+////////////////////////////////////////////////////////////////////
+// BG COLOR
+////////////////////////////////////////////////////////////////////
+#if defined(var_flashchange_BGcolor_freq)
+extern float BG_r;
+extern float BG_g;
+extern float BG_b;
+#endif
 
 ////////////////////////////////////////////////////////////////////
 // PROTOTYPES
@@ -283,6 +299,7 @@ void *pg_generateTexture( GLuint *textureID , pg_TextureFormat texture_format ,
 // IMAGE FILE WRITING (JPG OR PNG) (THREADED) 
 // THREADED TEXTURE WRITING
 /// SAVE IMAGE
+/*
 #ifdef WIN32
 DWORD WINAPI writepng(LPVOID lpParam);
 #else
@@ -293,10 +310,14 @@ DWORD WINAPI writejpg(LPVOID lpParam);
 #else
 void* writejpg(void * lpParam);
 #endif
+*/
+
+void writejpg(cv::String imageFileName);
+void writepng(cv::String imageFileName);
 
 // loading a dds format under its compressed form (contrary to other formats (png, jpg) which are decompressed)
-bool pg_load_compressed_photo(char* fileName, GLenum& photoFormat, unsigned int* compressedPhotoFormat, unsigned char** compressedPhotoRaster, int width, int height);
-	
+bool pg_load_compressed_photo(char* fileName, int width, int height);
+
 // TEXTURE LOADING
 bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	int nbTextures, int bytesperpixel,
@@ -313,7 +334,7 @@ bool pg_loadTexture(string fileName,
 	int width, int height);
 
 /// NON THREADED LOAD CAMERA FRAME
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 void loadCameraFrame(bool initial_capture, int IPCam_no);
 void pg_initCameraFrameTexture(Mat *video_frame);
 void pg_openCameraCaptureAndLoadFrame(void);
@@ -344,10 +365,13 @@ void* pg_movieLoop(void * lpParam);
 #endif
 
 // TEXTURE BUFFER MANAGEMENT
+#ifdef var_photo_diaporama
+void diaporama_random(void);
 void pg_launch_diaporama(void);
 bool pg_update_diaporama(void);
+#endif
 
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined (var_CATable)
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);
 #endif
 

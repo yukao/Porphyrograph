@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg width="210mm" height="297mm" viewBox="0 0 210 297" version="1.1" id="svg5" inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)" sodipodi:docname="image_based_acceleration.svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview id="namedview7" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:document-units="mm" showgrid="false" inkscape:zoom="2.3786088" inkscape:cx="447.3203" inkscape:cy="286.30181" inkscape:window-width="1920" inkscape:window-height="1057" inkscape:window-x="-8" inkscape:window-y="-8" inkscape:window-maximized="1" inkscape:current-layer="layer1" />
+  <defs id="defs2" />
+  <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1">
+    <rect style="fill:#7d7d7d;fill-opacity:0.60367;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1" id="rect236-9" width="9.1239405" height="9.1239405" x="81.80085" y="57.103283" />
+    <rect style="fill:#7d7d7d;fill-opacity:0.60367;stroke-width:0.5;stroke:#000000;stroke-opacity:1;stroke-dasharray:none" id="rect236-9-1" width="9.1239405" height="9.1239405" x="81.80085" y="47.979343" />
+    <rect style="fill:#7d7d7d;fill-opacity:0.60367;stroke:#000000;stroke-width:0.5;stroke-dasharray:none;stroke-opacity:1" id="rect236-4" width="9.1239405" height="9.1239405" x="90.924789" y="57.103283" />
+    <text xml:space="preserve" style="font-size:2.82223px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583" x="103.90942" y="64.214737" id="text1241"><tspan sodipodi:role="line" id="tspan1239" style="stroke-width:0.264583" x="103.90942" y="64.214737">gradX = greyX - grey_center</tspan></text>
+    <text xml:space="preserve" style="font-size:2.82223px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583" x="86.271866" y="44.361229" id="text1299"><tspan sodipodi:role="line" id="tspan1297" style="stroke-width:0.264583" x="86.271866" y="44.361229">gradY = greyY - grey_center</tspan></text>
+    <text xml:space="preserve" style="font-size:2.82223px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583" x="88.250526" y="77.710808" id="text1307"><tspan sodipodi:role="line" id="tspan1305" style="stroke-width:0.264583" x="88.250526" y="77.710808">a = acos(gradX / len(gradX, gradY))</tspan><tspan sodipodi:role="line" style="stroke-width:0.264583" x="88.250526" y="81.238594" id="tspan1309">if gradX &lt; 0 then a *= -1</tspan></text>
+  </g>
+</svg>

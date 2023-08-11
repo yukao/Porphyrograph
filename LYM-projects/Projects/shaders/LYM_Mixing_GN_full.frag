@@ -9,9 +9,13 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 1
 
+#define var_CAMixingWeight
 float	 CAMixingWeight;
+#define var_trackMixingWeight_0
 float	 trackMixingWeight_0;
+#define var_echo
 float	 echo;
+#define var_echoNeg
 float	 echoNeg;
 uniform float uniform_Mixing_scenario_var_data[4];
 

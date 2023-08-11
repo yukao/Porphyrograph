@@ -58,11 +58,6 @@ void main() {
                       decalCoords.y);
   vec4 CompositionAndTrackDisplayColor = texture(uniform_Master_texture_fs_Render_curr, coords );
 
-  // mute
-  if(mute_second_screen && decalCoords.x > width) {
-    outColor0 = vec4(0, 0, 0, 1);
-    return;
-  }
   // margin
   if(margin > 0 
       && (decalCoords.x >= 2 * width + margin 
@@ -71,26 +66,6 @@ void main() {
     return;
   }
 
-  // interface
-/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
-    if(decalCoords.x < 100) {
-      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
-    }
-    else if(decalCoords.x < 200) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
-    }
-    else if(decalCoords.x < 300) {
-      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, 1);
-    }
-    else if(decalCoords.x > 320 && decalCoords.x < 420) {
-      outColor0 = vec4(vec3(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.w), 1);
-    }
-    else if(decalCoords.x > 440 && decalCoords.x < 540) {
-      outColor0 = vec4(uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey.rgb, 1);
-    }
-    return;
-  }
-*/
 #ifdef PG_WITH_CA
   vec4 CA_color = texture(uniform_Master_texture_fs_CA, coords);
 #endif

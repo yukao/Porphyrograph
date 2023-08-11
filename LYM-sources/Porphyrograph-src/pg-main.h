@@ -40,7 +40,7 @@
 #define     NULL_ID   0
 
 
-extern char ScreenMessage[StringLength];
+extern string ScreenMessage;
 extern GLfloat messageTransparency;
 extern bool NewScreenMessage;
 extern bool ScreenMessageInitialized;
@@ -49,7 +49,7 @@ extern int Step;
 
 extern bool DisplayFramePerSecond;
 
-extern double CurrentClockTime;
+extern double pg_CurrentClockTime;
 extern int FramePerSecond;
 extern float LastImageSwap;
 
@@ -72,16 +72,21 @@ extern bool           windowDisplayed;
 extern int tablet_prec_x;
 extern int tablet_prec_y;
 
-extern int leftWindowWidth;
-extern int rightWindowWidth;
-extern int rightWindowVMargin;
-extern int doubleWindowWidth;
+// the width of the working window
+// half of the display in case of double window (doubling is made in the Master shader in this case)
+// full display otherwise
+extern int workingWindow_width;
+extern int workingWindow_width_powerOf2;
+extern float workingWindow_width_powerOf2_ratio;
+extern bool muteRightScreen;
+
 // the smallest powers of 2 for width and height
-extern int leftWindowWidth_powerOf2;
 extern int window_width_powerOf2;
 extern int window_height_powerOf2;
-extern float leftWindowWidth_powerOf2_ratio;
+extern float window_width_powerOf2_ratio;
 extern float window_height_powerOf2_ratio;
+
+extern int rightWindowVMargin;
 
 /// trace
 extern FILE    *pg_csv_file;
@@ -93,9 +98,6 @@ extern char *ErrorStr;
 extern char *Input_Message_String;
 extern char *Input_Message_Local_Commande_String;
 extern char *Output_Message_String;
-extern char *Output_Message_Pattern;
-extern char *Output_Message_ArgList;
-extern char *Output_Message_OSC;
 
 /// current mouse location
 extern int CurrentMousePos_x[PG_NB_CURSORS_MAX], CurrentMousePos_y[PG_NB_CURSORS_MAX];
@@ -154,7 +156,7 @@ void pg_process_special_key( int key );
 void pg_process_key( int key );
 
 /// scene termination
-void quit( void );
+void pg_quit( void );
 
 /* void window_idle_browse1( int step ); */
 void window_display( void );

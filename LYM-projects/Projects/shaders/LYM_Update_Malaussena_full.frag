@@ -7,16 +7,31 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 430
 
-bool      camera_BG_subtr;
-float     CAdecay;
-float     trkDecay_0;
-float     trkDecay_1;
-uniform vec4 uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1;
-float     trkDecay_2;
-float     trkDecay_3;
+int       pixel_mode;
+float     pixel_acc_factor;
+float     noiseScale;
+float     noiseLineScale;
+uniform vec4 uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale;
+float     pixel_acc_center_0;
+float     pixel_acc_center_1;
+float     repop_BG;
+float     repop_CA;
+uniform vec4 uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_repop_CA;
+int       CA1Type;
+int       CA1SubType;
+float     CAParams1;
+float     CAParams2;
+uniform vec4 uniform_Update_fs_4fv_CA1Type_CA1SubType_CAParams1_CAParams2;
+float     CAParams3;
+float     CAParams4;
+float     CAParams5;
+float     CAParams6;
+uniform vec4 uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6;
+float     CAParams7;
+float     CAParams8;
 int       currentDrawingTrack;
 int       currentVideoTrack;
-uniform vec4 uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack;
+uniform vec4 uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack;
 int       currentPhotoTrack;
 int       path_replay_trackNo_1;
 int       path_replay_trackNo_2;
@@ -27,49 +42,35 @@ int       path_replay_trackNo_5;
 int       path_replay_trackNo_6;
 int       path_replay_trackNo_7;
 uniform vec4 uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7;
-float     noiseScale;
-float     noiseLineScale;
-float     pixel_acc;
-float     pixel_acc_shiftX;
-uniform vec4 uniform_Update_fs_4fv_noiseScale_noiseLineScale_pixel_acc_pixel_acc_shiftX;
-float     pixel_acc_shiftY;
-float     pixel_radius;
-int       pixel_mode;
-float     repop_CA;
-uniform vec4 uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA;
-float     repop_BG;
-float     cameraGamma;
-float     cameraThreshold;
-float     cameraWeight;
-uniform vec4 uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight;
-float     cameraSobel;
-float     movieWeight;
-float     movieSobel;
+float     CAdecay_pulse;
 bool      invertMovie;
-uniform vec4 uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie;
-float     video_hue;
+int       cameraCumul;
+float     cameraThreshold;
+uniform vec4 uniform_Update_fs_4fv_CAdecay_pulse_invertMovie_cameraCumul_cameraThreshold;
+float     cameraGamma;
 float     video_satur;
 float     video_satur_pulse;
-float     video_value;
-uniform vec4 uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value;
-float     photoWeight;
-float     photo_hue;
-float     photo_satur;
-float     photo_satur_pulse;
-uniform vec4 uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse;
-float     photo_value;
-float     photo_value_pulse;
-float     photo_scale;
-float     mask_scale;
-uniform vec4 uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale;
-float     photo_contrast;
-float     mask_contrast;
-int       cameraCumul;
+float     cameraWeight;
+uniform vec4 uniform_Update_fs_4fv_cameraGamma_video_satur_video_satur_pulse_cameraWeight;
+float     movieWeight;
+float     cameraSobel;
+float     movieSobel;
+bool      BGSubtr;
+uniform vec4 uniform_Update_fs_4fv_movieWeight_cameraSobel_movieSobel_BGSubtr;
 int       CAstep;
-uniform vec4 uniform_Update_fs_4fv_photo_contrast_mask_contrast_cameraCumul_CAstep;
 bool      CAcolorSpread;
 bool      freeze;
-uniform vec2 uniform_Update_fs_2fv_CAcolorSpread_freeze;
+float     photo_value;
+uniform vec4 uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value;
+float     photo_value_pulse;
+float     photo_satur;
+float     photo_satur_pulse;
+float     mask_scale;
+uniform vec4 uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale;
+float     photo_scale;
+float     mask_contrast;
+float     photo_contrast;
+uniform vec3 uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast;
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -84,11 +85,7 @@ const float PI = 3.1415926535897932384626433832795;
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
 #define PG_NB_TRACKS 1
-#define PG_NB_PATHS  7
-
-//////////////////////////
-// TRACK DECAY
-vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+#define PG_NB_PATHS 7
 
 ///////////////////////////////////////////////////////////////////
 const uint pg_FBO_fs_CA_attacht = 0;
@@ -97,21 +94,15 @@ const uint pg_FBO_fs_Pixels_attacht = 1;
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-#define CA_TOTALISTIC                    0
-#define CA_TOTALISTIC_NB_SUBTYPES        4
-#define CA_TOTALISTIC_TABLE_OFFSET       0
-#define CA_GENERATION                    1
-#define CA_GENERATION_NB_SUBTYPES        4
-#define CA_GENERATION_TABLE_OFFSET       (CA_TOTALISTIC_TABLE_OFFSET + CA_TOTALISTIC_NB_SUBTYPES)
-#define CA_GAL_BIN_MOORE                 2
-#define CA_GAL_BIN_MOORE_NB_SUBTYPES     9
-#define CA_GAL_BIN_MOORE_TABLE_OFFSET    (CA_GENERATION_TABLE_OFFSET + CA_GENERATION_NB_SUBTYPES)
-#define CA_GAL_BIN_NEUMANN               3
-#define CA_GAL_BIN_NEUMANN_NB_SUBTYPES   4
-#define CA_GAL_BIN_NEUMANN_TABLE_OFFSET  (CA_GAL_BIN_MOORE_TABLE_OFFSET + CA_GAL_BIN_MOORE_NB_SUBTYPES)
-#define CA_NEUMANN_BIN                   4
-#define CA_NEUMANN_BIN_NB_SUBTYPES       10
-#define CA_NEUMANN_BIN_TABLE_OFFSET      (CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CA_GAL_BIN_NEUMANN_NB_SUBTYPES)
+#define CA_GOL                    0
+#define CA_TOTALISTIC             1
+#define CA_GENERATION             2
+#define CA_GENERAL_BINARY_MOORE   3
+#define CA_GENERAL_BINARY_NEUMANN 4
+#define CA_NEUMANN_BINARY         5
+#define CA_TUMOR_CELL             6
+#define CA_WORM                   7
+#define CA_TIME_TUNNEL            8
 
 // CA OFFSETS
 const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
@@ -131,9 +122,6 @@ const float shadeDisloc[5] = {0,0.4,              // empty new/old border
                                  0.6, 0.8,  1.0};       // new/old nucleus
 const float inverseShadeDisloc[5] = {0.0,2.5,              // empty new/old border
                                  1.67,1.25,  1.0};       // new/old nucleus
-
-const int nbStatesTotalistic[CA_TOTALISTIC_NB_SUBTYPES] ={1, 16, 16, 16};
-const int nbStatesGeneration[CA_GENERATION_NB_SUBTYPES] ={1,  4,  4, 25};
 
 ////////////////////////////////////////////////////////////////////
 // pixel mode
@@ -210,6 +198,8 @@ vec2 out_speed_pixel = vec2(0,0);
 ////////////////////////////////////
 // VIDEO UPDATE
   vec3 cameraImage = vec3( 0.0 );
+  vec2 cameraCoord = vec2(0.0);
+  vec2 cameraWH;
   vec3 movieImage = vec3( 0.0 );
   vec2 movieCoord = vec2(0.0);
   vec2 movieWH;
@@ -224,7 +214,7 @@ float sobelMatrixY[9] = {1,2,1,0,0,0,-1,-2,-1};
 ////////////////////////////////////
 // CA UPDATE
 vec4 out4_CA;
-
+float CAdecay = 0.0;
 vec4 noiseCA = vec4(0);
 bool CA_on_off;
 
@@ -235,7 +225,7 @@ vec4 neighborValuesDiag[16]=vec4[16](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec
 vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
 // pixel texture + z offset according to the chosen texture
 vec2 noisepixels;
-
+float radiuspixel;
 vec4 randomCA;
 vec4 randomCA2;
 
@@ -279,9 +269,9 @@ uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
-
-uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
-uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
+uniform vec4 uniform_Update_fs_4fv_trkDecay;
+uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
+uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -289,7 +279,7 @@ uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
+uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 uniform vec4 uniform_Update_fs_4fv_CAseed_type_size_loc;
 
@@ -463,7 +453,7 @@ void CA_out( vec4 currentCA ) {
 
   //////////////////////////////////////////////////////
   // GAME OF LIFE - TOTALISTIC OR GENERATION
-  if(CAType == CA_TOTALISTIC || CAType == CA_GENERATION ) {
+  if(/* CAType == CA_GOL || CAType == CA_TOTALISTIC || */ CAType == CA_GENERATION ) {
     int nbSurroundingLives =
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
@@ -492,71 +482,67 @@ void CA_out( vec4 currentCA ) {
       averageSurrounding = vec4(0.0);
     }
     
+    #define nbStatesGeneration 25
+    #define CArankGeneration 18
+
+    /*
+    uint nbStates = 16;
+    uint CArank = 9;
+
+    if( CAType == CA_TOTALISTIC && CASubType == 4 ) { // Wire number of states
+      nbStates = 4;
+    }
+    if( CAType == CA_TOTALISTIC && (CASubType == 5 || CASubType == 8) ) { // Busy Brain and Brian's Brain number of states
+      nbStates = 3;
+    }
+
+    if( CAType == CA_GOL ) { // GOL number of states + rank (height in data texture)
+      nbStates = 2;
+      CArank = 0;
+    }
+
+    if( CAType == CA_GENERATION ) { // CA generation number of states + rank (height in data texture)
+      CArank = 18;
+      nbStates = texelFetch(uniform_Update_texture_fs_CATable, 
+                            ivec2( 0 , CArank + CASubType ) ).r;
+    }
+    */
+
     // The first CA alpha value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed 
     // then alpha represents the state of the automaton
     if( currentCA.a < 0 ) {
-      /* out4_CA.a = noiseCA.r * (nbStates+1); // nbStates states randomly */
+      /* out4_CA.a = noiseCA.r * (nbStates+1); // nbStates states randomly
       // out4_CA.rgb = averageSurrounding.rgb;
       
       // special treatment for generation, otherwise
       // it does not start from flashCA
-      if( CAType == CA_TOTALISTIC ) { 
-        int nbStates = nbStatesTotalistic[CASubType];
-        float newState = clamp(noiseCA.r * (nbStates+1),1,nbStates); // nbStates states randomly
-        out4_CA.a = newState;
-        out4_CA.rgb = vec3(1);
-        // out4_CA.rgb = averageSurrounding.rgb;
-      }
-      else if( CAType == CA_GENERATION ) { 
-        int nbStates = nbStatesGeneration[CASubType];
-        float newState = clamp(noiseCA.r * (nbStates+1),1,nbStates); // nbStates states randomly
-        newState = 1;
-        out4_CA.a = newState;
-        out4_CA.rgb = vec3(1);
-        // out4_CA.rgb = averageSurrounding.rgb;
-      }
+      if( CAType == CA_GENERATION ) { */
+        out4_CA.a = 1;
+        out4_CA.rgb = vec3(1);//averageSurrounding.rgb;
+      // }
     }
     else {
-      if( CAType == CA_TOTALISTIC ) {
-        int nbStates = nbStatesTotalistic[CASubType];
-        float state = clamp(currentCA.a,0,nbStates);
-        float newState = 0;
-        newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                         ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
-                                CA_TOTALISTIC_TABLE_OFFSET + CASubType ) ).r;
-        out4_CA.a = float(newState);
-        if( newState > 0 ) {
-          // out4_CA.rgb = averageSurrounding.rgb;
-          out4_CA.rgb = vec3(1);
-        }
-        else {
-          out4_CA.rgb = vec3(0,0,0);
-        }
+      float state = clamp(currentCA.a,0,nbStatesGeneration);
+      float newState = 0;
+      newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
+                              CArankGeneration + CASubType ) ).r;
+      out4_CA.a = float(newState);
+      if( newState > 0 ) {
+        out4_CA.rgb = averageSurrounding.rgb;
+        // out4_CA.rgb = vec3(1);
       }
-      else if( CAType == CA_GENERATION ) {
-        int nbStates = nbStatesGeneration[CASubType];
-        float state = clamp(currentCA.a,0,nbStates);
-        float newState = 0;
-        newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                         ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
-                                CA_GENERATION_TABLE_OFFSET + CASubType ) ).r;
-        out4_CA.a = float(newState);
-        if( newState > 0 ) {
-          // out4_CA.rgb = averageSurrounding.rgb;
-          out4_CA.rgb = vec3(1);
-        }
-        else {
-          out4_CA.rgb = vec3(0,0,0);
-        }
+      else {
+        out4_CA.rgb = vec3(0,0,0);
       }
     }
   }
 
   ////////////////////////////////////////////////////// 
-  // GAL BIN MOORE NEIGHBORHOOD
-  else if( CAType == CA_GAL_BIN_MOORE ) {
+  // GENERAL BINARY MOORE NEIGHBORHOOD
+  else if( CAType == CA_GENERAL_BINARY_MOORE ) {
     // Fallski
     // C48,NM,Sb255a,Babb189ab63a
     // 48 states 0-47
@@ -593,160 +579,40 @@ void CA_out( vec4 currentCA ) {
                                ivec2( 0 , 38 + CASubType ) ).r;
     */
 
-    // previous automata collected from the web
-    if(CASubType <= 5) {
-      // The first CA value is negative so that it is not 
-      // displayed, here we change alpha value to positive
-      // because it is the second time it is displayed if 
-      float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
-      float newState = 0;
-      if( currentCA.a < 0 ) {
-        newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
-       //  out4_CA.a = nbStatesGeneralBinary;
-        out4_CA.a = newState;
-      }
-      else {
-        // survival
-        if( state != 0 ) {
-           newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                                 ivec2( nbSurroundingLives + 1 , 
-                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
-           // survival
-           if( newState != 0 && out4_CA.a >= 0.0 ) {
-              // out4_CA.a -= 1.0;
-           }
-           else {
-              out4_CA.a = 0;
-           }
-        }
-        // birth
-        else {
-          newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                         ivec2( 256 + nbSurroundingLives + 1 , 
-                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
-          // birth
-          if( newState != 0 ) {
-            out4_CA.a = nbStatesGeneralBinary;
-          }
-        }
-      }
-    }
-    // personal automata
-    else {
-      // The first CA value is negative so that it is not 
-      // displayed, here we change alpha value to positive
-      // because it is the second time it is displayed if 
-      float state = clamp(currentCA.a,0,1);
-      float newState = 0;
-      if( currentCA.a < 0 ) {
-        out4_CA.a = 1;
-      }
-      else {
-        // survival
-        if( state > 0 ) {
-           newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                                 ivec2( nbSurroundingLives + 1 , 
-                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r * 255;
-           // survival
-           if( newState != 0) {
-              out4_CA.a = currentCA.a;
-           }
-           // ageing
-           else {
-              out4_CA.a = max(0,round(currentCA.a - 1));
-           }
-        }
-        // birth
-        else {
-          newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                         ivec2( 256 + nbSurroundingLives + 1 , 
-                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r * 255;
-          // birth
-          if( newState != 0 ) {
-            out4_CA.a = round(newState);
-          }
-          // nothing (stays dead)
-          else {
-              out4_CA.a = 0;
-           }
-        }
-      }
-    }
-    if( out4_CA.a != 0 ) {
-      out4_CA.rgb = vec3(1);
-    }
-    else {
-      out4_CA.rgb = vec3(0);
-    }
-  }
-
-  ////////////////////////////////////////////////////// 
-  // GAL BIN VON NEUMANN NEIGHBORHOOD
-  else if( CAType == CA_GAL_BIN_NEUMANN ) {
-    // Banks,
-    // C0,NN,S3babbabbabba3b,B7ab3aba3b
-    // 2 states 0-1
-    // von Neumann neihborhood Order N,E,S,W
-    // states are encoded: N + 2 * E + 4 * S + 8 * W
-    // 0000 0 neighbor
-    // 1000 N neighbor
-    // 0100 E neighbor
-    // 3 = 1100 N and E neighbors
-    // Survive 3babbabbabba3b survival on 
-    //         1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,
-    // Birth   7ab3aba3b birth on 
-    //         0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,
-    // Encoding of Survival and Birth
-    // 16 0/1 digits encode 
-
-    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
-    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
-
-    int nbSurroundingLives =
-      (neighborValues[0].a > 0?   2:0) +  // E
-      (neighborValues[1].a > 0?   8:0) +  // W
-      (neighborValues[2].a > 0?   1:0) +  // N
-      (neighborValues[3].a > 0?   4:0) ;  // S
-
-    // uint CArank = 38;
-    uint nbStates = uint(texelFetch(uniform_Update_texture_fs_CATable, 
-                               ivec2( 0 , 
-                                      CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r * 255);
-
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
-    uint state = int(clamp(currentCA.a,0,nbStates));
+    float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
     float newState = 0;
     if( currentCA.a < 0 ) {
-      // newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
-      out4_CA.a = float(nbStates);
+      // newState = floor(noiseCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
+      out4_CA.a = nbStatesGeneralBinary;
     }
     else {
       // survival
-      if( state > 0 ) {
+      if( state != 0 ) {
          newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                               ivec2( nbSurroundingLives + 1 , 
-                                      CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r;
+                               ivec2( nbSurroundingLives + 1 , 38 + CASubType ) ).r;
          // survival
-         if( newState > 0 && out4_CA.a >= 0.0 ) {
-            out4_CA.a -= 1.0;
+         if( newState != 0 && out4_CA.a >= 0.0 ) {
+            // out4_CA.a -= 1.0;
+         }
+         else {
+            out4_CA.a = 0;
          }
       }
       // birth
       else {
         newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                       ivec2( 16 + nbSurroundingLives + 1 , 
-                              CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r;
+                       ivec2( 256 + nbSurroundingLives + 1 , 38 + CASubType ) ).r;
         // birth
-        if( newState > 0 ) {
-          out4_CA.a = float(nbStates);
+        if( newState != 0 ) {
+          out4_CA.a = nbStatesGeneralBinary;
         }
       }
     }
-
-    if( out4_CA.a > 0 ) {
-      out4_CA.rgb = vec3(out4_CA.a/float(nbStates-1));
+    if( out4_CA.a != 0 ) {
+      out4_CA.rgb = vec3(1.0,1.0,1.0);
     }
     else {
       out4_CA.rgb = vec3(0,0,0);
@@ -754,8 +620,8 @@ void CA_out( vec4 currentCA ) {
   }
 
   ////////////////////////////////////////////////////// 
-  // NEUMANN BIN VON NEUMANN NEIGHBORHOOD + CENTER
-  else if( CAType == CA_NEUMANN_BIN ) {
+  // NEUMANN BINARY VON NEUMANN NEIGHBORHOOD + CENTER
+  else if( CAType == CA_NEUMANN_BINARY ) {
     // Fredkin2 rule has the following definition: 2,01101001100101101001011001101001
     // The first digit, '2', tells the rule has 2 states (it's a 1 bit rule).
     // The second digit, '0', tells a cell in a configuration ME=0,N=0,E=0,S=0,W=0 will get the state 0.
@@ -785,8 +651,7 @@ void CA_out( vec4 currentCA ) {
     }
     else {
       newState = texelFetch(uniform_Update_texture_fs_CATable, 
-                    ivec2( nbSurroundingLives + 1 , 
-                            CA_NEUMANN_BIN_TABLE_OFFSET + CASubType ) ).r * 255.0;
+                    ivec2( nbSurroundingLives + 1 , 50 + CASubType ) ).r * 255.0;
       // newState = texelFetch(uniform_Update_texture_fs_CATable, 
       //                       ivec2( nbSurroundingLives + 1 , 58 ) ).r;
       out4_CA.a = float(newState);
@@ -801,6 +666,309 @@ void CA_out( vec4 currentCA ) {
     }
     // out4_CA = vec4(1.0,0.0,0.0,1.0);
   }
+
+  //////////////////////////////////////////////////////
+  // TUMOR CELL
+  else if( CAType == CA_TUMOR_CELL ) { // CAType == 6
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+
+    // vec4 neighborValues[8]=vec4[8](vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),
+    //                                vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0),vec4(0,0,0,0));
+
+    // STATES:
+    // 0: free
+    // 1: normal cell, 2-9: normal cell candidate for subdivision 
+    //                      in one of the 8 Moore neighborhoods
+    // 11: cancer cell, 12-19: cancer cell candidate for subdivision 
+    //                         in one of the 8 Moore neighborhoods
+    // states 10 and 20 had been made for quiescent cell but they
+    // are not necessary to deal with such cells (surrounded by living cells)
+
+    #define nbStatesTumorCell 21
+    uint state = int(clamp(currentCA.a,0,nbStatesTumorCell));
+    out4_CA = currentCA;
+    if( currentCA.a < 0 ) {
+      // free cell generated by pen
+      if( noiseCA.r < 0.6 ) {
+        out4_CA = vec4(0.0,0.0,0.0,0.0);
+      }
+      // normal cell generated by pen
+      else if( noiseCA.r < 0.6 + CAParams3 * 0.4 ) {
+        out4_CA = vec4(1.0,1.0,1.0,1.0);
+      }
+      // cancer cell generated by pen
+      else {
+        out4_CA = vec4(1.0,1.0,1.0,11.0);
+      }
+    }
+    else {
+      // stores and count free neighbor cells
+      int nbFreeNeighborCells = 0;
+      int indFreeNeighborCells[8];
+      int nbUsedNeighborCells = 0;
+      int indUsedNeighborCells[8];
+      for(int ind = 0 ; ind < 8 ; ind++ ) {
+        if( neighborValues[ind].a == 0 ) {
+          indFreeNeighborCells[nbFreeNeighborCells] = ind;
+          nbFreeNeighborCells++;
+        }
+        else {
+          indUsedNeighborCells[nbUsedNeighborCells] = ind;
+          nbUsedNeighborCells++;
+        }
+      }
+
+      // quiescent state does not have to be dealt with separately
+      // (a state with 8 alive neighbors)
+
+      // free slot: checks for neighboring cell subdivision
+      if( state == 0 ) {
+        // offsets and states are ranked accordingly
+        // so as to guess easily the expected state from the
+        // position of the offset 
+        for(int ind = 0 ; ind < nbUsedNeighborCells ; ind++ ) {
+          int indUsedNeighborCell = indUsedNeighborCells[ind];
+          // if the used neighbor cell is in the state of subdivision
+          // and if the subdivision location corresponds to the
+          // current free cell (diametrically opposite)
+          // normal cell candidate for subdivision at preceding step produces an offspring
+          // at the current location
+          if( neighborValues[indUsedNeighborCell].a == 2 + (7 - indUsedNeighborCell) ) {
+            out4_CA = vec4(1.0,1.0,1.0,1.0);
+          }
+          // cancer cell candidate for subdivision at preceding step produces an offspring
+          // at the current location
+          if( neighborValues[indUsedNeighborCell].a == 12 + (7 - indUsedNeighborCell) ) {
+            out4_CA = vec4(1.0,1.0,1.0,11.0);
+          }
+        }
+      }
+      // subdivision of a normal or cancer cell
+      else if( nbFreeNeighborCells > 0 ) {
+        // normal cell subdivision
+        if( state == 1 ) {
+           // subdivision
+           if( noiseCA.r < CAParams1 ) { // 0.85 
+              int indMigration = int(clamp(floor(noiseCA.b * nbFreeNeighborCells),
+                                                  0.0,float(nbFreeNeighborCells)));
+              out4_CA = vec4(1.0,1.0,1.0,2 + indFreeNeighborCells[indMigration]);
+           }
+           // ageing is made after update in main function
+           // out4_CA.rgb = clamp( out4_CA.rgb - 10 * vec3(CAdecay) , 0.0 , 1.0 );
+        }
+        // cancer cell subdivision
+        else if( state == 11 ) {
+           // subdivision
+           if( noiseCA.r < CAParams2 ) { // 0.9 
+              int indMigration = int(clamp(floor(noiseCA.b * nbFreeNeighborCells),
+                                                  0.0,float(nbFreeNeighborCells)));
+              out4_CA = vec4(1.0,1.0,1.0,12 + indFreeNeighborCells[indMigration]);
+           }
+        }
+        // the normal cell candidate for subdivision
+        // returns to normal state
+        else if( state >= 2 && state <= 9 ) {
+          out4_CA.a = 1.0;
+          // out4_CA.rgb = clamp( out4_CA.rgb - 10 * vec3(CAdecay) , 0.0 , 1.0 );
+        }
+        // the cancer cell candidate for subdivision
+        // returns to normal state
+        else if( state >= 12 && state <= 19 ) {
+          out4_CA.a = 11.0;
+        }
+      }
+    }
+
+    if( out4_CA.a <= 0 ) {
+      out4_CA.rgb = vec3(0.0,0.0,0.0);
+    }
+    // if( out4_CA.a > 0 ) {
+    //   out4_CA = vec4(1.0,0.0,0.0,11.0);
+    // }
+  }
+
+
+  ////////////////////////////////////////////////////// 
+  // GENERAL BINARY VON NEUMANN NEIGHBORHOOD
+  else if( CAType == CA_GENERAL_BINARY_NEUMANN ) {
+    // Banks,
+    // C0,NN,S3babbabbabba3b,B7ab3aba3b
+    // 2 states 0-1
+    // von Neumann neihborhood Order N,E,S,W
+    // states are encoded: N + 2 * E + 4 * S + 8 * W
+    // 0000 0 neighbor
+    // 1000 N neighbor
+    // 0100 E neighbor
+    // 3 = 1100 N and E neighbors
+    // Survive 3babbabbabba3b survival on 
+    //         1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,
+    // Birth   7ab3aba3b birth on 
+    //         0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,
+    // Encoding of Survival and Birth
+    // 16 0/1 digits encode 
+
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+
+    int nbSurroundingLives =
+      (neighborValues[0].a > 0?   2:0) +  // E
+      (neighborValues[1].a > 0?   8:0) +  // W
+      (neighborValues[2].a > 0?   1:0) +  // N
+      (neighborValues[3].a > 0?   4:0) ;  // S
+
+    // uint CArank = 38;
+    uint nbStates = uint(texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( 0 , 46 + CASubType ) ).r * 255);
+
+    // The first CA value is negative so that it is not 
+    // displayed, here we change alpha value to positive
+    // because it is the second time it is displayed if 
+    uint state = int(clamp(currentCA.a,0,nbStates));
+    float newState = 0;
+    if( currentCA.a < 0 ) {
+      newState = int(noiseCA.r * (nbStates+1)); // nbStates states randomly
+      out4_CA.a = float(nbStates);
+    }
+    else {
+      // survival
+      if( state > 0 ) {
+         newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( nbSurroundingLives + 1 , 46 + CASubType ) ).r;
+         // survival
+         if( newState > 0 && out4_CA.a >= 0.0 ) {
+            out4_CA.a -= 1.0;
+         }
+      }
+      // birth
+      else {
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( 16 + nbSurroundingLives + 1 , 46 + CASubType ) ).r;
+        // birth
+        if( newState > 0 ) {
+          out4_CA.a = float(nbStates);
+        }
+      }
+    }
+
+    if( out4_CA.a > 0 ) {
+      out4_CA.rgb = vec3(out4_CA.a/float(nbStates-1));
+    }
+    else {
+      out4_CA.rgb = vec3(0,0,0);
+    }
+  }
+
+  //////////////////////////////////////////////////////
+  // TIME TUNNEL
+  else if( CAType == CA_TIME_TUNNEL ) { // CAType == 6
+    float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
+
+    int nbSurroundingFiring =
+      (currentCA.a > 0? 1:0) +
+      (neighborValues[0].a > 0? 1:0) +
+      (neighborValues[1].a > 0? 1:0) +
+      (neighborValues[2].a > 0? 1:0) +
+      (neighborValues[3].a > 0? 1:0);
+    bool fired = false;
+    if( CASubType == 1 ) {
+      fired = (nbSurroundingFiring > 0 && nbSurroundingFiring < 5);
+    }
+    else if( CASubType == 2 ) {
+      fired = (nbSurroundingFiring > (0 + int(noiseCA.x * 2.0))
+         && nbSurroundingFiring < (5 - int(noiseCA.y * 2.0)) );
+    }
+    else if( CASubType == 3 ) {
+      fired = (nbSurroundingFiring > (0 + int(noiseCA.x * 2.0))
+         && nbSurroundingFiring < (4 - int(noiseCA.y * 2.0)) );
+    }
+    if( fired ) {
+      if( previousGray == 0.0 ) {
+        vec4 gatherSurroundingLives =
+          currentCA +
+         (neighborValues[0]) +
+         (neighborValues[1]) +
+         (neighborValues[2]) +
+         (neighborValues[3]);
+        out4_CA = gatherSurroundingLives/nbSurroundingFiring; // ready
+      }
+      else {
+        out4_CA = vec4(0.0); // ready
+      }
+    }
+    else {
+      out4_CA = vec4(0.0); // ready
+    }
+    return;
+  }
+
+  //////////////////////////////////////////////////////
+  // WORM
+/*
+  else if( CAType == CA_WORM ) {
+    // > 0.5 firing
+    // > 0 && <= 0.5 refractory
+    // 0 ready
+    // ready -> firing  (w 2 neighbors firing)
+    // firing -> rafractory
+    // refractory -> ready
+    float previousGray =  texture(uniform_Update_texture_fs_CATable, decalCoords ).a;
+    int nbSurroundingFiring =
+      (neighborValues[0].a > 0? 1:0) +
+      (neighborValues[1].a > 0? 1:0) +
+      (neighborValues[2].a > 0? 1:0) +
+      (neighborValues[3].a > 0? 1:0) +
+      (neighborValues[4].a > 0? 1:0) +
+      (neighborValues[5].a > 0? 1:0) +
+      (neighborValues[6].a > 0? 1:0) +
+      (neighborValues[7].a > 0? 1:0);
+
+    /////////////
+    // COLOR WORM
+    if( CASubType == 1 ) {
+      // alarm is off && many neighbors
+      if( (nbSurroundingFiring == 2 + int( noiseCA.x * 2) 
+           || nbSurroundingFiring == 3 + int( noiseCA.y * 2) 
+           || nbSurroundingFiring == 5 + int( noiseCA.z * 2) )
+             && currentCA.a <= 0 ) {
+        vec4 gatherSurroundingLives =
+          (neighborValues[0]) +
+          (neighborValues[1]) +
+          (neighborValues[2]) +
+          (neighborValues[3]) +
+          (neighborValues[4]) +
+          (neighborValues[5]) +
+          (neighborValues[6]) +
+          (neighborValues[7]);
+        out4_CA = clamp(gatherSurroundingLives/nbSurroundingFiring,0.0,1.0); // resets alarm
+      }
+      else {
+        out4_CA = currentCA - 100.0 * vec4(CAdecay);
+        if( out4_CA.a < 0.0 ) {
+          out4_CA = vec4(0.0);
+        }
+      }
+    }
+
+    /////////////
+    // B/W WORM
+    else if( CASubType == 2 ) {
+      // alarm is off && many neighbors
+      if( (nbSurroundingFiring == 2 + int( noise.x * 2) 
+       || nbSurroundingFiring == 3 + int( noise.y * 2) 
+       || nbSurroundingFiring == 5 + int( noise.z * 2) )
+       && currentCA.a <= 0 ) {
+         out4_CA = vec4(1.0); // resets alarm
+      }
+      else {
+        out4_CA = currentCA - 100.0 * vec4(CAdecay);
+        if( out4_CA.a < 0.0 ) {
+          out4_CA = vec4(0.0);
+        }
+      }
+    }
+  }
+*/
 
   //////////////////////////////////////////////////////
   // NO CA
@@ -935,14 +1103,26 @@ float out_gray_drawing( float current_mouse_x , float current_mouse_y ,
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  camera_BG_subtr = (uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[0] > 0 ? true : false);
-  CAdecay = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[1];
-  trkDecay_0 = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[2];
-  trkDecay_1 = uniform_Update_fs_4fv_camera_BG_subtr_CAdecay_trkDecay_0_trkDecay_1[3];
-  trkDecay_2 = uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[0];
-  trkDecay_3 = uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[1];
-  currentDrawingTrack = int(uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[2]);
-  currentVideoTrack = int(uniform_Update_fs_4fv_trkDecay_2_trkDecay_3_currentDrawingTrack_currentVideoTrack[3]);
+  pixel_mode = int(uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[0]);
+  pixel_acc_factor = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[1];
+  noiseScale = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[2];
+  noiseLineScale = uniform_Update_fs_4fv_pixel_mode_pixel_acc_factor_noiseScale_noiseLineScale[3];
+  pixel_acc_center_0 = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_repop_CA[0];
+  pixel_acc_center_1 = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_repop_CA[1];
+  repop_BG = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_repop_CA[2];
+  repop_CA = uniform_Update_fs_4fv_pixel_acc_center_0_pixel_acc_center_1_repop_BG_repop_CA[3];
+  CA1Type = int(uniform_Update_fs_4fv_CA1Type_CA1SubType_CAParams1_CAParams2[0]);
+  CA1SubType = int(uniform_Update_fs_4fv_CA1Type_CA1SubType_CAParams1_CAParams2[1]);
+  CAParams1 = uniform_Update_fs_4fv_CA1Type_CA1SubType_CAParams1_CAParams2[2];
+  CAParams2 = uniform_Update_fs_4fv_CA1Type_CA1SubType_CAParams1_CAParams2[3];
+  CAParams3 = uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6[0];
+  CAParams4 = uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6[1];
+  CAParams5 = uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6[2];
+  CAParams6 = uniform_Update_fs_4fv_CAParams3_CAParams4_CAParams5_CAParams6[3];
+  CAParams7 = uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[0];
+  CAParams8 = uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[1];
+  currentDrawingTrack = int(uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[2]);
+  currentVideoTrack = int(uniform_Update_fs_4fv_CAParams7_CAParams8_currentDrawingTrack_currentVideoTrack[3]);
   currentPhotoTrack = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[0]);
   path_replay_trackNo_1 = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[1]);
   path_replay_trackNo_2 = int(uniform_Update_fs_4fv_currentPhotoTrack_path_replay_trackNo_1_path_replay_trackNo_2_path_replay_trackNo_3[2]);
@@ -951,56 +1131,48 @@ void main() {
   path_replay_trackNo_5 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[1]);
   path_replay_trackNo_6 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[2]);
   path_replay_trackNo_7 = int(uniform_Update_fs_4fv_path_replay_trackNo_4_path_replay_trackNo_5_path_replay_trackNo_6_path_replay_trackNo_7[3]);
-  noiseScale = uniform_Update_fs_4fv_noiseScale_noiseLineScale_pixel_acc_pixel_acc_shiftX[0];
-  noiseLineScale = uniform_Update_fs_4fv_noiseScale_noiseLineScale_pixel_acc_pixel_acc_shiftX[1];
-  pixel_acc = uniform_Update_fs_4fv_noiseScale_noiseLineScale_pixel_acc_pixel_acc_shiftX[2];
-  pixel_acc_shiftX = uniform_Update_fs_4fv_noiseScale_noiseLineScale_pixel_acc_pixel_acc_shiftX[3];
-  pixel_acc_shiftY = uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[0];
-  pixel_radius = uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[1];
-  pixel_mode = int(uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[2]);
-  repop_CA = uniform_Update_fs_4fv_pixel_acc_shiftY_pixel_radius_pixel_mode_repop_CA[3];
-  repop_BG = uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight[0];
-  cameraGamma = uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight[1];
-  cameraThreshold = uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight[2];
-  cameraWeight = uniform_Update_fs_4fv_repop_BG_cameraGamma_cameraThreshold_cameraWeight[3];
-  cameraSobel = uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie[0];
-  movieWeight = uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie[1];
-  movieSobel = uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie[2];
-  invertMovie = (uniform_Update_fs_4fv_cameraSobel_movieWeight_movieSobel_invertMovie[3] > 0 ? true : false);
-  video_hue = uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value[0];
-  video_satur = uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value[1];
-  video_satur_pulse = uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value[2];
-  video_value = uniform_Update_fs_4fv_video_hue_video_satur_video_satur_pulse_video_value[3];
-  photoWeight = uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse[0];
-  photo_hue = uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse[1];
-  photo_satur = uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse[2];
-  photo_satur_pulse = uniform_Update_fs_4fv_photoWeight_photo_hue_photo_satur_photo_satur_pulse[3];
-  photo_value = uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale[0];
-  photo_value_pulse = uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale[1];
-  photo_scale = uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale[2];
-  mask_scale = uniform_Update_fs_4fv_photo_value_photo_value_pulse_photo_scale_mask_scale[3];
-  photo_contrast = uniform_Update_fs_4fv_photo_contrast_mask_contrast_cameraCumul_CAstep[0];
-  mask_contrast = uniform_Update_fs_4fv_photo_contrast_mask_contrast_cameraCumul_CAstep[1];
-  cameraCumul = int(uniform_Update_fs_4fv_photo_contrast_mask_contrast_cameraCumul_CAstep[2]);
-  CAstep = int(uniform_Update_fs_4fv_photo_contrast_mask_contrast_cameraCumul_CAstep[3]);
-  CAcolorSpread = (uniform_Update_fs_2fv_CAcolorSpread_freeze[0] > 0 ? true : false);
-  freeze = (uniform_Update_fs_2fv_CAcolorSpread_freeze[1] > 0 ? true : false);
+  CAdecay_pulse = uniform_Update_fs_4fv_CAdecay_pulse_invertMovie_cameraCumul_cameraThreshold[0];
+  invertMovie = (uniform_Update_fs_4fv_CAdecay_pulse_invertMovie_cameraCumul_cameraThreshold[1] > 0 ? true : false);
+  cameraCumul = int(uniform_Update_fs_4fv_CAdecay_pulse_invertMovie_cameraCumul_cameraThreshold[2]);
+  cameraThreshold = uniform_Update_fs_4fv_CAdecay_pulse_invertMovie_cameraCumul_cameraThreshold[3];
+  cameraGamma = uniform_Update_fs_4fv_cameraGamma_video_satur_video_satur_pulse_cameraWeight[0];
+  video_satur = uniform_Update_fs_4fv_cameraGamma_video_satur_video_satur_pulse_cameraWeight[1];
+  video_satur_pulse = uniform_Update_fs_4fv_cameraGamma_video_satur_video_satur_pulse_cameraWeight[2];
+  cameraWeight = uniform_Update_fs_4fv_cameraGamma_video_satur_video_satur_pulse_cameraWeight[3];
+  movieWeight = uniform_Update_fs_4fv_movieWeight_cameraSobel_movieSobel_BGSubtr[0];
+  cameraSobel = uniform_Update_fs_4fv_movieWeight_cameraSobel_movieSobel_BGSubtr[1];
+  movieSobel = uniform_Update_fs_4fv_movieWeight_cameraSobel_movieSobel_BGSubtr[2];
+  BGSubtr = (uniform_Update_fs_4fv_movieWeight_cameraSobel_movieSobel_BGSubtr[3] > 0 ? true : false);
+  CAstep = int(uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value[0]);
+  CAcolorSpread = (uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value[1] > 0 ? true : false);
+  freeze = (uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value[2] > 0 ? true : false);
+  photo_value = uniform_Update_fs_4fv_CAstep_CAcolorSpread_freeze_photo_value[3];
+  photo_value_pulse = uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale[0];
+  photo_satur = uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale[1];
+  photo_satur_pulse = uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale[2];
+  mask_scale = uniform_Update_fs_4fv_photo_value_pulse_photo_satur_photo_satur_pulse_mask_scale[3];
+  photo_scale = uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast[0];
+  mask_contrast = uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast[1];
+  photo_contrast = uniform_Update_fs_3fv_photo_scale_mask_contrast_photo_contrast[2];
 
   //////////////////////////
   // variables 
   // sound pulse
   vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
-  
+  float average_pulse = uniform_Update_fs_4fv_pulse.a;
 
   // frame number
-  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
+  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
 
+  // decay of drawing and CA layers
+  CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x - CAdecay_pulse * average_pulse;
+  
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
+  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
-  
+  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
+  radiuspixel = uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.z;
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -1034,7 +1206,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
     out_Update_FBO_fs_CA = vec4(0);  // CA
     out_Update_FBO_fs_Pixels = vec4(0);  // pixel speed / position
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
@@ -1125,16 +1297,16 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
+  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
+  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
     vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
   photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
@@ -1149,12 +1321,57 @@ void main() {
   // movie size
   movieWH = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   // camera size
-  // cameraWH = uniform_Update_fs_2fv_photo01Wghts.zw;
+  cameraWH = uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw;
 
   // video texture used for drawing
+/*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
+               * cameraWH;
+ */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
+               * cameraWH;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
+
+#ifdef PG_WITH_CAMERA_CAPTURE
+  // image reading
+  cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
+  // gamma correction
+  // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
+  if( BGSubtr ) {
+    cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
+  }
+  if( graylevel(cameraImage) < cameraThreshold ) {
+    cameraImage = vec3(0.0);
+  }
+
+  // cameraImage = vec3(1) - cameraImage;
+
+  // Sobel on camera
+  if( cameraSobel > 0 ) {
+      vec3 samplerSobel;
+      // sobel
+      vec3 sobelX = vec3(0.0);
+      vec3 sobelY = vec3(0.0);
+
+      // samples the center pixel and its Moore neighborhood
+      for( int i = 0 ; i < 4 ; i++ ) {
+          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
+          sobelX += sobelMatrixX[i] * samplerSobel;
+          sobelY += sobelMatrixY[i] * samplerSobel;
+      }
+      for( int i = 5 ; i < 9 ; i++ ) {
+          samplerSobel = texture(uniform_Update_texture_fs_Camera_frame , cameraCoord + offsetsVideo[i]).rgb;
+          sobelX += sobelMatrixX[i] * samplerSobel;
+          sobelY += sobelMatrixY[i] * samplerSobel;
+      }
+
+      samplerSobel = cameraImage;
+      sobelX = mix( samplerSobel , sobelX , cameraSobel );
+      sobelY = mix( samplerSobel , sobelY , cameraSobel );
+
+      cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+  }
+#endif
 
   // Sobel on movie
   if( movieSobel > 0 ) {
@@ -1317,7 +1534,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
+      && uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x + uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0 ) {
        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
     }
 
@@ -1369,7 +1586,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
+  flashToCACumul += uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.w
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track
@@ -1398,23 +1615,17 @@ void main() {
       // currentCA.rgb = vec3(1,0,0);
     }
     // seeding the CA with a predefined shape, size and location
-#define  _pg_CAseed_dot_center      0
-#define  _pg_CAseed_dot               1
-#define  _pg_CAseed_h_line            2
-#define  _pg_CAseed_v_line            3
-#define  _pg_CAseed_cross             4
-#define  _pg_CAseed_X                 5
-#define  _pg_CAseed_square            6
+#define  _pg_CAseed_dot        0
+#define  _pg_CAseed_h_line     1
+#define  _pg_CAseed_v_line     2
+#define  _pg_CAseed_cross      3
+#define  _pg_CAseed_X          4
+#define  _pg_CAseed_square     5
     if(uniform_Update_fs_4fv_CAseed_type_size_loc.z > 0) {
       int CAseed_type = int(uniform_Update_fs_4fv_CAseed_type_size_loc.x);
       int CAseed_size = int(uniform_Update_fs_4fv_CAseed_type_size_loc.y);
       vec2 CAseed_location = uniform_Update_fs_4fv_CAseed_type_size_loc.zw;
       switch(CAseed_type) {
-        case _pg_CAseed_dot_center:
-        if( length(vec2(decalCoords - CAseed_location - vec2(0.5,0.5))) < CAseed_size) {
-            currentCA = vec4(1,1,1,-1);
-        }
-        break;
         case _pg_CAseed_dot:
         if( length(vec2(decalCoords - CAseed_location)) < CAseed_size) {
             currentCA = vec4(1,1,1,-1);
@@ -1512,7 +1723,7 @@ void main() {
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
           out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
+               = out_track_FBO[indTrack].rgb - vec3(uniform_Update_fs_4fv_trkDecay[indTrack]);
       }
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
@@ -1555,6 +1766,28 @@ void main() {
     if( CAType == CA_GENERATION ) {
       newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
     }
+    // normal or normal quiescent cell ageing
+    else if( CAType == CA_TUMOR_CELL ) {
+      // fast decay for normal cells
+      if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a >= 1 && out_attachment_FBO[pg_FBO_fs_CA_attacht].a <= 10 ) { 
+        newCA_w_decay = clamp( newCA_w_decay - 10.0 * vec3(CAdecay) , 0.0 , 1.0 );
+        newCA_w_decay = clamp( newCA_w_decay - 10.0 * vec3(CAdecay) , 0.0 , 1.0 );
+      }
+      // slow decay for tumor cells
+      if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a >= 11 && out_attachment_FBO[pg_FBO_fs_CA_attacht].a <= 20 ) { 
+        newCA_w_decay = clamp( newCA_w_decay - 2.0 * vec3(CAdecay) , 0.0 , 1.0 );
+        newCA_w_decay = clamp( newCA_w_decay - 2.0 * vec3(CAdecay) , 0.0 , 1.0 );
+      }
+    }
+    /*
+    // normal or normal quiescent cell ageing
+    else if( CAType == CA_GENERAL_BINARY_MOORE ) {
+      // random decay for 
+      if( noiseCA.g < CAdecay ) { 
+        newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
+      }
+    }
+    */
 
     //////////////////////////////////////////////
     // rebuilds output for the gray/drawing buffer after decay
@@ -1568,7 +1801,7 @@ void main() {
     }
   }
 
-  // init CA beginning of GN for CA_GAL_BIN_MOORE / 3
+  // init CA beginning of GN for CA_GENERAL_BINARY_MOORE / 3
   /*
   if(frameNo % 1000 == 0) {
      if( length(vec2(decalCoords.x - width/2 , decalCoords.y - height/2)) < 1.2 ) {
@@ -1584,7 +1817,7 @@ void main() {
 
   //////////////////////////////////////////////
   // CA LAYER CLEAR
-  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
+  if( uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.y > 0 ) {
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
   }
 

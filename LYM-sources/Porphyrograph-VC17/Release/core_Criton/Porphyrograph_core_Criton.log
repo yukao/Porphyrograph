@@ -1,21 +1,12 @@
 ﻿  pg-conf.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-init.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-main.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-script.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3914,26): error C2065: 'flashParticleInit_freq': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3915,3): error C2065: 'part_initialization': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3915,55): error C2065: 'pg_particle_initial_pos_speed_texID': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3915,102): error C2065: 'pg_particle_initial_pos_speed_texID': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3916,39): error C2065: 'part_timeToTargt': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4343,7): error C2065: 'flashPhotoChangeBeat': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4343,66): error C2065: 'flashPhotoChangeBeat': undeclared identifier
   pg-shader.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  pg-stroke.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  pg-svg-clip-art.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  pg-texture.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  pg-udp.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  pg-update.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  Generating Code...

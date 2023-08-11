@@ -1,0 +1,12 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(491,5): warning MSB8028: The intermediate directory (Release\core_Biches\) contains files shared from another project (Porphyrograph_core_Biches.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  pg-script.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3636,26): error C2065: 'flashParticleInit_freq': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4057,7): error C2065: 'flashPhotoChangeBeat': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4057,66): error C2065: 'flashPhotoChangeBeat': undeclared identifier
+  pg-update.cpp
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2136,6): error C2065: 'part_image_acceleration': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2137,6): error C2065: 'part_image_acceleration': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2138,64): error C2065: 'part_image_acceleration': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2138,88): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+  Generating Code...

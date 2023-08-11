@@ -34,54 +34,47 @@ https://github.com/fcaruso/GLSLParametricCurve
 #if PG_NB_TRACKS == 1
 enum pg_FBO_Update_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_sampler = 0,
-#ifdef ALKEMI
+#if defined(var_alKemi)
 	pg_PreviousCA_FBO_Update_sampler,
 #endif
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_Update_sampler,
 	pg_Camera_BG_Update_sampler,
-#endif
 	pg_Movie_frame_Update_sampler,
 	pg_Noise_Update_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 	pg_RepopDensity_Update_sampler,
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_Update_sampler,
 	pg_Photo1_Update_sampler,
-#endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	pg_Clip0_Update_sampler,
-	pg_Clip1_Update_sampler,
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Update_sampler,
-#endif
-#if defined (TVW)
+	pg_SecondClipLeft_Update_sampler,
+	pg_SecondClipRight_Update_sampler,
+#if defined(var_part_initialization) 
+	pg_SVGandPart_render_FBO_Update_sampler,
+#if defined(TVW)
 	pg_TVWPixels0,
 	pg_TVWPixels1,
 	pg_TVWPixels2,
@@ -97,20 +90,22 @@ enum pg_FBO_Update_samplers
 	pg_TVWPixelsSwap4,
 	pg_TVWPixelsSwap5,
 #endif
+#endif
 	pg_Trk0_FBO_Update_sampler,
-#if defined (GN) || defined (CAAUDIO)
+#if defined(var_CATable)
 	pg_CATable_Update_sampler,
 #endif
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 	pg_Camera_BGIni_FBO_Update_sampler,
 #endif
 #ifdef WITH_BURST_MASK
 	pg_Burst_Mask_FBO_Update_sampler,
 #endif
+	pg_pixel_image_acc_Update_sampler,
 };
 enum pg_FBO_Update_attachments
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_attcht = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
@@ -130,14 +125,14 @@ enum pg_FBO_Update_attachments
 };
 enum pg_FBO_Mixing_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Mixing_sampler = 0,
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler = 0,
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
@@ -146,7 +141,7 @@ enum pg_FBO_Mixing_samplers
 #endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW)
+#if defined(TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -156,37 +151,30 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Master_sampler,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Master_sampler,
-#endif
+	pg_SVGandPart_render_FBO_Master_sampler,
 	pg_Trk0_FBO_Master_sampler,
-#if defined (PG_WITH_MASTER_MASK)
+#if defined(PG_WITH_MASTER_MASK)
 	pg_Mask_FBO_Master_sampler,
 #endif
-#if defined (GN) || defined (INTERFERENCE)
-	pg_LYMlogo_Master_sampler,
-#endif
 };
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
-	pg_Part_acc_ParticleAnimation_sampler,
+	pg_Part_image_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Noise_ParticleAnimation_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density)
 	pg_RepopDensity_ParticleAnimation_sampler,
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_ParticleAnimation_sampler,
-#endif
 	pg_Movie_frame_ParticleAnimation_sampler,
 	pg_Trk0_FBO_ParticleAnimation_sampler,
 };
@@ -196,54 +184,47 @@ enum pg_FBO_ParticleAnimation_samplers
 #if PG_NB_TRACKS == 2
 enum pg_FBO_Update_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_sampler = 0,
-#ifdef ALKEMI
+#if defined(var_alKemi)
 	pg_PreviousCA_FBO_Update_sampler,
 #endif
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_Update_sampler,
 	pg_Camera_BG_Update_sampler,
-#endif
 	pg_Movie_frame_Update_sampler,
 	pg_Noise_Update_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 	pg_RepopDensity_Update_sampler,
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_Update_sampler,
 	pg_Photo1_Update_sampler,
-#endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	pg_Clip0_Update_sampler,
-	pg_Clip1_Update_sampler,
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Update_sampler,
-#endif
-#if defined (TVW)
+	pg_SecondClipLeft_Update_sampler,
+	pg_SecondClipRight_Update_sampler,
+#if defined(var_part_initialization) 
+	pg_SVGandPart_render_FBO_Update_sampler,
+#if defined(TVW)
 	pg_TVWPixels0,
 	pg_TVWPixels1,
 	pg_TVWPixels2,
@@ -259,15 +240,43 @@ enum pg_FBO_Update_samplers
 	pg_TVWPixelsSwap4,
 	pg_TVWPixelsSwap5,
 #endif
+#endif
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
+#if defined(var_CATable)
+	pg_CATable_Update_sampler,
+#endif
+#if defined(var_camera_BG_ini_subtr)
+	pg_Camera_BGIni_FBO_Update_sampler,
+#endif
 #ifdef WITH_BURST_MASK
 	pg_Burst_Mask_FBO_Update_sampler,
 #endif
+	pg_pixel_image_acc_Update_sampler,
 };
 enum pg_FBO_Update_attachments
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
+	pg_CA_FBO_Update_attcht = 0,
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_attcht,
+	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#else
+#ifdef PG_NB_PIXEL_MODES
+	pg_Pixels_FBO_Update_attcht = 0,
+	pg_Trk0_FBO_Update_attcht,
+#else
+	pg_Trk0_FBO_Update_attcht = 0,
+#endif
+#endif
+	PG_FBO_UPDATE_NBATTACHTS
+};
+enum pg_FBO_Update_attachments
+{
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_attcht = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
@@ -288,14 +297,14 @@ enum pg_FBO_Update_attachments
 };
 enum pg_FBO_Mixing_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Mixing_sampler = 0,
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler = 0,
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
@@ -304,7 +313,7 @@ enum pg_FBO_Mixing_samplers
 #endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW)
+#if defined(TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -315,38 +324,31 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Master_sampler,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Master_sampler,
-#endif
+	pg_SVGandPart_render_FBO_Master_sampler,
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
-#if defined (PG_WITH_MASTER_MASK)
+#if defined(PG_WITH_MASTER_MASK)
 	pg_Mask_FBO_Master_sampler,
 #endif
-#if defined (GN) || defined (INTERFERENCE)
-	pg_LYMlogo_Master_sampler,
-#endif
 };
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
-	pg_Part_acc_ParticleAnimation_sampler,
+	pg_Part_image_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Noise_ParticleAnimation_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density)
 	pg_RepopDensity_ParticleAnimation_sampler,
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_ParticleAnimation_sampler,
-#endif
 	pg_Movie_frame_ParticleAnimation_sampler,
 	pg_Trk0_FBO_ParticleAnimation_sampler,
 	pg_Trk1_FBO_ParticleAnimation_sampler,
@@ -357,95 +359,87 @@ enum pg_FBO_ParticleAnimation_samplers
 #if PG_NB_TRACKS == 3
 enum pg_FBO_Update_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_sampler = 0,
-#ifdef ALKEMI
+#if defined(var_alKemi)
 	pg_PreviousCA_FBO_Update_sampler,
 #endif
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_Update_sampler,
 	pg_Camera_BG_Update_sampler,
-#endif
 	pg_Movie_frame_Update_sampler,
 	pg_Noise_Update_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 	pg_RepopDensity_Update_sampler,
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_Update_sampler,
 	pg_Photo1_Update_sampler,
+	pg_SecondClipLeft_Update_sampler,
+	pg_SecondClipRight_Update_sampler,
+#if defined(var_part_initialization) 
+	pg_SVGandPart_render_FBO_Update_sampler,
+#if defined(TVW)
+	pg_TVWPixels0,
+	pg_TVWPixels1,
+	pg_TVWPixels2,
+	pg_TVWPixels3,
+	pg_TVWPixels4,
+	pg_TVWPixels5,
+	pg_TVWMask02,
+	pg_TVWMask35,
+	pg_TVWPixelsSwap0,
+	pg_TVWPixelsSwap1,
+	pg_TVWPixelsSwap2,
+	pg_TVWPixelsSwap3,
+	pg_TVWPixelsSwap4,
+	pg_TVWPixelsSwap5,
 #endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	pg_Clip0_Update_sampler,
-	pg_Clip1_Update_sampler,
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Update_sampler,
 #endif
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
-#if defined (RIVETS)
+#if defined(var_CATable)
 	pg_CATable_Update_sampler,
 #endif
-#ifdef PG_WITH_BURST_MASK
+#if defined(var_camera_BG_ini_subtr)
+	pg_Camera_BGIni_FBO_Update_sampler,
+#endif
+#ifdef WITH_BURST_MASK
 	pg_Burst_Mask_FBO_Update_sampler,
 #endif
-};
-enum pg_FBO_Update_attachments
-{
-#ifdef PG_NB_CA_TYPES
-	pg_CA_FBO_Update_attcht = 0,
-#ifdef PG_NB_PIXEL_MODES
-	pg_Pixels_FBO_Update_attcht,
-	pg_Trk0_FBO_Update_attcht,
-#else
-	pg_Trk0_FBO_Update_attcht = 0,
-#endif
-#else
-#ifdef PG_NB_PIXEL_MODES
-	pg_Pixels_FBO_Update_attcht = 0,
-	pg_Trk0_FBO_Update_attcht,
-#else
-	pg_Trk0_FBO_Update_attcht = 0,
-#endif
-#endif
-	pg_Trk1_FBO_Update_attcht,
-	pg_Trk2_FBO_Update_attcht,
-	PG_FBO_UPDATE_NBATTACHTS
+	pg_pixel_image_acc_Update_sampler,
 };
 enum pg_FBO_Mixing_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Mixing_sampler = 0,
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler = 0,
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
@@ -454,7 +448,7 @@ enum pg_FBO_Mixing_samplers
 #endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW)
+#if defined(TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -466,39 +460,32 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Master_sampler,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Master_sampler,
-#endif
+	pg_SVGandPart_render_FBO_Master_sampler,
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
 	pg_Trk2_FBO_Master_sampler,
-#if defined (PG_WITH_MASTER_MASK)
+#if defined(PG_WITH_MASTER_MASK)
 	pg_Mask_FBO_Master_sampler,
 #endif
-#if defined (GN) || defined (INTERFERENCE)
-	pg_LYMlogo_Master_sampler,
-#endif
 };
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
-	pg_Part_acc_ParticleAnimation_sampler,
+	pg_Part_image_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Noise_ParticleAnimation_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density)
 	pg_RepopDensity_ParticleAnimation_sampler,
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_ParticleAnimation_sampler,
-#endif
 	pg_Movie_frame_ParticleAnimation_sampler,
 	pg_Trk0_FBO_ParticleAnimation_sampler,
 	pg_Trk1_FBO_ParticleAnimation_sampler,
@@ -510,64 +497,65 @@ enum pg_FBO_ParticleAnimation_samplers
 #if PG_NB_TRACKS == 4
 enum pg_FBO_Update_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_sampler = 0,
-#ifdef ALKEMI
+#if defined(var_alKemi)
 	pg_PreviousCA_FBO_Update_sampler,
 #endif
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #else
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_sampler = 0,
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler,
 #endif
 #else
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined (ENSO) ||defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) ||defined(FORET) || defined(CORE)
 	pg_Brushes_Update_sampler = 0,
 #endif
 #endif
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_Update_sampler,
 	pg_Camera_BG_Update_sampler,
-#endif
 	pg_Movie_frame_Update_sampler,
 	pg_Noise_Update_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 	pg_RepopDensity_Update_sampler,
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 	pg_Photo0_Update_sampler,
 	pg_Photo1_Update_sampler,
-#endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	pg_Clip0_Update_sampler,
-	pg_Clip1_Update_sampler,
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Update_sampler,
+	pg_SecondClipLeft_Update_sampler,
+	pg_SecondClipRight_Update_sampler,
+#if defined(var_part_initialization) 
+	pg_SVGandPart_render_FBO_Update_sampler,
 #endif
 	pg_Trk0_FBO_Update_sampler,
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
 	pg_Trk3_FBO_Update_sampler,
+#if defined(var_CATable)
+	pg_CATable_Update_sampler,
+#endif
+#if defined(var_camera_BG_ini_subtr)
+	pg_Camera_BGIni_FBO_Update_sampler,
+#endif
 #ifdef WITH_BURST_MASK
 	pg_Burst_Mask_FBO_Update_sampler,
 #endif
+	pg_pixel_image_acc_Update_sampler,
 };
 enum pg_FBO_Update_attachments
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Update_attcht = 0,
 #ifdef PG_NB_PIXEL_MODES
 	pg_Pixels_FBO_Update_attcht,
@@ -590,14 +578,14 @@ enum pg_FBO_Update_attachments
 };
 enum pg_FBO_Mixing_samplers
 {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Mixing_sampler = 0,
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler,
 #endif
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	pg_Part_render_FBO_Mixing_sampler = 0,
 	pg_Render_prec_FBO_Mixing_sampler,
 #else
@@ -606,7 +594,7 @@ enum pg_FBO_Mixing_samplers
 #endif
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined (TVW)
+#if defined(TVW)
 	pg_Display_Font_FBO_Mixing_sampler,
 	pg_Display_Message1_FBO_Mixing_sampler,
 	pg_Display_Message2_FBO_Mixing_sampler,
@@ -619,38 +607,34 @@ enum pg_FBO_Mixing_samplers
 enum pg_FBO_Master_samplers
 {
 	pg_Render_curr_FBO_Master_sampler = 0,
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	pg_CA_FBO_Master_sampler,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	pg_Part_render_FBO_Master_sampler,
-#endif
+	pg_SVGandPart_render_FBO_Master_sampler,
 	pg_Trk0_FBO_Master_sampler,
 	pg_Trk1_FBO_Master_sampler,
 	pg_Trk2_FBO_Master_sampler,
 	pg_Trk3_FBO_Master_sampler,
-#if defined (PG_WITH_MASTER_MASK)
+#if defined(PG_WITH_MASTER_MASK)
 	pg_Mask_FBO_Master_sampler,
 #endif
 };
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_Part_init_col_rad_ParticleAnimation_sampler,
-	pg_Part_acc_ParticleAnimation_sampler,
+	pg_Part_image_acc_ParticleAnimation_sampler,
 	pg_CA_FBO_ParticleAnimation_sampler,
 	pg_Part_pos_speed_FBO_ParticleAnimation_sampler,
 	pg_Part_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_sampler,
 	pg_Noise_ParticleAnimation_sampler,
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density)
 	pg_RepopDensity_ParticleAnimation_sampler,
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	pg_Camera_frame_ParticleAnimation_sampler,
-#endif
 	pg_Movie_frame_ParticleAnimation_sampler,
 	pg_Trk0_FBO_ParticleAnimation_sampler,
 	pg_Trk1_FBO_ParticleAnimation_sampler,
@@ -660,7 +644,7 @@ enum pg_FBO_ParticleAnimation_samplers
 #endif
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 
 enum pg_FBO_ParticleAnimation_attachments
 {
@@ -673,7 +657,7 @@ enum pg_FBO_ParticleAnimation_attachments
 
 enum eVertexArrayObject
 {
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 
 	pg_VAOParticle,
 #endif
@@ -684,11 +668,11 @@ enum eVertexArrayObject
 
 enum eVertexBufferObject
 {
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 
 	pg_VBOParticle,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 	pg_VBOParticleTexCoords,
 	pg_VBOpartRadius,
 	pg_VBOParticleColors,
@@ -698,7 +682,7 @@ enum eVertexBufferObject
 	pg_VBOpartRadius,
 	pg_VBOParticleColors,
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 
 	pg_EAOParticle,
 #endif
@@ -714,10 +698,10 @@ extern GLfloat pg_orthoWindowProjMatrix[16];
 extern GLfloat doubleProjMatrix[16];
 extern GLfloat pg_identityViewMatrix[16];
 extern GLfloat pg_identityModelMatrix[16];
-#if defined (PIERRES)
+#if defined(PIERRES)
 extern GLfloat pg_homographyForTexture[9];
 #endif
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 extern GLfloat modelMatrixSensor[16];
 #endif
 
@@ -726,18 +710,15 @@ extern GLfloat modelMatrixSensor[16];
 //////////////////////////////////////////////////////////////////////
 extern GLuint pg_vaoID[pg_VAOCount];
 extern GLuint pg_vboID[pg_VBOCount];
-#ifdef PG_MIRRORED_SECOND_SCREEN
-extern GLuint pg_Master_vaoID[pg_VAOCount];
-extern GLuint pg_Master_vboID[pg_VBOCount];
-#endif
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 extern unsigned int quadSensor_vao;
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 extern unsigned int **mesh_vao;
 extern vector <vector <string>> mesh_IDs; 
-extern int *nbMeshesPerMeshFile;
-extern int **nbFacesPerMesh;
+extern float** mesh_barycenter;
+extern int *pg_nbObjectsPerMeshFile;
+extern int **pg_nbFacesPerMeshFile;
 extern unsigned int **mesh_index_vbo;
 #endif
 
@@ -751,23 +732,56 @@ extern float quadMaster_points[];
 extern float quadMaster_texCoords[];
 extern unsigned int quadMaster_indices[PG_SIZE_QUAD_ARRAY];
 
+#if defined(var_activeMeshes)
+#define PG_MAX_ANIMATION_POSES 7
+extern int* pg_nb_bones;
+extern Bone** TabBones;
+extern int* pg_nb_AnimationPoses;
+extern int* pg_nb_LibraryPoses;
+extern float** pg_interpolation_weight_AnimationPose;
+extern float** pg_interpolation_weight_MotionPose;
+extern int* pg_nb_MotionPoses;
+class MotionPose {
+public:
+	float pose_Mesh_Translation_X;
+	float pose_Mesh_Translation_Y;
+	float pose_Mesh_Rotation_X;
+	float pose_Mesh_Rotation_Y;
+	float pose_Mesh_Rotation_Z;
+	float pose_Mesh_Rotation_angle;
+	float pose_Mesh_Scale;
+	MotionPose() {
+		pose_Mesh_Translation_X = 0.f;
+		pose_Mesh_Translation_Y = 0.f;
+		pose_Mesh_Rotation_angle = 0.f;
+		pose_Mesh_Rotation_X = 0.f;
+		pose_Mesh_Rotation_Y = 1.f;
+		pose_Mesh_Rotation_Z = 0.f;
+		pose_Mesh_Scale = 1.f;
+	}
+	~MotionPose() {
+	}
+};
+extern MotionPose** pg_motionPoses;
+#endif
+
 // particle curves
 #ifdef CURVE_PARTICLES
 extern GLfloat *pg_Particle_control_points;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 extern GLfloat *pg_Particle_vertices;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 
 extern unsigned int *pg_Particle_indices;
 #endif
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 //////////////////////////////////////////////////////////////////////
 // SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -813,23 +827,24 @@ extern GLuint drawBuffers[16];
 /////////////////////////////////////////////
 // FBO 
 extern GLuint pg_FBO_Update[PG_FBO_PINGPONG_SIZE]; // update
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-
+#if defined(var_activeClipArts) || defined(var_part_initialization)
+extern GLuint pg_FBO_SVGandParticleRendering; // particle rendering
+extern GLuint pg_FBO_SVGandParticleRendering_texID; // particle rendering
+#endif
+#if defined(var_part_initialization) 
 extern GLuint pg_FBO_ParticleAnimation[2]; // particle animation
-extern GLuint pg_FBO_ParticleRendering; // particle rendering
 extern GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
-extern GLuint pg_FBO_ParticleRendering_texID; // particle rendering
 #endif
 extern GLuint pg_FBO_Mixing_capturedFB_prec[2]; //  drawing memory on odd and even frames for echo
-// extern GLuint FBO_CameraFrame; //  video preprocessing outcome
-#ifdef PG_AUGMENTED_REALITY
+// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(PG_AUGMENTED_REALITY)
 extern GLuint pg_FBO_Master_capturedFB_prec; // master output memory for mapping on mesh  
 #endif
 
 // FBO texture
 extern GLuint pg_FBO_Update_texID[PG_FBO_PINGPONG_SIZE * PG_FBO_UPDATE_NBATTACHTS]; // update 
 extern GLuint pg_FBO_Mixing_capturedFB_prec_texID[2]; // drawing memory on odd and even frames for echo 
-// extern GLuint FBO_CameraFrame_texID; // video preprocessing outcome 
+// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #ifdef PG_AUGMENTED_REALITY
 extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for mapping on mesh  
 #endif
@@ -844,16 +859,16 @@ extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for m
 // comet texture
 extern GLuint comet_texture_2D_texID;
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES)
+#if defined(TEXTURED_QUAD_PARTICLES)
 // blurred disk texture
-extern GLuint blurredDisk_texture_2D_texID;
+extern std::vector<GLuint> blurredDisk_texture_2D_texID;
 #endif
 
 
 //////////////////
 // FUNCTIONS
 // Perlin Noise
-double noise(double x, double y, double z);
+double PerlinNoise(double x, double y, double z);
 
 // opengl error
 int printOglError(int no);
@@ -879,14 +894,14 @@ bool pg_initFBO(void);
 void pg_initRenderingMatrices(void);
 
 void pg_screenMessage_update(void);
-#if defined (TVW) || defined (ETOILES)
+#if defined(TVW) || defined(ETOILES)
 bool pg_ReadAllDisplayMessages(string dir, string basefilename);
 int pg_displayMessage_update(int indMesg);
 #endif
 
 void pg_initParticlePosition_Texture(void);
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 void SensorInitialization(void);
 void assignSensorPositions(void);
 void assignSensorActivations(void);
@@ -897,7 +912,7 @@ void sensor_sample_setUp_interpolation(void);
 void MetawearSensorInitialization();
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 void MeshInitialization(void);
 #endif
 

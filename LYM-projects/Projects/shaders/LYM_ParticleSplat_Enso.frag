@@ -18,7 +18,7 @@
 #version 420
 
 // comet texture
-layout (binding = 2) uniform sampler2D uniform_ParticleSplat_BlurredDisk_texture_fs_decal; // splat texture
+layout (binding = 2) uniform sampler2D uniform_ParticleSplat_texture_fs_decal; // splat texture
 
 in VertexData {
     vec3 color;
@@ -28,7 +28,7 @@ in VertexData {
 out vec4 fColor;
 
 void main() {
-	 fColor = texture(uniform_ParticleSplat_BlurredDisk_texture_fs_decal , VertexIn.texCoord);
+	 fColor = texture(uniform_ParticleSplat_texture_fs_decal , VertexIn.texCoord);
 	// fColor.rgb = VertexIn.color;
 	fColor.rgb = VertexIn.color;
 	// fColor.rgb = vec3(1,0,0);

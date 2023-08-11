@@ -23,7 +23,7 @@ const float PI = 3.1415926535897932384626433832795;
 
 ////////////////////////////////////////////////////////////////////
 // TRACK CONST
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 #define PG_NB_PATHS 11
 
 // path data array structure
@@ -47,11 +47,6 @@ const uint CA_DISLOCATION             = 1;
 const uint CA_PROTOCELLS              = 2;
 const uint CA_SOCIAL_PD               = 3;
 const uint CA_PATHS                   = 4;
-const uint CA_COLOR                   = 5;
-const uint CA_NOTYPE                  = 6;
-// const uint CA_PATHS = 4;
-// const uint CA_COLOR = 5;
-// const uint CA_NOTYPE = 6;
 
 // CA OFFSETS
 const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E NE N NW
@@ -356,8 +351,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseUpdateScale) {
+  v *= noiseUpdateScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -418,27 +413,29 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
 // FLAT
-return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
 }
 
 vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
-  // FLAT
+/*  // FLAT
   if(noiseType == 0 )  {
-    return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
-  }
+*/
+    return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
+/*  }
   // SUN RAYS
   else if(noiseType == 1 ) {
     vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
                      length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
-    return vec2(snoise( pos , noiseScale * 10 ) ,
-                            snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
+    return vec2(snoise( pos , noiseUpdateScale * 10 ) ,
+                            snoise( pos + vec2(2.0937,9.4872) , noiseUpdateScale * 10 ));
   }
   // MOVIE
   else {
     return texture(uniform_Update_texture_fs_Movie_frame, movieCoord + usedNeighborOffset/ movieWH ).rg;
   }
+*/
 }
 
 // random noise
@@ -1769,7 +1766,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseUpdateScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   pixelTextureCoordinatesPOT_XY = decalCoordsPOT 
                   + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
@@ -2224,8 +2221,8 @@ void main() {
       //  modifies speed according to acceleration
       vec2 pixel_acceleration;
       // FLAT
-        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
-                                snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
+        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseUpdateScale * 100 ),
+                                snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
       // }
 
       vec2 acceleration;

@@ -10,13 +10,21 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 4
 #define ATELIERS_PORTATIFS
 
+#define var_CAMixingWeight
 float	 CAMixingWeight;
+#define var_PartMixingWeight
 float	 PartMixingWeight;
+#define var_trackMixingWeight_0
 float	 trackMixingWeight_0;
+#define var_trackMixingWeight_1
 float	 trackMixingWeight_1;
+#define var_trackMixingWeight_2
 float	 trackMixingWeight_2;
+#define var_trackMixingWeight_3
 float	 trackMixingWeight_3;
+#define var_echo
 float	 echo;
+#define var_echoNeg
 float	 echoNeg;
 uniform float uniform_Mixing_scenario_var_data[8];
 

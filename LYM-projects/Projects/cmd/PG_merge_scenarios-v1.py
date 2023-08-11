@@ -21,7 +21,7 @@ def handler(signal_received, frame):
 	print('SIGINT or CTRL-C detected. Exiting gracefully')
 	sys.exit(0)
 
-USAGE = '''	print("Usage: python PG_merge_scenarios_standardForm_Projects-v1.py -i scenes-file.csv -o scenario-file.csv")
+USAGE = '''	print("Usage: python PG_merge_scenarios_standardForm_Projects-v1.py -i scenes-file.csv -I input_footer_scenario_file_name -J input_full_scenario_file_name -o scenario-file.csv")
 PG_merge_scenarios_standardForm_Projects-v1.py: A program for merging different Porphyrograph scenarios")
 
 '''
@@ -114,7 +114,7 @@ def main(main_args) :
 	input_full_scenario_file_name = ''
 	output_scenario_file_name = ''
 	try:
-		opts, args = getopt.getopt(main_args,"i:I:J:o:",["input_scenes_file_name=", "input_footer_scenario_file_name=", "input_full_scenario_file_name=", "output_scenario_file_name="])
+		opts, args = getopt.getopt(main_args,"i:f:F:o:",["input_scenes_file_name=", "input_footer_scenario_file_name=", "input_full_scenario_file_name=", "output_scenario_file_name="])
 	except getopt.GetoptError:
 		print(USAGE)
 		sys.exit(2)
@@ -123,9 +123,9 @@ def main(main_args) :
 		# CSV PARAMETER INPUT FILES
 		if opt in ("-i", "--input_scenes_file_name"):
 			input_list_scenes_file_name = arg
-		elif opt in ("-I", "--input_footer_scenario_file_name"):
+		elif opt in ("-f", "--input_footer_scenario_file_name"):
 			input_footer_scenario_file_name = arg
-		elif opt in ("-J", "--input_full_scenario_file_name"):
+		elif opt in ("-F", "--input_full_scenario_file_name"):
 			input_full_scenario_file_name = arg
 		elif opt in ("-o", "--output_scenario_file_name"):
 			output_scenario_file_name = arg
@@ -163,8 +163,8 @@ def main(main_args) :
 	# dictionaries of scenario variable definition
 	# build dictionary for the variable of the full scenario
 	variable_full_scenario_header_dictionary = dict()
-	for var_ID, varVerbatim, varType, varCallBack, varShader, varPulse, varDefault in zip(variable_full_scenario_header_IDs, variable_full_scenario_verbatims, variable_full_scenario_types, variable_full_scenario_callBacks, variable_full_scenario_shaders, variable_full_scenario_pulses, variable_full_scenario_initial_values) :
-		variable_full_scenario_header_dictionary[var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
+	for full_scenario_header_var_ID, varVerbatim, varType, varCallBack, varShader, varPulse, varDefault in zip(variable_full_scenario_header_IDs, variable_full_scenario_verbatims, variable_full_scenario_types, variable_full_scenario_callBacks, variable_full_scenario_shaders, variable_full_scenario_pulses, variable_full_scenario_initial_values) :
+		variable_full_scenario_header_dictionary[full_scenario_header_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 
 	##################################################################
 	# READS THE CSV SCENARIO/SCENE/NEW NAME FILE LINE BY LINE
@@ -209,17 +209,17 @@ def main(main_args) :
 
 		########### reads the header of the current scenario
 		print("reads the header of the current scenario")
-		variable_IDs, variable_verbatims, variable_types, variable_callBacks, variable_shaders, variable_pulses, variable_initial_values = read_scenario_header(readScenarioCSV)
+		current_scenario_variable_IDs, variable_verbatims, variable_types, variable_callBacks, variable_shaders, variable_pulses, variable_initial_values = read_scenario_header(readScenarioCSV)
 
 		########### checks whether the header of the full scenario contains all the variables of the current scene
 		########### if not, it reports an error
 		missing_vars_in_full_scenario = []
-		for varID in variable_IDs :
-			if not varID in variable_full_scenario_header_IDs :
-				missing_vars_in_full_scenario.append(varID)
+		for current_scenario_var_ID in current_scenario_variable_IDs :
+			if not current_scenario_var_ID in variable_full_scenario_header_IDs :
+				missing_vars_in_full_scenario.append(current_scenario_var_ID)
 		if(missing_vars_in_full_scenario != []) :
 			print("the following variables are missing in the full scenario", input_full_scenario_file_name, ":", missing_vars_in_full_scenario)
-			exit(0)
+			# exit(0)
 
 		########### reads all the scenes until the one that is looked for or the end of the scene list
 		ind_scene = 1
@@ -272,8 +272,8 @@ def main(main_args) :
 
 				# build dictionaries for the variable values of the selected scene
 				variable_scene_values_dictionary = dict()
-				for var_ID, varStartValue, varEndValue, varInterpolator in zip(variable_IDs, variable_start_values, variable_end_values, variable_interpolators) :
-					variable_scene_values_dictionary[var_ID] = [varStartValue, varEndValue, varInterpolator]
+				for current_scenario_var_ID, varStartValue, varEndValue, varInterpolator in zip(current_scenario_variable_IDs, variable_start_values, variable_end_values, variable_interpolators) :
+					variable_scene_values_dictionary[current_scenario_var_ID] = [varStartValue, varEndValue, varInterpolator]
 				variable_scene_values_dictionaries.append(variable_scene_values_dictionary)
 				# memorizes the scene description
 				variable_scene_descriptions.append(variable_scene_description)
@@ -314,24 +314,24 @@ def main(main_args) :
 	########### discards the variables in the full scenario var ID list which are not found in the current scenes
 	vars_used_in_full_scenario = []
 	vars_discarded_from_full_scenario = []
-	for varID in variable_full_scenario_header_IDs :
-		varID_found = False
+	for full_scenario_header_var_ID in variable_full_scenario_header_IDs :
+		full_scenario_header_var_ID_found = False
 		# looks if the full scenario variable is found in at least one of the scene variable dictionaries
 		for variable_scene_values_dictionary in variable_scene_values_dictionaries :
-			if varID in variable_scene_values_dictionary.keys() :
-				varID_found = True
-		if not varID_found :
+			if full_scenario_header_var_ID in variable_scene_values_dictionary.keys() :
+				full_scenario_header_var_ID_found = True
+		if not full_scenario_header_var_ID_found :
 			# the variable is discarded
-			vars_discarded_from_full_scenario.append(varID)
+			vars_discarded_from_full_scenario.append(full_scenario_header_var_ID)
 		else :
 			# the variable is kept
-			vars_used_in_full_scenario.append(varID)
+			vars_used_in_full_scenario.append(full_scenario_header_var_ID)
 	# removes from the list of variable IDS the variable which are discarded
 	# and the corresponding entries in the dictionary of the full header are also removed for coherence
 	print("discarded full scenario variables", vars_discarded_from_full_scenario)
-	for varID in vars_discarded_from_full_scenario :
-		variable_full_scenario_header_IDs.remove(varID)
-		del variable_full_scenario_header_dictionary[varID]
+	for discarded_full_scenario_header_var_ID in vars_discarded_from_full_scenario :
+		variable_full_scenario_header_IDs.remove(discarded_full_scenario_header_var_ID)
+		del variable_full_scenario_header_dictionary[discarded_full_scenario_header_var_ID]
 
 	##################################################################
 	# WRITES THE SCENE HEADER FROM THE FULL SCENARIO
@@ -340,7 +340,7 @@ def main(main_args) :
 	# basic writing version without variable reordering and default value addition for the non common variables
 	CSVwriter = csv.writer(output_scenario_fileCsv, delimiter=',')
 	CSVwriter.writerow(["RANK"] + list(range(len(variable_full_scenario_header_IDs))))
-	# variable_full_scenario_header_dictionary[var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
+	# variable_full_scenario_header_dictionary[current_scenario_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 	CSVwriter.writerow(["VERBATIM"] + list(map(lambda x: variable_full_scenario_header_dictionary[x][0] , variable_full_scenario_header_IDs)))
 	CSVwriter.writerow(["TYPE"] +  list(map(lambda x: variable_full_scenario_header_dictionary[x][1] , variable_full_scenario_header_IDs)))
 	CSVwriter.writerow(["ID"] + variable_full_scenario_header_IDs)
@@ -356,7 +356,7 @@ def main(main_args) :
 	# the first scene is used for the variable initial values, or default values from the full scenario initial values are chosen
 	first_scene_variable_dictionary = variable_scene_values_dictionaries[0]
 	# for each variable sets the initial value if it is found in the scene, otherwise sets the default value from the full scenario
-	# variable_full_scenario_header_dictionary[var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
+	# variable_full_scenario_header_dictionary[current_scenario_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 	CSVwriter.writerow([""] + list(map(lambda x: first_scene_variable_dictionary[x][0] if(x in first_scene_variable_dictionary.keys()) else variable_full_scenario_header_dictionary[x][5] , variable_full_scenario_header_IDs)))
 	CSVwriter.writerow(["/initial_values"])
 
@@ -370,19 +370,19 @@ def main(main_args) :
 		CSVwriter.writerow([variable_scene_description[1]] * (len(variable_full_scenario_header_IDs) + 1))
 		CSVwriter.writerow(["ID"] + variable_full_scenario_header_IDs)
 		# for each variable sets the initial value if it is found in the scene, otherwise sets the default value from the full scenario
-		# variable_full_scenario_header_dictionary[var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
+		# variable_full_scenario_header_dictionary[current_scenario_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 		CSVwriter.writerow([""] + list(map(lambda x: variable_scene_values_dictionary[x][0] if(x in variable_scene_values_dictionary.keys()) else variable_full_scenario_header_dictionary[x][5] , variable_full_scenario_header_IDs)))
 		# for each variable sets the final value if it is found in the scene, otherwise sets the default value from the full scenario
-		# variable_full_scenario_header_dictionary[var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
+		# variable_full_scenario_header_dictionary[current_scenario_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 		CSVwriter.writerow([""] + list(map(lambda x: variable_scene_values_dictionary[x][1] if(x in variable_scene_values_dictionary.keys()) else variable_full_scenario_header_dictionary[x][5] , variable_full_scenario_header_IDs)))
 		# for each variable sets the interpolation value if it is found in the scene, otherwise sets the default 's' fixed (default) value
 		CSVwriter.writerow([""] + list(map(lambda x: variable_scene_values_dictionary[x][2] if(x in variable_scene_values_dictionary.keys()) else 's' , variable_full_scenario_header_IDs)))
 		CSVwriter.writerow(["/scene"])
 		if (full_trace == True) :
 			defaulted_vars = []
-			for varID in variable_full_scenario_header_IDs :
-				if not(varID in variable_scene_values_dictionary.keys()) :
-					defaulted_vars.append(varID)
+			for full_scenario_header_var_ID in variable_full_scenario_header_IDs :
+				if not(full_scenario_header_var_ID in variable_scene_values_dictionary.keys()) :
+					defaulted_vars.append(full_scenario_header_var_ID)
 			print("defaulted variables in scene", ind_scene, defaulted_vars)
 		ind_scene += 1
 	CSVwriter.writerow(["/scenario"])

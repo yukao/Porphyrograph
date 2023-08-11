@@ -23,7 +23,7 @@ https://github.com/fcaruso/GLSLParametricCurve
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
-uniform vec3 uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse;
+uniform vec3 uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse;
 
 in VertexData {
     float radius;
@@ -57,12 +57,12 @@ void main()
     // sets the center in the middle of the particle
     // and calculates the size of the quad
     float internalRadiusTimesRadiusParameter 
-      = VertexIn[0].radius * uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.x;
+      = VertexIn[0].radius * uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse.x;
     internalRadiusTimesRadiusParameter *= distToReplayTrack * 0.5;
 
 
     // emits the polygon (a 4 vertices triangle strip)
-    int partType = int(uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.y);
+    int partType = int(uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse.y);
     for(int ind = 0 ; ind < 4 ; ind++) {
         gl_Position = position0 
               + vec4( internalRadiusTimesRadiusParameter * quadGeometry[ind], 0, 0);

@@ -22,6 +22,23 @@
 ////////////////////////////////////////////////////////////////////
 
 #include "pg-all_include.h"
+
+// MEMORY LEAK CONTROL
+_CrtMemState s1{};
+_CrtMemState s2{};
+_CrtMemState s3{};
+_CrtMemState s4{};
+_CrtMemState s5{};
+_CrtMemState s6{};
+_CrtMemState s7{};
+_CrtMemState s8{};
+_CrtMemState s9{};
+_CrtMemState s10{};
+_CrtMemState s11{};
+_CrtMemState s12{};
+_CrtMemState s13{};
+_CrtMemState sDiff{};
+
       
 /////////////////////////////////////////////////////////////////
 // config variables
@@ -34,14 +51,14 @@ float paths_y_next[PG_NB_PATHS + 1];
 
 // path variables
 float paths_time[PG_NB_PATHS + 1];
+float paths_time_prev[PG_NB_PATHS + 1];
+float paths_time_prev_prev[PG_NB_PATHS + 1];
 float paths_x[PG_NB_PATHS + 1];
 float paths_y[PG_NB_PATHS + 1];
-float paths_time_prev_prev[PG_NB_PATHS + 1];
-float paths_x_prev_prev[PG_NB_PATHS + 1];
-float paths_y_prev_prev[PG_NB_PATHS + 1];
-float paths_time_prev[PG_NB_PATHS + 1];
 float paths_x_prev[PG_NB_PATHS + 1];
 float paths_y_prev[PG_NB_PATHS + 1];
+float paths_x_prev_prev[PG_NB_PATHS + 1];
+float paths_y_prev_prev[PG_NB_PATHS + 1];
 float paths_x_memory[PG_NB_PATHS + 1];
 float paths_y_memory[PG_NB_PATHS + 1];
 float paths_x_prev_memory[PG_NB_PATHS + 1];
@@ -59,6 +76,10 @@ float paths_xL[PG_NB_PATHS + 1];
 float paths_yL[PG_NB_PATHS + 1];
 float paths_xR[PG_NB_PATHS + 1];
 float paths_yR[PG_NB_PATHS + 1];
+float tang_x[PG_NB_PATHS + 1];
+float tang_y[PG_NB_PATHS + 1];
+float tang_x_prev[PG_NB_PATHS + 1];
+float tang_y_prev[PG_NB_PATHS + 1];
 #endif
 int paths_BrushID[PG_NB_PATHS + 1];
 
@@ -88,11 +109,12 @@ float				svg_scale = 1.f;
 // mobile cursor for cursor blinking in Master shader
 bool mobile_cursor = true;
 
-#ifdef PG_MESHES
+#if defined(var_VP1LocX) && defined(var_VP1LocY) && defined(var_VP1LocZ) &&  defined(var_VP1LookAtX) && defined(var_VP1LookAtY) && defined(var_VP1LookAtZ) && defined(var_VP1UpY) && defined(var_VP1Reversed) && defined(var_VP1WidthTopAt1m) && defined(var_VP1BottomAt1m) && defined(var_VP1TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 // MVP matrices
 glm::mat4 VP1perspMatrix;
 glm::mat4 VP1viewMatrix;
 glm::mat4 MeshPosModelMatrix;
+glm::mat4 ObjectPosModelMatrix;
 glm::mat4 VP1homographyMatrix;
 #ifdef PG_SECOND_MESH_CAMERA
 glm::mat4 VP2perspMatrix;
@@ -101,11 +123,22 @@ glm::mat4 VP2homographyMatrix;
 #endif
 #endif
 
-#ifdef ETOILES_TEASER
+#if defined(var_Argenteuil_flash_move_track1_freq)
+float Argenteuil_track_x_transl_0 = 0.f;
+float Argenteuil_track_y_transl_0 = 0.f;
+float Argenteuil_track_x_transl_1 = 0.f;
+float Argenteuil_track_y_transl_1 = 0.f;
+#endif
+
+#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
+cv::Mat homography;
+#endif
+
+#if defined(ETOILES)
 float pen_x, pen_y, vec_x, vec_y;
 #endif
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 //////////////////////////////////////////////////////////////////////
 // SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -202,41 +235,42 @@ float CameraCurrent_WB_R = 0.0f;
 
 /////////////////////////////////////////////////////////////////
 // textures bitmaps and associated IDs
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 std::vector<GLuint> pg_particle_initial_pos_speed_texID;
 std::vector<GLuint> pg_particle_initial_color_radius_texID;
+#endif
+#if defined(var_part_image_acceleration) 
 std::vector<GLuint> pg_particle_acc_texID;
+#endif
+#if defined(var_pixel_image_acceleration) 
+std::vector<GLuint> pg_pixel_acc_texID;
 #endif
 
 GLuint pg_screenMessageBitmap_texID = 0; // nb_attachments=1
 GLubyte *pg_screenMessageBitmap = NULL;
 
-GLuint pg_paths_Pos_Texture_texID[PG_NB_PATHS + 1];
-GLfloat *pg_paths_Pos_Texture[PG_NB_PATHS + 1];
-GLuint pg_paths_Col_Texture_texID[PG_NB_PATHS + 1];
-GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
-GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
-GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
+//GLuint pg_paths_Pos_Texture_texID[PG_NB_PATHS + 1];
+//GLfloat *pg_paths_Pos_Texture[PG_NB_PATHS + 1];
+//GLuint pg_paths_Col_Texture_texID[PG_NB_PATHS + 1];
+//GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
+//GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
+//GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
 
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined(var_CATable)
 GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
 #endif
 
-#if defined (GN) || defined (INTERFERENCE)
-GLuint pg_LYMlogo_texID = NULL_ID;
-#endif
-
 GLuint Screen_Font_texture_Rectangle_texID = NULL_ID;
-#if defined (TVW)
+#if defined(TVW)
 GLuint Display_Font_texture_Rectangle_texID = NULL_ID;
 #endif
 
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 GLuint Pen_texture_3D_texID = NULL_ID;
 #endif
 GLuint Noise_texture_3D = NULL_ID;
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density) || defined(var_Part_repop_density)
 std::vector<GLuint>  pg_RepopDensity_texture_texID;
 #endif
 
@@ -245,11 +279,7 @@ GLuint Master_Mask_texID = 0;
 GLuint Master_Multilayer_Mask_texID = 0;
 #endif
 
-#ifdef PG_WITH_BURST_MASK
-GLuint Burst_Mask_texID = 0;
-#endif
-
-#if defined (TVW)
+#if defined(TVW)
 /////////////////////////////////////////////////////////////////
 // Image distribution
 float centralPhoto = 0;
@@ -276,7 +306,7 @@ int IndDisplayText2 = -1;
 bool DisplayText1Front = true;
 float DisplayTextSwapInitialTime = 0;
 #endif
-#if defined (TVW) || defined (ETOILES)
+#if defined(TVW) || defined(ETOILES)
 std::string* DisplayTextList;
 int* DisplayTextFirstInChapter;
 int NbDisplayTexts = 0;
@@ -286,7 +316,7 @@ int pg_Ind_Current_DisplayText = 0;
 int NbTextChapters = 0;
 #endif
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 GLuint Sensor_texture_rectangle = NULL_ID;
 #endif
 
@@ -294,7 +324,7 @@ GLuint Sensor_texture_rectangle = NULL_ID;
 GLuint pg_camera_texture_texID = 0;
 GLuint pg_movie_texture_texID = 0;
 GLuint pg_camera_BG_texture_texID = 0;
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 GLuint pg_camera_BGIni_texture_texID = 0;
 #endif
 // IplImage *pg_camera_frame = NULL;
@@ -314,10 +344,21 @@ vector<string> movieSoundtrackOnsetsFileName;
 vector<vector<float>> movieSoundtrackPeaks;
 vector<vector<float>> movieSoundtrackOnsets;
 int nb_movies = 0;
+
 // soundtracks
 vector<string> trackFileName;
 vector<string> trackShortName;
+vector<string> trackSoundtrackPeaksFileName;
+vector<string> trackSoundtrackOnsetsFileName;
+vector<vector<float>> trackSoundtrackPeaks;
+vector<vector<float>> trackSoundtrackOnsets;
+vector<float> trackSoundtrackOnsetsAndPeasksOffset;
 int nb_soundtracks = 0;
+int currentTrackSoundPeakIndex = 0;
+int nbTrackSoundPeakIndex = 0;
+int currentTrackSoundOnsetIndex = 0;
+int nbTrackSoundOnsetIndex = 0;
+
 // pen palettes presets
 int nb_pen_colorPresets = 0;
 vector<string> pen_colorPresets_names;
@@ -370,13 +411,14 @@ int clip_image_width = 0;
 int clip_image_height = 0;
 int clip_crop_width = 0;
 int clip_crop_height = 0;
+int clip_max_length = 0;
 // pen brushes
 string pen_brushes_fileName;
 int nb_pen_brushes = 0;
 // textures with multiple layers
 int nb_layers_master_mask = 0;
 bool is_capture_diaporama = false;
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 VideoCapture  pg_webCam_capture;
 VideoCapture* pg_IPCam_capture;
 String* pg_IPCam_capture_address;
@@ -384,17 +426,20 @@ int nb_IPCam = 0;
 int nb_webCam = 0;
 webCam* pg_webCams = NULL;
 int pg_current_active_cameraNo = INT_MIN;
-bool initializedWebcam = false;
+bool pg_initializedWebcam = false;
+bool pg_cameraCaptureIsOn = false;
 #endif
 VideoCapture  pg_movie_capture;
 Mat pg_movie_frame;
 
-movie_status pg_movie_status = movie_status();
+#if defined(var_movieCaptFreq)
+media_status pg_movie_status = media_status();
 bool is_movieLoading = false;
-bool is_movieLooping = false;
+bool is_movieAtEnd = false;
+#endif
 int initialSecondBGCapture = 0;
 
-#ifdef PG_WITH_CLIPS
+#if defined(var_clipCaptFreq)
 // clip track
 std::vector<clip_track> pg_clip_tracks;
 // clip status (left and right)
@@ -406,139 +451,159 @@ int playing_clipNoLeft = -1;
 int playing_secondClipNoLeft = -1;
 int playing_clipNoRight = -1;
 int playing_secondClipNoRight = -1;
+
+float fx_dry_wet = 0.f;
 #endif
 
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 bool secondInitialBGCapture = false;
 bool initialBGCapture = false;
 #endif
 
 const char *TextureEncodingString[EmptyTextureEncoding + 1] = { "jpeg", "png", "pnga", "png_gray", "pnga_gray", "rgb", "raw", "emptyimagetype" };
 
+/*
+threadData pDataWriteJpg;
+threadData pDataWriteSvg;
+threadData pDataWritePng;
+*/
+
+#if defined(var_movieCaptFreq)
 ///////////////////////////////////////////////////////
 // MOVIE STATUS MANAGEMENT WHILE STREAMING
-movie_status::movie_status() {
+media_status::media_status() {
 	nbFramesLeft = 0;
 	initialTime = 0.;
-	initialMovieNbFrames = 0;
+	initialMediaNbFrames = 0;
 
-	currentSoundPeakIndex = 0;
+	pg_movie_sound_onset = false;
+	pg_movie_sound_peak = false;
+	currentMovieSoundPeakIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
+		nbMovieSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
 	}
 	else {
-		nbSoundPeakIndex = 0;
+		nbMovieSoundPeakIndex = 0;
 	}
-	currentSoundOnsetIndex = 0;
+	currentMovieSoundOnsetIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
+		nbMovieSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
 	}
 	else {
-		nbSoundOnsetIndex = 0;
+		nbMovieSoundOnsetIndex = 0;
 	}
 }
 // number frames left until the end from current frame
-int movie_status::get_nbFramesLeft() {
+int media_status::get_nbFramesLeft() {
 	return nbFramesLeft;
 }
 // number of frames read from the beginning of the movie
-int movie_status::get_nbFramesRead() {
-	return initialMovieNbFrames - nbFramesLeft;
+int media_status::get_nbFramesRead() {
+	return initialMediaNbFrames - nbFramesLeft;
 }
 // current time when movie started
-double movie_status::get_initialTime() {
+double media_status::get_initialTime() {
 	return initialTime;
 }
 // initial total number of frames in the movie
-int movie_status::get_initialNbFrames() {
-	return initialMovieNbFrames;
+int media_status::get_initialNbFrames() {
+	return initialMediaNbFrames;
 }
 // sets the movie at a position from beginning
-void movie_status::set_position(int nb_frames_from_beginning) {
+void media_status::set_position(int nb_frames_from_beginning) {
 	if (nb_frames_from_beginning <= 0) {
-		reset_movie(initialMovieNbFrames);
+		reset_movie(initialMediaNbFrames);
 		return;
 	}
-	if (nb_frames_from_beginning >= initialMovieNbFrames) {
-		nb_frames_from_beginning = initialMovieNbFrames - 1;
+	if (nb_frames_from_beginning >= initialMediaNbFrames) {
+		nb_frames_from_beginning = initialMediaNbFrames - 1;
 	}
-	nbFramesLeft = initialMovieNbFrames - nb_frames_from_beginning;
-	initialTime = CurrentClockTime - (nb_frames_from_beginning / movieCaptFreq);
+	nbFramesLeft = initialMediaNbFrames - nb_frames_from_beginning;
+	initialTime = pg_CurrentClockTime - (nb_frames_from_beginning / movieCaptFreq);
 	//printf("set position frames from start %d frames left %d initialTime %.5f\n", nb_frames_from_beginning, nbFramesLeft, initialTime);
 
-	currentSoundPeakIndex = 0;
-	currentSoundOnsetIndex = 0;
+	currentMovieSoundPeakIndex = 0;
+	currentMovieSoundOnsetIndex = 0;
 	// sets the position for the onsets and peaks as well
-	updatePeakOrOnset();
+	updateMoviePeakOrOnset();
 }
 
-// checks whether a peak or an onset are passed or closer than one frame
-void movie_status::updatePeakOrOnset() {
-	double timeFromBeginning = CurrentClockTime - initialTime;
-
-	pg_video_sound_peak = false;
-	if (currentSoundPeakIndex < nbSoundPeakIndex - 1) {
-		float nextPeak = movieSoundtrackPeaks[currentlyPlaying_movieNo][currentSoundPeakIndex + 1];
-		while (nextPeak < timeFromBeginning || nextPeak - timeFromBeginning < 1 / movieCaptFreq) {
-			pg_video_sound_peak = true;
-			//printf("peak next %.5f time from begin %.5f\n", nextPeak, timeFromBeginning);
-			currentSoundPeakIndex++;
-			if (currentSoundPeakIndex < nbSoundPeakIndex - 1) {
-				nextPeak = movieSoundtrackPeaks[currentlyPlaying_movieNo][currentSoundPeakIndex + 1];
-			}
-			else {
-				break;
-			}
-		}
-	}
-	pg_video_sound_onset = false;
-	if (currentSoundOnsetIndex < nbSoundOnsetIndex - 1) {
-		float nextOnset = movieSoundtrackOnsets[currentlyPlaying_movieNo][currentSoundOnsetIndex + 1];
-		while (nextOnset < timeFromBeginning || nextOnset - timeFromBeginning < 1 / movieCaptFreq) {
-			pg_video_sound_onset = true;
-			//printf("onset next %.5f time from begin %.5f\n", nextOnset, timeFromBeginning);
-			currentSoundOnsetIndex++;
-			if (currentSoundOnsetIndex < nbSoundOnsetIndex - 1) {
-				nextOnset = movieSoundtrackOnsets[currentlyPlaying_movieNo][currentSoundOnsetIndex + 1];
-			}
-			else {
-				break;
-			}
-		}
+void media_status::updateMoviePeakOrOnset() {
+	double timeFromBeginning = pg_CurrentClockTime - initialTime;
+	if (int(movieSoundtrackPeaks.size()) > currentlyPlaying_movieNo && int(movieSoundtrackOnsets.size()) > currentlyPlaying_movieNo) {
+		updatePeakOrOnset(timeFromBeginning, &movieSoundtrackPeaks[currentlyPlaying_movieNo], &movieSoundtrackOnsets[currentlyPlaying_movieNo],
+			&pg_movie_sound_peak, &pg_movie_sound_onset, nbMovieSoundPeakIndex, nbMovieSoundOnsetIndex, &currentMovieSoundPeakIndex, &currentMovieSoundOnsetIndex);
 	}
 }
 // reads one frame and updates the remaining number of frames in the movie
-void movie_status::read_one_frame() {
+void media_status::read_one_frame() {
 	nbFramesLeft--;
-	updatePeakOrOnset();
+	updateMoviePeakOrOnset();
 }
 // (re)starts the movie from begginning with its total number of frames
-void movie_status::reset_movie(int nbTotFramesLeft) {
+void media_status::reset_movie(int nbTotFramesLeft) {
 	// printf("movie restarted\n");
 	nbFramesLeft = nbTotFramesLeft;
-	initialMovieNbFrames = nbFramesLeft;
-	initialTime = CurrentClockTime;
+	initialMediaNbFrames = nbFramesLeft;
+	initialTime = pg_CurrentClockTime;
 
-	currentSoundPeakIndex = 0;
+	currentMovieSoundPeakIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
+		nbMovieSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
 	}
 	else {
-		nbSoundPeakIndex = 0;
+		nbMovieSoundPeakIndex = 0;
 	}
-	currentSoundOnsetIndex = 0;
+	currentMovieSoundOnsetIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
+		nbMovieSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
 	}
 	else {
-		nbSoundOnsetIndex = 0;
+		nbMovieSoundOnsetIndex = 0;
 	}
 }
-movie_status::~movie_status() {
+media_status::~media_status() {
 
 }
+#endif
 
-#ifdef PG_WITH_CLIPS
+// checks whether a peak or an onset are passed or closer than one frame
+void updatePeakOrOnset(double timeFromBeginning, vector<float>* peaks, vector<float>* onsets,
+	bool* is_new_peak, bool* is_new_onset, int nbPeaks, int nbOnsets, int* curPeakIndex, int* curOnsetIndex) {
+	*is_new_peak = false;
+	//printf("curPeakIndex %d\n", *curPeakIndex);
+	if (*curPeakIndex < nbPeaks - 1) {
+		float nextPeak = (*peaks)[*curPeakIndex + 1];
+		while (nextPeak < timeFromBeginning || nextPeak - timeFromBeginning < 1 / 70.) {
+			*is_new_peak = true;
+			//printf("peak next %.5f time from begin %.5f index %d\n", nextPeak, timeFromBeginning, *curPeakIndex);
+			(*curPeakIndex)++;
+			if (*curPeakIndex < nbPeaks - 1) {
+				nextPeak = (*peaks)[*curPeakIndex + 1];
+			}
+			else {
+				break;
+			}
+		}
+	}
+	*is_new_onset = false;
+	if (*curOnsetIndex < nbOnsets - 1) {
+		float nextOnset = (*onsets)[*curOnsetIndex + 1];
+		while (nextOnset < timeFromBeginning || nextOnset - timeFromBeginning < 1 / 70.) {
+			*is_new_onset = true;
+			//printf("onset next %.5f time from begin %.5f\n", nextOnset, timeFromBeginning);
+			(*curOnsetIndex)++;
+			if (*curOnsetIndex < nbOnsets - 1) {
+				nextOnset = (*onsets)[*curOnsetIndex + 1];
+			}
+			else {
+				break;
+			}
+		}
+	}
+}
+
+#if defined(var_clipCaptFreq)
 ///////////////////////////////////////////////////////
 // // CLIP TRACKS
 clip_track::clip_track(int ind_clip, int nbFrames, string name) {
@@ -602,19 +667,20 @@ clip_status::clip_status(int clipSide) {
 		lastFrame[ind] = 0;
 		clip_autoplay[ind] = true;
 		clip_play[ind] = true;
-		lastPlayedFrameTime[ind] = CurrentClockTime;
+		lastPlayedFrameTime[ind] = pg_CurrentClockTime;
+		clip_level[ind] = 1.0;
+		clip_r_channel_level[ind] = 1.0f;
+		clip_g_channel_level[ind] = 1.0f;
+		clip_b_channel_level[ind] = 1.0f;
 	}
 	sideLR = pg_clip_LR(clipSide);
 	cumulated_scratch_offset = 0.;
 	currentFPS = 0;
 	last_scratch_angle = 0.f;
-	last_nudge_angle = 0.f;
-	is_scratch_pressed = false;
 	last_scratch_angle_change = 0.;
-	clip_level = 1.0;
-	clip_r = 1.0;
-	clip_g = 1.0;
-	clip_b = 1.0;
+	last_nudge_angle = 0.f;
+	last_nudge_angle_change = 0.;
+	is_scratch_pressed = false;
 	jump_frame_freq = 0;
 }
 // last frame index
@@ -633,11 +699,12 @@ void clip_status::set_lastPlayedFrameTime(int indClipRank, double a_time) {
 // with memory of exact time of current frame (including the delay to the current time)
 int clip_status::get_nextFrameAndUpdate(int indClipRank) {
 	// if minimally one frame has elapsed
-	double timeLapseSinceLastFrame = (CurrentClockTime - lastPlayedFrameTime[indClipRank]);
+	double timeLapseSinceLastFrame = (pg_CurrentClockTime - lastPlayedFrameTime[indClipRank]);
 	// clip is not updated if the speed is null or if the scratching plate is pressed 
 	if (currentFPS != 0 && !is_scratch_pressed) {
 		if (fabs(timeLapseSinceLastFrame) >= fabs(1. / currentFPS)) {
-			int nb_elapsedFrames = int(floor(fabs(timeLapseSinceLastFrame) * currentFPS)) * (timeLapseSinceLastFrame > 0 ? 1 : -1);
+			int lastPlayedFrame = lastFrame[indClipRank];
+			int nb_elapsedFrames = int(floor(fabs(timeLapseSinceLastFrame) * currentFPS));
 			lastFrame[indClipRank] = (lastFrame[indClipRank] + nb_elapsedFrames);
 			int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
 			while (lastFrame[indClipRank] >= initialNbFrames) {
@@ -646,10 +713,10 @@ int clip_status::get_nextFrameAndUpdate(int indClipRank) {
 			while (lastFrame[indClipRank] < 0) {
 				lastFrame[indClipRank] += initialNbFrames;
 			}
-			if (nb_elapsedFrames != 0) {
+			if (lastFrame[indClipRank] != lastPlayedFrame) {
 				lastPlayedFrameTime[indClipRank] = lastPlayedFrameTime[indClipRank] + nb_elapsedFrames / currentFPS;
-				if (CurrentClockTime - lastPlayedFrameTime[indClipRank] > 1. / currentFPS || CurrentClockTime - lastPlayedFrameTime[indClipRank] < -1. / currentFPS) {
-					lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+				if( fabs(pg_CurrentClockTime - lastPlayedFrameTime[indClipRank]) > 1. / currentFPS) {
+					lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
 				}
 			}
 			if (jump_frame_freq > 0 && pg_FrameNo % max(1, (10 - jump_frame_freq)) == 0) {
@@ -664,6 +731,7 @@ int clip_status::get_nextFrameAndUpdate(int indClipRank) {
 						sprintf(AuxString, "/clip_percent_right %d", int(lastFrame[indClipRank] / float(initialNbFrames) * 100.f)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 					}
 				}
+#if PG_NB_PARALLEL_CLIPS >= 2
 				else if (indClipRank == 1) {
 					if (sideLR == _clipLeft) {
 						sprintf(AuxString, "/clip2_percent_left %d", int(lastFrame[indClipRank] / float(initialNbFrames) * 100.f)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -672,9 +740,13 @@ int clip_status::get_nextFrameAndUpdate(int indClipRank) {
 						sprintf(AuxString, "/clip2_percent_right %d", int(lastFrame[indClipRank] / float(initialNbFrames) * 100.f)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 					}
 				}
+#endif
 			}
 		}
 	}
+	//if (sideLR == _clipLeft) {
+	//	sprintf(AuxString, "/clip_frame_left %d", lastFrame[indClipRank]); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+	//}
 	return lastFrame[indClipRank];
 }
 // current speed according to nudging
@@ -719,8 +791,9 @@ bool clip_status::get_clip_play(int indClipRank) {
 }
 // current playing clip No
 void clip_status::setCurrentlyPlaying_clipNo(int indClipRank, int indClip) {
+	//printf("setCurrentlyPlaying_clipNo %d %d\n", indClipRank, indClip);
 	currentlyPlaying_clipNo[indClipRank] = indClip;
-	lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+	lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
 	lastFrame[indClipRank] = 0;
 }
 // position of the wheel in last interaction
@@ -742,12 +815,12 @@ void clip_status::set_last_nudge_angle(float a_angle, double a_time) {
 void clip_status::set_position(int indClipRank, int nb_frames_from_beginning) {
 	if (nb_frames_from_beginning <= 0 && lastFrame[indClipRank] != 0) {
 		reset_clip(indClipRank);
-		//printf("set position %d  initialTime %.5f\n", 0, CurrentClockTime);
+		//printf("set position %d  initialTime %.5f\n", 0, pg_CurrentClockTime);
 		return;
 	}
 	int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
 	lastFrame[indClipRank] = nb_frames_from_beginning % initialNbFrames;
-	lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+	lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
 	//printf("set position %d  initialTime %.5f\n", lastFrame[indClipRank], lastPlayedFrameTime[indClipRank]);
 }
 // offsets the movie position by a positive or negative time delta (play mode)
@@ -756,11 +829,11 @@ void clip_status::play_offset_position(int indClipRank, double elapsedTime) {
 	int nb_elapsedFrames = int(floor(elapsedTime * currentFPS));
 	int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
 	lastFrame[indClipRank] = max(min((lastFrame[indClipRank] + nb_elapsedFrames), initialNbFrames - 1), 0);
-	lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+	lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
 }
 // offsets the movie position by a positive or negative time delta (scratch mode)
 // used several times for a small offset
-void clip_status::scratch_offset_position(int indClipRank, double timeLapse) {
+void clip_status::scratch_offset_position(double timeLapse) {
 	cumulated_scratch_offset += timeLapse;
 	//printf("cumulated_scratch_offset %.3f\n", cumulated_scratch_offset);
 	// positive number of frames, move forward
@@ -768,9 +841,13 @@ void clip_status::scratch_offset_position(int indClipRank, double timeLapse) {
 		int nb_elapsedFrames = int(floor(cumulated_scratch_offset * currentFPS));
 		//printf("positive lapse %d %.2f\n", nb_elapsedFrames, cumulated_scratch_offset * currentFPS);
 		if (nb_elapsedFrames > 0) {
-			int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
-			lastFrame[indClipRank] = (lastFrame[indClipRank] + nb_elapsedFrames) % initialNbFrames;
-			lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
+				if (currentlyPlaying_clipNo[indClipRank] >= 0) {
+					int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
+					lastFrame[indClipRank] = (lastFrame[indClipRank] + nb_elapsedFrames) % initialNbFrames;
+					lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
+				}
+			}
 			cumulated_scratch_offset = cumulated_scratch_offset - nb_elapsedFrames / currentFPS;
 		}
 	}
@@ -779,9 +856,13 @@ void clip_status::scratch_offset_position(int indClipRank, double timeLapse) {
 		int nb_elapsedFrames = int(floor(cumulated_scratch_offset * currentFPS) + 1);
 		//printf("negative lapse %d %.2f\n", nb_elapsedFrames, cumulated_scratch_offset * currentFPS);
 		if (nb_elapsedFrames < 0) {
-			int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
-			lastFrame[indClipRank] = (lastFrame[indClipRank] + nb_elapsedFrames + initialNbFrames) % initialNbFrames;
-			lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
+				if (currentlyPlaying_clipNo[indClipRank] >= 0) {
+					int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
+					lastFrame[indClipRank] = (lastFrame[indClipRank] + nb_elapsedFrames + initialNbFrames) % initialNbFrames;
+					lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
+				}
+			}
 			cumulated_scratch_offset = cumulated_scratch_offset - nb_elapsedFrames / currentFPS;
 		}
 	}
@@ -793,7 +874,7 @@ void clip_status::reset_clip(int indClipRank) {
 		int initialNbFrames = pg_clip_tracks[currentlyPlaying_clipNo[indClipRank]].get_initialNbFrames();
 		initialNbFrames = pg_nbCompressedClipFramesPerFolder[currentlyPlaying_clipNo[indClipRank]];
 	}
-	lastPlayedFrameTime[indClipRank] = CurrentClockTime;
+	lastPlayedFrameTime[indClipRank] = pg_CurrentClockTime;
 	lastFrame[indClipRank] = 0;
 }
 clip_status::~clip_status() {
@@ -801,7 +882,7 @@ clip_status::~clip_status() {
 }
 #endif
 
-#ifdef PG_SLOW_TRACK_TRANSLATION
+#if defined(var_slow_track_translation)
 ///////////////////////////////////////////////////////
 // CONVERSION OF FLOAT TRANSLATION INTO FRAME BASED INTEGER TRANSLATION
 float frame_based_translation(float transl, int translation_rank) {
@@ -835,91 +916,218 @@ float frame_based_translation(float transl, int translation_rank) {
 // ------------------------------------------------------------ //
 // --------------- DISPLAYS WINDOWS ONE AFTER ANOTHER --------- //
 // ------------------------------------------------------------ //
-void window_display( void ) {
-  windowDisplayed = true;
-  // printOglError(508);
+void window_display(void) {
 
-  //////////////////////////////////////////////////
-  //////////////////////////////////////////////////
-  // SCENE UPDATE AND SHADER UNIFORM PARAMETERS UPDATE
-  //////////////////////////////////////////////////
-  // scenario update
-  pg_update_scenario();
-  pg_run_callBacks();
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("\nstat 1\n"));
+	_CrtMemCheckpoint(&s1);
+#endif
 
-  // recalculates pulsed colors and reads current paths
-  pg_update_pulsed_colors_and_replay_paths(CurrentClockTime);
+	//printf("Maser %.2f\n", master);
 
-  // ships uniform variables  printOglError(51);
-  printOglError(50);
-  pg_update_shader_uniforms();
-  printOglError(51);
-  
-  // loads movie and/or camera frames
-  pg_update_clip_camera_and_movie_frame();
+	windowDisplayed = true;
+	// printOglError(508);
+
+	//////////////////////////////////////////////////
+	//////////////////////////////////////////////////
+	// SCENE UPDATE AND SHADER UNIFORM PARAMETERS UPDATE
+	//////////////////////////////////////////////////
+	// scenario update 
+	pg_update_scenario();
+	// runs callbacks
+	pg_run_callBacks();
+	// recalculates pulsed colors and reads current paths
+	pg_update_pulsed_colors_and_replay_paths(pg_CurrentClockTime);
+	// ships uniform variables  printOglError(51);
+	printOglError(50);
+	pg_update_shader_uniforms();
+	printOglError(51);
+	// loads movie andor camera frames
+	pg_update_clip_camera_and_movie_frame();
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 7\n"));
+	_CrtMemCheckpoint(&s7);
+	if (_CrtMemDifference(&sDiff, &s9, &s7))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
 
 
-  //////////////////////////////////////////////////
-  //////////////////////////////////////////////////
-  // SCENE DISPLAY AND SHADER UNIFORM PARAMETERS UPDATE
-  //////////////////////////////////////////////////
-  // OpenGL initializations before redisplay
-  OpenGLInit();
-  // printOglError(509);
+#if defined(var_activeMeshes)
+	// updates mesh animation
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		// visibility
+		bool visible = false;
+#if defined(ETOILES)
+		visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
+#elif defined(var_Caverne_Mesh_Profusion)
+		visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_CaverneActveMesh[indMeshFile]
+			&& (pg_CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile] > pg_CaverneMeshWakeupTime[indMeshFile])
+			&& (pg_CurrentClockTime < pg_CaverneMeshDeathTime[indMeshFile]));
+#else
+		visible = (activeMeshes & (1 << indMeshFile));
+#endif
 
-  // proper scene redrawing
-  // printf("VideoPb Draw scene \n\n");
-  pg_draw_scene( _Render, false );
+		// visible mesh
+		if (visible) {
+			if (TabBones[indMeshFile] != NULL) {
+				//printf("updage anim & bones mesh %d\n", indMeshFile);
+				update_anim(indMeshFile);
+				update_bones(indMeshFile);
+			}
+#if defined(var_Contact_mesh_rotation) && defined(var_Contact_mesh_translation_X) && defined(var_Contact_mesh_translation_Y) && defined(var_Contact_mesh_motion)
+			Contact_update_motion(indMeshFile);
+#endif
+		}
+	}
+#endif
 
-  //////////////////////////////////////////////////
-  //////////////////////////////////////////////////
-  // ONE-FRAME PARAMETERS RESET
-  //////////////////////////////////////////////////
-  // resets to 0 the variables that are only true for one frame such as flashes, resets...
-  one_frame_variables_reset();
 
-  // flushes OpenGL commands
-  glFlush();
 
-  glutSwapBuffers();
-  // 
+#if defined(PG_WITH_PORTAUDIO)
+	double timeFromBeginning = RealTime() - soundfile_data.sound_file_StartReadingTime;
+	if (currentlyPlaying_trackNo >= 0 && int(trackSoundtrackPeaks.size()) > currentlyPlaying_trackNo && int(trackSoundtrackOnsets.size()) > currentlyPlaying_trackNo) {
+		//printf("size %d %d\n", trackSoundtrackPeaks[currentlyPlaying_trackNo].size(), trackSoundtrackPeaks[currentlyPlaying_trackNo].size());
+		updatePeakOrOnset(timeFromBeginning, &trackSoundtrackPeaks[currentlyPlaying_trackNo], &trackSoundtrackOnsets[currentlyPlaying_trackNo],
+			&pg_track_sound_peak, &pg_track_sound_onset, nbTrackSoundPeakIndex, nbTrackSoundOnsetIndex, &currentTrackSoundPeakIndex, &currentTrackSoundOnsetIndex);
+#ifdef var_photo_diaporama
+		if (pg_track_sound_onset) {
+			diaporama_random();
+		}
+#endif
+	}
+	// tests whether the soundtrack is finished reading
+	if (pa_sound_data.pa_checkAudioStream()) {
+		//printf("soundtrack current time %f\n", RealTime() - soundfile_data.sound_file_StartReadingTime);
+	}
+#endif
 
-  // ------------------------------------------------------------ //
-  // --------------- FRAME/SUBFRAME GRABBING -------------------- //
+	//////////////////////////////////////////////////
+	//////////////////////////////////////////////////
+	// SCENE DISPLAY AND SHADER UNIFORM PARAMETERS UPDATE
+	//////////////////////////////////////////////////
+	// OpenGL initializations before redisplay
+	OpenGLInit();
+	// printOglError(509);
 
-  // ---------------- frame by frame output --------------------- //
-  // Svg screen shots
-  // printf("Draw Svg\n" );
-  if(take_snapshots && outputSvg
-	&& pg_FrameNo % stepSvg == 0
-	&& pg_FrameNo / stepSvg >= beginSvg && 
-	pg_FrameNo / stepSvg <= endSvg ) {
-    // printf("Draw Svg %d\n" , pg_FrameNo  );
-    pg_draw_scene( _Svg, true);
-  }
-    
-  // ---------------- frame by frame output --------------------- //
-  // Png screen shots
-  // printf("Draw Png\n" );
-  if(take_snapshots && outputPng
-	&& pg_FrameNo % stepPng == 0
-	&& pg_FrameNo / stepPng >= beginPng && 
-	pg_FrameNo / stepPng <= endPng ) {
-    pg_draw_scene( _Png, true);
-  }
-    
-  // ---------------- frame by frame output --------------------- //
-  // Jpg screen shots
-  // printf("Draw Jpg\n"  );
-  if(take_snapshots && outputJpg
-	&& pg_FrameNo % stepJpg == 0
-	&& pg_FrameNo / stepJpg >= beginJpg && 
-	pg_FrameNo / stepJpg <= endJpg ) {
-    pg_draw_scene( _Jpg, true);
-  }
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 4\n"));
+	_CrtMemCheckpoint(&s4);
+	if (_CrtMemDifference(&sDiff, &s7, &s4))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+	// proper scene redrawing
+	pg_draw_scene(_Render, false);
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 2\n"));
+	_CrtMemCheckpoint(&s2);
+	if (_CrtMemDifference(&sDiff, &s4, &s2))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+	//////////////////////////////////////////////////
+	//////////////////////////////////////////////////
+	// ONE-FRAME PARAMETERS RESET OR UPDATE (AUTOMATIC, NON SCENARIO-BASED UPDATES)
+	//////////////////////////////////////////////////
+	// resets to 0 the variables that are only true for one frame such as flashes, resets...
+	pg_automatic_var_reset_or_update();
+
+	// flushes OpenGL commands
+	glFlush();
+
+	// displays new frame
+	glutSwapBuffers();
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 3\n"));
+	_CrtMemCheckpoint(&s3);
+	if (_CrtMemDifference(&sDiff, &s2, &s3))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+	// ------------------------------------------------------------ //
+	// --------------- FRAME/SUBFRAME GRABBING -------------------- //
+
+	// ---------------- frame by frame output --------------------- //
+	// Svg screen shots
+	// printf("Draw Svg\n" );
+	if (take_snapshots && outputSvg) {
+		// frame count based output
+		if (stepSvgInFrames > 0) {
+			if (pg_FrameNo % stepSvgInFrames == 0
+				&& pg_FrameNo / stepSvgInFrames >= beginSvg &&
+				pg_FrameNo / stepSvgInFrames <= endSvg) {
+				pg_draw_scene(_Svg, true);
+			}
+		}
+		else if (stepSvgInSeconds > 0) {
+			if (nextSvgCapture < 0) {
+				nextSvgCapture = pg_CurrentClockTime;
+			}
+			if (pg_CurrentClockTime >= nextSvgCapture
+				&& pg_CurrentClockTime >= beginSvg &&
+				pg_CurrentClockTime <= endSvg) {
+				nextSvgCapture = max(nextSvgCapture + stepSvgInSeconds, pg_CurrentClockTime);
+				pg_draw_scene(_Svg, true);
+			}
+		}
+	}
+
+	// ---------------- frame by frame output --------------------- //
+	// Png screen shots
+	// printf("Draw Png\n" );
+	if (take_snapshots && outputPng ) {
+		// frame count based output
+		if (stepPngInFrames > 0) {
+			if (pg_FrameNo % stepPngInFrames == 0
+				&& pg_FrameNo / stepPngInFrames >= beginPng &&
+				pg_FrameNo / stepPngInFrames <= endPng) {
+				pg_draw_scene(_Png, true);
+			}
+		}
+		else if (stepPngInSeconds > 0) {
+			if (nextPngCapture < 0) {
+				nextPngCapture = pg_CurrentClockTime;
+			}
+			if (pg_CurrentClockTime >= nextPngCapture
+				&& pg_CurrentClockTime >= beginPng &&
+				pg_CurrentClockTime <= endPng) {
+				nextPngCapture = max(nextPngCapture + stepPngInSeconds, pg_CurrentClockTime);
+				pg_draw_scene(_Png, true);
+			}
+		}
+	}
+
+	// ---------------- frame by frame output --------------------- //
+	// Jpg screen shots
+	// printf("Draw Jpg\n"  );
+	if (take_snapshots && outputJpg) {
+		// frame count based output
+		if (stepJpgInFrames > 0) {
+			if (pg_FrameNo % stepJpgInFrames == 0
+				&& pg_FrameNo / stepJpgInFrames >= beginJpg &&
+				pg_FrameNo / stepJpgInFrames <= endJpg) {
+				pg_draw_scene(_Jpg, true);
+			}
+		}
+		else if (stepJpgInSeconds > 0) {
+			if (nextJpgCapture < 0) {
+				nextJpgCapture = pg_CurrentClockTime;
+			}
+			if (pg_CurrentClockTime >= nextJpgCapture
+				&& pg_CurrentClockTime >= beginJpg &&
+				pg_CurrentClockTime <= endJpg) {
+				nextJpgCapture = max(nextJpgCapture + stepJpgInSeconds, pg_CurrentClockTime);
+				pg_draw_scene(_Jpg, true);
+				//printf("nextJpgCapture %.2f pg_CurrentClockTime %.2f\n", nextJpgCapture, pg_CurrentClockTime);
+			}
+		}
+	}
 }
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // SENSOR READING AND SAMPLE CHOICE/
@@ -937,13 +1145,12 @@ void window_display( void ) {
 //// groups of samples for aliasing with additive samples
 
 void readSensors(void) {
-	bool sensorOn[PG_NB_SENSORS];
+	bool sensorOn[PG_NB_SENSORS] = { false };
 
-	bool sampleOn[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
-	int sampleToSensorPointer[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
+	bool sampleOn[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] = { false };
+	int sampleToSensorPointer[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] = { 0 };
 
-	GLubyte pixelColor[3 * PG_NB_SENSORS];
-	memset(pixelColor, 0, sizeof(pixelColor));
+	GLubyte pixelColor[3 * PG_NB_SENSORS] = { 0 };
 
 	// marks all the samples as unread
 	for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
@@ -984,91 +1191,7 @@ void readSensors(void) {
 	printOglError(691);
 
 	///////////////////////////////////////////////////////////////
-	// SENSOR-BASED SOUND IN SUPERCOLLIDER
-#ifdef PG_SUPERCOLLIDER
-	// looks for buffer aliasing possibilities: groups of sounds that could be replaced by a single buffer
-	float sensorLevel[PG_NB_SENSORS + 18];
-	bool groupOn[PG_NB_SENSOR_GROUPS];
-	float groupValues[PG_NB_SENSOR_GROUPS];
-	//printf("group on ");
-	for (int indgroup = 0; indgroup < PG_NB_SENSOR_GROUPS; indgroup++) {
-		if (sampleOn[sample_groups[indgroup][0]] && sampleOn[sample_groups[indgroup][1]]
-			&& sampleOn[sample_groups[indgroup][2]] && sampleOn[sample_groups[indgroup][3]]) {
-			// switches on the group with the average activation value
-			groupOn[indgroup] = true;
-			groupValues[indgroup] = (sensorLevel[sampleToSensorPointer[sample_groups[indgroup][0]]]
-				+ sensorLevel[sampleToSensorPointer[sample_groups[indgroup][1]]]
-				+ sensorLevel[sampleToSensorPointer[sample_groups[indgroup][2]]]
-				+ sensorLevel[sampleToSensorPointer[sample_groups[indgroup][3]]]);
-			// switches off the associated sensors
-			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][0]]] = 0.0f;
-			sensorOn[sampleToSensorPointer[sample_groups[indgroup][0]]] = false;
-			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][1]]] = 0.0f;
-			sensorOn[sampleToSensorPointer[sample_groups[indgroup][1]]] = false;
-			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][2]]] = 0.0f;
-			sensorOn[sampleToSensorPointer[sample_groups[indgroup][2]]] = false;
-			sensorLevel[sampleToSensorPointer[sample_groups[indgroup][3]]] = 0.0f;
-			sensorOn[sampleToSensorPointer[sample_groups[indgroup][3]]] = false;
-			//printf("%d (%d,%d,%d,%d) ",indgroup,sampleToSensorPointer[ sample_groups[ indgroup ][ 0 ] ],
-			//  sampleToSensorPointer[ sample_groups[ indgroup ][ 1 ] ],
-			//  sampleToSensorPointer[ sample_groups[ indgroup ][ 2 ] ],
-			//  sampleToSensorPointer[ sample_groups[ indgroup ][ 3 ] ]);
-		}
-		else {
-			groupOn[indgroup] = false;
-			groupValues[indgroup] = 0.0f;
-		}
-	}
-	//printf("\n");
-
-	// message value
-	std::string float_str;
-	std::string message = "/sensors";
-	float totalAmplitude = 0.0;
-	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		if (sensorOn[indSens]) {
-			float_str = std::to_string(static_cast<long double>(sensorLevel[indSens]));
-			// float_str.resize(4);
-			message += " " + float_str;
-			totalAmplitude += sensorLevel[indSens];
-		}
-		else {
-			message += " 0.0";
-		}
-	}
-	for (int indgroup = 0; indgroup < PG_NB_SENSOR_GROUPS; indgroup++) {
-		if (groupOn[indgroup]) {
-			float_str = std::to_string(static_cast<long double>(groupValues[indgroup]));
-			// float_str.resize(4);
-			message += " " + float_str;
-			totalAmplitude += groupValues[indgroup];
-		}
-		else {
-			message += " 0.0";
-		}
-	}
-	float_str = std::to_string(static_cast<long double>(totalAmplitude));
-	// float_str.resize(4);
-	message += " " + float_str;
-
-	// message format
-	std::string format = "";
-	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		format += "f ";
-	}
-	for (int indgroup = 0; indgroup < 18; indgroup++) {
-		format += "f ";
-	}
-	// Total amplitude
-	format += "f";
-
-	// message posting
-	pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_SC_send");
-#endif
-
-	///////////////////////////////////////////////////////////////
 	// SENSOR-BASED SOUND IN RENOISE OR PORPHYROGRAPH SOUND
-#ifndef SUPERCOLLIDER
 	// message value
 	std::string float_string;
 	std::string int_string;
@@ -1105,17 +1228,17 @@ void readSensors(void) {
 #endif
 
 			// starts the clock for stopping the sample play after a certain time
-			sample_play_start[sample_choice[indSens]] = CurrentClockTime;
+			sample_play_start[sample_choice[indSens]] = pg_CurrentClockTime;
 			sample_play_volume[sample_choice[indSens]] = sensorLevel[indSens];
 			// printf("lights sensor #%d\n", indSens);
 		}
 
 		// the sample has been triggered and has not yet reached 90% of its playing duration
 		if (sample_play_start[sample_choice[indSens]] > 0.0
-			&& CurrentClockTime - sample_play_start[sample_choice[indSens]] <= 0.9 * BEAT_DURATION) {
+			&& pg_CurrentClockTime - sample_play_start[sample_choice[indSens]] <= 0.9 * BEAT_DURATION) {
 			// set the value to the initial value until 0.9 so that there is one visual feedback per loop
 			sensorLevel[indSens] = (sample_play_volume[sample_choice[indSens]]
-				* float((CurrentClockTime - sample_play_start[sample_choice[indSens]]) / BEAT_DURATION));
+				* float((pg_CurrentClockTime - sample_play_start[sample_choice[indSens]]) / BEAT_DURATION));
 		}
 	}
 	printOglError(689);
@@ -1126,7 +1249,7 @@ void readSensors(void) {
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 			int indSample = sensor_sample_setUps[indSetup][indSens];
 			if (sample_play_start[indSample] > 0
-				&& CurrentClockTime - sample_play_start[indSample] > BEAT_DURATION) {
+				&& pg_CurrentClockTime - sample_play_start[indSample] > BEAT_DURATION) {
 #ifdef PG_RENOISE
 				// Renoise message format && message posting
 				sprintf(AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
@@ -1135,7 +1258,6 @@ void readSensors(void) {
 
 #ifdef PG_PORPHYROGRAPH_SOUND
 				// the sample plays until it finishes and only then it can be retriggered
-				/*
 				std::string message = "/track_";
 				int_string = std::to_string(indSample + 1);
 				message += int_string + "_level 0";
@@ -1145,7 +1267,6 @@ void readSensors(void) {
 
 				// message posting
 				pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
-				*/
 #endif
 
 				// resets the clock for replaying the sample if sensor triggered again
@@ -1153,7 +1274,6 @@ void readSensors(void) {
 			}
 		}
 	}
-#endif
 	printOglError(690);
 
 	// message trace
@@ -1162,7 +1282,7 @@ void readSensors(void) {
 }
 #endif
 
-#ifdef CAAUDIO
+#if defined(CAAUDIO)
 class GreyNote {
 public:
 	float grey;
@@ -1254,8 +1374,10 @@ void playChord() {
 				message += float_string;
 			}
 		}
+#ifdef PG_WITH_PUREDATA
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
+#endif
 	}
 	else {
 		message = "/chord ";
@@ -1328,8 +1450,10 @@ void playChord() {
 		for (int ind = 0; ind < 20; ind++) {
 			format += "f";
 		}
+#ifdef PG_WITH_PUREDATA
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
+#endif
 	}
 	delete rowColor;
 	delete rowGrey;
@@ -1344,7 +1468,7 @@ void playChord() {
 ///////////////////////////////////////////////////////////////////////
 // restores variables to 0 or false so that
 // they do not stay on more than one frame (flashes, initialization...)
-void one_frame_variables_reset(void) {
+void pg_automatic_var_reset_or_update(void) {
 	///////////////////////////////////////////////////////////////////////
 	// flash reset: restores flash to 0 so that
 	// it does not stay on more than one frame 
@@ -1404,6 +1528,7 @@ void one_frame_variables_reset(void) {
 		flashPartCA_weight = 0;
 	}
 
+#if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_photo_gamma) && defined(var_photo_satur) && defined(var_photo_threshold)
 	if (flashMaster > 0) {
 		flashMaster--;
 		// end of flash return to dark
@@ -1426,6 +1551,7 @@ void one_frame_variables_reset(void) {
 			*((bool*)ScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
 		}
 	}
+#endif
 
 	////////////////////////////
 	// flash camera reset
@@ -1439,7 +1565,7 @@ void one_frame_variables_reset(void) {
 			//printf("end of flash camera weight %.3f\n", flashCameraTrk_weight);
 		}
 	}
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	// flash photo reset
 	if (flashPhotoTrk_weight > 0.0f) {
 		if (flashPhotoTrk_weight > 0) {
@@ -1451,14 +1577,15 @@ void one_frame_variables_reset(void) {
 		}
 		else {
 			flashPhotoTrk_weight = 0.0f;
-			 //printf("end of flash photo weight %.3f\n", flashPhotoTrk_weight);
-			 flashPhotoTrk_nbFrames = 0;
+			//printf("end of flash photo weight %.3f\n", flashPhotoTrk_weight);
+			flashPhotoTrk_nbFrames = 0;
 		}
 	}
 #endif
 
+#ifdef var_photo_diaporama
 	if (pg_CurrentDiaporamaDir >= 0 && pg_CurrentDiaporamaEnd > 0) {
-		if (pg_CurrentDiaporamaEnd < CurrentClockTime) {
+		if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
 			printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
 			pg_CurrentDiaporamaEnd = -1;
 			pg_CurrentDiaporamaDir = -1;
@@ -1466,17 +1593,17 @@ void one_frame_variables_reset(void) {
 			sprintf(AuxString, "/diaporama_shortName ---"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
-
+#endif
 
 	// /////////////////////////
 	// clear layer reset
 	// does not reset if camera capture is still ongoing
 	if ((
-#ifdef PG_WITH_CAMERA_CAPTURE
-		!reset_camera && 
+#if defined(var_cameraCaptFreq)
+		!reset_camera &&
 #endif
 		!(initialSecondBGCapture == 1))
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 		|| (!initialBGCapture && !secondInitialBGCapture)
 #endif
 		) {
@@ -1494,7 +1621,7 @@ void one_frame_variables_reset(void) {
 	// copy to layer above (+1) or to layer below (-1)
 	copyToNextTrack = 0;
 
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	// DELAYED CAMERA WEIGHT COUNTDOWN
 	if (delayedCameraWeight > 1) {
 		delayedCameraWeight--;
@@ -1528,45 +1655,72 @@ void one_frame_variables_reset(void) {
 	pg_CAseed_trigger = false;
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	// /////////////////////////
 	// particle initialization reset
 	part_initialization = -1;
 #endif
+
+	// automatic master incay/decay
+	if (pg_master_incay_duration > 0) {
+		if (pg_master_incay_start_time + pg_master_incay_duration >= pg_CurrentClockTime) {
+			float alpha = max(0.f, min(1.f, float((pg_CurrentClockTime - pg_master_incay_start_time) / pg_master_incay_duration)));
+			master = pg_master_incay_start_value + alpha * (1.f - pg_master_incay_start_value);
+		}
+		else {
+			pg_master_incay_duration = 0.;
+			master = 1.f;
+		}
+		BrokenInterpolationVar[_master] = true;
+		*((float*)ScenarioVarPointers[_master]) = master;
+	}
+	if (pg_master_decay_duration > 0) {
+		if (pg_master_decay_start_time + pg_master_decay_duration >= pg_CurrentClockTime) {
+			float alpha = max(0.f, min(1.f, float((pg_CurrentClockTime - pg_master_decay_start_time) / pg_master_decay_duration)));
+			master = (1.f - alpha) * pg_master_decay_start_value;
+		}
+		else {
+			pg_master_decay_duration = 0.;
+			master = 0.f;
+		}
+		BrokenInterpolationVar[_master] = true;
+		*((float*)ScenarioVarPointers[_master]) = master;
+	}
 }
 
 ///////////////////////////////////////
 // MOVIE STREAMING JUMPS
-
+#if defined(var_movieCaptFreq)
 void pg_movie_backward(int nb_frames_back) {
 	// calculates hypothetical new position
-	int posInMovie = int(pg_movie_capture.get(CV_CAP_PROP_POS_FRAMES));
+	int posInMovie = int(pg_movie_capture.get(CAP_PROP_POS_FRAMES));
 	int new_pos_in_movie = posInMovie - nb_frames_back;
 	// rewinds the movie
 	if (new_pos_in_movie > 0) {
-		pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, new_pos_in_movie);
+		pg_movie_capture.set(CAP_PROP_POS_FRAMES, new_pos_in_movie);
 		pg_movie_status.set_position(new_pos_in_movie);
 		printf("rewinds %d frames %d frames left %.1f initial time\n", int(movieCaptFreq * 10), pg_movie_status.get_nbFramesLeft(), pg_movie_status.get_initialTime());
 	}
 	else {
-		pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, 0);
-		pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
+		pg_movie_capture.set(CAP_PROP_POS_FRAMES, 0);
+		pg_movie_status.reset_movie(int(pg_movie_capture.get(CAP_PROP_FRAME_COUNT)));
 		printf("starts from beginning\n");
 	}
 }
 
 void pg_movie_forward(int nb_frames_forth) {
 	// calculates hypothetical new position
-	int posInMovie = int(pg_movie_capture.get(CV_CAP_PROP_POS_FRAMES));
+	int posInMovie = int(pg_movie_capture.get(CAP_PROP_POS_FRAMES));
 	int new_pos_in_movie = posInMovie + nb_frames_forth;
 	// advances in the movie
 	if (new_pos_in_movie < pg_movie_status.get_initialNbFrames() ) {
 		printf("forward %d frames %d frames left %.1f initial time\n", int(movieCaptFreq * 10), pg_movie_status.get_nbFramesLeft(), pg_movie_status.get_initialTime());
-		pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, new_pos_in_movie);
+		pg_movie_capture.set(CAP_PROP_POS_FRAMES, new_pos_in_movie);
 		pg_movie_status.set_position(new_pos_in_movie);
 	}
 	// else stays where it is
 }
+#endif
 
 ///////////////////////////////////////
 // CLIP STREAMING JUMPS
@@ -1577,29 +1731,31 @@ void pg_update_clip_camera_and_movie_frame(void) {
 	//////////////////////////////////////////////////////////////////////
 	// CLIP, CAMERA AND MOVIE FRAME UPDATES BEFORE RENDERING
 	// /////////////////////////
-#ifdef PG_WITH_CLIPS
+#if defined(var_clipCaptFreq)
 	// reads next clip frame
 	for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
-		for (int indClip = 0; indClip < _clipLR; indClip++) {
+		for (int clipSide = 0; clipSide < _clipLR; clipSide++) {
+			//printf("currentPhotoTrack %d clipCaptFreq %.2f clip No %d nb clips %d side %d rank %d\n", currentPhotoTrack, clipCaptFreq, pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), pg_nbClips, clipSide, indClipRank);
 			if (currentPhotoTrack >= 0 && clipCaptFreq > 0
-				&& pg_clip_status[indClip].clip_play[indClipRank]
-				&& pg_clip_status[indClip].getCurrentlyPlaying_clipNo(indClipRank) >= 0
-				&& pg_clip_status[indClip].getCurrentlyPlaying_clipNo(indClipRank) < pg_nbClips) {
+				&& pg_clip_status[clipSide].clip_play[indClipRank]
+				&& pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0
+				&& pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) < pg_nbClips) {
 
 				// either the first frame has not been captured and the clip should loop at the beginning
 				// or whe are coming close to the end of the clip
-				//printf("clip frame %d\n", expectedclipFrameNo);
-				pg_clip_status[indClip].get_nextFrameAndUpdate(indClipRank);
+				//printf("clip update side %d rank %d\n", clipSide, indClipRank);
+				pg_clip_status[clipSide].get_nextFrameAndUpdate(indClipRank);
 			}
 		}
 	}
 #endif
 
+#if defined(var_movieCaptFreq)
 	// /////////////////////////
 	// reads next movie frame
 	if (currentVideoTrack >= 0 && movieCaptFreq > 0
 		&& currentlyPlaying_movieNo >= 0
-		&& !is_movieLooping && !is_movieLoading
+		&& !is_movieLoading
 		) {
 
 		// non threaded video update according to fps and time since the beginning of the movie play
@@ -1609,30 +1765,36 @@ void pg_update_clip_camera_and_movie_frame(void) {
 		// first frame and compares the actual frame no (actualMovieFrameNo)
 		// with the frame no expected to play with the correct frame rate (expectedMovieFrameNo)
 		int actualMovieFrameNo = (pg_movie_status.get_initialNbFrames() - pg_movie_status.get_nbFramesLeft());
-		int expectedMovieFrameNo = int((CurrentClockTime - pg_movie_status.get_initialTime()) * movieCaptFreq);
+		int expectedMovieFrameNo = int((pg_CurrentClockTime - pg_movie_status.get_initialTime()) * movieCaptFreq);
+
+		is_movieAtEnd = false;
 
 		// either the first frame has not been captured and the movie should loop at the beginning
 		// or whe are coming close to the end of the movie
-		if (!pg_FirstMovieFrameIsAvailable || (movie_loop && pg_movie_status.get_nbFramesLeft() < 10)) {
-			printf("Full video loop %d\n", pg_FrameNo);
+		//printf("%d\n", pg_movie_status.get_nbFramesLeft());
+		if (!pg_FirstMovieFrameIsAvailable || (movie_loop && pg_movie_status.get_nbFramesLeft() <= 1)) {
+			//printf("Full video loop %d\n", pg_FrameNo);
 			// Full video loop
-			if (pg_movie_status.get_nbFramesLeft() < 10) {
+			if (pg_movie_status.get_nbFramesLeft() <= 1) {
 				// resets the movie
-				pg_movie_capture.set(CV_CAP_PROP_POS_FRAMES, 0);
-				pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
-				// printf("movie restarted\n");
+				pg_movie_capture.set(CAP_PROP_POS_FRAMES, 0);
+				pg_movie_status.reset_movie(int(pg_movie_capture.get(CAP_PROP_FRAME_COUNT)));
+				printf("Movie restarted\n");
 			}
 		}
+
 		// if looping is not on and movie is closed to the end, loops on the last 10 frames
-		else if (!movie_loop && pg_movie_status.get_nbFramesLeft() < 10) {
-			// Short end video loop
-			pg_movie_backward(int(movieCaptFreq * 10));
-			printf("Short end video loop at %d, posInMovie %d\n",
-				pg_FrameNo, pg_movie_status.get_nbFramesLeft());
+		else if (!movie_loop && pg_movie_status.get_nbFramesLeft() <= 1) {
+			// does not retrieve more frames and stays on the last one
+			is_movieAtEnd = true;
+			//// Short end video loop
+			//pg_movie_backward(int(movieCaptFreq * 10));
+			//printf("Short end video loop at %d, posInMovie %d\n",
+			//	pg_FrameNo, pg_movie_status.get_nbFramesLeft());
 		}
 
 		// skips frames if rendering is slower than movie fps
-		if (pg_FirstMovieFrameIsAvailable && expectedMovieFrameNo - actualMovieFrameNo > 2) {
+		if ((!is_movieAtEnd) && (pg_FirstMovieFrameIsAvailable && expectedMovieFrameNo - actualMovieFrameNo > 2)) {
 			while (expectedMovieFrameNo - actualMovieFrameNo > 2) {
 				if (pg_movie_capture.grab()) {
 					pg_movie_status.read_one_frame();
@@ -1646,7 +1808,7 @@ void pg_update_clip_camera_and_movie_frame(void) {
 		}
 
 		//Grabs and returns a frame from movie if it is time for it
-		if (!pg_FirstMovieFrameIsAvailable || expectedMovieFrameNo - actualMovieFrameNo >= 1) {
+		if (!is_movieAtEnd && (!pg_FirstMovieFrameIsAvailable || expectedMovieFrameNo - actualMovieFrameNo >= 1)) {
 			if (pg_movie_capture.grab()) {
 				pg_movie_capture.retrieve(pg_movie_frame);
 				if (!pg_movie_frame.data) {
@@ -1672,14 +1834,16 @@ void pg_update_clip_camera_and_movie_frame(void) {
 		if (new_movie_frame) {
 			pg_initMovieFrameTexture(&pg_movie_frame);
 		}
-		//elapsedTimeSinceLastCapture = CurrentClockTime - lastFrameCaptureTime;
-		// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
+		//elapsedTimeSinceLastCapture = pg_CurrentClockTime - lastFrameCaptureTime;
+		// printf("Capture at %.4f last capture %.4f elapsed time %.4f frame duration %.4f\n", pg_CurrentClockTime, lastFrameCaptureTime, elapsedTimeSinceLastCapture, (1.0f / movieCaptFreq));
 	}
+#endif
 
 	// /////////////////////////
 	// reads next camera frame
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if ((currentVideoTrack >= 0
+		&& pg_cameraCaptureIsOn
 		&& (// grabs according to camera capture frequence
 			(cameraCaptFreq > 0 && pg_FrameNo % int(60.0 / cameraCaptFreq) == 0)
 			// grabs at the beginning, otherwise the program is stuck if no camera frame reading takes place
@@ -1695,7 +1859,8 @@ void pg_update_clip_camera_and_movie_frame(void) {
 
 		// non threaded
 		// printf("*** non threaded camera frame capture %d\n", pg_FrameNo);
-		if (cameraNo == -1 || (cameraNo >= 0 && cameraNo < nb_IPCam)) {
+		if ((pg_current_active_cameraNo < 0 && -pg_current_active_cameraNo - 1 < nb_webCam) 
+			|| (pg_current_active_cameraNo >= 0 && pg_current_active_cameraNo < nb_IPCam)) {
 			loadCameraFrame(false, cameraNo);
 		}
 	}
@@ -1704,93 +1869,39 @@ void pg_update_clip_camera_and_movie_frame(void) {
 
 
 void pg_update_shader_uniforms(void) {
-#ifdef GN
-#include "pg_update_body_GN.cpp"
-#endif
 #ifdef TVW
 #include "pg_update_body_TVW.cpp"
 #endif
 #ifdef CRITON
 #include "pg_update_body_Criton.cpp"
 #endif
-#if defined (KOMPARTSD)
+#if defined(KOMPARTSD)
 #include "pg_update_body_KompartSD.cpp"
 #endif
-#if defined (KOMPARTSD)
+#if defined(KOMPARTSD)
 #include "pg_update_body_Light.cpp"
 #endif
-#if defined (REUTLINGEN)
-#include "pg_update_body_Reutlingen.cpp"
-#endif
-#if defined (BICHES)
-#include "pg_update_body_Biches.cpp"
-#endif
-#if defined (ATELIERSENFANTS)
-#include "pg_update_body_AteliersEnfants.cpp"
-#endif
-#if defined (CAVERNEPLATON)
-#include "pg_update_body_CavernePlaton.cpp"
-#endif
-#if defined (PIERRES)
-#include "pg_update_body_Pierres.cpp"
-#endif
-#if defined (ENSO)
-#include "pg_update_body_Enso.cpp"
-#endif
-#if defined (TEMPETE)
-#include "pg_update_body_Tempete.cpp"
-#endif
-#if defined (DAWN)
-#include "pg_update_body_Dawn.cpp"
-#endif
-#if defined (RIVETS)
+#if defined(RIVETS)
 #include "pg_update_body_Rivets.cpp"
 #endif
-#if defined (ULM)
-#include "pg_update_body_Ulm.cpp"
-#endif
-#ifdef SONG
-#include "pg_update_body_Song.cpp"
-#endif
-#ifdef CORE
+#if defined(CORE)
 #include "pg_update_body_Core.cpp"
 #endif
-#ifdef FORET
+#if defined(FORET)
 #include "pg_update_body_Foret.cpp"
 #endif
-#ifdef SOUNDINITIATIVE
-#include "pg_update_body_SoundInitiative.cpp"
-#endif
-#ifdef ALKEMI
-#include "pg_update_body_alKemi.cpp"
-#endif
-#if defined (DEMO) || defined (DEMO_BEZIER)
-#include "pg_update_body_demo.cpp"
-#endif
-#ifdef VOLUSPA
+#if defined(VOLUSPA)
 #include "pg_update_body_voluspa.cpp"
 #endif
-#ifdef ARAKNIT
+#if defined(ARAKNIT)
 #include "pg_update_body_araknit.cpp"
 #endif
-#if defined (ETOILES)
-#include "pg_update_body_etoiles.cpp"
-#endif
-#ifdef INTERFERENCE
-#include "pg_update_body_interference.cpp"
-#endif
-#ifdef CAAUDIO
+#if defined(CAAUDIO)
 #include "pg_update_body_CAaudio.cpp"
-#endif
-#ifdef DASEIN
-#include "pg_update_body_dasein.cpp"
-#endif
-#ifdef BONNOTTE
-#include "pg_update_body_bonnotte.cpp"
 #endif
 	printOglError(510);
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization)
 	/////////////////////////////////////////////////////////////////////////
 	// PARTICLE ANIMATION SHADER UNIFORM VARIABLES
 	glUseProgram(shader_programme[pg_shader_ParticleAnimation]);
@@ -1804,21 +1915,21 @@ void pg_update_shader_uniforms(void) {
 	// at each frame a random repop channel is chosen among the available ones
 	bool repop_channels[PG_NB_PATHS + 1];
 	int nb_repop_channels = 0;
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_repop_0) && defined(var_part_path_repop_1) && defined(var_part_path_repop_2) && defined(var_part_path_repop_3)
 	nb_repop_channels += int(part_path_repop_0) + int(part_path_repop_1) + int(part_path_repop_2) + int(part_path_repop_3);
 	repop_channels[0] = part_path_repop_0;
 	repop_channels[1] = part_path_repop_1;
 	repop_channels[2] = part_path_repop_2;
 	repop_channels[3] = part_path_repop_3;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_repop_4) && defined(var_part_path_repop_5) && defined(var_part_path_repop_6) && defined(var_part_path_repop_7)
 	nb_repop_channels += int(part_path_repop_4) + int(part_path_repop_5) + int(part_path_repop_6) + int(part_path_repop_7);
 	repop_channels[4] = part_path_repop_4;
 	repop_channels[5] = part_path_repop_5;
 	repop_channels[6] = part_path_repop_6;
 	repop_channels[7] = part_path_repop_7;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_part_path_repop_8) && defined(var_part_path_repop_9) && defined(var_part_path_repop_10) && defined(var_part_path_repop_11)
 	nb_repop_channels += int(part_path_repop_8) + int(part_path_repop_9) + int(part_path_repop_10) + int(part_path_repop_11);
 	repop_channels[8] = part_path_repop_8;
 	repop_channels[9] = part_path_repop_9;
@@ -1837,37 +1948,52 @@ void pg_update_shader_uniforms(void) {
 		}
 	}
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)selected_channel, GLfloat(pg_targetFrameNo));
+		(GLfloat)workingWindow_width, (GLfloat)window_height, (GLfloat)selected_channel, GLfloat(pg_targetFrameNo));
+#endif
 
 	// pen paths positions
-#if defined (TVW)
+#if defined(TVW)
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
 	// the center of the screen is the default position for this track
 	if (part_path_repulse_1 || part_path_follow_1) {
-		paths_x[1] = float(leftWindowWidth / 2);
+		paths_x[1] = float(workingWindow_width / 2);
 		paths_y[1] = float(window_height / 2);
 	}
 	// special case for army radar: track 2 is assigned as repop path but is not replayed
 	// the center of the top left screen is the default position for this track
 	else if (part_path_repop_2 || part_path_repulse_2) {
-		paths_x[2] = float(leftWindowWidth / 4);
+		paths_x[2] = float(workingWindow_width / 4);
 		paths_y[2] = float(window_height / 4);
 		float randval = float(randomValue * 2 * PI);
 		float radius = randomValue;
-		paths_x_prev[2] = float(leftWindowWidth / 4 + 2 * radius * cos(randval));
+		paths_x_prev[2] = float(workingWindow_width / 4 + 2 * radius * cos(randval));
 		paths_y_prev[2] = float(window_height / 4 + 2 * radius * sin(randval));
 	}
 #endif
+
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
-		paths_x_memory[indPath] = (paths_x[indPath] > 0 ? paths_x[indPath] : paths_x_memory[indPath]);
-		paths_x_prev_memory[indPath] = (paths_x_prev[indPath] > 0 ? paths_x_prev[indPath] : paths_x_prev_memory[indPath]);
-		paths_y_memory[indPath] = (paths_y[indPath] > 0 ? paths_y[indPath] : paths_y_memory[indPath]);
-		paths_y_prev_memory[indPath] = (paths_y_prev[indPath] > 0 ? paths_y_prev[indPath] : paths_y_prev_memory[indPath]);
-		//if (indPath == 1) {
-		//	printf("xy prev xy %.2f %.2f %.2f %.2f\n", paths_x_memory[indPath], paths_y_memory[indPath], paths_x_prev_memory[indPath], paths_y_prev_memory[indPath]);
-		//}
+#if defined(var_Novak_flight_on)
+		if (indPath > 0) {
+			paths_x_prev_memory[indPath] = paths_x_memory[indPath];
+			paths_x_memory[indPath] = cur_Novak_flight_2D_points[indPath].x;
+			paths_y_prev_memory[indPath] = paths_y_memory[indPath];
+			paths_y_memory[indPath] = cur_Novak_flight_2D_points[indPath].y;
+		}
+		else {
+#endif
+			paths_x_memory[indPath] = (paths_x[indPath] > 0 ? paths_x[indPath] : paths_x_memory[indPath]);
+			paths_x_prev_memory[indPath] = (paths_x_prev[indPath] > 0 ? paths_x_prev[indPath] : paths_x_prev_memory[indPath]);
+			paths_y_memory[indPath] = (paths_y[indPath] > 0 ? paths_y[indPath] : paths_y_memory[indPath]);
+			paths_y_prev_memory[indPath] = (paths_y_prev[indPath] > 0 ? paths_y_prev[indPath] : paths_y_prev_memory[indPath]);
+			//if (indPath == 1) {
+			//	printf("xy prev xy %.2f %.2f %.2f %.2f\n", paths_x_memory[indPath], paths_y_memory[indPath], paths_x_prev_memory[indPath], paths_y_prev_memory[indPath]);
+			//}
+#if defined(var_Novak_flight_on)
+		}
+#endif
 	}
 
+#if defined(var_part_initialization)
 	// position
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 0] = paths_x_prev_memory[indPath];
@@ -1945,14 +2071,14 @@ void pg_update_shader_uniforms(void) {
 
 	// time is only used in TVW
 	glUniform4f(uniform_Update_fs_4fv_W_H_time_currentScene,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height, (GLfloat)CurrentClockTime, (GLfloat)pg_CurrentSceneIndex);
-	// printf("time %.2f\n", (GLfloat)CurrentClockTime);
+		(GLfloat)workingWindow_width, (GLfloat)window_height, (GLfloat)pg_CurrentClockTime, (GLfloat)pg_CurrentSceneIndex);
+	// printf("time %.2f\n", (GLfloat)pg_CurrentClockTime);
 	// printf("scene %d\n", pg_CurrentSceneIndex);
 
 	// pixels acceleration
 	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift,
 		(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 		fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
 #else
 		0.f);
@@ -2059,7 +2185,7 @@ void pg_update_shader_uniforms(void) {
 	// flash BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght,
 		flashTrkBG_weights[1], flashTrkBG_weights[2], flashTrkBG_weights[3], flashPartBG_weight);
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// flash Trk -> CA weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts,
 		flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
@@ -2071,7 +2197,7 @@ void pg_update_shader_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght,
 		flashTrkBG_weights[1], flashTrkBG_weights[2], 0.f, flashPartBG_weight);
 	//printf("flashTrkBG_weights %.2f %.2f \n", flashTrkBG_weights[1], flashTrkBG_weights[2]);
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// flash Trk -> CA weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts,
 		flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], 0.f);
@@ -2082,7 +2208,7 @@ void pg_update_shader_uniforms(void) {
 	// flash Trk -> BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght,
 		flashTrkBG_weights[1], 0.f, 0.f, flashPartBG_weight);
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// flash Trk -> CA weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts,
 		flashTrkCA_weights[0], flashTrkCA_weights[1], 0.f, 0.f);
@@ -2090,12 +2216,12 @@ void pg_update_shader_uniforms(void) {
 #endif
 #else
 #if PG_NB_TRACKS >= 1
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined(var_part_initialization)
 	// flash Trk -> BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght,
 		0.f, 0.f, 0.f, flashPartBG_weight);
 #endif
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// flash Trk -> CA weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts,
 		flashTrkCA_weights[0], 0.f, 0.f, 0.f);
@@ -2124,22 +2250,20 @@ void pg_update_shader_uniforms(void) {
 	if (copyToNextTrack != 0)
 		printf("copyToNextTrack %d\n", copyToNextTrack);
 
-#ifdef PG_WITH_PHOTO_FLASH
 	// photo flash
-#if defined (ETOILES_TEASER)
+#if defined(ETOILES)
 	photo_offsetX = 0;
 	photo_offsetY = 0;
 	if (pg_CurrentSceneIndex == 0 || pg_CurrentSceneIndex == 1) {
 		photo_offsetY = 0.52f - pg_Translate_SVG_Text(pg_Ind_Current_DisplayText) / window_height;
 	}
 #endif
-#if defined (PIERRES)
+#if defined(var_photoJitterAmpl) and defined(var_photo_offsetX) and defined(var_photo_offsetX)
 	float angle = photoJitterAmpl * (pulse[0] - 0.5f) * float(M_PI);
 	float radius = photoJitterAmpl * (pulse[2] - 0.5f);
 	// offset for POT coordinates
-	photo_offsetX = radius * cos(angle) / window_width;
+	photo_offsetX = radius * cos(angle) / workingWindow_width;
 	photo_offsetY = radius * sin(angle) / window_height;
-#endif
 	glUniform4f(uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY,
 		flashPhotoTrk_weight, flashPhotoTrk_threshold, photo_offsetX, photo_offsetY);
 #endif
@@ -2147,7 +2271,7 @@ void pg_update_shader_uniforms(void) {
 	// flash CA -> BG & repop color (BG & CA)
 	glUniform4f(uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght,
 		repop_ColorBG_r, repop_ColorBG_g, repop_ColorBG_b, flashCABG_weight);
-#if defined(PG_NB_CA_TYPES) && !defined (GN) && !defined (ALKEMI)
+#if defined(var_nb_CATypes) && !defined(var_alKemi)
 	glUniform3f(uniform_Update_fs_3fv_repop_ColorCA,
 		repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
 #endif
@@ -2156,16 +2280,16 @@ void pg_update_shader_uniforms(void) {
 	glUniform3f(uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres,
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
 	// photo size 
-#if defined (TVW)
+#if defined(TVW)
 	glUniform4f(uniform_Update_fs_4fv_photo01_wh,
 		(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
 		(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
 #endif
 
-#if defined (PG_WITH_PHOTO_DIAPORAMA)
-#ifdef PG_WITH_CLIPS
+#if defined(var_photo_diaporama)
+#if defined(var_clip_mix)
 	// clip weights 
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	if ((playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips)
 		|| (playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips)
 		|| (playing_secondClipNoLeft >= 0 && playing_secondClipNoLeft < pg_nbClips)
@@ -2173,41 +2297,58 @@ void pg_update_shader_uniforms(void) {
 		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
 			float(clip_crop_width) / clip_image_width, float(clip_crop_height) / clip_image_height,
 			float(clip_crop_width) / clip_image_width, float(clip_crop_height) / clip_image_height);
-		float wl0 = 0.f;
-		float wr0 = 0.f;
-		float wl1 = 0.f;
-		float wr1 = 0.f;
+		float wl0 = 0.f; // weight of first left clip
+		float wr0 = 0.f; // weight of first right clip
+		float wl1 = 0.f; // weight of second left clip
+		float wr1 = 0.f; // weight of second right clip
+		// valid first left clip
 		if (playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips) {
 			wl0 = 1.f;
 		}
+		// valid first right clip
 		if (playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips) {
 			wr0 = 1.f;
 		}
+		// valid second left clip
 		if (playing_secondClipNoLeft >= 0 && playing_secondClipNoLeft < pg_nbClips) {
 			wl1 = 1.f;
 		}
+		// valid second right clip
 		if (playing_secondClipNoRight >= 0 && playing_secondClipNoRight < pg_nbClips) {
 			wr1 = 1.f;
 		}
+		//printf("wl0 %.2f wl1 %.2f\n", wl0, wl1);
+		// mixing fader in the middle
+		// first and second clips are mixed fully
+		// the right and left levels are used for lateral mixing
 		if (clip_mix == 0) {
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
-				wl0 * pg_clip_status[_clipLeft].clip_level, wr0 * pg_clip_status[_clipRight].clip_level, rand_0_1, rand_0_1);
+				wl0 * pg_clip_status[_clipLeft].clip_level[0], wr0 * pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
 			glUniform2f(uniform_Update_fs_2fv_clip01Wghts,
-				wl1 * pg_clip_status[_clipLeft].clip_level, wr1 * pg_clip_status[_clipRight].clip_level);
+				wl1 * pg_clip_status[_clipLeft].clip_level[1], wr1 * pg_clip_status[_clipRight].clip_level[1]);
+			//printf("neut wl0 %.2f wl1 %.2f\n", wl0, wl1);
 		}
+		// second clips are mixed fully
+		// first clip progressively decrease
+		// the right and left levels are used for lateral mixing
 		else if (clip_mix < 0) {
 			clip_mix = max(clip_mix, -0.5f);
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
-				wl0 * (1.f + 2 * clip_mix) * pg_clip_status[_clipLeft].clip_level, wr0 * (1.f + 2 * clip_mix) * pg_clip_status[_clipRight].clip_level, rand_0_1, rand_0_1);
+				wl0 * (1 - 2 * -clip_mix) * pg_clip_status[_clipLeft].clip_level[0], wr0 * (1 - 2 * -clip_mix) * pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
 			glUniform2f(uniform_Update_fs_2fv_clip01Wghts,
-				wl1 * pg_clip_status[_clipLeft].clip_level, wr1 * pg_clip_status[_clipRight].clip_level);
+				wl1 * pg_clip_status[_clipLeft].clip_level[1], wr1 * pg_clip_status[_clipRight].clip_level[1]);
+			//printf("neg %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0 * (1 - 2 * -clip_mix), wl1);
 		}
+		// first clips are mixed fully
+		// second lip progressively decrease
+		// the right and left levels are used for lateral mixing
 		else if (clip_mix > 0) {
 			clip_mix = min(clip_mix, 0.5f);
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
-				wl0 * pg_clip_status[_clipLeft].clip_level, wr0 * pg_clip_status[_clipRight].clip_level, rand_0_1, rand_0_1);
+				wl0 * pg_clip_status[_clipLeft].clip_level[0], wr0 * pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
 			glUniform2f(uniform_Update_fs_2fv_clip01Wghts,
-				wl1 * (1.f - 2 * clip_mix) * pg_clip_status[_clipLeft].clip_level, wr1 * (1.f - 2 * clip_mix) * pg_clip_status[_clipRight].clip_level);
+				wl1 * (1 - 2 * clip_mix) * pg_clip_status[_clipLeft].clip_level[1], wr1 * (1 - 2 * clip_mix) * pg_clip_status[_clipRight].clip_level[1]);
+				//printf("pos %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0, wl1 * (1 - 2 * clip_mix));
 		}
 	}
 	else
@@ -2218,15 +2359,15 @@ void pg_update_shader_uniforms(void) {
 			float(clip_crop_width) / clip_image_width, float(clip_crop_height) / clip_image_height,
 			float(clip_crop_width) / clip_image_width, float(clip_crop_height) / clip_image_height);
 		//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
-	//	leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio,
-	//	leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio);
+	//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
+	//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
 		if (!(playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips)) {
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
-				0.0, pg_clip_status[_clipRight].clip_level, rand_0_1, rand_0_1);
+				0.0, pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
 		}
 		else if (!(playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips)) {
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
-				pg_clip_status[_clipLeft].clip_level, 0.0, rand_0_1, rand_0_1);
+				pg_clip_status[_clipLeft].clip_level1[1], 0.0, rand_0_1, rand_0_1);
 		}
 	}
 	else 
@@ -2234,11 +2375,11 @@ void pg_update_shader_uniforms(void) {
 #endif
 	if (pg_CurrentDiaporamaDir >= 0) {
 		glUniform4f(uniform_Update_fs_4fv_photo01_wh,
-		leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio,
-		leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio);
+		workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
+		workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
 		//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
-	//	leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio,
-	//	leftWindowWidth_powerOf2_ratio, window_height_powerOf2_ratio);
+	//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
+	//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
 
 		glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues,
 			pg_Photo_weight[0], pg_Photo_weight[1], rand_0_1, rand_0_1);
@@ -2257,7 +2398,7 @@ void pg_update_shader_uniforms(void) {
 	//printf("camera movie weight %.2f %.2f\n",
 	//	*((float *)ScenarioVarPointers[_cameraWeight]), *((float *)ScenarioVarPointers[_movieWeight]));
 
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	// camera texture offset 
 	glUniform4f(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H,
 		(GLfloat)pg_camera_x_offset, (GLfloat)pg_camera_y_offset,
@@ -2265,7 +2406,7 @@ void pg_update_shader_uniforms(void) {
 	//printf("Update shader camera frame size %dx%d offset %dx%d\n", pg_camera_frame_width, pg_camera_frame_height, pg_camera_x_offset, pg_camera_y_offset);
 #endif
 
-#if defined (TVW)
+#if defined(TVW)
 	// image buffer layer weights
 	centralPhoto += photoJitterAmpl * fabs(rand_0_1 - 0.5f);
 	while (centralPhoto < 0) centralPhoto += PG_PHOTO_NB_TEXTURES;
@@ -2321,22 +2462,35 @@ void pg_update_shader_uniforms(void) {
 	glUniform4fv(uniform_Update_fs_4fv_mask_noisesxy, 3, pg_Photo_mask_position_noises);
 #endif
 
-#ifdef PG_SLOW_TRACK_TRANSLATION
-	// track x & y translations
-	float translation_x[2] = {0.f, 0.f};
-	float translation_y[2] = { 0.f, 0.f };
-	translation_x[0] = frame_based_translation(track_x_transl_0, 0);
-	translation_y[0] = frame_based_translation(track_y_transl_0, 1);
-	translation_x[1] = frame_based_translation(track_x_transl_1, 2);
-	translation_y[1] = frame_based_translation(track_y_transl_1, 3);
+#if defined(var_slow_track_translation)
+	if (slow_track_translation) {
+		// track x & y translations
+		float translation_x[2] = { 0.f, 0.f };
+		float translation_y[2] = { 0.f, 0.f };
+		translation_x[0] = frame_based_translation(track_x_transl_0, 0);
+		translation_y[0] = frame_based_translation(track_y_transl_0, 1);
+		translation_x[1] = frame_based_translation(track_x_transl_1, 2);
+		translation_y[1] = frame_based_translation(track_y_transl_1, 3);
+		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1,
+			translation_x[0], translation_y[0], translation_x[1], translation_y[1]);
+	}
+	else {
+		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1,
+			track_x_transl_0, track_y_transl_0, track_x_transl_1, track_y_transl_1);
+	}
+#elif defined(var_Argenteuil_flash_move_track1_freq)
 	glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1,
-		translation_x[0], translation_y[0], translation_x[1], translation_y[1]);
+		Argenteuil_track_x_transl_0, Argenteuil_track_y_transl_0, Argenteuil_track_x_transl_1, Argenteuil_track_y_transl_1);
+	Argenteuil_track_x_transl_0 = 0.f;
+	Argenteuil_track_y_transl_0 = 0.f;
+	Argenteuil_track_x_transl_1 = 0.f;
+	Argenteuil_track_y_transl_1 = 0.f;
 #else
 	glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1,
 		track_x_transl_0, track_y_transl_0, track_x_transl_1, track_y_transl_1);
 #endif
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// acceleration center and CA subtype
 	// in case of interpolation between CA1 and CA2 
 	if (!BrokenInterpolationVar[_CA1_CA2_weight]) {
@@ -2363,14 +2517,14 @@ void pg_update_shader_uniforms(void) {
 	}
 #endif
 
-#if defined (PG_NB_CA_TYPES) || defined (PG_WITH_BLUR)
+#if defined(var_nb_CATypes) || defined(PG_WITH_BLUR)
 	glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius,
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 		GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 #else
 		0.f, 0.f,
 #endif
-#if defined (PG_WITH_BLUR)
+#if defined(PG_WITH_BLUR)
 		(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 #else
 		0.f, 0.f);
@@ -2379,26 +2533,28 @@ void pg_update_shader_uniforms(void) {
 // printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 #endif
 
-#ifdef PG_WITH_CLIPS
-	glUniform3f(uniform_Update_fs_3fv_photo_rgb, pg_clip_status[_clipLeft].clip_r, pg_clip_status[_clipLeft].clip_g, pg_clip_status[_clipLeft].clip_b);
-	//printf("RGB L %.2f %.2f %.2f\n", pg_clip_status[_clipLeft].clip_r, pg_clip_status[_clipLeft].clip_g, pg_clip_status[_clipLeft].clip_b);
-	//printf("RGB R %.2f %.2f %.2f\n", pg_clip_status[_clipRight].clip_r, pg_clip_status[_clipRight].clip_g, pg_clip_status[_clipRight].clip_b);
+#if defined(var_clipCaptFreq)
+	glUniform3f(uniform_Update_fs_3fv_photo_rgb, pg_clip_status[_clipLeft].clip_r_channel_level[0], 
+		pg_clip_status[_clipLeft].clip_g_channel_level[0], 
+		pg_clip_status[_clipLeft].clip_b_channel_level[0]);
+	//printf("RGB L %.2f %.2f %.2f\n", pg_clip_status[_clipLeft].clip_r_channel_level, pg_clip_status[_clipLeft].clip_g_channel_level, pg_clip_status[_clipLeft].clip_b_channel_level);
+	//printf("RGB R %.2f %.2f %.2f\n", pg_clip_status[_clipRight].clip_r_channel_level, pg_clip_status[_clipRight].clip_g_channel_level, pg_clip_status[_clipRight].clip_b_channel_level);
 #endif
 
 
-#ifdef GN
 	// sets the time of the 1st plane launch 
+#if defined(var_GenerativeNights_planes)
 	if (CAInterpolatedType == CA_NEUMANN_BINARY && firstPlaneFrameNo < 0) {
 		// printf("First plane frame no %d\n", firstPlaneFrameNo);
-		firstPlaneFrameNo = pg_FrameNo - 200;
+		firstPlaneFrameNo = pg_FrameNo - 2300;
 	}
-	glUniform2f(uniform_Update_fs_2fv_initCA_1stPlaneFrameNo,
-		initCA, GLfloat(firstPlaneFrameNo));
+	glUniform2f(uniform_Update_fs_2fv_initCA_1stPlaneFrameNo, initCA, GLfloat(firstPlaneFrameNo));
 	// one shot CA launching
 	if (initCA > 0.0f) {
 		initCA = 0.0f;
 	}
 #endif
+
 	if (CAInterpolatedType_prev != CAInterpolatedType
 		|| CAInterpolatedSubType_prev != CAInterpolatedSubType) {
 		sprintf(AuxString, "/CAType %d", CAInterpolatedType);
@@ -2413,12 +2569,13 @@ void pg_update_shader_uniforms(void) {
 	/////////////////////////////////////////////////////////////////////////
 	// PARTICLE RENDERING SHADER UNIFORM VARIABLES
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
+#if defined(var_part_initialization)
+#if defined(TEXTURED_QUAD_PARTICLES) || defined(LINE_SPLAT_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 	glUniform4f(uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio,
 		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
 		(GLfloat)particle_type,
-		pulse[2], float(leftWindowWidth)/float(window_height));
+		pulse[2], float(workingWindow_width)/float(window_height));
 
 	///////////////////////////////////////////////////////////////////////
 	bool assigned = false;
@@ -2439,7 +2596,7 @@ void pg_update_shader_uniforms(void) {
 		}
 	}
 #endif
-#if defined (CURVE_PARTICLES) 
+#if defined(CURVE_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 	glUniform3f(uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse,
 		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
@@ -2465,16 +2622,18 @@ void pg_update_shader_uniforms(void) {
 		}
 	}
 #endif
-#if defined (TVW)
+#endif
+
+#if defined(TVW)
 	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
 	// the center of the screen is the default position for this track
 	if (part_path_repulse_1 || part_path_follow_1) {
-		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(leftWindowWidth / 2), float(window_height / 2));
+		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(workingWindow_width / 2), float(window_height / 2));
 	}
 	// special case for army radar: track 2 is assigned as repop path but is not replayed
 	// the center of the top left screen is the default position for this track
 	else if (part_path_repop_2 || part_path_repulse_2) {
-		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(leftWindowWidth / 4), float(window_height / 4));
+		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height, float(workingWindow_width / 4), float(window_height / 4));
 	}
 #endif
 
@@ -2488,7 +2647,7 @@ void pg_update_shader_uniforms(void) {
 	glUseProgram(shader_programme[pg_shader_Mixing]);
 
 	// CA weight
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	glUniform3f(uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght,
 		(GLfloat)window_height, flashCameraTrk_weight, flashPhotoTrk_weight);
 #else
@@ -2497,7 +2656,7 @@ void pg_update_shader_uniforms(void) {
 #endif
 
 	// TEXT TRANSPARENCY
-#if defined (TVW)
+#if defined(TVW)
 	glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha,
 		messageTransparency,
 		(GLfloat)DisplayText1Alpha, (GLfloat)DisplayText2Alpha);
@@ -2528,29 +2687,34 @@ void pg_update_shader_uniforms(void) {
 		//	(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
 
 
-#if defined(GN) || defined(TVW) || defined(ALKEMI)
+#if defined(TVW) || defined(var_alKemi)
 	int rightWindowVMargin = 0;
 	if (double_window && window_width > 1920) {
-		rightWindowVMargin = (window_width - 2 * leftWindowWidth) / 2;
+		rightWindowVMargin = (window_width - 2 * workingWindow_width) / 2;
 	}
 	// screen size
 	glUniform4f(uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(rightWindowVMargin),
-		GLfloat(CurrentClockTime - InitialScenarioTime));
+		(GLfloat)workingWindow_width, (GLfloat)window_height, GLfloat(rightWindowVMargin),
+		GLfloat(pg_CurrentClockTime - InitialScenarioTime));
 #else
 	// screen size
-	//printf("time from start %.2f\n", GLfloat(CurrentClockTime - InitialScenarioTime));
-		glUniform3f(uniform_Master_fs_3fv_width_height_timeFromStart,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(CurrentClockTime - InitialScenarioTime));
+	//printf("time from start %.2f\n", GLfloat(pg_CurrentClockTime - InitialScenarioTime));
+	glUniform4f(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen,
+		(GLfloat)workingWindow_width, (GLfloat)window_height, GLfloat(pg_CurrentClockTime - InitialScenarioTime),
+		(GLfloat)muteRightScreen);
 #endif
 	// printf("mobile cursor %d\n", (mobile_cursor ? 1 : 0));
 	glUniform2i(uniform_Master_fs_2iv_mobile_cursor_currentScene, (mobile_cursor ? 1 : 0), pg_CurrentSceneIndex);
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 	// high bandpass color
 	glUniform3f(uniform_Master_fs_3fv_Caverne_BackColor_rgb,
 		Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
 #endif
-#ifdef PG_SENSORS
+#if defined(var_flashchange_BGcolor_freq)
+	glUniform3f(uniform_Master_fs_3fv_BG_color_rgb,
+		BG_r, BG_g, BG_b);
+#endif
+#ifdef var_sensor_layout
 	/////////////////////////////////////////////////////////////////////////
 	// SENSOR SHADER UNIFORM VARIABLES
 	// glUseProgram(shader_programme[pg_shader_Sensor]);
@@ -2558,18 +2722,25 @@ void pg_update_shader_uniforms(void) {
 	// no update is made globally for all the sensors
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	/////////////////////////////////////////////////////////////////////////
 	// MESH SHADER UNIFORM VARIABLES
 	glUseProgram(shader_programme[pg_shader_Mesh]);
 	// the variable of the mesh shader is updated before each rendering mode (lines of facets)
-#if !defined(TEMPETE) && !defined(ENSO) && !defined(SONG) && !defined(CORE)
 	glUniform3f(uniform_Mesh_fs_3fv_light, mesh_light_x, mesh_light_y, mesh_light_z);
+#if defined(var_Contact_mesh_expand)
+	glUniform2f(uniform_Mesh_vp_2fv_dilate_explode, Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
+	//printf("mesh %.2f %.2f\n", Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
 #endif
-#ifdef PG_AUGMENTED_REALITY
+#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
 	glUniform4f(uniform_Mesh_fs_4fv_textureFrontier, textureFrontier_wmin, textureFrontier_wmax, textureFrontier_hmin, textureFrontier_hmax);
 	glUniform4f(uniform_Mesh_fs_4fv_textureFrontier_width, textureFrontier_wmin_width, textureFrontier_wmax_width, textureFrontier_hmin_width, textureFrontier_hmax_width);
 	glUniform4f(uniform_Mesh_fs_4fv_textureScaleTransl, textureScale_w, textureScale_h, textureTranslate_w, textureTranslate_h);
+#endif
+#if defined(var_Contact_mesh_palette)
+	float pulsed_color[3];
+	compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, true);
+	glUniform4f(uniform_Mesh_fs_4fv_color_palette, pulsed_color[0], pulsed_color[1], pulsed_color[2], float(Contact_mesh_palette));
 #endif
 #endif
 
@@ -2586,7 +2757,7 @@ void pg_update_shader_uniforms(void) {
 /////////////////////////////////////
 // PASS #0: PARTICLE ANIMATION PASS
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization)
 void pg_ParticleAnimationPass(void) {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
 	// printf("FBO ANIMATION       %d\n", pg_FBO_ParticleAnimation[((pg_FrameNo + 1) % 2)]);
@@ -2607,8 +2778,8 @@ void pg_ParticleAnimationPass(void) {
 	// texture unit location
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed, pg_Part_init_pos_speed_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad, pg_Part_init_col_rad_ParticleAnimation_sampler);
-	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_acc, pg_Part_acc_ParticleAnimation_sampler);
-#ifdef PG_NB_CA_TYPES
+	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_acc, pg_Part_image_acc_ParticleAnimation_sampler);
+#ifdef var_nb_CATypes
 	glUniform1i(uniform_ParticleAnimation_texture_fs_CA, pg_CA_FBO_ParticleAnimation_sampler);
 #endif
 	glUniform1i(uniform_ParticleAnimation_texture_fs_CA, pg_CA_FBO_ParticleAnimation_sampler);
@@ -2616,12 +2787,8 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_col_rad, pg_Part_col_rad_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad, pg_Part_Target_pos_col_rad_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Noise, pg_Noise_ParticleAnimation_sampler);
-#ifdef PG_WITH_REPOP_DENSITY
 	glUniform1i(uniform_ParticleAnimation_texture_fs_RepopDensity, pg_RepopDensity_ParticleAnimation_sampler);
-#endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Camera_frame, pg_Camera_frame_ParticleAnimation_sampler);
-#endif
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Movie_frame, pg_Movie_frame_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk0, pg_Trk0_FBO_ParticleAnimation_sampler);
 #if PG_NB_TRACKS >= 2
@@ -2634,8 +2801,8 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk3, pg_Trk3_FBO_ParticleAnimation_sampler);
 #endif
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 	// position speed are stored in a texture
 	glActiveTexture(GL_TEXTURE0 + pg_Part_init_pos_speed_ParticleAnimation_sampler);
@@ -2658,18 +2825,18 @@ void pg_ParticleAnimationPass(void) {
 	if (part_initialization >= 0
 		&& part_initialization < int(pg_particle_initial_pos_speed_texID.size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_initial_color_radius_texID.at(part_initialization)); // color RGB - rad 
-		printf("particle initialization (color radius) %d\n", part_initialization);
+		//printf("particle initialization (color radius) %d\n", part_initialization);
 	}
-	glActiveTexture(GL_TEXTURE0 + pg_Part_acc_ParticleAnimation_sampler);
-	// acceleration is taken from photo 
+	glActiveTexture(GL_TEXTURE0 + pg_Part_image_acc_ParticleAnimation_sampler);
+	// acceleration is taken from image 
 	if (part_image_acceleration >= 0
 		&& part_image_acceleration < int(pg_particle_acc_texID.size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_particle_acc_texID.at(part_image_acceleration)); // color RGB - rad 
-		printf("particle image initialization (image based initialization) %d\n", part_initialization);
+		//printf("particle image acceleration (image based acceleration) %d\n", part_image_acceleration);
 	}
 
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// 2-cycle ping-pong CA step n step n (FBO attachment 0)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % PG_FBO_PINGPONG_SIZE) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
@@ -2691,13 +2858,15 @@ void pg_ParticleAnimationPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Noise_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_3D, Noise_texture_3D);
 
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density)
 	// noise texture (noise is also generated procedurally in the update shader)
 	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_ParticleAnimation_sampler);
 	if (Part_repop_density >= 0
 		&& unsigned int(Part_repop_density) < pg_RepopDensity_texture_texID.size()) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_RepopDensity_texture_texID.at(Part_repop_density));
+		//printf("part repop density %d/%d\n", Part_repop_density, pg_RepopDensity_texture_texID.at(Part_repop_density));
 	}
+	
 	else {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
@@ -2707,9 +2876,11 @@ void pg_ParticleAnimationPass(void) {
 	// glActiveTexture(GL_TEXTURE0 + 7);
 	// glBindTexture(GL_TEXTURE_RECTANGLE, FBO_CameraFrame_texID);
 	// current camera texture
-#ifdef PG_WITH_CAMERA_CAPTURE
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_ParticleAnimation_sampler);
+#if defined(var_cameraCaptFreq)
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_texture_texID);
+#else
+	glBindTexture(GL_TEXTURE_RECTANGLE, 0);
 #endif
 
 	// movie texture
@@ -2774,7 +2945,7 @@ void pg_UpdatePass(void) {
 	glUniformMatrix4fv(uniform_Update_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
 	glUniformMatrix4fv(uniform_Update_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
-#if defined (PG_WITH_PHOTO_HOMOGRAPHY)
+#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 	// homography for background texture distortion
 	// source points
 	std::vector<cv::Point2f> sourcePoints;
@@ -2803,36 +2974,33 @@ void pg_UpdatePass(void) {
 #endif
 
 	// texture unit location
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	glUniform1i(uniform_Update_texture_fs_CA, pg_CA_FBO_Update_sampler);
+#endif
+#if defined(var_alKemi)
+	glUniform1i(uniform_Update_texture_fs_PreviousCA, pg_PreviousCA_FBO_Update_sampler);
 #endif
 #ifdef PG_NB_PIXEL_MODES
 	glUniform1i(uniform_Update_texture_fs_Pixels, pg_Pixels_FBO_Update_sampler);
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 	glUniform1i(uniform_Update_texture_fs_Brushes, pg_Brushes_Update_sampler);
 #endif
-#ifdef PG_WITH_CAMERA_CAPTURE
 	glUniform1i(uniform_Update_texture_fs_Camera_frame, pg_Camera_frame_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Camera_BG, pg_Camera_BG_Update_sampler);
-#endif
 	glUniform1i(uniform_Update_texture_fs_Movie_frame, pg_Movie_frame_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Noise, pg_Noise_Update_sampler);
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 	glUniform1i(uniform_Update_texture_fs_RepopDensity, pg_RepopDensity_Update_sampler);
 #endif
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 	glUniform1i(uniform_Update_texture_fs_Photo0, pg_Photo0_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Photo1, pg_Photo1_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Clip0, pg_SecondClipLeft_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Clip1, pg_SecondClipRight_Update_sampler);
+#if defined(var_part_initialization) 
+	glUniform1i(uniform_Update_texture_fs_Part_render, pg_SVGandPart_render_FBO_Update_sampler);
 #endif
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	glUniform1i(uniform_Update_texture_fs_Clip0, pg_Clip0_Update_sampler);
-	glUniform1i(uniform_Update_texture_fs_Clip1, pg_Clip1_Update_sampler);
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	glUniform1i(uniform_Update_texture_fs_Part_render, pg_Part_render_FBO_Update_sampler);
-#endif
-#if defined (TVW)
+#if defined(TVW)
 	glUniform1i(uniform_Update_texture_fs_TVWPixels0, pg_TVWPixels0);
 	glUniform1i(uniform_Update_texture_fs_TVWPixels1, pg_TVWPixels1);
 	glUniform1i(uniform_Update_texture_fs_TVWPixels2, pg_TVWPixels2);
@@ -2858,27 +3026,25 @@ void pg_UpdatePass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Update_texture_fs_Trk3, pg_Trk3_FBO_Update_sampler);
 #endif
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined(var_CATable)
 	glUniform1i(uniform_Update_texture_fs_CATable, pg_CATable_Update_sampler);
 #endif
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 	glUniform1i(uniform_Update_texture_fs_Camera_BGIni, pg_Camera_BGIni_FBO_Update_sampler);
 #endif
-#ifdef PG_WITH_BURST_MASK
-	glUniform1i(uniform_Update_texture_fs_Burst_Mask, pg_Burst_Mask_FBO_Update_sampler);
-#endif
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glUniform1i(uniform_Update_texture_fs_pixel_acc, pg_pixel_image_acc_Update_sampler);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % PG_FBO_PINGPONG_SIZE) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-#ifdef ALKEMI
+#endif
+#if defined(var_alKemi)
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- previous Frame
 	glActiveTexture(GL_TEXTURE0 + pg_PreviousCA_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + (PG_FBO_PINGPONG_SIZE - 1)) % PG_FBO_PINGPONG_SIZE) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-#endif
 #endif
 
 #ifdef PG_NB_PIXEL_MODES
@@ -2890,26 +3056,24 @@ void pg_UpdatePass(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// pen patterns
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 	glActiveTexture(GL_TEXTURE0 + pg_Brushes_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Pen_texture_3D_texID);
 #endif
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 	// camera texture produced at preceding pass
 	// glActiveTexture(GL_TEXTURE0 + 7);
 	// glBindTexture(GL_TEXTURE_RECTANGLE, FBO_CameraFrame_texID);
 	// current camera texture
-#ifdef PG_WITH_CAMERA_CAPTURE
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_texture_texID);
 
 	// current background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BG_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BG_texture_texID);
-#endif
 
 	// movie texture
 	glActiveTexture(GL_TEXTURE0 + pg_Movie_frame_Update_sampler);
@@ -2919,7 +3083,7 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Noise_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Noise_texture_3D);
 
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_BG_CA_repop_density)
 	// repop density texture
 	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_Update_sampler);
 	if (BG_CA_repop_density >= 0
@@ -2931,17 +3095,21 @@ void pg_UpdatePass(void) {
 	}
 #endif
 
-#ifdef PG_WITH_PHOTO_DIAPORAMA
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_Update_sampler);
-#ifdef PG_WITH_CLIPS
-	if (playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips
+#ifdef var_photo_diaporama
+#if defined(var_clipCaptFreq)
+	if (playing_clipNoLeft >= 0 
+		&& playing_clipNoLeft < pg_nbClips
 		&& pg_firstCompressedClipFramesInFolder[playing_clipNoLeft] 
 			+ pg_clip_status[_clipLeft].get_lastFrame(0) < pg_nbCompressedClipFrames
 		&& pg_firstCompressedClipFramesInFolder[playing_clipNoLeft] 
 			+ pg_clip_status[_clipLeft].get_lastFrame(0) >= 0) {
 			glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_firstCompressedClipFramesInFolder[playing_clipNoLeft] 
 				+ pg_clip_status[_clipLeft].get_lastFrame(0)]->texBuffID);
+			//printf("frame rel %d, Frame abs %d, tex ID %d\n", pg_clip_status[_clipLeft].get_lastFrame(0), pg_firstCompressedClipFramesInFolder[playing_clipNoLeft]
+			//	+ pg_clip_status[_clipLeft].get_lastFrame(0), pg_ClipFrames_buffer_data[pg_firstCompressedClipFramesInFolder[playing_clipNoLeft]
+			//	+ pg_clip_status[_clipLeft].get_lastFrame(0)]->texBuffID);
 	}
 	else 
 #endif
@@ -2953,7 +3121,9 @@ void pg_UpdatePass(void) {
 			//printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
 		//}
 	}
-	else {
+	else 
+#endif
+	{
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		//if (pg_FrameNo % 60 == 0) {
 		//	printf("texture ID NULL\n");
@@ -2962,8 +3132,10 @@ void pg_UpdatePass(void) {
 
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_Update_sampler);
-#ifdef PG_WITH_CLIPS
-	if (playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips
+#ifdef var_photo_diaporama
+#if defined(var_clipCaptFreq)
+	if (playing_clipNoRight >= 0 
+		&& playing_clipNoRight < pg_nbClips
 		&& pg_firstCompressedClipFramesInFolder[playing_clipNoRight]
 		+ pg_clip_status[_clipRight].get_lastFrame(0) < pg_nbCompressedClipFrames
 		&& pg_firstCompressedClipFramesInFolder[playing_clipNoRight]
@@ -2981,36 +3153,45 @@ void pg_UpdatePass(void) {
 		//	printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
 		//}
 	}
-	else {
+	else 
+#endif
+	{
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		//if (pg_FrameNo % 60 == 0) {
 		//	printf("texture ID NULL\n");
 		//}
 	}
-#endif
+
 
 	// clip[0] texture
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	glActiveTexture(GL_TEXTURE0 + pg_Clip0_Update_sampler);
-	if (playing_secondClipNoLeft >= 0 && playing_secondClipNoLeft < pg_nbClips
+	// second clips on left and right
+	glActiveTexture(GL_TEXTURE0 + pg_SecondClipLeft_Update_sampler);
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	if (playing_secondClipNoLeft >= 0
+		&& playing_secondClipNoLeft < pg_nbClips
 		&& pg_firstCompressedClipFramesInFolder[playing_secondClipNoLeft]
 		+ pg_clip_status[_clipLeft].get_lastFrame(1) < pg_nbCompressedClipFrames
 		&& pg_firstCompressedClipFramesInFolder[playing_secondClipNoLeft]
 		+ pg_clip_status[_clipLeft].get_lastFrame(1) >= 0) {
 		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_firstCompressedClipFramesInFolder[playing_secondClipNoLeft]
 			+ pg_clip_status[_clipLeft].get_lastFrame(1)]->texBuffID);
+		//printf("frame %d\n", pg_firstCompressedClipFramesInFolder[playing_secondClipNoLeft]
+		//	+ pg_clip_status[_clipLeft].get_lastFrame(1));
 	}
-	else {
+	else 
+#endif
+	{
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		//if (pg_FrameNo % 60 == 0) {
-		//	printf("texture ID NULL\n");
+			//printf("second clip left texture ID NULL\n");
 		//}
 	}
-#endif
+
 	// clip[1] texture
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
-	glActiveTexture(GL_TEXTURE0 + pg_Clip1_Update_sampler);
-	if (playing_secondClipNoRight >= 0 && playing_secondClipNoRight < pg_nbClips
+	glActiveTexture(GL_TEXTURE0 + pg_SecondClipRight_Update_sampler);
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	if (playing_secondClipNoRight >= 0
+		&& playing_secondClipNoRight < pg_nbClips
 		&& pg_firstCompressedClipFramesInFolder[playing_secondClipNoRight]
 		+ pg_clip_status[_clipRight].get_lastFrame(1) < pg_nbCompressedClipFrames
 		&& pg_firstCompressedClipFramesInFolder[playing_secondClipNoRight]
@@ -3018,21 +3199,23 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_firstCompressedClipFramesInFolder[playing_secondClipNoRight]
 			+ pg_clip_status[_clipRight].get_lastFrame(1)]->texBuffID);
 	}
-	else {
+	else 
+#endif
+	{
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		//if (pg_FrameNo % 60 == 0) {
 		//	printf("texture ID NULL\n");
 		//}
 	}
-#endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+
+#if defined(var_part_initialization) 
 	// FBO capture of particle rendering used for flashing layers with particles
-	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
+	glActiveTexture(GL_TEXTURE0 + pg_SVGandPart_render_FBO_Update_sampler);
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_SVGandParticleRendering_texID);
 #endif
 
-#if defined (TVW)
+#if defined(TVW)
 	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels0);
 	glBindTexture(GL_TEXTURE_2D, 
 		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID);
@@ -3124,22 +3307,31 @@ void pg_UpdatePass(void) {
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % PG_FBO_PINGPONG_SIZE) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
 
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined(var_CATable)
 	// CA Data table (FBO attachment 11)
 	glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
 #endif 
+	// pixel acceleration  (FBO attachment 11)
+	//printf("pixel image acceleration (image based acceleration) %d size %d\n", pixel_image_acceleration, pg_pixel_acc_texID.size());
+	glActiveTexture(GL_TEXTURE0 + pg_pixel_image_acc_Update_sampler);
+	// acceleration is taken from photo 
+#if defined(var_pixel_image_acceleration)
+	if (pixel_image_acceleration >= 0
+		&& pixel_image_acceleration < int(pg_pixel_acc_texID.size())) {
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_pixel_acc_texID.at(pixel_image_acceleration)); // color RGB - rad 
+		//printf("pixel image acceleration (image based acceleration) %d\n", pixel_image_acceleration);
+	}
+	else
+#endif
+	{
+		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+	}
 
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BGIni_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BGIni_texture_texID);
-#endif
-
-#ifdef PG_WITH_BURST_MASK
-	// Master mask texture
-	glActiveTexture(GL_TEXTURE0 + pg_Burst_Mask_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, Burst_Mask_texID);
 #endif
 
 	// printf("photo IDs %d %d\n", pg_Photo_buffer_data[0].texBuffID, pg_Photo_buffer_data[1].texBuffID);
@@ -3161,15 +3353,14 @@ void pg_UpdatePass(void) {
 
 /////////////////////////////////////
 // PASS #2: PARTICLE, TEXT, SVG CLIP ART RENDERING PASS
-
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_activeClipArts) || defined(var_part_initialization)
 void pg_SVGandParticleRenderingPass(void) {
 	// printf("nb paticles %d\^n", nb_particles);
 	// draws the Bezier curve
 
-#ifndef TEMPETE
+#if !defined(TEMPETE)
 	if (pg_FrameNo > 0) {
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_SVGandParticleRendering);
 	}
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -3179,7 +3370,7 @@ void pg_SVGandParticleRenderingPass(void) {
 	////////////////////////////////////////
 	// SVG TEXT OR CLIP ART RENDERING    
 	////////////////////////////////////////
-#if defined (ETOILES_TEASER)
+#if defined(ETOILES)
 	if (pg_CurrentSceneIndex == 0) {
 		pg_Display_SVG_Text(&pg_Ind_Current_DisplayText, false);
 	}
@@ -3187,7 +3378,7 @@ void pg_SVGandParticleRenderingPass(void) {
 		pg_Display_SVG_Text(&pg_Ind_Current_DisplayText, true);
 	}
 #else
-#ifdef PG_WITH_CLIP_ART
+#if defined(var_activeClipArts)
 	pg_Display_All_SVG_ClipArt(activeClipArts);
 	printOglError(5256);
 #endif
@@ -3196,7 +3387,9 @@ void pg_SVGandParticleRenderingPass(void) {
 	////////////////////////////////////////
 	// PARTICLE RENDERING    
 	////////////////////////////////////////
-#if defined (TEXTURED_QUAD_PARTICLES)
+#if defined(var_part_initialization) 
+
+#if defined(TEXTURED_QUAD_PARTICLES)
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -3210,7 +3403,6 @@ void pg_SVGandParticleRenderingPass(void) {
 
 	////////////////////////////////////////
 	// activate shaders and sets uniform variable values    
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) 
 	glUseProgram(shader_programme[pg_shader_ParticleRender]);
 
 	glUniformMatrix4fv(uniform_ParticleSplat_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
@@ -3223,37 +3415,23 @@ void pg_SVGandParticleRenderingPass(void) {
 	// color/radius Particle update
 	glUniform1i(uniform_ParticleSplat_texture_vp_Part_col_rad, 1); 
 
-#if defined (TEXTURED_QUAD_PARTICLES)
+#if defined(TEXTURED_QUAD_PARTICLES)
 	// blurred disk texture
-	glUniform1i(uniform_ParticleSplat_BlurredDisk_texture_fs_decal, 2);
-#endif
-#endif
-#if defined (CURVE_PARTICLES) 
-	glUseProgram(shader_programme[pg_shader_ParticleRender]);
-
-	glUniformMatrix4fv(uniform_ParticleCurve_vp_proj, 1, GL_FALSE, pg_orthoWindowProjMatrix);
-	glUniformMatrix4fv(uniform_ParticleCurve_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
-	glUniformMatrix4fv(uniform_ParticleCurve_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
-
-	// texture unit location
-	// position/speed Particle update
-	glUniform1i(uniform_ParticleCurve_texture_vp_Part_pos_speed, 0);
-	// color/radius Particle update
-	glUniform1i(uniform_ParticleCurve_texture_vp_Part_col_rad, 1); 
-
+	glUniform1i(uniform_ParticleSplat_texture_fs_decal, 2);
+#elif defined(CURVE_PARTICLES) 
 	// comet texture
 	glUniform1i(uniform_ParticleCurve_Comet_texture_fs_decal, 2);
 #endif
 	printOglError(5256);
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
-	// 2-cycle ping-pong bezier Particle update
+	// 2-cycle ping-pong pos/speed
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleAnimation_texID[(pg_FrameNo % 2) * PG_FBO_PARTICLEANIMATION_NBATTACHTS + pg_Part_pos_speed_FBO_ParticleAnimation_attcht]);
 
-	// 2-cycle ping-pong bezier Particle update
+	// 2-cycle ping-pong color/radius
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleAnimation_texID[(pg_FrameNo % 2) * PG_FBO_PARTICLEANIMATION_NBATTACHTS + pg_Part_col_rad_FBO_ParticleAnimation_attcht]);
 
@@ -3261,11 +3439,14 @@ void pg_SVGandParticleRenderingPass(void) {
 	// comet texture
 	glActiveTexture(GL_TEXTURE0 + 2);
 	glBindTexture(GL_TEXTURE_2D, comet_texture_2D_texID);
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES)
+#elif defined(TEXTURED_QUAD_PARTICLES)
 	// blurred disk texture
 	glActiveTexture(GL_TEXTURE0 + 2);
-	glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID);
+#if defined(var_partSplat_texture)
+	glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID.at(partSplat_texture));
+#else
+	glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID.at(0));
+#endif
 #endif
 	printOglError(5259);
 
@@ -3290,8 +3471,7 @@ void pg_SVGandParticleRenderingPass(void) {
 		GL_UNSIGNED_INT,   // type
 		(void*)0           // element array buffer offset
 	);
-#endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#else
 	// Draw the patches !
 	glDrawElements(
 		GL_POINTS,      // mode
@@ -3306,8 +3486,10 @@ void pg_SVGandParticleRenderingPass(void) {
 	glDisableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-#if defined (TEXTURED_QUAD_PARTICLES)
+#if defined(TEXTURED_QUAD_PARTICLES)
 	glDisable(GL_BLEND);
+#endif
+
 #endif
 
 }
@@ -3345,17 +3527,17 @@ void pg_MixingPass(void) {
 	glUniformMatrix4fv(uniform_Mixing_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	glUniform1i(uniform_Mixing_texture_fs_CA, pg_CA_FBO_Mixing_sampler);
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	glUniform1i(uniform_Mixing_texture_fs_Part_render, pg_Part_render_FBO_Mixing_sampler);
 #endif
 	glUniform1i(uniform_Mixing_texture_fs_Render_prec, pg_Render_prec_FBO_Mixing_sampler);
 
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Font, pg_Screen_Font_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Message, pg_Screen_Message_FBO_Mixing_sampler);
-#if defined (TVW)
+#if defined(TVW)
 	glUniform1i(uniform_Mixing_texture_fs_Display_Font, pg_Display_Font_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Display_Message1, pg_Display_Message1_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Display_Message2, pg_Display_Message2_FBO_Mixing_sampler);
@@ -3371,19 +3553,19 @@ void pg_MixingPass(void) {
 	glUniform1i(uniform_Mixing_texture_fs_Trk3, pg_Trk3_FBO_Mixing_sampler);
 #endif
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// 2-cycle ping-pong CA step n + 1 (FBO attachment 0) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % PG_FBO_PINGPONG_SIZE) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization)
 	// Particles step n
 	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Mixing_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_SVGandParticleRendering_texID);
 #endif
 
 	// preceding snapshot for echo
@@ -3398,7 +3580,7 @@ void pg_MixingPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Screen_Message_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_screenMessageBitmap_texID);
 
-#if defined (TVW)
+#if defined(TVW)
 	// display font texture
 	glActiveTexture(GL_TEXTURE0 + pg_Display_Font_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, Display_Font_texture_Rectangle_texID);
@@ -3464,7 +3646,8 @@ void pg_MixingPass(void) {
 // PASS #4: FINAL DISPLAY: MIX OF ECHOED AND NON-ECHOED LAYERS
 
 void pg_MasterPass(void) {
-#ifdef PG_AUGMENTED_REALITY
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(PG_AUGMENTED_REALITY)
 	if (pg_FrameNo > 0) {
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
 	}
@@ -3473,16 +3656,13 @@ void pg_MasterPass(void) {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 #endif
 
-#ifdef PG_MIRRORED_SECOND_SCREEN
 	// sets viewport to double window
-	glViewport(0, 0, int(doubleWindowWidth * 1.5f), window_height);
-#else
-	// sets viewport to double window
-	glViewport(0, 0, doubleWindowWidth, window_height);
-#endif
+	glViewport(0, 0, window_width, window_height);
 
-#ifndef PG_AUGMENTED_REALITY
-	glDrawBuffer(GL_BACK);
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(PG_AUGMENTED_REALITY)
+	// TO BE CHECKED
+	// glDrawBuffer(GL_BACK);
 #endif
 
 	// output video buffer clean-up
@@ -3498,16 +3678,18 @@ void pg_MasterPass(void) {
 	glUniformMatrix4fv(uniform_Master_vp_view, 1, GL_FALSE, pg_identityViewMatrix);
 	glUniformMatrix4fv(uniform_Master_vp_model, 1, GL_FALSE, pg_identityModelMatrix);
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	// texture unit locations
 	glUniform1i(uniform_Master_texture_fs_Render_curr, pg_Render_curr_FBO_Master_sampler);
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	glUniform1i(uniform_Master_texture_fs_CA, pg_CA_FBO_Master_sampler);
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-	glUniform1i(uniform_Master_texture_fs_Part_render, pg_Part_render_FBO_Master_sampler);
+#if defined(var_part_initialization) 
+	glUniform1i(uniform_Master_texture_fs_Part_render, pg_SVGandPart_render_FBO_Master_sampler);
+#else
+	glUniform1i(uniform_Master_texture_fs_Part_render, pg_SVGandPart_render_FBO_Master_sampler);
 #endif
 	glUniform1i(uniform_Master_texture_fs_Trk0, pg_Trk0_FBO_Master_sampler);
 #if PG_NB_TRACKS >= 2
@@ -3523,24 +3705,24 @@ void pg_MasterPass(void) {
 	glUniform1i(uniform_Master_texture_fs_Mask, pg_Mask_FBO_Master_sampler);
 #endif
 
-#if defined (GN) || defined (INTERFERENCE)
-	glUniform1i(uniform_Master_texture_fs_LYMlogo, pg_LYMlogo_Master_sampler);
-#endif
-
 	// Mixing pass output (echoed composition of tracks)
 	glActiveTexture(GL_TEXTURE0 + pg_Render_curr_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % PG_FBO_PINGPONG_SIZE) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_activeClipArts) || defined(var_part_initialization)
 	// Particles step n 
-	glActiveTexture(GL_TEXTURE0 + pg_Part_render_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleRendering_texID);
+	glActiveTexture(GL_TEXTURE0 + pg_SVGandPart_render_FBO_Master_sampler);
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_SVGandParticleRendering_texID);
+#else
+	// Particles step n 
+	glActiveTexture(GL_TEXTURE0 + pg_SVGandPart_render_FBO_Master_sampler);
+	glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 #endif
 
 	// 2-cycle ping-pong track 0 step n (FBO attachment 3) -- next frame (outout from update pass)
@@ -3574,12 +3756,6 @@ void pg_MasterPass(void) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID);
 	}
 #endif
-#if defined (GN)
-	// LYM logo
-	glActiveTexture(GL_TEXTURE0 + pg_LYMlogo_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_LYMlogo_texID);
-#endif
-
 
 	//if (pg_FrameNo % 1000 <= 1) {
 	//	printf("Final check texID 0-5 %d %d %d %d %d %d\n\n",
@@ -3606,7 +3782,7 @@ void pg_MasterPass(void) {
 	);
 }
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 //////////////////////////////////////////////////
 // PASS #5: SENSOR PASS
 void pg_SensorPass(void) {
@@ -3622,8 +3798,8 @@ void pg_SensorPass(void) {
 	glUseProgram(shader_programme[pg_shader_Sensor]);
 	glBindVertexArray(quadSensor_vao);
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	// texture unit location
 	glUniform1i(uniform_Sensor_texture_fs_decal, 0);
 	// previous pass output
@@ -3638,15 +3814,16 @@ void pg_SensorPass(void) {
 		int reindexed_Sensor = Sensor_order[indSens];
 		if (sensor_onOff[reindexed_Sensor]) {
 			//printf("sensor index %d reindex %d\n", indSens, reindexed_Sensor);
-			modelMatrixSensor[12] = (sensorPositions[3 * reindexed_Sensor] + 0.5f - leftWindowWidth / 2.0f) + leftWindowWidth / 2.0f;
+			modelMatrixSensor[12] = (sensorPositions[3 * reindexed_Sensor] + 0.5f - workingWindow_width / 2.0f) + workingWindow_width / 2.0f;
 			modelMatrixSensor[13] = (sensorPositions[3 * reindexed_Sensor + 1] + 0.5f - window_height / 2.0f) + window_height / 2.0f;
 			modelMatrixSensor[14] = sensorPositions[3 * reindexed_Sensor + 2];
+			//printf("left sensor %d %.3f %.3f %.3f\n", indSens, modelMatrixSensor[12], modelMatrixSensor[13], modelMatrixSensor[14]);
 			glUniformMatrix4fv(uniform_Sensor_vp_model, 1, GL_FALSE, modelMatrixSensor);
 
 			// sensorLevel[indSens]
-			glUniform4f(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency,
+			glUniform4f(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency,
 				(sensor_onOff[reindexed_Sensor] ? 1.0f : -1.0f), (reindexed_Sensor == currentSensor ? 1.0f : -1.0f),
-				(sensorFollowMouse_onOff ? 1.0f : -1.0f), sensorLevel[reindexed_Sensor]);
+				master, sensorLevel[reindexed_Sensor]);
 
 			// draw points from the currently bound VAO with current in-use shader
 			glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
@@ -3658,19 +3835,21 @@ void pg_SensorPass(void) {
 	if (double_window) {
 		int rightWindowVMargin = 0;
 		if (window_width > 1920) {
-			rightWindowVMargin = (window_width - 2 * leftWindowWidth) / 2;
+			rightWindowVMargin = (window_width - 2 * workingWindow_width) / 2;
 		}
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 			int reindexed_Sensor = Sensor_order[indSens];
 			if (sensor_onOff[reindexed_Sensor]) {
-				modelMatrixSensor[12] = (sensorPositions[3 * reindexed_Sensor] + 0.5f - leftWindowWidth / 2.0f) + 3 * leftWindowWidth / 2.0f + rightWindowVMargin;
+				modelMatrixSensor[12] = (sensorPositions[3 * reindexed_Sensor] + 0.5f - workingWindow_width / 2.0f) + workingWindow_width / 2.0f
+					+ rightWindowVMargin + workingWindow_width;
 				modelMatrixSensor[13] = (sensorPositions[3 * reindexed_Sensor + 1] + 0.5f - window_height / 2.0f) + window_height / 2.0f;
 				modelMatrixSensor[14] = sensorPositions[3 * reindexed_Sensor + 2];
+				//printf("right sensor %d %.3f %.3f %.3f\n", indSens, modelMatrixSensor[12], modelMatrixSensor[13], modelMatrixSensor[14]);
 				glUniformMatrix4fv(uniform_Sensor_vp_model, 1, GL_FALSE, modelMatrixSensor);
 
-				glUniform4f(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency,
+				glUniform4f(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency,
 					(sensor_onOff[reindexed_Sensor] ? 1.0f : -1.0f), (reindexed_Sensor == currentSensor ? 1.0f : -1.0f),
-					(sensorFollowMouse_onOff ? 1.0f : -1.0f), sensorLevel[reindexed_Sensor]);
+					master, sensorLevel[reindexed_Sensor]);
 
 				// draw points from the currently bound VAO with current in-use shader
 				glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
@@ -3683,7 +3862,7 @@ void pg_SensorPass(void) {
 }
 #endif
 
-#if defined (PG_WITH_PHOTO_HOMOGRAPHY)
+#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 // initializes the homography matrices for the distortion of the projected image
 void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, std::vector<cv::Point2f> *destinationPoints, GLfloat matValues[], int dim) {
 	//////////////////////////////////////////////////////////////////////////////////
@@ -3694,8 +3873,8 @@ void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, st
 	// points measured experimetally corresponding to the 4 vertices of the
 	// quad projected at 1m with the projector axis orthogonal to the projection plane
 
-	cv::Mat homography = cv::findHomography(*sourcePoints, *destinationPoints, 0);
-	 //printf("mat size %d %d\n", homography.size().width, homography.size().height);
+	homography = cv::findHomography(*sourcePoints, *destinationPoints, 0);
+	//printf("mat size %d %d\n", homography.size().width, homography.size().height);
 	// in GLM Matrix types store their values in column - major order.
 	 if (dim == 4) {
 		 matValues[0] = (float)((double*)homography.data)[0];
@@ -3737,18 +3916,17 @@ void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, st
 }
 #endif
 
-#ifdef PG_MESHES
-
+#if defined(var_VP1LocX) && defined(var_VP1LocY) && defined(var_VP1LocZ) &&  defined(var_VP1LookAtX) && defined(var_VP1LookAtY) && defined(var_VP1LookAtZ) && defined(var_VP1UpY) && defined(var_VP1Reversed) && defined(var_VP1WidthTopAt1m) && defined(var_VP1BottomAt1m) && defined(var_VP1TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 // initializes the transformation matrices related to the frustum
 // should only be called when the values are changed through pd or maxmsp
-void pg_calculate_projection_matrices(void) {
+void pg_calculate_perspective_matrices(void) {
 	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
 	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
 	if (double_window) {
-#ifdef TEMPETE
+#if defined(TEMPETE)
 		VP1perspMatrix
 			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m * 2.0f, VP1TopAt1m * 2.0f, nearPlane, farPlane);
 #else
@@ -3765,11 +3943,11 @@ void pg_calculate_projection_matrices(void) {
 	// Camera matrix
 	// float eyePosition[3] = {10.1f,4.6f,4.4f};
 	// the projection of the bottom of the screen is known
-	// we have to deduce the look at from this point and the measure of 
+	// we have to deduce the look at from this point && the measure of 
 	// the projector calibration
 	// the look at has to be recalculated because the targe point is above the axis of projection
 	// by an angle alpha
-    //printf("VP1BottomAt1m %.2f\n" , VP1BottomAt1m );
+	//printf("VP1BottomAt1m %.2f\n" , VP1BottomAt1m );
 
 	float VP1alpha = atan(VP1BottomAt1m);
 	glm::vec4 vectorVPPositionToScreenBottom
@@ -3790,14 +3968,14 @@ void pg_calculate_projection_matrices(void) {
 	VP1viewMatrix
 		= glm::lookAt(
 			glm::vec3(VP1LocX, VP1LocY, VP1LocZ), // Camera is at (VP1LocX, VP1LocY, VP1LocZ), in World Space
-			lookAtPoint, // and looks at lookAtPoint
+			lookAtPoint, // && looks at lookAtPoint
 			glm::vec3(0, VP1UpY, (VP1Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP1UpY, 1 or 0, VP1UpY, -1 if projector is upside down)
 		);
 
-#ifdef PG_SECOND_MESH_CAMERA
+#if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 	//////////////////////////////////////////////////////////////////////////////////
 	// left camera (right display)
-#ifdef TEMPETE
+#if defined(TEMPETE)
 	VP2perspMatrix
 		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m * 2.0f, VP2TopAt1m * 2.0f, nearPlane, farPlane);
 #else
@@ -3835,15 +4013,41 @@ void pg_calculate_projection_matrices(void) {
 			glm::vec3(0, VP2UpY, (VP2Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP2UpY, 1 or 0, VP2UpY, -1 if projector is upside down)
 		);
 #endif
-
-
 }
+
+void pg_calculate_orthographic_matrices(void) {
+	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
+	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// right camera (right display)
+	if (double_window) {
+		VP1perspMatrix
+			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
+	else {
+		VP1perspMatrix
+			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
+	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+
+	// Camera matrix
+	//printf("Look at real %.2f %.2f %.2f\n\n", lookAtPoint.x, lookAtPoint.y, lookAtPoint.z);
+	glm::mat4 m4(1.0f);
+	VP1viewMatrix = m4;
+
+
+#if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
+	// TODO
+#endif
+}
+#endif
 
 //////////////////////////////////////////////////
 // PASS #6: MESH PASS
-
-#ifdef ETOILES_TEASER
-bool mesh_guided_by_strokes(int indMeshFile) {
+// MESH ANIMATIONS FOR PROJECTS
+#if defined(ETOILES)
+bool Etoiles_mesh_guided_by_strokes(int indMeshFile) {
 	// meshes are guided by strokes
 	int path_no = indMeshFile + 1;
 	bool visible = false;
@@ -3853,7 +4057,7 @@ bool mesh_guided_by_strokes(int indMeshFile) {
 		visible = (is_path_replay[path_no] && paths_x[path_no] > 0 && paths_y[path_no] > 0);
 		if (visible) {
 			// normal pen coordinates
-			pen_x = (paths_x[path_no] / leftWindowWidth) * 2.f - 1.f;
+			pen_x = (paths_x[path_no] / workingWindow_width) * 2.f - 1.f;
 			pen_y = (paths_y[path_no] / window_height) * 2.f - 1.f;
 		}
 		else {
@@ -3902,7 +4106,7 @@ bool mesh_guided_by_strokes(int indMeshFile) {
 			visible = isTrackRecord && paths_x[0] > 0 && paths_y[0] > 0;
 			if (visible) {
 				// normal pen coordinates
-				pen_x = (paths_x[0] / leftWindowWidth) * 2.f - 1.f;
+				pen_x = (paths_x[0] / workingWindow_width) * 2.f - 1.f;
 				pen_y = (paths_y[0] / window_height) * 2.f - 1.f;
 			}
 		}
@@ -3910,7 +4114,7 @@ bool mesh_guided_by_strokes(int indMeshFile) {
 	return visible;
 }
 
-void ray_animation(int indMeshFile) {
+void Etoiles_ray_animation(int indMeshFile) {
 	// rotates and scales a ray so that it follows a pen
 	// vector from ray center to pen
 	vec_x = pen_x + pg_Mesh_Translation_X[indMeshFile];
@@ -3929,10 +4133,8 @@ void ray_animation(int indMeshFile) {
 	float norm_vec = sqrt(vec_x * vec_x + vec_y * vec_y);
 	pg_Mesh_Scale[indMeshFile] = norm_vec;
 }
-#endif
-
-#ifdef CAVERNEPLATON
-void automatic_rotation(int indMeshFile) {
+#elif defined(var_Caverne_Mesh_Profusion)
+void Caverne_profusion_automatic_rotation(int indMeshFile) {
 	// rotation update
 	if (indMeshFile < 7) {
 		pg_Mesh_Rotation_angle[indMeshFile] += 0.03f;
@@ -3957,26 +4159,23 @@ void automatic_rotation(int indMeshFile) {
 		pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
 	}
 }
+#elif defined(var_MmeShanghai_brokenGlass)
+void MmeShanghai_automatic_brokenGlass_animation(int indMeshFile, int indObjectInMesh) {
+	float animationTime = float(pg_CurrentClockTime - pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile][indObjectInMesh]);
+	pg_MmeShanghai_Object_Translation_Y[indMeshFile][indObjectInMesh] = -0.0065f * animationTime * animationTime;
+	pg_MmeShanghai_Object_Rotation_angle[indMeshFile][indObjectInMesh] += pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshFile][indObjectInMesh];
+}
 #endif
 
+#if defined(var_activeMeshes)
 void pg_MeshPass(void) {
 	float eyePosition[3] = { 20.f, 0.f, 0.f };
 	float lookat[3] = { 0.f, 0.f, 0.f };
 
-#ifdef PG_AUGMENTED_REALITY
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(PG_AUGMENTED_REALITY)
 	if (!directRenderingwithoutMeshScreen1) {
-#endif
-#ifndef PG_AUGMENTED_REALITY
-		// draws the meshes on top of particles
-		if (pg_FrameNo > 0) {
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
-		}
-		// transparency
-		glEnable(GL_BLEND);
-		// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#else
+
 		// draws the meshes alone
 		// unbind output FBO 
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -3986,6 +4185,19 @@ void pg_MeshPass(void) {
 
 		// no transparency
 		glDisable(GL_BLEND);
+#else
+#if defined(var_activeClipArts) || defined(var_part_initialization)
+		// draws the meshes on top of particles
+		if (pg_FrameNo > 0) {
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_SVGandParticleRendering);
+		}
+#endif
+
+		// transparency
+		glEnable(GL_BLEND);
+		// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 #endif
 
 		// output buffer cleanup
@@ -4002,7 +4214,11 @@ void pg_MeshPass(void) {
 
 		// calculates the view and perspective matrices according to the parameters in the scenario file
 		// for one camera if single screen, and two otherwise
-		pg_calculate_projection_matrices();
+#if !defined(var_MmeShanghai_brokenGlass)
+		pg_calculate_perspective_matrices();
+#else
+		pg_calculate_orthographic_matrices();
+#endif
 
 #ifdef PG_WITH_HOMOGRAPHY
 		// Read points
@@ -4031,14 +4247,14 @@ void pg_MeshPass(void) {
 
 		// sets viewport to single window
 		if (double_window) {
-#ifdef TEMPETE
-			glViewport(0, window_height / 2, leftWindowWidth, window_height);
+#if defined(TEMPETE)
+			glViewport(0, window_height / 2, workingWindow_width, window_height);
 #else
-			glViewport(0, 0, leftWindowWidth, window_height);
+			glViewport(0, 0, workingWindow_width, window_height);
 #endif
 		}
 		else {
-		glViewport(0, 0, leftWindowWidth, window_height);
+			glViewport(0, 0, workingWindow_width, window_height);
 		}
 
 		// projection and view matrices
@@ -4051,25 +4267,34 @@ void pg_MeshPass(void) {
 		for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
 			// visibility
 			bool visible = false;
-#ifdef ETOILES_TEASER
-			visible = mesh_guided_by_strokes(indMeshFile);
-#else
-#ifdef CAVERNEPLATON
+#if defined(ETOILES)
+			visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
+#elif defined(var_Caverne_Mesh_Profusion)
 			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_CaverneActveMesh[indMeshFile]
-				&& (CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile] > pg_CaverneMeshWakeupTime[indMeshFile])
-				&& (CurrentClockTime < pg_CaverneMeshDeathTime[indMeshFile]));
+				&& (pg_CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile] > pg_CaverneMeshWakeupTime[indMeshFile])
+				&& (pg_CurrentClockTime < pg_CaverneMeshDeathTime[indMeshFile]));
 #else
 			visible = (activeMeshes & (1 << indMeshFile));
 #endif
-#endif
+
 			// visible mesh
 			if (visible) {
 				// mesh animation
-#ifdef CAVERNEPLATON
-				automatic_rotation(indMeshFile);
+#if defined(ETOILES)
+				Etoiles_ray_animation();
+#elif defined(var_Caverne_Mesh_Profusion)
+				Caverne_profusion_automatic_rotation(indMeshFile);
 #endif
-#ifdef ETOILES_TEASER
-				ray_animation();
+
+#if defined(var_Contact_mesh_anime)
+				glm::f32* valMats = new glm::f32[16 * pg_nb_bones[indMeshFile]];
+				for (int indBone = 0; indBone < pg_nb_bones[indMeshFile]; indBone++) {
+					memcpy(&valMats[16 * indBone],
+						glm::value_ptr(TabBones[indMeshFile][indBone].pointAnimationMatrix),
+						16 * sizeof(glm::f32));
+				}
+				glUniformMatrix4fv(uniform_Mesh_bones_matrices, 20, GL_FALSE, valMats);
+				delete[] valMats;
 #endif
 
 				// Model matrix 
@@ -4077,101 +4302,221 @@ void pg_MeshPass(void) {
 				// 1. a varying translation matrix
 				MeshPosModelMatrix = glm::translate(glm::mat4(1.0f),
 					glm::vec3(pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]));
+				//printf("Mesh translation ind Mesh %d tr %.2f %.2f %.2f \n",indMeshFile, 
+					//pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile]);
 				// 2. a varying rotation matrix 
 				glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[indMeshFile],
 					pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile]);
+#if defined(var_Contact_mesh_rotation)
+				MeshPosModelMatrix = glm::translate(MeshPosModelMatrix,	glm::vec3(0.f, -15.f,0.f));
+#endif
 				MeshPosModelMatrix = glm::rotate(MeshPosModelMatrix, pg_Mesh_Rotation_angle[indMeshFile], myRotationAxis);
+#if defined(var_Contact_mesh_rotation)
+				MeshPosModelMatrix = glm::translate(MeshPosModelMatrix, glm::vec3(0.f, 15.f, 0.f));
+#endif
 				// 3. a varying scaling matrix 
-#if defined (ETOILES_TEASER)
+#if defined(ETOILES)
 				MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
-#elif defined (CAVERNEPLATON)
+#elif defined(var_Caverne_Mesh_Profusion)
 				if (indMeshFile < 7) {
 					MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
 				}
 				else {
-					MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile] * min(2.0f, (CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile]) / 20.f)));
+					MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile] * min(2.0f, (pg_CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile]) / 20.f)));
 				}
 #else
 				MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
 #endif
-				// model matrix transfered to GPU
+				// model matrix transfered to GPU (if it is not object by object made)
 				glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
 					glm::value_ptr(MeshPosModelMatrix));
 
-				for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
-					// binds VAO
-					glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
+#if defined(var_MmeShanghai_brokenGlass)
+				if (indMeshFile == 0 /* wall (broken glass on the right panel) */) {
+					glUniform4f(uniform_Mesh_fs_4fv_color, 0, 0, 0, 1.0f);
+					glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg, 0, 0, 1.f, MS_BLACK);
+				}
+				else if (indMeshFile == 2 /* WHITE_RIGHT */) {
+					glUniform4f(uniform_Mesh_fs_4fv_color, MS_WHITE_RIGHT_r, MS_WHITE_RIGHT_g, MS_WHITE_RIGHT_b, 1.0f);
+					glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg, MS_WHITE_RIGHT_color_weight, MS_WHITE_RIGHT_master_weight, MS_WHITE_RIGHT_photo_weight, MS_BLACK);
+				}
+				else if (indMeshFile == 1 /* WHITE_LEFT */) {
+					glUniform4f(uniform_Mesh_fs_4fv_color, MS_WHITE_LEFT_r, MS_WHITE_LEFT_g, MS_WHITE_LEFT_b, 1.0f);
+					glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg, MS_WHITE_LEFT_color_weight, MS_WHITE_LEFT_master_weight, MS_WHITE_LEFT_photo_weight, MS_BLACK);
+				}
+				else if (indMeshFile == 3 /* BLACK */) {
+					glUniform4f(uniform_Mesh_fs_4fv_color, MS_WHITE_LEFT_r, MS_WHITE_LEFT_g, MS_WHITE_LEFT_b, 1.0f);
+					glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg, 0.f, 0.f, 0.f, MS_BLACK);
+				}
+#endif
 
-					// activate shaders and sets uniform variable values    
-					glUseProgram(shader_programme[pg_shader_Mesh]);
+				for (int indObjectInMesh = 0; indObjectInMesh < pg_nbObjectsPerMeshFile[indMeshFile]; indObjectInMesh++) {
+					bool visibleObject = true;
+#if defined(var_MmeShanghai_brokenGlass)
+					if (indMeshFile == 0) {
+						if (MmeShanghai_brokenGlass > 0 && MmeShanghai_brokenGlass <= pg_MmeShanghai_NbMeshSubParts[indMeshFile]) {
+							visibleObject = pg_MmeShanghai_MeshSubParts[indMeshFile][MmeShanghai_brokenGlass - 1][indObjectInMesh];
+							// new visible object, defines the wake up time for falling
+							if (visibleObject && pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile][indObjectInMesh] == 0.f 
+								// animation starts when all the meshes are displayed
+								&& MmeShanghai_brokenGlass >= pg_MmeShanghai_NbMeshSubParts[indMeshFile]) {
+								pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile][indObjectInMesh] = pg_CurrentClockTime + rand_0_1 * 10.0;
+								pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshFile][indObjectInMesh] = float(rand_0_1 * M_PI * 0.004);
+								pg_MmeShanghai_Object_Rotation_X[indMeshFile][indObjectInMesh] = rand_0_1;
+								pg_MmeShanghai_Object_Rotation_Y[indMeshFile][indObjectInMesh] = rand_0_1;
+								pg_MmeShanghai_Object_Rotation_Z[indMeshFile][indObjectInMesh] = rand_0_1;
+							}
+						}
+						else if (MmeShanghai_brokenGlass > pg_MmeShanghai_NbMeshSubParts[indMeshFile]) {
+							visibleObject = pg_MmeShanghai_MeshSubParts[indMeshFile][pg_MmeShanghai_NbMeshSubParts[indMeshFile] - 1][indObjectInMesh];
+						}
+						else {
+							visibleObject = false;
+						}
+						if (visibleObject
+							&& pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile][indObjectInMesh] < pg_CurrentClockTime
+							// animation starts when all the meshes are displayed
+							&& MmeShanghai_brokenGlass >= pg_MmeShanghai_NbMeshSubParts[indMeshFile]) {
+							MmeShanghai_automatic_brokenGlass_animation(indMeshFile, indObjectInMesh);
+							// Model matrix 
+							// transformed mesh according to scenario file
+							// 1. a varying translation matrix
+							ObjectPosModelMatrix = glm::translate(MeshPosModelMatrix,
+								glm::vec3(pg_MmeShanghai_Object_Translation_X[indMeshFile][indObjectInMesh],
+									pg_MmeShanghai_Object_Translation_Y[indMeshFile][indObjectInMesh],
+									pg_MmeShanghai_Object_Translation_Z[indMeshFile][indObjectInMesh]));
+							// 2. a varying rotation matrix (with bakc and forth translation to barycenter so that the object rotates on itself
+							ObjectPosModelMatrix = glm::translate(ObjectPosModelMatrix,
+								glm::vec3(mesh_barycenter[indMeshFile][3 * indObjectInMesh + 0],
+									mesh_barycenter[indMeshFile][3 * indObjectInMesh + 1],
+									mesh_barycenter[indMeshFile][3 * indObjectInMesh + 2]));
+							glm::vec3 myObjectRotationAxis(pg_MmeShanghai_Object_Rotation_X[indMeshFile][indObjectInMesh],
+								pg_MmeShanghai_Object_Rotation_Y[indMeshFile][indObjectInMesh], pg_MmeShanghai_Object_Rotation_Z[indMeshFile][indObjectInMesh]);
+							ObjectPosModelMatrix = glm::rotate(ObjectPosModelMatrix, pg_MmeShanghai_Object_Rotation_angle[indMeshFile][indObjectInMesh], myObjectRotationAxis);
+							ObjectPosModelMatrix = glm::translate(ObjectPosModelMatrix,
+								glm::vec3(-mesh_barycenter[indMeshFile][3 * indObjectInMesh + 0],
+									-mesh_barycenter[indMeshFile][3 * indObjectInMesh + 1],
+									-mesh_barycenter[indMeshFile][3 * indObjectInMesh + 2]));
 
-					glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-					glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
-					// texture unit location
-					glUniform1i(uniform_Mesh_texture_fs_decal, 0);
-#ifdef PG_MESHES
-					glActiveTexture(GL_TEXTURE0 + 0);
-					if (pg_Mesh_TextureRank[indMeshFile] != -1) {
-						// specific texture
-						glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle[indMeshFile]);
+							// model matrix transfered to GPU (if it is not object by object made)
+							glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
+								glm::value_ptr(ObjectPosModelMatrix));
+						}
+						else {
+							glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
+								glm::value_ptr(glm::mat4(1.0f)));
+						}
 					}
-					else {
-						// previous pass output
-						// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
+#endif
+					if (visibleObject) {
+						//printf("mesh pass mesh %d obj %d\n", indMeshFile, indObjectInMesh);
+
+						// binds VAO
+						glBindVertexArray(mesh_vao[indMeshFile][indObjectInMesh]);
+
+						// activate shaders and sets uniform variable values    
+						glUseProgram(shader_programme[pg_shader_Mesh]);
+
+						glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+						glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+						// texture unit location
+						glUniform1i(uniform_Mesh_texture_fs_decal, 0);
+						glActiveTexture(GL_TEXTURE0 + 0);
+
+						if (pg_Mesh_TextureRank[indMeshFile] != -1) {
+							// specific texture
+							glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle[indMeshFile]);
+						}
+						else {
+							// previous pass output
+							// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #ifdef PG_AUGMENTED_REALITY
+							glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
+#else
+							glBindTexture(GL_TEXTURE_RECTANGLE, 0);
+#endif
+						}
+
+#if defined(var_MmeShanghai_brokenGlass) && defined(PG_AUGMENTED_REALITY)
+						// second texture is the BG rendering
+						glUniform1i(uniform_Mesh_texture_fs_BG, 1);
+						glActiveTexture(GL_TEXTURE0 + 1);
 						glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
 #endif
-					}
-#endif
-					// standard filled mesh drawing
-					// draw triangles from the currently bound VAO with current in-use shader
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
-					glUseProgram(shader_programme[pg_shader_Mesh]);
+																								   // standard filled mesh drawing
+						// draw triangles from the currently bound VAO with current in-use shader
+						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indObjectInMesh]);
+						glUseProgram(shader_programme[pg_shader_Mesh]);
 
-					// updates this variable according whether triangles or lines are shown
-					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-					printOglError(698);
+						// updates this variable according whether triangles or lines are shown
+						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene,
+							isDisplayLookAt, -1, float(indMeshFile), (GLfloat)pg_CurrentSceneIndex);
+						glUniform3f(uniform_Mesh_fs_3fv_light, mesh_light_x, mesh_light_y, mesh_light_z);
+						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+						glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+						printOglError(698);
 
-#if defined(CAVERNEPLATON) 
-					// draws the polygon contours
-					// updates this variable according whether triangles or lines are shown
-					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#if defined(var_with_edges)
+						// draws the polygon contours
+						// updates this variable according whether triangles or lines are shown
+						if (with_edges == 1
+#if defined(var_MmeShanghai_brokenGlass)
+							&& indMeshFile == 0
 #endif
+							) {
+							glDisable(GL_DEPTH_TEST);
+							glLineWidth(1);
+							glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, pg_Mesh_TextureRank[indMeshFile] != -1, (GLfloat)pg_CurrentSceneIndex);
+							glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+							glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+							glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+							glEnable(GL_DEPTH_TEST);
+						}
+#endif
+						// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #ifdef PG_AUGMENTED_REALITY
 					// optional additional drawing of the polygon contours for checking calibration in augmented reality
-					if (with_mesh) {
-						// no z-Buffer
-						glDisable(GL_DEPTH_TEST);
-						glLineWidth(3);
-						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-						// no z-Buffer
-						glEnable(GL_DEPTH_TEST);
-					}
+						if (with_mesh) {
+							// no z-Buffer
+							glDisable(GL_DEPTH_TEST);
+							glLineWidth(3);
+							glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
+							glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+							glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+							glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+							// no z-Buffer
+							glEnable(GL_DEPTH_TEST);
+						}
 #endif
-					//printf("Display mesh VP1 %d/%d size (nb faces) %d\n\n", indMeshFile + 1, nbMeshesPerMeshFile[indMeshFile],
-					//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
-
-
+						//printf("Display mesh VP1 %d/%d size (nb faces) %d\n\n", indMeshFile + 1, pg_nbObjectsPerMeshFile[indMeshFile],
+						//	pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]);
+					} // visible submesh object
 				} // submeshes
+
+				// armature rendering
+				if (TabBones[indMeshFile] != NULL && false) {
+					glDisable(GL_DEPTH_TEST);
+					//printf("render armature mesh #%d\n", indMeshFile);
+						// updates this variable according whether triangles or lines are shown
+					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene,
+						isDisplayLookAt, 1, float(indMeshFile), (GLfloat)pg_CurrentSceneIndex);
+					glUniform3f(uniform_Mesh_fs_3fv_light, 0, 0, 0);
+					render_bones(MeshPosModelMatrix, indMeshFile);
+				}
+
 			} // visible mesh
 		} // all the meshes
 		printOglError(697);
-#ifdef PG_AUGMENTED_REALITY
+		// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 	}
 	// direct rendering without using the mesh
 	else {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glDrawBuffer(GL_BACK);
-		glBlitFramebuffer(0, 0, leftWindowWidth, window_height, 0, 0, leftWindowWidth, window_height,
+		glBlitFramebuffer(0, 0, workingWindow_width, window_height, 0, 0, workingWindow_width, window_height,
 			GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
 		printOglError(599);
@@ -4181,10 +4526,10 @@ void pg_MeshPass(void) {
 #ifdef PG_SECOND_MESH_CAMERA
 	if (!directRenderingwithoutMeshScreen2) {
 		// sets viewport to second window
-#ifdef TEMPETE
-		glViewport(0, 0, leftWindowWidth, window_height / 2);
+#if defined(TEMPETE)
+		glViewport(0, 0, workingWindow_width, window_height / 2);
 #else
-		glViewport(leftWindowWidth , 0, leftWindowWidth, window_height);
+		glViewport(workingWindow_width , 0, workingWindow_width, window_height);
 #endif
 		// duplicates the Meshs in case of double window
 
@@ -4214,25 +4559,21 @@ void pg_MeshPass(void) {
 				// 3. a varying scaling matrix 
 				MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[indMeshFile]));
 
-				//printf("tr %.2f %.2f %.2f rot  %.2f %.2f %.2f (rot %.2f) scale  %.2f\n", pg_Mesh_Translation_X[indMeshFile], pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile], pg_Mesh_Rotation_X[indMeshFile],
-				//	pg_Mesh_Rotation_Y[indMeshFile], pg_Mesh_Rotation_Z[indMeshFile], pg_Mesh_Rotation_angle[indMeshFile], pg_Mesh_Scale[indMeshFile]);
-
 				// model matrix transfered to GPU
 				glUniformMatrix4fv(uniform_Mesh_vp_model, 1, GL_FALSE,
 					glm::value_ptr(MeshPosModelMatrix));
 
-				for (int indMeshInFile = 0; indMeshInFile < nbMeshesPerMeshFile[indMeshFile]; indMeshInFile++) {
+				for (int indObjectInMesh = 0; indObjectInMesh < pg_nbObjectsPerMeshFile[indMeshFile]; indObjectInMesh++) {
 					// binds VAO
-					glBindVertexArray(mesh_vao[indMeshFile][indMeshInFile]);
+					glBindVertexArray(mesh_vao[indMeshFile][indObjectInMesh]);
 
 					// activate shaders and sets uniform variable values    
 					glUseProgram(shader_programme[pg_shader_Mesh]);
 
-					glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-					glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+					glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+					glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 					// texture unit location
 					glUniform1i(uniform_Mesh_texture_fs_decal, 0);
-#ifdef PG_MESHES
 					glActiveTexture(GL_TEXTURE0 + 0);
 					if (pg_Mesh_TextureRank[indMeshFile] != -1) {
 						// specific texture
@@ -4241,23 +4582,25 @@ void pg_MeshPass(void) {
 					else {
 						// previous pass output
 						// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
+						// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #ifdef PG_AUGMENTED_REALITY
 						glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
 #endif
 					}
-#endif
+
 					// standard filled mesh drawing
 					// draw triangles from the currently bound VAO with current in-use shader
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indMeshInFile]);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMeshFile][indObjectInMesh]);
 					glUseProgram(shader_programme[pg_shader_Mesh]);
 
 					// updates this variable according whether triangles or lines are shown
 					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);
 
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+					glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 
-#ifdef PG_AUGMENTED_REALITY
+					// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 					// optional additional drawing of the polygon contours for checking calibration in augmented reality
 					if (with_mesh) {
 						// no z-Buffer
@@ -4265,17 +4608,18 @@ void pg_MeshPass(void) {
 						glLineWidth(3);
 						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						glDrawElements(GL_TRIANGLES, nbFacesPerMesh[indMeshFile][indMeshInFile] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+						glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 						// no z-Buffer
 						glEnable(GL_DEPTH_TEST);
 					}
 #endif
-					//printf("Display mesh VP2 %d/%d size (nb faces) %d\n", indMeshFile, indMeshInFile,
-					//	nbFacesPerMesh[indMeshFile][indMeshInFile]);
+					//printf("Display mesh VP2 %d/%d size (nb faces) %d\n", indMeshFile, indObjectInMesh,
+					//	pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]);
 
 
 				} // submeshes
+
 			} // visible mesh
 		} // all the meshes
 
@@ -4292,7 +4636,7 @@ void pg_MeshPass(void) {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glDrawBuffer(GL_BACK);
-		glBlitFramebuffer(leftWindowWidth, 0, 2 * leftWindowWidth, window_height, leftWindowWidth, 0, 2 * leftWindowWidth, window_height,
+		glBlitFramebuffer(workingWindow_width, 0, 2 * workingWindow_width, window_height, workingWindow_width, 0, 2 * workingWindow_width, window_height,
 			GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
 		printOglError(599);
@@ -4302,27 +4646,28 @@ void pg_MeshPass(void) {
 #endif
 
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
 //////////////////////////////////////////////////////////////////////////////////////////////
 void pg_draw_scene(DrawingMode mode, bool threaded) {
 	// ******************** Svg output ********************
 	if (mode == _Svg) {
-		threadData* pData = new threadData;
-		pData->fname = new char[512];
-    pData->w = leftWindowWidth;
-		pData->h = window_height;
+		cv::String imageFileName;
 		indSvgSnapshot++;
 
-		sprintf(pData->fname, "%s%s-%s-%04d.svg",
+		imageFileName = format("%s%s-%s-%04d.svg",
 			snapshots_dir_path_name.c_str(),
 			Svg_file_name.c_str(),
 			date_stringStream.str().c_str(),
 			indSvgSnapshot);
-		pg_logCurrentLineSceneVariables(pData->fname);
+		pg_logCurrentLineSceneVariables(imageFileName);
 
+		writesvg(imageFileName);
+
+/*
 		if (!threaded) {
-			writesvg((void*)pData);
+			writesvg((void*)&pDataWriteSvg);
 		}
 		else {
 #ifdef WIN32
@@ -4331,7 +4676,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 				NULL,                   // default security attributes
 				0,                      // use default stack size  
 				writesvg,		    // thread function name
-				(void*)pData,		    // argument to thread function 
+				(void*)&pDataWriteSvg,		    // argument to thread function 
 				0,                      // use default creation flags 
 				&rc);   // returns the thread identifier 
 			if (hThread == NULL) {
@@ -4343,7 +4688,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 			pthread_t drawing_thread;
 			int rc;
 			rc = pthread_create(&drawing_thread, NULL,
-				writesvg, (void*)pData);
+				writesvg, (void*)&pDataWriteSvg);
 			if (rc) {
 				std::cout << "Error:unable to create thread writesvg" << rc << std::endl;
 				exit(-1);
@@ -4351,33 +4696,33 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 			pthread_exit(NULL);
 #endif
 		}
+*/
 	}
 
 	// ******************** Png output ********************
 	else if (mode == _Png) {
-		threadData* pData = new threadData;
-		pData->fname = new char[512];
-    pData->w = leftWindowWidth;
-		pData->h = window_height;
-		pData->imgThreadData = new cv::Mat(pData->h, pData->w, CV_8UC3);
+		//pDataWritePng.w = workingWindow_width;
+		//pDataWritePng.h = window_height;
+		cv::String imageFileName;
+
 		indPngSnapshot++;
 
-		sprintf(pData->fname, "%s%s-%s-%04d.png",
+		imageFileName = format("%s%s-%s-%04d.png",
 			snapshots_dir_path_name.c_str(),
 			Png_file_name.c_str(),
 			date_stringStream.str().c_str(),
 			indPngSnapshot);
 		struct stat buffer;
 		int count = 0;
-		while (stat(pData->fname, &buffer) == 0) {
-			sprintf(pData->fname, "%s%s-%s-%04d-%03d.jpg",
+		while (stat(imageFileName.c_str(), &buffer) == 0) {
+			imageFileName = format("%s%s-%s-%04d-%03d.png",
 				snapshots_dir_path_name.c_str(),
 				Png_file_name.c_str(),
 				date_stringStream.str().c_str(),
 				indPngSnapshot, count);
 			count++;
 		}
-		pg_logCurrentLineSceneVariables(pData->fname);
+		pg_logCurrentLineSceneVariables(imageFileName);
 
 		glReadBuffer(GL_FRONT);
 
@@ -4389,10 +4734,13 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 		//   the rows are packed as tight as possible (no row padding), set the pack
 		//   alignment to 1.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, pData->w, pData->h, GL_RGB, GL_UNSIGNED_BYTE, pData->imgThreadData->data);
+		pngImgMatRGBInitial.create(window_height, workingWindow_width, CV_8UC3); // GL_RGB
+		glReadPixels(0, 0, workingWindow_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, pngImgMatRGBInitial.data);
 
+		writepng(imageFileName);
+/*
 		if (!threaded) {
-			writepng((void*)pData);
+			writepng((void*)&pDataWritePng);
 		}
 		else {
 #ifdef WIN32
@@ -4401,7 +4749,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 				NULL,                   // default security attributes
 				0,                      // use default stack size  
 				writepng,		    // thread function name
-				(void*)pData,		    // argument to thread function 
+				(void*)&pDataWritePng,		    // argument to thread function 
 				0,                      // use default creation flags 
 				&rc);   // returns the thread identifier 
 			if (hThread == NULL) {
@@ -4421,36 +4769,36 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 			pthread_exit(NULL);
 #endif
 		}
+*/
 	}
 
 	// ******************** Jpg output ********************
 	else if (mode == _Jpg) {
-		threadData* pData = new threadData;
-		pData->fname = new char[512];
-    pData->w = leftWindowWidth;
-		pData->h = window_height;
-		pData->imgThreadData = new cv::Mat(pData->h, pData->w, CV_8UC3);
+		//pDataWriteJpg.w = workingWindow_width;
+		//pDataWriteJpg.h = window_height;
+		cv::String imageFileName;
+	
 		indJpgSnapshot++;
 
-		sprintf(pData->fname, "%s%s-%s-%04d.jpg",
+		imageFileName = format("%s%s-%s-%04d.jpg",
 			snapshots_dir_path_name.c_str(),
 			Jpg_file_name.c_str(),
 			date_stringStream.str().c_str(),
 			indJpgSnapshot);
 		struct stat buffer;
 		int count = 0;
-		while (stat(pData->fname, &buffer) == 0) {
-			sprintf(pData->fname, "%s%s-%s-%04d-%03d.jpg",
+		while (stat(imageFileName.c_str(), &buffer) == 0) {
+			imageFileName = format("%s%s-%s-%04d-%03d.jpg",
 				snapshots_dir_path_name.c_str(),
 				Jpg_file_name.c_str(),
 				date_stringStream.str().c_str(),
 				indJpgSnapshot, count);
 			count++;
 		}
-		pg_logCurrentLineSceneVariables(pData->fname);
+		pg_logCurrentLineSceneVariables(imageFileName);
 		printf("Snapshot jpg step %d (%s)\n",
 			indJpgSnapshot,
-			pData->fname);
+			imageFileName.c_str());
 
 		glReadBuffer(GL_BACK);
 
@@ -4462,11 +4810,18 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 		//   the rows are packed as tight as possible (no row padding), set the pack
 		//   alignment to 1.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, pData->w, pData->h, GL_RGB, GL_UNSIGNED_BYTE, pData->imgThreadData->data);
+
+		jpgImgMatRGBInitial.create(window_height, workingWindow_width, CV_8UC3); // GL_RGB
+		glReadPixels(0, 0, workingWindow_width, window_height, GL_RGB, GL_UNSIGNED_BYTE,
+			jpgImgMatRGBInitial.data);
 		printOglError(706);
 
-		if (!threaded) {
-			writejpg((void*)pData);
+		writejpg(imageFileName);
+
+/*
+		if (!threaded) 
+
+			writejpg((void*)&pDataWriteJpg);
 		}
 		else {
 #ifdef WIN32
@@ -4475,7 +4830,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 				NULL,                   // default security attributes
 				0,                      // use default stack size  
 				writejpg,		    // thread function name
-				(void*)pData,		    // argument to thread function 
+				(void*)&pDataWriteJpg,		    // argument to thread function 
 				0,                      // use default creation flags 
 				&rc);   // returns the thread identifier 
 			if (hThread == NULL) {
@@ -4495,17 +4850,18 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 			pthread_exit(NULL);
 #endif
 		}
+*/
 	}
 
 	// ******************** interactive output ********************
 	else if (mode == _Render) {
 
 		// sets viewport to single window
-	glViewport(0, 0, leftWindowWidth, window_height);
+	glViewport(0, 0, workingWindow_width, window_height);
 
 		glDisable(GL_BLEND);
 
-#if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined(var_part_initialization)
 		//////////////////////////////////////
 		// particle animation pass #0
 		pg_ParticleAnimationPass();
@@ -4520,7 +4876,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 
 		//////////////////////////////////////
 		// particle and SVG clip art pass #2a
-#if defined(TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES)
+#if defined(var_activeClipArts) || defined(var_part_initialization)
 		pg_SVGandParticleRenderingPass();
 		printOglError(683);
 #endif
@@ -4529,7 +4885,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 		// mesh pass #2b
 		// the meshes are displayed together with the particles except for augmented reality
 		// where they are displayed last
-#if defined(PG_MESHES) && !defined(PG_AUGMENTED_REALITY)
+#if defined(var_activeMeshes) && !defined(PG_AUGMENTED_REALITY)
 		if (activeMeshes > 0) {
 			pg_MeshPass();
 		}
@@ -4547,7 +4903,7 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 
 		//////////////////////////////////////
 		// additional sensor pass on top of final rendering
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 		bool oneSensorActiveMin = false;
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 			int reindexed_Sensor = Sensor_order[indSens];
@@ -4571,10 +4927,10 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 			int reindexed_Sensor = Sensor_order[indSens];
 			if (!sensor_onOff[reindexed_Sensor]) {
-				//printf("CurrentClockTime - sensor_last_activation_time %f\n", CurrentClockTime - sensor_last_activation_time);
+				//printf("pg_CurrentClockTime - sensor_last_activation_time %f\n", pg_CurrentClockTime - sensor_last_activation_time);
 				if (sensor_activation == 5
-					&& CurrentClockTime - sensor_last_activation_time > 45) {
-					sensor_last_activation_time = CurrentClockTime;
+					&& pg_CurrentClockTime - sensor_last_activation_time > 45) {
+					sensor_last_activation_time = pg_CurrentClockTime;
 					sensor_onOff[reindexed_Sensor] = true;
 					break;
 				}
@@ -4582,21 +4938,18 @@ void pg_draw_scene(DrawingMode mode, bool threaded) {
 		}
 #endif
 
-#ifdef CAAUDIO
-#ifdef PG_PUREDATA_SOUND
-#ifdef PG_NB_CA_TYPES
+#if defined(CAAUDIO) && defined(PG_PUREDATA_SOUND) && defined(var_nb_CATypes)
 		// drawing memory on odd and even frames for CA	
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec[(pg_FrameNo % 2)]); // drawing memory on odd and even frames for echo and sensors	
 		playChord();
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 #endif
-#endif
-#endif
 
 		//////////////////////////////////////
 		// last mesh pass with final rendering texture
 		// for augmented reality
-#if defined(PG_MESHES) && defined(PG_AUGMENTED_REALITY)
+		// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(var_activeMeshes) && defined(PG_AUGMENTED_REALITY)
 		if (activeMeshes > 0) {
 			pg_MeshPass();
 		}

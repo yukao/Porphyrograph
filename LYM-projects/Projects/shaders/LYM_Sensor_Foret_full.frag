@@ -32,7 +32,7 @@ void main() {
   vec4 sensorColor = texture(fs_decal, decalCoords );
   float outgray = mix( sensorColor.r , sensorColor.g , 
           uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency.w );
-  outColor0 = vec4(1,0,0,outgray);
+  outColor0 = vec4(uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency.z,0,0,outgray);
   /*
   if( uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency.z > 0 
     && uniform_Sensor_fs_4fv_onOff_isCurrentSensor_isFollowMouse_transparency.y > 0 ) {

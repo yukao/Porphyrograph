@@ -28,7 +28,7 @@ layout(line_strip, max_vertices = 16) out;
 #define DOPPLER 2
 #define GLISSANDO 3
 
-uniform vec3 uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse;
+uniform vec3 uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse;
 
 in VertexData {
     float radius;
@@ -101,20 +101,20 @@ void main()
 {
    
     vec4 position0 = gl_in[0].gl_Position;
-/*    float distToReplayTrack = 1;
+    float distToReplayTrack = 1;
     if(VertexIn[0].replayTrackLocation.x >= -1) {
         distToReplayTrack = length(position0.xy-VertexIn[0].replayTrackLocation);
     }
-*/    
+    
     // sets the center in the middle of the particle
+    // and calculates the size of the quad
     float internalRadiusTimesRadiusParameter 
-    // and calculates the size of the quad according to distance to target
-      = VertexIn[0].radius * uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.x;
-    // internalRadiusTimesRadiusParameter *= distToReplayTrack * 0.5;
+      = VertexIn[0].radius * uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse.x;
+    internalRadiusTimesRadiusParameter *= distToReplayTrack * 0.5;
 
 
     // emits the polygon (a 16 vertices triangle strip)
-    int partType = int(uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.y);
+    int partType = int(uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse.y);
     if(partType == MOTEUR) {
         vec2 barycentricWeights;
         float currPoint = position0.x;
@@ -140,7 +140,7 @@ void main()
     else if(partType == SUSTAIN) {
         float barycentricWeight;
         barycentricWeight
-                = clamp(uniform_ParticleSplat_gs_3fv_part_size_partType_highPitchPulse.z,0,1);
+                = clamp(uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse.z,0,1);
 
         for(int ind = 0 ; ind < 16 ; ind++) {
             vec2 barycenter = barycentricWeight * spikyCircleSustain[ind]

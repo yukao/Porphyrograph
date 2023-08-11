@@ -1,23 +1,12 @@
 ﻿  pg-conf.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-init.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-main.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-mesh.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-script.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-shader.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-stroke.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1186,7): error C2065: 'path_replay_loop': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1186,31): warning C4805: '==': unsafe mix of type 'unknown-type' and type 'bool' in operation
   pg-svg-clip-art.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-texture.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
   pg-udp.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  pg-update.cpp
-C:\sync.com\Sync\LYM-github\Porphyrograph\LYM-sources\Porphyrograph-src\pg-all_include.h(64,10): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
-  Generating Code...

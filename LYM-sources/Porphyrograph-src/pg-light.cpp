@@ -798,21 +798,22 @@ void DMX_light_initialization(void)
 ////////////////////////////////////////////////////////////////////
 // GUI UPDATE
 void pg_lightGUI_values_and_pulse_update(int light_param, int interface_light_group, string light_param_string) {
-	//printf("light group %d\n", pg_interface_light_group);
 	if (pg_nb_light_groups > 0) {
-		sprintf(AuxString, "/light/%d/%s %.4f", interface_light_group, light_param_string.c_str(),
+		sprintf(AuxString, "/light/%d/%s %.4f", interface_light_group + 1, light_param_string.c_str(),
 			pg_light_groups[pg_interface_light_group].get_group_val(light_param, 0));
+		//printf("/light/%d/%s %.4f\n", interface_light_group + 1, light_param_string.c_str(),
+		//	pg_light_groups[pg_interface_light_group].get_group_val(light_param, 0));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/light_control/onOff_%s %d %d", light_param_string.c_str(), interface_light_group,
+		sprintf(AuxString, "/light_control/onOff_%s %d %d", light_param_string.c_str(), interface_light_group + 1,
 			pg_light_groups[pg_interface_light_group].get_group_onOff(light_param));
 		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/light_pulse/%d/%s %.4f", interface_light_group, light_param_string.c_str(),
+		sprintf(AuxString, "/light_pulse/%d/%s %.4f", interface_light_group + 1, light_param_string.c_str(),
 			pg_light_groups[pg_interface_light_group].get_group_pulse(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/light_control/beatRandom_%s %d %d", light_param_string.c_str(), interface_light_group,
+		sprintf(AuxString, "/light_control/beatRandom_%s %d %d", light_param_string.c_str(), interface_light_group + 1,
 			int(pg_light_groups[pg_interface_light_group].get_group_beatRandom(light_param)));
 		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/light_control/beatOnOff_%s %d %d", light_param_string.c_str(), interface_light_group,
+		sprintf(AuxString, "/light_control/beatOnOff_%s %d %d", light_param_string.c_str(), interface_light_group + 1,
 			int(pg_light_groups[pg_interface_light_group].get_group_beatOnOff(light_param)));
 		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
 	}
@@ -849,7 +850,7 @@ void pg_lightGUI_all_values_and_pulse_update(void) {
 		for (const auto& myPair : pg_light_param_hashMap) {
 			int light_param = myPair.first;
 			string light_param_string = myPair.second;
-			//printf("lightpair %d\n", light_param);
+			//printf("light value update %d %d (%s)\n", light_param, pg_interface_light_group, light_param_string.c_str());
 			pg_lightGUI_values_and_pulse_update(light_param, pg_interface_light_group, light_param_string);
 
 		}

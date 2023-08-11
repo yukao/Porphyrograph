@@ -35,6 +35,8 @@ const char *pg_UDPMessageFormatString[Emptypg_UDPMessageFormat + 1] = { "Plain" 
 /////////////////////////////////////////////////////
 
 int                      pg_NbScenes;
+bool					 pg_last_scene_update = false;
+
 
 Scene                    *pg_Scenario;
 
@@ -43,7 +45,7 @@ string					 snapshots_dir_path_prefix;
 string					 snapshots_dir_path_name;
 string					 screen_font_file_name;
 int                      screen_font_size;
-#if defined (TVW)
+#if defined(TVW)
 string					 display_font_file_name;
 int                      display_font_size;
 #endif
@@ -53,19 +55,32 @@ TextureEncoding          font_texture_encoding;
 pg_Window              *PG_Window;
 
 // PNG capture
-string                    Png_file_name;
+string                   Png_file_name;
 int                      beginPng;
 int                      endPng;
-int                      stepPng;
+int                      stepPngInFrames;
+double                   stepPngInSeconds;
+double                   nextPngCapture;
 bool                     outputPng;
 int						 indPngSnapshot;
-// \}
+
+// JPG capture
+string                   Jpg_file_name;
+int                      beginJpg;
+int                      endJpg;
+int                      stepJpgInFrames;
+double                   stepJpgInSeconds;
+double                   nextJpgCapture;
+bool                     outputJpg;
+int						 indJpgSnapshot;
 
 // SVG capture
-string                    Svg_file_name;
+string                   Svg_file_name;
 int                      beginSvg;
 int                      endSvg;
-int                      stepSvg;
+int                      stepSvgInFrames;
+double                   stepSvgInSeconds;
+double                   nextSvgCapture;
 bool                     outputSvg;
 int						 indSvgSnapshot;
 
@@ -74,19 +89,10 @@ int                      nb_svg_paths = 0;
 SVG_path                 *SVGpaths = NULL;
 int						 current_path_group = 0;
 
-// JPG capture
-string                    Jpg_file_name;
-int                      beginJpg;
-int                      endJpg;
-int                      stepJpg;
-bool                     outputJpg;
-int						 indJpgSnapshot;
-
 // VIDEO capture
-string                    Video_file_name;
+string                   Video_file_name;
 int                      beginVideo_file;
 int                      endVideo_file;
-int                      stepVideo_file;
 bool                     outputVideo_file;
 
 // UDP servers and clients
@@ -126,10 +132,11 @@ pg_ClipArt_Colors_Types *pg_ClipArt_Colors = NULL;
 // subpath display
 bool *pg_ClipArt_SubPath = NULL;
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 // MESHES
 // number of mesh files
 int pg_nb_Mesh_files = 0;
+int pg_nb_Mesh_objects = 0;
 // file names
 string *pg_Mesh_fileNames = NULL;
 // geometrical transformations
@@ -151,8 +158,23 @@ float *pg_Mesh_Motion_X = NULL;
 float *pg_Mesh_Motion_Y = NULL;
 float *pg_Mesh_Motion_Z = NULL;
 int *pg_Mesh_TextureRank = NULL;
-#if defined(CAVERNEPLATON)
-bool *pg_CaverneActveMesh = NULL;
+#if defined(var_MmeShanghai_brokenGlass)
+bool** pg_MmeShanghaiActveMeshObjects = NULL;
+double** pg_MmeShanghaiMeshObjectWakeupTime = NULL;
+bool*** pg_MmeShanghai_MeshSubParts = NULL;
+string** pg_MmeShanghai_MeshSubPart_FileNames = NULL;
+int* pg_MmeShanghai_NbMeshSubParts = NULL;
+float** pg_MmeShanghai_Object_Rotation_angle = NULL;
+float** pg_MmeShanghai_Object_Rotation_X = NULL;
+float** pg_MmeShanghai_Object_Rotation_Y = NULL;
+float** pg_MmeShanghai_Object_Rotation_Z = NULL;
+float** pg_MmeShanghai_Object_Translation_X = NULL;
+float** pg_MmeShanghai_Object_Translation_Y = NULL;
+float** pg_MmeShanghai_Object_Translation_Z = NULL;
+float** pg_MmeShanghai_Object_Rotation_Ini_angle = NULL; 
+#endif
+#if defined(var_Caverne_Mesh_Profusion) && defined(var_Caverne_BackColor)
+bool* pg_CaverneActveMesh = NULL;
 float* pg_CaverneMeshWakeupTime = NULL;
 float* pg_CaverneMeshBirthTime = NULL;
 float* pg_CaverneMeshDeathTime = NULL;
@@ -166,7 +188,7 @@ bool Caverne_BackColorFlash = false;
 bool Caverne_BackColorFlash_prec = false;
 #endif
 // color
-pg_ClipArt_Colors_Types *pg_Mesh_Colors = NULL;
+float **pg_Mesh_Colors = NULL;
 // textures
 GLuint *Mesh_texture_rectangle = NULL_ID;
 #endif
@@ -197,6 +219,10 @@ bool *pg_Texture_Invert = NULL;
 // texture ID
 GLuint *pg_Texture_texID = NULL;
 
+// window(s) size and location
+int my_window_x = 0;
+int my_window_y = 0;
+
 
 /////////////////////////////////////////////////////
 // Default values for global variables
@@ -212,6 +238,57 @@ pg_Window::~pg_Window(void) {
 // environment parsing from configuration file
 /////////////////////////////////////////////////////
 
+float my_stof(string str) {
+	float f = 0.f;
+	try {
+		f = std::stof(str);
+	}
+	catch (const std::invalid_argument&) {
+		sprintf(ErrorStr, "Error: float argument is invalid (%s)\n", str.c_str()); ReportError(ErrorStr); throw 50;
+	}
+	catch (const std::out_of_range&) {
+		sprintf(ErrorStr, "Error: float argument is out of range (%s)\n", str.c_str()); ReportError(ErrorStr); throw 50;
+	}
+	catch (const std::exception& e) {
+		sprintf(ErrorStr, "Error: float argument is incorrect (%s): %s\n", str.c_str(), e.what()); ReportError(ErrorStr); throw 50;
+	}
+	return f;
+}
+
+int my_stoi(string str) {
+	int i = 0;
+	try {
+		i = std::stoi(str);
+	}
+	catch (const std::invalid_argument&) {
+		sprintf(ErrorStr, "Error: int argument is invalid (%s)\n", str.c_str()); ReportError(ErrorStr); throw 50;
+	}
+	catch (const std::out_of_range&) {
+		sprintf(ErrorStr, "Error: int argument is out of range (%s)\n", str.c_str()); ReportError(ErrorStr); throw 50;
+	}
+	catch (const std::exception& e) {
+		sprintf(ErrorStr, "Error: int argument is incorrect (%s): %s\n", str.c_str(), e.what()); ReportError(ErrorStr); throw 50;
+	}
+	return i;
+}
+
+double my_stod(string str) {
+	double d = 0.;
+	try {
+		d = std::stod(str);
+	}
+	catch (const std::invalid_argument&) {
+		sprintf(ErrorStr, "Error: double argument is invalid (%s)\n", str.c_str()); ReportError(ErrorStr); throw 50;
+	}
+	catch (const std::out_of_range&) {
+		sprintf(ErrorStr, "Error: double argument is out of range (%s)\n", str.c_str()); ReportError(ErrorStr); throw 50;
+	}
+	catch (const std::exception& e) {
+		sprintf(ErrorStr, "Error: double argument is incorrect (%s): %s\n", str.c_str(), e.what()); ReportError(ErrorStr); throw 50;
+	}
+	return d;
+}
+
 void stringstreamStoreLine(std::stringstream *sstream, std::string *line) {
 	(*sstream).clear();
 	if ((*line).find('\t') == std::string::npos) {
@@ -224,7 +301,7 @@ double stringToDuration(string percentOrAbsoluteDuration, double full_length, in
 	double returnedPercent = 0.f;
 	if (percentOrAbsoluteDuration.back() == 's') {
 		percentOrAbsoluteDuration.resize(size_t(percentOrAbsoluteDuration.size() - 1));
-		returnedPercent = std::stof(percentOrAbsoluteDuration);
+		returnedPercent = my_stof(percentOrAbsoluteDuration);
 		if (returnedPercent < 0 || returnedPercent > full_length) {
 			sprintf(ErrorStr, "Error: in scene %d var %d absolute duration %s negative or greater than full scene duration %.2f\n", ind_scene, ind_var, (percentOrAbsoluteDuration + "s").c_str(), full_length); ReportError(ErrorStr); throw 50;
 		}
@@ -233,7 +310,7 @@ double stringToDuration(string percentOrAbsoluteDuration, double full_length, in
 		}
 	}
 	else {
-		returnedPercent = std::stof(percentOrAbsoluteDuration);
+		returnedPercent = my_stof(percentOrAbsoluteDuration);
 		if (returnedPercent < 0 || returnedPercent > 1.f) {
 			sprintf(ErrorStr, "Error: in scene %d var %d relative duration %s negative or greater than 1.\n", ind_scene, ind_var, percentOrAbsoluteDuration.c_str()); ReportError(ErrorStr); throw 50;
 		}
@@ -306,12 +383,21 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"initial_values\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-	// reads configuration variables initial values
+	// reads configuration variables initial values (not used because precalculated in the included script_header file)
 	std::getline(confFin, line);
 	stringstreamStoreLine(&sstream, &line);
-	//std::cout << "VALUES: \n";
+	////std::cout << "VALUES: \n";
+	// some variables should not be precompiled so that there is not a need to recompile to have them changed when loading the header
 	for (int indP = 0; indP < _MaxConfigurationVarIDs; indP++) {
-		sstream >> InitialValuesConfigurationVar[indP];
+		if (indP == _window_x) {
+			sstream >> my_window_x;
+		}
+		else if (indP == _window_y) {
+			sstream >> my_window_y;
+		}
+		else {
+			sstream >> temp;
+		}
 		//std::cout << InitialValuesConfigurationVar[indP];
 		//std::cout << " ";
 	}
@@ -322,19 +408,27 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	// rendering_files
 	std::getline(confFin, line);
+	stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("rendering_files") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"rendering_files\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 
 	// TYPE
 	std::getline(confFin, line);
-	// ID ID	begin	end	step	id	shots
+	// ID	begin	end	step	id	shots
 	std::getline(confFin, line);
 
 	// storing the Video capture values
 	std::getline(confFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID;
+	if (ID.compare("VIDEO") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"VIDEO\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstream >> beginVideo_file;
 	sstream >> endVideo_file;
-	sstream >> stepVideo_file;
+	sstream >> temp; // unused
 	sstream >> Video_file_name;
 	outputVideo_file = !Video_file_name.empty();
 
@@ -342,9 +436,22 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::getline(confFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID;
+	if (ID.compare("SVG") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"SVG\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstream >> beginSvg;
 	sstream >> endSvg;
-	sstream >> stepSvg;
+	sstream >> temp;
+	if (temp.back() == 's') {
+		temp.resize(size_t(temp.size() - 1));
+		stepSvgInSeconds = my_stof(temp);
+		nextSvgCapture = -1.;
+		stepSvgInFrames = -1;
+	}
+	else {
+		stepSvgInFrames = my_stoi(temp);
+		stepSvgInSeconds = -1.;
+	}
 	sstream >> Svg_file_name;
 	outputSvg = !Svg_file_name.empty();
 	indSvgSnapshot = 0;
@@ -353,9 +460,22 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::getline(confFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID;
+	if (ID.compare("PNG") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"PNG\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstream >> beginPng;
 	sstream >> endPng;
-	sstream >> stepPng;
+	sstream >> temp;
+	if (temp.back() == 's') {
+		temp.resize(size_t(temp.size() - 1));
+		stepPngInSeconds = my_stof(temp);
+		nextPngCapture = -1.;
+		stepPngInFrames = -1;
+	}
+	else {
+		stepPngInFrames = my_stoi(temp);
+		stepPngInSeconds = -1.;
+	}
 	sstream >> Png_file_name;
 	outputPng = !Png_file_name.empty();
 	indPngSnapshot = 0;
@@ -364,9 +484,23 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::getline(confFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID;
+	if (ID.compare("JPG") != 0) {
+		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"JPG\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+	}
 	sstream >> beginJpg;
 	sstream >> endJpg;
-	sstream >> stepJpg;
+	sstream >> temp;
+	if (temp.back() == 's') {
+		temp.resize(size_t(temp.size() - 1));
+		stepJpgInSeconds = my_stof(temp);
+		nextJpgCapture = -1.;
+		stepJpgInFrames = -1;
+	}
+	else {
+		stepJpgInFrames = my_stoi(temp);
+		stepJpgInSeconds = -1.;
+	}
+
 	sstream >> Jpg_file_name;
 	outputJpg = !Jpg_file_name.empty();
 	indJpgSnapshot = 0;
@@ -470,7 +604,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			sprintf(ErrorStr, "Error: unknown receive message format [%s]!", ID.c_str()); ReportError(ErrorStr); throw 249;
 		}
 		sstream >> IP_Clients[ind_IP_Client]->IP_message_trace;
-		sstream >> IP_Clients[ind_IP_Client]->depth_output_stack;
+		sstream >> IP_Clients[ind_IP_Client]->max_depth_output_stack;
 		sstream >> IP_Clients[ind_IP_Client]->OSC_endian_reversal;
 		// std::cout << "OSC_trace: " << IP_Clients[ind_IP_Client]->IP_message_trace << "\n";
 		//std::cout << "IP_Clients[ ind_IP_Client ]->id: " << IP_Clients[ind_IP_Client]->id << "\n";
@@ -481,7 +615,6 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// /udp_remote_client
 	std::getline(confFin, line);
 
-#ifdef PG_WITH_CAMERA_CAPTURE
 	// webCam Number of cameras
 	std::getline(confFin, line);
 	stringstreamStoreLine(&sstream, &line);
@@ -489,8 +622,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	if (ID.compare("webCam") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"webCam\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
+#if defined(var_cameraCaptFreq)
 	sstream >> nb_webCam;
-	 std::cout << "Nb webCams: " << nb_webCam << "\n";
+	std::cout << "Nb webCams: " << nb_webCam << "\n";
+#else
+	int unusedvar;
+	sstream >> unusedvar;
+#endif
 
 	// VERBATIM
 	std::getline(confFin, line);
@@ -499,6 +637,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// ID
 	std::getline(confFin, line);
 
+#if defined(var_cameraCaptFreq)
 	pg_webCams = new webCam[nb_webCam];
 	for (int ind_webCam = 0; ind_webCam < nb_webCam; ind_webCam++) {
 		std::getline(confFin, line);
@@ -530,7 +669,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			sprintf(ErrorStr, "Error: webcam configuration incorrect cameraHeight \"%s\"\n", temp3.c_str()); ReportError(ErrorStr); throw 50;
 		}		//std::cout << temp2 << "\n";
 	}
-
+#else
+	for (int ind_webCam = 0; ind_webCam < unusedvar; ind_webCam++) {
+		std::getline(confFin, line);
+	}
+#endif
 	// /webCam
 	std::getline(confFin, line);
 
@@ -542,8 +685,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	if (ID.compare("remote_IPCam") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"remote_IPCam\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
+#if defined(var_cameraCaptFreq)
 	sstream >> nb_IPCam;
-	// std::cout << "Nb clients: " << nb_IP_Clients << "\n";
+	// std::cout << "nb_IPCam: " << nb_IPCam << "\n";
+#else
+	sstream >> unusedvar;
+#endif
 
 	// VERBATIM
 	std::getline(confFin, line);
@@ -552,6 +699,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// ID
 	std::getline(confFin, line);
 
+#if defined(var_cameraCaptFreq)
 	pg_IPCam_capture = new VideoCapture[nb_IPCam];
 	pg_IPCam_capture_address = new String[nb_IPCam];
 	for (int ind_IPCam = 0; ind_IPCam < nb_IPCam; ind_IPCam++) {
@@ -574,10 +722,14 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		//fulllAddress = "rtsp://192.168.1.65:8554/main";
 		pg_IPCam_capture_address[ind_IPCam] = "rtsp://" + temp + ":" + temp2 + "/" + temp3;
 	}
+#else
+	for (int ind_IPCam = 0; ind_IPCam < unusedvar; ind_IPCam++) {
+		std::getline(confFin, line);
+	}
+#endif
 
 	// /remote_IPCam
 	std::getline(confFin, line);
-#endif
 
 	// shader_files Number of files
 	std::getline(confFin, line);
@@ -589,7 +741,28 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	sstream >> nb_shader_files;
 	std::cout << "nb_shader_files: " << nb_shader_files << "\n";
 	if (nb_shader_files != pg_NbShaderTotal) {
-		sprintf(ErrorStr, "Error: number of shader file names does not match expectation [%d/%d] (%s)!", nb_shader_files, pg_NbShaderTotal,line.c_str()); ReportError(ErrorStr); throw 429;
+		sprintf(ErrorStr, "Error: number of shader file names does not match expectation [%d/%d] (%s)!", nb_shader_files, pg_NbShaderTotal,line.c_str()); ReportError(ErrorStr); 
+		printf("Expected shaders: ");
+#if defined(var_part_initialization) 
+		printf("Particle aniation shader, ");
+#endif
+		printf("Update shader, ");
+#if defined(var_part_initialization) 
+		printf("Particle Render shader, ");
+#endif
+		printf("Mixing shader, ");
+		printf("Master shader, ");
+#ifdef var_sensor_layout
+		printf("Sensor shader, ");
+#endif
+#if defined(var_activeClipArts)
+		printf("Clip Art shader, ");
+#endif
+#if defined(var_activeMeshes)
+		printf("Mesh shader, ");
+#endif
+		printf("\n");
+		throw 429;
 	}
 
 	// VERBATIM
@@ -667,7 +840,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	screen_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
 	screen_font_size = 15;
-#if defined (TVW)
+#if defined(TVW)
 	display_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_25_usascii.png";
 	display_font_size = 25;
 #endif
@@ -689,14 +862,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 
 	/////////////////////////////////////////////////////////////////
 	// ASSIGNS INITIAL VALUES TO ALL CONFIGURATION FILES
-	InitializeConfigurationVar();
+	//InitializeConfigurationVar();
 
 	setWindowDimensions();
 
-	printf("Window %dx%d w:%d+%d Margin:%d TopLeft %dx%d\n",
-		window_width, window_height, leftWindowWidth, rightWindowWidth,
-		rightWindowVMargin, window_x, window_y);
-
+	printf("Window %dx%d working window width:%d working window doubling (1/0) %d Margin:%d TopLeft %dx%d\n",
+		window_width, window_height, workingWindow_width, double_window,
+		rightWindowVMargin, my_window_x, my_window_y);
 
 
 	/////////////////////////////////////////////////////////////////
@@ -737,7 +909,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			if (!has_only_digits) {
 				sprintf(ErrorStr, "Error: non numeric variable initial value for var %d (%s)\n", indP, temp.c_str()); ReportError(ErrorStr); throw 50;
 			}
-			InitialValuesInterpVar[indP].val_num = std::stod(temp);
+			InitialValuesInterpVar[indP].val_num = my_stod(temp);
 		}
 		else {
 			InitialValuesInterpVar[indP].val_string = temp;
@@ -861,7 +1033,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 						indScene + 1, indP, ScenarioVarMessages[indP], ScenarioVarTypes[indP], ScenarioVarMessages[indP]); ReportError(ErrorStr); throw 50;
 				}
 				else {
-					pg_Scenario[indScene].scene_initial_parameters[indP].val_num = std::stod(temp);
+					pg_Scenario[indScene].scene_initial_parameters[indP].val_num = my_stod(temp);
 				}
 			}
 		}
@@ -890,7 +1062,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 					sprintf(ErrorStr, "Error: non numeric variable final value in scene %d var %d type %d (%s)\n", indScene + 1, indP, ScenarioVarTypes[indP], temp.c_str()); ReportError(ErrorStr); throw 50;
 				}
 				else {
-					pg_Scenario[indScene].scene_final_parameters[indP].val_num = std::stod(temp);
+					pg_Scenario[indScene].scene_final_parameters[indP].val_num = my_stod(temp);
 				}
 			}
 			// std::cout << scene_final_parameters[indScene][indP].val_num << " ";
@@ -909,6 +1081,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		// storing the interpolation mode
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 			char valCh = 0;
+			char valCh2 = 0;
 			string vals, val2s;
 			float val3;
 
@@ -919,23 +1092,36 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 					+ pg_Scenario[indScene].scene_final_parameters[indP].val_num);
 
 			if (sstream.eof()) {
-				sprintf(ErrorStr, "Error: missing interpolation value in scene %d (%s) var %d (%s)\n", 
+				sprintf(ErrorStr, "Error: missing interpolation value in scene %d (%s) var %d (%s)\n",
 					indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, ScenarioVarMessages[indP]); ReportError(ErrorStr); throw 50;
 			}
 
 			sstream >> std::skipws >> temp;
 			valCh = temp[0];
+			if (temp.length() > 1) {
+				valCh2 = temp[1];
+				if (valCh2 != 'k') {
+					sprintf(ErrorStr, "Error: only k modifier is allowed on interpolation mode, not %c in scene %d var %d\n", valCh2, indScene + 1, indP + 1); ReportError(ErrorStr); throw 50;
+				}
+			}
+			else {
+				valCh2 = ' ';
+			}
 			// printf("valch %d\n" , (int)valCh );
 
-			switch (valCh) {
-				// l: value interpolates linearly between initial and final value from 0.0% to 1.0%
-				// L: value is initial from 0.0% until offset, 
-				// interpolates linearly between initial and final value from offset to offset + duration
-				// is final value between offset + duration and 1.0%
-			case 'l':
-			case 'L':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_linear_interpolation;
+			
+			// l: value interpolates linearly between initial and final value from 0.0% to 1.0%
+			// L: value is initial from 0.0% until offset, 
+			// interpolates linearly between initial and final value from offset to offset + duration
+			// is final value between offset + duration and 1.0%
+			if (valCh == 'l' || valCh == 'L') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_linear_interpolation;
+				if (valCh2 == ' ') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
+				}
+				else if (valCh2 == 'k') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				}
 				if (valCh == 'L') {
 					sstream >> vals;
 					sstream >> val2s;
@@ -966,16 +1152,21 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 					// std::cout << "L " << val << " " << val2 << " ";
 
 				}
-				break;
-				// c: value interpolates cosinely between initial and final value from 0.0% to 1.0%
-				// C: value is initial from 0.0% until offset, 
-				// interpolates cosinely between initial and final value from offset to offset + duration
-				// is final value between offset + duration and 1.0%
-				// COSINE INTERPOLATION
-			case 'c':
-			case 'C':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_cosine_interpolation;
+
+			}
+			// c: value interpolates cosinely between initial and final value from 0.0% to 1.0%
+			// C: value is initial from 0.0% until offset, 
+			// interpolates cosinely between initial and final value from offset to offset + duration
+			// is final value between offset + duration and 1.0%
+			// COSINE INTERPOLATION
+			else if (valCh == 'c' || valCh == 'C') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_cosine_interpolation;
+				if (valCh2 == ' ') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
+				}
+				else if (valCh2 == 'k') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				}
 				if (valCh == 'C') {
 					sstream >> vals;
 					sstream >> val2s;
@@ -1004,15 +1195,19 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 						sprintf(ErrorStr, "Error: offset value C(osine) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
-				break;
-				// z: value interpolates cosinely between initial and final value from 0.0% to 1.0%
-				// Z: value is initial from 0.0% until offset, 
-				// Beizer approximated with a cosine and a non linear input 3x^2-2x^3
-				// BEZIER INTERPOLATION
-			case 'z':
-			case 'Z':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_bezier_interpolation;
+			}
+			// z: value interpolates cosinely between initial and final value from 0.0% to 1.0%
+			// Z: value is initial from 0.0% until offset, 
+			// Beizer approximated with a cosine and a non linear input 3x^2-2x^3
+			// BEZIER INTERPOLATION
+			else if (valCh == 'z' || valCh == 'Z') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_bezier_interpolation;
+				if (valCh2 == ' ') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
+				}
+				else if (valCh2 == 'k') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				}
 				if (valCh == 'Z') {
 					sstream >> vals;
 					sstream >> val2s;
@@ -1041,15 +1236,19 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 						sprintf(ErrorStr, "Error: offset value Z(Bezier) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
-				break;
-				// e: value interpolates exponentially between initial and final value from 0.0% to 1.0%
-				// E: value is initial from 0.0% until offset, 
-				// exponential interpolation: alpha ^ exponent
-				// BEZIER INTERPOLATION
-			case 'e':
-			case 'E':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_exponential_interpolation;
+			}
+			// e: value interpolates exponentially between initial and final value from 0.0% to 1.0%
+			// E: value is initial from 0.0% until offset, 
+			// exponential interpolation: alpha ^ exponent
+			// EXPONENTIAL INTERPOLATION
+			else if (valCh == 'e' || valCh == 'E') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_exponential_interpolation;
+				if (valCh2 == ' ') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
+				}
+				else if (valCh2 == 'k') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				}
 				sstream >> val3;
 				pg_Scenario[indScene].scene_interpolations[indP].exponent = val3;
 				if (valCh == 'E') {
@@ -1080,13 +1279,17 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 						sprintf(ErrorStr, "Error: offset value Z(Bezier) in scene %d var %d greater than 1.0: %.3f\n", indScene + 1, indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
-				break;
-				// b: bell curve interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
-				// BELL INTERPOLATION
-			case 'b':
-			case 'B':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_bell_interpolation;
+			}
+			// b: bell curve interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
+			// BELL INTERPOLATION
+			else if (valCh == 'b' || valCh == 'B') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_bell_interpolation;
+				if (valCh2 == ' ') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
+				}
+				else if (valCh2 == 'k') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				}
 				sstream >> pg_Scenario[indScene].scene_interpolations[indP].midTermValue;
 				//printf("Bell interpolation mode in scene %d (%s) parameter %d [%d] [%c] mid term value %.2f!\n",
 				//	indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, int(valCh), valCh, 
@@ -1121,18 +1324,23 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 					// std::cout << "L " << val << " " << val2 << " ";
 
 				}
-				break;
-				// b: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
-				// SAW TOOTH INTERPOLATION
-			case 't':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_sawtooth_interpolation;
+			}
+			// b: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
+			// SAW TOOTH INTERPOLATION
+			else if (valCh == 't') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_sawtooth_interpolation;
+				if (valCh2 == ' ') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
+				}
+				else if (valCh2 == 'k') {
+					pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				}
 				sstream >> pg_Scenario[indScene].scene_interpolations[indP].midTermValue;
-				break;
-			case 's':
-			case 'S':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_stepwise_interpolation;
+			}
+			// STEPWISE VALUE WITHOUT INTERPOLATION
+			else if (valCh == 's' || valCh == 'S') {
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_stepwise_interpolation;
+				pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_scenario_initial;
 				pg_Scenario[indScene].scene_interpolations[indP].offSet = 0.0;
 				pg_Scenario[indScene].scene_interpolations[indP].duration = 1.0;
 				if (valCh == 'S') {
@@ -1149,15 +1357,27 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 						sprintf(ErrorStr, "Error: offset value of S(tepwise) in scene %d (%s) var %d greater than 1.0: %.3f\n", indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, val); ReportError(ErrorStr); throw 50;
 					}
 				}
-				break;
-			case 'k':
-			case 'K':
-				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode
-					= pg_keep_value;
-				break;
-			default:
+				else {
+					if (ScenarioVarTypes[indP] == _pg_string
+						&& pg_Scenario[indScene].scene_initial_parameters[indP].val_string
+						!= pg_Scenario[indScene].scene_final_parameters[indP].val_string) {
+						sprintf(ErrorStr, "Error: S(tepwise) interpolation should have same initial and final values %s/%s in scene %d (%s) var %d\n",
+							pg_Scenario[indScene].scene_initial_parameters[indP].val_string.c_str(), pg_Scenario[indScene].scene_final_parameters[indP].val_string.c_str(), indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1); ReportError(ErrorStr); throw 50;
+					}
+					else if (ScenarioVarTypes[indP] != _pg_string
+						&& pg_Scenario[indScene].scene_initial_parameters[indP].val_num
+						!= pg_Scenario[indScene].scene_final_parameters[indP].val_num) {
+						sprintf(ErrorStr, "Error: S(tepwise) interpolation should have same initial and final values %.2f/%.2f in scene %d (%s) var %d\n", pg_Scenario[indScene].scene_initial_parameters[indP].val_num, pg_Scenario[indScene].scene_final_parameters[indP].val_num, indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1); ReportError(ErrorStr); throw 50;
+					}
+				}
+			}
+			// KEEP CURRENT VALUE WITHOUT INTERPOLATION
+			else if (valCh == 'k' || valCh == 'K') {
+				pg_Scenario[indScene].scene_interpolations[indP].initialization_mode = pg_current_value;
+				pg_Scenario[indScene].scene_interpolations[indP].interpolation_mode = pg_keep_value;
+			}
+			else {
 				sprintf(ErrorStr, "Error: unknown interpolation mode in scene %d (%s) parameter %d [%d] [%c]!", indScene + 1, pg_Scenario[indScene].scene_IDs.c_str(), indP + 1, int(valCh), valCh); ReportError(ErrorStr); throw 50;
-				break;
 			}
 
 			//if (indP == _trkDecay_1 && indScene == 12) {
@@ -1196,7 +1416,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string videos
 	if (ID.compare("videos") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"videos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"videos\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 	sstream >> nb_movies;
 
@@ -1324,8 +1544,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> clip_image_height;
 		sstream >> clip_crop_width;
 		sstream >> clip_crop_height;
-		if (clip_image_width == 0 || clip_image_height == 0 || clip_crop_width == 0 || clip_crop_height == 0) {
-			sprintf(ErrorStr, "Error: incorrect configuration file: missing dimension data for clip image size %dx%d cropped size %dx%d\n", clip_image_width, clip_image_height, clip_crop_width, clip_crop_height); ReportError(ErrorStr); throw 100;
+		sstream >> clip_max_length;
+		if (clip_image_width == 0 || clip_image_height == 0 || clip_crop_width == 0 || clip_crop_height == 0 || clip_max_length == 0) {
+			sprintf(ErrorStr, "Error: incorrect configuration file: missing dimension data for clip image size %dx%d cropped size %dx%d max length %d\n", clip_image_width, clip_image_height, clip_crop_width, clip_crop_height, clip_max_length); ReportError(ErrorStr); throw 100;
 		}
 	}
 	else {
@@ -1373,13 +1594,19 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	else {
 		photoAlbumDirName = "";
 	}
+
 	if (nb_photo_albums > 0 && photoAlbumDirName.compare("captures") != 0) {
-		pg_ImageDirectory = "Data/" + project_name + "-data/";
-		if (nb_photo_albums > 0) {
-			pg_ImageDirectory += photoAlbumDirName;
+		if (photoAlbumDirName.find(':') == std::string::npos) {
+			pg_ImageDirectory = "Data/" + project_name + "-data/";
+			if (nb_photo_albums > 0) {
+				pg_ImageDirectory += photoAlbumDirName;
+			}
+			else {
+				pg_ImageDirectory += "images/";
+			}
 		}
 		else {
-			pg_ImageDirectory += "images/";
+			pg_ImageDirectory = photoAlbumDirName;
 		}
 		std::cout << "Photo album directory: " << pg_ImageDirectory << std::endl;
 	}
@@ -1387,7 +1614,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		pg_ImageDirectory = "captures";
 		std::cout << "Using capture images" << std::endl;
 	}
-#if defined (TVW)
+#if defined(TVW)
 	pg_MaskDirectory = "Data/" + project_name + "-data/";
 	if (nb_photo_albums > 1) {
 		pg_MaskDirectory += photoAlbumDirName[1];
@@ -1406,7 +1633,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	std::cout << "Loading messages from " << pg_MessageDirectory << std::endl;
 #endif
 
-#if defined (ETOILES)
+#if defined(ETOILES)
 	pg_MessageDirectory = "Data/" + project_name + "-data/";
 	pg_MessageDirectory += "messages/";
 	std::cout << "Loading messages from " << pg_MessageDirectory << std::endl;
@@ -1442,7 +1669,91 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		trackFileName.push_back(temp);
 		sstream >> temp2;
 		trackShortName.push_back(temp2);
-		std::cout << "Soundtrack: " << trackFileName[indTrack] << " " << trackShortName[indTrack] << " (#" << indTrack << ")\n";
+		std::cout << "Soundtrack: " << trackFileName[indTrack] << " " << trackShortName[indTrack] << " (#" << indTrack << ")\n";		
+		
+		// in addition to the track name and short name, 2 additional
+		// files can be used to generate beats from sound envelope at 1
+		// or sound onsets detected through aubio library
+
+		// possible additional peaked sound envelope at 1.0 or above
+		// NULL value or no value means no file
+		if (sstream >> temp2) {
+			// there is a soundtrack file with peaked sound envelope at 1.0
+			if (temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
+				trackSoundtrackPeaksFileName.push_back(temp2);
+				string csv_line;
+				vector<float> peak_times;
+				std::ifstream peak_file(temp2);
+				if (!peak_file) {
+					sprintf(ErrorStr, "Error: peak file [%s] not found!", temp2.c_str()); ReportError(ErrorStr); throw 11;
+				}
+				printf("Read audio soundtrack peaks [%s]\n", temp2.c_str());
+				// reads the peaks timecodes and stores them in a float vector
+				std::getline(peak_file, csv_line);
+				std::getline(peak_file, csv_line);
+				std::getline(peak_file, csv_line);
+				while (std::getline(peak_file, csv_line)) {
+					std::stringstream  peak_sstream;
+					stringstreamStoreLine(&peak_sstream, &csv_line);
+					float time, sound;
+					peak_sstream >> time;
+					peak_sstream >> sound;
+					if (sound >= 1) {
+						peak_times.push_back(time);
+					}
+				}
+				peak_file.close();
+				trackSoundtrackPeaks.push_back(peak_times);
+				//for (int i = 0; i < int(peak_times.size()); ++i) {
+				//	std::cout << "Peak: " << peak_times[i] << '\n';
+				//}
+			}
+			else {
+				trackSoundtrackPeaksFileName.push_back("");
+				trackSoundtrackPeaks.push_back({});
+			}
+			if (sstream >> temp2 && temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
+				trackSoundtrackOnsetsFileName.push_back(temp2);
+				string csv_line;
+				vector<float> onset_times;
+				std::ifstream onset_file(temp2);
+				if (!onset_file) {
+					sprintf(ErrorStr, "Error: onset file [%s] not found!", temp2.c_str()); ReportError(ErrorStr); throw 11;
+				}
+				// reads the peaks timecodes and stores them in a float vector
+				printf("Read audio soundtrack onsets [%s]\n", temp2.c_str());
+				while (std::getline(onset_file, csv_line)) {
+					std::stringstream  onset_sstream;
+					stringstreamStoreLine(&onset_sstream, &csv_line);
+					float time;
+					onset_sstream >> time;
+					onset_times.push_back(time);
+				}
+				onset_file.close();
+				trackSoundtrackOnsets.push_back(onset_times);
+				//for (int i = 0; i < int(onset_times.size()); ++i) {
+				//	std::cout << "Onset: " << onset_times[i] << '\n';
+				//}
+			}
+			else {
+				trackSoundtrackOnsetsFileName.push_back("");
+				trackSoundtrackOnsets.push_back({});
+			}
+			float offset = 0.f;
+			sstream >> offset;
+			trackSoundtrackOnsetsAndPeasksOffset.push_back(offset);
+		}
+		else {
+			trackSoundtrackPeaksFileName.push_back("");
+			trackSoundtrackPeaks.push_back({});
+			trackSoundtrackOnsetsFileName.push_back("");
+			trackSoundtrackOnsets.push_back({});
+			trackSoundtrackOnsetsAndPeasksOffset.push_back(0.f);
+		}
+		//std::cout << "track : " << 
+		// trackFileName[indVideo] << "\n";
+
+
 	}
 	// /soundtracks
 	std::getline(scenarioFin, line);
@@ -1470,7 +1781,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	nb_svg_paths = 0;
 	current_path_group = 0;
 	sstream >> nb_svg_paths;
-	//printf("nb svg paths %d\n", nb_svg_paths);
+	printf("nb svg paths %d\n", nb_svg_paths);
 	SVGpaths = new SVG_path[nb_svg_paths]();
 
 	for (int indPrerecPath = 0; indPrerecPath < nb_svg_paths; indPrerecPath++) {
@@ -1480,28 +1791,32 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> temp; // file name
 		string fileName = "Data/" + project_name + "-data/SVGs/" + temp;
 		sstream >> temp2;
-		int indPath = std::stoi(temp2);
+		int indPath = my_stoi(temp2);
 		sstream >> temp2;
-		int indTrack = std::stoi(temp2);
+		int indTrack = my_stoi(temp2);
 		sstream >> temp2;
-		float pathRadius = std::stof(temp2);
+		float pathRadius = my_stof(temp2);
 		sstream >> temp2;
-		float path_r_color = std::stof(temp2);
+		float path_r_color = my_stof(temp2);
 		sstream >> temp2;
-		float path_g_color = std::stof(temp2);
+		float path_g_color = my_stof(temp2);
 		sstream >> temp2;
-		float path_b_color = std::stof(temp2);
+		float path_b_color = my_stof(temp2);
 		sstream >> temp2;
-		float path_readSpeedScale = std::stof(temp2);
+		float path_readSpeedScale = my_stof(temp2);
 		string path_ID = "";
 		sstream >> path_ID;
 		sstream >> temp2;
-		int path_group = std::stoi(temp2);
+		int path_group = my_stoi(temp2);
 		sstream >> temp2;
-		bool with_color_radius_from_scenario = (std::stoi(temp2) != 0);
+		bool with_color_radius_from_scenario = (my_stoi(temp2) != 0);
+		sstream >> temp2;
+		double secondsforwidth = my_stod(temp2);
 
-		SVGpaths[indPrerecPath].SVG_path_init(indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale, path_ID, fileName, path_group, with_color_radius_from_scenario);
-		//printf("path no %d group %d\n", SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].path_group);
+		printf("path no %d group %d\n", SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].path_group);
+		SVGpaths[indPrerecPath].SVG_path_init(indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale,
+			path_ID, fileName, path_group, with_color_radius_from_scenario, secondsforwidth);
+		printf("path no %d group %d\n", SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].path_group);
 		// checks whether the paths are not duplicated
 		for (int indAux = 0; indAux < indPrerecPath; indAux++) {
 			if (SVGpaths[indAux].indPath == SVGpaths[indPrerecPath].indPath && SVGpaths[indAux].path_group == SVGpaths[indPrerecPath].path_group) {
@@ -1509,21 +1824,24 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 			}
 		}
 
-		//printf("Path ID [%s]\n", path_ID.c_str());
-		//printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
-			//indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
+		printf("Path ID [%s]\n", path_ID.c_str());
+		printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
+			indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (indTrack >= 0 && indTrack < PG_NB_TRACKS && indPath >= 1 && indPath <= PG_NB_PATHS) {
 			if (path_group - 1 == current_path_group) {
-				//printf("Loading SVG path %s track %d\n", (char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(), indTrack);
+				printf("Loading SVG path %s track %d\n", (char *)("Data/" + project_name + "-data/SVGs/" + temp).c_str(), indTrack);
+#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 				load_svg_path((char*)fileName.c_str(),
-					indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale, path_ID, with_color_radius_from_scenario);
+					indPath, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, 
+					path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth);
+#endif
 			}
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path %d number (\"%s\")",
 				indTrack, indPath, fileName.c_str()); ReportError(ErrorStr); throw 100;
 		}
-		// std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
+		 std::cout << "svg_path #" << indPath << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << indTrack << "\n";
 	}
 	// /svg_paths
 	std::getline(scenarioFin, line);
@@ -1588,7 +1906,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> pg_ClipArt_Scale[indClipArtFile];
 		sstream >> pg_ClipArt_Translation_X[indClipArtFile];
 		sstream >> pg_ClipArt_Translation_Y[indClipArtFile];
-		printf("ind clipart %d scale %.2f pos %.2f %.2f\n", indClipArtFile, pg_ClipArt_Scale[indClipArtFile], pg_ClipArt_Translation_X[indClipArtFile], pg_ClipArt_Translation_Y[indClipArtFile]);
+		//printf("ind clipart %d scale %.2f pos %.2f %.2f\n", indClipArtFile, pg_ClipArt_Scale[indClipArtFile], pg_ClipArt_Translation_X[indClipArtFile], pg_ClipArt_Translation_Y[indClipArtFile]);
 		sstream >> pg_ClipArt_Rotation[indClipArtFile];
 		sstream >> ID;
 		if (ID.compare("nat") == 0) {
@@ -1619,7 +1937,7 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_clip_arts\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	////////////////////////////
 	////// MESHES
 	// the meshes are loaded inside the GPU and diplayed depending on their activity
@@ -1635,7 +1953,8 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	// number of obj files in the configuration file
 	sstream >> pg_nb_Mesh_files;
 
-#ifdef PG_AUGMENTED_REALITY
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 	if (pg_nb_Mesh_files <= 0) {
 		sprintf(ErrorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); ReportError(ErrorStr); throw 100;
 	}
@@ -1644,15 +1963,20 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	pg_Mesh_fileNames = new string[pg_nb_Mesh_files];
 
 	pg_Mesh_Scale = new float[pg_nb_Mesh_files];
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_Mesh_Profusion
 	pg_CaverneActveMesh = new bool[pg_nb_Mesh_files];
 	pg_CaverneMeshWakeupTime = new float[pg_nb_Mesh_files];
 	pg_CaverneMeshBirthTime = new float[pg_nb_Mesh_files];
 	pg_CaverneMeshDeathTime = new float[pg_nb_Mesh_files];
 #endif
+#if defined(var_MmeShanghai_brokenGlass)
+	pg_MmeShanghai_MeshSubParts = new bool** [pg_nb_Mesh_files];
+	pg_MmeShanghai_NbMeshSubParts = new int[pg_nb_Mesh_files];
+	pg_MmeShanghai_MeshSubPart_FileNames = new string * [pg_nb_Mesh_files];
+#endif
 	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
 		pg_Mesh_Scale[indFile] = 1.0f;
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_Mesh_Profusion
 		pg_CaverneActveMesh[indFile] = false;
 		if (indFile < 7) {
 			pg_CaverneMeshWakeupTime[indFile] = float(rand_0_1 * 10.);
@@ -1662,6 +1986,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		}
 		pg_CaverneMeshBirthTime[indFile] = 0.f;
 		pg_CaverneMeshDeathTime[indFile] = 0.f;
+#endif
+#if defined(var_MmeShanghai_brokenGlass)
+		pg_MmeShanghai_MeshSubParts[indFile] = NULL;
+		pg_MmeShanghai_NbMeshSubParts[indFile] = 0;
+		pg_MmeShanghai_MeshSubPart_FileNames[indFile] = NULL;
 #endif
 	}
 
@@ -1699,9 +2028,13 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 	memset((char *)pg_Mesh_Motion_Z, 0, pg_nb_Mesh_files * sizeof(float));
 	pg_Mesh_TextureRank = new int[pg_nb_Mesh_files];
 	memset((char *)pg_Mesh_TextureRank, 0, pg_nb_Mesh_files * sizeof(int));
-	pg_Mesh_Colors = new pg_ClipArt_Colors_Types[pg_nb_Mesh_files];
+	pg_Mesh_Colors = new float*[pg_nb_Mesh_files];
 	for (int indFile = 0; indFile < pg_nb_Mesh_files; indFile++) {
-		pg_Mesh_Colors[indFile] = ClipArt_nat;
+		pg_Mesh_Colors[indFile] = new float[4];
+		pg_Mesh_Colors[indFile][0] = 1.f;
+		pg_Mesh_Colors[indFile][1] = 1.f;
+		pg_Mesh_Colors[indFile][2] = 1.f;
+		pg_Mesh_Colors[indFile][3] = 1.f;
 	}
 	Mesh_texture_rectangle = new GLuint[pg_nb_Mesh_files];
 	memset((char *)Mesh_texture_rectangle, 0, pg_nb_Mesh_files * sizeof(GLuint));
@@ -1711,9 +2044,12 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string mesh
 		sstream >> pg_Mesh_fileNames[indMeshFile]; // file name
-		pg_Mesh_fileNames[indMeshFile]
-			= "Data/" + project_name + "-data/meshes/"
-			+ pg_Mesh_fileNames[indMeshFile];
+		// full path is not given, look in default local path
+		if (pg_Mesh_fileNames[indMeshFile].find(':') == std::string::npos) {
+			pg_Mesh_fileNames[indMeshFile]
+				= "Data/" + project_name + "-data/meshes/"
+				+ pg_Mesh_fileNames[indMeshFile];
+		}
 
 		// image initial geometry
 		sstream >> pg_Mesh_Scale[indMeshFile];
@@ -1724,6 +2060,9 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> pg_Mesh_Rotation_X[indMeshFile];
 		sstream >> pg_Mesh_Rotation_Y[indMeshFile];
 		sstream >> pg_Mesh_Rotation_Z[indMeshFile];
+		if (pg_Mesh_Rotation_X[indMeshFile] == 0 && pg_Mesh_Rotation_Y[indMeshFile] == 0 && pg_Mesh_Rotation_Z[indMeshFile] == 0) {
+			sprintf(ErrorStr, "Error: incorrect mesh %s configuration: rotation with Null axix ", pg_Mesh_fileNames[indMeshFile].c_str()); ReportError(ErrorStr); throw 100;
+		}
 		sstream >> pg_Mesh_Motion_X[indMeshFile];
 		sstream >> pg_Mesh_Motion_Y[indMeshFile];
 		sstream >> pg_Mesh_Motion_Z[indMeshFile];
@@ -1735,28 +2074,58 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		pg_Mesh_Rotation_Ini_Z[indMeshFile] = pg_Mesh_Rotation_Z[indMeshFile];
 		sstream >> ID;
 		if (ID.compare("nat") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_nat;
+			pg_Mesh_Colors[indMeshFile][0] = 1.f;
+			pg_Mesh_Colors[indMeshFile][1] = 1.f;
+			pg_Mesh_Colors[indMeshFile][2] = 1.f;
+			pg_Mesh_Colors[indMeshFile][3] = 0.f;
 		}
 		else if (ID.compare("white") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_white;
+			pg_Mesh_Colors[indMeshFile][0] = 1.f;
+			pg_Mesh_Colors[indMeshFile][1] = 1.f;
+			pg_Mesh_Colors[indMeshFile][2] = 1.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else if (ID.compare("red") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_red;
+			pg_Mesh_Colors[indMeshFile][0] = 1.f;
+			pg_Mesh_Colors[indMeshFile][1] = 0.f;
+			pg_Mesh_Colors[indMeshFile][2] = 0.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else if (ID.compare("green") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_green;
+			pg_Mesh_Colors[indMeshFile][0] = 0.f;
+			pg_Mesh_Colors[indMeshFile][1] = 1.f;
+			pg_Mesh_Colors[indMeshFile][2] = 0.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else if (ID.compare("blue") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_blue;
+			pg_Mesh_Colors[indMeshFile][0] = 0.f;
+			pg_Mesh_Colors[indMeshFile][1] = 0.f;
+			pg_Mesh_Colors[indMeshFile][2] = 1.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else if (ID.compare("cyan") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_cyan;
+			pg_Mesh_Colors[indMeshFile][0] = 0.f;
+			pg_Mesh_Colors[indMeshFile][1] = 1.f;
+			pg_Mesh_Colors[indMeshFile][2] = 1.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else if (ID.compare("magenta") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_magenta;
+			pg_Mesh_Colors[indMeshFile][0] = 1.f;
+			pg_Mesh_Colors[indMeshFile][1] = 0.f;
+			pg_Mesh_Colors[indMeshFile][2] = 1.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else if (ID.compare("yellow") == 0) {
-			pg_Mesh_Colors[indMeshFile] = ClipArt_yellow;
+			pg_Mesh_Colors[indMeshFile][0] = 1.f;
+			pg_Mesh_Colors[indMeshFile][1] = 1.f;
+			pg_Mesh_Colors[indMeshFile][2] = 0.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
+		}
+		else if (ID.compare("black") == 0) {
+			pg_Mesh_Colors[indMeshFile][0] = 0.f;
+			pg_Mesh_Colors[indMeshFile][1] = 0.f;
+			pg_Mesh_Colors[indMeshFile][2] = 0.f;
+			pg_Mesh_Colors[indMeshFile][3] = 1.f;
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, cyan, yellow, magenta, red, blue, or greeen expected)", ID.c_str()); ReportError(ErrorStr); throw 100;
@@ -1767,6 +2136,18 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		//	pg_Mesh_Translation_Y[indMeshFile], pg_Mesh_Translation_Z[indMeshFile],
 		//	pg_Mesh_Rotation_angle[indMeshFile]);
 		// the rank of the mesh textures applied to this mesh
+#if defined(var_MmeShanghai_brokenGlass)
+		sstream >> pg_MmeShanghai_NbMeshSubParts[indMeshFile];
+		pg_MmeShanghai_MeshSubPart_FileNames[indMeshFile] = new string[pg_MmeShanghai_NbMeshSubParts[indMeshFile]];
+		pg_MmeShanghai_MeshSubParts[indMeshFile] = new bool* [pg_MmeShanghai_NbMeshSubParts[indMeshFile]];
+		for (int indPart = 0; indPart < pg_MmeShanghai_NbMeshSubParts[indMeshFile]; indPart++) {
+			sstream >> pg_MmeShanghai_MeshSubPart_FileNames[indMeshFile][indPart];
+			pg_MmeShanghai_MeshSubPart_FileNames[indMeshFile][indPart]
+				= "Data/" + project_name + "-data/meshes/"
+				+ pg_MmeShanghai_MeshSubPart_FileNames[indMeshFile][indPart];
+			pg_MmeShanghai_MeshSubParts[indMeshFile][indPart] = NULL;
+		}
+#endif
 	}
 
 	// /meshes
@@ -1822,11 +2203,15 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string texture
-		sstream >> pg_Texture_fileNames[indTextureFile]; // file name
-		pg_Texture_fileNames[indTextureFile]
-			= "Data/" + project_name + "-data/textures/"
-			+ pg_Texture_fileNames[indTextureFile];
-		sstream >> pg_Texture_fileNamesSuffix[indTextureFile]; // file name
+		sstream >> ID; // file name
+		if (ID.find(':') == std::string::npos) {
+			pg_Texture_fileNames[indTextureFile]
+				= "Data/" + project_name + "-data/textures/" + ID;
+		}
+		else {
+			pg_Texture_fileNames[indTextureFile] = ID;
+		}
+		sstream >> pg_Texture_fileNamesSuffix[indTextureFile]; // file suffix
 
 		// usage
 		sstream >> ID;
@@ -1861,11 +2246,11 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		else if (ID.compare("part_acc") == 0) {
 			pg_Texture_usages[indTextureFile] = Texture_part_acc;
 		}
+		else if (ID.compare("pixel_acc") == 0) {
+			pg_Texture_usages[indTextureFile] = Texture_pixel_acc;
+		}
 		else if (ID.compare("repop_density") == 0) {
 			pg_Texture_usages[indTextureFile] = Texture_repop_density;
-		}
-		else if (ID.compare("burst_mask") == 0) {
-			pg_Texture_usages[indTextureFile] = Texture_burst_mask;
 		}
 		else if (ID.compare("multilayer_master_mask") == 0) {
 			pg_Texture_usages[indTextureFile] = Texture_multilayer_master_mask;
@@ -1894,38 +2279,38 @@ void parseConfigurationFile(std::ifstream& confFin, std::ifstream&  scenarioFin)
 		sstream >> pg_Texture_Size_X[indTextureFile];
 		sstream >> pg_Texture_Size_Y[indTextureFile];
 		if (pg_Texture_usages[indTextureFile] == Texture_master_mask &&
-			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
 			sprintf(ErrorStr, "Error: master mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
 				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indTextureFile] == Texture_burst_mask &&
-			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
-			sprintf(ErrorStr, "Error: burst mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
-				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
-		}
 		if (pg_Texture_usages[indTextureFile] == Texture_multilayer_master_mask &&
-			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
 			sprintf(ErrorStr, "Error: multilayer master mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
 				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
 		if (pg_Texture_usages[indTextureFile] == Texture_noise &&
-			(pg_Texture_Size_X[indTextureFile] < window_width_powerOf2 || pg_Texture_Size_Y[indTextureFile] < window_height_powerOf2)) {
-			sprintf(ErrorStr, "Error: noise texture should be minimlally %dx%d (%dx%d)\n", window_width_powerOf2, window_height_powerOf2,
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width_powerOf2 || pg_Texture_Size_Y[indTextureFile] < window_height_powerOf2)) {
+			sprintf(ErrorStr, "Error: noise texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width_powerOf2, window_height_powerOf2,
 				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
 		if (pg_Texture_usages[indTextureFile] == Texture_part_init &&
-			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
-			sprintf(ErrorStr, "Error: particle initialization texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: particle initialization texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
 				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
 		if (pg_Texture_usages[indTextureFile] == Texture_part_acc &&
-			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
-			sprintf(ErrorStr, "Error: particle acceleration texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: particle acceleration texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
+				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
+		}
+		if (pg_Texture_usages[indTextureFile] == Texture_pixel_acc &&
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error: pixel acceleration texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
 				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
 		if (pg_Texture_usages[indTextureFile] == Texture_repop_density &&
-			(pg_Texture_Size_X[indTextureFile] < window_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
-			sprintf(ErrorStr, "Error:  repopulation density texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
+			(pg_Texture_Size_X[indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indTextureFile] < window_height)) {
+			sprintf(ErrorStr, "Error:  repopulation density texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
 				pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile]); ReportError(ErrorStr); throw 100;
 		}
 
@@ -2185,33 +2570,29 @@ int FindSceneById(std::string * sceneID) {
 void setWindowDimensions(void) {
 	if (double_window && window_width > 1920) {
 		if (wide_screen) {
-			leftWindowWidth = window_width * 3 / 7;
+			workingWindow_width = window_width * 3 / 7;
 		}
 		else {
-			leftWindowWidth = window_width / 2;
+			workingWindow_width = window_width / 2;
 		}
-		rightWindowWidth = window_width - leftWindowWidth;
-		rightWindowVMargin = (rightWindowWidth - leftWindowWidth) / 2;
-		doubleWindowWidth = window_width;
+		rightWindowVMargin = (window_width -  2 * workingWindow_width) / 2;
 	}
 	else {
-		leftWindowWidth = window_width;
-		rightWindowWidth = 0;
+		workingWindow_width = window_width;
 		rightWindowVMargin = 0;
-		doubleWindowWidth = window_width;
 	}
 	// looks for the smallest powers of 2 for width and height
-	leftWindowWidth_powerOf2 = 1;
-	while (leftWindowWidth_powerOf2 < leftWindowWidth)
-		leftWindowWidth_powerOf2 *= 2;
+	workingWindow_width_powerOf2 = 1;
+	while (workingWindow_width_powerOf2 < workingWindow_width)
+		workingWindow_width_powerOf2 *= 2;
 	window_height_powerOf2 = 1;
 	while (window_height_powerOf2 < window_height)
 		window_height_powerOf2 *= 2;
 	window_width_powerOf2 = 1;
 	while (window_width_powerOf2 < window_width)
 		window_width_powerOf2 *= 2;
-	leftWindowWidth_powerOf2_ratio =
-		float(leftWindowWidth) / float(leftWindowWidth_powerOf2);
+	workingWindow_width_powerOf2_ratio =
+		float(workingWindow_width) / float(workingWindow_width_powerOf2);
 	window_height_powerOf2_ratio =
 		float(window_height) / float(window_height_powerOf2);
 }
@@ -2252,7 +2633,7 @@ void LoadConfigurationFile( const char * confFileName , const char * scenarioFil
 
   //std::cout << "\n*** max_network_message_length/max_mouse_recording_frames/minimal_interframe_latency: " 
   //  << max_network_message_length <<  << " " << max_mouse_recording_frames << " " << minimal_interframe_latency "\n";
-  //std::cout << "\n*** window size: " << window_width << " " << window_height << " " << window_x << " " << window_y << "\n";
+  //std::cout << "\n*** window size: " << window_width << " " << window_height << " " << my_window_x << " " << my_window_y << "\n";
 
 }
 

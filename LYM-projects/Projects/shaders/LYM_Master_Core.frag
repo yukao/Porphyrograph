@@ -8,8 +8,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 #define PG_NB_TRACKS 4
-// #define ATELIERS_PORTATIFS
-#define CAVERNEPLATON
 
 #include_declarations
 
@@ -52,8 +50,12 @@ layout (binding = 7) uniform sampler3D uniform_Master_texture_fs_Mask;  // mask 
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform vec4 uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
+
+#if defined(var_flashchange_BGcolor_freq)
+ uniform vec3 uniform_Master_fs_3fv_BG_color_rgb;
+#endif
 
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
@@ -62,8 +64,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
-  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
+  float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
+  float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
   vec2 initialCoords = coords;
@@ -80,7 +82,8 @@ void main() {
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
+  if(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.w != 0
+     && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -114,6 +117,7 @@ void main() {
   // a track is used to mask other ones: can be used to reveal a
   // track by drawing on another one
   float maskGrey = 1.0;
+#ifdef var_currentMaskTrack
   if (currentMaskTrack == 0) {
     trackMasterWeight_0 = 0; maskGrey = graylevel(track0_color.rgb); 
   }
@@ -132,31 +136,40 @@ void main() {
     trackMasterWeight_3 = 0; maskGrey = graylevel(track3_color.rgb);
   }
 #endif
+#endif
 
   vec3 NonEchoedColor
     = vec3(track0_color.rgb) * trackMasterWeight_0
-#if PG_NB_TRACKS >= 2
+#if PG_NB_TRACKS >= 2 && defined(var_trackMasterWeight_1) && defined(var_trackMasterWeight_1)
     + vec3(track1_color.rgb) * trackMasterWeight_1
 #endif
-#if PG_NB_TRACKS >= 3
+#if PG_NB_TRACKS >= 3 && defined(var_trackMasterWeight_2)
     + vec3(track2_color.rgb) * trackMasterWeight_2
 #endif
-#if PG_NB_TRACKS >= 4
+#if PG_NB_TRACKS >= 4 && defined(var_trackMasterWeight_3)
     + vec3(track3_color.rgb) * trackMasterWeight_3
 #endif
     + CA_color.rgb * CAMasterWeight
+#if defined(var_PartMasterWeight)
     + particle_color.rgb * PartMasterWeight * particle_color.a
+#endif
     ;
-    
+
   ////////////////////////////////////////////////////////////////////
   // mix of echoed and non-echoed layer mixes
   // and clamping
   outColor0 
     = vec4( clamp( MixingColor.rgb + NonEchoedColor , 0.0 , 1.0 ) , 1.0 );
+#if defined(var_flashchange_BGcolor_freq)
+  outColor0 
+    = vec4( clamp( outColor0.rgb + uniform_Master_fs_3fv_BG_color_rgb , 0.0 , 1.0 ) , 1.0 );
+#endif
   // masking
+#ifdef var_currentMaskTrack
   if (currentMaskTrack >= 0) {
-    //outColor0.rgb *= maskGrey;
+   outColor0.rgb *= maskGrey;
   }
+#endif
 
   ////////////////////////////////////////////////////////////////////
   // inverted image
@@ -166,57 +179,67 @@ void main() {
 
   ////////////////////////////////////////////////////////////////////
   // image mask
+#if defined(var_master_mask_scale) && defined(var_master_mask_scale_ratio) && defined(var_master_offsetX) && defined(var_master_offsetY)
   vec2 ratioed_scale = vec2(master_mask_scale, master_mask_scale * master_mask_scale_ratio);
   vec2 coordsWRTcenter = (initialCoords - centerCoords) / ratioed_scale;
   vec2 scaled_coords = coordsWRTcenter + (centerCoords + vec2(master_offsetX, master_offsetY) / ratioed_scale);
 
   float maskColor = 0;
+#ifdef var_master_mask_opacity_1
   if(master_mask_opacity_1 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.0833333333)).g * master_mask_opacity_1;
   }
+#endif
+#ifdef var_master_mask_opacity_2
   if(master_mask_opacity_2 > 0) {
-    maskColor = texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
+    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.25)).g * master_mask_opacity_2;
-    maskColor += maskColor;
   }
+#endif
+#ifdef var_master_mask_opacity_3
   if(master_mask_opacity_3 > 0) {
-    maskColor = texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
+    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.4166666667)).g * master_mask_opacity_3;
-    maskColor += maskColor;
   }
+#endif
+#ifdef var_master_mask_opacity_4
   if(master_mask_opacity_4 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.5833333333)).g * master_mask_opacity_4;
   }
+#endif
+#ifdef var_master_mask_opacity_5
   if(master_mask_opacity_5 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.75)).g * master_mask_opacity_5;
   }
+#endif
+#ifdef var_master_mask_opacity_6
   if(master_mask_opacity_6 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.9166666667)).g * master_mask_opacity_6;
   }
+#endif
 
   maskColor = clamp(maskColor, 0, 1);
   outColor0.rgb *= maskColor;
+#endif
 
-/*  if(decalCoords.x < master_crop_x || decalCoords.x > master_crop_y) {
-    outColor0 = vec4(0,0,0,1);
-  }
-*/
-
- ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
   // blinking cursor 1 pixel wide under the mouse (except for hide)
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
   float mouse_y = uniform_Master_fs_4fv_xy_frameno_pulsedShift.y;
   float frameno = uniform_Master_fs_4fv_xy_frameno_pulsedShift.z;
 
-// vertical mirror
-//  coords.y = height - coords.y;
-// double mirror
-//   coords.y = height - coords.y;
-//   coords.x = width - coords.x;
+  // vertical mirror
+  //  coords.y = height - coords.y;
+  // double mirror
+  //   coords.y = height - coords.y;
+  //   coords.x = width - coords.x;
+
+  // master level
+  outColor0.rgb *= master;
 
   // blinking cursor
   if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
@@ -224,8 +247,4 @@ void main() {
       && length(vec2(coords.x - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
-
-  // NEMOURS: overlay between two videoprojectors
-  // outColor0.rgb *= master * alpha;
-  outColor0.rgb *= master;
 }

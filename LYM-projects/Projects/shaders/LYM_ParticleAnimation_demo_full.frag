@@ -7,43 +7,44 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-float	 partDecay;
-int		part_initialization;
-int		part_image_acceleration;
-bool	  part_path_follow_0;
-bool	  part_path_follow_1;
-bool	  part_path_follow_2;
-bool	  part_path_follow_3;
-bool	  part_path_follow_4;
-bool	  part_path_follow_5;
-bool	  part_path_follow_6;
-bool	  part_path_follow_7;
-bool	  part_path_repulse_0;
-bool	  part_path_repulse_1;
-bool	  part_path_repulse_2;
-bool	  part_path_repulse_3;
-bool	  part_path_repulse_4;
-bool	  part_path_repulse_5;
-bool	  part_path_repulse_6;
-bool	  part_path_repulse_7;
-float	 part_size;
-float	 part_acc;
-float	 part_damp;
-float	 noiseScale;
-float	 part_field_weight;
-float	 part_damp_targtRad;
-float	 part_timeToTargt;
-bool	  partMove_target;
-bool	  partMove_rand;
-int		partExit_mode;
-int		partStroke_mode;
-int		partColor_mode;
-float	 pixel_acc_shiftX;
-float	 pixel_acc_shiftY;
-float	 repop_part;
-float	 repop_path;
-bool	  freeze;
-uniform float uniform_ParticleAnimation_scenario_var_data[36];
+float     noiseScale;
+float     pixel_acc_center_0;
+float     pixel_acc_center_1;
+bool      part_path_follow_0;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_noiseScale_pixel_acc_center_0_pixel_acc_center_1_part_path_follow_0;
+bool      part_path_follow_1;
+bool      part_path_follow_2;
+bool      part_path_follow_3;
+bool      part_path_follow_4;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_follow_1_part_path_follow_2_part_path_follow_3_part_path_follow_4;
+bool      part_path_follow_5;
+bool      part_path_follow_6;
+bool      part_path_follow_7;
+bool      part_path_repulse_0;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_follow_5_part_path_follow_6_part_path_follow_7_part_path_repulse_0;
+bool      part_path_repulse_1;
+bool      part_path_repulse_2;
+bool      part_path_repulse_3;
+bool      part_path_repulse_4;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_repulse_1_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4;
+bool      part_path_repulse_5;
+bool      part_path_repulse_6;
+bool      part_path_repulse_7;
+bool      freeze;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_part_path_repulse_5_part_path_repulse_6_part_path_repulse_7_freeze;
+int       part_initialization;
+bool      partMove_target;
+bool      partMove_rand;
+int       partExit_mode;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_part_initialization_partMove_target_partMove_rand_partExit_mode;
+int       partStroke_mode;
+int       partColor_mode;
+float     part_damp_targtRad;
+float     part_timeToTargt;
+uniform vec4 uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_part_damp_targtRad_part_timeToTargt;
+float     part_field_weight;
+float     partRepopRadius;
+uniform vec2 uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius;
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -53,10 +54,6 @@ uniform float uniform_ParticleAnimation_scenario_var_data[36];
 #define PG_VIDEO_ACTIVE
 #define PG_NB_TRACKS 4
 #define PG_NB_PATHS 7
-
-#define PG_PATH_ANIM_POS              0
-#define PG_PATH_ANIM_RAD              1
-#define PG_MAX_PATH_ANIM_DATA         2
 
 // VIDEO UPDATE
 #ifdef PG_VIDEO_ACTIVE
@@ -133,7 +130,6 @@ const uint DRAWING_LINE = 1;
 ////////////////////////////////////////////////////////////////////
 // MACROS
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
-#define maxCol(col) (max(col.r,max(col.g,col.b)))
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -176,9 +172,9 @@ vec4 out_target_position_color_radius_particle = vec4(1);
 // number of particles
 int nbParticles = 0;
 
-
-
-
+// part acc & damp
+float part_acc_factor;
+float part_damp_factor;
 
 
 ////////////////////////////////////////////////////////////////////
@@ -197,14 +193,24 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
-uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_PATHS + 1)];
-
+uniform float uniform_ParticleAnimation_fs_1fv_partDecay; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit; // 
+uniform vec3 uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH; //
- 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   // 
+
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_x; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_y; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_x_prev; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_y_prev; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths03_RadiusX; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_x; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_y; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_x_prev; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_y_prev; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_paths47_RadiusX; // 
 
 /////////////////////////////////////
 // INPUT
@@ -213,26 +219,25 @@ uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   //
                       // particle initialization from images
 layout (binding = 0) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_init_pos_speed;  // couples of textures for particle initialization through photo or video: position/speed
 layout (binding = 1) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_init_col_rad;  // couples of textures for particle initialization through photo: color/radius
-layout (binding = 2) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_acc;  // texture for particle acceleration shift through photo
-layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_CA;         // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 4) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong ParticleAnimation pass position/speed of Particles step n (FBO attachment 2)
-layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong ParticleAnimation pass color/radius of Particles step n (FBO attachment 3)
-layout (binding = 6) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
+layout (binding = 2) uniform samplerRect uniform_ParticleAnimation_texture_fs_CA;         // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_pos_speed;  // 2-cycle ping-pong ParticleAnimation pass position/speed of Particles step n (FBO attachment 2)
+layout (binding = 4) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_col_rad;  // 2-cycle ping-pong ParticleAnimation pass color/radius of Particles step n (FBO attachment 3)
+layout (binding = 3) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
-layout (binding = 7) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
+layout (binding = 6) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
 #ifdef PG_VIDEO_ACTIVE
-layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
+layout (binding = 7) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
+layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
 #endif
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
+layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
+layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
+layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 
 /////////////////////////////////////
@@ -329,33 +334,6 @@ vec2 generativeNoise(vec2 texCoordLoc) {
   return vec2(snoise( texCoordLoc , noiseScale * 100 ),
                           snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
 }
-
-// random noise
-// https://www.ronja-tutorials.com/2018/09/02/white-noise.html
-// after (c) Ronja Böhringer
-//get a scalar random value from a 3d value
-// 2-step computation due to lack of precision
-int rand3D(vec3 value, float threshold){
-    //make value smaller to avoid artefacts
-    vec3 smallValue = sin(value);
-    //get scalar value from 3d vector
-    double random = sin(dot(smallValue, vec3(12.9898, 78.233, 37.719))) * 1437.585453;
-    //make value more random by making it bigger and then taking teh factional part
-    random = 100 * fract(random);
-    if(random < threshold) {
-      //get scalar value from 3d vector
-      double random2 = sin(dot(smallValue, vec3(47.2903, 12.0989, 28.2381))) * 2639.832872;
-      //make value more random by making it bigger and then taking teh factional part
-      random2 = (100 * fract(random2));
-      if(random2 < threshold) {
-        return 1;
-      }
-      else {
-        return 0;
-      }
-    }
-    return 0;
-  }
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // ANIMATED PARTICLES UPDATE
@@ -407,14 +385,14 @@ void particle_out( void ) {
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords ).xy;
           out_target_position_color_radius_particle.z
             = target_color_radius.r * 255. + target_color_radius.g * 65025. + target_color_radius.b * 16581375.;
-          out_target_position_color_radius_particle.w = part_size;
+          out_target_position_color_radius_particle.w = partRepopRadius;
       }
       else { // instant positioning on the target
           out_position_speed_particle
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords );
           // out_position_speed_particle.xy *= vec2(width,height);
           // out_position_speed_particle = vec4(decalCoords,1,1);
-          out_color_radius_particle = vec4(target_color_radius.rgb, part_size);
+          out_color_radius_particle = vec4(target_color_radius.rgb, partRepopRadius);
           // out_color_radius_particle = vec4(1,1,1,10);
       }
       return;
@@ -428,7 +406,7 @@ void particle_out( void ) {
           vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Camera_frame , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
           out_target_position_color_radius_particle.z
             = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
-          out_target_position_color_radius_particle.w = part_size;
+          out_target_position_color_radius_particle.w = partRepopRadius;
       }
       else { // instant positioning on the target
           out_position_speed_particle
@@ -436,7 +414,7 @@ void particle_out( void ) {
           out_position_speed_particle.zw = vec2(0,0);
           vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
           vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Camera_frame , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
-          out_color_radius_particle = vec4(target_color.rgb, part_size);
+          out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
       }
     }
     // movie
@@ -448,7 +426,7 @@ void particle_out( void ) {
           vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Movie_frame , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
           out_target_position_color_radius_particle.z
             = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
-          out_target_position_color_radius_particle.w = part_size;
+          out_target_position_color_radius_particle.w = partRepopRadius;
       }
       else { // instant positioning on the target
           out_position_speed_particle
@@ -456,7 +434,7 @@ void particle_out( void ) {
           out_position_speed_particle.zw = vec2(0,0);
           vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
           vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Movie_frame , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
-          out_color_radius_particle = vec4(target_color.rgb, part_size);
+          out_color_radius_particle = vec4(target_color.rgb, partRepopRadius);
       }
     }
     return;
@@ -468,17 +446,20 @@ void particle_out( void ) {
   // SINCE REPOPULATION IS AN ADDITIVE PROCESS, SEVERAL SOURCES OF PARTICLES CAN
   // EXIST SIMULTANEOUSLY
   int repopChannel = int(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo.z);
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
+  float repop_path_coef = uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor.y;
   vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.75 ) );
-  vec4 radius_random = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
-  if( repop_path > 0
-    && rand3D(vec3(decalCoordsPOT, radius_random.y), repop_path) != 0) {
-    vec4 pen_pos_prev_cur 
-      = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
-    vec4 radius = uniform_ParticleAnimation_path_data[repopChannel * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
-    if( repopChannel >= 0 && pen_pos_prev_cur.z > 0 && pen_pos_prev_cur.w > 0 ) {
+  if( repop_path_coef > 0
+    && int((frameNo+5000) * randomValue.w ) % int(15000 *(1-repop_path_coef)) == int((randomValue.x * 5000.0
+        + randomValue.z * 5000.0 + randomValue.y * 5000.0 ) *(1-repop_path_coef)) ) {
+    if( repopChannel >= 0 && repopChannel < 4 
+      && uniform_ParticleAnimation_fs_4fv_paths03_x[repopChannel] > 0
+      && uniform_ParticleAnimation_fs_4fv_paths03_y[repopChannel] > 0 ) {
      /////////////////////////////////////////////////////////////////////
-      vec2 pen_prev = vec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w);
-      vec2 pen_curr = vec2( pen_pos_prev_cur.x, height - pen_pos_prev_cur.y);
+      vec2 pen_prev = vec2( uniform_ParticleAnimation_fs_4fv_paths03_x_prev[repopChannel],
+                height - uniform_ParticleAnimation_fs_4fv_paths03_y_prev[repopChannel]);
+      vec2 pen_curr = vec2( uniform_ParticleAnimation_fs_4fv_paths03_x[repopChannel],
+                height - uniform_ParticleAnimation_fs_4fv_paths03_y[repopChannel]);
       vec2 orth = pen_prev - pen_curr;
       if(length(orth) != 0) {
         orth.xy = orth.yx;
@@ -487,12 +468,39 @@ void particle_out( void ) {
       }
       out_position_speed_particle.xy 
         = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius.x; // thickness
+      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) 
+              * (uniform_ParticleAnimation_fs_4fv_paths03_RadiusX[repopChannel]); // thickness
       out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
       out_color_radius_particle 
           = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
-                  part_size);
+                  partRepopRadius);
     }
+#endif
+#if PG_NB_PATHS == 7
+    else if( repopChannel >= 4 
+              && uniform_ParticleAnimation_fs_4fv_paths47_x[repopChannel - 4] > 0
+              && uniform_ParticleAnimation_fs_4fv_paths47_y[repopChannel - 4] > 0 ) {
+     /////////////////////////////////////////////////////////////////////
+      vec2 pen_prev = vec2( uniform_ParticleAnimation_fs_4fv_paths47_x_prev[repopChannel - 4],
+                height - uniform_ParticleAnimation_fs_4fv_paths47_y_prev[repopChannel - 4]);
+      vec2 pen_curr = vec2( uniform_ParticleAnimation_fs_4fv_paths47_x[repopChannel - 4],
+                height - uniform_ParticleAnimation_fs_4fv_paths47_y[repopChannel - 4]);
+      vec2 orth = pen_prev - pen_curr;
+      if(length(orth) != 0) {
+        orth.xy = orth.yx;
+        orth.y *= -1;
+        orth = normalize(orth);
+      }
+      out_position_speed_particle.xy 
+        = mix(pen_curr, pen_prev, randomPart.z ); // linear position
+      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) 
+              * (uniform_ParticleAnimation_fs_4fv_paths47_RadiusX[repopChannel - 4]); // thickness
+      out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+      out_color_radius_particle 
+          = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
+                  partRepopRadius);
+    }
+#endif
   }
 
   //////////////////////////////////////////////////////////////////
@@ -500,11 +508,11 @@ void particle_out( void ) {
   // Uniform repopulation
   if( out_position_speed_particle.x == -10000) {
     // if the pixel noise is equal to frame % 8500 the cell is repopulated with a pixel
-    
+    float repop_part = uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor.x;
     vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.25 ) );
-    vec4 radius_random = uniform_ParticleAnimation_path_data[0 * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
     if( repop_part > 0
-        && rand3D(vec3(decalCoordsPOT, radius_random.z), repop_part) != 0) {
+        && int(frameNo * randomValue.w ) % int(15000 *(1-repop_part)) == int((randomValue.y * 5000.0
+          + randomValue.z * 5000.0 + randomValue.x * 5000.0 ) *(1-repop_part)) ) {
          /////////////////////////////////////////////////////////////////////
         // RANDOM INITIALIZATION
         // head and tail are initialized with the same values
@@ -515,7 +523,7 @@ void particle_out( void ) {
           = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
         out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
         out_color_radius_particle 
-          = vec4(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz,part_size);
+          = vec4(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz,partRepopRadius);
     }
   }
 
@@ -540,7 +548,7 @@ void particle_out( void ) {
                        texture( uniform_ParticleAnimation_texture_fs_Trk3 , out_position_speed_particle.xy ).rgb;
 #endif
   // CA flash on particles
-  flashToPartCumul += uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.x
+  flashToPartCumul += uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers.x
                     * texture( uniform_ParticleAnimation_texture_fs_CA , out_position_speed_particle.xy ).rgb;
 
   //////////////////////////////////////////////////////////////////
@@ -600,17 +608,13 @@ void particle_out( void ) {
 
   ///////////////////////////////////////////////////////////////////
   // builds a path_follow or repulse vector so that it can be used in the for loop
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
   bvec4 path_follow03 = bvec4(part_path_follow_0,part_path_follow_1,part_path_follow_2,part_path_follow_3);
   bvec4 path_repulse03 = bvec4(part_path_repulse_0,part_path_repulse_1,part_path_repulse_2,part_path_repulse_3);
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if PG_NB_PATHS == 7
   bvec4 path_follow47 = bvec4(part_path_follow_4,part_path_follow_5,part_path_follow_6,part_path_follow_7);
   bvec4 path_repulse47 = bvec4(part_path_repulse_4,part_path_repulse_5,part_path_repulse_6,part_path_repulse_7);
-#endif
-#if PG_NB_PATHS == 11
-  bvec4 path_follow811 = bvec4(part_path_follow_8,part_path_follow_9,part_path_follow_10,part_path_follow_11);
-  bvec4 path_repulse811 = bvec4(part_path_repulse_8,part_path_repulse_9,part_path_repulse_10,part_path_repulse_11);
 #endif
 
   dvec2 part_acceleration = dvec2(0);
@@ -619,66 +623,47 @@ void particle_out( void ) {
   ///////////////////////////////////////////////////////////////////
   // PARTICLE: PATH FOLLOW OR REPULSE
   for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
-    vec4 pen_pos_prev_cur 
-      = uniform_ParticleAnimation_path_data[indPath * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
-    dvec2 curPos = dvec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w );
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
     if( indPath < 4 && path_follow03[indPath] ) {
       // reaches for pen position
       part_acceleration 
-        = dvec2(curPos - out_position_speed_particle.xy);
+        = dvec2(dvec2( uniform_ParticleAnimation_fs_4fv_paths03_x[indPath] , 
+                          height - uniform_ParticleAnimation_fs_4fv_paths03_y[indPath] )
+                    - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
     }
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if PG_NB_PATHS == 7
     else if( indPath >= 4 && path_follow47[indPath - 4] ) {
       // reaches for pen position
       part_acceleration 
-        = dvec2(curPos - out_position_speed_particle.xy);
+        = dvec2(dvec2( uniform_ParticleAnimation_fs_4fv_paths47_x[indPath - 4] , 
+                          height - uniform_ParticleAnimation_fs_4fv_paths47_y[indPath - 4] )
+                    - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
    }
 #endif
-#if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_follow47[indPath - 8] ) {
-      // reaches for pen position
-      part_acceleration 
-        = dvec2(curPos - out_position_speed_particle.xy);
-      dist_to_target = length(part_acceleration);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
-   }
-#endif
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
     if( indPath < 4 && path_repulse03[indPath] ) {
       // escapes from pen position
       part_acceleration 
-        = dvec2(out_position_speed_particle.xy - curPos);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+        = dvec2(out_position_speed_particle.xy 
+             - dvec2( (uniform_ParticleAnimation_fs_4fv_paths03_x[indPath]) , 
+                     height - uniform_ParticleAnimation_fs_4fv_paths03_y[indPath] ));
     }
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if PG_NB_PATHS == 7
     else if( indPath >= 4 && path_repulse47[indPath - 4] ) {
       // reaches for pen position
       // escapes from pen position
       part_acceleration 
-        = dvec2(out_position_speed_particle.xy - curPos);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
-    }
-#endif
-#if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_repulse47[indPath - 8] ) {
-      // reaches for pen position
-      // escapes from pen position
-      part_acceleration 
-        = dvec2(out_position_speed_particle.xy - curPos);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+        = dvec2(out_position_speed_particle.xy 
+             - dvec2( (uniform_ParticleAnimation_fs_4fv_paths47_x[indPath - 4]) , 
+                     height - uniform_ParticleAnimation_fs_4fv_paths47_y[indPath - 4] ));
     }
 #endif
   }
@@ -687,6 +672,8 @@ void particle_out( void ) {
   // PARTICLE: MOTION TOWARDS A TARGET
   if(partMove_target && frameNo < targetFrameNo && part_initialization < 0) { // reaches a grid
     // reaches for a target in a certain number of steps
+    // float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+    // int rankGrid = int(rank * width * height);
     part_acceleration 
       = dvec2(out_target_position_color_radius_particle.xy
                   - out_position_speed_particle.xy);// * (1. - (targetFrameNo - frameNo)/part_timeToTargt);
@@ -724,29 +711,22 @@ void particle_out( void ) {
   //////////////////////////////////////////////////////////////////
   // SPEED UPDATE FROM ACCELERATION AND DAMPING
   dvec2 speed2D;
-  // texture based acceleration shift
-  if(part_image_acceleration >= 0) {
-    float rot_angle = part_field_weight * texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).r;
-    float cosa = cos(rot_angle);
-    float sina = sin(rot_angle);
-    part_acceleration  
-      = dmat2(cosa, -sina, sina, cosa) * part_acceleration;
-  }
-  // speed update from acceleration vector part_acceleration 
-  // (with a factor equal to part_acc controlled by interface or scenario)
+  // acceleration
   speed2D 
-    = out_position_speed_particle.zw + dvec2(part_acc * part_acceleration);
-  // damping with a factor equal to part_damp controlled by interface or scenario
+    = out_position_speed_particle.zw + dvec2(part_acc_factor * part_acceleration);
+  // damping
   speed2D
-    -= dvec2(part_damp * speed2D);
+    -= dvec2(part_damp_factor * speed2D);
 
   // reading the noise value for acceleration 
   double speed = length(speed2D);
-  if(part_image_acceleration < 0) {
   speed2D  
     = normalize(speed2D 
       + part_field_weight * dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center)) * speed;
-  }
+  // part_acceleration 
+  //   += part_field_weight * (generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+  // }
+
 
   // speed damping to reach a target
   if( dist_to_target < part_damp_targtRad ) {
@@ -754,12 +734,11 @@ void particle_out( void ) {
   }
 
   // position update from new speed value
-  speed =length(speed2D);
   // with speed limit
+  speed =length(speed2D);
   if(speed > 50) {
     speed2D *= double(50/speed);
   }
-  // with random speed for static particles
   if(speed < 0.0001) {
     speed2D = dvec2(generativeNoise(pixelTextureCoordinatesXY));
   }
@@ -856,48 +835,42 @@ void particle_out( void ) {
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  partDecay = uniform_ParticleAnimation_scenario_var_data[0];
-  part_initialization = int(uniform_ParticleAnimation_scenario_var_data[1]);
-  part_image_acceleration = int(uniform_ParticleAnimation_scenario_var_data[2]);
-  part_path_follow_0 = (uniform_ParticleAnimation_scenario_var_data[3] > 0 ? true : false);
-  part_path_follow_1 = (uniform_ParticleAnimation_scenario_var_data[4] > 0 ? true : false);
-  part_path_follow_2 = (uniform_ParticleAnimation_scenario_var_data[5] > 0 ? true : false);
-  part_path_follow_3 = (uniform_ParticleAnimation_scenario_var_data[6] > 0 ? true : false);
-  part_path_follow_4 = (uniform_ParticleAnimation_scenario_var_data[7] > 0 ? true : false);
-  part_path_follow_5 = (uniform_ParticleAnimation_scenario_var_data[8] > 0 ? true : false);
-  part_path_follow_6 = (uniform_ParticleAnimation_scenario_var_data[9] > 0 ? true : false);
-  part_path_follow_7 = (uniform_ParticleAnimation_scenario_var_data[10] > 0 ? true : false);
-  part_path_repulse_0 = (uniform_ParticleAnimation_scenario_var_data[11] > 0 ? true : false);
-  part_path_repulse_1 = (uniform_ParticleAnimation_scenario_var_data[12] > 0 ? true : false);
-  part_path_repulse_2 = (uniform_ParticleAnimation_scenario_var_data[13] > 0 ? true : false);
-  part_path_repulse_3 = (uniform_ParticleAnimation_scenario_var_data[14] > 0 ? true : false);
-  part_path_repulse_4 = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_repulse_5 = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse_6 = (uniform_ParticleAnimation_scenario_var_data[17] > 0 ? true : false);
-  part_path_repulse_7 = (uniform_ParticleAnimation_scenario_var_data[18] > 0 ? true : false);
-  part_size = uniform_ParticleAnimation_scenario_var_data[19];
-  part_acc = uniform_ParticleAnimation_scenario_var_data[20];
-  part_damp = uniform_ParticleAnimation_scenario_var_data[21];
-  noiseScale = uniform_ParticleAnimation_scenario_var_data[22];
-  part_field_weight = uniform_ParticleAnimation_scenario_var_data[23];
-  part_damp_targtRad = uniform_ParticleAnimation_scenario_var_data[24];
-  part_timeToTargt = uniform_ParticleAnimation_scenario_var_data[25];
-  partMove_target = (uniform_ParticleAnimation_scenario_var_data[26] > 0 ? true : false);
-  partMove_rand = (uniform_ParticleAnimation_scenario_var_data[27] > 0 ? true : false);
-  partExit_mode = int(uniform_ParticleAnimation_scenario_var_data[28]);
-  partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[29]);
-  partColor_mode = int(uniform_ParticleAnimation_scenario_var_data[30]);
-  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[31];
-  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[32];
-  repop_part = uniform_ParticleAnimation_scenario_var_data[33];
-  repop_path = uniform_ParticleAnimation_scenario_var_data[34];
-  freeze = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
+  noiseScale = uniform_ParticleAnimation_fs_4fv_noiseScale_pixel_acc_center_0_pixel_acc_center_1_part_path_follow_0[0];
+  pixel_acc_center_0 = uniform_ParticleAnimation_fs_4fv_noiseScale_pixel_acc_center_0_pixel_acc_center_1_part_path_follow_0[1];
+  pixel_acc_center_1 = uniform_ParticleAnimation_fs_4fv_noiseScale_pixel_acc_center_0_pixel_acc_center_1_part_path_follow_0[2];
+  part_path_follow_0 = (uniform_ParticleAnimation_fs_4fv_noiseScale_pixel_acc_center_0_pixel_acc_center_1_part_path_follow_0[3] > 0 ? true : false);
+  part_path_follow_1 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_1_part_path_follow_2_part_path_follow_3_part_path_follow_4[0] > 0 ? true : false);
+  part_path_follow_2 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_1_part_path_follow_2_part_path_follow_3_part_path_follow_4[1] > 0 ? true : false);
+  part_path_follow_3 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_1_part_path_follow_2_part_path_follow_3_part_path_follow_4[2] > 0 ? true : false);
+  part_path_follow_4 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_1_part_path_follow_2_part_path_follow_3_part_path_follow_4[3] > 0 ? true : false);
+  part_path_follow_5 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_5_part_path_follow_6_part_path_follow_7_part_path_repulse_0[0] > 0 ? true : false);
+  part_path_follow_6 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_5_part_path_follow_6_part_path_follow_7_part_path_repulse_0[1] > 0 ? true : false);
+  part_path_follow_7 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_5_part_path_follow_6_part_path_follow_7_part_path_repulse_0[2] > 0 ? true : false);
+  part_path_repulse_0 = (uniform_ParticleAnimation_fs_4fv_part_path_follow_5_part_path_follow_6_part_path_follow_7_part_path_repulse_0[3] > 0 ? true : false);
+  part_path_repulse_1 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_1_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4[0] > 0 ? true : false);
+  part_path_repulse_2 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_1_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4[1] > 0 ? true : false);
+  part_path_repulse_3 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_1_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4[2] > 0 ? true : false);
+  part_path_repulse_4 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_1_part_path_repulse_2_part_path_repulse_3_part_path_repulse_4[3] > 0 ? true : false);
+  part_path_repulse_5 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_5_part_path_repulse_6_part_path_repulse_7_freeze[0] > 0 ? true : false);
+  part_path_repulse_6 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_5_part_path_repulse_6_part_path_repulse_7_freeze[1] > 0 ? true : false);
+  part_path_repulse_7 = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_5_part_path_repulse_6_part_path_repulse_7_freeze[2] > 0 ? true : false);
+  freeze = (uniform_ParticleAnimation_fs_4fv_part_path_repulse_5_part_path_repulse_6_part_path_repulse_7_freeze[3] > 0 ? true : false);
+  part_initialization = int(uniform_ParticleAnimation_fs_4fv_part_initialization_partMove_target_partMove_rand_partExit_mode[0]);
+  partMove_target = (uniform_ParticleAnimation_fs_4fv_part_initialization_partMove_target_partMove_rand_partExit_mode[1] > 0 ? true : false);
+  partMove_rand = (uniform_ParticleAnimation_fs_4fv_part_initialization_partMove_target_partMove_rand_partExit_mode[2] > 0 ? true : false);
+  partExit_mode = int(uniform_ParticleAnimation_fs_4fv_part_initialization_partMove_target_partMove_rand_partExit_mode[3]);
+  partStroke_mode = int(uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_part_damp_targtRad_part_timeToTargt[0]);
+  partColor_mode = int(uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_part_damp_targtRad_part_timeToTargt[1]);
+  part_damp_targtRad = uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_part_damp_targtRad_part_timeToTargt[2];
+  part_timeToTargt = uniform_ParticleAnimation_fs_4fv_partStroke_mode_partColor_mode_part_damp_targtRad_part_timeToTargt[3];
+  part_field_weight = uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius[0];
+  partRepopRadius = uniform_ParticleAnimation_fs_2fv_part_field_weight_partRepopRadius[1];
 
   //////////////////////////
   // variables 
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
+  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
 
   // frame number
   frameNo = int(round(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.w));
@@ -922,7 +895,11 @@ void main() {
   // noise for CA: random value
   randomPart = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
 
-  nbParticles = int(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.y);
+  nbParticles = int(uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers.y);
+
+  // part acc and dÃ¢mp
+  part_acc_factor = uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor.z;
+  part_damp_factor = uniform_ParticleAnimation_fs_4fv_repop_part_path_acc_damp_factor.w;
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -931,7 +908,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.z > 0) {
+  if(frameNo <= 10 || uniform_ParticleAnimation_fs_3fv_flashCAPartWght_nbParticles_clearAllLayers.z > 0) {
     out_ParticleAnimation_FBO_fs_Part_pos_speed = vec4(-10000,-10000,0,0);  // particle position / speed
     out_ParticleAnimation_FBO_fs_Part_col_rad = vec4(1,1,1,1);  // particle color / radius
     out_ParticleAnimation_FBO_fs_Part_Target_pos_col_rad = vec4(-10000,-10000,16646655,1);  // particle target position / color / radius
@@ -983,13 +960,12 @@ void main() {
     particle_out();
 
     //////////////////////////////////////////////
+    // PARTICLE RANDOM MOTION FOR ATELIERS_PORTATIFS
+    //////////////////////////////////////////////
     // particle decay
     if( graylevel(out_color_radius_particle.rgb) > 0 ) {
-      vec3 decayedColor = out_color_radius_particle.rgb - vec3(partDecay);
-      float maxDecayedColor = maxCol( decayedColor );
-      if( maxDecayedColor <= 1.0 ) {
-        out_color_radius_particle.rgb = decayedColor;
-      }
+      out_color_radius_particle.rgb 
+           = out_color_radius_particle.rgb - vec3(uniform_ParticleAnimation_fs_1fv_partDecay);
     }
     out_color_radius_particle.rgb 
       = clamp( out_color_radius_particle.rgb , 0.0 , 1.0 );

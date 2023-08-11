@@ -267,13 +267,13 @@ float cameraWB_R          ;
 float cameraWB_B          ;
 float cameraExposure      ;
 float cameraGain          ;
+float cameraGamma         ;
 float cameraBrightness    ;
 float cameraSaturation    ;
 float cameraContrast      ;
-float cameraGamma         ;
-float cameraCaptFreq      ;
 float camera_gamma        ;
 float camera_gamma_pulse  ;
+float cameraCaptFreq      ;
 int   cameraNo            ;
 int   playing_movieNo     ;
 float movieCaptFreq       ;
@@ -458,6 +458,7 @@ float nearPlane           ;
 float farPlane            ;
 bool  movie_loop          ;
 bool  path_replay_loop    ;
+float path_replay_speed   ;
 float master_crop_x       ;
 float master_crop_y       ;
 float master_crop_width   ;
@@ -527,6 +528,19 @@ int   currentLightScene   ;
 bool  directRenderingwithoutMeshScreen1;
 bool  penStrokeAtBeat     ;
 int   path_group          ;
+bool  with_flight         ;
+float flight_speed        ;
+float flight_speed_pulse  ;
+float flight_cuve_length  ;
+float flight_cuve_length_pulse;
+float flight_cuve_x_spread;
+float flight_cuve_x_spread_pulse;
+float flight_cuve_y_spread;
+float flight_cuve_y_spread_pulse;
+float flight_deviation_speed;
+float flight_deviation_speed_pulse;
+float flight_deviation_amplitude;
+float flight_deviation_amplitude_pulse;
 VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { 
 	_pg_bool,
 	_pg_bool,
@@ -936,53 +950,11 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_int,
-	_pg_int,
 	_pg_float,
-	_pg_float,
+	_pg_int,
 	_pg_int,
 	_pg_float,
 	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -992,6 +964,49 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_bool,
 	_pg_bool,
 	_pg_bool,
@@ -1002,6 +1017,19 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_bool,
 	_pg_bool,
 	_pg_int,
+	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
 	(void *)&auto_beat,
@@ -1218,13 +1246,13 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&cameraWB_B,
 	(void *)&cameraExposure,
 	(void *)&cameraGain,
+	(void *)&cameraGamma,
 	(void *)&cameraBrightness,
 	(void *)&cameraSaturation,
 	(void *)&cameraContrast,
-	(void *)&cameraGamma,
-	(void *)&cameraCaptFreq,
 	(void *)&camera_gamma,
 	(void *)&camera_gamma_pulse,
+	(void *)&cameraCaptFreq,
 	(void *)&cameraNo,
 	(void *)&playing_movieNo,
 	(void *)&movieCaptFreq,
@@ -1409,6 +1437,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&farPlane,
 	(void *)&movie_loop,
 	(void *)&path_replay_loop,
+	(void *)&path_replay_speed,
 	(void *)&master_crop_x,
 	(void *)&master_crop_y,
 	(void *)&master_crop_width,
@@ -1478,6 +1507,19 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&directRenderingwithoutMeshScreen1,
 	(void *)&penStrokeAtBeat,
 	(void *)&path_group,
+	(void *)&with_flight,
+	(void *)&flight_speed,
+	(void *)&flight_speed_pulse,
+	(void *)&flight_cuve_length,
+	(void *)&flight_cuve_length_pulse,
+	(void *)&flight_cuve_x_spread,
+	(void *)&flight_cuve_x_spread_pulse,
+	(void *)&flight_cuve_y_spread,
+	(void *)&flight_cuve_y_spread_pulse,
+	(void *)&flight_deviation_speed,
+	(void *)&flight_deviation_speed_pulse,
+	(void *)&flight_deviation_amplitude,
+	(void *)&flight_deviation_amplitude_pulse,
 };
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void auto_beat_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1719,6 +1761,10 @@ void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 void cameraGain_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	cameraGain_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
 }
+void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void cameraGamma_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	cameraGamma_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
 void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void cameraBrightness_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	cameraBrightness_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
@@ -1730,10 +1776,6 @@ void cameraSaturation_callBack_generic(pg_Parameter_Input_Type param_input_type,
 void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void cameraContrast_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	cameraContrast_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
-}
-void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
-void cameraGamma_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	cameraGamma_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
 }
 void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 void cameraNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -2066,10 +2108,10 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	&cameraWB_B_callBack_generic,
 	&cameraExposure_callBack_generic,
 	&cameraGain_callBack_generic,
+	&cameraGamma_callBack_generic,
 	&cameraBrightness_callBack_generic,
 	&cameraSaturation_callBack_generic,
 	&cameraContrast_callBack_generic,
-	&cameraGamma_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -2306,6 +2348,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	&activeMeshes_callBack_generic,
 	&mobileMeshes_callBack_generic,
 	NULL,
@@ -2326,6 +2369,19 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	&path_group_callBack_generic,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
   (char *)"auto_beat",
@@ -2542,13 +2598,13 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"cameraWB_B",
   (char *)"cameraExposure",
   (char *)"cameraGain",
+  (char *)"cameraGamma",
   (char *)"cameraBrightness",
   (char *)"cameraSaturation",
   (char *)"cameraContrast",
-  (char *)"cameraGamma",
-  (char *)"cameraCaptFreq",
   (char *)"camera_gamma",
   (char *)"camera_gamma_pulse",
+  (char *)"cameraCaptFreq",
   (char *)"cameraNo",
   (char *)"playing_movieNo",
   (char *)"movieCaptFreq",
@@ -2733,6 +2789,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"farPlane",
   (char *)"movie_loop",
   (char *)"path_replay_loop",
+  (char *)"path_replay_speed",
   (char *)"master_crop_x",
   (char *)"master_crop_y",
   (char *)"master_crop_width",
@@ -2802,6 +2859,19 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"directRenderingwithoutMeshScreen1",
   (char *)"penStrokeAtBeat",
   (char *)"path_group",
+  (char *)"with_flight",
+  (char *)"flight_speed",
+  (char *)"flight_speed_pulse",
+  (char *)"flight_cuve_length",
+  (char *)"flight_cuve_length_pulse",
+  (char *)"flight_cuve_x_spread",
+  (char *)"flight_cuve_x_spread_pulse",
+  (char *)"flight_cuve_y_spread",
+  (char *)"flight_cuve_y_spread_pulse",
+  (char *)"flight_deviation_speed",
+  (char *)"flight_deviation_speed_pulse",
+  (char *)"flight_deviation_amplitude",
+  (char *)"flight_deviation_amplitude_pulse",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2961,7 +3031,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3213,6 +3283,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3276,6 +3347,19 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
 };
 char *ScenarioVarStrings[_MaxInterpVarIDs] = { 
@@ -3493,13 +3577,13 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"cameraWB_B",
   (char *)"cameraExposure",
   (char *)"cameraGain",
+  (char *)"cameraGamma",
   (char *)"cameraBrightness",
   (char *)"cameraSaturation",
   (char *)"cameraContrast",
-  (char *)"cameraGamma",
-  (char *)"cameraCaptFreq",
   (char *)"camera_gamma",
   (char *)"camera_gamma_pulse",
+  (char *)"cameraCaptFreq",
   (char *)"cameraNo",
   (char *)"playing_movieNo",
   (char *)"movieCaptFreq",
@@ -3684,6 +3768,7 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"farPlane",
   (char *)"movie_loop",
   (char *)"path_replay_loop",
+  (char *)"path_replay_speed",
   (char *)"master_crop_x",
   (char *)"master_crop_y",
   (char *)"master_crop_width",
@@ -3753,4 +3838,17 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"directRenderingwithoutMeshScreen1",
   (char *)"penStrokeAtBeat",
   (char *)"path_group",
+  (char *)"with_flight",
+  (char *)"flight_speed",
+  (char *)"flight_speed_pulse",
+  (char *)"flight_cuve_length",
+  (char *)"flight_cuve_length_pulse",
+  (char *)"flight_cuve_x_spread",
+  (char *)"flight_cuve_x_spread_pulse",
+  (char *)"flight_cuve_y_spread",
+  (char *)"flight_cuve_y_spread_pulse",
+  (char *)"flight_deviation_speed",
+  (char *)"flight_deviation_speed_pulse",
+  (char *)"flight_deviation_amplitude",
+  (char *)"flight_deviation_amplitude_pulse",
 };

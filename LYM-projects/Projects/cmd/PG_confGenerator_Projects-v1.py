@@ -233,17 +233,7 @@ def main(main_args) :
 			print("Unknown head mode [",line,"] !")
 			sys.exit(0)
 
-		if(mode == INITIALIZATION) :
-			# initial values
-			line = next(readCSV)
-
-			#closing tag
-			line = next(readCSV)
-
-			#next line
-			line = next(readCSV)
-		
-		elif(mode == RENDERING_FILES) :
+		if(mode == RENDERING_FILES) :
 			line = next(readCSV)
 
 			# variable types
@@ -314,6 +304,7 @@ def main(main_args) :
 		
 		elif(mode == SPECIFICATION) :
 			# variable rank -> comment
+			ScriptHeader.write("// CONFIGURATION CONSTANTS\n")
 			ScriptHeader.write("// " + space_char.join(map(str, line)) + "\n")
 			line = next(readCSV)
 
@@ -340,52 +331,69 @@ def main(main_args) :
 			config_ids = line[1:]
 			line = next(readCSV)
 			
+		elif(mode == INITIALIZATION) :
+			# initial values
+			line = next(readCSV)
+			config_initial_values = line[1:]
+
+			#closing tag
+			line = next(readCSV)
+
+			#next line
+			line = next(readCSV)
+		
+			############################### configuration variable declarations
+			# extern configuration variable declaration in the header file
+			for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
+				if(config_type == "sign") :
+					config_type = "float"
+				elif(config_type == "path") :
+					config_type = "bool"
+				if(config_type == "bool"):
+					if(config_init != "0") :
+						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "true"))
+					else :
+						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "false"))
+				else :
+					ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, config_init))
+			
 			############################### constant declarations
 			# number of scene variables
+			for config_id in config_ids :
+				ScriptHeader.write("#define var_%s\n" % config_id)
 			ScriptHeader.write("enum ConfigurationVarIDs {\n")
 			# scene variable initialization
 			ScriptHeader.write("  _%s = 0," % config_ids[0] + "\n")
-			for id_var in config_ids[1:] :
-				ScriptHeader.write("  _%s," % id_var + "\n")
+			for config_id in config_ids[1:] :
+				ScriptHeader.write("  _%s," % config_id + "\n")
 				# print("  _%s,", config_ids
 			
 			ScriptHeader.write("  _MaxConfigurationVarIDs};\n")
 
-			############################### configuration variable declarations
-			# extern configuration variable declaration in the header file
-			for config_id, config_type in zip(config_ids, config_types):
-				if(config_type == "sign") :
-						config_type = "float"
-				elif(config_type == "path") :
-						config_type = "bool"
-				ScriptHeader.write("extern %-5s %-20s;\n" % (config_type , config_id))
-			
 			# configuration variable declaration
-			for config_id, config_type in zip(config_ids, config_types):
-				if(config_type == "sign") :
-						config_type = "float"					
-				elif(config_type == "path") :
-						config_type = "bool"
-				ScriptBody.write("%-5s %-20s;\n" % (config_type , config_id))
+			# for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
+			# 	if(config_type == "sign") :
+			# 			config_type = "float"					
+			# 	elif(config_type == "path") :
+			# 			config_type = "bool"
+			# 	ScriptBody.write("%-5s %-20s;\n" % (config_type , config_id))
 
 			############################### configuration variable declarations
 			# extern configuration variable types % pointers declarations
-			ScriptHeader.write("enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };\n")
-			ScriptHeader.write("enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n")
-			ScriptHeader.write("extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];\n")
-			ScriptHeader.write("extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];\n")
+			# ScriptHeader.write("extern VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs];\n")
+			# ScriptHeader.write("extern void * ConfigurationVarPointers[_MaxConfigurationVarIDs];\n")
 
 			# scenario variable types declarations
-			ScriptBody.write("VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs] = { \n")
-			for config_type in config_types :
-				ScriptBody.write("	_pg_%s,\n" % config_type)
-			ScriptBody.write("};\n")
+			# ScriptBody.write("VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs] = { \n")
+			# for config_type in config_types :
+			# 	ScriptBody.write("	_pg_%s,\n" % config_type)
+			# ScriptBody.write("};\n")
 
 			# scenario variable pointers declarations
-			ScriptBody.write("void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = { \n")
-			for config_id in config_ids :
-				ScriptBody.write("	(void *)&%s,\n" % config_id)
-			ScriptBody.write("};\n")
+			# ScriptBody.write("void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = { \n")
+			# for config_id in config_ids :
+			# 	ScriptBody.write("	(void *)&%s,\n" % config_id)
+			# ScriptBody.write("};\n")
 
 	Configuration_InputCsv.close()
 
@@ -461,6 +469,7 @@ def main(main_args) :
 		
 		elif(mode == SPECIFICATION) :
 			# variable rank -> comment
+			ScriptHeader.write("// SCENARIO VARIABLES\n")
 			ScriptHeader.write("// " + space_char.join(map(str, line)) + "\n")
 			line = next(readCSV)
 
@@ -529,7 +538,7 @@ def main(main_args) :
 	############################### constant declarations
 	# number of scene variables
 	for id_string in ids :
-		ScriptHeader.write(" #define var_%s\n" % id_string)
+		ScriptHeader.write("#define var_%s\n" % id_string)
 	ScriptHeader.write("enum InterpVarIDs{ \n")
 	# scene variable initialization
 	ScriptHeader.write("  _%s = 0,\n" % ids[0])
@@ -542,6 +551,7 @@ def main(main_args) :
 	# interpolation cancelation variable declaration
 	# ScriptBody.write("bool BrokenInterpolationVar[ _MaxInterpVarIDs ]"
 	# scenario variable declarations
+	ScriptBody.write("// SCENARIO VARIABLES\n")
 	for id_string, type_string in zip(ids, types):
 		if(type_string == "sign") :
 			type_string = "float"			
@@ -558,6 +568,8 @@ def main(main_args) :
 		ScriptHeader.write("extern %-5s %-20s;\n" % (type_string , id_string))
 
 	# extern scenario variable types, pointers and messages declaration in the header file
+	ScriptHeader.write("enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };\n")
+	ScriptHeader.write("enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n")
 	ScriptHeader.write("extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern void * ScenarioVarPointers[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern char *ScenarioVarMessages[_MaxInterpVarIDs];\n")
@@ -609,7 +621,7 @@ def main(main_args) :
 				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
 				ScriptBody.write("	%s(param_input_type, scenario_or_gui_command_value.val_string);\n" % callBack_id_string)
 			else :
-				print("Unknown callback parameter type [%s]" % type_string)
+				print("Unknown callback ",callBack_id_string," parameter type [",type_string,"]")
 				sys.exit(0)
 			ScriptBody.write("}\n")
 
@@ -705,6 +717,7 @@ def main(main_args) :
 			if(withParticleShaders) :
 				if(re.search(r'ParticleAnimation_fs', target_shader_list) != None) :
 					# ParticleAnimation_fs parameter
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "#define var_" + id_string + "\n"
 					ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] = id_string
 					ParticleAnimation_fs_types[ParticleAnimation_fs_index] = type_string
 					if(type_string == "bool" or type_string == "path") :
@@ -751,6 +764,7 @@ def main(main_args) :
 			
 			if(re.search(r'Update_fs', target_shader_list) != None) :
 				# Update_fs parameter
+				Update_head_glsl = Update_head_glsl + "#define var_" + id_string + "\n"
 				Update_fs_IDs[Update_fs_index] = id_string
 				Update_fs_types[Update_fs_index] = type_string
 				if(type_string == "bool" or type_string == "path") :
@@ -796,6 +810,7 @@ def main(main_args) :
 			
 			if(re.search(r'Mixing_fs', target_shader_list) != None) :
 				# Mixing_fs parameter
+				Mixing_head_glsl = Mixing_head_glsl + "#define var_" + id_string + "\n"
 				Mixing_fs_IDs[Mixing_fs_index] = id_string
 				Mixing_fs_types[Mixing_fs_index] = type_string
 				if(type_string == "bool" or type_string == "path") :
@@ -843,6 +858,7 @@ def main(main_args) :
 			if(withParticleShaders) :
 				if(re.search(r'ParticleRender_fs', target_shader_list) != None) :
 					# ParticleRender_fs parameter
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "#define var_" + id_string + "\n"
 					ParticleRender_fs_IDs[ParticleRender_fs_index] = id_string
 					ParticleRender_fs_types[ParticleRender_fs_index] = type_string
 					if(type_string == "bool" or type_string == "path") :
@@ -889,6 +905,7 @@ def main(main_args) :
 			
 			if(re.search(r'Master_fs', target_shader_list) != None) :
 				# Master_fs parameter
+				Master_head_glsl = Master_head_glsl + "#define var_" + id_string + "\n"
 				Master_fs_IDs[Master_fs_index] = id_string
 				Master_fs_types[Master_fs_index] = type_string
 				if(type_string == "bool" or type_string == "path") :

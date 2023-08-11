@@ -380,6 +380,7 @@ static void pg_Display_One_SVG_ClipArt(pg_ClipArt_Colors_Types color, int path_l
 
 //////////////////////////////////////////////////
 // RENDERING GPU SVG IF SOME LAYERS ARE ACTIVE
+#if defined(var_activeClipArts)
 void pg_Display_All_SVG_ClipArt(int activeFiles) {
 	//printf("active cliparts: %d\n", activeFiles);
 	if (activeFiles != 0) {
@@ -429,8 +430,9 @@ void pg_Display_All_SVG_ClipArt(int activeFiles) {
 	}
 	printOglError(5257);
 }
+#endif
 
-#if defined (ETOILES_TEASER)
+#if defined (ETOILES)
 //////////////////////////////////////////////////
 // RENDERING OF MESSAGE THROUGH SVG GPU CHARACTERS
 float pg_Translate_SVG_Text(int indDisplayText) {

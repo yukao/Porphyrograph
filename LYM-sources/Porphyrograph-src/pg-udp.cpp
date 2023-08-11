@@ -27,109 +27,12 @@
 #include "pg-all_include.h"
 
 typedef  char *     Pchar;
-
-void pg_CopyAndAllocString( char **target , const char *source ) {
-  if( !source ) {
-    return;
-  }
-  int str_l = int(strlen(source));
-  if( *target && (int(strlen( *target )) < str_l ) ) {
-    delete [] *target;
-    *target = NULL;
-  }
-  if( !(*target) ) {
-    *target = new char[ str_l + 1 ];
-  }
-  memcpy( *target , source , str_l * sizeof( char ) );
-  (*target)[str_l] = 0;
-}
-
-long     pg_ScanIntegerString( int *p_c  ,
-			    int withTrailingSpaceChars , 
-			    char *charstring , int *ind ) {
-  long            i = 0L;
-  short           neg = 0;
-
-  if( *p_c == '-') {
-    neg = 1;
-    *p_c = charstring[*ind];
-    (*ind)++;
-  }
-  else if( *p_c == '+') {
-    *p_c = charstring[*ind];
-    (*ind)++;
-  }
-  if (_Num(*p_c)) {
-    while ( _Num(*p_c) ) {
-      i = i*10L + (long)(*p_c - '0');
-      *p_c = charstring[*ind];
-      (*ind)++;
-    }
-
-    if( withTrailingSpaceChars ) {
-      while( _SpaceChar(*p_c) ) {
-	*p_c = charstring[*ind];
-	(*ind)++;
-      }
-    }
-    if( neg == 1)
-      i = -i;
-    return i;
-  }
-  else {
-    return 0L;
-  }
-}
-
-float    pg_ScanFloatString( int *p_c  ,
-		   int withTrailingSpaceChars , 
-		   char *charstring , int *ind ) {
-  float           resul, dec = 0.1F;
-  short           neg = 0;
-
-  // arithmetic expression
-  if( *p_c == '-' ) {
-    neg = 1;
-    *p_c = charstring[*ind];
-    (*ind)++;
-  }
-  else if( *p_c == '+' ) {
-    *p_c = charstring[*ind];
-    (*ind)++;
-  }
-  resul = (float) pg_ScanIntegerString( p_c , false ,charstring,ind );
-  if( *p_c == '.') {
-    *p_c = charstring[*ind];
-    (*ind)++;
-
-    while ( _Num(*p_c) ) {
-      resul += dec * (*p_c - '0');
-      dec *= 0.1F;
-      *p_c = charstring[*ind];
-      (*ind)++;
-    }
-  }
-  // exponent
-  if(  *p_c == 'e' ) {
-    *p_c = charstring[*ind];
-    (*ind)++;
-    float exponent = (float)pg_ScanIntegerString( p_c , false ,charstring,ind );
-    resul *= powf( 10.0 , exponent );
- }
-  if( withTrailingSpaceChars ) {
-    while( _SpaceChar(*p_c) ) {
-      *p_c = charstring[*ind];
-      (*ind)++;
-    }
-  }
-  if( neg == 1)
-    resul = -resul;
-  return resul;
-}
+std::array<char, max_network_message_length> UDP_buffer;
+std::unique_ptr<UDP_Transport> udp_transport(newUDP_Transport());
 
 // string splitting into string vector by single char
-vector<string> split_string(string str, char token) {
-	vector<string>result;
+vector<std::string> split_string(string str, char token) {
+	vector<std::string>result;
 	while (str.size()) {
 		int index = str.find(token);
 		if (index != string::npos) {
@@ -163,17 +66,13 @@ pg_IPClient::pg_IPClient( void ) {
   // client stack: stores pending output messages
   output_pattern_stack = NULL;
   output_message_stack = NULL;
-  depth_output_stack = 10;
-  current_depth_output_stack = -1;
-  maximal_IP_message_delay = 0.1F;
+  max_depth_output_stack = 10;
+  current_depth_output_stack = 0;
+  maximal_IP_message_delay = 100.f; // ms between two bursts of UDP messages emmissions
   last_IP_message_time = 0;
 
   // output message format
   send_format = Plain;
-
-  // labelling of output messages
-  first_IP_message_number = 0;
-  current_IP_message_number = 0;
 
   // console trace
   IP_message_trace = false;
@@ -188,34 +87,26 @@ pg_IPClient::pg_IPClient( void ) {
 }
     
 pg_IPClient::~pg_IPClient(void) {
-  id.clear();
+	id.clear();
 
-  if (output_message_stack) {
-    for (int ind = 0; ind < depth_output_stack; ind ++) {
-      if (output_message_stack[ind]) {
-		delete [] output_message_stack[ind];
-		output_message_stack[ind] = NULL;
-	  }
-    }
+	if (output_message_stack) {
+		delete[] output_message_stack;
+	}
+	output_message_stack = NULL;
 
-    delete [] output_message_stack;
-    output_message_stack = NULL;
-  }
 
-  if (output_pattern_stack) {
-    for (int ind = 0; ind < depth_output_stack; ind ++) {
-      if (output_pattern_stack[ind]) {
-		delete [] output_pattern_stack[ind];
-		output_pattern_stack[ind] = NULL;
-      }
-    }
-
-    delete [] output_pattern_stack;
-    output_pattern_stack = NULL;
-  }
+	if (output_pattern_stack) {
+		delete[] output_pattern_stack;
+	}
+	output_pattern_stack = NULL;
 
 #ifdef WIN32
-  closesocket(SocketToRemoteServer);
+	//if (send_format != OSC) {
+		closesocket(SocketToRemoteServer);
+	//}
+	//else {
+	//	lo_address_free(lo_client);
+	//}
 #endif
 }
 
@@ -224,70 +115,58 @@ void pg_IPClient::InitClient(void) {
 	//////////////////////////////
 	// remote server opening
 
-	struct                  addrinfo *result;
+	struct                  addrinfo* result;
 	struct                  addrinfo hints;
 
 	char Remote_server_port_string[128];
 	sprintf(Remote_server_port_string, "%d", Remote_server_port);
 
-	// non liblo message handling
-	if (send_format != OSC) {
-		memset(&hints, 0, sizeof hints); // make sure the struct is empty
-		hints.ai_family = AF_INET;     // don't care IPv4 or IPv6
-		hints.ai_socktype = SOCK_DGRAM; // UDP stream sockets
-		int err = getaddrinfo(Remote_server_IP.c_str(), Remote_server_port_string, &hints, &result);
+	memset(&hints, 0, sizeof hints); // make sure the struct is empty
+	hints.ai_family = AF_INET;     // don't care IPv4 or IPv6
+	hints.ai_socktype = SOCK_DGRAM; // UDP stream sockets
+	int err = getaddrinfo(Remote_server_IP.c_str(), Remote_server_port_string, &hints, &result);
+	if (err != 0) {
+		sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
+	}
+	else {
+		char                    hname[1024];
+		err = getnameinfo(
+			result->ai_addr,             // Pointer to your struct sockaddr
+			socklen_t(result->ai_addrlen),          // Size of this struct
+			hname,                       // Pointer to hostname string
+			sizeof hname,                // Size of this string
+			NULL,                        // Pointer to service name string
+			0,                           // Size of this string
+			0                            // No flags given
+		);
 		if (err != 0) {
 			sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
 		}
 		else {
-			char                    hname[1024];
-			err = getnameinfo(
-				result->ai_addr,             // Pointer to your struct sockaddr
-				socklen_t(result->ai_addrlen),          // Size of this struct
-				hname,                       // Pointer to hostname string
-				sizeof hname,                // Size of this string
-				NULL,                        // Pointer to service name string
-				0,                           // Size of this string
-				0                            // No flags given
-			);
-			if (err != 0) {
-				sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
+			/* get server IP address (no check if input is IP address or DNS name */
+			// deprecated Remote_server_host = gethostbyname(Remote_server_IP.c_str());
+			memset(&remoteServAddr, 0, sizeof(remoteServAddr));
+			remoteServAddr.sin_family = AF_INET;
+			inet_pton(AF_INET, hname, &(remoteServAddr.sin_addr));
+			remoteServAddr.sin_port = htons(u_short(Remote_server_port));
+
+			printf("Network client '%s': sending data to '%s' (%s) on port %d\n",
+				id.c_str(), Remote_server_IP.c_str(), hname, Remote_server_port);
+
+			/* socket creation */
+			//memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
+			//Remote_server_host->h_addr_list[0], Remote_server_host->h_length);
+
+			SocketToRemoteServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+			if (SocketToRemoteServer < 0) {
+				sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
 			}
-			else {
-				/* get server IP address (no check if input is IP address or DNS name */
-				// deprecated Remote_server_host = gethostbyname(Remote_server_IP.c_str());
-				memset(&remoteServAddr, 0, sizeof(remoteServAddr));
-				remoteServAddr.sin_family = AF_INET;
-				inet_pton(AF_INET, hname, &(remoteServAddr.sin_addr));
-				remoteServAddr.sin_port = htons(u_short(Remote_server_port));
-
-				printf("Network client '%s': sending data to '%s' (%s) on port %d\n",
-					id.c_str(), Remote_server_IP.c_str(), hname, Remote_server_port);
-
-				/* socket creation */
-				//memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
-				//Remote_server_host->h_addr_list[0], Remote_server_host->h_length);
-
-				SocketToRemoteServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-				if (SocketToRemoteServer < 0) {
-					sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
-				}
-				err = connect(SocketToRemoteServer, result->ai_addr, int(result->ai_addrlen));
-				if (err == -1) {
-					sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
-				}
-				// listen(SocketToRemoteServer, 200);
+			err = connect(SocketToRemoteServer, result->ai_addr, int(result->ai_addrlen));
+			if (err == -1) {
+				sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
 			}
+			// listen(SocketToRemoteServer, 200);
 		}
-	}
-	// liblo message handling
-	else {
-		// liblo client
-		lo_client = lo_address_new(Remote_server_IP.c_str(), Remote_server_port_string);
-		printf("Network client '%s': sending OSC to '%s' on port %d\n",
-			id.c_str(), Remote_server_IP.c_str(), Remote_server_port);
-		//printf("Sending OSC packets to '%s'\n",
-		//	lo_address_get_url(lo_client));
 	}
 
 	// system initializing
@@ -296,19 +175,469 @@ void pg_IPClient::InitClient(void) {
 
 void pg_IPClient::IP_OutputStackInitialization( void ) {
   // output message stack initializing
-  output_message_stack = new Pchar[depth_output_stack];
-  for(int ind_stack = 0 ; ind_stack < depth_output_stack ;
-      ind_stack++ ) {
-    output_message_stack[ ind_stack ] = NULL;
+  output_message_stack = new string[max_depth_output_stack];
+  for(int ind_stack = 0 ; ind_stack < max_depth_output_stack ; ind_stack++ ) {
+    output_message_stack[ ind_stack ] = "";
   }
-  current_depth_output_stack = -1;
   // output pattern stack initializing
-  output_pattern_stack = new Pchar[depth_output_stack];
-  for(int ind_stack = 0 ; ind_stack < depth_output_stack ;
-      ind_stack++ ) {
-    output_pattern_stack[ ind_stack ] = NULL;
+  output_pattern_stack = new string[max_depth_output_stack];
+  for(int ind_stack = 0 ; ind_stack < max_depth_output_stack ; ind_stack++ ) {
+    output_pattern_stack[ ind_stack ] = "";
   }
+  current_depth_output_stack = 0;
 }
+
+size_t pg_IPClient::makePacket(void* buffer, size_t size)
+{
+	// Construct a packet
+	OSCPP::Client::Packet OSC_packet(buffer, size);
+
+	// OSC message bundle
+	if (output_message_stack[current_depth_output_stack - 1][0] == '#') {
+		// splits the argument separated by space chars
+		std::vector<std::string> message_arguments;
+		message_arguments = split_string(output_message_stack[current_depth_output_stack - 1], ' ');
+
+		// sends OSC message through OSC bundle
+		// message that begins by an OSC address #/aaaa/aaa 
+		// whether or not the pattern is provided with the command
+		int pattern_size = int(output_pattern_stack[current_depth_output_stack - 1].length());
+
+		//lo_bundle osc_bundle = lo_bundle_new(LO_TT_IMMEDIATE);
+		//lo_message message_osc = lo_message_new();
+
+		if (pattern_size == message_arguments.size() - 1) {
+			// single argument
+			if (pattern_size == 1) {
+				switch (output_pattern_stack[current_depth_output_stack - 1][0]) {
+				case 's':
+					OSC_packet
+						// Open a bundle with a timetag
+						.openBundle(1234ULL)
+						// Add a message address
+						.openMessage(message_arguments[0].c_str(), 1)
+						// Write the arguments
+						.string(message_arguments[1].c_str())
+						.closeMessage()
+						.closeBundle();
+					break;
+				case 'i':
+					OSC_packet
+						// Open a bundle with a timetag
+						.openBundle(1234ULL)
+						// Add a message address
+						.openMessage(message_arguments[0].c_str(), 1)
+						// Write the arguments
+						.int32(stoi(message_arguments[1]))
+						.closeMessage()
+						.closeBundle();
+					break;
+				case 'f':
+					OSC_packet
+						// Open a bundle with a timetag
+						.openBundle(1234ULL)
+						// Add a message address
+						.openMessage(message_arguments[0].c_str(), 1)
+						// Write the arguments
+						.float32(stof(message_arguments[1]))
+						.closeMessage()
+						.closeBundle();
+					break;
+				default:
+					sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", output_pattern_stack[current_depth_output_stack - 1][0], output_message_stack[current_depth_output_stack - 1].c_str()); ReportError(ErrorStr);
+					break;
+				}
+			}
+			//lo_bundle_free(osc_bundle);
+			//lo_message_free(message_osc);
+		}
+	}
+	// OSC message bundle
+
+	// OSC message not bundle
+	else if (output_message_stack[current_depth_output_stack - 1][0] == '/') {
+		// splits the argument separated by space chars
+		std::vector<std::string> message_arguments;
+		message_arguments = split_string(output_message_stack[current_depth_output_stack - 1], ' ');
+
+		// message that begins by an OSC address /aaaa/aaa 
+		// msg with more than one argument
+		if (output_pattern_stack[current_depth_output_stack - 1] != "") {
+			int pattern_size = int(output_pattern_stack[current_depth_output_stack - 1].length());
+
+			// pattern and argument size match
+			if (pattern_size == message_arguments.size() - 1) {
+				// single argument
+				if (pattern_size == 1) {
+					switch (output_pattern_stack[current_depth_output_stack - 1][0]) {
+					case 's':
+						OSC_packet
+							// Add a message address
+							.openMessage(message_arguments[0].c_str(), 1)
+							// Write the arguments
+							.string(message_arguments[1].c_str())
+							.closeMessage();
+						break;
+					case 'i':
+						OSC_packet
+							// Add a message address
+							.openMessage(message_arguments[0].c_str(), 1)
+							// Write the arguments
+							.int32(stoi(message_arguments[1]))
+							.closeMessage();
+						break;
+					case 'f':
+						OSC_packet
+							// Add a message address
+							.openMessage(message_arguments[0].c_str(), 1)
+							// Write the arguments
+							.float32(stof(message_arguments[1]))
+							.closeMessage();
+						break;
+					default:
+						sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", output_pattern_stack[current_depth_output_stack - 1][0], output_message_stack[current_depth_output_stack - 1].c_str()); ReportError(ErrorStr);
+						break;
+					}
+				}
+				else {
+					if (output_pattern_stack[current_depth_output_stack - 1] == "ff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 2)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "sff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 3)
+							.string(message_arguments[1].c_str())
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 3)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 4)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 5)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 6)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 7)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 8)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 9)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 10)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 11)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 12)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 13)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 14)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 15)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.float32(stof(message_arguments[15]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 16)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.float32(stof(message_arguments[15]))
+							.float32(stof(message_arguments[16]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 17)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.float32(stof(message_arguments[15]))
+							.float32(stof(message_arguments[16]))
+							.float32(stof(message_arguments[17]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 18)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.float32(stof(message_arguments[15]))
+							.float32(stof(message_arguments[16]))
+							.float32(stof(message_arguments[17]))
+							.float32(stof(message_arguments[18]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "fffffffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 19)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.float32(stof(message_arguments[15]))
+							.float32(stof(message_arguments[16]))
+							.float32(stof(message_arguments[17]))
+							.float32(stof(message_arguments[18]))
+							.float32(stof(message_arguments[19]))
+							.closeMessage();
+					}
+					else if (output_pattern_stack[current_depth_output_stack - 1] == "ffffffffffffffffffff") {
+						OSC_packet
+							.openMessage(message_arguments[0].c_str(), 20)
+							.float32(stof(message_arguments[1]))
+							.float32(stof(message_arguments[2]))
+							.float32(stof(message_arguments[3]))
+							.float32(stof(message_arguments[4]))
+							.float32(stof(message_arguments[5]))
+							.float32(stof(message_arguments[6]))
+							.float32(stof(message_arguments[7]))
+							.float32(stof(message_arguments[8]))
+							.float32(stof(message_arguments[9]))
+							.float32(stof(message_arguments[10]))
+							.float32(stof(message_arguments[11]))
+							.float32(stof(message_arguments[12]))
+							.float32(stof(message_arguments[13]))
+							.float32(stof(message_arguments[14]))
+							.float32(stof(message_arguments[15]))
+							.float32(stof(message_arguments[16]))
+							.float32(stof(message_arguments[17]))
+							.float32(stof(message_arguments[18]))
+							.float32(stof(message_arguments[19]))
+							.float32(stof(message_arguments[20]))
+							.closeMessage();
+					}
+					else {
+						// error: does not process message of more than one argument for the moment
+						sprintf(ErrorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size); ReportError(ErrorStr);
+					}
+				}
+			}
+			// pattern and argument size match
+			// error : pattern and message size differ
+			else {
+				sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %d)!", output_pattern_stack[current_depth_output_stack - 1].c_str(), output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size, message_arguments.size() - 1); ReportError(ErrorStr);
+			}
+			// error : pattern and message size differ
+		}
+		// msg with more than one argument
+		// msg with 0 argument
+		else {
+			OSC_packet
+				// Add a message address
+				.openMessage(message_arguments[0].c_str(), 0)
+				.closeMessage();
+		}
+		// msg with 0 argument
+	}
+	// OSC message not bundle
+
+	return OSC_packet.size(); }
 
 void pg_IPClient::sendIPmessages(void) {
 	if (SocketToRemoteServer < 0) {
@@ -316,352 +645,35 @@ void pg_IPClient::sendIPmessages(void) {
 	}
 
 	int nb_sent_messages = 0;
-	// messages are sent by packets to avoir overflowing the client with more messages than it can process at a time
-	while (current_depth_output_stack >= 0 || ++nb_sent_messages > 50) {
+	// messages are sent by bursts to avoir overflowing the client with more messages than it can process at a time
+	while (current_depth_output_stack > 0 && ++nb_sent_messages < 100) {
 		// printf( "sendUDPmessage %d\n" , current_depth_output_stack );
 
-		// checks whether last message was received
-		// or it is the first message
-		// or the elapsed time since the last message is greater than the
-		// maximal delay
+		// if the elapsed time since the last message is lower than the maximal delay
 		double current_time = RealTime();
-
-		bool message_received = true;
-
-		if (message_received
-			|| current_IP_message_number == first_IP_message_number
-			|| ((current_time - last_IP_message_time) / 1000.)
-				> maximal_IP_message_delay) {
-
-
+		if (((current_time - last_IP_message_time) / 1000.) < maximal_IP_message_delay) {
 			if (IP_message_trace) {
-				printf("send message [%s, %s]\n", output_message_stack[0], output_pattern_stack[0]);
+				printf("send message [%s, %s]\n", output_message_stack[current_depth_output_stack - 1].c_str(), output_pattern_stack[current_depth_output_stack - 1].c_str());
 			}
 
 			// copies the earliest message
-			int     indLocalCommandLine = 0;
-
-			// Plain format
-			if (send_format == Plain) {
-				strncpy(Output_Message_String, output_message_stack[0],
-					max_network_message_length - 1);
-			}
-
-			// OSC bundle
-			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
-				// splits the argument separated by space chars
-				std::vector<std::string> message_arguments;
-				message_arguments = split_string(String(output_message_stack[0]), ' ');
-
-				// sends OSC message through OSC bundle
-				// message that begins by an OSC address #/aaaa/aaa 
-				// whether or not the pattern is provided with the command
-				int pattern_size = int(strlen(output_pattern_stack[0]));
-
-				lo_bundle osc_bundle = lo_bundle_new(LO_TT_IMMEDIATE);
-				lo_message message_osc = lo_message_new();
-
-				if (pattern_size == message_arguments.size() - 1) {
-					// single argument
-					if (pattern_size == 1) {
-						switch (*(output_pattern_stack[0])) {
-						case 's':
-							lo_message_add_string(message_osc, message_arguments[1].c_str());
-							lo_bundle_add_message(osc_bundle, message_arguments[0].c_str() + 1, message_osc);
-							if (lo_send_bundle(lo_client, osc_bundle) == -1) {
-								sprintf(ErrorStr, "Error: OSC error %d (s): %s  for message %s\n", lo_address_errno(lo_client),
-									lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-							}
-							break;
-						case 'i':
-							lo_message_add_int32(message_osc, stoi(message_arguments[1]));
-							lo_bundle_add_message(osc_bundle, message_arguments[0].c_str() + 1, message_osc);
-							if (lo_send_bundle(lo_client, osc_bundle) == -1) {
-								sprintf(ErrorStr, "Error: OSC error %d (i): %s  for message %s\n", lo_address_errno(lo_client),
-									lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-							}
-							break;
-						case 'f':
-							lo_message_add_float(message_osc, stof(message_arguments[1]));
-							lo_bundle_add_message(osc_bundle, message_arguments[0].c_str() + 1, message_osc);
-							//printf("send float %.2f address %s\n", stof(message_arguments[1]), message_arguments[0].c_str() + 1);
-							if (lo_send_bundle(lo_client, osc_bundle) == -1) {
-								sprintf(ErrorStr, "Error: OSC error %d (f): %s  for message %s\n", lo_address_errno(lo_client),
-									lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-							}
-							break;
-						default:
-							sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", *(output_pattern_stack[0]), output_message_stack[0]); ReportError(ErrorStr);
-							break;
-						}
-					}
-					lo_bundle_free(osc_bundle);
-					lo_message_free(message_osc);
-				}
-			}
-
-			// OSC message
-			else if (send_format == OSC && *(output_message_stack[0]) == '/') {
-				// splits the argument separated by space chars
-				std::vector<std::string> message_arguments;
-				message_arguments = split_string(String(output_message_stack[0]), ' ');
-
-				// sends OSC message through OSC
-				// message that begins by an OSC address /aaaa/aaa 
-					// whether or not the pattern is provided with the command
-				if (*(output_pattern_stack[0])) {
-					int pattern_size = int(strlen(output_pattern_stack[0]));
-
-					if (pattern_size == message_arguments.size() - 1) {
-						// single argument
-						if (pattern_size == 1) {
-							switch (*(output_pattern_stack[0])) {
-							case 's':
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], message_arguments[1].c_str()) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d (s): %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
-								}
-								break;
-							case 'i':
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stoi(message_arguments[1])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d (i): %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
-								}
-								break;
-							case 'f':
-								if (strcmp(message_arguments[0].c_str(), "/video") == 0) {
-									printf("Message integer string %s value %.2f\n", message_arguments[0].c_str(), stof(message_arguments[1]));
-								}
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0], stof(message_arguments[1])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d (f): %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
-								}
-								break;
-							default:
-								sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", *(output_pattern_stack[0]), output_message_stack[0]); ReportError(ErrorStr);
-								break;
-							}
-						}
-						else {
-							if (strcmp(output_pattern_stack[0], "ff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "sff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									message_arguments[1].c_str(), stof(message_arguments[2]), stof(message_arguments[3])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
-									stof(message_arguments[5])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
-									stof(message_arguments[5]), stof(message_arguments[6])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]), 
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]), 
-									stof(message_arguments[9])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]), 
-									stof(message_arguments[13])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]), 
-									stof(message_arguments[13]), stof(message_arguments[14])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
-									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
-									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
-									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
-									stof(message_arguments[17])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
-									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
-									stof(message_arguments[17]), stof(message_arguments[18])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "fffffffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
-									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
-									stof(message_arguments[17]), stof(message_arguments[18]), stof(message_arguments[19])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else if (strcmp(output_pattern_stack[0], "ffffffffffffffffffff") == 0) {
-								if (lo_send(lo_client, message_arguments[0].c_str(), output_pattern_stack[0],
-									stof(message_arguments[1]), stof(message_arguments[2]), stof(message_arguments[3]), stof(message_arguments[4]),
-									stof(message_arguments[5]), stof(message_arguments[6]), stof(message_arguments[7]), stof(message_arguments[8]),
-									stof(message_arguments[9]), stof(message_arguments[10]), stof(message_arguments[11]), stof(message_arguments[12]),
-									stof(message_arguments[13]), stof(message_arguments[14]), stof(message_arguments[15]), stof(message_arguments[16]),
-									stof(message_arguments[17]), stof(message_arguments[18]), stof(message_arguments[19]), stof(message_arguments[20])) == -1) {
-									sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client),
-										lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr);
-								}
-							}
-							else {
-								// error: does not process message of more than one argument for the moment
-								sprintf(ErrorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[0], pattern_size); ReportError(ErrorStr);
-							}
-						}
-					}
-					else {
-						// error : pattern and message size differ
-						sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %d)!", output_pattern_stack[0], output_message_stack[0], pattern_size, message_arguments.size() - 1); ReportError(ErrorStr);
-					}
-				}
-				// no pattern, just an address
-				else {
-					if (lo_send(lo_client, output_message_stack[0], NULL) == -1) {
-						sprintf(ErrorStr, "Error: OSC error %d: %s  for message %s\n", lo_address_errno(lo_client), lo_address_errstr(lo_client), output_message_stack[0]); ReportError(ErrorStr); 
-					}
-				}
-			}
-
-			// FIFO processing of messages
-			// shifts the stack down 
-			for (int ind_mess = 0; ind_mess < current_depth_output_stack;
-				ind_mess++) {
-				pg_CopyAndAllocString(&(output_message_stack[ind_mess]),
-					output_message_stack[ind_mess + 1]);
-				pg_CopyAndAllocString(&(output_pattern_stack[ind_mess]),
-					output_pattern_stack[ind_mess + 1]);
-			}
-			current_depth_output_stack--;
+			int indLocalCommandLine = 0;
 
 			// records the emission time
 			last_IP_message_time = RealTime();
 
 			// sends the message
-			// formats the command
-			// pads the length to a multiple of 4
 			int length;
 			int localCommandLineLength = 0;
+			// emitted packet size
+			int rc = 0;
+
+			// Plain format
+			// formats the command
+			// pads the length to a multiple of 4
 			if (send_format == Plain) {
+				strncpy(Output_Message_String, output_message_stack[current_depth_output_stack - 1].c_str(), max_network_message_length - 1);
+
 				length = int(strlen(Output_Message_String));
 				int inchar;
 				for (inchar = length; inchar < length + (12 - length % 4) - 1;
@@ -674,39 +686,8 @@ void pg_IPClient::sendIPmessages(void) {
 				Output_Message_String[length + (12 - length % 4)] = 0;
 				localCommandLineLength = length + (12 - length % 4);
 				// pure data
-				// MaxOutput_Message_String[ length + (12 - length % 4) - 1] = 0;
-			}
-			// OSC bundle
-			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
-				// the message has been sent through the OSC library liblo
-				//sprintf(ErrorStr, "Error: udp client: OSC bundle emission not processed [%s]!", output_message_stack[0]); ReportError(ErrorStr);
-				continue;
-				/*
-				length = int(20 + strlen(Output_Message_OSC + 20));
-				int inchar;
-				for (inchar = length; inchar < length + (4 - length % 4) - 1;
-					inchar++) {
-					Output_Message_OSC[inchar] = ' ';
-				}
-				Output_Message_OSC[length + (4 - length % 4) - 1] = 0;
-				Output_Message_OSC[20 - 1] = (char)(strlen(Output_Message_OSC + 20) + 1);
-				localCommandLineLength = length + (4 - length % 4);
-				*/
-				//printf( "message size %d\n" , strlen(Output_Message_OSC + 20 )  + 1 );
-			}
-			// OSC message
-			else if (send_format == OSC && *(output_message_stack[0]) == '/') {
-				// the message has been sent through the OSC library liblo
-				// localCommandLineLength = indLocalCommandLine;
-				continue;
-			}
 
-			// sends the command (except OSC messages)
-			int rc = 0;
-			// Plain format
-			if (send_format == Plain) {
-				rc = send(SocketToRemoteServer, Output_Message_String,
-					localCommandLineLength, 0);
+				rc = send(SocketToRemoteServer, Output_Message_String, localCommandLineLength, 0);
 				//(struct sockaddr *) &remoteServAddr, 
 				//sizeof(remoteServAddr));
 				if (rc != localCommandLineLength) {
@@ -717,51 +698,27 @@ void pg_IPClient::sendIPmessages(void) {
 						Output_Message_String, (int)strlen(Output_Message_String));
 				}
 			}
-			// OSC bundle
-			// currently not sent through the liblo library, modify the code in the preceding loop to send bundle
-			// OSC messages through liblo
-			/*
-			else if (send_format == OSC && *(output_message_stack[0]) == '#') {
-				rc = 0;
-				int len = int(20 + strlen(Output_Message_OSC + 20) + 1);
-				rc = send(SocketToRemoteServer, Output_Message_OSC, len, 0);
+			// OSC format
+			else if(send_format == OSC) {
+				const size_t packetSize = makePacket(Output_Message_String, max_network_message_length);
+
+				rc = send(SocketToRemoteServer, Output_Message_String, (int)packetSize, 0);
 				//(struct sockaddr *) &remoteServAddr, 
 				//sizeof(remoteServAddr));
-				if (rc != len) {
-					sprintf(ErrorStr, "Error: udp client: OSC data incompletely sent [%s]!", Output_Message_OSC); ReportError(ErrorStr); // close(SocketToRemoteServer); throw 273;
+				if (rc != (int)packetSize) {
+					sprintf(ErrorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", Output_Message_String, rc, (int)packetSize); ReportError(ErrorStr); // close(SocketToRemoteServer); throw 273;
 				}
 				if (rc > 0 && IP_message_trace) {
-					printf("udp client: send OSC bundle %d [%s] (%d bytes)\n",
-						(int)*(Output_Message_OSC + 20 - 1),
-						Output_Message_OSC + 20,
-						(int)(20 + strlen(Output_Message_OSC + 20) + 1));
+					printf("Network client: send string [%s] (%d bytes)\n",Output_Message_String, (int)packetSize);
 				}
 			}
-			*/
-			// OSC message
-			// the message has been sent through the OSC library liblo
-			/*
-			else if (send_format == OSC && *Output_Message_OSC == '/') {
-				rc = 0;
-				rc = send(SocketToRemoteServer, Output_Message_OSC,
-							localCommandLineLength, 0);
-				//(struct sockaddr *) &remoteServAddr, 
-				//sizeof(remoteServAddr));
-				if (rc != localCommandLineLength) {
-					sprintf(ErrorStr, "Error: udp client: data incompletely sent [%s]!", Output_Message_OSC); ReportError(ErrorStr); // close(SocketToRemoteServer); throw 273;
-				}
-				if (rc > 0 && IP_message_trace) {
-					printf("udp client: send OSC message (%d bytes)\n",
-						localCommandLineLength);
-					for (int ind = 0; ind < localCommandLineLength; ind++) {
-						//printf( "%c(%d) " ,Output_Message_OSC[ind] , (int)Output_Message_OSC[ind] );
-						printf("%c", Output_Message_OSC[ind]);
-					}
-					printf("\n");
-				}
-			}
-			*/
+
+			// stack depiling
+			//printf("msg emmission stack size %d (%s,%s)\n", current_depth_output_stack, output_message_stack[current_depth_output_stack - 1].c_str(), output_pattern_stack[current_depth_output_stack - 1].c_str());
+			current_depth_output_stack--;
 		}
+		// if the elapsed time since the last message is lower than the maximal delay
+		// Higher than the maximal delay
 		else {
 			if (IP_message_trace) {
 				printf("udp client: delay %.5f / %.5f \n",
@@ -770,11 +727,12 @@ void pg_IPClient::sendIPmessages(void) {
 			}
 			return;
 		}
+		// Higher than the maximal delay
 	}
+	// messages are sent by bursts to avoir overflowing the client with more messages than it can process at a time
 }
 
-void pg_IPClient::storeIP_output_message(char *commandLine,
-	char *pattern) {
+void pg_IPClient::storeIP_output_message(char *commandLine, char *pattern) {
 
 	// printf( "commandLine %s %d\n" , commandLine , current_depth_output_stack );
 	if (SocketToRemoteServer < 0) {
@@ -782,32 +740,25 @@ void pg_IPClient::storeIP_output_message(char *commandLine,
 	}
 
 	// printf( "commandLine %s %d\n" , commandLine , current_depth_output_stack );
-	if (current_depth_output_stack < depth_output_stack - 1) {
-		current_depth_output_stack++;
-		pg_CopyAndAllocString(&(output_message_stack[current_depth_output_stack]),
-			commandLine);
+	if (current_depth_output_stack < max_depth_output_stack - 1) {
+		output_message_stack[current_depth_output_stack] = string(commandLine);
 		if (pattern && *pattern) {
-			pg_CopyAndAllocString(&(output_pattern_stack[current_depth_output_stack]),
-				pattern);
+			output_pattern_stack[current_depth_output_stack] = string(pattern);
 		}
 		else {
-			pg_CopyAndAllocString(&(output_pattern_stack[current_depth_output_stack]),
-				"");
+			output_pattern_stack[current_depth_output_stack] = "";
 		}
+		current_depth_output_stack++;
+		//printf("msg storage stack size %d (%s,%s)\n", current_depth_output_stack, commandLine, pattern);
 	}
 	else {
 		sprintf(ErrorStr, "Error: UDP output message stack overflow %d %d (%s) to IP %s:%d!", 
-			current_depth_output_stack, depth_output_stack, commandLine, Remote_server_IP.c_str(), Remote_server_port); ReportError(ErrorStr);
+			current_depth_output_stack, max_depth_output_stack, commandLine, Remote_server_IP.c_str(), Remote_server_port); ReportError(ErrorStr);
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // UDP SERVER
-
-// liblo OSC messages error handling
-void liblo_error_handling(int num, const char *msg, const char *path) {
-	sprintf(ErrorStr, "Error: liblo server error %d in path %s: %s\n", num, path, msg); ReportError(ErrorStr);
-}
 
 pg_IPServer::pg_IPServer( void ) {
   // local server ID
@@ -855,13 +806,6 @@ pg_IPServer::~pg_IPServer(void) {
 	id.clear();
 
 	if (input_message_stack) {
-		for (int ind_stack = 0; ind_stack < depth_input_stack; ind_stack++) {
-			if (input_message_stack[ind_stack]) {
-				delete[] input_message_stack[ind_stack];
-				input_message_stack[ind_stack] = NULL;
-			}
-		}
-
 		delete[] input_message_stack;
 		input_message_stack = NULL;
 	}
@@ -875,12 +819,6 @@ pg_IPServer::~pg_IPServer(void) {
 		input_message_length_stack = NULL;
 	}
 
-	for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
-		if (OSC_arguments[ind]) {
-			delete[] OSC_arguments[ind];
-		}
-	}
-
 #ifdef WIN32
 	closesocket(SocketToLocalServer);
 #endif
@@ -889,67 +827,54 @@ pg_IPServer::~pg_IPServer(void) {
 void pg_IPServer::InitServer(void) {
 	///////////////////////////////
 	// local server creation
-	if (receive_format != OSC) {
-		struct sockaddr_in localServAddr;
+	struct sockaddr_in localServAddr;
 
 #ifndef _WIN32
-		/* socket creation */
-		SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, 0);
+	/* socket creation */
+	SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, 0);
 
-		if (SocketToLocalServer < 0) {
-			sprintf(ErrorStr, "Error: cannot open socket to local server!"); ReportError(ErrorStr);
-		}
-		else {
-			int SocketToLocalServerFlags;
+	if (SocketToLocalServer < 0) {
+		sprintf(ErrorStr, "Error: cannot open socket to local server!"); ReportError(ErrorStr);
+	}
+	else {
+		int SocketToLocalServerFlags;
 
-			// Read the socket's flags
-			SocketToLocalServerFlags = fcntl(SocketToLocalServer, F_GETFL, 0);
-			// Sets the socket's flags to non-blocking
-			SocketToLocalServerFlags |= O_NONBLOCK;
-			int ret = fcntl(SocketToLocalServer, F_SETFL, SocketToLocalServerFlags);
-			if (ret < 0) {
-				sprintf(ErrorStr, "Error: local server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
-			}
-		}
-#else
-		/* socket creation */
-		SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-		if (SocketToLocalServer < 0) {
-			sprintf(ErrorStr, "Error: udp server cannot open socket to local server!"); ReportError(ErrorStr);
-		}
-		else {
-			// Read the socket's flags
-			unsigned long onoff = 1;
-
-			if (ioctlsocket(SocketToLocalServer, FIONBIO, &onoff) != 0) {
-				sprintf(ErrorStr, "Error: udp server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
-			}
-		}
-#endif
-
-		/* bind local server port */
-		localServAddr.sin_family = AF_INET;
-		localServAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-		localServAddr.sin_port = htons(u_short(Local_server_port));
-
-		int rc = bind(SocketToLocalServer, (struct sockaddr *) &localServAddr,
-			sizeof(localServAddr));
-		if (rc < 0) {
-			sprintf(ErrorStr, "Error: cannot bind local port number %d!", Local_server_port); ReportError(ErrorStr);
-			return;
+		// Read the socket's flags
+		SocketToLocalServerFlags = fcntl(SocketToLocalServer, F_GETFL, 0);
+		// Sets the socket's flags to non-blocking
+		SocketToLocalServerFlags |= O_NONBLOCK;
+		int ret = fcntl(SocketToLocalServer, F_SETFL, SocketToLocalServerFlags);
+		if (ret < 0) {
+			sprintf(ErrorStr, "Error: local server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
 		}
 	}
-	// liblo init server
+#else
+	/* socket creation */
+	SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	if (SocketToLocalServer < 0) {
+		sprintf(ErrorStr, "Error: udp server cannot open socket to local server!"); ReportError(ErrorStr);
+	}
 	else {
-		char Local_server_port_string[128];
-		sprintf(Local_server_port_string, "%d", Local_server_port);
+		// Read the socket's flags
+		unsigned long onoff = 1;
 
-		/* start a new server on port Local_server_port */
-		lo_local_server = lo_server_new(Local_server_port_string, liblo_error_handling);
+		if (ioctlsocket(SocketToLocalServer, FIONBIO, &onoff) != 0) {
+			sprintf(ErrorStr, "Error: udp server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
+		}
+	}
+#endif
 
-		/* add method that will match any path and args */
-		lo_server_add_method(lo_local_server, NULL, NULL, processLibloReceivedOSC, this);
+	/* bind local server port */
+	localServAddr.sin_family = AF_INET;
+	localServAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	localServAddr.sin_port = htons(u_short(Local_server_port));
+
+	int rc = bind(SocketToLocalServer, (struct sockaddr*)&localServAddr,
+		sizeof(localServAddr));
+	if (rc < 0) {
+		sprintf(ErrorStr, "Error: cannot bind local port number %d!", Local_server_port); ReportError(ErrorStr);
+		return;
 	}
 
 	printf("Network server: listening on port %u\n", Local_server_port);
@@ -958,96 +883,112 @@ void pg_IPServer::InitServer(void) {
 	IP_InputStackInitialization();
 
 	for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
-		OSC_arguments[ind] = new char[StringLength];
-		*(OSC_arguments[ind]) = 0;
+		OSC_arguments[ind] = "";
 	}
-	OSC_address = new char[StringLength];
 }
 
 void pg_IPServer::IP_InputStackInitialization(void) {
 	// input message stack initializing
 	input_argc_stack = new int[depth_input_stack];
-	input_message_stack = new Pchar[depth_input_stack];
+	input_message_stack = new string[depth_input_stack];
 	input_message_length_stack = new int[depth_input_stack];
 	for (int ind_stack = 0; ind_stack < depth_input_stack;
 		ind_stack++) {
 		input_argc_stack[ind_stack] = -1;
-		input_message_stack[ind_stack] = NULL;
+		input_message_stack[ind_stack] = "";
 		input_message_length_stack[ind_stack] = 0;
 	}
 	current_depth_input_stack = 0;
 }
 
-// liblo catch any incoming messages and display them. returning 1 means that the
-// message has not been fully handled and the server should try other methods
-int processLibloReceivedOSC(const char *path, const char *types, lo_arg ** argv,
-	int argc, void *data, void *user_data)
+
+UDP_Transport* newUDP_Transport()
 {
-	pg_IPServer *classInstance = (pg_IPServer *)user_data;
-	char argument[StringLength];
-
-	// string initialization to 0
-	memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
-
-	//printf("processLibloReceivedOSC\n");
-
-	strcpy(Input_Message_Local_Commande_String, path);
-	for (int indParam = 0; indParam < argc; indParam++) {
-		strcat(Input_Message_Local_Commande_String, " ");
-		if (types[indParam] == 'i') {
-			sprintf(argument, "%d", argv[indParam]->i);
-			strcat(Input_Message_Local_Commande_String, argument);
-		}
-		else if (types[indParam] == 'f') {
-			sprintf(argument, "%.5f", argv[indParam]->f);
-			// printf("f argument #%d [%s] at %d %d\n", indParam + 1 , argument , indChar , sizeof( float ) ); 
-			strcat(Input_Message_Local_Commande_String, argument);
-		}
-		else if (types[indParam] == 's') {
-			char *argtString = (char *)argv[indParam];
-			// printf("s argument #%d [%s] at %d\n", indParam + 1 , message + indChar , indChar );
-			if( (*argtString) != '\"') {
-				strcat(Input_Message_Local_Commande_String, "\"");
-				strcat(Input_Message_Local_Commande_String, argtString);
-				strcat(Input_Message_Local_Commande_String, "\"");
-			}
-			else {
-				strcat(Input_Message_Local_Commande_String, argtString);
-			}
-		}
-		else {
-			sprintf(ErrorStr, "Error: unknown OSC pattern element %c in received message!", types[indParam]); ReportError(ErrorStr);
-		}
-	}
-
-	if (classInstance->IP_message_trace) {
-		printf("udp server: receive OSC message [%s]\n",
-			Input_Message_Local_Commande_String);
-	}
-	classInstance->storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String, argc);
-
-	return 1;
+	return new UDP_Transport;
 }
 
-int pg_IPServer::receiveOneMessage( char *message ) {
-  // message length
-  int n = 0;
+int UDP_Transport::transport_recv(SOCKET serverSocket, void* buffer, size_t size_max) {
+	int n = recv(serverSocket, m_buffer, size_max, 0);
+	if (n > 0) {
+		std::memcpy(buffer, m_buffer, n);
+		return n;
+	}
+	else {
+		return 0;
+	}
+}
 
-  // one shot UDP reception
-  n = recv(SocketToLocalServer, message, max_network_message_length, 0);
-  //printf("message size %d\n", n);
-  //for (int i = 0; i < n; i++) {
-	 // printf("%c", message[i]);
-  //}
-  //printf("\n");
-  return n;
+int pg_IPServer::handlePacket(const OSCPP::Server::Packet& packet) {
+	char argument[StringLength];
+	if (packet.isBundle()) {
+		// Convert to bundle
+		OSCPP::Server::Bundle bundle(packet);
+
+		// Print the time
+		std::cout << "#bundle " << bundle.time() << std::endl;
+
+		// Get packet stream
+		OSCPP::Server::PacketStream packets(bundle.packets());
+
+		// Iterate over all the packets and call handlePacket recursively.
+		// Cuidado: Might lead to stack overflow!
+		while (!packets.atEnd()) {
+			return handlePacket(packets.next());
+		}
+	}
+	else {
+		// Convert to message
+		OSCPP::Server::Message msg(packet);
+		// Get argument stream
+		OSCPP::Server::ArgStream args(msg.args());
+		// copies the address
+		strcpy(Input_Message_Local_Commande_String, msg.address());
+
+		int argc = args.size();
+		//printf("OSC message with %d arguments\n", argc);
+		int indParam = 0;
+		while (!args.atEnd()) {
+			indParam++;
+			strcat(Input_Message_Local_Commande_String, " ");
+			char tag = args.tag();
+			if (tag == 'i') {
+				sprintf(argument, "%d", args.int32());
+				//printf("i argument #%d [%s]\n", indParam, argument);
+				strcat(Input_Message_Local_Commande_String, argument);
+			}
+			else if (tag == 'f') {
+					// printf("f argument #%d [%s] at %d %d\n", indParam + 1 , argument , indChar , sizeof( float ) ); 
+				sprintf(argument, "%.5f", args.float32());
+				//printf("f argument #%d [%s]\n", indParam, argument);
+				strcat(Input_Message_Local_Commande_String, argument);
+			}
+			else if (tag == 's') {
+				const char* argtString = args.string();
+				// printf("s argument #%d [%s] at %d\n", indParam + 1 , message + indChar , indChar );
+				if ((*argtString) != '\"') {
+					strcat(Input_Message_Local_Commande_String, "\"");
+					strcat(Input_Message_Local_Commande_String, argtString);
+					strcat(Input_Message_Local_Commande_String, "\"");
+				}
+				else {
+					strcat(Input_Message_Local_Commande_String, argtString);
+				}
+				//printf("s argument #%d [%s]\n", indParam, argtString);
+			}
+			else {
+				sprintf(ErrorStr, "Error: unknown OSC pattern element %c in received message!", tag); ReportError(ErrorStr);
+			}
+		}
+		return argc;
+	}
+	return 0;
 }
 
 void pg_IPServer::receiveIPMessages(void) {
 	// initializes the stack in which message strings are stored
 	current_depth_input_stack = 0;
 
-	// non liblo message handling
+	// Plain message handling
 	if (receive_format != OSC) {
 		if (SocketToLocalServer < 0) {
 			return;
@@ -1058,7 +999,7 @@ void pg_IPServer::receiveIPMessages(void) {
 		memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
 
 		// receive message
-		int n = receiveOneMessage(Input_Message_String);
+		int n = recv(SocketToLocalServer, Input_Message_String, max_network_message_length, 0);
 
 		while (n > 0) {
 
@@ -1074,13 +1015,37 @@ void pg_IPServer::receiveIPMessages(void) {
 			}
 
 			memset(Input_Message_String, 0x0, max_network_message_length);
-			n = receiveOneMessage(Input_Message_String);
+			n = recv(SocketToLocalServer, Input_Message_String, max_network_message_length, 0);
 		}
 	}
-	// liblo OSC message handling
+	// OSC message handling
 	else {
-		while (lo_server_recv_noblock(lo_local_server,0)) {
+		if (SocketToLocalServer < 0) {
+			return;
 		}
+
+		// string initialization to 0
+		memset(Input_Message_String, 0x0, max_network_message_length);
+		memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
+
+		// receive message
+		int size = udp_transport->transport_recv(SocketToLocalServer, UDP_buffer.data(), UDP_buffer.size());
+
+		while (size > 0) {
+			///////////////////////////////////////////////////////
+			// OSC format (string)
+			if (receive_format == OSC) {
+				if (IP_message_trace) {
+					printf("udp server: receive OSC message [%s]\n", UDP_buffer.data());
+				}
+				int argc = handlePacket(OSCPP::Server::Packet(UDP_buffer.data(), size));
+				storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String, argc);
+			}
+
+			memset(Input_Message_String, 0x0, max_network_message_length);
+			size = udp_transport->transport_recv(SocketToLocalServer, UDP_buffer.data(), UDP_buffer.size());
+		}
+
 	}
 
 	// forwards the non duplicated messages to the script manager
@@ -1089,7 +1054,7 @@ void pg_IPServer::receiveIPMessages(void) {
 }
 
 void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, int argc) {
-	if (receive_format != OSC && SocketToLocalServer < 0) {
+	if (/* receive_format != OSC && */ SocketToLocalServer < 0) {
 		return;
 	}
 
@@ -1113,10 +1078,10 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 			// same tag
 			// the current message is kept instead of the previous one with the same tag
 			if (input_message_length_stack[ind_mess] == tagLength
-				&& strncmp(input_message_stack[ind_mess], messString, tagLength) == 0) {
-				// printf( "duplicate removed [%s] for [%s]\n" ,  input_message_stack[ ind_mess ] , messString );
+				&& strncmp(input_message_stack[ind_mess].c_str(), messString, tagLength) == 0) {
+				// printf( "duplicate removed [%s] for [%s]\n" ,  input_message_stack[ ind_mess ].c_str() , messString );
 				input_argc_stack[ind_mess] = argc;
-				pg_CopyAndAllocString(&input_message_stack[ind_mess], messString);
+				input_message_stack[ind_mess] = string(messString);
 				input_argc_stack[ind_mess] = argc;
 				return;
 			}
@@ -1125,7 +1090,7 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 
 	// input message stack storing if no duplicate found
 	if (current_depth_input_stack < depth_input_stack - 1) {
-		pg_CopyAndAllocString(&input_message_stack[current_depth_input_stack], messString);
+		input_message_stack[current_depth_input_stack] = string(messString);
 		input_argc_stack[current_depth_input_stack] = argc;
 		input_message_length_stack[current_depth_input_stack] = tagLength;
 		current_depth_input_stack++;
@@ -1133,15 +1098,15 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 	else {
 		sprintf(ErrorStr, "Error: UDP input message stack overflow %d %d!", current_depth_input_stack, depth_input_stack); ReportError(ErrorStr);
 		// for( int ind_mess = 0 ; ind_mess < depth_input_stack - 1  ; ind_mess++ ) {
-		//   printf( "message [%s]\n" ,  input_message_stack[ ind_mess ] );
+		//   printf( "message [%s]\n" ,  input_message_stack[ ind_mess ].c_str() );
 		// }
 	}
 }
 
 void pg_IPServer::ProcessFilteredInputMessages(void) {
-	char *messString;
+	string messString;
 
-	if (receive_format != OSC && SocketToLocalServer < 0) {
+	if (/* receive_format != OSC && */ SocketToLocalServer < 0) {
 		return;
 	}
 
@@ -1152,113 +1117,78 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 
 		if (IP_message_trace)
 		{
-			printf("process message [%s]\n", messString);
-		}
-
-		// general message just as in an ordinary script
-		int         indChar = 0;
-		int         p_c = ' ';
-		int         message_length = int(strlen(messString));
-
-		////////////////////////
-		// parsing the associated command
-		// first skipping blank characters or comments
-		// SpaceCommentsInclude(NULL,&p_c,messString,&indChar);
-		while (_SpaceChar(p_c)) {
-			p_c = messString[indChar];
-			indChar++;
+			printf("process message [%s]\n", messString.c_str());
 		}
 
 		///////////////////////////////////////
 		// OSC message format
-		if (p_c == '/') {
-			// ignores leading /
-			messString += 1;
-			indChar += 1;
+		// skips first chars before first /
+		if (messString.find('/', 0) != string::npos){
 
-			// int          tagLength = strlen( messString );
-			char         *pch;
+			// ignores leading /
+			messString.erase(0,1);
 
 			// removes string termination: ; + \n
-			if ((pch = strchr(messString, ';'))) {
-				*pch = '\0';
+			if (messString.find(';', 0) != string::npos) {
+				messString = messString.substr(0, messString.find(';', 0));
 			}
 
 			// computes the length of the message tag
 			int tagLength = 0;
-			if ((pch = strchr(messString, ' '))) {
-				tagLength = int(pch - messString);
-				p_c = ' ';
+			int indOSCParam = 0;
+			float OSC_float_arguments[MAX_OSC_ARGUMENTS] = { 0.f };
+			for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
+				OSC_arguments[ind] = "";
+			}
+			if (messString.find(' ', 0) != string::npos) {
+				tagLength = messString.find(' ', 0);
+				OSC_address = messString.substr(0, tagLength);
+				messString = messString.substr(tagLength + 1, string::npos);;
+
+				// printf( "OSC parameters %s\n" );
+				while (indOSCParam < MAX_OSC_ARGUMENTS
+					&& messString != "") {
+					// computes the length of the message tag
+					if (messString.find(' ', 0) != string::npos) {
+						tagLength = messString.find(' ', 0);
+						OSC_arguments[indOSCParam] = messString.substr(0, tagLength);
+						messString = messString.substr(tagLength + 1, string::npos);
+						indOSCParam++;
+					}
+					else {
+						OSC_arguments[indOSCParam] = messString;
+						messString = "";
+						indOSCParam++;
+					}
+				}
 			}
 			else {
-				tagLength = int(strlen(messString));
-				p_c = 0;
+				OSC_address = messString;
+				indOSCParam = 0;
+				messString = "";
 			}
 
-			strncpy(OSC_address, messString, tagLength);
-			OSC_address[tagLength] = 0;
-			messString += tagLength;
-			indChar += tagLength;
-			// printf( "message command [%s] length [%d]\n" , OSC_address , tagLength );
 
-			// printf( "OSC parameters %s\n" , pch );
-			int indOSCParam = 0;
-			// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch ,  messString , p_c ,indChar );
-			while (p_c == ' ') {
-				messString += 1;
-				indChar += 1;
-				p_c = *messString;
+			if (messString != "") {
+				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d vs %d)!", indOSCParam, MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
 			}
-			// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch , messString ,  p_c ,indChar );
 
-			while (indOSCParam < MAX_OSC_ARGUMENTS
-				&& p_c
-				&& indChar < message_length + 1) {
-				// computes the length of the message tag
-				tagLength = 0;
-				if ((pch = strchr(messString, ' '))) {
-					tagLength = int(pch - messString);
-					p_c = ' ';
+			//printf("Alias command %s size %d :\n" , OSC_address.c_str(), indOSCParam);
+
+			for (int ind = 0; ind < indOSCParam; ind++) {
+				try {
+					OSC_float_arguments[ind] = std::stof(OSC_arguments[ind]);
 				}
-				else {
-					tagLength = int(strlen(messString));
-					p_c = 0;
+				catch (...) {
+					OSC_float_arguments[ind] = 0.f;
 				}
-
-				strncpy(OSC_arguments[indOSCParam], messString, tagLength);
-				OSC_arguments[indOSCParam][tagLength] = 0;
-				messString += tagLength;
-				indChar += tagLength;
-				// printf( "message command [%s] length [%d]\n" , OSC_arguments[indOSCParam] , tagLength );
-
-				// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch  , messString ,  p_c ,indChar );
-				while (p_c == ' ') {
-					messString += 1;
-					indChar += 1;
-					p_c = *messString;
-				}
-				// printf( "p_c %d (%s) mess (%s) pch %c indChar %d\n" , pch , pch , messString ,  p_c ,indChar );
-
-				indOSCParam++;
+				//printf("arg %d %.5f, ", ind, OSC_float_arguments[ind]);
 			}
-
-			if (p_c) {
-				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d)!", MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
-			}
-
-			// printf("Alias command %s size %d :\n" , OSC_address , indOSCParam );
-			// for( int ind = 0 ; ind < indOSCParam ; ind++ ) {
-			// printf("%s \n" , OSC_arguments[ind] );
-			// }
-
-			float OSC_float_arguments[MAX_OSC_ARGUMENTS];
-			for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
-				OSC_float_arguments[ind] = (float)atof(OSC_arguments[ind]);
-			}
+			//printf("\n");
 			pg_aliasScript(OSC_address, OSC_arguments[0], OSC_float_arguments, nb_arguments);
 		}
 		else {
-			sprintf(ErrorStr, "Error: incorrect external message syntax %s!", messString); ReportError(ErrorStr); break;
+			sprintf(ErrorStr, "Error: incorrect external message syntax %s!", messString.c_str()); ReportError(ErrorStr); break;
 		}
 	}
 }

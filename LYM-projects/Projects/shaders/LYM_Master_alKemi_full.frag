@@ -7,26 +7,43 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 420
 
-#define PG_NB_TRACKS 3
+#define PG_NB_TRACKS 4
 // #define ATELIERS_PORTATIFS
 #define CAVERNEPLATON
 
+#define var_mute_second_screen
 bool	  mute_second_screen;
+#define var_invertAllLayers
 bool	  invertAllLayers;
-float	 cursorSize;
+#define var_cursorSize
+int		cursorSize;
+#define var_master
 float	 master;
+#define var_CAMasterWeight
 float	 CAMasterWeight;
+#define var_PartMasterWeight
 float	 PartMasterWeight;
+#define var_trackMasterWeight_0
 float	 trackMasterWeight_0;
+#define var_trackMasterWeight_1
 float	 trackMasterWeight_1;
+#define var_trackMasterWeight_2
 float	 trackMasterWeight_2;
+#define var_trackMasterWeight_3
+float	 trackMasterWeight_3;
+#define var_interfaceOnScreen
 bool	  interfaceOnScreen;
+#define var_master_scale
 float	 master_scale;
+#define var_master_scale_pulse
 float	 master_scale_pulse;
+#define var_master_scale_ratio
 float	 master_scale_ratio;
+#define var_master_offsetX
 float	 master_offsetX;
+#define var_master_offsetY
 float	 master_offsetY;
-uniform float uniform_Master_scenario_var_data[15];
+uniform float uniform_Master_scenario_var_data[16];
 
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
 
@@ -81,19 +98,20 @@ out vec4 outColor0;
 void main() {
   mute_second_screen = (uniform_Master_scenario_var_data[0] > 0 ? true : false);
   invertAllLayers = (uniform_Master_scenario_var_data[1] > 0 ? true : false);
-  cursorSize = uniform_Master_scenario_var_data[2];
+  cursorSize = int(uniform_Master_scenario_var_data[2]);
   master = uniform_Master_scenario_var_data[3];
   CAMasterWeight = uniform_Master_scenario_var_data[4];
   PartMasterWeight = uniform_Master_scenario_var_data[5];
   trackMasterWeight_0 = uniform_Master_scenario_var_data[6];
   trackMasterWeight_1 = uniform_Master_scenario_var_data[7];
   trackMasterWeight_2 = uniform_Master_scenario_var_data[8];
-  interfaceOnScreen = (uniform_Master_scenario_var_data[9] > 0 ? true : false);
-  master_scale = uniform_Master_scenario_var_data[10];
-  master_scale_pulse = uniform_Master_scenario_var_data[11];
-  master_scale_ratio = uniform_Master_scenario_var_data[12];
-  master_offsetX = uniform_Master_scenario_var_data[13];
-  master_offsetY = uniform_Master_scenario_var_data[14];
+  trackMasterWeight_3 = uniform_Master_scenario_var_data[9];
+  interfaceOnScreen = (uniform_Master_scenario_var_data[10] > 0 ? true : false);
+  master_scale = uniform_Master_scenario_var_data[11];
+  master_scale_pulse = uniform_Master_scenario_var_data[12];
+  master_scale_ratio = uniform_Master_scenario_var_data[13];
+  master_offsetX = uniform_Master_scenario_var_data[14];
+  master_offsetY = uniform_Master_scenario_var_data[15];
 
   float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
   float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
@@ -112,12 +130,6 @@ void main() {
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
-
-  // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
-    outColor0 = vec4(0, 0, 0, 1);
-    return;
-  }
 
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to Mixing weights

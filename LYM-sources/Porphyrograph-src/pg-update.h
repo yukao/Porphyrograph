@@ -24,20 +24,37 @@
 #ifndef PG_UPDATE_H
 #define PG_UPDATE_H
 
+// MEMORY LEAK CONTROL
+extern _CrtMemState s1;
+extern _CrtMemState s2;
+extern _CrtMemState s3;
+extern _CrtMemState s4;
+extern _CrtMemState s5;
+extern _CrtMemState s6;
+extern _CrtMemState s7;
+extern _CrtMemState s8;
+extern _CrtMemState s9;
+extern _CrtMemState s10;
+extern _CrtMemState s11;
+extern _CrtMemState s12;
+extern _CrtMemState s13;
+extern _CrtMemState sDiff;
+
+
 /////////////////////////////////////////////////////////////////
 // textures bitmaps and associated IDs
 extern GLuint pg_screenMessageBitmap_texID; // nb_attachments=1
 extern GLubyte *pg_screenMessageBitmap;
 
-extern GLuint pg_paths_Pos_Texture_texID[PG_NB_PATHS + 1];
-extern GLfloat *pg_paths_Pos_Texture[PG_NB_PATHS + 1];
-extern GLuint pg_paths_Col_Texture_texID[PG_NB_PATHS + 1];
-extern GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
-extern GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
-extern GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
+//extern GLuint pg_paths_Pos_Texture_texID[PG_NB_PATHS + 1];
+//extern GLfloat *pg_paths_Pos_Texture[PG_NB_PATHS + 1];
+//extern GLuint pg_paths_Col_Texture_texID[PG_NB_PATHS + 1];
+//extern GLfloat *pg_paths_Col_Texture[PG_NB_PATHS + 1];
+//extern GLuint pg_paths_RadBrushRendmode_Texture_texID[PG_NB_PATHS + 1];
+//extern GLfloat *pg_paths_RadBrushRendmode_Texture[PG_NB_PATHS + 1];
 
 extern GLuint Screen_Font_texture_Rectangle_texID;
-#if defined (TVW)
+#if defined(TVW)
 extern GLuint Display_Font_texture_Rectangle_texID;
 #endif
 
@@ -46,29 +63,31 @@ extern GLuint Master_Mask_texID;
 extern GLuint Master_Multilayer_Mask_texID;
 #endif
 
-#ifdef PG_WITH_BURST_MASK
-extern GLuint Burst_Mask_texID;
-#endif
-
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 extern GLuint Pen_texture_3D_texID;
 #endif
 extern GLuint Noise_texture_3D;
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density)
 extern std::vector<GLuint>  pg_RepopDensity_texture_texID;
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 extern std::vector<GLuint> pg_particle_initial_pos_speed_texID;
 extern std::vector<GLuint> pg_particle_initial_color_radius_texID;
+#endif
+#if defined(var_part_image_acceleration) 
 extern std::vector<GLuint> pg_particle_acc_texID;
 #endif
+#if defined(var_pixel_image_acceleration) 
+extern std::vector<GLuint> pg_pixel_acc_texID;
+#endif
 
-#ifdef PG_SENSORS
+
+#ifdef var_sensor_layout
 extern GLuint Sensor_texture_rectangle;
 #endif
 
-#if defined (TVW)
+#if defined(TVW)
 #define   PG_NB_DISPLAY_MESSAGES 3500
 
 ////////////////////////////////////////////////////////////////
@@ -93,7 +112,7 @@ extern int IndDisplayText2;
 extern bool DisplayText1Front;
 extern float DisplayTextSwapInitialTime;
 #endif
-#if defined (TVW) || defined (ETOILES)
+#if defined(TVW) || defined(ETOILES)
 extern std::string* DisplayTextList;
 extern int* DisplayTextFirstInChapter;
 extern int NbDisplayTexts;
@@ -103,7 +122,7 @@ extern int pg_Ind_Current_DisplayText;
 extern int NbTextChapters;
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 // MVP matrices
 extern glm::mat4 VP1perspMatrix;
 extern glm::mat4 VP1viewMatrix;
@@ -135,7 +154,7 @@ extern float CameraCurrent_WB_R;
 extern GLuint pg_camera_texture_texID;
 extern GLuint pg_movie_texture_texID;
 extern GLuint pg_camera_BG_texture_texID;
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 extern GLuint pg_camera_BGIni_texture_texID;
 #endif
 // extern IplImage *pg_camera_frame;
@@ -159,8 +178,17 @@ extern int nb_movies;
 // soundtracks
 extern vector<string> trackFileName;
 extern vector<string> trackShortName;
+extern vector<string> trackSoundtrackPeaksFileName;
+extern vector<string> trackSoundtrackOnsetsFileName;
+extern vector<float> trackSoundtrackOnsetsAndPeasksOffset;
+extern vector<vector<float>> trackSoundtrackPeaks;
+extern vector<vector<float>> trackSoundtrackOnsets;
 extern int currentlyPlaying_trackNo;
 extern int nb_soundtracks;
+extern int currentTrackSoundPeakIndex;
+extern int nbTrackSoundPeakIndex;
+extern int currentTrackSoundOnsetIndex;
+extern int nbTrackSoundOnsetIndex;
 // pen palettes presets
 extern int nb_pen_colorPresets;
 extern vector<string> pen_colorPresets_names;
@@ -173,7 +201,8 @@ extern int pg_interface_light_group;
 /// Error string
 extern char* ErrorStr;
 // current time
-extern double CurrentClockTime;
+extern double pg_CurrentClockTime;
+extern double PrecedingClockTime;
 // error report
 void ReportError(char* errorString);
 enum { _rgb_red = 0, _rgb_green, _rgb_blue, _rgb };
@@ -420,7 +449,7 @@ public:
 			if (group_beatRandom[light_param]) {
 				group_val[light_param] = rand_0_1;
 				changed_since_last_DMX_update = true;
-				sprintf(AuxString, "/light/%d/%s %.4f", group_no, light_param_string.c_str(), group_val[light_param]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/light/%d/%s %.4f", group_no + 1, light_param_string.c_str(), group_val[light_param]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			}
 		}
 	}
@@ -448,7 +477,7 @@ public:
 		}
 		if (group_val_pulse[light_param] != 0.f) {
 			float val = group_value * (1.f + pulse_average * group_val_pulse[light_param]) * group_val_master[light_param];
-			sprintf(AuxString, "/light/%d/%s %.4f", group_no, pg_light_param_hashMap[light_param].c_str(), val); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/light/%d/%s %.4f", group_no + 1, pg_light_param_hashMap[light_param].c_str(), val); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			return val;
 		}
 		else {
@@ -497,7 +526,7 @@ public:
 				// sin curve
 				if (group_loop[light_param].curve_type == 0) {
 					double phase = 0.f;
-					double absc = CurrentClockTime * group_loop[light_param].loop_speed * 2 * M_PI + phase;
+					double absc = pg_CurrentClockTime * group_loop[light_param].loop_speed * 2 * M_PI + phase;
 					group_val[light_param] = group_loop[light_param].loop_min
 						+ float(sin(absc) * 0.5 + 0.5) * (group_loop[light_param].loop_max - group_loop[light_param].loop_min);
 					changed_since_last_DMX_update = true;
@@ -505,7 +534,7 @@ public:
 				}
 				// sawtooth curve
 				else if (group_loop[light_param].curve_type == 1) {
-					double absc = CurrentClockTime * group_loop[light_param].loop_speed;
+					double absc = pg_CurrentClockTime * group_loop[light_param].loop_speed;
 					if (group_loop[light_param].parallel_vs_alternate == 1) {
 						group_val[light_param] = group_loop[light_param].loop_min
 							+ float(absc - floor(absc)) * (group_loop[light_param].loop_max - group_loop[light_param].loop_min);
@@ -520,12 +549,12 @@ public:
 				// on/off stepwise curve
 				else if (group_loop[light_param].curve_type == 2) {
 					double phase = 0.f;
-					double absc = CurrentClockTime * group_loop[light_param].loop_speed * 2 * M_PI + phase;
+					double absc = pg_CurrentClockTime * group_loop[light_param].loop_speed * 2 * M_PI + phase;
 					group_val[light_param] = (sin(absc) > 0 ? group_loop[light_param].loop_max : group_loop[light_param].loop_min);
 					changed_since_last_DMX_update = true;
 					//printf("stepwise curve %.5f\n", group_val[light_param]);
 				}
-				sprintf(AuxString, "/light/%d/%s %.4f", group_no, light_param_string.c_str(), group_val[light_param]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/light/%d/%s %.4f", group_no + 1, light_param_string.c_str(), group_val[light_param]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			}
 		}
 	}
@@ -560,6 +589,7 @@ extern int clip_image_width;
 extern int clip_image_height;
 extern int clip_crop_width;
 extern int clip_crop_height;
+extern int clip_max_length;
 // pen brushes
 extern string pen_brushes_fileName;
 extern int nb_pen_brushes;
@@ -567,7 +597,7 @@ extern int nb_pen_brushes;
 extern int nb_layers_master_mask;
 
 extern bool is_capture_diaporama;
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 extern VideoCapture pg_webCam_capture;
 extern VideoCapture* pg_IPCam_capture;
 extern String* pg_IPCam_capture_address;
@@ -594,21 +624,23 @@ public:
 };
 extern webCam* pg_webCams;
 extern int pg_current_active_cameraNo;
-extern bool initializedWebcam;
+extern bool pg_initializedWebcam;
+extern bool pg_cameraCaptureIsOn;
 #endif
 extern VideoCapture  pg_movie_capture;
-class movie_status {
+#if defined(var_movieCaptFreq)
+class media_status {
 private:
 	int nbFramesLeft;
 	double initialTime;
-	int currentSoundPeakIndex;
-	int initialMovieNbFrames;
-	int nbSoundPeakIndex;
-	int currentSoundOnsetIndex;
-	int nbSoundOnsetIndex;
+	int initialMediaNbFrames;
+	int currentMovieSoundPeakIndex;
+	int nbMovieSoundPeakIndex;
+	int currentMovieSoundOnsetIndex;
+	int nbMovieSoundOnsetIndex;
 
 public:
-	movie_status();
+	media_status();
 	// number frames left until the end from current frame
 	int get_nbFramesLeft();
 	// number of frames read from the beginning of the movie
@@ -618,21 +650,22 @@ public:
 	// initial total number of frames in the movie
 	int get_initialNbFrames();
 	// checks whether a peak or an onset are passed or closer than one frame
-	void updatePeakOrOnset(void);
+	void updateMoviePeakOrOnset(void);
 	// sets the movie at a position from beginning
 	void set_position(int nb_frames_from_beginning);
 	// reads one frame and updates the remaining number of frames in the movie
 	void read_one_frame();
 	// (re)starts the movie from begginning with its total number of frames
 	void reset_movie(int nbTotFramesLeft);
-	~movie_status();
+	~media_status();
 };
-extern movie_status pg_movie_status;
-extern bool is_movieLooping;
+extern media_status pg_movie_status;
 extern bool is_movieLoading;
+extern bool is_movieAtEnd;
+#endif 
 extern int initialSecondBGCapture;
 
-#ifdef PG_WITH_CLIPS
+#if defined(var_clipCaptFreq)
 #define _NbMaxCues 8
 enum pg_clip_LR
 {
@@ -683,10 +716,10 @@ private:
 public:
 	bool clip_autoplay[PG_NB_PARALLEL_CLIPS];
 	bool clip_play[PG_NB_PARALLEL_CLIPS];
-	float clip_level;
-	float clip_r;
-	float clip_g;
-	float clip_b;
+	float clip_level[PG_NB_PARALLEL_CLIPS];
+	float clip_r_channel_level[PG_NB_PARALLEL_CLIPS];
+	float clip_g_channel_level[PG_NB_PARALLEL_CLIPS];
+	float clip_b_channel_level[PG_NB_PARALLEL_CLIPS];
 	int jump_frame_freq;
 
 	clip_status(int clipSide);
@@ -731,7 +764,7 @@ public:
 	void set_position(int indClipRank, int nb_frames_from_beginning);
 	// offsets the movie position by a positive or negative time delta (scratch mode)
 	// used several times for a small offset
-	void scratch_offset_position(int indClipRank, double elapsedTime);
+	void scratch_offset_position(double elapsedTime);
 	// offsets the movie position by a positive or negative time delta (play mode)
 	// used once for a big jump
 	void play_offset_position(int indClipRank, double elapsedTime);
@@ -745,13 +778,14 @@ extern int playing_clipNoLeft;
 extern int playing_secondClipNoLeft;
 extern int playing_clipNoRight;
 extern int playing_secondClipNoRight;
+extern float fx_dry_wet;
 // clip status
 extern clip_status pg_clip_status[_clipLR];
 // index of top clip 
 extern int rankOfTopClip;
 #endif
 
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 extern bool secondInitialBGCapture;
 extern bool initialBGCapture;
 #endif
@@ -829,22 +863,29 @@ extern float paths_xL[PG_NB_PATHS + 1];
 extern float paths_yL[PG_NB_PATHS + 1];
 extern float paths_xR[PG_NB_PATHS + 1];
 extern float paths_yR[PG_NB_PATHS + 1];
+extern float tang_x[PG_NB_PATHS + 1];
+extern float tang_y[PG_NB_PATHS + 1];
+extern float tang_x_prev[PG_NB_PATHS + 1];
+extern float tang_y_prev[PG_NB_PATHS + 1];
 #endif
 extern int paths_BrushID[PG_NB_PATHS + 1];
 
 extern bool mobile_cursor;
 
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined(var_Argenteuil_flash_move_track1_freq)
+extern float Argenteuil_track_x_transl_0;
+extern float Argenteuil_track_y_transl_0;
+extern float Argenteuil_track_x_transl_1;
+extern float Argenteuil_track_y_transl_1;
+#endif
+
+#if defined(var_CATable)
 extern GLuint pg_CATable_ID;
 extern GLubyte *pg_CATable;
 #endif
-#if defined (GN) || defined (INTERFERENCE)
-extern GLuint pg_LYMlogo_texID;
-extern cv::Mat pg_LYMlogo_image;
-#endif
 
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 //////////////////////////////////////////////////////////////////////
 // SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -874,31 +915,33 @@ extern double sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 // data structure for threads to use.
 // This is passed by void pointer so it can be any data type
 // that can be passed using a single void pointer (LPVOID).
-class threadData {
-public:
-  char *fname;
-  int w;
-  int h;
-  cv::Mat *imgThreadData;
-};
+//class threadData {
+//public:
+//  string imageFileName;
+//  int w;
+//  int h;
+//  cv::Mat imgToBeWrittenThreadData;
+//};
 
 
 // FUNCTIONS
 void window_display(void);
-void one_frame_variables_reset(void);
+void pg_automatic_var_reset_or_update(void);
 void pg_update_shader_uniforms(void);
+void updatePeakOrOnset(double timeFromBeginning, vector<float> *peaks, vector<float> *onsets,
+	bool* is_new_peak, bool* is_new_onset, int nbPeaks, int nbOnsets, int* curPeakIndex, int* curOnsetIndex);
 // MOVIE STREAMING JUMPS
 void pg_movie_forward(int nb_frames_forth);
 void pg_movie_backward(int nb_frames_back);
 // MOVIE AND CAMERA FRAME CAPTURE
 void pg_update_clip_camera_and_movie_frame(void);
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 // PASS #0: PARTICLE ANIMATION PASS
 void pg_ParticleAnimationPass(void);
 #endif
 // PASS #1: UPDATE (CA, PIXELS, PARTICLES)
 void pg_UpdatePass(void);
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_activeClipArts) || defined(var_part_initialization)
 // PASS #2: PARTICLE RENDERING PASS
 void pg_SVGandParticleRenderingPass(void);
 #endif
@@ -906,14 +949,18 @@ void pg_SVGandParticleRenderingPass(void);
 void pg_MixingPass(void);
 // PASS #4: FINAL DISPLAY: MIX OF ECHOED AND NON-ECHOED LAYERS
 void pg_MasterPass(void);
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 // PASS #5: SENSOR PASS
 void pg_SensorPass(void);
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 // PASS #6: MESH PASS
-void pg_calculate_projection_matrices(void);
+void pg_calculate_perspective_matrices(void);
+void pg_calculate_orthographic_matrices(void);
 void pg_MeshPass(void);
+#if defined(var_Contact_mesh_rotation) && defined(var_Contact_mesh_translation_X) && defined(var_Contact_mesh_translation_Y)
+void Contact_pulse_rotation_translation_scale();
+#endif
 #endif
 #if defined(PG_WITH_HOMOGRAPHY) || defined(PG_WITH_PHOTO_HOMOGRAPHY)
 void pg_calculate_homography_matrices(std::vector<cv::Point2f>* sourcePoints, std::vector<cv::Point2f>* destinationPoints, GLfloat matValues[], int dim);

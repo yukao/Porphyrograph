@@ -8,42 +8,66 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #version 420
 
 #define PG_NB_TRACKS 4
-// #define ATELIERS_PORTATIFS
-#define CAVERNEPLATON
 
+#define var_mute_second_screen
 bool	  mute_second_screen;
+#define var_invertAllLayers
 bool	  invertAllLayers;
+#define var_cursorSize
 int		cursorSize;
+#define var_master
 float	 master;
+#define var_CAMasterWeight
 float	 CAMasterWeight;
+#define var_PartMasterWeight
 float	 PartMasterWeight;
+#define var_trackMasterWeight_0
 float	 trackMasterWeight_0;
+#define var_trackMasterWeight_1
 float	 trackMasterWeight_1;
+#define var_trackMasterWeight_2
 float	 trackMasterWeight_2;
+#define var_trackMasterWeight_3
 float	 trackMasterWeight_3;
-float	 SecondMasterMixingWeight;
+#define var_currentMaskTrack
 int		currentMaskTrack;
+#define var_master_scale
 float	 master_scale;
+#define var_master_scale_pulse
 float	 master_scale_pulse;
+#define var_master_scale_ratio
 float	 master_scale_ratio;
+#define var_master_offsetX
 float	 master_offsetX;
+#define var_master_offsetY
 float	 master_offsetY;
+#define var_master_mask_opacity_1
 float	 master_mask_opacity_1;
+#define var_master_mask_opacity_2
 float	 master_mask_opacity_2;
+#define var_master_mask_opacity_3
 float	 master_mask_opacity_3;
+#define var_master_mask_opacity_4
 float	 master_mask_opacity_4;
+#define var_master_mask_opacity_5
 float	 master_mask_opacity_5;
-float	 master_mask_opacity_6;
-bool	  interfaceOnScreen;
+#define var_master_crop_x
 float	 master_crop_x;
+#define var_master_crop_y
 float	 master_crop_y;
+#define var_master_crop_width
 float	 master_crop_width;
+#define var_master_mask
 float	 master_mask;
-float	 master_mask_scale;
-float	 master_mask_scale_ratio;
-float	 master_mask_offsetX;
-float	 master_mask_offsetY;
-uniform float uniform_Master_scenario_var_data[32];
+#define var_master_mass_scale
+float	 master_mass_scale;
+#define var_master_mass_scale_ratio
+float	 master_mass_scale_ratio;
+#define var_master_mass_offsetX
+float	 master_mass_offsetX;
+#define var_master_mass_offsetY
+float	 master_mass_offsetY;
+uniform float uniform_Master_scenario_var_data[29];
 
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
 
@@ -84,8 +108,12 @@ layout (binding = 7) uniform sampler3D uniform_Master_texture_fs_Mask;  // mask 
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform vec4 uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
+
+#if defined(var_flashchange_BGcolor_freq)
+ uniform vec3 uniform_Master_fs_3fv_BG_color_rgb;
+#endif
 
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
@@ -102,31 +130,28 @@ void main() {
   trackMasterWeight_1 = uniform_Master_scenario_var_data[7];
   trackMasterWeight_2 = uniform_Master_scenario_var_data[8];
   trackMasterWeight_3 = uniform_Master_scenario_var_data[9];
-  SecondMasterMixingWeight = uniform_Master_scenario_var_data[10];
-  currentMaskTrack = int(uniform_Master_scenario_var_data[11]);
-  master_scale = uniform_Master_scenario_var_data[12];
-  master_scale_pulse = uniform_Master_scenario_var_data[13];
-  master_scale_ratio = uniform_Master_scenario_var_data[14];
-  master_offsetX = uniform_Master_scenario_var_data[15];
-  master_offsetY = uniform_Master_scenario_var_data[16];
-  master_mask_opacity_1 = uniform_Master_scenario_var_data[17];
-  master_mask_opacity_2 = uniform_Master_scenario_var_data[18];
-  master_mask_opacity_3 = uniform_Master_scenario_var_data[19];
-  master_mask_opacity_4 = uniform_Master_scenario_var_data[20];
-  master_mask_opacity_5 = uniform_Master_scenario_var_data[21];
-  master_mask_opacity_6 = uniform_Master_scenario_var_data[22];
-  interfaceOnScreen = (uniform_Master_scenario_var_data[23] > 0 ? true : false);
-  master_crop_x = uniform_Master_scenario_var_data[24];
-  master_crop_y = uniform_Master_scenario_var_data[25];
-  master_crop_width = uniform_Master_scenario_var_data[26];
-  master_mask = uniform_Master_scenario_var_data[27];
-  master_mask_scale = uniform_Master_scenario_var_data[28];
-  master_mask_scale_ratio = uniform_Master_scenario_var_data[29];
-  master_mask_offsetX = uniform_Master_scenario_var_data[30];
-  master_mask_offsetY = uniform_Master_scenario_var_data[31];
+  currentMaskTrack = int(uniform_Master_scenario_var_data[10]);
+  master_scale = uniform_Master_scenario_var_data[11];
+  master_scale_pulse = uniform_Master_scenario_var_data[12];
+  master_scale_ratio = uniform_Master_scenario_var_data[13];
+  master_offsetX = uniform_Master_scenario_var_data[14];
+  master_offsetY = uniform_Master_scenario_var_data[15];
+  master_mask_opacity_1 = uniform_Master_scenario_var_data[16];
+  master_mask_opacity_2 = uniform_Master_scenario_var_data[17];
+  master_mask_opacity_3 = uniform_Master_scenario_var_data[18];
+  master_mask_opacity_4 = uniform_Master_scenario_var_data[19];
+  master_mask_opacity_5 = uniform_Master_scenario_var_data[20];
+  master_crop_x = uniform_Master_scenario_var_data[21];
+  master_crop_y = uniform_Master_scenario_var_data[22];
+  master_crop_width = uniform_Master_scenario_var_data[23];
+  master_mask = uniform_Master_scenario_var_data[24];
+  master_mass_scale = uniform_Master_scenario_var_data[25];
+  master_mass_scale_ratio = uniform_Master_scenario_var_data[26];
+  master_mass_offsetX = uniform_Master_scenario_var_data[27];
+  master_mass_offsetY = uniform_Master_scenario_var_data[28];
 
-  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
-  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
+  float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
+  float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
   vec2 initialCoords = coords;
@@ -143,7 +168,8 @@ void main() {
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
+  if(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.w != 0
+     && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -177,6 +203,7 @@ void main() {
   // a track is used to mask other ones: can be used to reveal a
   // track by drawing on another one
   float maskGrey = 1.0;
+#ifdef var_currentMaskTrack
   if (currentMaskTrack == 0) {
     trackMasterWeight_0 = 0; maskGrey = graylevel(track0_color.rgb); 
   }
@@ -195,31 +222,40 @@ void main() {
     trackMasterWeight_3 = 0; maskGrey = graylevel(track3_color.rgb);
   }
 #endif
+#endif
 
   vec3 NonEchoedColor
     = vec3(track0_color.rgb) * trackMasterWeight_0
-#if PG_NB_TRACKS >= 2
+#if PG_NB_TRACKS >= 2 && defined(var_trackMasterWeight_1) && defined(var_trackMasterWeight_1)
     + vec3(track1_color.rgb) * trackMasterWeight_1
 #endif
-#if PG_NB_TRACKS >= 3
+#if PG_NB_TRACKS >= 3 && defined(var_trackMasterWeight_2)
     + vec3(track2_color.rgb) * trackMasterWeight_2
 #endif
-#if PG_NB_TRACKS >= 4
+#if PG_NB_TRACKS >= 4 && defined(var_trackMasterWeight_3)
     + vec3(track3_color.rgb) * trackMasterWeight_3
 #endif
     + CA_color.rgb * CAMasterWeight
+#if defined(var_PartMasterWeight)
     + particle_color.rgb * PartMasterWeight * particle_color.a
+#endif
     ;
-    
+
   ////////////////////////////////////////////////////////////////////
   // mix of echoed and non-echoed layer mixes
   // and clamping
   outColor0 
     = vec4( clamp( MixingColor.rgb + NonEchoedColor , 0.0 , 1.0 ) , 1.0 );
+#if defined(var_flashchange_BGcolor_freq)
+  outColor0 
+    = vec4( clamp( outColor0.rgb + uniform_Master_fs_3fv_BG_color_rgb , 0.0 , 1.0 ) , 1.0 );
+#endif
   // masking
+#ifdef var_currentMaskTrack
   if (currentMaskTrack >= 0) {
-    //outColor0.rgb *= maskGrey;
+   outColor0.rgb *= maskGrey;
   }
+#endif
 
   ////////////////////////////////////////////////////////////////////
   // inverted image
@@ -229,57 +265,67 @@ void main() {
 
   ////////////////////////////////////////////////////////////////////
   // image mask
+#if defined(var_master_mask_scale) && defined(var_master_mask_scale_ratio) && defined(var_master_offsetX) && defined(var_master_offsetY)
   vec2 ratioed_scale = vec2(master_mask_scale, master_mask_scale * master_mask_scale_ratio);
   vec2 coordsWRTcenter = (initialCoords - centerCoords) / ratioed_scale;
   vec2 scaled_coords = coordsWRTcenter + (centerCoords + vec2(master_offsetX, master_offsetY) / ratioed_scale);
 
   float maskColor = 0;
+#ifdef var_master_mask_opacity_1
   if(master_mask_opacity_1 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.0833333333)).g * master_mask_opacity_1;
   }
+#endif
+#ifdef var_master_mask_opacity_2
   if(master_mask_opacity_2 > 0) {
-    maskColor = texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
+    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.25)).g * master_mask_opacity_2;
-    maskColor += maskColor;
   }
+#endif
+#ifdef var_master_mask_opacity_3
   if(master_mask_opacity_3 > 0) {
-    maskColor = texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
+    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.4166666667)).g * master_mask_opacity_3;
-    maskColor += maskColor;
   }
+#endif
+#ifdef var_master_mask_opacity_4
   if(master_mask_opacity_4 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.5833333333)).g * master_mask_opacity_4;
   }
+#endif
+#ifdef var_master_mask_opacity_5
   if(master_mask_opacity_5 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.75)).g * master_mask_opacity_5;
   }
+#endif
+#ifdef var_master_mask_opacity_6
   if(master_mask_opacity_6 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
       0.9166666667)).g * master_mask_opacity_6;
   }
+#endif
 
   maskColor = clamp(maskColor, 0, 1);
   outColor0.rgb *= maskColor;
+#endif
 
-/*  if(decalCoords.x < master_crop_x || decalCoords.x > master_crop_y) {
-    outColor0 = vec4(0,0,0,1);
-  }
-*/
-
- ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
   // blinking cursor 1 pixel wide under the mouse (except for hide)
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
   float mouse_y = uniform_Master_fs_4fv_xy_frameno_pulsedShift.y;
   float frameno = uniform_Master_fs_4fv_xy_frameno_pulsedShift.z;
 
-// vertical mirror
-//  coords.y = height - coords.y;
-// double mirror
-//   coords.y = height - coords.y;
-//   coords.x = width - coords.x;
+  // vertical mirror
+  //  coords.y = height - coords.y;
+  // double mirror
+  //   coords.y = height - coords.y;
+  //   coords.x = width - coords.x;
+
+  // master level
+  outColor0.rgb *= master;
 
   // blinking cursor
   if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
@@ -287,8 +333,4 @@ void main() {
       && length(vec2(coords.x - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
-
-  // NEMOURS: overlay between two videoprojectors
-  // outColor0.rgb *= master * alpha;
-  outColor0.rgb *= master;
 }

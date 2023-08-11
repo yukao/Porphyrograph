@@ -66,10 +66,12 @@ PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES] = { PhotoSwa
 // image index management for progessive image turnover
 // according to image blend frequency and duration
 // and according to directory size
+#ifdef var_photo_diaporama
 int pg_CurrentDiaporamaFile = 0;
 int pg_CurrentDiaporamaDir = -1;
 double pg_CurrentDiaporamaEnd = -1;
 bool ascendingDiaporama = true;
+#endif
 
 std::string pg_ImageDirectory;
 #if defined (TVW)
@@ -106,6 +108,35 @@ GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2] = { 0.0f };
 // the index from which an image available for swapping is looked for
 int pg_IndInitialSwapPhoto = 0;
 
+////////////////////////////////////////////////////////////////////
+// OPENCV MATRICES TO STORE IMAGES
+cv::Mat pngImgMatRGBInitial;
+cv::Mat pngImgMatRGBFlipped;
+cv::Mat pngImgMatBGR;
+cv::Mat jpgImgMatRGBInitial;
+cv::Mat jpgImgMatRGBFlipped;
+cv::Mat jpgImgMatBGR;
+cv::Mat tiffLayerMatRGBInit;
+cv::Mat tiffLayerMatBGR;
+cv::Mat tiffLayerMatBGRFlipped;
+cv::Mat image3DLayerBGRInit;
+cv::Mat image3DLayerRGB;
+cv::Mat image3DLayerRGBFlipped;
+cv::Mat textureImgMatBGRInit;
+cv::Mat textureImgMatRGB;
+cv::Mat textureImgMatRGBFlipped;
+cv::Mat particleImgMatBGRInit;
+cv::Mat particleImgMatRGB;
+cv::Mat particleImgMatRGBFlipped;
+cv::Mat particleAccImgMatBGRInit;
+cv::Mat particleAccImgMatRGB;
+cv::Mat particleAccImgMatRGBFlipped;
+
+unsigned int imgPhotoCompressedFormat;
+unsigned char* imgPhotoCompressedBitmap = NULL;
+cv::Mat imgPhotoBGRInit;
+cv::Mat imgPhotoRGB;
+
 
 ////////////////////////////////////////////////////////////////////
 // SHORT CLIP IMAGE FILES
@@ -123,6 +154,15 @@ int* pg_nbCompressedClipFramesPerFolder = NULL;
 int* pg_firstCompressedClipFramesInFolder = NULL;
 //int pg_CurrentClipFramesFile = 0;
 //int pg_CurrentClipFramesDir = -1;
+
+////////////////////////////////////////////////////////////////////
+// BG COLOR
+////////////////////////////////////////////////////////////////////
+#if defined(var_flashchange_BGcolor_freq)
+float BG_r = 0.f;
+float BG_g = 0.f;
+float BG_b = 0.f;
+#endif
 
 
 // FUNCTION FOR CLEARING A DIRECTORY
@@ -168,7 +208,8 @@ bool pg_initTextures(void) {
 	// unless the image itself is used to generate other textures
 	for (int indTextureFile = 0; indTextureFile < pg_nb_Texture_files; indTextureFile++) {
 		if (pg_Texture_usages[indTextureFile] != Texture_part_init
-			&& pg_Texture_usages[indTextureFile] != Texture_part_acc) {
+			&& pg_Texture_usages[indTextureFile] != Texture_part_acc
+			&& pg_Texture_usages[indTextureFile] != Texture_pixel_acc) {
 			if (pg_Texture_Dimension[indTextureFile] == 2) {
 				pg_loadTexture((char *)(pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str(),
 					&pg_Texture_texID[indTextureFile],
@@ -194,7 +235,7 @@ bool pg_initTextures(void) {
 				printOglError(8);
 			}
 		}
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 		else if (pg_Texture_usages[indTextureFile] == Texture_part_init
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
 			printf("Loading particles initial images %s\n", (pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str());
@@ -205,30 +246,52 @@ bool pg_initTextures(void) {
 				}
 			}
 		}
+#endif
+#if defined(var_part_image_acceleration) 
 		else if (pg_Texture_usages[indTextureFile] == Texture_part_acc
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
 			printf("Loading particles acceleration shift images %s\n", (pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str());
-			if (storeParticleAccelerationfromImage(pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile])) {
-				if (pg_Texture_Rank[indTextureFile] != pg_particle_acc_texID.size()) {
-					sprintf(ErrorStr, "Error: particle initialization texture #%d rank incorrect (%d rank expected)!\n", pg_particle_acc_texID.size(), pg_Texture_Rank[indTextureFile]); ReportError(ErrorStr); throw 336;
-				}
-			}
+			//if (storeParticleAccelerationfromImage(pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile])) {
+			//	if (pg_Texture_Rank[indTextureFile] != pg_particle_acc_texID.size()) {
+			//		sprintf(ErrorStr, "Error: particle initialization texture #%d rank incorrect (%d rank expected)!\n", pg_particle_acc_texID.size(), pg_Texture_Rank[indTextureFile]); ReportError(ErrorStr); throw 336;
+			//	}
+			//}
+			GLuint textureParticle_acc_ID = -1;
+			pg_loadTexture((char*)(pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str(),
+				&textureParticle_acc_ID,
+				pg_Texture_Is_Rectangle[indTextureFile],
+				pg_Texture_Invert[indTextureFile],
+				GL_RGBA8, GL_RGBA,
+				GL_UNSIGNED_BYTE, GL_LINEAR,
+				pg_Texture_Size_X[indTextureFile],
+				pg_Texture_Size_Y[indTextureFile]);
+			pg_particle_acc_texID.push_back(textureParticle_acc_ID);
+		}
+#endif
+#if defined(var_pixel_image_acceleration) 
+		else if (pg_Texture_usages[indTextureFile] == Texture_pixel_acc
+			&& pg_Texture_Dimension[indTextureFile] == 2) {
+			printf("Loading pixel acceleration shift images %s\n", (pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str());
+			GLuint texturePixel_acc_ID = -1;
+			pg_loadTexture((char*)(pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str(),
+				&texturePixel_acc_ID,
+				pg_Texture_Is_Rectangle[indTextureFile],
+				pg_Texture_Invert[indTextureFile],
+				GL_RGBA8, GL_RGBA,
+				GL_UNSIGNED_BYTE, GL_LINEAR,
+				pg_Texture_Size_X[indTextureFile],
+				pg_Texture_Size_Y[indTextureFile]);
+			pg_pixel_acc_texID.push_back(texturePixel_acc_ID);
 		}
 #endif
 	}
 
 	// assigns the textures to their destination according to their usage field
 	for (int indTextureFile = 0; indTextureFile < pg_nb_Texture_files; indTextureFile++) {
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 		if (pg_Texture_usages[indTextureFile] == Texture_sensor
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
 			Sensor_texture_rectangle = pg_Texture_texID[indTextureFile];
-		}
-#endif
-#if defined (GN)
-		if (pg_Texture_usages[indTextureFile] == Texture_logo
-			&& pg_Texture_Dimension[indTextureFile] == 2) { // 1024, 768
-			pg_LYMlogo_texID = pg_Texture_texID[indTextureFile];
 		}
 #endif
 #ifdef PG_WITH_MASTER_MASK
@@ -242,13 +305,7 @@ bool pg_initTextures(void) {
 			Master_Multilayer_Mask_texID = pg_Texture_texID[indTextureFile];
 		}
 #endif
-#ifdef PG_WITH_BURST_MASK
-		if (pg_Texture_usages[indTextureFile] == Texture_burst_mask
-			&& pg_Texture_Dimension[indTextureFile] == 2) {
-			Burst_Mask_texID = pg_Texture_texID[indTextureFile];
-		}
-#endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(ATELIERSENFANTS) || defined(CORE)
+#if !defined (PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 		if (pg_Texture_usages[indTextureFile] == Texture_brush
 			&& pg_Texture_Dimension[indTextureFile] == 3) {
 			Pen_texture_3D_texID = pg_Texture_texID[indTextureFile];
@@ -259,23 +316,24 @@ bool pg_initTextures(void) {
 			&& pg_Texture_Dimension[indTextureFile] == 3) {
 			Noise_texture_3D = pg_Texture_texID[indTextureFile];
 		}
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density) 
 		if (pg_Texture_usages[indTextureFile] == Texture_repop_density
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
 			pg_RepopDensity_texture_texID.push_back(pg_Texture_texID[indTextureFile]);
+			printf("Loading repop density images %s\n", (pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str());
 			if (pg_Texture_Rank[indTextureFile] != pg_RepopDensity_texture_texID.size()) {
 				sprintf(ErrorStr, "Error: repopulation texture density #%d rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID.size(), pg_Texture_Rank[indTextureFile]); ReportError(ErrorStr); throw 336;
 			}
 		}
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 		// printf("Loading particles initial images %s\n", fileName.c_str()); 
 		if (!pg_particle_initial_pos_speed_texID.size()
 				|| !pg_particle_initial_color_radius_texID.size()) {
 			sprintf(ErrorStr, "Error: particle initialization texture not provided, check texture list with part_init usage!\n"); ReportError(ErrorStr); throw 336;
 		}
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 		if (pg_Texture_usages[indTextureFile] == Texture_mesh
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
 			// assigns this textures to the meshes which have the same texture rank
@@ -295,32 +353,26 @@ bool pg_initTextures(void) {
 #if defined (TEXTURED_QUAD_PARTICLES)
 		if (pg_Texture_usages[indTextureFile] == Texture_splat_particle
 			&& pg_Texture_Dimension[indTextureFile] == 2) {
-			blurredDisk_texture_2D_texID = pg_Texture_texID[indTextureFile];
+			blurredDisk_texture_2D_texID.push_back(pg_Texture_texID[indTextureFile]);
+			printf("Loading texture splat images %s\n", (pg_Texture_fileNames[indTextureFile] + pg_Texture_fileNamesSuffix[indTextureFile]).c_str());
+			if (pg_Texture_Rank[indTextureFile] != blurredDisk_texture_2D_texID.size()) {
+				sprintf(ErrorStr, "Error: texture splat image #%d rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID.size(), pg_Texture_Rank[indTextureFile]); ReportError(ErrorStr); throw 336;
+			}
 		}
 #endif
 	}
 	// and checks that the textures were provided
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 	if (Sensor_texture_rectangle == NULL_ID) {
 		sprintf(ErrorStr, "Error: sensor texture not provided, check texture list with sensor usage!\n"); ReportError(ErrorStr); throw 336;
 	}
 #endif
-#if defined (GN)
-	if (pg_LYMlogo_texID == NULL_ID) {
-		sprintf(ErrorStr, "Error: logo texture not provided, check texture list with logo usage!\n"); ReportError(ErrorStr); throw 336;
-	}
-#endif
 #ifdef PG_WITH_MASTER_MASK
-	if (Master_Mask_texID == NULL_ID && Master_Multilayer_Mask_texID == NULL_ID) {
-		sprintf(ErrorStr, "Error: master mask texture not provided, check texture list with master mask usage!\n"); ReportError(ErrorStr); throw 336;
+	if (Master_Mask_texID == NULL_ID || Master_Multilayer_Mask_texID == NULL_ID) {
+		sprintf(ErrorStr, "Error: master mask texture (usage: master_mask) and multilayer master mask texture (usage: multilayer_master_mask) not provided, check texture list with master mask usage!\n"); ReportError(ErrorStr); throw 336;
 	}
 #endif
-#ifdef PG_WITH_BURST_MASK
-	if (Burst_Mask_texID == NULL_ID) {
-		sprintf(ErrorStr, "Error: burst mask texture not provided, check texture list with burst mask usage!\n"); ReportError(ErrorStr); throw 336;
-	}
-#endif
-#if !defined (PG_BEZIER_PATHS) || defined(PIERRES) || defined(ENSO) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(CORE)
+#if !defined (PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
 	if (Pen_texture_3D_texID == NULL_ID) {
 		sprintf(ErrorStr, "Error: brush texture not provided, check texture list with sensor usage!\n"); ReportError(ErrorStr); throw 336;
 	}
@@ -328,12 +380,12 @@ bool pg_initTextures(void) {
 	if (Noise_texture_3D == NULL_ID) {
 		sprintf(ErrorStr, "Error: noise texture not provided, check texture list with sensor usage!\n"); ReportError(ErrorStr); throw 336;
 	}
-#ifdef PG_WITH_REPOP_DENSITY
+#if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density) 
 	if (pg_RepopDensity_texture_texID.size() == 0) {
 		sprintf(ErrorStr, "Error: repopulation texture density not provided, check texture list with BG_CA_repop_density usage!\n"); ReportError(ErrorStr); throw 336;
 	}
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	// assigns this textures to the meshes which have the same texture rank
 	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
 		if (pg_Mesh_TextureRank[indMeshFile] != -1 // frame buffer texture
@@ -348,7 +400,7 @@ bool pg_initTextures(void) {
 	}
 #endif
 #if defined (TEXTURED_QUAD_PARTICLES)
-	if (blurredDisk_texture_2D_texID == NULL_ID) {
+	if (blurredDisk_texture_2D_texID.size() == 0) {
 		sprintf(ErrorStr, "Error: splat particles texture not provided, check texture list with splat_particle usage!\n"); ReportError(ErrorStr); throw 336;
 	}
 #endif
@@ -391,10 +443,11 @@ bool pg_initTextures(void) {
 		(GLubyte *)pg_generateTexture(&pg_screenMessageBitmap_texID, pg_byte_tex_format,
 			message_pixel_length, 1);
 	if (!pg_screenMessageBitmap) {
-		sprintf(ErrorStr, "Error: screen message bitmap not allocated (%s)!\n", ScreenMessage); ReportError(ErrorStr); throw 336;
+		sprintf(ErrorStr, "Error: screen message bitmap not allocated (%s)!\n", ScreenMessage.c_str()); ReportError(ErrorStr); throw 336;
 	}
 	// glGenTextures( 1, &(pg_screenMessageBitmap_texID) );
 
+/*
 	// paths initialization
 	for (int indPath = 0; indPath <= PG_NB_PATHS ; indPath++) {
 		pg_paths_Pos_Texture_texID[indPath] = 0;
@@ -410,24 +463,25 @@ bool pg_initTextures(void) {
 			(GLfloat *)pg_generateTexture(&(pg_paths_Pos_Texture_texID[indPath]), pg_float_tex_format,
 				max_mouse_recording_frames, 1);
 		if (!pg_paths_Pos_Texture[indPath]) {
-			sprintf(ErrorStr, "Error: pg_paths_Pos_Texture not allocated (%s)!\n", ScreenMessage); ReportError(ErrorStr); throw 336;
+			sprintf(ErrorStr, "Error: pg_paths_Pos_Texture not allocated (%d)!\n", indPath); ReportError(ErrorStr); throw 336;
 		}
 		pg_paths_Col_Texture[indPath] =
 			(GLfloat *)pg_generateTexture(&(pg_paths_Col_Texture_texID[indPath]), pg_float_tex_format,
 				max_mouse_recording_frames, 1);
 		if (!pg_paths_Col_Texture[indPath]) {
-			sprintf(ErrorStr, "Error: pg_paths_Col_Texture not allocated (%s)!\n", ScreenMessage); ReportError(ErrorStr); throw 336;
+			sprintf(ErrorStr, "Error: pg_paths_Col_Texture not allocated (%d)!\n", indPath); ReportError(ErrorStr); throw 336;
 		}
 		pg_paths_RadBrushRendmode_Texture[indPath] =
 			(GLfloat *)pg_generateTexture(&(pg_paths_RadBrushRendmode_Texture_texID[indPath]), pg_float_tex_format,
 				max_mouse_recording_frames, 1);
 		if (!pg_paths_RadBrushRendmode_Texture[indPath]) {
-			sprintf(ErrorStr, "Error: pg_paths_RadBrushRendmode_Texture not allocated (%s)!\n", ScreenMessage); ReportError(ErrorStr); throw 336;
+			sprintf(ErrorStr, "Error: pg_paths_RadBrushRendmode_Texture not allocated (%d)!\n", indPath); ReportError(ErrorStr); throw 336;
 		}
 	}
+*/
 
 	// CA Tables
-#if defined (GN) || defined (CAAUDIO) || defined(RIVETS)
+#if defined (var_CATable)
 #define width_data_table 600
 #define height_data_table 200
 	pg_CATable =
@@ -436,7 +490,7 @@ bool pg_initTextures(void) {
 	pg_CATable_values(pg_CATable_ID, pg_CATable,
 		width_data_table, height_data_table);
 	if (!pg_CATable_ID) {
-		sprintf(ErrorStr, "Error: data tables for the CA bitmap not allocated (%s)!\n", ScreenMessage); ReportError(ErrorStr); throw 336;
+		sprintf(ErrorStr, "Error: data tables for the CA bitmap not allocated (%dx%d)!\n", width_data_table, height_data_table); ReportError(ErrorStr); throw 336;
 	}
 
 	//printf( "\n" );
@@ -510,11 +564,11 @@ void *pg_generateTexture(GLuint *textureID, pg_TextureFormat texture_format,
 // INITIALIZATION OF THE TRANSITION TABLES FOR THE CELLULAR AUTOMATA
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined (GN)
+#if defined (var_CATable) && !(defined (RIVETS) || defined (CAAUDIO))
 #include "pg_CATable_GN.cpp"
 #endif
 
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined (var_CATable) && (defined (RIVETS) || defined (CAAUDIO))
 #include "pg_CATable_CAaudio.cpp"
 #endif
 
@@ -533,40 +587,54 @@ void *pg_generateTexture(GLuint *textureID, pg_TextureFormat texture_format,
 // SAVE IMAGE
 //////////////////////////////////////////////////////////////////////
 
-/* Attempts to save PNG to file; returns 0 on success, non-zero on error. */
+/* Attempts to save PNG to file; returns 0 on success, non-zero on error. 
 #ifdef WIN32
 DWORD WINAPI writepng(LPVOID lpParam) {
 #else
-void* writepng(void * lpParam) {
+void* writepng(void* lpParam) {
 #endif
-	threadData * pDataArray = (threadData *)lpParam;
+	threadData* pDataArray = (threadData*)lpParam;
 
-	cv::Mat result;
-	cv::flip(*(pDataArray->imgThreadData), result, 0); // vertical flip
+	cv::flip(pDataArray->imgToBeWrittenThreadData, pngImgMatRGBFlipped, 0); // vertical flip
 #ifndef OPENCV_3
-	cv::cvtColor(result, result, CV_RGB2BGR);
+	cv::cvtColor(*(pDataArray->imgThreadData), pngImgMatBGR, CV_RGB2BGR);
 
 	std::vector<int> params;
 	params.push_back(CV_IMWRITE_PNG_COMPRESSION);
 #else
-	cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
+	cv::cvtColor(pngImgMatRGBFlipped, pngImgMatBGR, cv::COLOR_RGB2BGR);
 
 	std::vector<int> params;
 	params.push_back(cv::IMWRITE_PNG_COMPRESSION);
 #endif
 	params.push_back(9);
 	params.push_back(0);
-	cv::imwrite(pDataArray->fname, result);
-
-	delete pDataArray->imgThreadData;
-	delete pDataArray->fname;
-	delete pDataArray;
+	cv::imwrite(pDataArray->imageFileName, pngImgMatBGR);
 
 	return 0;
 }
+*/
+
+void writepng(cv::String imageFileName) {
+	cv::flip(pngImgMatRGBInitial, pngImgMatRGBFlipped, 0); // vertical flip
+#ifndef OPENCV_3
+	cv::cvtColor(pngImgMatRGBFlipped, pngImgMatBGR, CV_RGB2BGR);
+
+	std::vector<int> params;
+	params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+#else
+	cv::cvtColor(pngImgMatRGBFlipped, pngImgMatBGR, cv::COLOR_RGB2BGR);
+
+	std::vector<int> params;
+	params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+#endif
+	params.push_back(9);
+	params.push_back(0);
+	cv::imwrite(imageFileName, pngImgMatBGR);
+}
 
 
-/* Attempts to save JPG to file; returns 0 on success, non-zero on error. */
+/* Attempts to save JPG to file; returns 0 on success, non-zero on error. 
 #ifdef WIN32
 DWORD WINAPI writejpg(LPVOID lpParam) {
 #else
@@ -574,29 +642,44 @@ void* writejpg(void * lpParam) {
 #endif
 	threadData * pDataArray = (threadData *)lpParam;
 
-	cv::Mat result;
-	cv::flip(*(pDataArray->imgThreadData), result, 0); // vertical flip
+	cv::flip(pDataArray->imgToBeWrittenThreadData, jpgImgMatRGBFlipped, 0); // vertical flip
 #ifndef OPENCV_3
-	cv::cvtColor(result, result, CV_RGB2BGR);
+	cv::cvtColor(jpgImgMatRGBFlipped, jpgImgMatBGR, CV_RGB2BGR);
 
 	std::vector<int> params;
 	params.push_back(CV_IMWRITE_JPEG_QUALITY);
 #else
-	cv::cvtColor(result, result, cv::COLOR_RGB2BGR);
+	cv::cvtColor(jpgImgMatRGBFlipped, jpgImgMatBGR, cv::COLOR_RGB2BGR);
 
 	std::vector<int> params;
 	params.push_back(cv::IMWRITE_JPEG_QUALITY);
 #endif
 	params.push_back(70);   // that's percent, so 100 == no compression, 1 == full 
-							// printf("write jpg (%s)\n", pDataArray->fname);
-	cv::imwrite(pDataArray->fname, result);
 
-	delete pDataArray->imgThreadData;
-	delete pDataArray->fname;
-	delete pDataArray;
+	cv::imwrite(pDataArray->imageFileName, jpgImgMatBGR);
 
 	return 0;
 }
+*/
+
+void writejpg(cv::String imageFileName) {
+	cv::flip(jpgImgMatRGBInitial, jpgImgMatRGBFlipped, 0); // vertical flip
+#ifndef OPENCV_3
+	cv::cvtColor(jpgImgMatRGBFlipped, jpgImgMatBGR, CV_RGB2BGR);
+
+	std::vector<int> params;
+	params.push_back(CV_IMWRITE_JPEG_QUALITY);
+#else
+	cv::cvtColor(jpgImgMatRGBFlipped, jpgImgMatBGR, cv::COLOR_RGB2BGR);
+
+	std::vector<int> params;
+	params.push_back(cv::IMWRITE_JPEG_QUALITY);
+#endif
+	params.push_back(70);   // that's percent, so 100 == no compression, 1 == full 
+
+	cv::imwrite(imageFileName, jpgImgMatBGR);
+}
+
 
 
 /////////////////////////////////////////////////////////////////
@@ -638,7 +721,7 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	if (is_image_tiff) {
 		vector<Mat> pages;
 		sprintf(filename, "%s%s", filePrefixName.c_str(), fileSuffixName.c_str());
-		printf("Loading %s\n", filename);
+		printf("Loading tiff image as 3D texture %s ", filename);
 #ifndef OPENCV_3
 		bool res = imreadmulti(filename, pages, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 #else
@@ -651,40 +734,42 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 		long ind = 0;
 		for (int indTex = 0; indTex < nbTextures; indTex++) {
 			// texture load through OpenCV
-			cv::Mat imgOpenCV = pages.at(indTex);
+			tiffLayerMatRGBInit = pages.at(indTex);
 #ifndef OPENCV_3
 			// printf("nb channels %d\n", imgOpenCV.channels());
-			int colorTransform = (imgOpenCV.channels() == 4) ? CV_BGRA2RGBA :
-				(imgOpenCV.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
+			int colorTransform = (tiffLayerMat.channels() == 4) ? CV_BGRA2RGBA :
+				(tiffLayerMat.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
 			// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
-			cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+			cv::cvtColor(tiffLayerMatRGBInit, tiffLayerMatBGR, colorTransform);
 #else
-			int colorTransform = (imgOpenCV.channels() == 4) ? cv::COLOR_BGRA2RGBA :
-				(imgOpenCV.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB;
+			int colorTransform = (tiffLayerMatRGBInit.channels() == 4) ? cv::COLOR_BGRA2RGBA :
+				(tiffLayerMatRGBInit.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB;
 			// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
-			cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+			cv::cvtColor(tiffLayerMatRGBInit, tiffLayerMatBGR, colorTransform);
 #endif
-			cv::Mat result;
+			if (indTex == 0) {
+				printf(" (%d channels, %d layers)\n", tiffLayerMatRGBInit.channels(), pages.size());
+			}
 			if (invert)
-				cv::flip(imgOpenCV, result, 0); // vertical flip
+				cv::flip(tiffLayerMatBGR, tiffLayerMatBGRFlipped, 0); // vertical flip
 			else
-				result = imgOpenCV;
+				tiffLayerMatBGRFlipped = tiffLayerMatBGR;
 
-			if (!result.data) {                              // Check for invalid input
+			if (!tiffLayerMatBGRFlipped.data) {                              // Check for invalid input
 				sprintf(ErrorStr, "Could not open or find the image %s!\n", filename); ReportError(ErrorStr); throw 425;
 				return false;
 			}
-			if (result.cols != texture_width
-				|| result.rows != texture_height) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected multilayer tiff image size %s %d/%d %d/%d!\n", filename, result.cols, texture_width, result.rows, texture_height); ReportError(ErrorStr); throw 425;
+			if (tiffLayerMatBGRFlipped.cols != texture_width
+				|| tiffLayerMatBGRFlipped.rows != texture_height) {   // Check for invalid input
+				sprintf(ErrorStr, "Unexpected multilayer tiff image size %s %d/%d %d/%d!\n", filename, tiffLayerMatBGRFlipped.cols, texture_width, tiffLayerMatBGRFlipped.rows, texture_height); ReportError(ErrorStr); throw 425;
 				return false;
 			}
-			if (result.elemSize() != bytesperpixel) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected multilayer tiff image bytes per pixel %s %d/%d!\n", filename, result.elemSize(), bytesperpixel); ReportError(ErrorStr); throw 425;
+			if (tiffLayerMatBGRFlipped.elemSize() != bytesperpixel) {   // Check for invalid input
+				sprintf(ErrorStr, "Unexpected multilayer tiff image bytes per pixel %s %d/%d!\n", filename, tiffLayerMatBGRFlipped.elemSize(), bytesperpixel); ReportError(ErrorStr); throw 425;
 				return false;
 			}
 			//printf("texture loading layer %d bytes per pixel %ld\n", indTex, result.elemSize());
-			GLubyte* ptr = result.data;
+			GLubyte* ptr = tiffLayerMatBGRFlipped.data;
 			for (long int i = 0; i < size; i++)
 				bitmap[ind++] = ptr[i];
 		}
@@ -694,40 +779,39 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 		for (int indTex = 0; indTex < nbTextures; indTex++) {
 			sprintf(filename, "%s_%03d%s", filePrefixName.c_str(),
 				indTex + 1, fileSuffixName.c_str());
-			printf("Loading %s\n", filename);
+			printf("Loading 3D texture %s\n", filename);
 
 			// texture load through OpenCV
 #ifndef OPENCV_3
-			cv::Mat imgOpenCV = cv::imread(filename, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
+			image3DLayerBGRInit = cv::imread(filename, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 			// printf("nb channels %d\n", imgOpenCV.channels());
-			int colorTransform = (imgOpenCV.channels() == 4) ? CV_BGRA2RGBA :
-				(imgOpenCV.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
+			int colorTransform = (image3DLayerBGRInit.channels() == 4) ? CV_BGRA2RGBA :
+				(image3DLayerBGRInit.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
 			// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
-			cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+			cv::cvtColor(image3DLayerBGRInit, image3DLayerRGB, colorTransform);
 #else
-			cv::Mat imgOpenCV = cv::imread(filename, cv::IMREAD_UNCHANGED);   // Read the file
-			int colorTransform = (imgOpenCV.channels() == 4) ? cv::COLOR_BGRA2RGBA :
-				(imgOpenCV.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB;
+			image3DLayerBGRInit = cv::imread(filename, cv::IMREAD_UNCHANGED);   // Read the file
+			int colorTransform = (image3DLayerBGRInit.channels() == 4) ? cv::COLOR_BGRA2RGBA :
+				(image3DLayerBGRInit.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB;
 			// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
-			cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+			cv::cvtColor(image3DLayerBGRInit, image3DLayerRGB, colorTransform);
 #endif
-			cv::Mat result;
 			if (invert)
-				cv::flip(imgOpenCV, result, 0); // vertical flip
+				cv::flip(image3DLayerRGB, image3DLayerRGBFlipped, 0); // vertical flip
 			else
-				result = imgOpenCV;
+				image3DLayerRGBFlipped = image3DLayerRGB;
 
-			if (!result.data) {                              // Check for invalid input
+			if (!image3DLayerRGBFlipped.data) {                              // Check for invalid input
 				sprintf(ErrorStr, "Could not open or find the image %s!\n", filename); ReportError(ErrorStr); throw 425;
 				return false;
 			}
-			if (result.cols != texture_width
-				|| result.rows != texture_height) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected 3D image size %s %d/%d %d/%d!\n", filename, result.cols, texture_width, result.rows, texture_height); ReportError(ErrorStr); throw 425;
+			if (image3DLayerRGBFlipped.cols != texture_width
+				|| image3DLayerRGBFlipped.rows != texture_height) {   // Check for invalid input
+				sprintf(ErrorStr, "Unexpected 3D image size %s %d/%d %d/%d!\n", filename, image3DLayerRGBFlipped.cols, texture_width, image3DLayerRGBFlipped.rows, texture_height); ReportError(ErrorStr); throw 425;
 				return false;
 			}
 
-			GLubyte* ptr = result.data;
+			GLubyte* ptr = image3DLayerRGBFlipped.data;
 			for (long int i = 0; i < size; i++)
 				bitmap[ind++] = ptr[i];
 		}
@@ -773,7 +857,7 @@ bool pg_loadTexture(string fileName,
 	GLenum datatype, GLenum texturefilter,
 	int width, int height) {
 
-	printf("Loading %s\n", fileName.c_str());
+	printf("Loading 2D texture %s\n", fileName.c_str());
 
 	glEnable(GL_TEXTURE_2D);
 	if (!(*textureID)) {
@@ -782,43 +866,48 @@ bool pg_loadTexture(string fileName,
 
 	// texture load through OpenCV
 #ifndef OPENCV_3
-	cv::Mat imgOpenCV = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
+	textureImgMatBGRInit = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 	// printf("File %s nb channels %d\n", fileName.c_str(), imgOpenCV.channels());
-	int colorTransform = (imgOpenCV.channels() == 4) ? CV_BGRA2RGBA :
-		(imgOpenCV.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
+	int colorTransform = (textureImgMatBGRInit.channels() == 4) ? CV_BGRA2RGBA :
+		(textureImgMatBGRInit.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
 	// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
 	if (imgOpenCV.channels() >= 3) {
-		cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+		cv::cvtColor(textureImgMatBGRInit, textureImgMatRGB, colorTransform);
+	}
+	else {
+		textureImgMatRGB = textureImgMatBGRInit;
 	}
 #else
-	cv::Mat imgOpenCV = cv::imread(fileName, cv::IMREAD_UNCHANGED);   // Read the file
-	//printf("texture %s nb channels %d\n", fileName.c_str(), imgOpenCV.channels());
-	if (format == GL_RGBA8 && imgOpenCV.channels() != 4) {
-		sprintf(ErrorStr, "RGBA image expected for texture %s not %d-channel!\n", fileName.c_str(), imgOpenCV.channels()); ReportError(ErrorStr); throw 425;
+	textureImgMatBGRInit = cv::imread(fileName, cv::IMREAD_UNCHANGED);   // Read the file
+	//printf("texture %s nb channels %d\n", fileName.c_str(), textureImgMatBGRInit.channels());
+	if (format == GL_RGBA && textureImgMatBGRInit.channels() != 4) {
+		sprintf(ErrorStr, "RGBA image expected for texture %s not %d-channel!\n", fileName.c_str(), textureImgMatBGRInit.channels()); ReportError(ErrorStr); throw 425;
 	}
-	else if (format == GL_LUMINANCE && imgOpenCV.channels() != 1) {
-		sprintf(ErrorStr, "Gray level image expected for texture %s not %d-channel!\n", fileName.c_str(), imgOpenCV.channels()); ReportError(ErrorStr); throw 425;
+	else if (format == GL_LUMINANCE && textureImgMatBGRInit.channels() != 1) {
+		sprintf(ErrorStr, "Gray level image expected for texture %s not %d-channel!\n", fileName.c_str(), textureImgMatBGRInit.channels()); ReportError(ErrorStr); throw 425;
 	}
-	int colorTransform = (imgOpenCV.channels() == 4) ? cv::COLOR_BGRA2RGBA :
-		(imgOpenCV.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB;
+	int colorTransform = (textureImgMatBGRInit.channels() == 4) ? cv::COLOR_BGRA2RGBA :
+		(textureImgMatBGRInit.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB;
 	// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
-	if (imgOpenCV.channels() >= 3) {
-		cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+	if (textureImgMatBGRInit.channels() >= 3) {
+		cv::cvtColor(textureImgMatBGRInit, textureImgMatRGB, colorTransform);
+	}
+	else {
+		textureImgMatRGB = textureImgMatBGRInit;
 	}
 #endif
 
-	cv::Mat result;
 	if (invert)
-		cv::flip(imgOpenCV, result, 0); // vertical flip
+		cv::flip(textureImgMatRGB, textureImgMatRGBFlipped, 0); // vertical flip
 	else
-		result = imgOpenCV;
+		textureImgMatRGBFlipped = textureImgMatBGRInit;
 
-	if (!result.data) {                              // Check for invalid input
+	if (!textureImgMatRGBFlipped.data) {                              // Check for invalid input
 		sprintf(ErrorStr, "Could not open or find the image %s!\n", fileName.c_str()); ReportError(ErrorStr); throw 425;
 		return false;
 	}
-	if (result.cols != width || result.rows != height) {                              // Check for invalid input
-		sprintf(ErrorStr, "Unexpected image size %s %d/%d %d/%d!\n", fileName.c_str(), result.cols, width, result.rows, height); ReportError(ErrorStr); throw 425;
+	if (textureImgMatRGBFlipped.cols != width || textureImgMatRGBFlipped.rows != height) {                              // Check for invalid input
+		sprintf(ErrorStr, "Unexpected image size %s %d/%d %d/%d!\n", fileName.c_str(), textureImgMatRGBFlipped.cols, width, textureImgMatRGBFlipped.rows, height); ReportError(ErrorStr); throw 425;
 		return false;
 	}
 
@@ -828,17 +917,17 @@ bool pg_loadTexture(string fileName,
 		glBindTexture(GL_TEXTURE_RECTANGLE, *textureID);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, (GLfloat)texturefilter);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, (GLfloat)texturefilter);
-		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 			0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 			components,            // Components: Internal colour format to convert to
-			result.cols,          // Image width
-			result.rows,          // Image heigh
+			textureImgMatRGBFlipped.cols,          // Image width
+			textureImgMatRGBFlipped.rows,          // Image heigh
 			0,                 // Border width in pixels (can either be 1 or 0)
 			format, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 			datatype,  // Image data type
-			result.ptr());        // The actual image data itself
+			textureImgMatRGBFlipped.ptr());        // The actual image data itself
 		printOglError(40);
 	}
 	else {
@@ -851,12 +940,12 @@ bool pg_loadTexture(string fileName,
 		glTexImage2D(GL_TEXTURE_2D,     // Type of texture
 			0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 			components,            // Components: Internal colour format to convert to
-			result.cols,          // Image width
-			result.rows,          // Image height
+			textureImgMatRGBFlipped.cols,          // Image width
+			textureImgMatRGBFlipped.rows,          // Image height
 			0,                 // Border width in pixels (can either be 1 or 0)
 			format, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 			datatype,  // Image data type
-			result.ptr());        // The actual image data itself
+			textureImgMatRGBFlipped.ptr());        // The actual image data itself
 		printOglError(50);
 		glEnable(GL_TEXTURE_RECTANGLE);
 		// glGenerateMipmap(GL_TEXTURE_2D);
@@ -874,42 +963,44 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 
 	printOglError(705);
 
-	cv::Mat image;
 #ifndef OPENCV_3
-	cv::Mat imgOpenCV = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
+	particleImgMatBGRInit = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 #else
-	cv::Mat imgOpenCV = cv::imread(fileName, cv::IMREAD_UNCHANGED);   // Read the file
+	particleImgMatBGRInit = cv::imread(fileName, cv::IMREAD_UNCHANGED);   // Read the file
 #endif
 																// Check for invalid input
-	if (!imgOpenCV.data) {
+	if (!particleImgMatBGRInit.data) {
 		printf("Could not open or find the 2D image (%s)!\n", fileName.c_str()); // ReportError(ErrorStr); throw 425;
 		return false;
 	}
-	int nbChannels = imgOpenCV.channels();
+	int nbChannels = particleImgMatBGRInit.channels();
 	//printf("File %s nb channels %d\n", fileName.c_str(), nbChannels);
-	int colorTransform = (nbChannels == 4) ? CV_BGRA2RGBA :
-		(nbChannels == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
+	int colorTransform = (nbChannels == 4) ? COLOR_BGRA2RGBA :
+		(nbChannels == 3) ? COLOR_BGR2RGB : COLOR_GRAY2RGB;
 	// int glColorType = (nbChannels == 4) ? GL_RGBA : GL_RGB;
 	if (nbChannels >= 3) {
-		cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+		cv::cvtColor(particleImgMatBGRInit, particleImgMatRGB, colorTransform);
+	}
+	else {
+		particleImgMatRGB = particleImgMatBGRInit;
 	}
 	if (invert)
-		cv::flip(imgOpenCV, image, 0); // vertical flip
+		cv::flip(particleImgMatRGB, particleImgMatRGBFlipped, 0); // vertical flip
 	else
-		image = imgOpenCV;
+		particleImgMatRGBFlipped = particleImgMatRGB;
 
-	if (nb_particles > leftWindowWidth * window_height) {
-		sprintf(ErrorStr, "Particle size should be lower than %d!\n", leftWindowWidth * window_height); ReportError(ErrorStr); throw 425;
+	if (nb_particles > workingWindow_width * window_height) {
+		sprintf(ErrorStr, "Particle size should be lower than %d!\n", workingWindow_width * window_height); ReportError(ErrorStr); throw 425;
 		return false;
 	}
 	//else {
-	//	 printf("File %s nb channels %d for %d particles in window (%dx%d)\n", fileName.c_str(), nbChannels, nb_particles, leftWindowWidth, window_height);
+	//	 printf("File %s nb channels %d for %d particles in window (%dx%d)\n", fileName.c_str(), nbChannels, nb_particles, workingWindow_width, window_height);
 	//}
 
-	float *pos_speed = new float[leftWindowWidth * window_height * 4];
-	float *color_radius = new float[leftWindowWidth * window_height * 4];
-	bool *allocated = new bool[leftWindowWidth * window_height];
-	for (int i = 0; i < leftWindowWidth * window_height; i++) {
+	float *pos_speed = new float[workingWindow_width * window_height * 4];
+	float *color_radius = new float[workingWindow_width * window_height * 4];
+	bool *allocated = new bool[workingWindow_width * window_height];
+	for (int i = 0; i < workingWindow_width * window_height; i++) {
 		allocated[i] = false;
 		color_radius[i * 4 + 0] = 1.f;
 		color_radius[i * 4 + 1] = 1.f;
@@ -922,16 +1013,11 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 	}
 
 	// for a 4:3 image- should be modified for another ratio
-	float image_ratio = float(leftWindowWidth) / float(window_height);
-#ifndef TEMPETE
+	float image_ratio = float(workingWindow_width) / float(window_height);
 	int partic_height = int(floor(sqrt(nb_particles / image_ratio)));
 	int partic_width = int(floor(partic_height * image_ratio));
 	//printf("partic hxw %dx%d\n", partic_height, partic_width);
-#else
-	int partic_height = int(floor(sqrt(nb_particles / image_ratio)));
-	int partic_width = int(floor(partic_height * image_ratio));
-#endif
-	float ratioImgToPart = float(image.cols) / partic_width;
+	float ratioImgToPart = float(particleImgMatRGBFlipped.cols) / partic_width;
 	float partic_radius = 2.f * ratioImgToPart;
 	int intPartic_radius = int(floor(partic_radius));
 	//printf("partic radius %d ratioImgToPart %.2f\n", intPartic_radius, ratioImgToPart);
@@ -943,10 +1029,10 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 			float r = 0.f, g = 0.f, b = 0.f;
 			for (int indLocCol = -intPartic_radius; indLocCol <= intPartic_radius; indLocCol++) {
 				for (int indLocRow = -intPartic_radius; indLocRow <= intPartic_radius; indLocRow++) {
-					if ((indPixelRow + indLocRow) >= 0 && (indPixelRow + indLocRow) < image.rows
-						&& (indPixelCol + indLocCol) >= 0 && (indPixelCol + indLocCol) < image.cols) {
-						Point3_<uchar>* p = image.ptr<Point3_<uchar> >(image.rows - (indPixelRow + indLocRow) - 1, (indPixelCol + indLocCol));
-						//Point3_<uchar>* p = image.ptr<Point3_<uchar> >(image.rows - indPixelRow - 1, indPixelCol);
+					if ((indPixelRow + indLocRow) >= 0 && (indPixelRow + indLocRow) < particleImgMatRGBFlipped.rows
+						&& (indPixelCol + indLocCol) >= 0 && (indPixelCol + indLocCol) < particleImgMatRGBFlipped.cols) {
+						Point3_<uchar>* p = particleImgMatRGBFlipped.ptr<Point3_<uchar> >(particleImgMatRGBFlipped.rows - (indPixelRow + indLocRow) - 1, (indPixelCol + indLocCol));
+						//Point3_<uchar>* p = particleImgMatRGBFlipped.ptr<Point3_<uchar> >(particleImgMatRGBFlipped.rows - indPixelRow - 1, indPixelCol);
 						r += p->x / 255.f;
 						g += p->y / 255.f;
 						b += p->z / 255.f;
@@ -989,7 +1075,7 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 		}
 	}
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	GLuint textureParticleInitialization_pos_speed_ID;
 	GLuint textureParticleInitialization_color_radius_ID;
 	glGenTextures(1, &textureParticleInitialization_pos_speed_ID);
@@ -997,16 +1083,16 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 	glEnable(GL_TEXTURE_RECTANGLE);
 	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 	glBindTexture(GL_TEXTURE_RECTANGLE, textureParticleInitialization_pos_speed_ID);
-	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, leftWindowWidth, window_height, 0,
+	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, workingWindow_width, window_height, 0,
 		GL_RGBA, GL_FLOAT, pos_speed);
 	pg_particle_initial_pos_speed_texID.push_back(textureParticleInitialization_pos_speed_ID);
 
 	glBindTexture(GL_TEXTURE_RECTANGLE, textureParticleInitialization_color_radius_ID);
-	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, leftWindowWidth, window_height, 0,
+	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, workingWindow_width, window_height, 0,
 		GL_RGBA, GL_FLOAT, color_radius);
 	pg_particle_initial_color_radius_texID.push_back(textureParticleInitialization_color_radius_ID);
 #endif
@@ -1030,65 +1116,68 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName) { // 2 text
 //////////////////////////////////////////////
 // particle acceleration shift from photography
 // stored into pg_particle_acc_texID
+/*
 bool storeParticleAccelerationfromImage(string fileName)  {
 	bool invert = false;
 
 	printOglError(705);
 
-	cv::Mat image;
 #ifndef OPENCV_3
-	cv::Mat imgOpenCV = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
+	particleAccImgMatBGRInit = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 #else
-	cv::Mat imgOpenCV = cv::imread(fileName, cv::IMREAD_UNCHANGED);   // Read the file
+	particleAccImgMatBGRInit = cv::imread(fileName, cv::IMREAD_UNCHANGED);   // Read the file
 #endif
 																// Check for invalid input
-	if (!imgOpenCV.data) {
+	if (!particleAccImgMatBGRInit.data) {
 		printf("Could not open or find the 2D image (%s)!\n", fileName.c_str()); // ReportError(ErrorStr); throw 425;
 		return false;
 	}
-	int nbChannels = imgOpenCV.channels();
+	int nbChannels = particleAccImgMatBGRInit.channels();
 	// printf("File %s nb channels %d\n", fileName.c_str(), nbChannels);
-	int colorTransform = (nbChannels == 4) ? CV_BGRA2RGBA :
-		(nbChannels == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
+	int colorTransform = (nbChannels == 4) ? COLOR_BGRA2RGBA :
+		(nbChannels == 3) ? COLOR_BGR2RGB : COLOR_GRAY2RGB;
 	// int glColorType = (nbChannels == 4) ? GL_RGBA : GL_RGB;
 	if (nbChannels >= 3) {
-		cv::cvtColor(imgOpenCV, imgOpenCV, colorTransform);
+		cv::cvtColor(particleAccImgMatBGRInit, particleAccImgMatRGB, colorTransform);
+	}
+	else {
+		particleAccImgMatRGB = particleAccImgMatBGRInit;
 	}
 	if (invert)
-		cv::flip(imgOpenCV, image, 0); // vertical flip
+		cv::flip(particleAccImgMatRGB, particleAccImgMatRGBFlipped, 0); // vertical flip
 	else
-		image = imgOpenCV;
+		particleAccImgMatRGBFlipped = particleAccImgMatRGB;
 
-	if (nb_particles > leftWindowWidth * window_height) {
-		sprintf(ErrorStr, "Particle size should be lower than %d!\n", leftWindowWidth * window_height); ReportError(ErrorStr); throw 425;
+	if (nb_particles > workingWindow_width * window_height) {
+		sprintf(ErrorStr, "Particle size should be lower than %d!\n", workingWindow_width * window_height); ReportError(ErrorStr); throw 425;
 		return false;
 	}
 	//else {
-	//	 printf("File %s nb channels %d for %d particles in window (%dx%d)\n", fileName.c_str(), nbChannels, nb_particles, leftWindowWidth, window_height);
+	//	 printf("File %s nb channels %d for %d particles in window (%dx%d)\n", fileName.c_str(), nbChannels, nb_particles, workingWindow_width, window_height);
 	//}
 
-	float* acceleration_shift = new float[leftWindowWidth * window_height * 4];
-	for (int i = 0; i < leftWindowWidth * window_height; i++) {
+	float* acceleration_shift = new float[workingWindow_width * window_height * 4];
+	for (int i = 0; i < workingWindow_width * window_height; i++) {
 		acceleration_shift[i * 4 + 0] = 1.f;
 		acceleration_shift[i * 4 + 1] = 1.f;
 		acceleration_shift[i * 4 + 2] = 1.f;
 		acceleration_shift[i * 4 + 3] = 1.f;
 	}
 
-	//printf("image %d %d %d %d\n", image.rows, image.cols, window_height, leftWindowWidth);
-	if (image.rows < window_height) {
-		sprintf(ErrorStr, "Image for particle acceleration height (%d) should be higher or equal than window height %d!\n", image.rows, window_height); ReportError(ErrorStr); throw 425;
+	//printf("image %d %d %d %d\n", image.rows, image.cols, window_height, workingWindow_width);
+	if (particleAccImgMatRGBFlipped.rows < window_height) {
+		sprintf(ErrorStr, "Image for particle acceleration height (%d) should be higher or equal than window height %d!\n", particleAccImgMatRGBFlipped.rows, window_height); ReportError(ErrorStr); throw 425;
 	}
-	if (image.cols < leftWindowWidth) {
-		sprintf(ErrorStr, "Image for particle acceleration widht (%d) should be higher or equal than window width %d!\n", image.cols, leftWindowWidth); ReportError(ErrorStr); throw 425;
+	if (particleAccImgMatRGBFlipped.cols < workingWindow_width) {
+		sprintf(ErrorStr, "Image for particle acceleration widht (%d) should be higher or equal than window width %d!\n", particleAccImgMatRGBFlipped.cols, workingWindow_width); ReportError(ErrorStr); throw 425;
 	}
 
-	//printf("window dim %dx%d\n", leftWindowWidth, window_height);
+	//printf("window dim %dx%d\n", workingWindow_width, window_height);
 	for (int indRow = 0; indRow < window_height; indRow++) {
-		for (int indCol = 0; indCol < leftWindowWidth; indCol++) {
+		for (int indCol = 0; indCol < workingWindow_width; indCol++) {
 			float r = 0.f, g = 0.f, b = 0.f;
-			Point3_<uchar>* p = image.ptr<Point3_<uchar> >(image.rows - indRow - 1, indCol);
-			int indPixel = indRow * leftWindowWidth + indCol;
+			Point3_<uchar>* p = particleAccImgMatRGBFlipped.ptr<Point3_<uchar> >(particleAccImgMatRGBFlipped.rows - indRow - 1, indCol);
+			int indPixel = indRow * workingWindow_width + indCol;
 			r = p->x / 255.f;
 			g = p->y / 255.f;
 			b = p->z / 255.f;
@@ -1103,17 +1192,17 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 		}
 	}
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	GLuint textureParticleInitialization_acc_ID;
 	glGenTextures(1, &textureParticleInitialization_acc_ID);
 	glEnable(GL_TEXTURE_RECTANGLE);
 	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 	glBindTexture(GL_TEXTURE_RECTANGLE, textureParticleInitialization_acc_ID);
-	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, leftWindowWidth, window_height, 0,
+	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, workingWindow_width, window_height, 0,
 		GL_RGBA, GL_FLOAT, acceleration_shift);
 	pg_particle_acc_texID.push_back(textureParticleInitialization_acc_ID);
 #endif
@@ -1131,10 +1220,11 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 
 	return true;
 }
+*/
 
 //////////////////////////////////////////////
 /// NON THREADED LOAD CAMERA FRAME
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 void loadCameraFrame(bool initial_capture, int IPCam_no) {
 #if defined(KOMPARTSD) || defined(LIGHT)
 	return;
@@ -1177,7 +1267,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 		}
 		else {
 			// tries to preserve ratio
-		float window_ratio = float(leftWindowWidth) / window_height;
+		float window_ratio = float(workingWindow_width) / window_height;
 			if (pg_camera_frame.rows * window_ratio < pg_camera_frame.cols) {
 				//printf("camera size height leading\n");
 				camera_frame_width = int(pg_camera_frame.rows * window_ratio);
@@ -1240,6 +1330,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 	// end of initial capture
 
 	if (pg_camera_frame.data) {
+		// printf("sends camera frame to GPU\n");
 		glEnable(GL_TEXTURE_RECTANGLE);
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_texture_texID);
 		glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
@@ -1254,7 +1345,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 												// /////////////////////////
 												// reads BG camera frame for image subtraction
 		if (reset_camera || initialSecondBGCapture == 1) { // currentVideoTrack <=> video off
-			printf("Non threaded current BG video capture frame %d\n", pg_FrameNo);
+			// printf("sends camera BG to GPU\n");
 			reset_camera = false;
 
 			// makes a second video capture 
@@ -1279,7 +1370,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 				pg_camera_frame.data);        // The actual image data itself
 		}
 
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 		if (initialBGCapture || secondInitialBGCapture) { // currentVideoTrack <=> video off
 			printf("*** non threaded initial BG video capture frame %d\n", pg_FrameNo);
 			initialBGCapture = false;
@@ -1348,7 +1439,7 @@ void pg_initCameraFrameTexture(Mat *camera_frame) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// glGenerateMipmap(GL_TEXTURE_2D);
 
-#ifdef GN
+#if defined(var_camera_BG_ini_subtr)
 	// initial background
 	if (!pg_camera_BGIni_texture_texID) {
 		glGenTextures(1, &pg_camera_BGIni_texture_texID);
@@ -1382,33 +1473,44 @@ void pg_openCameraCaptureAndLoadFrame(void) {
 		// cv::CAP_FFMPEG or cv::CAP_IMAGES or cv::CAP_DSHOW.
 		pg_webCam_capture.open(pg_webCams[-cameraNo - 1].cameraID, cv::CAP_DSHOW);
 		if (!pg_webCam_capture.isOpened()) {
-			sprintf(ErrorStr, "Error: webcam ID #%d not opened!\n", pg_webCams[-cameraNo - 1].cameraID); ReportError(ErrorStr); throw 336;
+			sprintf(ErrorStr, "Error: webcam ID #%d not opened!\n", pg_webCams[-cameraNo - 1].cameraID); 
+			ReportError(ErrorStr);
+			pg_current_active_cameraNo = INT_MIN;
+			pg_cameraCaptureIsOn = false;
 		}
+		else {
+			pg_webCam_capture.set(CAP_PROP_FRAME_WIDTH, pg_webCams[-cameraNo - 1].cameraWidth);
+			pg_webCam_capture.set(CAP_PROP_FRAME_HEIGHT, pg_webCams[-cameraNo - 1].cameraHeight);
 
-		pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, pg_webCams[-cameraNo - 1].cameraWidth);
-		pg_webCam_capture.set(CV_CAP_PROP_FRAME_HEIGHT, pg_webCams[-cameraNo - 1].cameraHeight);
+			// initial webcam frame reading
+			loadCameraFrame(true, cameraNo);
+			pg_current_active_cameraNo = cameraNo;
 
-		// initial webcam frame reading
-		loadCameraFrame(true, cameraNo);
-		pg_current_active_cameraNo = cameraNo;
-
-		if (!initializedWebcam) {
-			pg_initWebcamParameters();
-			initializedWebcam = true;
+			if (!pg_initializedWebcam) {
+				pg_initWebcamParameters();
+				pg_initializedWebcam = true;
+			}
+			pg_cameraCaptureIsOn = true;
 		}
 	}
 	else if (cameraNo >= 0 && cameraNo < nb_IPCam) {
 		pg_IPCam_capture[cameraNo].open(pg_IPCam_capture_address[cameraNo]);
 		if (!pg_IPCam_capture[cameraNo].isOpened()) {
-			sprintf(ErrorStr, "Error: IPCam #%d (%s) not opened!\n", cameraNo, pg_IPCam_capture_address[cameraNo].c_str()); ReportError(ErrorStr); throw 336;
+			sprintf(ErrorStr, "Error: IPCam #%d (%s) not opened!\n", cameraNo, pg_IPCam_capture_address[cameraNo].c_str()); 
+			ReportError(ErrorStr); 
+			pg_current_active_cameraNo = INT_MIN;
+			pg_cameraCaptureIsOn = false;
 		}
+		else {
 
-		pg_IPCam_capture[cameraNo].set(CV_CAP_PROP_FRAME_WIDTH, 1920);
-		pg_IPCam_capture[cameraNo].set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+			pg_IPCam_capture[cameraNo].set(CAP_PROP_FRAME_WIDTH, 1920);
+			pg_IPCam_capture[cameraNo].set(CAP_PROP_FRAME_HEIGHT, 1080);
 
-		// initial IPCam #0 frame reading
-		loadCameraFrame(true, cameraNo);
-		pg_current_active_cameraNo = cameraNo;
+			// initial IPCam #0 frame reading
+			loadCameraFrame(true, cameraNo);
+			pg_current_active_cameraNo = cameraNo;
+			pg_cameraCaptureIsOn = true;
+		}
 	}
 }
 
@@ -1419,13 +1521,16 @@ void pg_releaseCameraCapture(void) {
 	//Index of camera is -1 since only one camera
 	// connected to the computer or it does not
 	// matter what camera to use.
-	if (pg_current_active_cameraNo == -1) {
-		pg_webCam_capture.release();
+	if (pg_cameraCaptureIsOn) {
+		if (pg_current_active_cameraNo < 0 && -pg_current_active_cameraNo - 1 < nb_webCam) {
+			pg_webCam_capture.release();
+		}
+		else if (pg_current_active_cameraNo >= 0 && pg_current_active_cameraNo < nb_IPCam) {
+			pg_IPCam_capture[pg_current_active_cameraNo].release();
+		}
 	}
-	else if (pg_current_active_cameraNo >= 0 && pg_current_active_cameraNo < nb_IPCam) {
-		pg_IPCam_capture[pg_current_active_cameraNo].release();
-	}
-	pg_current_active_cameraNo = -2;
+	pg_current_active_cameraNo = INT_MIN;
+	pg_cameraCaptureIsOn = false;
 }
 
 void pg_initWebcamParameters(void) {
@@ -1461,7 +1566,7 @@ void pg_initWebcamParameters(void) {
 	// default_value           : 4000
 
 	/* cvSetCaptureProperty comment for see3cam */
-	//float window_ratio = float(leftWindowWidth) / window_height;
+	//float window_ratio = float(workingWindow_width) / window_height;
 	//const float ratio_16_9 = 16.0f / 9.0f;
 	//if (window_ratio >= ratio_16_9 || ratio_16_9 - window_ratio < window_ratio - 4.0 / 3.0) {
 	//	 //pg_webCam_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
@@ -1477,16 +1582,16 @@ void pg_initWebcamParameters(void) {
 	// higher values could be tried for width, fx 1280 x 720 (16:9) 960x720 (4:3)
 	//pg_webCam_capture.set(CV_CAP_PROP_FPS, 60);
 
-	CameraCurrent_exposure = (float)pg_webCam_capture.get(CV_CAP_PROP_EXPOSURE);
-	CameraCurrent_gain = (float)pg_webCam_capture.get(CV_CAP_PROP_GAIN);
-	CameraCurrent_brightness = (float)pg_webCam_capture.get(CV_CAP_PROP_BRIGHTNESS);
-	CameraCurrent_saturation = (float)pg_webCam_capture.get(CV_CAP_PROP_SATURATION);
-	CameraCurrent_contrast = (float)pg_webCam_capture.get(CV_CAP_PROP_CONTRAST);
-	//CameraCurrent_FPS = (float)pg_webCam_capture.get(CV_CAP_PROP_FPS);
-	CameraCurrent_focus = (float)pg_webCam_capture.get(CV_CAP_PROP_FOCUS);
-	CameraCurrent_gamma = (float)pg_webCam_capture.get(CV_CAP_PROP_GAMMA);
-	CameraCurrent_WB_B = (float)pg_webCam_capture.get(CV_CAP_PROP_WHITE_BALANCE_BLUE_U);
-	CameraCurrent_WB_R = (float)pg_webCam_capture.get(CV_CAP_PROP_WHITE_BALANCE_RED_V);
+	CameraCurrent_exposure = (float)pg_webCam_capture.get(CAP_PROP_EXPOSURE);
+	CameraCurrent_gain = (float)pg_webCam_capture.get(CAP_PROP_GAIN);
+	CameraCurrent_brightness = (float)pg_webCam_capture.get(CAP_PROP_BRIGHTNESS);
+	CameraCurrent_saturation = (float)pg_webCam_capture.get(CAP_PROP_SATURATION);
+	CameraCurrent_contrast = (float)pg_webCam_capture.get(CAP_PROP_CONTRAST);
+	//CameraCurrent_FPS = (float)pg_webCam_capture.get(CAP_PROP_FPS);
+	CameraCurrent_focus = (float)pg_webCam_capture.get(CAP_PROP_FOCUS);
+	CameraCurrent_gamma = (float)pg_webCam_capture.get(CAP_PROP_GAMMA);
+	CameraCurrent_WB_B = (float)pg_webCam_capture.get(CAP_PROP_WHITE_BALANCE_BLUE_U);
+	CameraCurrent_WB_R = (float)pg_webCam_capture.get(CAP_PROP_WHITE_BALANCE_RED_V);
 
 	printf("Current Cam exposure   %.2f\n", CameraCurrent_exposure);
 	printf("Current Cam gain       %.2f\n", CameraCurrent_gain);
@@ -1503,50 +1608,50 @@ void pg_initWebcamParameters(void) {
 
 	if (*((float *)ScenarioVarPointers[_cameraExposure]) != CameraCurrent_exposure) {
 		printf("cv VideoCapture set exposure new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraExposure]), CameraCurrent_exposure);
-		//pg_webCam_capture.set(CV_CAP_PROP_EXPOSURE, (*((float *)ScenarioVarPointers[_cameraExposure])));
+		//pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float *)ScenarioVarPointers[_cameraExposure])));
 		CameraCurrent_exposure = *((float *)ScenarioVarPointers[_cameraExposure]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraGain]) != CameraCurrent_gain) {
 		printf("cv VideoCapture set gain new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraGain]), CameraCurrent_gain);
-		pg_webCam_capture.set(CV_CAP_PROP_GAIN, *((float *)ScenarioVarPointers[_cameraGain]));
+		pg_webCam_capture.set(CAP_PROP_GAIN, *((float *)ScenarioVarPointers[_cameraGain]));
 		CameraCurrent_gain = *((float *)ScenarioVarPointers[_cameraGain]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraBrightness]) != CameraCurrent_brightness) {
 		printf("cv VideoCapture set brightness new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraBrightness]), CameraCurrent_brightness);
-		pg_webCam_capture.set(CV_CAP_PROP_BRIGHTNESS, *((float *)ScenarioVarPointers[_cameraBrightness]));
+		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, *((float *)ScenarioVarPointers[_cameraBrightness]));
 		CameraCurrent_brightness = *((float *)ScenarioVarPointers[_cameraBrightness]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraSaturation]) != CameraCurrent_saturation) {
 		printf("cv VideoCapture set saturation new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraSaturation]), CameraCurrent_saturation);
-		pg_webCam_capture.set(CV_CAP_PROP_SATURATION, *((float *)ScenarioVarPointers[_cameraSaturation]));
+		pg_webCam_capture.set(CAP_PROP_SATURATION, *((float *)ScenarioVarPointers[_cameraSaturation]));
 		CameraCurrent_saturation = *((float *)ScenarioVarPointers[_cameraSaturation]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float*)ScenarioVarPointers[_cameraContrast]) != CameraCurrent_contrast) {
 		printf("cv VideoCapture set contrast new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraContrast]), CameraCurrent_contrast);
-		pg_webCam_capture.set(CV_CAP_PROP_CONTRAST, *((float*)ScenarioVarPointers[_cameraContrast]));
+		pg_webCam_capture.set(CAP_PROP_CONTRAST, *((float*)ScenarioVarPointers[_cameraContrast]));
 		CameraCurrent_contrast = *((float*)ScenarioVarPointers[_cameraContrast]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float*)ScenarioVarPointers[_cameraGamma]) != CameraCurrent_gamma) {
 		printf("cv VideoCapture set gamma new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraGamma]), CameraCurrent_gamma);
-		pg_webCam_capture.set(CV_CAP_PROP_GAMMA, *((float*)ScenarioVarPointers[_cameraGamma]));
+		pg_webCam_capture.set(CAP_PROP_GAMMA, *((float*)ScenarioVarPointers[_cameraGamma]));
 		CameraCurrent_contrast = *((float*)ScenarioVarPointers[_cameraGamma]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraWB_R]) != CameraCurrent_WB_R
 		&& *((float *)ScenarioVarPointers[_cameraWB_R]) >= 0) {
 		printf("cv VideoCapture set wbR new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraWB_R]), CameraCurrent_WB_R);
-		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_RED_V, *((float *)ScenarioVarPointers[_cameraWB_R]));
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, *((float *)ScenarioVarPointers[_cameraWB_R]));
 		CameraCurrent_WB_R = *((float *)ScenarioVarPointers[_cameraWB_R]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 	if (*((float *)ScenarioVarPointers[_cameraWB_B]) != CameraCurrent_WB_B) {
 		printf("cv VideoCapture set wbB new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraWB_B]), CameraCurrent_WB_B);
-		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_BLUE_U, *((float *)ScenarioVarPointers[_cameraWB_B]));
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, *((float *)ScenarioVarPointers[_cameraWB_B]));
 		CameraCurrent_WB_B = *((float *)ScenarioVarPointers[_cameraWB_B]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
@@ -1563,6 +1668,7 @@ void pg_initWebcamParameters(void) {
 }
 #endif
 
+#if defined(var_movieCaptFreq)
 void pg_initMovieFrameTexture(Mat *movie_frame) {
 	glEnable(GL_TEXTURE_RECTANGLE);
 
@@ -1611,20 +1717,12 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 		}
 		return NULL;
 	}
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-	strcpy(pg_MovieFrame_buffer_data.PhotoName, ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
 	strcpy(pg_MovieFrame_buffer_data.PhotoName, (movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
 
 	//Grabs and returns a frame from movie
 	pg_movie_capture >> pg_FirstMovieFrame;
 	if (!pg_FirstMovieFrame.data) {
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-		printf("Movie frame %s not grabbed!\n", ("Data/" + project_name + "-data/videos/" + *fileName).c_str());
-#else
 		printf("Movie frame %s not grabbed!\n", (*fileName).c_str());
-#endif
 		return NULL;
 	}
 	else {
@@ -1637,7 +1735,7 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 	pg_initMovieFrameTexture(&pg_FirstMovieFrame);
 
 	printf("Movie frame to GPU %dx%d\n", pg_movie_frame_width, pg_movie_frame_height);
-	pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
+	pg_movie_status.reset_movie(int(pg_movie_capture.get(CAP_PROP_FRAME_COUNT)));
 	is_movieLoading = false;
 	return NULL;
 }
@@ -1647,46 +1745,22 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 	// printf("VideoPb Init movie playback and capture first frame non threaded\n");
 
 	// film loading openCV
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-	pg_movie_capture.open(("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
-	//pg_movie_capture.set(CV_CAP_PROP_FOURCC, CV_FOURCC('A', 'V', 'C', '1'));fileStream.open("logs.txt");
-	//std::fstream fileStream;
-	//fileStream.open(movieFileName[currentlyPlaying_movieNo]);
-	//if (fileStream.fail()) {
-	//	printf("file could not be opened\n");
-	//}	
-	//else {
-	//	printf("file could be opened\n");
-	//	fileStream.close();
-	//}
 	pg_movie_capture.open((movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
+
 	// printf("%s Opened\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
 	if (!pg_movie_capture.isOpened()) {
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-		printf("Movie file %s not loaded!\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
 		printf("Movie file [%s] not loaded!\n", (movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
 		return NULL;
 	}
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-	strcpy(pg_MovieFrame_buffer_data.PhotoName, ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
 	strcpy(pg_MovieFrame_buffer_data.PhotoName, (movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
+
 	// printf("Name %s Opened\n", pg_MovieFrame_buffer_data.PhotoName);
 
 	//Grabs and returns a frame from movie
 	pg_movie_capture >> pg_FirstMovieFrame;
 	// texture loading
 	if (!pg_FirstMovieFrame.data) {
-#if !defined(TEMPETE) && !defined(DAWN) && !defined(RIVETS)
-		printf("Movie frame %s not grabbed!\n", ("Data/" + project_name + "-data/videos/" + movieFileName[currentlyPlaying_movieNo]).c_str());
-#else
 		printf("Movie frame %s not grabbed!\n", (movieFileName[currentlyPlaying_movieNo]).c_str());
-#endif
 		return NULL;
 	}
 	pg_movie_frame_width = pg_FirstMovieFrame.cols;
@@ -1695,13 +1769,13 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 	pg_FirstMovieFrameIsAvailable = true;
 
 	printf("Movie frame initialisation %dx%d\n", pg_movie_frame_width, pg_movie_frame_height);
-	pg_movie_status.reset_movie(int(pg_movie_capture.get(CV_CAP_PROP_FRAME_COUNT)));
+	pg_movie_status.reset_movie(int(pg_movie_capture.get(CAP_PROP_FRAME_COUNT)));
 	is_movieLoading = false;
 
 	// printf("Movie nb frames %d\n", pg_movie_nbFramesLeft);
 	return NULL;
 }
-
+#endif
 
 /////////////////////////////////////////////////////////////////
 // TEXTURE BUFFER MANAGEMENT
@@ -1709,6 +1783,21 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 
 //////////////////////////////////////////////////////////////////
 // PROCESSES PHOTO DIAPORAMA
+
+#ifdef var_photo_diaporama
+void diaporama_random() {
+	if (pg_nbCompressedImageDirs > 0) {
+		// goes to the first photo diaporama if it is not already selected and if there is one 
+		if (photo_diaporama < 0 && nb_photo_albums > 0) {
+			photo_diaporama = 0;
+		}
+		pg_CurrentDiaporamaDir = int(rand_0_1 * pg_nbCompressedImageDirs) % pg_nbCompressedImageDirs;
+		//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+		sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		pg_launch_diaporama();
+	}
+}
 
 // initializes the blending of each image inside a folder
 void pg_launch_diaporama(void) {
@@ -1742,7 +1831,7 @@ void pg_launch_diaporama(void) {
 				//printf("curr diap %d curr file %d asc %d next img %d\n", pg_CurrentDiaporamaDir,
 				//	pg_CurrentDiaporamaFile, ascendingDiaporama, nextCompressedImage);
 				// launches blending of the first image
-				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].blendStart = float(CurrentClockTime);
+				pg_Photo_swap_buffer_data[(indPhoto + 1) % PG_PHOTO_NB_TEXTURES].blendStart = float(pg_CurrentClockTime);
 			}
 		}
 		// printf("ama initial files #%d\n", indPhoto);
@@ -1751,7 +1840,7 @@ void pg_launch_diaporama(void) {
 	printOglError(469);
 
 	// launches blending of the first image
-	pg_Photo_swap_buffer_data[0].blendStart = float(CurrentClockTime);
+	pg_Photo_swap_buffer_data[0].blendStart = float(pg_CurrentClockTime);
 	for (int indPhoto = 1; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
 		pg_Photo_swap_buffer_data[1].blendStart = -1.0f;
 	}
@@ -1767,7 +1856,7 @@ bool pg_update_diaporama(void) {
 	// achieved while loading the new photos
 	if (pg_Photo_swap_buffer_data[0].blendStart < 0.0f
 		&& pg_Photo_swap_buffer_data[1].blendStart < 0.0f) {
-		pg_Photo_swap_buffer_data[0].blendStart = float(CurrentClockTime);
+		pg_Photo_swap_buffer_data[0].blendStart = float(pg_CurrentClockTime);
 	}
 
 	for (int indPhoto = 0; indPhoto < PG_PHOTO_NB_TEXTURES; indPhoto++) {
@@ -1791,7 +1880,7 @@ bool pg_update_diaporama(void) {
 		}
 
 		// ongoing blending
-		double playingTime = CurrentClockTime - pg_Photo_swap_buffer_data[indPhoto].blendStart;
+		double playingTime = pg_CurrentClockTime - pg_Photo_swap_buffer_data[indPhoto].blendStart;
 		*photoWeightPtr = 0.0f;
 		// incay and decay are 0 if is_capture_diaporama
 		float incay = (is_capture_diaporama ? 0 : photo_diaporama_fade);
@@ -1871,7 +1960,6 @@ bool pg_update_diaporama(void) {
 }
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // AFTER LOADING IN MEMORY, FOR DISPLAY: TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
 // AND POSSIBLY LOOPS INSIDE THE DIRECTORY
@@ -1914,89 +2002,11 @@ int nextFileIndexMemoryLoop(int currentDirIndex, int *currentFileIndex, bool asc
 		return indcomprImage % pg_nbCompressedImages;
 	}
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// ON THE DISK TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
-// AND POSSIBLY JUMPS TO NEXT DIRECTORY IF ALL IMAGES ARE USED
-// AND POSSIBLY JUMPS TO THE FIRST DIRECTORY IF ALL IMAGES ARE USED
-//std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex,
-//	int *currentFileIndex) {
-//	// printf("dir path %s cur dir index %d cur file index %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex);
-//	string * returnedString;
-//	// next file in the same dir
-//	if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-//		(*currentFileIndex)++;
-//		return returnedString;
-//	}
-//	else {
-//		// first file in the same dir
-//		(*currentFileIndex) = 0;
-//		if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-//			(*currentFileIndex)++;
-//			return returnedString;
-//		}
-//		else {
-//			// first file in the next dir
-//			(*currentDirIndex)++;
-//			(*currentFileIndex) = 0;
-//			if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-//				(*currentFileIndex)++;
-//				return returnedString;
-//			}
-//			else {
-//				// first file in the first dir
-//				(*currentDirIndex) = 0;
-//				(*currentFileIndex) = 0;
-//				if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-//					(*currentFileIndex)++;
-//					return returnedString;
-//				}
-//				else {
-//					std::cout << "nextFileIndexDiskLoop Error(" << errno << ") opening " << dirpath << std::endl;
-//					return NULL;
-//				}
-//			}
-//
-//		}
-//	}
-//}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// ON THE DISK TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
-// AND POSSIBLY JUMPS TO NEXT DIRECTORY IF ALL IMAGES ARE USED
-// USED FOR LOADING ALL IMAGES
-// STOPS AT THE LAST DIRECTORY
-// SUBDIRECTORY AND FILE NAMES SHOULD END WITH 000, 001, 002...
-//string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex, int maxFilesPerFolder) {
-//	// printf("dir path %s cur dir index %d cur file index %d maxFilesPerFolder %d\n", dirpath->c_str(), *currentDirIndex, *currentFileIndex, maxFilesPerFolder);
-//	string * returnedString;
-//	// next file in the same dir
-//	if ((maxFilesPerFolder < 0 || (*currentFileIndex) < maxFilesPerFolder)
-//		&& (returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-//		//printf("dir %d file %d\n", *currentDirIndex, *currentFileIndex);
-//		(*currentFileIndex)++;
-//		return returnedString;
-//	}
-//	else {
-//		// first file in the next dir
-//		(*currentFileIndex) = 0;
-//		(*currentDirIndex)++;
-//		if ((returnedString = is_subdir_subfile_index(dirpath, *currentDirIndex, *currentFileIndex))) {
-//			//printf("dir %d file %d\n", *currentDirIndex, *currentFileIndex);
-//			(*currentFileIndex)++;
-//			return returnedString;
-//		}
-//		else {
-//			// finishes
-//			return NULL;
-//		}
-//	}
-//}
-
+#endif
 
 /////////////////////////////////////////////
 // 2D image loading
-bool pg_load_compressed_photo(char * fileName, GLenum * photoFormat, unsigned int * compressedPhotoFormat, unsigned char** compressedPhotoRaster, int width, int height) {
+bool pg_load_compressed_photo(char* fileName, int width, int height) {
 	FILE* fp;
 	unsigned char header[124];
 
@@ -2045,7 +2055,6 @@ bool pg_load_compressed_photo(char * fileName, GLenum * photoFormat, unsigned in
 		//ratio_v = u_int(h) / height_from_header;
 		return false;
 	}
-	*photoFormat = GL_RGB;
 
 	// Check for image size
 	if (mipMapCount > 1) {
@@ -2055,9 +2064,13 @@ bool pg_load_compressed_photo(char * fileName, GLenum * photoFormat, unsigned in
 	}
 
 	// allocates memory
-	*compressedPhotoRaster
+	if (imgPhotoCompressedBitmap) {
+		free(imgPhotoCompressedBitmap);
+		imgPhotoCompressedBitmap = NULL;
+	}
+	imgPhotoCompressedBitmap
 		= (unsigned char*)malloc(linearSize * sizeof(unsigned char));
-	fread(*compressedPhotoRaster, 1, linearSize, fp);
+	fread(imgPhotoCompressedBitmap, 1, linearSize, fp);
 	//printf("linear size %d\n", linearSize);
 	/* close the file pointer */
 	fclose(fp);
@@ -2065,25 +2078,25 @@ bool pg_load_compressed_photo(char * fileName, GLenum * photoFormat, unsigned in
 	switch (fourCC)
 	{
 	case FOURCC_DXT1:
-		*compressedPhotoFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+		imgPhotoCompressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
 		//printf("compressed format DTX1\n");
 		break;
 	case FOURCC_DXT3:
-		*compressedPhotoFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+		imgPhotoCompressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
 		//printf("compressed format DTX3\n");
 		break;
 	case FOURCC_DXT5:
-		*compressedPhotoFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+		imgPhotoCompressedFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 		//printf("compressed format DTX5\n");
 		break;
 	default:
 		sprintf(ErrorStr, "Unexpected compression format %s %d!",
 			fileName, fourCC); ReportError(ErrorStr);
-		free(compressedPhotoRaster);
-		compressedPhotoRaster = NULL;
+		free(imgPhotoCompressedBitmap);
+		imgPhotoCompressedBitmap = NULL;
 		return false;
 	}
-	//printf("Loaded photo %s compressed format %d\n", fileName, *compressedPhotoFormat);
+	//printf("Loaded photo %s compressed format %d\n", fileName, imgPhotoCompressedFormat);
 	return true;
 }
 bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, bool verbose) {
@@ -2108,82 +2121,82 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, boo
 
 	// DDS FILE
 	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
-		if (!pg_load_compressed_photo(PhotoName, &format, &compressedFormat, &compressedPhotoBitmap, w, h)) {
+		if (!pg_load_compressed_photo(PhotoName, w, h)) {
 			*(PhotoName) = 0;
 		}
+		photoFormat = GL_RGB;
 	}
 	// JPEG FILE
 	else if (strcmp(extension, ".jpg") == 0) {
 		// texture load through OpenCV
 #ifndef OPENCV_3
 		// threaded = false;
-		imgPhotoOpenCV = new cv::Mat();
-		*(imgPhotoOpenCV) = cv::imread(PhotoName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
+		imgPhotoBGRInit = cv::imread(PhotoName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 																			  // Check for invalid input
-		if (!imgPhotoOpenCV.data) {
+		if (!imgPhotoBGRInit.data) {
 			sprintf(ErrorStr, "Could not open or find the 2D image %s!", PhotoName); ReportError(ErrorStr);
 			loadedInRAM = false;
-			imgPhotoOpenCV->release();
 			*(PhotoName) = 0;
 			return false;
 		}
 		// Check for image size
-		if ((w > 0 && imgPhotoOpenCV.cols != w)
-			|| (h > 0 && imgPhotoOpenCV.rows != h)) {
+		if ((w > 0 && imgPhotoBGRInit.cols != w)
+			|| (h > 0 && imgPhotoBGRInit.rows != h)) {
 			sprintf(ErrorStr, "Unexpected jpg diaporama image size %s %d/%d %d/%d!",
-				PhotoName, imgPhotoOpenCV.cols, w, imgPhotoOpenCV.rows,
+				PhotoName, imgPhotoBGRInit.cols, w, imgPhotoBGRInit.rows,
 				h); ReportError(ErrorStr);
 			loadedInRAM = false;
-			imgPhotoOpenCV->release();
 			*(PhotoName) = 0;
 			return false;
 		}
-		w = imgPhotoOpenCV.cols;
-		h = imgPhotoOpenCV.rows;
-		format
-			= ((imgPhotoOpenCV->channels() == 4) ? GL_RGBA :
-			((imgPhotoOpenCV->channels() == 3) ? GL_RGB : GL_LUMINANCE));
+		w = imgPhotoBGRInit.cols;
+		h = imgPhotoBGRInit.rows;
+		photoFormat
+			= ((imgPhotoBGRInit.channels() == 4) ? GL_RGBA :
+			((imgPhotoBGRInit.channels() == 3) ? GL_RGB : GL_LUMINANCE));
 
 		int colorTransform = (channelsPhoto == 4) ? CV_BGRA2RGBA :
-			(imgPhotoOpenCV->channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
-		// int glColorType = (imgPhotoOpenCV->channels() == 4) ? GL_RGBA : GL_RGB;
-		if (imgPhotoOpenCV->channels() >= 3) {
-			cv::cvtColor(imgPhotoOpenCV, imgPhotoOpenCV, colorTransform);
+			(imgPhotoBGRInit.channels() == 3) ? CV_BGR2RGB : CV_GRAY2RGB;
+		// int glColorType = (imgPhotoBGRInit.channels() == 4) ? GL_RGBA : GL_RGB;
+		if (imgPhotoBGRInit.channels() >= 3) {
+			cv::cvtColor(imgPhotoBGRInit, imgPhotoRGB, colorTransform);
+		}
+		else {
+			imgPhotoRGB = imgPhotoBGRInit;
 		}
 #else
-		imgPhotoOpenCV = new cv::Mat();
-		*(imgPhotoOpenCV) = cv::imread(PhotoName, cv::IMREAD_UNCHANGED);   // Read the file
+		imgPhotoBGRInit = cv::imread(PhotoName, cv::IMREAD_UNCHANGED);   // Read the file
 																		   // Check for invalid input
-		if (!imgPhotoOpenCV->data) {
+		if (!imgPhotoBGRInit.data) {
 			sprintf(ErrorStr, "Could not open or find the 2D image %s!", PhotoName); ReportError(ErrorStr);
-			imgPhotoOpenCV->release();
 			*(PhotoName) = 0;
 			return false;
 		}
 		// Check for image size
-		if ((w > 0 && imgPhotoOpenCV->cols != w)
-			|| (h > 0 && imgPhotoOpenCV->rows != h)) {
+		if ((w > 0 && imgPhotoBGRInit.cols != w)
+			|| (h > 0 && imgPhotoBGRInit.rows != h)) {
 			sprintf(ErrorStr, "Unexpected jpg image size %s %d/%d %d/%d!",
-				PhotoName, imgPhotoOpenCV->cols, w, imgPhotoOpenCV->rows,
+				PhotoName, imgPhotoBGRInit.cols, w, imgPhotoBGRInit.rows,
 				h); ReportError(ErrorStr);
-			imgPhotoOpenCV->release();
 			*(PhotoName) = 0;
 			return false;
 		}
-		w = imgPhotoOpenCV->cols;
-		h = imgPhotoOpenCV->rows;
-		format
-			= ((imgPhotoOpenCV->channels() == 4) ? GL_RGBA :
-			((imgPhotoOpenCV->channels() == 3) ? GL_RGB : GL_LUMINANCE));
-
+		w = imgPhotoBGRInit.cols;
+		h = imgPhotoBGRInit.rows;
+		photoFormat
+			= ((imgPhotoBGRInit.channels() == 4) ? GL_RGBA :
+			((imgPhotoBGRInit.channels() == 3) ? GL_RGB : GL_LUMINANCE));
 
 		int colorTransform
-			= ((imgPhotoOpenCV->channels() == 4) ? cv::COLOR_BGRA2RGBA :
-			((imgPhotoOpenCV->channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB));
+			= ((imgPhotoBGRInit.channels() == 4) ? cv::COLOR_BGRA2RGBA :
+			((imgPhotoBGRInit.channels() == 3) ? cv::COLOR_BGR2RGB : cv::COLOR_GRAY2RGB));
 
-		// int glColorType = (imgPhotoOpenCV->channels() == 4) ? GL_RGBA : GL_RGB;
-		if (imgPhotoOpenCV->channels() >= 3) {
-			cv::cvtColor(*(imgPhotoOpenCV), *(imgPhotoOpenCV), colorTransform);
+		// int glColorType = (imgPhotoBGRInit.channels() == 4) ? GL_RGBA : GL_RGB;
+		if (imgPhotoBGRInit.channels() >= 3) {
+			cv::cvtColor(imgPhotoBGRInit, imgPhotoRGB, colorTransform);
+		}
+		else {
+			imgPhotoRGB = imgPhotoBGRInit;
 		}
 #endif
 	}
@@ -2193,11 +2206,6 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, boo
 		return false;
 	}
 
-	//	char * ptr = strrchr( PhotoName , '/' );
-	//	printf( "-> RAM image [%s] size %dx%d\n" , (ptr? ptr + 1: PhotoName) ,
-	//		w  , imgpDataArray->h );
-	//      printf("Loaded in RAM %d\n",loadedInRAM);
-
 	return true;
 }
 
@@ -2206,7 +2214,8 @@ bool ClipFramesDataStruct::pg_loadClipFrames(char * fileName, int width, int hei
 	int fileNameLength = int(strlen(fileName));
 	char* extension = fileName + fileNameLength - 4;
 	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
-		if (pg_load_compressed_photo(fileName, &format, &compressedFormat, &compressedPhotoBitmap, width, height)) {
+		if (pg_load_compressed_photo(fileName, width, height)) {
+			clipImgFormat = GL_RGB;
 			return true;
 		}
 	}
@@ -2218,27 +2227,27 @@ bool ClipFramesDataStruct::pg_loadClipFrames(char * fileName, int width, int hei
 //////////////////////////////////////////////////////////////////
 // TRANSFERS BUFFER TO GPU
 
-bool pg_toGPUCompressedPhoto(unsigned int compressedPhotoFormat, int width, int height, unsigned char * compressedPhotoRaster, GLuint textureID, GLenum textureFilter) {
+bool pg_toGPUCompressedPhoto(int width, int height, GLuint textureID, GLenum textureFilter) {
 	unsigned int blockSize
-		= (compressedPhotoFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
+		= (imgPhotoCompressedFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
 	unsigned int size = ((width + 3) / 4) * ((height + 3) / 4) * blockSize;
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (float)textureFilter);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (float)textureFilter);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	glCompressedTexImage2D(GL_TEXTURE_2D,     // Type of texture
 		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-		compressedPhotoFormat,  // compression format
+		imgPhotoCompressedFormat,  // compression format
 		width,                 // Image width
 		height,                 // Image height
 		0,                 // Border width in pixels (can either be 1 or 0)
 		size,              // Image data type
-		compressedPhotoRaster);        // The actual image data itself
+		imgPhotoCompressedBitmap);        // The actual image data itself
 
-	free(compressedPhotoRaster);
-	compressedPhotoRaster = NULL;
+	free(imgPhotoCompressedBitmap);
+	imgPhotoCompressedBitmap = NULL;
 	printOglError(6);
 	//printf("To GPU photo ID %d size %dx%d block size %d compressed format %d filter %d\n", textureID, width, height, blockSize, compressedPhotoFormat, textureFilter);
 	return false;
@@ -2257,60 +2266,59 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum 
 
 	printOglError(6);
 
-	//printf("texture rect %d ID indCompressedImage %d compression %d\n", is_rectangle, texBuffID, compressedFormat);
+	//printf("texture rect %d ID indCompressedImage %d compression %d\n", is_rectangle, texBuffID, imgPhotoCompressedFormat);
 
 	// glActiveTexture (GL_TEXTURE0 + index);
-	if (is_rectangle && !compressedFormat) {
+	if (is_rectangle && !imgPhotoCompressedFormat) {
 		glEnable(GL_TEXTURE_RECTANGLE);
 		glBindTexture(GL_TEXTURE_RECTANGLE, texBuffID);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, (GLfloat)texturefilter);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, (GLfloat)texturefilter);
-		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 			0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 			components,            // Components: Internal colour format to convert to
 			w,          // Image width
 			h,          // Image heigh
 			0,                 // Border width in pixels (can either be 1 or 0)
-			format, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
+			photoFormat, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 			datatype,  // Image data type
-			imgPhotoOpenCV->ptr());        // The actual image data itself
+			imgPhotoRGB.ptr());        // The actual image data itself
 		printOglError(4);
 		// printf("filename %s\n", PhotoName);
 		valret = false;
 	}
 	else {
-		if (!compressedFormat) {
+		if (!imgPhotoCompressedFormat) {
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, texBuffID);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (float)texturefilter);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (float)texturefilter);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 			glTexImage2D(GL_TEXTURE_2D,     // Type of texture
 				0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 				components,            // Components: Internal colour format to convert to
 				w,          // Image width
 				h,          // Image height
 				0,                 // Border width in pixels (can either be 1 or 0)
-				format, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
+				photoFormat, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 				datatype,  // Image data type
-				imgPhotoOpenCV->ptr());        // The actual image data itself
+				imgPhotoRGB.ptr());        // The actual image data itself
 			printOglError(5);
 			valret = false;
 		}
 		else {
-			valret = pg_toGPUCompressedPhoto(compressedFormat, w, h, compressedPhotoBitmap, texBuffID, texturefilter);
+			valret = pg_toGPUCompressedPhoto(w, h, texBuffID, texturefilter);
 		}
 	}
 
-	// glGenerateMipmap(GL_TEXTURE_2D);
 	return valret;
 }
 
 bool ClipFramesDataStruct::pg_toGPUClipFrames(int w, int h, GLint components, GLenum datatype, GLenum texturefilter) {
-	return pg_toGPUCompressedPhoto(compressedFormat, w, h, compressedPhotoBitmap, texBuffID, texturefilter);
+	return pg_toGPUCompressedPhoto(w, h, texBuffID, texturefilter);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -2338,11 +2346,11 @@ bool update_image_buffer_swapping(void) {
 			if (indImage < 3) {
 				if (pg_Photo_alphaSwap02[indImage] < 1.0) {
 					pg_Photo_alphaSwap02[indImage]
-						= std::min(1.0f, (float)((CurrentClockTime
+						= std::min(1.0f, (float)((pg_CurrentClockTime
 							- pg_Photo_swap_buffer_data[indImage].swapStart) /
 							photo_diaporama_fade));
 					//printf("Image %d time %.2f alpha %.2f (start %.2f dur %.2f)\n" , 
-					//  indImage , CurrentClockTime , pg_Photo_alphaSwap02[indImage] ,
+					//  indImage , pg_CurrentClockTime , pg_Photo_alphaSwap02[indImage] ,
 					//  pg_Photo_swap_buffer_data[indImage].swapStart,
 					//  photo_diaporama_fade );
 					valRet = true;
@@ -2354,11 +2362,11 @@ bool update_image_buffer_swapping(void) {
 			else {
 				if (pg_Photo_alphaSwap35[indImage - 3] < 1.0) {
 					pg_Photo_alphaSwap35[indImage - 3]
-						= std::min(1.0f, (float)((CurrentClockTime
+						= std::min(1.0f, (float)((pg_CurrentClockTime
 							- pg_Photo_swap_buffer_data[indImage].swapStart) /
 							photo_diaporama_fade));
 					//printf("Image %d time %.2f alpha %.2f (start %.2f dur %.2f)\n" , 
-					//  indImage , CurrentClockTime , pg_Photo_alphaSwap35[indImage - 3] ,
+					//  indImage , pg_CurrentClockTime , pg_Photo_alphaSwap35[indImage - 3] ,
 					//  pg_Photo_swap_buffer_data[indImage].swapStart,
 					//  photo_diaporama_fade  );
 					valRet = true;
@@ -2460,7 +2468,7 @@ bool pg_swap_image(int indcomprImage)
 			indAvailableSwapImage, photo_diaporama_fade);
 
 		// launches swapping
-		pg_Photo_swap_buffer_data[indAvailableSwapImage].swapStart = CurrentClockTime;
+		pg_Photo_swap_buffer_data[indAvailableSwapImage].swapStart = pg_CurrentClockTime;
 		pg_Photo_swap_buffer_data[indAvailableSwapImage].swapping = true;
 		if (indAvailableSwapImage < 3) {
 			pg_Photo_alphaSwap02[indAvailableSwapImage] = 0.0f;
@@ -2468,7 +2476,7 @@ bool pg_swap_image(int indcomprImage)
 		else {
 			pg_Photo_alphaSwap35[indAvailableSwapImage - 3] = 0.0f;
 		}
-		LastImageSwap = CurrentClockTime;
+		LastImageSwap = pg_CurrentClockTime;
 		return true;
 	}
 	else {
@@ -2519,7 +2527,7 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 					strcpy(pg_Photo_mask_buffer_data[indBuffer].PhotoName,
 						fileName->c_str());
 					valret &= pg_Photo_mask_buffer_data[indBuffer].pg_loadPhoto(
-						false, leftWindowWidth, window_height, true);
+						false, workingWindow_width, window_height, true);
 					delete fileName;
 					fileName = NULL;
 
@@ -2595,7 +2603,7 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 				strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName,
 					fileName->c_str());
 				valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-					true, leftWindowWidth, leftWindowWidth, false);
+					true, workingWindow_width, workingWindow_width, false);
 				delete fileName;
 				fileName = NULL;
 
@@ -2720,8 +2728,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 							strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName, (char*)(subdir_entry.path().string().c_str()));
 
 							// loads the images with a size that corresponds to the screen size
-							valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-					true, leftWindowWidth_powerOf2, window_height_powerOf2, false);
+							valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false);
 
 							// loads the compressed image into GPU
 							pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
@@ -2738,54 +2745,8 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 			}
 		}
 	}
-	//while ((fileName
-	//	= nextFileIndexDiskNoLoop(&pg_ImageDirectory,
-	//		&pg_CurrentDiaporamaDir, &pg_CurrentDiaporamaFile, maxFilesPerFolder))
-	//	&& indCompressedImage < pg_nbCompressedImages
-	//	&& pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs) {
-	//	//std::cout << "file " << *fileName << " dir " << pg_CurrentDiaporamaDir << std::endl;
-	//	// counts files in dir
-	//	pg_nbCompressedImagesPerFolder[pg_CurrentDiaporamaDir] = pg_CurrentDiaporamaFile;
-	//	// if first file, stores the pointer to the file index, so that ID can be retrived 
-	//	// later from index in folder
-	//	if (pg_CurrentDiaporamaFile == 1) {
-	//		pg_firstCompressedFileInFolder[pg_CurrentDiaporamaDir] = indCompressedImage;
-	//	}
-	//	if (*(pg_Photo_buffer_data[indCompressedImage]->PhotoName) == 0) {
-	//		if (!pg_Photo_buffer_data[indCompressedImage]->IDallocated) {
-	//			// allocates a texture ID for the image
-	//			glGenTextures(1, &(pg_Photo_buffer_data[indCompressedImage]->texBuffID));
-	//			pg_Photo_buffer_data[indCompressedImage]->IDallocated = true;
 
-	//			// stores the photo file name
-	//			strcpy(pg_Photo_buffer_data[indCompressedImage]->PhotoName, fileName->c_str());
-
-	//			// loads the images with a size that corresponds to the screen size
-	//			valret &= pg_Photo_buffer_data[indCompressedImage]->pg_loadPhoto(
-	//				true, window_width_powerOf2, window_height_powerOf2, false);
-
-	//			// frees file name string memory
-	//			delete fileName;
-	//			fileName = NULL;
-
-	//			// loads the compressed image into GPU
-	//			pg_Photo_buffer_data[indCompressedImage]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
-	//			// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indCompressedImage]->texBuffID);
-
-	//			printOglError(8);
-	//		}
-	//	}
-	//	indCompressedImage++;
-	//}
 	std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages << " files." << std::endl;
-	//for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
-	//	printf("Diaporama No %d, first image %d Nb images %d\n", ind + 1, pg_firstCompressedFileInFolder[ind], pg_nbCompressedImagesPerFolder[ind]);
-	//}
-	//std::cout << "Folders index/nbFiles/1stFileIndex";
-	//for (int ind = 0; ind < pg_nbCompressedImageDirs; ind++) {
-	//	std::cout << " " << ind << "/" << pg_nbCompressedImagesPerFolder[ind] << "/" << pg_firstCompressedFileInFolder[ind];
-	//}
-	//std::cout << std::endl;
 
 	// INITIALIZES SWAP
 	for (int indBuffer = 0; indBuffer < PG_PHOTO_NB_TEXTURES;
@@ -2797,7 +2758,7 @@ bool  pg_ReadInitalImageTextures(int ind_dir, int nbImages, int nbFolders, int m
 	return valret;
 }
 
-#ifdef PG_WITH_CLIPS
+#if defined(var_clipCaptFreq)
 
 std::string get_stem(const fs::path& p) { return (p.stem().string()); }
 bool  pg_ReadInitalClipFramesTextures(void) {
@@ -2819,7 +2780,7 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 		return false;
 	}
 
-	std::cout << "Counting ClipFrames " << std::endl;
+	//std::cout << "Counting ClipFrames " << std::endl;
 	if (fs::is_directory(pg_ClipDirectory)) {
 		auto dirIter = fs::directory_iterator(pg_ClipDirectory);
 		for (auto& dir_entry : dirIter)
@@ -2828,23 +2789,19 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 			{
 				++pg_nbClips;
 				
+				int nb_images_per_clip = 0;
 				auto subDirIter = fs::directory_iterator(dir_entry);
 				for (auto& subdir_entry : subDirIter)
 				{
-					if (subdir_entry.is_regular_file())
+					if (subdir_entry.is_regular_file() && nb_images_per_clip < clip_max_length)
 					{
 						++pg_nbCompressedClipFrames;
+						++nb_images_per_clip;
 					}
 				}
 			}
 		}
 	}
-	//while ((fileName
-	//	= nextFileIndexDiskNoLoop(&pg_ClipDirectory, &pg_CurrentClipFramesDir, &pg_CurrentClipFramesFile, -1))) {
-	//	//std::cout << "ClipFrames " << *fileName << " dir " << pg_CurrentDiaporamaDir << " file " << pg_CurrentDiaporamaFile << std::endl;
-	//	pg_nbCompressedClipFrames++;
-	//}
-	//pg_nbClips = pg_CurrentClipFramesDir;
 
 	////////////////////////////////////////////
 	// LOADS IMAGES FROM FOLDERS
@@ -2852,7 +2809,7 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 		std::cout << "Clip frames loading completed 0 files." << std::endl;
 		return false;
 	}
-	std::cout << "Clip frames loading completed " << pg_nbClips << " dirs." << std::endl;
+	//std::cout << "Clip frames counting "<< pg_nbCompressedClipFrames << " completed in " << pg_nbClips << " dirs." << std::endl;
 
 	// allocates first frame indices and number of frames for each clip
 	pg_nbCompressedClipFramesPerFolder = new int[pg_nbClips];
@@ -2890,10 +2847,11 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 			if (indCompressedClipDirs < pg_nbClips  && dir_entry.is_directory())
 			{
 				int initialClipFrameIndex = indCompressedClipFrames;
+				int nb_images_per_clip = 0;
 				auto subDirIter = fs::directory_iterator(dir_entry);
 				for (auto& subdir_entry : subDirIter)
 				{
-					if (indCompressedClipFrames < pg_nbCompressedClipFrames && subdir_entry.is_regular_file())
+					if (indCompressedClipFrames < pg_nbCompressedClipFrames && subdir_entry.is_regular_file() && nb_images_per_clip < clip_max_length)
 					{
 						if (pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID == -1) {
 							// allocates a texture ID for the image
@@ -2901,16 +2859,17 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 
 							// loads the images with a size that corresponds to the screen size
 							//printf("file %s\n", (char *)subdir_entry.path().string().c_str());
-							//std::cout << "file " << subdir_entry.path() << std::endl;
+							//std::cout << "file " << subdir_entry.path().string() << std::endl;
 							valret &= pg_ClipFrames_buffer_data[indCompressedClipFrames]
 								->pg_loadClipFrames((char*)(subdir_entry.path().string().c_str()), clip_image_width, clip_image_height, false);
 
 							// loads the compressed image into GPU
 							pg_ClipFrames_buffer_data[indCompressedClipFrames]->pg_toGPUClipFrames(clip_image_width, clip_image_height, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR);
-							// printf("texture ID indCompressedClipFrames %d\n", pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID);
+							 //printf("texture ID dir %d indCompressedClipFrames %d texID %d\n", indCompressedClipDirs, indCompressedClipFrames, pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID);
 
 							printOglError(8);
 							++indCompressedClipFrames;
+							++nb_images_per_clip;
 						}
 					}
 				}
@@ -2961,17 +2920,17 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 	else {
 		sprintf(ErrorStr, "Error: cues file [%ls] not provided - automatic cues!", full_path.c_str()); ReportError(ErrorStr); 
 		for (int clipNo = 0; clipNo < pg_nbClips; clipNo++) {
-			printf("Clip No %d, first frame %d Nb frames %d\n", clipNo + 1, pg_firstCompressedClipFramesInFolder[clipNo], pg_nbCompressedClipFramesPerFolder[clipNo]);
+			//printf("Clip No %d (%s), first frame %d Nb frames %d\n", clipNo + 1, pg_firstCompressedClipFramesInFolder[clipNo], pg_nbCompressedClipFramesPerFolder[clipNo]);
 			//cues[ind] = rand_0_1 * pg_nbCompressedClipFramesPerFolder[ind]
 			int cues[_NbMaxCues] = { -1 };
 			cues[0] = 0;
-			cues[1] = int(floor(rand_0_1 * pg_nbCompressedClipFramesPerFolder[clipNo])) % pg_nbCompressedClipFramesPerFolder[clipNo];
-			cues[2] = int(floor(rand_0_1 * pg_nbCompressedClipFramesPerFolder[clipNo])) % pg_nbCompressedClipFramesPerFolder[clipNo];
+			cues[1] = int(floor(0.33 * pg_nbCompressedClipFramesPerFolder[clipNo])) % pg_nbCompressedClipFramesPerFolder[clipNo];
+			cues[2] = int(floor(0.66 * pg_nbCompressedClipFramesPerFolder[clipNo])) % pg_nbCompressedClipFramesPerFolder[clipNo];
 			pg_clip_tracks[clipNo].set_cue(0, 0);
 			pg_clip_tracks[clipNo].set_cue(1, cues[1]);
 			pg_clip_tracks[clipNo].set_cue(2, cues[2]);
-			printf("Clip No %d, first frame %d Nb frames %d cues (%d, %d, %d)\n", 
-				clipNo + 1, pg_firstCompressedClipFramesInFolder[clipNo], pg_nbCompressedClipFramesPerFolder[clipNo],
+			printf("Clip No %d (%s), first frame %d Nb frames %d cues (%d, %d, %d)\n", 
+				clipNo + 1, pg_clip_tracks[clipNo].get_name().c_str(), pg_firstCompressedClipFramesInFolder[clipNo], pg_nbCompressedClipFramesPerFolder[clipNo],
 				cues[0], cues [1], cues[2]);
 		}
 	}

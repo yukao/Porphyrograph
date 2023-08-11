@@ -10,16 +10,16 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 3
 #define ATELIERS_PORTATIFS
 
-float     CAMixingWeight;
-float     PartMixingWeight;
-float     trackMixingWeight_0;
-float     trackMixingWeight_1;
-uniform vec4 uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1;
-float     trackMixingWeight_2;
-float     trackMixingWeight_3;
 float     echo;
 float     echoNeg;
-uniform vec4 uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg;
+float     CAMixingWeight;
+float     PartMixingWeight;
+uniform vec4 uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight;
+float     trackMixingWeight_0;
+float     trackMixingWeight_1;
+float     trackMixingWeight_2;
+float     trackMixingWeight_3;
+uniform vec4 uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3;
 
 // Main shader.
 
@@ -29,7 +29,7 @@ in vec2 decalCoords;  // coord text
 /////////////////////////////////////
 // UNIFORMS
 // passed by the C program
-uniform vec2 uniform_Mixing_fs_2fv_height_flashCameraTrkWght;
+uniform vec3 uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght;
 uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 
 /////////////////////////////////////
@@ -57,16 +57,16 @@ layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  CAMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[0];
-  PartMixingWeight = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[1];
-  trackMixingWeight_0 = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[2];
-  trackMixingWeight_1 = uniform_Mixing_fs_4fv_CAMixingWeight_PartMixingWeight_trackMixingWeight_0_trackMixingWeight_1[3];
-  trackMixingWeight_2 = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[0];
-  trackMixingWeight_3 = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[1];
-  echo = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[2];
-  echoNeg = uniform_Mixing_fs_4fv_trackMixingWeight_2_trackMixingWeight_3_echo_echoNeg[3];
+  echo = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[0];
+  echoNeg = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[1];
+  CAMixingWeight = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[2];
+  PartMixingWeight = uniform_Mixing_fs_4fv_echo_echoNeg_CAMixingWeight_PartMixingWeight[3];
+  trackMixingWeight_0 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[0];
+  trackMixingWeight_1 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[1];
+  trackMixingWeight_2 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[2];
+  trackMixingWeight_3 = uniform_Mixing_fs_4fv_trackMixingWeight_0_trackMixingWeight_1_trackMixingWeight_2_trackMixingWeight_3[3];
 
-  float height = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.x;
+  float height = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.y;
 
 
   ////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ void main() {
   }
 
   // brigher CA at the beginning of a flash
-  float flashCameraCoef = uniform_Mixing_fs_2fv_height_flashCameraTrkWght.y;
+  float flashCameraCoef = uniform_Mixing_fs_3fv_pulsedShift_height_flashCameraTrkWght.z;
   if( flashCameraCoef > 0 ) { // flash video
     if(flashCameraCoef < 0.3) {
       CAMixingWeight += (1.0 - CAMixingWeight) * flashCameraCoef / 0.3;          

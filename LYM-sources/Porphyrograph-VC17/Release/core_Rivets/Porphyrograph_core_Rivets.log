@@ -1,0 +1,295 @@
+﻿  pg-conf.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(769,33): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(888,34): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(918,34): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(1223,36): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-conf.cpp(1229,41): error C2065: '_pg_string': undeclared identifier
+  pg-init.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(180,51): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1524,19): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1525,83): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1527,19): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1528,85): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1546,69): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1547,38): error C3863: array type 'GLuint [0]' is not assignable
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1549,39): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1550,83): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1553,52): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1554,4): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.cpp(1555,17): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+  pg-main.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+  pg-mesh.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+  pg-script.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1225,40): error C2065: 'ScenarioVarStrings': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1246,40): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1662,80): error C2664: 'void (pg_Parameter_Input_Type,double)': cannot convert argument 2 from 'ScenarioValue' to 'double'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1662,79): message : No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(1991,40): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(2004,32): error C2065: 'ScenarioVarStrings': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(2004,25): warning C4473: 'fprintf' : not enough arguments passed for format string
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(2004,25): message : placeholders and their parameters expect 1 variadic arguments, but 0 were provided
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(2004,25): message : the missing variadic argument 1 is required by format string '%s'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3874,128): error C2664: 'void (pg_Parameter_Input_Type,double)': cannot convert argument 2 from 'ScenarioValue' to 'double'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(3874,127): message : No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4048,39): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4369,35): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4396,35): error C2065: '_pg_string': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4768,22): error C2601: 'StopTrack': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4797,43): error C2601: 'pg_launch_performance': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4845,27): error C2601: 'setup': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4854,28): error C2601: 'setup_plus': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4876,29): error C2601: 'setup_minus': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4881,35): error C2601: 'pg_keyStrokeScripts': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4980,49): error C2601: 'flash_beat_generation': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4989,55): error C2601: 'flash_continuous_generation': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5008,54): error C2601: 'pg_flash_control': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5178,24): error C2601: 'ReceiveBeat': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5400,32): error C2601: 'pg_Make_flashCamera': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(5410,6): error C2601: 'pg_aliasScript': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(7537,31): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8396,40): error C2601: 'ClipArt_SubPathOnOff': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8406,139): error C2601: 'compute_pulsed_palette_color': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8534,72): error C2601: 'HSVtoRGB': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8571,72): error C2601: 'RGBtoHSV': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8607,161): error C2601: 'compute_pulsed_HSV_color': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(8880,36): error C2601: 'pg_update_pulsed_colors': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9562,44): error C2601: 'pg_writeMessageOnScreen': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(9570,33): error C2601: 'pg_snapshot': local function definitions are illegal
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): message : this line contains a '{' which has not yet been matched
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-script.cpp(4660): fatal error C1075: '{': no matching token found
+  pg-shader.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg_shader_body_bind_Rivets.cpp(4,116): error C2065: 'pg_shader_ParticleAnimation': undeclared identifier
+  pg-stroke.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1551,7): error C2065: 'path_replay_loop': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1551,27): warning C4805: '==': unsafe mix of type 'unknown-type' and type 'bool' in operation
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1674,6): error C2065: 'pen_saturation_replay': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1674,36): error C2065: 'pen_saturation_replay_pulse': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1675,6): error C2065: 'pen_hue_replay': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1675,29): error C2065: 'pen_hue_replay_pulse': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1676,6): error C2065: 'pen_value_replay': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1676,31): error C2065: 'pen_value_replay_pulse': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1690,8): error C2065: 'pen_saturation_replay': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1691,29): error C2065: 'pen_saturation_replay_pulse': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1692,8): error C2065: 'pen_value_replay': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1693,29): error C2065: 'pen_value_replay_pulse': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1694,8): error C2065: 'pen_hue_replay': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1695,29): error C2065: 'pen_hue_replay_pulse': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-stroke.cpp(1720,64): error C2065: 'pen_brush_replay': undeclared identifier
+  pg-svg-clip-art.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+  pg-texture.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2705,7): error C2653: 'fs': is not a class or namespace name
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2705,11): error C3861: 'is_directory': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2706,19): error C2653: 'fs': is not a class or namespace name
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2706,23): error C3861: 'directory_iterator': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2707,27): error C2672: 'begin': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): error C2893: Failed to specialize function template 'unknown-type std::begin(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1840): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): error C2784: 'const _Elem *std::begin(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(55): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2707,27): error C2672: 'end': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): error C2893: Failed to specialize function template 'unknown-type std::end(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1850): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): error C2784: 'const _Elem *std::end(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(60): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): error C3536: '<begin>$L0': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2708,4): error C3536: '<end>$L0': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2707,34): error C2100: illegal indirection
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2713,24): error C2653: 'fs': is not a class or namespace name
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2713,28): error C3861: 'directory_iterator': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2714,32): error C2672: 'begin': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): error C2893: Failed to specialize function template 'unknown-type std::begin(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1840): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): error C2784: 'const _Elem *std::begin(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(55): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2714,32): error C2672: 'end': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): error C2893: Failed to specialize function template 'unknown-type std::end(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1850): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): error C2784: 'const _Elem *std::end(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(60): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): error C3536: '<begin>$L1': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2715,6): error C3536: '<end>$L1': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2714,42): error C2100: illegal indirection
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2751,6): error C2653: 'fs': is not a class or namespace name
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2751,10): error C3861: 'is_directory': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2752,18): error C2653: 'fs': is not a class or namespace name
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2752,22): error C3861: 'directory_iterator': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2753,26): error C2672: 'begin': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): error C2893: Failed to specialize function template 'unknown-type std::begin(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1840): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): error C2784: 'const _Elem *std::begin(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(55): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2753,26): error C2672: 'end': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): error C2893: Failed to specialize function template 'unknown-type std::end(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1850): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): error C2784: 'const _Elem *std::end(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(60): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): error C3536: '<begin>$L2': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2754,3): error C3536: '<end>$L2': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2753,33): error C2100: illegal indirection
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2760,23): error C2653: 'fs': is not a class or namespace name
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2760,27): error C3861: 'directory_iterator': identifier not found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2761,31): error C2672: 'begin': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): error C2893: Failed to specialize function template 'unknown-type std::begin(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1840): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): error C2784: 'const _Elem *std::begin(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(55): message : see declaration of 'std::begin'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2761,31): error C2672: 'end': no matching overloaded function found
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): error C2893: Failed to specialize function template 'unknown-type std::end(_Container &)'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\xutility(1850): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): message : With the following template arguments:
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): message : '_Container=unknown-type'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): error C2784: 'const _Elem *std::end(std::initializer_list<_Elem>) noexcept': could not deduce template argument for 'std::initializer_list<_Elem>' from 'unknown-type'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\initializer_list(60): message : see declaration of 'std::end'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): error C3536: '<begin>$L3': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2762,5): error C3536: '<end>$L3': cannot be used before it is initialized
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2761,41): error C2100: illegal indirection
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-texture.cpp(2771,113): error C2660: 'strcpy': function does not take 1 arguments
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\string.h(130,1): message : see declaration of 'strcpy'
+  pg-udp.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+  pg-update.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,21): error C2039: 'filesystem': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\iomanip(23): message : see declaration of 'std'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-all_include.h(52,31): error C2878: 'filesystem': a namespace or class of this name does not exist
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-init.h(828,58): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg_update_body_Rivets.cpp(2,32): error C2065: 'pg_shader_ParticleAnimation': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg_update_body_Rivets.cpp(112,32): error C2065: 'pg_shader_ParticleRender': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2219,34): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2940,47): error C2065: 'pg_SecondClipLeft_Update_sampler': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2941,47): error C2065: 'pg_SecondClipRight_Update_sampler': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2986,96): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2986,123): error C2065: 'pg_CA_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2986,147): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2997,96): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2997,123): error C2065: 'pg_Pixels_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(2997,151): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3227,96): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3227,123): error C2065: 'pg_Trk0_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3227,149): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3232,96): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3232,123): error C2065: 'pg_Trk1_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3232,149): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3238,96): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3238,123): error C2065: 'pg_Trk2_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3238,149): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3500,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3500,129): error C2065: 'pg_CA_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3500,153): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3538,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3538,129): error C2065: 'pg_Trk0_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3538,155): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3543,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3543,129): error C2065: 'pg_Trk1_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3543,155): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3549,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3549,129): error C2065: 'pg_Trk2_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3549,155): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3658,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3658,129): error C2065: 'pg_CA_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3658,153): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3673,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3673,129): error C2065: 'pg_Trk0_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3673,155): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3678,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3678,129): error C2065: 'pg_Trk1_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3678,155): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3684,102): error C2065: 'PG_FBO_UPDATE_NBATTACHTS': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3684,129): error C2065: 'pg_Trk2_FBO_Update_attcht': undeclared identifier
+C:\sync.com\Sync\LYM-sources\Porphyrograph-src\pg-update.cpp(3684,155): error C2660: 'glBindTexture': function does not take 1 arguments
+C:\sync.com\Sync\LYM-sources\share\glew-1.11.0\include\GL\glew.h(849,23): message : see declaration of 'glBindTexture'
+  Generating Code...

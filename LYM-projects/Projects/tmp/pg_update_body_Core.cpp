@@ -30,7 +30,7 @@
  ParticleAnimation_scenario_var_data[27] = (GLfloat)part_size * (1.f + pulse_average * part_size_pulse);
  ParticleAnimation_scenario_var_data[28] = (GLfloat)part_acc * (1.f + pulse_average * part_acc_pulse);
  ParticleAnimation_scenario_var_data[29] = (GLfloat)part_damp * (1.f + pulse_average * part_damp_pulse);
- ParticleAnimation_scenario_var_data[30] = (GLfloat)part_gravity;
+ ParticleAnimation_scenario_var_data[30] = (GLfloat)part_gravity * (1.f + pulse_average * part_gravity_pulse);
  ParticleAnimation_scenario_var_data[31] = (GLfloat)noiseScale * (1.f + pulse_average * noiseScale_pulse);
  ParticleAnimation_scenario_var_data[32] = (GLfloat)part_field_weight * (1.f + pulse_average * part_field_weight_pulse);
  ParticleAnimation_scenario_var_data[33] = (GLfloat)part_damp_targtRad;

@@ -9,17 +9,29 @@ LYM alKemi & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 1
 
+#define var_mute_second_screen
 bool	  mute_second_screen;
+#define var_invertAllLayers
 bool	  invertAllLayers;
+#define var_cursorSize
 int		cursorSize;
+#define var_master
 float	 master;
+#define var_CAMasterWeight
 float	 CAMasterWeight;
+#define var_trackMasterWeight_0
 float	 trackMasterWeight_0;
+#define var_interfaceOnScreen
 bool	  interfaceOnScreen;
+#define var_master_scale
 float	 master_scale;
+#define var_master_scale_pulse
 float	 master_scale_pulse;
+#define var_master_scale_ratio
 float	 master_scale_ratio;
+#define var_master_offsetX
 float	 master_offsetX;
+#define var_master_offsetY
 float	 master_offsetY;
 uniform float uniform_Master_scenario_var_data[12];
 
@@ -42,7 +54,6 @@ layout (binding = 4) uniform samplerRect uniform_Master_texture_fs_Trk2;  // 2-c
 #if PG_NB_TRACKS >= 4
 layout (binding = 5) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-cycle ping-pong Drawing pass track 3 step n (FBO attachment 6)
 #endif
-layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // LYM logo
 
 /////////////////////////////////////
 // UNIFORMS
@@ -50,13 +61,14 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_LYMlogo;  // 
 // uniform vec4 uniform_Master_fs_4fv_transparency_scale_leftwidth_rightVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec4 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
-uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
+/*uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
-
+*/
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
 out vec4 outColor0;
@@ -76,17 +88,20 @@ void main() {
   master_offsetY = uniform_Master_scenario_var_data[11];
 
   vec2 coords = decalCoords;
-  float leftWindowWidth = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float rightWindowVMargin = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.z;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float leftWindowWidth = uniform_Master_fs_3fv_width_height_timeFromStart.x;
+  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
 
-  if( coords.x > leftWindowWidth ) {
+/*  if( coords.x > leftWindowWidth ) {
     if( coords.x < leftWindowWidth + rightWindowVMargin
         || coords.x > 2 * leftWindowWidth + rightWindowVMargin ) {
       outColor0 = vec4(0,0,0,1);
       return;
     }
     coords.x = coords.x - (leftWindowWidth + rightWindowVMargin);
+  }
+*/
+  if( coords.x > leftWindowWidth ) {
+    coords.x = coords.x - (leftWindowWidth);
   }
   
   //   // FX scaling
@@ -107,7 +122,7 @@ void main() {
   }
 
   // interface
-  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
+/*  if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
       outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
     }
@@ -125,7 +140,7 @@ void main() {
     }
     return;
   }
-
+*/
   ////////////////////////////////////////////////////////////////////
   // mix of echoed layers according to composition weights
   vec4 CompositionColor = texture(uniform_Master_texture_fs_Render_curr, coords );
@@ -176,9 +191,10 @@ void main() {
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
   float mouse_y = uniform_Master_fs_4fv_xy_frameno_pulsedShift.y;
   float frameno = uniform_Master_fs_4fv_xy_frameno_pulsedShift.z;
-  if( mouse_x < leftWindowWidth && mouse_x > 0 
-      && length(vec2(decalCoords.x - mouse_x , height - decalCoords.y - mouse_y)) 
-      < cursorSize ) { 
+  // blinking cursor
+  if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 
+      && mouse_x < width && mouse_x > 0 
+      && length(vec2(coords.x - mouse_x , height - coords.y - mouse_y)) < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
   }
 
@@ -186,7 +202,7 @@ void main() {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
 
-  // logo in the end
-  outColor0.rgb = mix( texture(uniform_Master_texture_fs_LYMlogo, coords ).rgb , outColor0.rgb , 
-           master );
+  // master level
+  outColor0.rgb *= master;
+
 }

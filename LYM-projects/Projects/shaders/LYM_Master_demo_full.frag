@@ -10,20 +10,21 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_NB_TRACKS 3
 #define ATELIERS_PORTATIFS
 
-bool      mute_second_screen;
+float     blendTransp;
 bool      invertAllLayers;
 int       cursorSize;
-float     master;
-uniform vec4 uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master;
 float     CAMasterWeight;
+uniform vec4 uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight;
 float     PartMasterWeight;
 float     trackMasterWeight_0;
 float     trackMasterWeight_1;
-uniform vec4 uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1;
 float     trackMasterWeight_2;
+uniform vec4 uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2;
 float     trackMasterWeight_3;
 bool      interfaceOnScreen;
-uniform vec3 uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen;
+bool      hide;
+bool      mute_screen;
+uniform vec4 uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen;
 
 // Main shader.
 
@@ -50,7 +51,7 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
@@ -63,20 +64,21 @@ out vec4 outColor0;
 
 
 void main() {
-  mute_second_screen = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[0] > 0 ? true : false);
-  invertAllLayers = (uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[1] > 0 ? true : false);
-  cursorSize = int(uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[2]);
-  master = uniform_Master_fs_4fv_mute_second_screen_invertAllLayers_cursorSize_master[3];
-  CAMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[0];
-  PartMasterWeight = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[1];
-  trackMasterWeight_0 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[2];
-  trackMasterWeight_1 = uniform_Master_fs_4fv_CAMasterWeight_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1[3];
-  trackMasterWeight_2 = uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[0];
-  trackMasterWeight_3 = uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[1];
-  interfaceOnScreen = (uniform_Master_fs_3fv_trackMasterWeight_2_trackMasterWeight_3_interfaceOnScreen[2] > 0 ? true : false);
+  blendTransp = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[0];
+  invertAllLayers = (uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[1] > 0 ? true : false);
+  cursorSize = int(uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[2]);
+  CAMasterWeight = uniform_Master_fs_4fv_blendTransp_invertAllLayers_cursorSize_CAMasterWeight[3];
+  PartMasterWeight = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[0];
+  trackMasterWeight_0 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[1];
+  trackMasterWeight_1 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[2];
+  trackMasterWeight_2 = uniform_Master_fs_4fv_PartMasterWeight_trackMasterWeight_0_trackMasterWeight_1_trackMasterWeight_2[3];
+  trackMasterWeight_3 = uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[0];
+  interfaceOnScreen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[1] > 0 ? true : false);
+  hide = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[2] > 0 ? true : false);
+  mute_screen = (uniform_Master_fs_4fv_trackMasterWeight_3_interfaceOnScreen_hide_mute_screen[3] > 0 ? true : false);
 
-  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
+  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
 #ifdef ATELIERS_PORTATIFS
   float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
@@ -87,15 +89,15 @@ void main() {
 #endif
 
   // vertical mirror
-  // coords.y = height - coords.y;
-  // BRON mirror
+    coords.y = height - coords.y;
+  // ST OUEN horizontal mirror
   // coords.x = width - coords.x;
   // double mirror
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
 
   // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
+  if(mute_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -182,14 +184,15 @@ void main() {
   // comment for single cursor
 
 // vertical mirror
-//  coords.y = height - coords.y;
-// BRON mirror
-//  coordX = width - coordX;
+//   coords.y = height - coords.y;
+// ST OUEN horizontal mirror
+// coordX = width - coordX;
 // double mirror
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;
 
-  if( mouse_x < width && mouse_x > 0 
+  if( !hide
+      && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - coords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
@@ -198,5 +201,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= master;
+  outColor0.rgb *= blendTransp;
 }

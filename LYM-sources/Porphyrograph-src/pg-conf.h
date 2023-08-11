@@ -25,15 +25,17 @@
 #ifndef PG_CONF_H
 #define PG_CONF_H
 
-enum InterpolationType{ pg_linear_interpolation = 0, pg_cosine_interpolation, pg_bell_interpolation, pg_bezier_interpolation, pg_sawtooth_interpolation, pg_stepwise_interpolation , pg_keep_value , pg_exponential_interpolation, EmptyInterpolationType };
+enum InterpolationType { pg_linear_interpolation = 0, pg_cosine_interpolation, pg_bell_interpolation, pg_bezier_interpolation, pg_sawtooth_interpolation, pg_stepwise_interpolation, pg_keep_value, pg_exponential_interpolation, EmptyInterpolationType };
+enum InitializationType { pg_scenario_initial = 0, pg_current_value, EmptyInitializationType };
 
 struct pg_Interpolation
 {
-  InterpolationType interpolation_mode;
-  double offSet;
-  double exponent;
-  double duration;
-  double midTermValue;
+	InterpolationType interpolation_mode;
+	InitializationType initialization_mode;
+	double offSet;
+	double exponent;
+	double duration;
+	double midTermValue;
 };
 
 class pg_Window {
@@ -79,6 +81,7 @@ public:
 		scene_interpolations = new pg_Interpolation[_MaxInterpVarIDs];
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 			scene_interpolations[indP].interpolation_mode = pg_linear_interpolation;
+			scene_interpolations[indP].initialization_mode = pg_scenario_initial;
 			scene_interpolations[indP].offSet = 0.0;
 			scene_interpolations[indP].duration = 1.0;
 		}
@@ -86,22 +89,36 @@ public:
 };
 
 extern int                      pg_NbScenes;
+extern bool					    pg_last_scene_update;
 extern Scene*                   pg_Scenario;
 
 // PNG capture
 extern string                   Png_file_name;
 extern int                      beginPng;
 extern int                      endPng;
-extern int                      stepPng;
+extern int                      stepPngInFrames;
+extern double                   stepPngInSeconds;
+extern double                   nextPngCapture;
 extern bool                     outputPng;
 extern int					    indPngSnapshot;
-// \}
+
+// JPG capture
+extern string                   Jpg_file_name;
+extern int                      beginJpg;
+extern int                      endJpg;
+extern int                      stepJpgInFrames;
+extern double                   stepJpgInSeconds;
+extern double                   nextJpgCapture;
+extern bool                     outputJpg;
+extern int						indJpgSnapshot;
 
 // SVG capture
 extern string                   Svg_file_name;
 extern int                      beginSvg;
 extern int                      endSvg;
-extern int                      stepSvg;
+extern int                      stepSvgInFrames;
+extern double                   stepSvgInSeconds;
+extern double                   nextSvgCapture;
 extern bool                     outputSvg;
 extern int						indSvgSnapshot;
 
@@ -120,6 +137,7 @@ public:
 	string path_fileName;
 	int path_group;
 	bool with_color_radius_from_scenario;
+	double secondsforwidth;
 	SVG_path(void) {
 		indPath = 1;
 		indTrack = 1;
@@ -132,9 +150,11 @@ public:
 		path_fileName = "";
 		path_group = 0;
 		with_color_radius_from_scenario = false;
+		secondsforwidth = 10.;
 	}
-	void SVG_path_init(int p_indPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color, 
-		float p_path_b_color, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group, bool p_with_color__brush_radius_from_scenario) {
+	void SVG_path_init(int p_indPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color,
+		float p_path_b_color, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group,
+		bool p_with_color__brush_radius_from_scenario, double p_secondsforwidth) {
 		indPath = p_indPath;
 		indTrack = p_indTrack;
 		pathRadius = p_pathRadius;
@@ -153,6 +173,7 @@ public:
 			path_group = p_path_group - 1;
 		}
 		with_color_radius_from_scenario = p_with_color__brush_radius_from_scenario;
+		secondsforwidth = p_secondsforwidth;
 	}
 	~SVG_path() {
 		path_ID = "";
@@ -161,19 +182,10 @@ public:
 extern SVG_path *SVGpaths;
 extern int current_path_group;
 
-// JPG capture
-extern string                   Jpg_file_name;
-extern int                      beginJpg;
-extern int                      endJpg;
-extern int                      stepJpg;
-extern bool                     outputJpg;
-extern int						indJpgSnapshot;
-
 // VIDEO capture
 extern string                   Video_file_name;
 extern int                      beginVideo_file;
 extern int                      endVideo_file;
-extern int                      stepVideo_file;
 extern bool                     outputVideo_file;
 
 // UDP serversisClearAllLayersnd clients
@@ -218,15 +230,16 @@ extern int pg_last_activated_ClipArt;
 // lastisClearAllLayersctivated Mesh
 extern int pg_last_activated_Mesh;
 // color
-enum pg_ClipArt_Colors_Types { ClipArt_nat = 0, ClipArt_white, ClipArt_red, ClipArt_green, ClipArt_blue, ClipArt_yellow, ClipArt_cyan, ClipArt_magenta };
+enum pg_ClipArt_Colors_Types { ClipArt_nat = 0, ClipArt_white, ClipArt_red, ClipArt_green, ClipArt_blue, ClipArt_yellow, ClipArt_cyan, ClipArt_magenta, ClipArt_black};
 extern pg_ClipArt_Colors_Types *pg_ClipArt_Colors;
 // subpath display
 extern bool *pg_ClipArt_SubPath;
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 // MESHES
 // number of meshe files
 extern int pg_nb_Mesh_files;
+extern int pg_nb_Mesh_objects;
 // file names
 extern string *pg_Mesh_fileNames;
 // geometrical transformations
@@ -248,7 +261,22 @@ extern float *pg_Mesh_Motion_X;
 extern float *pg_Mesh_Motion_Y;
 extern float *pg_Mesh_Motion_Z;
 extern int *pg_Mesh_TextureRank;
-#if defined(CAVERNEPLATON)
+#if defined(var_MmeShanghai_brokenGlass)
+extern bool** pg_MmeShanghaiActveMeshObjects;
+extern double** pg_MmeShanghaiMeshObjectWakeupTime;
+extern bool*** pg_MmeShanghai_MeshSubParts;
+extern string** pg_MmeShanghai_MeshSubPart_FileNames;
+extern int* pg_MmeShanghai_NbMeshSubParts;
+extern float** pg_MmeShanghai_Object_Rotation_angle;
+extern float** pg_MmeShanghai_Object_Rotation_X;
+extern float** pg_MmeShanghai_Object_Rotation_Y;
+extern float** pg_MmeShanghai_Object_Rotation_Z;
+extern float** pg_MmeShanghai_Object_Translation_X;
+extern float** pg_MmeShanghai_Object_Translation_Y;
+extern float** pg_MmeShanghai_Object_Translation_Z;
+extern float** pg_MmeShanghai_Object_Rotation_Ini_angle;
+#endif
+#if defined(var_Caverne_Mesh_Profusion)
 extern bool* pg_CaverneActveMesh;
 extern float* pg_CaverneMeshWakeupTime;
 extern float* pg_CaverneMeshBirthTime;
@@ -264,15 +292,19 @@ extern bool Caverne_BackColorFlash;
 extern bool Caverne_BackColorFlash_prec;
 #endif
 // color
-extern pg_ClipArt_Colors_Types *pg_Mesh_Colors;
+extern float **pg_Mesh_Colors;
 // textures
 extern GLuint *Mesh_texture_rectangle;
 #endif
 
+float my_stof(string str);
+int my_stoi(string str);
+double my_stod(string str);
+
 // TEXTURES
 enum pg_Texture_Usages { Texture_master_mask = 0, Texture_mesh, Texture_sensor, Texture_logo, 
 	Texture_brush, Texture_noise, Texture_curve_particle, Texture_splat_particle, Texture_part_init,
-	Texture_part_acc, Texture_repop_density, Texture_burst_mask, Texture_multilayer_master_mask};
+	Texture_part_acc, Texture_pixel_acc, Texture_repop_density, Texture_multilayer_master_mask};
 // number of Texture files
 extern int pg_nb_Texture_files;
 // file names
@@ -301,6 +333,10 @@ extern GLuint *pg_Texture_texID;
 /// the params of the font file
 extern string                    font_file_encoding;
 extern TextureEncoding           font_texture_encoding;
+
+// window(s) size and location
+extern int my_window_x;
+extern int my_window_y;
 
 void light_channel_string_to_channel_no(string a_light_channel_string, int* light_channel, int* light_channel_fine);
 void saveInitialTimesAndDurations(void);

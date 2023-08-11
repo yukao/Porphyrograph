@@ -52,7 +52,7 @@ layout (binding = 7) uniform sampler3D uniform_Master_texture_fs_Mask;  // mask 
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform vec4 uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
 uniform ivec4 uniform_Master_fs_4iv_master_mask_opacity1;
@@ -66,8 +66,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
-  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
+  float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
+  float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
   // vertical mirror
@@ -89,7 +89,7 @@ void main() {
 
 
   // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
+  if(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.w != 0 && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }

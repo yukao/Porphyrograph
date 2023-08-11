@@ -1,0 +1,2 @@
+cd C:\sync.com\Sync\LYM-projects\
+C:\sync.com\Sync\LYM-sources\Porphyrograph-VC17\Release\core_Core\ContAct-v3.exe ./Projects/configuration/YN_ContAct_CATable-head-single.csv ./Projects/scenarios/YN_ContAct-scenario-v3.csv

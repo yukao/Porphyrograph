@@ -18,7 +18,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 const float PI = 3.1415926535897932384626433832795;
 
 // Gaussian blur
-/*
 const float weights[8][10] = {
   { 0.361710386853153, 0.117430169561019, 0.00401823943539796, 0, 0, 0, 0, 0, 0, 0, },
   { 0.160943513523684, 0.0976171754339892, 0.0217813359878234, 0.00178792093458716, 0, 0, 0, 0, 0, 0, },
@@ -29,7 +28,6 @@ const float weights[8][10] = {
   { 0.022659246945633, 0.0211207405530146, 0.0171040969458123, 0.0120342352127056, 0.00735638042938192, 0.00390694415457561, 0.00180275855491957, 0.000722711999073055, 0.000251721495878215, 0, },
   { 0.0178892106047989, 0.0169224681628769, 0.0143245600399185, 0.0108503547098669, 0.00735447434710435, 0.00446071417758884, 0.00242104138407988, 0.00117583149116467, 0.000511014259566371, 0.000198731178680599, },
 };
-*/
 
 #define SPLAT_PARTICLES
 
@@ -164,7 +162,7 @@ float sobelMatrixY[9] = {1,2,1,0,0,0,-1,-2,-1};
 ////////////////////////////////////
 // CA UPDATE
 vec4 out4_CA;
-
+float CAdecay = 0.0;
 bool CA_on_off;
 
 vec4 neighborValues[8]=vec4[8](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec4(0));
@@ -174,7 +172,7 @@ vec4 neighborValuesDiag[16]=vec4[16](vec4(0),vec4(0),vec4(0),vec4(0),vec4(0),vec
 vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
 // pixel texture + z offset according to the chosen texture
 vec2 noisepixels;
-
+float radiuspixel;
 vec4 randomCA;
 vec4 randomCA2;
 
@@ -218,17 +216,17 @@ uniform vec4 uniform_Update_fs_4fv_paths47_RadiusX;
 uniform vec4 uniform_Update_fs_4fv_paths47_RadiusY;
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
-
-uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
-uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
+uniform vec4 uniform_Update_fs_4fv_trkDecay;
+uniform vec4 uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght;
+uniform vec4 uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift;
+uniform vec4 uniform_Update_fs_4fv_pulse;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
-uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
-uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
+uniform vec4 uniform_Update_fs_4fv_photo01Wghts_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
 /////////////////////////////////////
@@ -240,8 +238,8 @@ layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;
 layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
 layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
 layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 7) uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 8) uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 7) uniform samplerRect uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Photo1;  // photo_1 texture
 layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
 layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
@@ -370,8 +368,8 @@ vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   }
   // SUN RAYS
   else if(noiseType == 1 ) {
-    vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
-                     length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
+    vec2 pos = vec2( atan((noiseCenter_0-texCoordLoc.x)/(noiseCenter_1-texCoordLoc.y)) * (noiseAngleScale * 10),
+                     length(vec2(noiseCenter_0,noiseCenter_1) - texCoordLoc) / (noiseLineScale) );
     return vec2(snoise( pos , noiseScale * 10 ) ,
                             snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
   }
@@ -982,7 +980,7 @@ void CA_out( vec4 currentCA ) {
 
 void pixel_out( void ) {
   // fills by cumulating the neighboring pixels that
-  // can reach the pixel at this frame (come into a circle of radius pixel_radius)
+  // can reach the pixel at this frame (come into a circle of radius radiuspixel)
   // with the pixel seen as length unit.
   out_color_pixel = vec3(0,0,0);
   int nb_cumultated_pixels = 0;
@@ -1004,7 +1002,7 @@ void pixel_out( void ) {
       // the acceleration found in the continuous texture
       // and the position corresponding to the loclation of the
       // pixel in the coordinates system of the current pixel
-      // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
+      // expected to be in [-radiuspixel,+radiuspixel]x[-radiuspixel,+radiuspixel]
       if( graylevel(surrpixel_localColor) >  0 ) {
         vec2 surrpixel_speed;
         vec2 surrpixel_position;
@@ -1022,15 +1020,15 @@ void pixel_out( void ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc > 0 ) {
+        if( pixel_acc_factor > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc * acceleration;
+            += pixel_acc_factor * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc * surrpixel_speed;
+            += pixel_acc_factor * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
@@ -1045,9 +1043,9 @@ void pixel_out( void ) {
           nb_cumultated_pixels++;
         }
         // radius pixel extension for (S,N,E,W) neighbors
-        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
-          float dist = pixel_radius - length(surrpixel_nextPosition);
+        else if( abs(surrpixel_nextPosition.x) <= (radiuspixel - randomCA.z)
+                  && abs(surrpixel_nextPosition.y) <= (radiuspixel - randomCA.w) ) {
+          float dist = radiuspixel - length(surrpixel_nextPosition);
           out_color_pixel += surrpixel_localColor.rgb;
           // adds high frequency random speed to make them leave the initial pixel
           out_speed_pixel += dist * (randomCA.xy - vec2(0.5,0.5));
@@ -1077,7 +1075,7 @@ void pixel_out( void ) {
       // the acceleration found in the continuous texture
       // and the position corresponding to the location of the
       // pixel in the coordinates system of the current pixel
-      // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
+      // expected to be in [-radiuspixel,+radiuspixel]x[-radiuspixel,+radiuspixel]
       if( graylevel(surrpixel_localColor) >  0 ) {
         vec2 surrpixel_speed;
         vec2 surrpixel_position;
@@ -1097,22 +1095,22 @@ void pixel_out( void ) {
 
         vec2 acceleration;
         acceleration = pixel_acceleration - pixel_acc_center;
-        if( pixel_acc > 0 ) {
+        if( pixel_acc_factor > 0 ) {
           // acceleration
           surrpixel_speed 
-            += pixel_acc * acceleration;
+            += pixel_acc_factor * acceleration;
         }
         else {
           // damping
           surrpixel_speed 
-            += pixel_acc * surrpixel_speed;
+            += pixel_acc_factor * surrpixel_speed;
         }
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
         // the current step is added to the position
 
-        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - randomCA.z)
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - randomCA.w) ) {
+        if( abs(surrpixel_nextPosition.x) <= (radiuspixel - randomCA.z)
+                  && abs(surrpixel_nextPosition.y) <= (radiuspixel - randomCA.w) ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
           // computes the position of the pixel
@@ -1265,20 +1263,23 @@ void main() {
 #include_initializations
 
   //////////////////////////
-  // TRACK DECAY
-  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
-
-  //////////////////////////
   // variables 
-  // frame number
-  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
+  // sound pulse
+  vec3 pulse = uniform_Update_fs_4fv_pulse.rgb;
+  float average_pulse = uniform_Update_fs_4fv_pulse.a;
 
+  // frame number
+  frameNo = int(round(uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.y));
+
+  // decay of drawing and CA layers
+  CAdecay = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.x - CAdecay_pulse * average_pulse;
+  
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
+  Cursor = uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.z;
 
   // pixels position speed update parameters
-  pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
-  
+  pixel_acc_center = vec2(pixel_acc_center_0,pixel_acc_center_1);
+  radiuspixel = uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.z;
 
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
@@ -1312,7 +1313,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.x > 0) {
+  if(frameNo <= 10 || uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.x > 0) {
     out_Update_FBO_fs_CA = vec4(0);  // CA
     out_Update_FBO_fs_Pixels = vec4(0);  // pixel speed / position
     out_Update_FBO_fs_Trk0 = vec4(0,0,0,1);  // tracks 0-(PG_NB_TRACKS-1)
@@ -1361,7 +1362,6 @@ void main() {
       decalCoordsPrevStep.y < height && decalCoordsPrevStep.y >= 0 ) {
     out_track_FBO[1] = texture( uniform_Update_texture_fs_Trk1 , decalCoordsPrevStep );
     // BLUR
-  /*
     if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z >= 2) {
       int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.z),10);
       vec3 valPixel = vec3(0);
@@ -1374,7 +1374,9 @@ void main() {
       }
       out_track_FBO[1] = vec4(valPixel, out_track_FBO[1].a);
     }
-    */
+  }
+  else {
+    out_track_FBO[1] = vec4( 0, 0, 0, 0 );
   }
 #endif
 
@@ -1383,7 +1385,6 @@ void main() {
   out_track_FBO[2] 
     = texture( uniform_Update_texture_fs_Trk2 , decalCoords );
   // BLUR
-  /*
   if(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w >= 2) {
     int blurRad = min(int(uniform_Update_fs_4fv_CAType_SubType_blurRadius.w),10);
     vec3 valPixel = vec3(0);
@@ -1396,7 +1397,6 @@ void main() {
     }
     out_track_FBO[2] = vec4(valPixel, out_track_FBO[2].a);
   }
-  */
 #endif
 #if PG_NB_TRACKS >= 4
   out_track_FBO[3] 
@@ -1430,20 +1430,19 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  vec2 coordsImage = vec2( 0.0 );
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.x > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
+  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x > 0) {
+    vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.x * texture(uniform_Update_texture_fs_Photo0, 
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x * texture(uniform_Update_texture_fs_Photo0, 
         coordsImageScaled ).rgb;
   }
-  if(photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
+  if(uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0) {
+    vec2 coordsImage = vec2(decalCoordsPOT.x , 1.0 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw;
     vec2 coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
-    photocolor += photoWeight * uniform_Update_fs_2fv_photo01Wghts.y * texture(uniform_Update_texture_fs_Photo1,  
+    photocolor += uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y * texture(uniform_Update_texture_fs_Photo1,  
         coordsImageScaled ).rgb;
   }
-  photocolor *= vec3(photo_value);
+  photocolor *= (vec3(photo_value) + photo_value * photo_value_pulse * pulse);
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -1455,17 +1454,13 @@ void main() {
   // movie size
   movieWH = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.xy;
   // camera size
-  cameraWH = uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.zw;
+  cameraWH = uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.zw;
 
   // video texture used for drawing
 /*   cameraCoord = vec2(0.4 * (decalCoordsPOT.x + 0.55), 0.4 * (1. - decalCoordsPOT.y) )
                * cameraWH;
-     cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
+ */  cameraCoord = vec2(1 - decalCoordsPOT.x, (decalCoordsPOT.y) )
                * cameraWH;
- */
-  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-              // added for wide angle lens that covers more than the drawing surface
-               * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
   movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
                * movieWH;
 
@@ -1473,7 +1468,7 @@ void main() {
   cameraImage = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   // gamma correction
   // cameraImage = vec3( pow(cameraImage.r,cameraGamma) , pow(cameraImage.g,cameraGamma) , pow(cameraImage.b,cameraGamma) );
-  if( camera_BG_subtr ) {
+  if( BGSubtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
   if( graylevel(cameraImage) < cameraThreshold ) {
@@ -1543,14 +1538,22 @@ void main() {
   videocolor = cameraWeight * cameraImage 
               + movieWeight * movieImage;
 
-  // video_satur
+  // image_satur image_satur_pulse
+  vec3 pulsed_satur = vec3(1);
+  if(video_satur_pulse > 0) {
+    pulsed_satur = video_satur + video_satur_pulse * pulse;
+  }
   //  public-domain function by Darel Rex Finley
-  if(video_satur > 0) {
+  if(video_satur > 0 || video_satur_pulse > 0 ) {
     float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
                                (videocolor.g)*(videocolor.g) * .587 +
                                (videocolor.b)*(videocolor.b) * .114 ) ;
-    videocolor = clamp( powerColor 
-      + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
+    videocolor.r = clamp( powerColor 
+      + (videocolor.r - powerColor) * pulsed_satur.r , 0 , 1 );
+    videocolor.g = clamp( powerColor 
+      + (videocolor.g - powerColor) * pulsed_satur.g , 0 , 1 );
+    videocolor.b = clamp( powerColor 
+      + (videocolor.b - powerColor) * pulsed_satur.b , 0 , 1 );
   }
 
   ///////////////////////////////////////////////////
@@ -1608,35 +1611,25 @@ void main() {
       // drawing occurs
       if( pathStroke > 0 ) {
         if(indPath < 4) {
+            curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
+                uniform_Update_fs_4fv_paths03_y[indPath] , 
+                uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
+                uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
+                uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
+                uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
+                int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
+                pathStroke );
             if(indPath == 0 && // rubber stylus
                                Cursor < 0) {
-                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y[indPath] , 
-                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                    3 * uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                    3 * uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                    pathStroke );
                 out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel);
-                curTrack_color.rgb = vec3(0);
+                curTrack_grayLevel = 0;
             }
-            else { // normal stylus
-                curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths03_x[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y[indPath] , 
-                    uniform_Update_fs_4fv_paths03_x_prev[indPath] , 
-                    uniform_Update_fs_4fv_paths03_y_prev[indPath] ,
-                    uniform_Update_fs_4fv_paths03_RadiusX[indPath] ,
-                    uniform_Update_fs_4fv_paths03_RadiusY[indPath] ,
-                    int(uniform_Update_fs_4fv_paths03_BrushID[indPath]),
-                    pathStroke );
-                curTrack_color.rgb
-                  += curTrack_grayLevel
-                    * uniform_Update_fs_4fv_paths03_a[indPath]
-                    * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
-                                uniform_Update_fs_4fv_paths03_g[indPath] , 
-                                uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
-            }
+            curTrack_color.rgb
+            += curTrack_grayLevel
+                * uniform_Update_fs_4fv_paths03_a[indPath]
+                * vec3( uniform_Update_fs_4fv_paths03_r[indPath] , 
+                            uniform_Update_fs_4fv_paths03_g[indPath] , 
+                            uniform_Update_fs_4fv_paths03_b[indPath] );  // brush opacity is combined with color opacity
         }
         else {
             curTrack_grayLevel =  out_gray_drawing( uniform_Update_fs_4fv_paths47_x[indPath - 4] , 
@@ -1670,10 +1663,15 @@ void main() {
     // out_track_FBO[1].rgb = 0.001 * out_track_FBO[1].rgb + .999 * vec3(1,0,0);
 
     /////////////////
+    // TRACK photo
+    if(currentPhotoTrack == indCurTrack 
+      && uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.x + uniform_Update_fs_4fv_photo01Wghts_Camera_W_H.y > 0 ) {
+       out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
+    }
+
+    /////////////////
     // TRACK video
-    bool videoOn = false;
     if( currentVideoTrack == indCurTrack && cameraWeight + movieWeight > 0) {
-      videoOn = true;
       if( cameraCumul == 1 ) { // ADD
         out_track_FBO[indCurTrack] 
           = vec4( clamp( max(videocolor,out_track_FBO[indCurTrack].rgb) , 0.0 , 1.0 ) ,  1.0 );
@@ -1707,22 +1705,6 @@ void main() {
       }
     }
 
-    /////////////////
-    // TRACK photo
-    if(currentPhotoTrack == indCurTrack 
-      && photoWeight * uniform_Update_fs_2fv_photo01Wghts.x + photoWeight * uniform_Update_fs_2fv_photo01Wghts.y > 0 ) {
-      // only photo (but not drawing or whatever memory from preceding tracks)
-      if(!videoOn) {
-       out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
-      }
-      // cumul video + photo
-      else {
-       out_track_FBO[indCurTrack].rgb
-       = clamp( out_track_FBO[indCurTrack].rgb + photocolor , 0.0 , 1.0 );
-      }
-    }
-
-
     // non BG track flash on BG track (only concerns tracks >= 1)
     if( indCurTrack != 0 ) {
       flashToBGCumul += uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[indCurTrack - 1] 
@@ -1745,7 +1727,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
+  flashToCACumul += uniform_Update_fs_4fv_CAdecay_frameno_Cursor_flashPartCAWght.w
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track
@@ -1811,7 +1793,7 @@ void main() {
     //////////////////////////////////////
     //////////////////////////////////////
     if( uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.y > 0 ) {
-      pixel_radius = 1;
+      radiuspixel = 1;
     }
 
     pixel_out();
@@ -1834,15 +1816,15 @@ void main() {
 
       vec2 acceleration;
       acceleration = pixel_acceleration - pixel_acc_center;
-      if( pixel_acc > 0 ) {
+      if( pixel_acc_factor > 0 ) {
       	// acceleration
       	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
-          += pixel_acc * acceleration;
+          += pixel_acc_factor * acceleration;
       }
       else {
       	// damping
       	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
-          += pixel_acc * out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy;
+          += pixel_acc_factor * out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy;
       }
       // updates the position of the current pixel
       out_attachment_FBO[pg_FBO_fs_Pixels_attacht].zw += out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy; 
@@ -1880,7 +1862,7 @@ void main() {
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
           out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
+               = out_track_FBO[indTrack].rgb - vec3(uniform_Update_fs_4fv_trkDecay[indTrack]);
       }
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
@@ -1914,7 +1896,7 @@ void main() {
 
   //////////////////////////////////////////////
   // CA LAYER CLEAR
-  if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
+  if( uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift.y > 0 ) {
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
   }
 

@@ -20,90 +20,36 @@
 
 #include "pg-all_include.h"
 
-#ifdef GN
-#include "pg_script_body_GN.cpp"
-#endif
 #ifdef TVW
 #include "pg_script_body_TVW.cpp"
 #endif
 #ifdef CRITON
 #include "pg_script_body_Criton.cpp"
 #endif
-#if defined (KOMPARTSD)
+#if defined(KOMPARTSD)
 #include "pg_script_body_KompartSD.cpp"
 bool testUDP_KOMPARTSD = false;
 #endif
-#if defined (LIGHT)
+#if defined(LIGHT)
 #include "pg_script_body_Light.cpp"
 #endif
-#if defined (REUTLINGEN)
-#include "pg_script_body_Reutlingen.cpp"
-#endif
-#if defined (BICHES)
-#include "pg_script_body_Biches.cpp"
-#endif
-#if defined (ATELIERSENFANTS)
-#include "pg_script_body_AteliersEnfants.cpp"
-#endif
-#if defined (CAVERNEPLATON)
-#include "pg_script_body_CavernePlaton.cpp"
-#endif
-#if defined (PIERRES)
-#include "pg_script_body_Pierres.cpp"
-#endif
-#if defined (ENSO)
-#include "pg_script_body_Enso.cpp"
-#endif
-#if defined (TEMPETE)
-#include "pg_script_body_Tempete.cpp"
-#endif
-#if defined (DAWN)
-#include "pg_script_body_Dawn.cpp"
-#endif
-#if defined (RIVETS)
+#if defined(RIVETS)
 #include "pg_script_body_Rivets.cpp"
 #endif
-#if defined (ULM)
-#include "pg_script_body_Ulm.cpp"
-#endif
-#ifdef SONG
-#include "pg_script_body_Song.cpp"
-#endif
-#ifdef CORE
+#if defined(CORE)
 #include "pg_script_body_Core.cpp"
 #endif
-#ifdef FORET
+#if defined(FORET)
 #include "pg_script_body_Foret.cpp"
 #endif
-#ifdef SOUNDINITIATIVE
-#include "pg_script_body_SoundInitiative.cpp"
-#endif
-#ifdef ALKEMI
-#include "pg_script_body_alKemi.cpp"
-#endif
-#if defined (DEMO) || defined (DEMO_BEZIER)
-#include "pg_script_body_demo.cpp"
-#endif
-#ifdef VOLUSPA
+#if defined(VOLUSPA)
 #include "pg_script_body_voluspa.cpp"
 #endif
-#ifdef ARAKNIT
+#if defined(ARAKNIT)
 #include "pg_script_body_araknit.cpp"
 #endif
-#if defined (ETOILES)
-#include "pg_script_body_etoiles.cpp"
-#endif
-#ifdef INTERFERENCE
-#include "pg_script_body_interference.cpp"
-#endif
-#ifdef CAAUDIO
+#if defined(CAAUDIO)
 #include "pg_script_body_CAaudio.cpp"
-#endif
-#ifdef DASEIN
-#include "pg_script_body_dasein.cpp"
-#endif
-#ifdef BONNOTTE
-#include "pg_script_body_bonnotte.cpp"
 #endif
 
 std::string project_name = "core";
@@ -121,7 +67,7 @@ ScenarioValue InitialValuesInterpVar[_MaxInterpVarIDs];
 // last value shipped to the GUI (PD)
 float LastGUIShippedValuesInterpVar[_MaxInterpVarIDs];
 // initial values in the configuration file
-float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
+//float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 
 //////////////////////////////////////////////
 // beat no
@@ -141,7 +87,7 @@ int FourFrameStrokeNb = 5;
 int FourFrameStroke_x = PG_OUT_OF_SCREEN_CURSOR;
 int FourFrameStroke_y = PG_OUT_OF_SCREEN_CURSOR;
 
-#ifdef GN
+#if defined(var_GenerativeNights_planes)
 //////////////////////////////////////////////
 /// image number of first plane
 int      firstPlaneFrameNo = -1;
@@ -150,13 +96,13 @@ int      firstPlaneFrameNo = -1;
 // CA initialization
 float initCA = 0.0f;
 #endif
-#ifdef PIERRES
-int PIERRES_countBeat = 0;
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // WORK VARIABLES
 /////////////////////////////////////////////////////////////////////////
+
+// ++++++++++++++++++++++ GLUT MODIFIER ++++++++++++++++++++ 
+int pg_key_modifier = 0;
 
 // ++++++++++++++++++++++ MUSIC CONTROL ++++++++++++++++++++ 
 // music control inputs received at each frame
@@ -260,50 +206,62 @@ float pulsed_repop_colorBG[3];
 float pulsed_repop_colorCA[3];
 
 // memory of preceding pulsed color values to avoid unnecessary update
-float repop_colorBG_prec = 0.f;
-float repop_colorBG_pulse_prec = 0.f;
-float repop_greyBG_prec = 0.f;
-float repop_greyBG_pulse_prec = 0.f;
+float repop_colorBG_prec = -1.f;
+float repop_colorBG_pulse_prec = -1.f;
+float repop_greyBG_prec = -1.f;
+float repop_greyBG_pulse_prec = -1.f;
 
-float repop_colorCA_prec = 0.f;
-float repop_colorCA_pulse_prec = 0.f;
-float repop_greyCA_prec = 0.f;
-float repop_greyCA_pulse_prec = 0.f;
+float repop_colorCA_prec = -1.f;
+float repop_colorCA_pulse_prec = -1.f;
+float repop_greyCA_prec = -1.f;
+float repop_greyCA_pulse_prec = -1.f;
 
-#ifndef PEN_HSV
-float pen_color_prec = 0.f;
-float pen_color_pulse_prec = 0.f;
-float pen_grey_prec = 0.f;
-float pen_grey_pulse_prec = 0.f;
-#else
-float pen_hue_prec = 0.f;
-float pen_hue_pulse_prec = 0.f;
-float pen_sat_prec = 0.f;
-float pen_sat_pulse_prec = 0.f;
-float pen_value_prec = 0.f;
-float pen_value_pulse_prec = 0.f;
+#if defined(var_pen_color)
+float pen_color_prec = -1.f;
+float pen_color_pulse_prec = -1.f;
+#endif
+#if defined(var_pen_grey)
+float pen_grey_prec = -1.f;
+float pen_grey_pulse_prec = -1.f;
+#endif
+#if defined(var_pen_hue)
+float pen_hue_prec = -1.f;
+float pen_hue_pulse_prec = -1.f;
+#endif
+#if defined(var_pen_sat)
+float pen_sat_prec = -1.f;
+float pen_sat_pulse_prec = -1.f;
+#endif
+#if defined(var_pen_value)
+float pen_value_prec = -1.f;
+float pen_value_pulse_prec = -1.f;
 #endif
 
-#ifndef PART_HSV
-float repop_colorPart_prec = 0.f;
-float repop_colorPart_pulse_prec = 0.f;
-float repop_greyPart_prec = 0.f;
-float repop_greyPart_pulse_prec = 0.f;
-#else
-float repop_huePart_prec = 0.f;
-float repop_huePart_pulse_prec = 0.f;
-float repop_satPart_prec = 0.f;
-float repop_satPart_pulse_prec = 0.f;
-float repop_valuePart_prec = 0.f;
-float repop_valuePart_pulse_prec = 0.f;
+#if defined(var_repop_colorPart) && defined(var_repop_greyPart)
+float repop_colorPart_prec = -1.f;
+float repop_colorPart_pulse_prec = -1.f;
+float repop_greyPart_prec = -1.f;
+float repop_greyPart_pulse_prec = -1.f;
+#endif
+#if defined(var_repop_huePart)
+float repop_huePart_prec = -1.f;
+float repop_huePart_pulse_prec = -1.f;
+#endif
+#if defined(var_repop_satPart)
+float repop_satPart_prec = -1.f;
+float repop_satPart_pulse_prec = -1.f;
+#endif
+#if defined(var_repop_valuePart)
+float repop_valuePart_prec = -1.f;
+float repop_valuePart_pulse_prec = -1.f;
 #endif
 
-float pulse_prec[3] = { 0.f };
+float pulse_prec[3] = { -1.f };
 
 // factor increasing the acceleration weight of pixels, the brush radius, color...
 // based on sound volume attacks
 float pulse_average;
-float pulse_average_prec = 0.f;
+float pulse_average_prec = -1.f;
 float pulse[3] = { 0.0f };
 float seed_pulsePerlinNoise[4 * 2] 
 	= { rand_0_1 * 255, rand_0_1 * 255, rand_0_1 * 255, rand_0_1 * 255, 
@@ -326,14 +284,17 @@ int currentSVGTrack = 0;
 int currentlyPlaying_trackNo = -1;
 bool soundTrack_on = true;
 
+// movie soundtrack passes over an onset or a peak before next frame
+bool pg_track_sound_onset = false;
+bool pg_track_sound_peak = false;
+
 // movie playing
 int currentlyPlaying_movieNo = -1;
 float current_extern_movieNo = -1;
 
 // movie soundtrack passes over an onset or a peak before next frame
-bool pg_video_sound_onset = false;
-bool pg_video_sound_peak = false;
-
+bool pg_movie_sound_onset = false;
+bool pg_movie_sound_peak = false;
 // pen preset
 int current_pen_colorPreset = -1;
 
@@ -368,6 +329,13 @@ int flashPixel;
 // one-frame master flashing  
 int flashMaster;
 
+#if defined(var_Argenteuil_flashchange_diaporama_freq)
+// diaporama change flashing with a first pass on a permutation of all the images
+int var_Argenteuil_flashchange_diaporama_pass = -1;
+std::vector<int> imageRanksPermutation;
+#endif
+
+
 int flashTrkCA_freq_0_saved = 0;
 #if PG_NB_TRACKS >= 2
 int flashTrkCA_freq_1_saved = 0;
@@ -398,7 +366,7 @@ bool is_flashCameraTrk = false;
 float flashCameraTrk_weight = 0.0f;
 float flashCameraTrk_decay = 1.0f;
 float flashCameraTrk_threshold = 0.5f;
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 bool is_flashPhotoTrk = false;
 float flashPhotoTrk_weight = 0.0f;
 float flashPhotoTrk_decay = 1.0f;
@@ -452,6 +420,14 @@ bool* pg_variable_updated = NULL;
 pg_Parameter_Input_Type* pg_variable_param_input_type = NULL;
 ScenarioValue *pg_variable_scenario_or_gui_command_value = NULL;
 
+// master automatic incay/decay
+double pg_master_incay_duration = 0.;
+double pg_master_incay_start_time = 0.;
+float pg_master_incay_start_value = 0.f;
+double pg_master_decay_duration = 0.;
+double pg_master_decay_start_time = 0.;
+float pg_master_decay_start_value = 1.f;
+
 // resend all values (fx after interface crash)
 bool resend_all_variables = true;
 
@@ -468,6 +444,7 @@ double AbsoluteInitialScenarioTime;
 
 // +++++++++++++++++++++++ CLEAR AND INVERT +++++++++++++++++++++++++++++++++
 double lastClearTime = 0.;
+int lastClearSceneIndex = -1;
 
 // +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
 double lastBeatTime = 0.;
@@ -504,6 +481,11 @@ vector<string> StylusvsRubberButtonLabelsPaths = { "/trait/rubber_label", "/trai
 vector<int> StylusvsRubberButtonValues = { pg_Rubber, pg_Stylus };
 
 
+// +++++++++++++++++++++++ Clip ranges for automatic clip selection for ContAct +++++
+#if defined(var_Contact_clip_in_range)
+std::vector<int> ContAct_clip_ranges_min;
+std::vector<int> ContAct_clip_ranges_max;
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -567,13 +549,10 @@ enum pg_OSC_addresses_hashMap_IDs
 	_pen_brush_minus,
 	_pen_brush_replay_plus,
 	_pen_brush_replay_minus,
-#if defined(PIERRES)
-	_pen_position_dash_plus,
-#endif
 #ifdef PG_NB_PIXEL_MODES
 	_pixel_mode_plus,
 #endif
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	_CA1Type_plus,
 	_CA1SubType_plus,
 	_CA1Type_minus,
@@ -591,6 +570,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_repopCA_BW,
 	_repopPart_BW,
 	_pressure_onOff,
+	_diaporama_random,
 	_diaporama_plus,
 	_diaporama_minus,
 	_flash_photo_diaporama,
@@ -598,6 +578,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_soundtrack_minus,
 	_soundtrack_onOff,
 	_soundtrack_volume,
+	_soundtrack_seek,
 	_pen_colorPreset_minus,
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
@@ -619,6 +600,8 @@ enum pg_OSC_addresses_hashMap_IDs
 	_movie_minus,
 	_movie_forward,
 	_movie_backward,
+	_camera_open,
+	_camera_close,
 	_clip_plus,
 	_clip_minus,
 	_clip_forward,
@@ -631,26 +614,43 @@ enum pg_OSC_addresses_hashMap_IDs
 	_clip_nudge_touch_release,
 	_clip_cue_onOff,
 	_clip_cue_jump,
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_cue_jump,
+#endif
 	_clip_cue_call,
 	_clip_fx,
+	_clip_fx_std,
 	_clip_equalizer,
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	_clip2_equalizer,
+#endif
 	_clip_sample,
+	_clip_sample_range,
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_sample,
+#endif
 	_clip_sample_shift,
 	_clip_new,
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	_clip2_new,
+#endif
 	_clip_fader,
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	_clip2_fader,
+#endif
 	_clip_autoplay_left,
 	_clip_autoplay_right,
 	_clip_play_left,
 	_clip_play_right,
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_autoplay_left,
 	_clip2_autoplay_right,
 	_clip2_play_left,
 	_clip2_play_right,
+#endif
 	_resend_all,
 	_resend_all_light,
-	_setup,
+	_setupNo,
 	_setupName,
 	_setup_plus,
 	_setup_plus_5,
@@ -658,6 +658,8 @@ enum pg_OSC_addresses_hashMap_IDs
 	_setup_minus_5,
 	_setup_plus_keep_total_dur,
 	_interpolation_duration,
+	_master_decay,
+	_master_incay,
 #ifdef CRITON
 	_JUCE_loop_track,
 	_JUCE_exit,
@@ -701,10 +703,11 @@ enum pg_OSC_addresses_hashMap_IDs
 	_ClipArt_yellow_color,
 	_ClipArt_cyan_color,
 	_ClipArt_magenta_color,
+	_ClipArt_black_color,
 	_ClipArt_translations,
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	_Mesh_onOff,
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_Mesh_Profusion
 	_Caverne_Mesh_Profusion_on,
 	_Caverne_Mesh_Profusion_off,
 	_Caverne_Mesh_7Solids_on,
@@ -716,22 +719,21 @@ enum pg_OSC_addresses_hashMap_IDs
 	_Mesh_light_y,
 	_Mesh_light_z,
 #endif
+	_muteRightScreen_onOff,
 	_isClearAllLayers,
 	_StylusvsRubber,
-#ifdef ATELIERSENFANTS
+#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	_pen_hue_sat_value,
+#endif
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	_repop_hue_sat_valuePart,
 #endif
 	_take_snapshot,
 	_path_replay_stopAll,
 	_path_replay_playAll,
+	_clear_path_group,
 #ifdef PG_METAWEAR
 	_mw_mss_pos,
-#endif
-#if defined(BICHES) || defined (ATELIERSENFANTS)
-	_big_green_pen_track1,
-	_big_red_pen_track2,
-	_small_black_pen_track2,
 #endif
 	_cameraWB_R_plus,
 	_cameraWB_B_plus,
@@ -750,11 +752,10 @@ enum pg_OSC_addresses_hashMap_IDs
 	_cameraContrast_minus,
 	_cameraGamma_minus,
 	_reset_on_camera,
-#ifdef PIERRES
+	_reset_camera_params,
 	_processing_video,
 	_processing_image,
 	_processing_master,
-#endif
 	_BottomLeft,
 	_BottomRight,
 	_TopLeft,
@@ -827,13 +828,10 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "pen_brush_minus", _pen_brush_minus },
 	{ "pen_brush_replay_minus", _pen_brush_replay_minus },
 	{ "pen_brush_replay_plus", _pen_brush_replay_plus },
-#if defined(PIERRES)
-	{ "pen_position_dash_plus", _pen_position_dash_plus },
-#endif
 #ifdef PG_NB_PIXEL_MODES
 	{ "pixel_mode_plus", _pixel_mode_plus },
 #endif
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	{ "CA1Type_plus", _CA1Type_plus },
 	{ "CA1SubType_plus", _CA1SubType_plus },
 	{ "CA1Type_minus", _CA1Type_minus },
@@ -851,6 +849,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "repopCA_BW", _repopCA_BW },
 	{ "repopPart_BW", _repopPart_BW },
 	{ "pressure_onOff", _pressure_onOff },
+	{ "diaporama_random", _diaporama_random },
 	{ "diaporama_plus", _diaporama_plus },
 	{ "diaporama_minus", _diaporama_minus },
 	{ "flash_photo_diaporama", _flash_photo_diaporama },
@@ -858,6 +857,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "soundtrack_minus", _soundtrack_minus },
 	{ "soundtrack_onOff", _soundtrack_onOff },
 	{ "soundtrack_volume", _soundtrack_volume },
+	{ "soundtrack_seek", _soundtrack_seek },
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
@@ -879,6 +879,8 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "movie_minus", _movie_minus },
 	{ "movie_forward", _movie_forward },
 	{ "movie_backward", _movie_backward },
+	{ "camera_open", _camera_open },
+	{ "camera_close", _camera_close },
 	{ "clip_plus", _clip_plus },
 	{ "clip_minus", _clip_minus },
 	{ "clip_forward", _clip_forward },
@@ -891,26 +893,41 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "clip_nudge_touch_release", _clip_nudge_touch_release },
 	{ "clip_cue_onOff", _clip_cue_onOff },
 	{ "clip_cue_jump", _clip_cue_jump },
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_cue_jump", _clip2_cue_jump },
+#endif
 	{ "clip_cue_call", _clip_cue_call },
 	{ "clip_fx", _clip_fx },
+	{ "clip_fx_std", _clip_fx_std },
 	{ "clip_equalizer", _clip_equalizer },
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	{ "clip2_equalizer", _clip2_equalizer },
+#endif
 	{ "clip_sample", _clip_sample },
+	{ "clip_sample_range", _clip_sample_range },
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_sample", _clip2_sample },
+#endif
 	{ "clip_sample_shift", _clip_sample_shift },
 	{ "clip_new", _clip_new },
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+	{ "clip2_new", _clip2_new },
 	{ "clip_fader", _clip_fader },
+	{ "clip2_fader", _clip2_fader },
+#endif
 	{ "clip_autoplay_left", _clip_autoplay_left },
 	{ "clip_autoplay_right", _clip_autoplay_right },
 	{ "clip_play_left", _clip_play_left },
 	{ "clip_play_right", _clip_play_right },
+#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_autoplay_left", _clip_autoplay_left },
 	{ "clip2_autoplay_right", _clip_autoplay_right },
 	{ "clip2_play_left", _clip_play_left },
 	{ "clip2_play_right", _clip_play_right },
+#endif
 	{ "resend_all", _resend_all },
 	{ "resend_all_light", _resend_all_light },
-	{ "setup", _setup },
+	{ "setupNo", _setupNo },
 	{ "setupName", _setupName },
 	{ "setup_plus", _setup_plus },
 	{ "setup_plus_5", _setup_plus_5 },
@@ -918,6 +935,8 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "setup_minus_5", _setup_minus_5 },
 	{ "setup_plus_keep_total_dur", _setup_plus_keep_total_dur },
 	{ "interpolation_duration", _interpolation_duration },
+	{ "master_decay", _master_decay },
+	{ "master_incay", _master_incay },
 #ifdef CRITON
 	{ "JUCE_loop_track", _JUCE_loop_track },
 	{ "JUCE_exit", _JUCE_exit },
@@ -961,10 +980,11 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "ClipArt_yellow_color", _ClipArt_yellow_color },
 	{ "ClipArt_cyan_color", _ClipArt_cyan_color },
 	{ "ClipArt_magenta_color", _ClipArt_magenta_color },
+	{ "ClipArt_black_color", _ClipArt_black_color },
 	{ "ClipArt_translations", _ClipArt_translations },
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	{ "Mesh_onOff", _Mesh_onOff },
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_Mesh_Profusion
 	{ "Caverne_Mesh_Profusion_on", _Caverne_Mesh_Profusion_on },
 	{ "Caverne_Mesh_Profusion_off", _Caverne_Mesh_Profusion_off },
 	{ "Caverne_Mesh_7Solids_on", _Caverne_Mesh_7Solids_on },
@@ -976,22 +996,21 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "Mesh_light_y", _Mesh_light_y },
 	{ "Mesh_light_z", _Mesh_light_z },
 #endif
+	{ "muteRightScreen_onOff", _muteRightScreen_onOff },
 	{ "isClearAllLayers", _isClearAllLayers },
 	{ "StylusvsRubber", _StylusvsRubber },
-#ifdef ATELIERSENFANTS
+#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	{ "pen_hue_sat_value", _pen_hue_sat_value },
+#endif
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	{ "repop_hue_sat_valuePart", _repop_hue_sat_valuePart },
 #endif
 	{ "take_snapshot", _take_snapshot },
 	{ "path_replay_stopAll", _path_replay_stopAll },
 	{ "path_replay_playAll", _path_replay_playAll },
+	{ "clear_path_group", _clear_path_group },
 #ifdef PG_METAWEAR
 	{ "mw_mss_pos", _mw_mss_pos },
-#endif
-#if defined(BICHES) || defined (ATELIERSENFANTS)
-	{ "big_green_pen_track1", _big_green_pen_track1 },
-	{ "big_red_pen_track2",  _big_red_pen_track2 },
-	{ "small_black_pen_track2", _small_black_pen_track2 },
 #endif
 	{ "cameraWB_R_plus", _cameraWB_R_plus },
 	{ "cameraWB_B_plus", _cameraWB_B_plus },
@@ -1010,11 +1029,10 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "cameraContrast_minus", _cameraContrast_minus },
 	{ "cameraGamma_minus", _cameraGamma_minus },
 	{ "reset_on_camera", _reset_on_camera },
-#ifdef PIERRES
+	{ "reset_camera_params", _reset_camera_params },
 	{ "processing_video", _processing_video },
 	{ "processing_image", _processing_image },
 	{ "processing_master", _processing_master },
-#endif
 	{ "TopLeft", _TopLeft },
 	{ "TopRight", _TopRight },
 	{ "BottomLeft", _BottomLeft },
@@ -1046,22 +1064,22 @@ int double_to_sign(double param) {
 void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordinates[2]) {
 	switch(location) {
 	case 	_pg_CAseed_loc_center: {
-		coordinates[0] = leftWindowWidth / 2;
+		coordinates[0] = workingWindow_width / 2;
 		coordinates[1] = window_height / 2;
 		break;
 	}
 	case 	_pg_CAseed_loc_N: {
-		coordinates[0] = leftWindowWidth / 2;
+		coordinates[0] = workingWindow_width / 2;
 		coordinates[1] = 0;
 		break;
 	}
 	case 	_pg_CAseed_loc_E: {
-		coordinates[0] = leftWindowWidth;
+		coordinates[0] = workingWindow_width;
 		coordinates[1] = window_height / 2;
 		break;
 	}
 	case 	_pg_CAseed_loc_S: {
-		coordinates[0] = leftWindowWidth / 2;
+		coordinates[0] = workingWindow_width / 2;
 		coordinates[1] = window_height;
 		break;
 	}
@@ -1076,12 +1094,12 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 		break;
 	}
 	case 	_pg_CAseed_loc_NE: {
-		coordinates[0] = leftWindowWidth;
+		coordinates[0] = workingWindow_width;
 		coordinates[1] = 0;
 		break;
 	}
 	case 	_pg_CAseed_loc_SE: {
-		coordinates[0] = leftWindowWidth;
+		coordinates[0] = workingWindow_width;
 		coordinates[1] = window_height;
 		break;
 	}
@@ -1096,7 +1114,6 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 
 ///////////////////////////////////////////////////////////////////////////////////
 // MANAGES EXCLUSIVE BUTTONS IN INTERFACE
-#ifdef ATELIERSENFANTS
 template <typename T>
 void ExclusiveButtonsAndLabelsOnOff(vector<string> ButtonPaths, vector<string> ButtonLabelPaths, vector<T> ButtonValues, bool withDefault, T value) {
 	if(ButtonPaths.size() != ButtonValues.size() || ButtonLabelPaths.size() != ButtonValues.size()) {
@@ -1127,11 +1144,11 @@ void ExclusiveButtonsAndLabelsOnOff(vector<string> ButtonPaths, vector<string> B
 		}
 	}
 }
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////////
 // ASSIGNS INITIAL VALUES TO ALL CONFIGURATION FILES
+/*
 void InitializeConfigurationVar(void) {
 	for (int indVar = 0; indVar < _MaxConfigurationVarIDs; indVar++) {
 		if (ConfigurationVarTypes[indVar] == _pg_float) {
@@ -1154,6 +1171,7 @@ void InitializeConfigurationVar(void) {
 		}
 	}
 }
+*/
 
 /////////////////////////////////////////////////////////////////////////
 // INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE INITIAL VALUES LINE
@@ -1163,16 +1181,16 @@ void pg_initializeScenearioVariables(void) {
 	// only assigned at initialization, does not change during the set
 	//glUseProgram(shader_programme[pg_shader_Camera]);
 	//glUniform2f(uniform_Camera_vp_2fv_width_height,
-	//	(GLfloat)leftWindowWidth, (GLfloat)window_height);
+	//	(GLfloat)workingWindow_width, (GLfloat)window_height);
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	// only assigned at initialization, does not change during the set
 	glUseProgram(shader_programme[pg_shader_ParticleAnimation]);
 
 	///////////////////////////////////////////////////////////////////
 	// VERTEX SHADER VARIABLE
 	glUniform2f(uniform_ParticleAnimation_vp_2fv_width_height,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height);
+		(GLfloat)workingWindow_width, (GLfloat)window_height);
 #endif
 
 	// only assigned at initialization, does not change during the set
@@ -1181,7 +1199,7 @@ void pg_initializeScenearioVariables(void) {
 	///////////////////////////////////////////////////////////////////
 	// VERTEX SHADER VARIABLE
 	glUniform2f(uniform_Update_vp_2fv_width_height,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height);
+		(GLfloat)workingWindow_width, (GLfloat)window_height);
 
 	/////////////////////////////////////////////////////////////////////////
 	// ADDITION OF SCENARIO-CONTROLLED UNIFORM VARIABLES TO THE HASH MAP
@@ -1218,7 +1236,7 @@ void pg_initializeScenearioVariables(void) {
 	// track replay 
 	// source track recording
 	// is recording source -> has to stop recording source 
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_1)
 	if (path_replay_trackNo_1 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[1] = path_replay_trackNo_1;
@@ -1227,6 +1245,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(1, path_replay_trackNo_1);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_2)
 	if (path_replay_trackNo_2 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[2] = path_replay_trackNo_2;
@@ -1235,6 +1255,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(2, path_replay_trackNo_2);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_3)
 	if (path_replay_trackNo_3 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[3] = path_replay_trackNo_3;
@@ -1244,7 +1266,7 @@ void pg_initializeScenearioVariables(void) {
 		}
 	}
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_4)
 	if (path_replay_trackNo_4 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[4] = path_replay_trackNo_4;
@@ -1253,6 +1275,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(4, path_replay_trackNo_4);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_5)
 	if (path_replay_trackNo_5 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[5] = path_replay_trackNo_5;
@@ -1261,6 +1285,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(5, path_replay_trackNo_5);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_6)
 	if (path_replay_trackNo_6 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[6] = path_replay_trackNo_6;
@@ -1269,6 +1295,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(6, path_replay_trackNo_6);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_7)
 	if (path_replay_trackNo_7 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[7] = path_replay_trackNo_7;
@@ -1278,7 +1306,7 @@ void pg_initializeScenearioVariables(void) {
 		}
 	}
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_8)
 	if (path_replay_trackNo_8 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[8] = path_replay_trackNo_8;
@@ -1287,6 +1315,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(8, path_replay_trackNo_8);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_9)
 	if (path_replay_trackNo_9 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[9] = path_replay_trackNo_9;
@@ -1295,6 +1325,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(9, path_replay_trackNo_9);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_10)
 	if (path_replay_trackNo_10 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[10] = path_replay_trackNo_10;
@@ -1303,6 +1335,8 @@ void pg_initializeScenearioVariables(void) {
 			pg_path_replay_trackNo_onOff(10, path_replay_trackNo_10);
 		}
 	}
+#endif
+#if defined(var_path_replay_trackNo_11)
 	if (path_replay_trackNo_11 >= 0) {
 		if (tracksSync) {
 			synchr_start_path_replay_trackNo[11] = path_replay_trackNo_11;
@@ -1316,41 +1350,57 @@ void pg_initializeScenearioVariables(void) {
 	// track recording 
 	// source track recording
 	// is recording source -> has to stop recording source 
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_1)
 	if (!path_record_1) {
 		pg_path_recording_stop(1);
 	}
+#endif
+#if defined(var_path_record_2)
 	if (!path_record_2) {
 		pg_path_recording_stop(2);
 	}
+#endif
+#if defined(var_path_record_3)
 	if (!path_record_3) {
 		pg_path_recording_stop(3);
 	}
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4)
 	if (!path_record_4) {
 		pg_path_recording_stop(4);
 	}
+#endif
+#if defined(var_path_record_5)
 	if (!path_record_5) {
 		pg_path_recording_stop(5);
 	}
+#endif
+#if defined(var_path_record_6)
 	if (!path_record_6) {
 		pg_path_recording_stop(6);
 	}
+#endif
+#if defined(var_path_record_7)
 	if (!path_record_7) {
 		pg_path_recording_stop(7);
 	}
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8)
 	if (!path_record_8) {
 		pg_path_recording_stop(8);
 	}
+#endif
+#if defined(var_path_record_9)
 	if (!path_record_9) {
 		pg_path_recording_stop(9);
 	}
+#endif
+#if defined(var_path_record_10)
 	if (!path_record_10) {
 		pg_path_recording_stop(10);
 	}
+#endif
+#if defined(var_path_record_11)
 	if (!path_record_11) {
 		pg_path_recording_stop(11);
 	}
@@ -1391,11 +1441,11 @@ void pg_initializeScenearioVariables(void) {
 	flashMaster = 0;
 
 	// background subraction
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	reset_camera = true;
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	// particle initialization reset
 	part_initialization = -1;
 #endif
@@ -1431,7 +1481,7 @@ void pg_initializeScenearioVariables(void) {
 	sprintf(AuxString, "/CAseed_square %d", 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	pg_CAseed_location = _pg_CAseed_loc_center;
 	sprintf(AuxString, "/CAseed_loc %d", pg_CAseed_location); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-	pg_CAseed_coordinates[0] = leftWindowWidth / 2;
+	pg_CAseed_coordinates[0] = workingWindow_width / 2;
 	pg_CAseed_coordinates[1] = window_height / 2;
 	pg_CAseed_size = 1;
 	sprintf(AuxString, "/CAseed_size %d", pg_CAseed_size); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1464,14 +1514,14 @@ void pg_initializeScenearioVariables(void) {
 	// DRAWING-CONTROLLED UNIFORM VARIABLES: dynamic values received from drawing or track display 
 	// pen position storage on the two quads 
 	for (int indPath = 0; indPath < PG_NB_PATHS + 1; indPath++) {
-		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_x_next[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y_next[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-		paths_x_prev_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-		paths_y_prev_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_x_prev_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		paths_y_prev_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_x_memory[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y_memory[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_x_prev_memory[indPath] = PG_OUT_OF_SCREEN_CURSOR;
@@ -1483,6 +1533,10 @@ void pg_initializeScenearioVariables(void) {
 		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
+		tang_x[indPath] = 0;
+		tang_y[indPath] = 0;
+		tang_x_prev[indPath] = 0;
+		tang_y_prev[indPath] = 0;
 #endif
 
 		// pen color
@@ -1544,11 +1598,11 @@ void pg_initializeScenearioVariables(void) {
 	sprintf(AuxString, "/soundtrack_volume %d", int(soundTrack_on));
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 
-#if defined (PIERRES)
+#if defined(PIERRES)
 	updateXYKeystonePad();
 #endif
 
-#if !defined (LIGHT)
+#if !defined(LIGHT)
 	// rubber vs pen interface initialization
 	if (CurrentCursorStylusvsRubber == pg_Stylus) {
 		sprintf(AuxString, "/StylusvsRubber %d", pg_Stylus); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1559,24 +1613,29 @@ void pg_initializeScenearioVariables(void) {
 #endif
 
 	// color interface initialization
-#ifdef ATELIERSENFANTS
+#if (defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)) || (defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart))
 	float control_color[3];
+#endif
+#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	HSVtoRGB(pen_hue, pen_sat, pen_value, &control_color[0], &control_color[1], &control_color[2]);
 	sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	//printf("color msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
+#endif
 
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 	sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-
+#endif
 	// drawing type initialization
 	ExclusiveButtonsAndLabelsOnOff(DessinButtonsPaths, DessinButtonLabelsPaths, DessinButtonValues, true, trkDecay_1);
 
+#ifdef var_photo_diaporama
 	// photo diaporama initialization
 	ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, photo_diaporama);
+#endif
 
 	// drawing type initialization
 	ExclusiveButtonsAndLabelsOnOff(StylusvsRubberButtonsPaths, StylusvsRubberButtonLabelsPaths, StylusvsRubberButtonValues, false, CurrentCursorStylusvsRubber);
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1593,10 +1652,211 @@ void pg_initializationCallBacks(void) {
 // GUI DISPLAY & LOG FILE LOGGING
 /////////////////////////////////////////////////////////////
 void pg_displaySceneVariables(void) {
+	if (resend_all_variables) {
+#if !defined(LIGHT)
+		if (pg_CurrentScene && pg_CurrentSceneIndex >= 0 && pg_CurrentSceneIndex < pg_NbScenes) {
+			sprintf(AuxString, "/setupNo %d", pg_CurrentSceneIndex); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			if (pg_CurrentSceneIndex < pg_NbScenes - 1) {
+				sprintf(AuxString, "/setup_next next:_%s", pg_Scenario[pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			}
+			else {
+				sprintf(AuxString, "/setup_next next:_%s", (char*)"END"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+		else if (pg_CurrentScene == NULL) {
+			sprintf(AuxString, "/setupNo -1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup initial_setup"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_1 ***"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_2 ***"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			if (pg_NbScenes > 0) {
+				sprintf(AuxString, "/setup_next next:_%s", pg_Scenario[0].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+		else if (pg_CurrentScene == &pg_InterpolationScene) {
+			sprintf(AuxString, "/setupNo -1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup interpolation scene"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_1 next_scene_%s", pg_Scenario[pg_SceneIndexAfterInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_2 previous_scene_%s", pg_Scenario[pg_SceneIndexBeforeInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		}
+		sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		InterfaceInitializations();
+#endif
+#ifdef PG_WITH_PUREDATA
+		// resends the sound variables to PD (as in the callback)
+		sprintf(AuxString, "/sound_env_min %.2f", float(*((float*)ScenarioVarPointers[_sound_env_min])));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
+		sprintf(AuxString, "/sound_env_max %.2f", float(*((float*)ScenarioVarPointers[_sound_env_max])));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
+#endif
+
+#if defined(var_partColor_mode) || defined(var_partStroke_mode) || defined(var_partExit_mode) 
+		for (int ind = 0; ind < 3; ind++) {
+			if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
+				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+			else {
+				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+			if (ind == *((int*)ScenarioVarPointers[_partStroke_mode])) {
+				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+			else {
+				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+			if (ind == *((int*)ScenarioVarPointers[_partExit_mode])) {
+				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+			else {
+				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+#endif
+
+#if defined(var_clipCaptFreq)
+		// clip intialization for First Clip
+		sprintf(AuxString, "/clip_autoplay_left %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(0)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/clip_play_left %d", int(pg_clip_status[_clipLeft].get_clip_play(0)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/clip_autoplay_right %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(0)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/clip_play_right %d", int(pg_clip_status[_clipLeft].get_clip_play(0)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+
+#if PG_NB_PARALLEL_CLIPS >= 2
+		// clip intialization for Second Clip
+		sprintf(AuxString, "/clip2_autoplay_left %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(1)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/clip2_play_left %d", int(pg_clip_status[_clipLeft].get_clip_play(1)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/clip2_autoplay_right %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(1)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/clip2_play_right %d", int(pg_clip_status[_clipLeft].get_clip_play(1)));
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#endif
+#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
+		sprintf(AuxString, "/path_replay_trackNo_1 %d", path_replay_trackNo_1);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_1 %d", path_record_1);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_2) && defined(var_path_record_2)
+		sprintf(AuxString, "/path_replay_trackNo_2 %d", path_replay_trackNo_2);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_2 %d", path_record_2);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_3) && defined(var_path_record_3)
+		sprintf(AuxString, "/path_replay_trackNo_3 %d", path_replay_trackNo_3);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_3 %d", path_record_3);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_4) && defined(var_path_record_4)
+		sprintf(AuxString, "/path_replay_trackNo_4 %d", path_replay_trackNo_4);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_4 %d", path_record_4);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_5) && defined(var_path_record_5)
+		sprintf(AuxString, "/path_replay_trackNo_5 %d", path_replay_trackNo_5);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_5 %d", path_record_5);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_6) && defined(var_path_record_6)
+		sprintf(AuxString, "/path_replay_trackNo_6 %d", path_replay_trackNo_6);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_6 %d", path_record_6);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_7) && defined(var_path_record_7)
+		sprintf(AuxString, "/path_replay_trackNo_7 %d", path_replay_trackNo_7);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_7 %d", path_record_7);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_8) && defined(var_path_record_8)
+		sprintf(AuxString, "/path_replay_trackNo_8 %d", path_replay_trackNo_8);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_8 %d", path_record_8);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_9) && defined(var_path_record_9)
+		sprintf(AuxString, "/path_replay_trackNo_9 %d", path_replay_trackNo_9);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_9 %d", path_record_9);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_10) && defined(var_path_record_10)
+		sprintf(AuxString, "/path_replay_trackNo_10 %d", path_replay_trackNo_10);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_10 %d", path_record_10);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+#if defined(var_path_replay_trackNo_11) && defined(var_path_record_11)
+		sprintf(AuxString, "/path_replay_trackNo_11 %d", path_replay_trackNo_11);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/path_record_11 %d", path_record_11);
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+#endif
+	}
+#if defined(LIGHT)
+	if (resend_all_light_variables) {
+		pg_lightGUI_initialization();
+		resend_all_light_variables = false;
+	}
+#endif
+
+	/////////////////////////////////////////////////////////////////////////
+	// TIME CONTROLLED VARIABLES (NOT FORWARDED TO SHADERS)
+	// time display
+	// time exceeded in scene
+#if !defined(LIGHT)
+	sprintf(AuxString, "/volumeDisplay %.2f", pulse_average);
+	pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+
+	if (remainingTimeInScene >= 0) {
+		sprintf(AuxString, "/time %d:%d", (int)remainingTimeInScene / 60, (int)remainingTimeInScene % 60); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		if (remainingTimeInScene < 20) {
+			sprintf(AuxString, "/time_color_red 1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		}
+		else if (remainingTimeInScene < 20) {
+			sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/time_color_orange 1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		}
+		else {
+			sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/time_color_green 1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+	// time exceeded in scene
+	else {
+		int remTime = (int)remainingTimeInScene;
+		if (remTime > -60) {
+			sprintf(AuxString, "/time %d:%d", remTime / 60, remTime % 60); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		}
+		else {
+			sprintf(AuxString, "/time %d:%d", remTime / 60, -(remTime % 60)); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		}
+		sprintf(AuxString, "/time_color 3"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+	}
+#endif
+
 	/////////////////////////////////////////////////////////////////////////
 	// SCENARIO-CONTROLLED VARIABLES
+	//int rank = max(pg_FrameNo, 1) % 10;
+	//for (int indVar = rank * 45; indVar < min((rank + 1) * 45, int(_MaxInterpVarIDs)); indVar++) {
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
-		// the variable has a registered GUI ID in the scenario
+			// the variable has a registered GUI ID in the scenario
 		// and its values has changed since it was sent to the GUI last time
 		if (*(ScenarioVarMessages[indVar])) {
 			if (ScenarioVarTypes[indVar] == _pg_float) {
@@ -1656,134 +1916,9 @@ void pg_displaySceneVariables(void) {
 			}
 		}
 	}
-	if (resend_all_variables) {
-#if !defined (LIGHT)
-		if (pg_CurrentScene && pg_CurrentSceneIndex >= 0 && pg_CurrentSceneIndex < pg_NbScenes) {
-			sprintf(AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			if (pg_CurrentSceneIndex < pg_NbScenes - 1) {
-				sprintf(AuxString, "/setup_next next:_%s", pg_Scenario[pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			}
-			else {
-				sprintf(AuxString, "/setup_next next:_%s", (char*)"END"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			}
-		}
-		else if (pg_CurrentScene == NULL) {
-			sprintf(AuxString, "/setup initial_setup"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_1 ***"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_2 ***"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			if (pg_NbScenes > 0) {
-				sprintf(AuxString, "/setup_next next:_%s", pg_Scenario[0].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			}
-		}
-		else if (pg_CurrentScene == &pg_InterpolationScene) {
-			sprintf(AuxString, "/setup interpolation scene"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_1 next_scene_%s", pg_Scenario[pg_SceneIndexAfterInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_2 previous_scene_%s", pg_Scenario[pg_SceneIndexBeforeInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-		}
-		sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-		InterfaceInitializations();
-#endif
-#ifdef PG_WITH_PUREDATA
-		// resends the sound variables to PD (as in the callback)
-		sprintf(AuxString, "/sound_env_min %.2f", float(*((float*)ScenarioVarPointers[_sound_env_min])));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
-		sprintf(AuxString, "/sound_env_max %.2f", float(*((float*)ScenarioVarPointers[_sound_env_max])));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
-#endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-		for (int ind = 0; ind < 3; ind++) {
-			if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
-				sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			}
-			else {
-				sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			}
-			if (ind == *((int*)ScenarioVarPointers[_partStroke_mode])) {
-				sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			}
-			else {
-				sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			}
-			if (ind == *((int*)ScenarioVarPointers[_partExit_mode])) {
-				sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			}
-			else {
-				sprintf(AuxString, "/partExit_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			}
-		}
-#endif
+	resend_all_variables = false;
 
-#ifdef PG_WITH_CLIPS
-		// clip intialization for Left Clip
-		sprintf(AuxString, "/clip_autoplay_left %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(0)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/clip_play_left %d", int(pg_clip_status[_clipLeft].get_clip_play(0)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/clip_autoplay_right %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(0)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/clip_play_right %d", int(pg_clip_status[_clipLeft].get_clip_play(0)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-
-		// clip intialization for Left Clip
-		sprintf(AuxString, "/clip_autoplay_left %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(1)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/clip_play_left %d", int(pg_clip_status[_clipLeft].get_clip_play(1)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/clip_autoplay_right %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(1)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(AuxString, "/clip_play_right %d", int(pg_clip_status[_clipLeft].get_clip_play(1)));
-		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-#endif
-		resend_all_variables = false;
-	}
-#if defined(LIGHT)
-	if (resend_all_light_variables) {
-		pg_lightGUI_initialization();
-		resend_all_light_variables = false;
-	}
-#endif
-
-	/////////////////////////////////////////////////////////////////////////
-	// TIME CONTROLLED VARIABLES (NOT FORWARDED TO SHADERS)
-	// time display
-	// time exceeded in scene
-#if !defined (LIGHT)
-	sprintf(AuxString, "/volumeDisplay %.2f", pulse_average);
-	pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-
-	if (remainingTimeInScene >= 0) {
-		sprintf(AuxString, "/time %d:%d", (int)remainingTimeInScene / 60, (int)remainingTimeInScene % 60); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-		if (remainingTimeInScene < 10) {
-			sprintf(AuxString, "/time_color_red 1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-		}
-		else if (remainingTimeInScene < 20) {
-			sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/time_color_orange 1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/time_color_green 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-		}
-		else {
-			sprintf(AuxString, "/time_color_red 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/time_color_orange 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/time_color_green 1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-	// time exceeded in scene
-	else {
-		int remTime = (int)remainingTimeInScene;
-		if (remTime > -60) {
-			sprintf(AuxString, "/time %d:%d", remTime / 60, remTime % 60); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-		}
-		else {
-			sprintf(AuxString, "/time %d:%d", remTime / 60, -(remTime % 60)); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-		}
-		sprintf(AuxString, "/time_color 3"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-	}
-#endif
 }
 
 void pg_send_message_udp(char *pattern, char * message, char *targetHostid) {
@@ -1791,7 +1926,8 @@ void pg_send_message_udp(char *pattern, char * message, char *targetHostid) {
 	for (int ind = 0; ind < nb_IP_Clients; ind++) {
 		if (strcmp(targetHostid, IP_Clients[ind]->id.c_str()) == 0) {
 			targetHost = IP_Clients[ind];
-			// printf("send_message_udp %s %s %d %d\n", message, pattern, nb_IP_Clients, targetHost);
+			// char msg[512];
+			// sprintf(msg, "send_message_udp %s %s %d %d size (curr %d tot %d)\n", message, pattern, nb_IP_Clients, targetHost, targetHost->current_depth_output_stack, targetHost->max_depth_output_stack);
 			targetHost->storeIP_output_message(message, pattern);
 		}
 	}
@@ -1822,7 +1958,7 @@ pg_IPClient *pg_UDP_client(char *targetHostid) {
 // makes a line of a CSV file to be used as a starting point for a repetition of the
 // setup
 
-void pg_logCurrentLineSceneVariables(char *fileName) {
+void pg_logCurrentLineSceneVariables(string fileName) {
 	/////////////////////////////////////////////////////////////////////////
 	// SCENARIO-CONTROLLED UNIFORM VARIABLES
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
@@ -1845,7 +1981,7 @@ void pg_logCurrentLineSceneVariables(char *fileName) {
 			fprintf(pg_csv_file, ",%s", (*((string*)ScenarioVarPointers[indVar])).c_str());
 		}
 	}
-	fprintf(pg_csv_file, ",%s\n" , fileName);
+	fprintf(pg_csv_file, ",%s\n" , fileName.c_str());
 }
 
 // makes the first line of a CSV log file
@@ -1863,93 +1999,143 @@ void pg_logFirstLineSceneVariables(void) {
 ///////////////////////////////////////////////////////////////////////////////////
 // SCENARIO BASED COMMANDS
 ///////////////////////////////////////////////////////////////////////////////////
-#ifdef PG_WITH_PUREDATA
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
-	lastBeatTime = CurrentClockTime;
+	lastBeatTime = pg_CurrentClockTime;
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music beats
 		sprintf(AuxString, "/auto_beat %d", (int)(*((bool *)ScenarioVarPointers[_auto_beat])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("auto_beat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_auto_beat])));
+#endif
 	}
 }
-#if defined(FORET) || defined (CORE)
+#if defined(var_MIDIwithStroke)
 void MIDIwithStroke_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music beats
 		sprintf(AuxString, "/MIDIwithStroke %d", (int)(*((bool*)ScenarioVarPointers[_MIDIwithStroke])));
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 		// printf("MIDIwithStroke[%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithBeat])));
+#endif
 	}
 }
 #endif
+#if defined(var_MIDIwithBeat)
 void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music beats
 		sprintf(AuxString, "/MIDIwithBeat %d", (int)(*((bool*)ScenarioVarPointers[_MIDIwithBeat])));
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 		// printf("MIDIwithBeat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithBeat])));
+#endif
 	}
 }
+#endif
+#if defined(var_MIDIwithColor)
 void MIDIwithColor_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music Colors
 		sprintf(AuxString, "/MIDIwithColor %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithColor])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("MIDIwithColor [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithColor])));
+#endif
 	}
 }
+#endif
+#if defined(var_MIDIwithBrush)
 void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music Brushs
 		sprintf(AuxString, "/MIDIwithBrush %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithBrush])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("MIDIwithBrush [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithBrush])));
-	}
-}
-#ifdef PG_WITH_CAMERA_CAPTURE
-void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
-	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		// sends a message to PD to stop sending music Flashs
-		sprintf(AuxString, "/MIDIwithCameraFlash %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithCameraFlash])));
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithFlash])));
+#endif
 	}
 }
 #endif
+#if defined(var_MIDIwithCameraFlash)
+void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
+#if defined(var_cameraCaptFreq)
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
+		// sends a message to PD to stop sending music Flashs
+		sprintf(AuxString, "/MIDIwithCameraFlash %d", (int)(*((bool*)ScenarioVarPointers[_MIDIwithCameraFlash])));
+		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
+		// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithFlash])));
+#endif
+	}
+#endif
+}
+#endif
+#if defined(var_Contact_clip_in_range)
+void Contact_clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
+#if defined(var_clipCaptFreq)
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+		ContAct_clip_ranges_min.clear();
+		ContAct_clip_ranges_max.clear();
+		if (scenario_or_gui_command_value != "NULL") {
+			std::vector<std::string> ContAct_clip_ranges;
+			ContAct_clip_ranges = split_string(scenario_or_gui_command_value, '/');
+			for (string range : ContAct_clip_ranges) {
+				std::vector<std::string> clip_min_max;
+				clip_min_max = split_string(range, '-');
+				ContAct_clip_ranges_min.push_back(stoi(clip_min_max[0]));
+				ContAct_clip_ranges_max.push_back(stoi(clip_min_max[1]));
+			}
+		}
+	}
+#endif
+}
+#endif
+#if defined(var_MIDIwithPhotoFlash)
 void MIDIwithPhotoFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music Flashs
 		sprintf(AuxString, "/MIDIwithPhotoFlash %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithPhotoFlash])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithFlash])));
+#endif
 	}
 }
+#endif
+#if defined(var_auto_pulse)
 void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		// sends a message to PD to stop sending music pulse
 		sprintf(AuxString, "/auto_pulse %d", (int)(*((bool *)ScenarioVarPointers[_auto_pulse])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("auto_pulse [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_auto_pulse])));
+#endif
 		for (int ind = 0; ind < 3 * 2; ind++) {
 			seed_pulsePerlinNoise[ind] = rand_0_1 * 255;
 		}
 	}
 }
+#endif
 void beat_delay_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		sprintf(AuxString, "/beat_delay %.5f", scenario_or_gui_command_value);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
+#endif
 	}
 }
 void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#ifdef PG_WITH_PUREDATA
 		sprintf(AuxString, "/beat_threshold %.5f", scenario_or_gui_command_value);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
+#endif
 	}
 }
-#endif
-#ifndef PEN_HSV
+#if defined(var_pen_color)
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/pen_colorPreset -1.0");
@@ -1973,22 +2159,30 @@ void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, float 
 }
 #endif
 #if defined(PG_WITH_PUREDATA) || defined(PG_WITH_JUCE)
-void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		soundtrack_weight = scenario_or_gui_command_value;
+		soundtrack_PD_weight = scenario_or_gui_command_value;
 #ifdef PG_WITH_PUREDATA
-		sprintf(AuxString, "/soundtrack_weight %.2f", soundtrack_weight);
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
+		sprintf(AuxString, "/soundtrack_weight %.2f", soundtrack_PD_weight);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
 #endif
 #ifdef PG_WITH_JUCE
-		sprintf(AuxString, "/JUCE_soundtrack_weight %.2f", soundtrack_weight);
-		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_SoundJUCE_send");
+		sprintf(AuxString, "/JUCE_soundtrack_weight %.2f", soundtrack_PD_weight);
+		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_SoundJUCE_send");
 #endif
 	}
 }
 #endif
+#if defined(PG_WITH_PORTAUDIO)
+void soundtrack_PA_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+		soundtrack_PA_weight = scenario_or_gui_command_value;
+	}
+}
+#endif
 
-#ifdef ATELIERSENFANTS
+
+#if defined(var_pen_hue)
 void pen_hue_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
@@ -1997,6 +2191,8 @@ void pen_hue_callBack(pg_Parameter_Input_Type param_input_type, float scenario_o
 		//printf("colorH msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 	}
 }
+#endif
+#if defined(var_pen_sat)
 void pen_sat_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
@@ -2005,6 +2201,8 @@ void pen_sat_callBack(pg_Parameter_Input_Type param_input_type, float scenario_o
 		//printf("colorS msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 	}
 }
+#endif
+#if defined(var_pen_value)
 void pen_value_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
@@ -2013,36 +2211,50 @@ void pen_value_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		//printf("colorV msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 	}
 }
+#endif
+#if defined(var_repop_huePart)
 void repop_huePart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 		float control_color[3];
 		HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 		sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+#endif
 		//printf("colorH msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
 	}
 }
+#endif
+#if defined(var_repop_satPart)
 void repop_satPart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 		float control_color[3];
 		HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 		sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+#endif
 		//printf("colorS msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
 	}
 }
+#endif
+#if defined(var_repop_valuePart)
 void repop_valuePart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 		HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 		sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+#endif
 		//printf("colorV msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
 	}
 }
+#endif
 void trkDecay_1_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(DessinButtonsPaths, DessinButtonLabelsPaths, DessinButtonValues, true, trkDecay_1);
 	}
 }
+#if defined(var_fingers)
 void fingers_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// drawing type initialization
@@ -2051,21 +2263,41 @@ void fingers_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_
 }
 #endif
 
+#if defined(var_Contact_anim_speed)
+void Contact_anim_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+		for (int indMesh = 0; indMesh < pg_nb_Mesh_files; indMesh++) {
+			mesh_startAnime[indMesh] = pg_CurrentClockTime;
+		}
+	}
+}
+#endif
+
+#if defined(var_Contact_motion_speed)
+void Contact_motion_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+		for (int indMesh = 0; indMesh < pg_nb_Mesh_files; indMesh++) {
+			mesh_startAnime[indMesh] = pg_CurrentClockTime;
+		}
+	}
+}
+#endif
+
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// sprintf(AuxString, "/message Exposure_%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		if (scenario_or_gui_command_value != CameraCurrent_exposure) {
 			//printf("Cam exposure %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
-			//pg_webCam_capture.set(CV_CAP_PROP_EXPOSURE, scenario_or_gui_command_value);
+			//pg_webCam_capture.set(CAP_PROP_EXPOSURE, scenario_or_gui_command_value);
 			CameraCurrent_exposure = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
 	}
 #endif
 }
-#if defined(CAVERNEPLATON)
+#if defined(var_Caverne_Mesh_Profusion)
 void Caverne_Mesh_Profusion_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		//printf("/Caverne_Mesh_Profusion %.1f\n", scenario_or_gui_command_value);
@@ -2083,13 +2315,13 @@ void Caverne_Mesh_Profusion_callBack(pg_Parameter_Input_Type param_input_type, f
 }
 #endif
 void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// sprintf(AuxString, "/message Gamma%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		if (scenario_or_gui_command_value != CameraCurrent_gamma) {
 			//printf("Cam gamma %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
-			pg_webCam_capture.set(CV_CAP_PROP_GAMMA, scenario_or_gui_command_value);
+			pg_webCam_capture.set(CAP_PROP_GAMMA, scenario_or_gui_command_value);
 			CameraCurrent_gamma = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
@@ -2097,12 +2329,12 @@ void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenar
 #endif
 }
 void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != CameraCurrent_gain) {
 			printf("Cam gain %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam 
-			pg_webCam_capture.set(CV_CAP_PROP_GAIN, scenario_or_gui_command_value);
+			pg_webCam_capture.set(CAP_PROP_GAIN, scenario_or_gui_command_value);
 			CameraCurrent_gain = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
@@ -2110,12 +2342,12 @@ void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 #endif
 }
 void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != CameraCurrent_brightness) {
 			//printf("Cam brightness %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
-			pg_webCam_capture.set(CV_CAP_PROP_BRIGHTNESS, scenario_or_gui_command_value);
+			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, scenario_or_gui_command_value);
 			CameraCurrent_brightness = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
@@ -2123,12 +2355,12 @@ void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float s
 #endif
 }
 void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != CameraCurrent_saturation) {
 			//printf("Cam saturation %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam 
-			pg_webCam_capture.set(CV_CAP_PROP_SATURATION, scenario_or_gui_command_value);
+			pg_webCam_capture.set(CAP_PROP_SATURATION, scenario_or_gui_command_value);
 			CameraCurrent_saturation = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
@@ -2136,12 +2368,12 @@ void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float s
 #endif
 }
 void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != CameraCurrent_contrast) {
 			//printf("Cam contrast %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
-			pg_webCam_capture.set(CV_CAP_PROP_CONTRAST, scenario_or_gui_command_value);
+			pg_webCam_capture.set(CAP_PROP_CONTRAST, scenario_or_gui_command_value);
 			CameraCurrent_contrast = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
@@ -2149,12 +2381,12 @@ void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float sce
 #endif
 }
 void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != CameraCurrent_WB_B) {
 			//printf("Cam WB B %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
-			pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_BLUE_U, scenario_or_gui_command_value);
+			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, scenario_or_gui_command_value);
 			CameraCurrent_WB_B = scenario_or_gui_command_value;
 			pg_LastCameraParameterChange_Frame = pg_FrameNo;
 		}
@@ -2162,13 +2394,13 @@ void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 #endif
 }
 void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != CameraCurrent_WB_R) {
 			//printf("Cam WB R %.2f\n", scenario_or_gui_command_value);
 			// cvSetCaptureProperty comment for see3cam
 			if (scenario_or_gui_command_value >= 0) {
-				pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_RED_V, scenario_or_gui_command_value);
+				pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, scenario_or_gui_command_value);
 				CameraCurrent_WB_R = scenario_or_gui_command_value;
 				pg_LastCameraParameterChange_Frame = pg_FrameNo;
 			}
@@ -2176,30 +2408,24 @@ void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 #endif
 }
-#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA)
+#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA) || defined(PG_WITH_PORTAUDIO)
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// play a new track
-		if (playing_soundtrackNo >= 0
-			&& playing_soundtrackNo < nb_soundtracks) {
-//			soundTrack_on = true;
-#ifdef PG_WITH_PUREDATA
-//			sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
-//			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-#endif
-//			sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
-//			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
-			currentlyPlaying_trackNo = playing_soundtrackNo;
-			PlayTrack(currentlyPlaying_trackNo);
+		if (int(scenario_or_gui_command_value) >= 0
+			&& int(scenario_or_gui_command_value) < nb_soundtracks
+			&& currentlyPlaying_trackNo != int(scenario_or_gui_command_value)) {
+			PlayTrack(int(scenario_or_gui_command_value), 0.);
 		}
 		// stop playing a track
-		else if (playing_soundtrackNo < 0) {
-			currentlyPlaying_trackNo = playing_soundtrackNo;
+		else if (int(scenario_or_gui_command_value) < 0) {
+			//printf("playing_soundtrackNo_callBack: playing_soundtrackNo neg %d\n", int(scenario_or_gui_command_value));
 			StopTrack();
 		}
 	}
 }
 #endif
+#if defined(var_movieCaptFreq)
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// starts playing another video
@@ -2217,8 +2443,9 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scen
 		}
 	}
 }
-#ifdef PG_WITH_CAMERA_CAPTURE
+#endif
 void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+#if defined(var_cameraCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		//printf("camera current %d new %d param type %d\n", pg_current_active_cameraNo, cameraNo, param_input_type);
 		if (cameraNo != pg_current_active_cameraNo) {
@@ -2226,10 +2453,12 @@ void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or
 			pg_openCameraCaptureAndLoadFrame();
 		}
 	}
-}
 #endif
-#ifdef PG_WITH_CLIPS
+}
+
+#if defined(var_clipCaptFreq)
 void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
+#if defined(var_clipCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != "NULL") {
 			for (int ind_clip = 0; ind_clip < pg_nbClips; ind_clip++) {
@@ -2238,7 +2467,7 @@ void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, str
 					// starts playing another clip
 					//printf("Start playing clip \n");
 					playing_clipNoLeft = ind_clip;
-					printf("playing left clip no %s\n", scenario_or_gui_command_value.c_str());
+					printf("playing left clip name %s\n", scenario_or_gui_command_value.c_str());
 					pg_play_clip_no(0, _clipLeft, playing_clipNoLeft);
 					return;
 				}
@@ -2253,8 +2482,10 @@ void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, str
 		sprintf(AuxString, "/clip_shortName_0 %s", "---");
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
+#endif
 }
 void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
+#if defined(var_clipCaptFreq)
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != "NULL") {
 			for (int ind_clip = 0; ind_clip < pg_nbClips; ind_clip++) {
@@ -2262,7 +2493,7 @@ void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, st
 					// starts playing another clip
 					//printf("Start playing clip \n");
 					playing_clipNoRight = ind_clip;
-					printf("playing right clip no %s\n", scenario_or_gui_command_value.c_str());
+					printf("playing right clip name %s\n", scenario_or_gui_command_value.c_str());
 					pg_play_clip_no(0, _clipRight, playing_clipNoRight);
 					return;
 				}
@@ -2273,12 +2504,13 @@ void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, st
 			//printf("Stop playing right cLip [NULL]\n");
 		}
 		playing_clipNoRight = -1;
-		pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(0, playing_clipNoRight);
+		pg_clip_status[_clipRight].setCurrentlyPlaying_clipNo(0, playing_clipNoRight);
 		sprintf(AuxString, "/clip_shortName_1 %s", "---");
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
+#endif
 }
-#if defined(PG_NB_PARALLEL_CLIPS) && PG_NB_PARALLEL_CLIPS >= 2
+#if PG_NB_PARALLEL_CLIPS >= 2
 void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != "NULL") {
@@ -2287,7 +2519,7 @@ void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_typ
 					// starts playing another clip
 					//printf("Start playing clip \n");
 					playing_secondClipNoLeft = ind_clip;
-					printf("playing second left clip no %s\n", scenario_or_gui_command_value.c_str());
+					printf("playing second left clip name %s\n", scenario_or_gui_command_value.c_str());
 					pg_play_clip_no(1, _clipLeft, playing_secondClipNoLeft);
 					return;
 				}
@@ -2303,6 +2535,7 @@ void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_typ
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
+
 void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value != "NULL") {
@@ -2311,7 +2544,7 @@ void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_ty
 					// starts playing another clip
 					//printf("Start playing clip \n");
 					playing_secondClipNoRight = ind_clip;
-					printf("playing second right clip no %s\n", scenario_or_gui_command_value.c_str());
+					printf("playing second right clip name %s\n", scenario_or_gui_command_value.c_str());
 					pg_play_clip_no(1, _clipRight, playing_secondClipNoRight);
 					return;
 				}
@@ -2322,13 +2555,15 @@ void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_ty
 			//printf("Stop playing second left cLip [NULL]\n");
 		}
 		playing_secondClipNoRight = -1;
-		pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(1, playing_secondClipNoRight);
+		pg_clip_status[_clipRight].setCurrentlyPlaying_clipNo(1, playing_secondClipNoRight);
 		sprintf(AuxString, "/clip2_shortName_1 %s", "---");
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
 #endif
 #endif
+
+#if defined(var_movieCaptFreq)
 void pg_play_movie_no(void) {
 	if (playing_movieNo >= 0 && playing_movieNo < nb_movies
 		&& playing_movieNo != currentlyPlaying_movieNo) {
@@ -2350,8 +2585,9 @@ void pg_play_movie_no(void) {
 		is_movieLoading = true;
 		printf("Loading %s\n", movieFileName[currentlyPlaying_movieNo].c_str());
 		// sprintf(AuxString, "/message %s", movieFileName[currentlyPlaying_movieNo].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
-#if defined(TEMPETE) || defined(DAWN) || defined(RIVETS)
+//#if (defined(RIVETS) || defined(CAAUDIO) || defined(CORE)) && !defined(SOUNDINITATIVE)
 		pg_initVideoMoviePlayback_nonThreaded(&movieFileName[currentlyPlaying_movieNo]);
+/*
 #else
 #ifdef WIN32
 		DWORD rc;
@@ -2380,12 +2616,48 @@ void pg_play_movie_no(void) {
 		pthread_exit(NULL);
 #endif
 #endif
+*/
+	}
+}
+#endif
+
+#if defined(var_clipCaptFreq)
+void clip_new(int indClipRank, int clipSide, int nb_arguments, float *float_arguments) {
+	if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips > 0) {
+		int i = 0;
+		int clipNo = -1;
+		if (nb_arguments == 1) {
+			clipNo = int(floor(rand_0_1 * pg_nbClips)) % pg_nbClips;
+			while (i++ < 10 && clipNo == pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)) {
+				clipNo = int(floor(rand_0_1 * pg_nbClips)) % pg_nbClips;
+			}
+		}
+		else if (nb_arguments == 3 || nb_arguments == 2) {
+			if ((nb_arguments == 3 && (float_arguments[1] > float_arguments[2])) || float_arguments[1] < 0) {
+				if (nb_arguments == 2)
+					sprintf(ErrorStr, "Incorrect new clip arguments (%.2f)!", float_arguments[1]); ReportError(ErrorStr);
+				if (nb_arguments == 3)
+					sprintf(ErrorStr, "Incorrect new clip arguments (%.2f, %.2f)!", float_arguments[1], float_arguments[2]); ReportError(ErrorStr);
+			}
+			int clipMin = int(float_arguments[1]);
+			int clipMax = pg_nbClips;
+			if (nb_arguments == 3) {
+				clipMax = int(float_arguments[2]);
+			}
+			clipNo = int(floor(rand_0_1 * (clipMax - clipMin + 1))) % (clipMax - clipMin + 1) + clipMin;
+			while (i++ < 10 && clipNo == pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)) {
+				clipNo = int(floor(rand_0_1 * (clipMax - clipMin + 1))) % (clipMax - clipMin + 1) + clipMin;
+			}
+		}
+		if (clipNo >= 0 && clipNo < pg_nbClips) {
+			pg_play_clip_no(indClipRank, clipSide, clipNo);
+		}
 	}
 }
 
-#ifdef PG_WITH_CLIPS
 void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
-	if (clipSide == _clipLeft || clipSide == _clipRight
+	//printf("play clip No %d side %d rank %d previous clip no %d\n", clipNo, clipSide, indClipRank, pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank));
+	if ((clipSide == _clipLeft || clipSide == _clipRight)
 		&& clipNo >= 0 && clipNo < pg_nbClips
 		&& clipNo != pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)) {
 
@@ -2396,36 +2668,48 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				playing_clipNoLeft = clipNo;
 				sprintf(AuxString, "/clip_shortName_0 %s", pg_clip_tracks[playing_clipNoLeft].get_name().c_str());
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				sprintf(AuxString, "/clip_play_left 0");
-				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-				printf("Play left clip %d at %d fps\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq));
+				sprintf(AuxString, "/clip_play_0 %d", playing_clipNoLeft);
+				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+				(*((string*)ScenarioVarPointers[_playing_clipNameLeft])) = pg_clip_tracks[playing_clipNoLeft].get_name();
+				playing_clipNameLeft = pg_clip_tracks[playing_clipNoLeft].get_name();
+				//printf("Play left clip %d at %d fps, is playing %d nb frames %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]), pg_clip_tracks[pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)].get_initialNbFrames());
 			}
+#if PG_NB_PARALLEL_CLIPS >= 2
 			else {
 				playing_secondClipNoLeft = clipNo;
 				sprintf(AuxString, "/clip2_shortName_0 %s", pg_clip_tracks[playing_secondClipNoLeft].get_name().c_str());
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				sprintf(AuxString, "/clip2_play_left 0");
-				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-				printf("Play second left clip %d at %d fps\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq));
+				sprintf(AuxString, "/clip2_play_0 %d", playing_secondClipNoLeft);
+				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+				//printf("Play second left clip %d at %d fps, is playing %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]));
+				(*((string*)ScenarioVarPointers[_playing_secondClipNameLeft])) = pg_clip_tracks[playing_secondClipNoLeft].get_name();
+				playing_secondClipNameLeft = pg_clip_tracks[playing_secondClipNoLeft].get_name();
 			}
+#endif
 		}
 		else {
 			if (indClipRank == 0) {
 				playing_clipNoRight = pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank);
 				sprintf(AuxString, "/clip_shortName_1 %s", pg_clip_tracks[playing_clipNoRight].get_name().c_str());
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				sprintf(AuxString, "/clip_play_right 0");
-				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-				printf("Play right clip %d at %d fps\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq));
+				sprintf(AuxString, "/clip_play_1 %d", playing_clipNoRight);
+				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+				//printf("Play right clip %d at %d fps, is playing %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]));
+				(*((string*)ScenarioVarPointers[_playing_clipNameRight])) = pg_clip_tracks[playing_clipNoRight].get_name();
+				playing_clipNameRight = pg_clip_tracks[playing_clipNoRight].get_name();
 			}
+#if PG_NB_PARALLEL_CLIPS >= 2
 			else {
 				playing_secondClipNoRight = pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank);
 				sprintf(AuxString, "/clip2_shortName_1 %s", pg_clip_tracks[playing_secondClipNoRight].get_name().c_str());
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				sprintf(AuxString, "/clip2_play_right 0");
-				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-				printf("Play second right clip %d at %d fps\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq));
+				sprintf(AuxString, "/clip2_play_1 %d", playing_secondClipNoRight);
+				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+				//printf("Play second right clip %d at %d fps, is playing %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]));
+				(*((string*)ScenarioVarPointers[_playing_secondClipNameRight])) = pg_clip_tracks[playing_secondClipNoRight].get_name();
+				playing_secondClipNameRight = pg_clip_tracks[playing_secondClipNoRight].get_name();
 			}
+#endif
 		}
 
 		pg_clip_status[clipSide].reset_clip(indClipRank);
@@ -2435,7 +2719,7 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 }
 #endif
 
-#if defined(CAVERNEPLATON)
+#if defined(var_Caverne_Mesh_Profusion)
 void extern_movieNo_callBack(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (extern_movieNo != current_extern_movieNo) {
@@ -2446,6 +2730,8 @@ void extern_movieNo_callBack(pg_Parameter_Input_Type param_input_type, ScenarioV
 	}
 }
 #endif
+
+#ifdef var_photo_diaporama
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		//printf("photo_diaporama_callBack %d\n", scenario_or_gui_command_value);
@@ -2473,6 +2759,8 @@ void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scen
 #endif
 	}
 }
+#endif
+
 void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value > 0.) {
@@ -2483,7 +2771,7 @@ void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, flo
 		}
 	}
 }
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value > 0.) {
@@ -2499,7 +2787,7 @@ void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, int scenario_o
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value >= 1) { // large radius for the image brushes*
 			pen_radiusMultiplier = 50.0f;
-#if defined(PIERRES) || defined(ENSO) || defined(ATELIERSENFANTS) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(CORE)
+#if defined(FORET) || defined(CORE)
 			pen_radiusMultiplier = 1.0f;
 #endif
 		}
@@ -2511,43 +2799,46 @@ void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, int scenario_o
 }
 void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-		// printf("delta %.3f\n", (float)(CurrentClockTime - lastClearTime) );
-		if (CurrentClockTime - lastClearTime < 0.5f) {
+		// printf("delta %.3f\n", (float)(pg_CurrentClockTime - lastClearTime) );
+		if (pg_CurrentClockTime - lastClearTime < 0.5f) {
 			// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_TouchOSC_send");
 			isClearAllLayers = 1;
 			lastClearTime = 0.0f;
-			printf("****** isClearAllLayers %d\n",isClearAllLayers);
+			//printf("****** _PG_GUI_COMMAND isClearAllLayers %d\n",isClearAllLayers);
 		}
 		else {
-			lastClearTime = CurrentClockTime;
+			lastClearTime = pg_CurrentClockTime;
 		}
 	}
-	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value) {
+	// clearing is only made once at the beginning of a scene
+	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value && lastClearSceneIndex != pg_CurrentSceneIndex) {
 		// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_TouchOSC_send");
 		isClearAllLayers = 1;
-		lastClearTime = CurrentClockTime;
-		// printf("****** isClearAllLayers %d\n", isClearAllLayers);
+		lastClearTime = pg_CurrentClockTime;
+		lastClearSceneIndex = pg_CurrentSceneIndex;
+		 //printf("****** _PG_SCENARIO isClearAllLayers %d %d %d\n", isClearAllLayers, pg_FirstFrameInScene, pg_CurrentSceneIndex);
 	}
 }
 void clearLayer_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-		if (CurrentClockTime - lastClearTime < 0.2f) {
+		if (pg_CurrentClockTime - lastClearTime < 0.2f) {
 			isClearLayer = 1;
 			lastClearTime = 0.0f;
 			// pg_send_message_udp((char *)"s", (char *)"/message clear_all_layers", (char *)"udp_TouchOSC_send");
 		}
 		else {
 			isClearLayer = 1;
-			lastClearTime = CurrentClockTime;
+			lastClearTime = pg_CurrentClockTime;
 			// pg_send_message_udp((char *)"s", (char *)"/message clear_layer", (char *)"udp_TouchOSC_send");
 		}
 	}
-	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value) {
+	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value && lastClearSceneIndex != pg_CurrentSceneIndex) {
 		isClearLayer = 1;
-		lastClearTime = CurrentClockTime;
+		lastClearTime = pg_CurrentClockTime;
+		lastClearSceneIndex = pg_CurrentSceneIndex;
 	}
 }
-#ifdef PG_LIGHTS_CONTROL_IN_PYTHON
+#if defined(var_currentLightScene)
 void currentLightScene_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if ((param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) && scenario_or_gui_command_value >= 0) {
 		sprintf(AuxString, "/light_control/light_scene_start %d", int(currentLightScene) - 1);
@@ -2571,7 +2862,7 @@ void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scen
 	// printf("reset sound\n");
 }
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		// MESH INTERFACE VARIABLE INITIALIZATION
@@ -2580,6 +2871,8 @@ void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenari
 		}
 	}
 }
+#endif
+#if defined(var_mobileMeshes)
 void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		// MESH INTERFACE VARIABLE INITIALIZATION
@@ -2589,13 +2882,21 @@ void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenari
 	}
 }
 #endif
+#if defined(var_MmeShanghai_brokenGlass)
+void MmeShanghai_brokenGlass_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
+		// activation of a mesh subgroup for which the edges will be drawn
+	}
+}
+#endif
 void clearCA_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 		// pg_send_message_udp((char *)"s", (char *)"/message clear_CA", (char *)"udp_TouchOSC_send");
 		isClearCA = 1;
 	}
-	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value) {
+	else if (param_input_type == _PG_SCENARIO && scenario_or_gui_command_value && lastClearSceneIndex != pg_CurrentSceneIndex) {
 		isClearCA = 1;
+		lastClearSceneIndex = pg_CurrentSceneIndex;
 	}
 }
 void clearEcho_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
@@ -2607,6 +2908,20 @@ void clearEcho_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_
 		isClearEcho = 1;
 	}
 }
+void clear_path_group(void) {
+	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
+		pg_Path_Status[ind].isFirstFrame = false;
+		pg_Path_Status[ind].isActiveRecording = false;
+		pg_Path_Status[ind].isNormalized = false;
+		pg_Path_Status[ind].indReading = -1;
+		pg_Path_Status[ind].initialTimeRecording = 0.0f;
+		pg_Path_Status[ind].finalTimeRecording = 0.0f;
+		pg_Path_Status[ind].initialTimeReading = 0.0f;
+		pg_Path_Status[ind].lastPlayedFrameTime = 1.0F;
+		pg_Path_Status[ind].readSpeedScale = 1.0F;
+		pg_indPreviousFrameReading[ind] = 0;
+	}
+}
 void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (int(scenario_or_gui_command_value) >= 0 && int(scenario_or_gui_command_value) - 1 != current_path_group) {
@@ -2616,37 +2931,50 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 				//printf("path %d path group %d\n", current_path_group, SVGpaths[indPrerecPath].path_group);
 				if (SVGpaths[indPrerecPath].indPath <= PG_NB_PATHS && SVGpaths[indPrerecPath].path_group == current_path_group) {
 					was_path_replay[SVGpaths[indPrerecPath].indPath] = is_path_replay[SVGpaths[indPrerecPath].indPath];
+#if defined(var_path_replay_trackNo_1)
 					if (is_path_replay[SVGpaths[indPrerecPath].indPath]) {
 						 //printf("Stops Replay indPath %d: %d\n", SVGpaths[indPrerecPath].indPath, is_path_replay[SVGpaths[indPrerecPath].indPath]);
-						pg_path_replay_trackNo_stop(SVGpaths[indPrerecPath].indPath);
+						
+						(SVGpaths[indPrerecPath].indPath);
 					}
+#endif
+#if defined(var_path_record_1)
 					// is recording source -> has to stop recording source 
 					if (pg_Path_Status[SVGpaths[indPrerecPath].indPath].isActiveRecording) {
 						//printf("Stops Recording indPath %d: %d\n", SVGpaths[indPrerecPath].indPath, pg_Path_Status[SVGpaths[indPrerecPath].indPath].isActiveRecording);
 						pg_path_recording_stop(SVGpaths[indPrerecPath].indPath);
 					}
+#endif
 				}
 			}
+			clear_path_group();
 			current_path_group = int(scenario_or_gui_command_value) - 1;
 			//printf("new current path %d\n", current_path_group);
 			for (int indPrerecPath = 0; indPrerecPath < nb_svg_paths; indPrerecPath++) {
 				//printf("path %d path group %d\n", current_path_group, SVGpaths[indPrerecPath].path_group);
 				if (SVGpaths[indPrerecPath].indPath <= PG_NB_PATHS && SVGpaths[indPrerecPath].path_group == current_path_group) {
 					//printf("load path for replay %s\n", SVGpaths[indPrerecPath].path_fileName.c_str());
+#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 					load_svg_path((char*)SVGpaths[indPrerecPath].path_fileName.c_str(),
 						SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].indTrack, SVGpaths[indPrerecPath].pathRadius,
 						SVGpaths[indPrerecPath].path_r_color, SVGpaths[indPrerecPath].path_g_color, SVGpaths[indPrerecPath].path_b_color,
-						SVGpaths[indPrerecPath].path_readSpeedScale, SVGpaths[indPrerecPath].path_ID, SVGpaths[indPrerecPath].with_color_radius_from_scenario);
+						SVGpaths[indPrerecPath].path_readSpeedScale, SVGpaths[indPrerecPath].path_ID, SVGpaths[indPrerecPath].with_color_radius_from_scenario,
+						SVGpaths[indPrerecPath].secondsforwidth);
+#endif
+#if defined(var_path_replay_trackNo_1)
 					// start reading if it was already reading
 					if (was_path_replay[SVGpaths[indPrerecPath].indPath]) {
 						//printf("Starts Replay indPath %d: %d\n", SVGpaths[indPrerecPath].indPath, was_path_replay[SVGpaths[indPrerecPath].indPath]);
 						pg_path_replay_trackNo_start(SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].indTrack);
 					}
+#endif
 				}
 			}
 		}
 	}
 }
+
+#if defined(var_path_replay_trackNo_1) || defined(var_path_record_1)
 void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	int playing_track = -1;
 	// for a keystroke or a GUI, the command is the current track whatever its value
@@ -2669,41 +2997,55 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		// stops recording if recording is on
 		bool isTrackRecord = false;
 		switch (pathNo) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 		case 1:
 			isTrackRecord = path_record_1;
 			break;
+#if defined(var_path_record_2)
 		case 2:
 			isTrackRecord = path_record_2;
 			break;
+#endif
+#if defined(var_path_record_3)
 		case 3:
 			isTrackRecord = path_record_3;
 			break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4)
 		case 4:
 			isTrackRecord = path_record_4;
 			break;
+#endif
+#if defined(var_path_record_5)
 		case 5:
 			isTrackRecord = path_record_5;
 			break;
+#endif
+#if defined(var_path_record_6)
 		case 6:
 			isTrackRecord = path_record_6;
 			break;
+#endif
+#if defined(var_path_record_7)
 		case 7:
 			isTrackRecord = path_record_7;
 			break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8)
 		case 8:
 			isTrackRecord = path_record_8;
 			break;
+#endif
+#if defined(var_path_record_9)
 		case 9:
 			isTrackRecord = path_record_9;
 			break;
+#endif
+#if defined(var_path_record_10)
 		case 10:
 			isTrackRecord = path_record_10;
 			break;
+#endif
+#if defined(var_path_record_11)
 		case 11:
 			isTrackRecord = path_record_11;
 			break;
@@ -2724,7 +3066,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 				synchr_start_path_replay_trackNo[pathNo] = playing_track;
 			}
 			else {
-				printf("start replay path %d\n", pathNo);
+				//printf("start replay path %d\n", pathNo);
 				pg_path_replay_trackNo_onOff(pathNo, playing_track);
 			}
 			//sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
@@ -2750,111 +3092,85 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		}
 	}
 }
+#endif
 
 void reload_SVGs_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value) {
 			for (int indPrerecPath = 0; indPrerecPath < nb_svg_paths; indPrerecPath++) {
 				if (SVGpaths[indPrerecPath].indPath <= PG_NB_PATHS) {
+#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 					load_svg_path((char*)SVGpaths[indPrerecPath].path_fileName.c_str(),
 						SVGpaths[indPrerecPath].indPath, SVGpaths[indPrerecPath].indTrack, SVGpaths[indPrerecPath].pathRadius,
 						SVGpaths[indPrerecPath].path_r_color, SVGpaths[indPrerecPath].path_g_color, SVGpaths[indPrerecPath].path_b_color,
-						SVGpaths[indPrerecPath].path_readSpeedScale, SVGpaths[indPrerecPath].path_ID, SVGpaths[indPrerecPath].with_color_radius_from_scenario);
+						SVGpaths[indPrerecPath].path_readSpeedScale, SVGpaths[indPrerecPath].path_ID, SVGpaths[indPrerecPath].with_color_radius_from_scenario,
+						SVGpaths[indPrerecPath].secondsforwidth);
+#endif
 				}
 			}
 		}
 	}
 }
 
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_1) 
 void path_replay_trackNo_1_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(1, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_2) 
 void path_replay_trackNo_2_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(2, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_3) 
 void path_replay_trackNo_3_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(3, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_4) 
 void path_replay_trackNo_4_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(4, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_5) 
 void path_replay_trackNo_5_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(5, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_6) 
 void path_replay_trackNo_6_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(6, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_7) 
 void path_replay_trackNo_7_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(7, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_8) 
 void path_replay_trackNo_8_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(8, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_9) 
 void path_replay_trackNo_9_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(9, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_10) 
 void path_replay_trackNo_10_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(10, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_replay_trackNo_11) 
 void path_replay_trackNo_11_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	path_replay_trackNo_callBack(11, param_input_type, scenario_or_gui_command_value);
 }
 #endif
+#if defined(var_path_record_1) 
 void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
-	//bool isTrackRecord = false;
-
-	//printf("begin callback path record for path 1 recording %d (recorded %d)\n",  path_record_1, recorded_path[1]);
-
-//	switch (pathNo) {
-//#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-//	case 1:
-//		isTrackRecord = path_record_1;
-//		break;
-//	case 2:
-//		isTrackRecord = path_record_2;
-//		break;
-//	case 3:
-//		isTrackRecord = path_record_3;
-//		break;
-//#endif
-//#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-//	case 4:
-//		isTrackRecord = path_record_4;
-//		break;
-//	case 5:
-//		isTrackRecord = path_record_5;
-//		break;
-//	case 6:
-//		isTrackRecord = path_record_6;
-//		break;
-//	case 7:
-//		isTrackRecord = path_record_7;
-//		break;
-//#endif
-//#if PG_NB_PATHS == 11
-//	case 8:
-//		isTrackRecord = path_record_8;
-//		break;
-//	case 9:
-//		isTrackRecord = path_record_9;
-//		break;
-//	case 10:
-//		isTrackRecord = path_record_10;
-//		break;
-//	case 11:
-//		isTrackRecord = path_record_11;
-//		break;
-//#endif
-//	}
-
 	//keystroke on/off command
 	//printf("begin callback path %d is track record %d (recorded %d)\n", pathNo, int(pg_Path_Status[pathNo].isActiveRecording), int(recorded_path[pathNo]));
-
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 		// is not currently recording -> starts recording 
 		if (!pg_Path_Status[pathNo].isActiveRecording) {
@@ -2899,366 +3215,499 @@ void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, 
 	//printf("end callback path record for path 1 recording %d active recording %d (recorded %d)\n", path_record_1, int(pg_Path_Status[1].isActiveRecording), recorded_path[1]);
 	//printf("end callback path record for path 2 recording %d active recording %d (recorded %d)\n", path_record_2, int(pg_Path_Status[2].isActiveRecording), recorded_path[2]);
 }
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#endif
+#if defined(var_path_record_1) 
 void path_record_1_callBack( pg_Parameter_Input_Type param_input_type , bool scenario_or_gui_command_value ) {
 	path_record_callBack(1 , param_input_type , scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_2) 
 void path_record_2_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(2, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_3) 
 void path_record_3_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(3, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4) 
 void path_record_4_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(4, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_5) 
 void path_record_5_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(5, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_6) 
 void path_record_6_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(6, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_7) 
 void path_record_7_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(7, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8) 
 void path_record_8_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(8, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_9) 
 void path_record_9_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(9, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_10) 
 void path_record_10_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(10, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_path_record_11) 
 void path_record_11_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	path_record_callBack(11, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 void part_move_init(void) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_follow_0) && defined(var_part_path_repulse_0)
 	*((bool *)ScenarioVarPointers[_part_path_follow_0]) = false;
+	*((bool*)ScenarioVarPointers[_part_path_repulse_0]) = false;
+#endif
+#if defined(var_part_path_follow_1) && defined(var_part_path_repulse_1)
 	*((bool *)ScenarioVarPointers[_part_path_follow_1]) = false;
+	*((bool*)ScenarioVarPointers[_part_path_repulse_1]) = false;
+#endif
+#if defined(var_part_path_follow_2) && defined(var_part_path_repulse_2)
 	*((bool *)ScenarioVarPointers[_part_path_follow_2]) = false;
+	*((bool*)ScenarioVarPointers[_part_path_repulse_2]) = false;
+#endif
+#if defined(var_part_path_follow_3) && defined(var_part_path_repulse_3)
 	*((bool *)ScenarioVarPointers[_part_path_follow_3]) = false;
-	*((bool *)ScenarioVarPointers[_part_path_repulse_0]) = false;
-	*((bool *)ScenarioVarPointers[_part_path_repulse_1]) = false;
-	*((bool *)ScenarioVarPointers[_part_path_repulse_2]) = false;
 	*((bool *)ScenarioVarPointers[_part_path_repulse_3]) = false;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_follow_4) && defined(var_part_path_repulse_4)
 	*((bool*)ScenarioVarPointers[_part_path_follow_4]) = false;
-	*((bool*)ScenarioVarPointers[_part_path_follow_5]) = false;
-	*((bool*)ScenarioVarPointers[_part_path_follow_6]) = false;
-	*((bool*)ScenarioVarPointers[_part_path_follow_7]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_4]) = false;
+#endif
+#if defined(var_part_path_follow_5) && defined(var_part_path_repulse_5)
+	*((bool*)ScenarioVarPointers[_part_path_follow_5]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_5]) = false;
+#endif
+#if defined(var_part_path_follow_6) && defined(var_part_path_repulse_6)
+	*((bool*)ScenarioVarPointers[_part_path_follow_6]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_6]) = false;
+#endif
+#if defined(var_part_path_follow_7) && defined(var_part_path_repulse_7)
+	*((bool*)ScenarioVarPointers[_part_path_follow_7]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_7]) = false;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_part_path_follow_8) && defined(var_part_path_repulse_8)
 	*((bool*)ScenarioVarPointers[_part_path_follow_8]) = false;
-	*((bool*)ScenarioVarPointers[_part_path_follow_9]) = false;
-	*((bool*)ScenarioVarPointers[_part_path_follow_10]) = false;
-	*((bool*)ScenarioVarPointers[_part_path_follow_11]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_8]) = false;
+#endif
+#if defined(var_part_path_follow_9) && defined(var_part_path_repulse_9)
+	*((bool*)ScenarioVarPointers[_part_path_follow_9]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_9]) = false;
+#endif
+#if defined(var_part_path_follow_10) && defined(var_part_path_repulse_10)
+	*((bool*)ScenarioVarPointers[_part_path_follow_10]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_10]) = false;
+#endif
+#if defined(var_part_path_follow_11) && defined(var_part_path_repulse_11)
+	*((bool*)ScenarioVarPointers[_part_path_follow_11]) = false;
 	*((bool*)ScenarioVarPointers[_part_path_repulse_11]) = false;
 #endif
 }
 void part_path_follow_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	bool state = false;
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_follow_0)
 	switch (pathNo) {
 	case 0:
 		state = part_path_follow_0;
 		break;
+#if defined(var_part_path_follow_1)
 	case 1:
 		state = part_path_follow_1;
 		break;
+#endif
+#if defined(var_part_path_follow_2)
 	case 2:
 		state = part_path_follow_2;
 		break;
+#endif
+#if defined(var_part_path_follow_3)
 	case 3:
 		state = part_path_follow_3;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-	switch (pathNo) {
+#if defined(var_part_path_follow_4)
 	case 4:
 		state = part_path_follow_4;
 		break;
+#endif
+#if defined(var_part_path_follow_5)
 	case 5:
 		state = part_path_follow_5;
 		break;
+#endif
+#if defined(var_part_path_follow_6)
 	case 6:
 		state = part_path_follow_6;
 		break;
+#endif
+#if defined(var_part_path_follow_7)
 	case 7:
 		state = part_path_follow_7;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 11
-	switch (pathNo) {
-	case 4:
+#if defined(var_part_path_follow_8)
+	case 8:
 		state = part_path_follow_8;
 		break;
-	case 5:
+#endif
+#if defined(var_part_path_follow_9)
+	case 9:
 		state = part_path_follow_9;
 		break;
-	case 6:
+#endif
+#if defined(var_part_path_follow_10)
+	case 10:
 		state = part_path_follow_10;
 		break;
-	case 7:
+#endif
+#if defined(var_part_path_follow_11b)
+	case 11:
 		state = part_path_follow_11;
 		break;
+#endif
 	}
 #endif
+
 	if (!state)
 		return; // nothing to do for null values
+
 	part_move_init();
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+
+#if defined(var_part_path_follow_0)
 	switch (pathNo) {
 	case 0:
 		*((bool *)ScenarioVarPointers[_part_path_follow_0]) = state;
 		break;
+#if defined(var_part_path_follow_1)
 	case 1:
 		*((bool *)ScenarioVarPointers[_part_path_follow_1]) = state;
 		break;
+#endif
+#if defined(var_part_path_follow_2)
 	case 2:
 		*((bool *)ScenarioVarPointers[_part_path_follow_2]) = state;
 		break;
+#endif
+#if defined(var_part_path_follow_3)
 	case 3:
 		*((bool *)ScenarioVarPointers[_part_path_follow_3]) = state;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-	switch (pathNo) {
+#if defined(var_part_path_follow_4)
 	case 4:
 		*((bool*)ScenarioVarPointers[_part_path_follow_4]) = state;
 		break;
+#endif
+#if defined(var_part_path_follow_5)
 	case 5:
 		*((bool*)ScenarioVarPointers[_part_path_follow_5]) = state;
 		break;
+#endif
+#if defined(var_part_path_follow_6)
 	case 6:
 		*((bool*)ScenarioVarPointers[_part_path_follow_6]) = state;
 		break;
+#endif
+#if defined(var_part_path_follow_7)
 	case 7:
 		*((bool*)ScenarioVarPointers[_part_path_follow_7]) = state;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 11
-	switch (pathNo) {
-	case 4:
+#if defined(var_part_path_follow_8)
+	case 8:
 		*((bool*)ScenarioVarPointers[_part_path_follow_8]) = state;
 		break;
-	case 5:
+#endif
+#if defined(var_part_path_follow_9)
+	case 9:
 		*((bool*)ScenarioVarPointers[_part_path_follow_9]) = state;
 		break;
-	case 6:
+#endif
+#if defined(var_part_path_follow_10)
+	case 10:
 		*((bool*)ScenarioVarPointers[_part_path_follow_10]) = state;
 		break;
-	case 7:
+#endif
+#if defined(var_part_path_follow_11)
+	case 11:
 		*((bool*)ScenarioVarPointers[_part_path_follow_11]) = state;
 		break;
+#endif
 	}
 #endif
 }
 void part_path_repulse_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	bool state = false;
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_repulse_0)
 	switch (pathNo) {
 	case 0:
 		state = part_path_repulse_0;
 		break;
+#if defined(var_part_path_repulse_1)
 	case 1:
 		state = part_path_repulse_1;
 		break;
+#endif
+#if defined(var_part_path_repulse_2)
 	case 2:
 		state = part_path_repulse_2;
 		break;
+#endif
+#if defined(var_part_path_repulse_3)
 	case 3:
 		state = part_path_repulse_3;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-	switch (pathNo) {
+#if defined(var_part_path_repulse_4)
 	case 4:
 		state = part_path_repulse_4;
 		break;
+#endif
+#if defined(var_part_path_repulse_5)
 	case 5:
 		state = part_path_repulse_5;
 		break;
+#endif
+#if defined(var_part_path_repulse_6)
 	case 6:
 		state = part_path_repulse_6;
 		break;
+#endif
+#if defined(var_part_path_repulse_7)
 	case 7:
 		state = part_path_repulse_7;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 11
-	switch (pathNo) {
-	case 4:
+#if defined(var_part_path_repulse_8)
+	case 8:
 		state = part_path_repulse_8;
 		break;
-	case 5:
+#endif
+#if defined(var_part_path_repulse_9)
+	case 9:
 		state = part_path_repulse_9;
 		break;
-	case 6:
+#endif
+#if defined(var_part_path_repulse_10)
+	case 10:
 		state = part_path_repulse_10;
 		break;
-	case 7:
+#endif
+#if defined(var_part_path_repulse_11)
+	case 11:
 		state = part_path_repulse_11;
 		break;
-	}
 #endif
+}
+#endif
+
 	if (!state)
 		return; // nothing to do for null values
 	part_move_init();
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+
+#if defined(var_part_path_repulse_0)
 	switch (pathNo) {
 	case 0:
 		*((bool *)ScenarioVarPointers[_part_path_repulse_0]) = state;
 		break;
+#if defined(var_part_path_repulse_1)
 	case 1:
 		*((bool *)ScenarioVarPointers[_part_path_repulse_1]) = state;
 		break;
+#endif
+#if defined(var_part_path_repulse_2)
 	case 2:
 		*((bool *)ScenarioVarPointers[_part_path_repulse_2]) = state;
 		break;
+#endif
+#if defined(var_part_path_repulse_3)
 	case 3:
 		*((bool *)ScenarioVarPointers[_part_path_repulse_3]) = state;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-	switch (pathNo) {
+#if defined(var_part_path_repulse_4)
 	case 4:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_4]) = state;
 		break;
+#endif
+#if defined(var_part_path_repulse_5)
 	case 5:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_5]) = state;
 		break;
+#endif
+#if defined(var_part_path_repulse_6)
 	case 6:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_6]) = state;
 		break;
+#endif
+#if defined(var_part_path_repulse_7)
 	case 7:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_7]) = state;
 		break;
-	}
 #endif
-#if PG_NB_PATHS == 11
-	switch (pathNo) {
-	case 4:
+#if defined(var_part_path_repulse_8)
+	case 8:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_8]) = state;
 		break;
-	case 5:
+#endif
+#if defined(var_part_path_repulse_9)
+	case 9:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_9]) = state;
 		break;
-	case 6:
+#endif
+#if defined(var_part_path_repulse_10)
+	case 10:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_10]) = state;
 		break;
-	case 7:
+#endif
+#if defined(var_part_path_repulse_11)
+	case 11:
 		*((bool*)ScenarioVarPointers[_part_path_repulse_11]) = state;
 		break;
+#endif
 }
 #endif
 }
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_follow_0)
 void part_path_follow_0_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(0, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_1)
 void part_path_follow_1_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(1, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_2)
 void part_path_follow_2_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(2, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_3)
 void part_path_follow_3_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(3, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_follow_4)
 void part_path_follow_4_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(4, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_5)
 void part_path_follow_5_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(5, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_6)
 void part_path_follow_6_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(6, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_7)
 void part_path_follow_7_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(7, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_part_path_follow_8)
 void part_path_follow_8_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(8, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_9)
 void part_path_follow_9_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(9, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_10)
 void part_path_follow_10_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(10, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_follow_11)
 void part_path_follow_11_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_follow_callBack(11, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_repulse_0)
 void part_path_repulse_0_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(0, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_1)
 void part_path_repulse_1_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(1, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_2)
 void part_path_repulse_2_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(2, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_3)
 void part_path_repulse_3_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(3, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_part_path_repulse_4)
 void part_path_repulse_4_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(4, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_5)
 void part_path_repulse_5_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(5, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_6)
 void part_path_repulse_6_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(6, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_7)
 void part_path_repulse_7_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(7, param_input_type, scenario_or_gui_command_value);
 }
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_part_path_repulse_8)
 void part_path_repulse_8_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(8, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_9)
 void part_path_repulse_9_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(9, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_10)
 void part_path_repulse_10_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(10, param_input_type, scenario_or_gui_command_value);
 }
+#endif
+#if defined(var_part_path_repulse_11)
 void part_path_repulse_11_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	part_path_repulse_callBack(11, param_input_type, scenario_or_gui_command_value);
 }
 #endif
+#if defined(var_partMove_target) && defined(var_partMove_rand) && defined(var_part_timeToTargt)
 void partMove_target_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	// printf("Particle move target %d\n" , int(partMove_target));
 	bool state = partMove_target;
@@ -3279,7 +3728,9 @@ void part_initialization_callBack(pg_Parameter_Input_Type param_input_type, int 
 	//printf("part initialization call back %d %d\n", part_initialization, scenario_or_gui_command_value);
 }
 #endif
-#ifdef PG_SENSORS
+#endif
+
+#ifdef var_sensor_layout
 void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	// copies the grid layout
 	assignSensorPositions();
@@ -3295,53 +3746,98 @@ void sensor_sample_setUp_callBack(pg_Parameter_Input_Type param_input_type, floa
 
 ///////////////////////////////////////////////////////////////////////////////////
 // SCENARIO BASED COMMANDS
+#if defined(var_path_record_1)
 void pg_NextRecordReplayPath(void) {
 	// only one track recording per second to avoid repetition
-	if (CurrentClockTime - LastTrackRecordingChangeClockTime > 1) {
-		LastTrackRecordingChangeClockTime = CurrentClockTime;
+	if (pg_CurrentClockTime - LastTrackRecordingChangeClockTime > 1) {
+		LastTrackRecordingChangeClockTime = pg_CurrentClockTime;
 	}
 	else {
 		return;
 	}
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-	if (path_record_1) {
-		path_replay_trackNo_callBack(1, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_2) {
-		path_replay_trackNo_callBack(2, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_3) {
-		path_replay_trackNo_callBack(3, _PG_GUI_COMMAND, -1);
-	}
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-	else if (path_record_4) {
-		path_replay_trackNo_callBack(4, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_5) {
-		path_replay_trackNo_callBack(5, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_6) {
-		path_replay_trackNo_callBack(6, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_7) {
-		path_replay_trackNo_callBack(7, _PG_GUI_COMMAND, -1);
-	}
-#endif
-#if PG_NB_PATHS == 11
-	else if (path_record_8) {
-		path_replay_trackNo_callBack(8, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_9) {
-		path_replay_trackNo_callBack(9, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_10) {
-		path_replay_trackNo_callBack(10, _PG_GUI_COMMAND, -1);
-	}
-	else if (path_record_11) {
+#if defined(var_path_record_11)
+	if (path_record_11) {
 		path_replay_trackNo_callBack(11, _PG_GUI_COMMAND, -1);
 	}
 #endif
+#if defined(var_path_record_10)
+	else if (path_record_10) {
+		path_replay_trackNo_callBack(10, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 11
+		path_record_callBack(11, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_9)
+	else if (path_record_9) {
+		path_replay_trackNo_callBack(9, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 11
+		path_record_callBack(10, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_8)
+	else if (path_record_8) {
+		path_replay_trackNo_callBack(8, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 11
+		path_record_callBack(9, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_7)
+	else if (path_record_7) {
+		path_replay_trackNo_callBack(7, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 11
+		path_record_callBack(8, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_6)
+	else if (path_record_6) {
+		path_replay_trackNo_callBack(6, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+		path_record_callBack(7, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_5)
+	else if (path_record_5) {
+		path_replay_trackNo_callBack(5, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+		path_record_callBack(6, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_4)
+	else if (path_record_4) {
+		path_replay_trackNo_callBack(4, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+		path_record_callBack(5, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_3)
+	else if (path_record_3) {
+		path_replay_trackNo_callBack(3, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+		path_record_callBack(4, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+#if defined(var_path_record_2)
+	else if (path_record_2) {
+		path_replay_trackNo_callBack(2, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+		path_record_callBack(3, _PG_GUI_COMMAND, true);
+#endif
+	}
+#endif
+	else if (path_record_1) {
+		path_replay_trackNo_callBack(1, _PG_GUI_COMMAND, -1);
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+		path_record_callBack(2, _PG_GUI_COMMAND, true);
+#endif
+	}
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 	else if (!is_path_replay[1]) {
 		path_record_callBack(1, _PG_GUI_COMMAND, true);
@@ -3382,6 +3878,7 @@ void pg_NextRecordReplayPath(void) {
 	}
 #endif
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////
 // SCENARIO BASED COMMANDS
@@ -3415,7 +3912,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 	}
 	else if (ScenarioVarTypes[indParam] == _pg_int) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 			if (indParam == _CA1Type || indParam == _CA2Type ||
 				indParam == _CA1SubType || indParam == _CA2SubType) {
 				// for CAType we choose to alternate randomly between both types, according
@@ -3432,15 +3929,15 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 			}
 			else {
 #endif
-				* ((int*)ScenarioVarPointers[indParam]) = int(scenario_or_gui_command_value.val_num);
-#ifdef PG_NB_CA_TYPES
+				* ((int*)ScenarioVarPointers[indParam]) = int(round(scenario_or_gui_command_value.val_num));
+#ifdef var_nb_CATypes
 			}
 #endif
 		}
 	}
 	else if (ScenarioVarTypes[indParam] == _pg_bool) {
 		if (param_input_type == _PG_SCENARIO) {
-			*((bool*)ScenarioVarPointers[indParam]) = (scenario_or_gui_command_value.val_num > 0 ? true : false);
+			*((bool*)ScenarioVarPointers[indParam]) = bool(round(scenario_or_gui_command_value.val_num));
 		}
 		else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 			*((bool*)ScenarioVarPointers[indParam]) = !(*((bool*)ScenarioVarPointers[indParam]));
@@ -3473,7 +3970,7 @@ void pg_run_a_callBack(int indParam) {
 	pg_variable_updated[indParam] = false;
 }
 
-#if defined (PIERRES)
+#if defined(PIERRES)
 /// <summary>
 /// updates the position of the cursor in the Keystone pad for texture keystone distortion
 /// </summary>
@@ -3492,7 +3989,7 @@ void updateXYKeystonePad(void) {
 #endif
 
 
-#if defined (TVW)
+#if defined(TVW)
 int SubScenesDiaporamaDir(int currentScene) {
 	switch (currentScene) {
 	case 0:
@@ -3548,7 +4045,7 @@ void pg_update_visual_and_text_chapters(bool new_scene) {
 		}
 		else if(pg_CurrentScene) {
 			// possible text and visual scene advance
-			float elapsed_time_from_start = CurrentClockTime - InitialScenarioTime;
+			float elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
 
 			pg_CurrentDiaporamaDir
 				= (int(elapsed_time_from_start - pg_CurrentScene->scene_initial_time) / 60)
@@ -3588,7 +4085,7 @@ void pg_update_visual_and_text_chapters(bool new_scene) {
 				DisplayText1Alpha = 0.0f;
 				DisplayText2Alpha = 1.0f;
 			}
-			DisplayTextSwapInitialTime = CurrentClockTime;
+			DisplayTextSwapInitialTime = pg_CurrentClockTime;
 			//printf("New text DisplayText1Front %d index 1/2 %d/%d dir %d dir size %d\n", int(DisplayText1Front), IndDisplayText1, IndDisplayText2, pg_CurrentDiaporamaDir, DisplayTextFirstInChapter[pg_CurrentDiaporamaDir]);
 		}
 
@@ -3613,6 +4110,9 @@ void pg_update_visual_and_text_chapters(bool new_scene) {
 
 ////////////////////////////////////////////////////////////////////////////////////
 // BEGINNING OF A NEW SCENE: INITIALIZATION OF TIMES AND DURATIONS, AND VARIABLE VALUES
+
+// saves the current values of the parameters in case of k (copy) interpolation mode
+// or in case of interpolation between the current values and the initial values of the current scene
 void pg_keep_value_copy(Scene* currentScene, int indVar, ScenarioValue* parameter_value) {
 	if (ScenarioVarTypes[indVar] == _pg_float) {
 		parameter_value[indVar].val_num = double(*((float*)ScenarioVarPointers[indVar]));
@@ -3646,6 +4146,8 @@ void pg_keep_value_copy(Scene* currentScene, int indVar, ScenarioValue* paramete
 
 // begins a new scene and updates scene variables
 void StartNewScene(int ind_scene, double delta_time) {
+	pg_last_scene_update = false;
+
 	/////////////////////////////////////////////////
 	// No interpolation: starts immediately a new scene
 	if (pg_SceneInterpolationDuration <= 0 && ind_scene >= 0 && ind_scene < pg_NbScenes) {
@@ -3661,12 +4163,12 @@ void StartNewScene(int ind_scene, double delta_time) {
 			pg_Scenario[ind_scene - 1].scene_duration -= delta_time;
 		}
 		// unuseful because is already made through pg_Scenario[ind_scene].scene_initial_time -= delta_time;
-		//InitialScenarioTime = CurrentClockTime - pg_Scenario[ind_scene].scene_initial_time;
+		//InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[ind_scene].scene_initial_time;
 
-		InitialScenarioTime = CurrentClockTime - pg_Scenario[ind_scene].scene_initial_time;
+		InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[ind_scene].scene_initial_time;
 		if (ind_scene == 0) {
 			// restarts scenarios
-			AbsoluteInitialScenarioTime = CurrentClockTime - pg_Scenario[0].scene_initial_time;
+			AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[0].scene_initial_time;
 		}
 
 		// UPDATES THE SCENE POINTERS AND INDICES
@@ -3703,10 +4205,10 @@ void StartNewScene(int ind_scene, double delta_time) {
 
 	}
 	/////////////////////////////////////////////////
-	// scene interpolation: linear interpolation of current variable values to a new scene
+	// SCENE INTERPOLATION: linear interpolation of current variable values to a new scene 
 	// variables all keep their current values and interpolate towards the values of the variables in the target scene
 	else {
-		printf("Start interpolation scene\n");
+		//printf("Start interpolation scene\n");
 		// UPDATES THE SCENE POINTERS AND INDICES
 		pg_CurrentSceneIndex = -1;
 		pg_CurrentScene = &pg_InterpolationScene;
@@ -3718,10 +4220,10 @@ void StartNewScene(int ind_scene, double delta_time) {
 			pg_CurrentScene->scene_IDs = "INTERPOLATION";
 			pg_CurrentScene->scene_duration = pg_SceneInterpolationDuration;
 			pg_CurrentScene->scene_change_when_ends = true;
-			pg_CurrentScene->scene_initial_time = CurrentClockTime;
+			pg_CurrentScene->scene_initial_time = pg_CurrentClockTime;
 			pg_CurrentScene->scene_final_time = pg_CurrentScene->scene_initial_time + pg_SceneInterpolationDuration;
 			pg_CurrentScene->scene_originalDuration = pg_SceneInterpolationDuration;
-			pg_CurrentScene->scene_originalInitial_time = CurrentClockTime;
+			pg_CurrentScene->scene_originalInitial_time = pg_CurrentClockTime;
 			pg_CurrentScene->scene_originalFinal_time = pg_CurrentScene->scene_initial_time + pg_SceneInterpolationDuration;
 
 			for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
@@ -3745,16 +4247,17 @@ void StartNewScene(int ind_scene, double delta_time) {
 			//	pg_CurrentScene->scene_final_parameters[_master], pg_CurrentScene->scene_final_parameters[_master]);
 			// resets interpolation time so that the interpolation does not restart indefinitely
 			pg_SceneInterpolationDuration = 0.f;
-#if !defined (LIGHT)
+#if !defined(LIGHT)
 			sprintf(AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 		}
 	}
 
-#if !defined (LIGHT)
+#if !defined(LIGHT)
 	if (pg_CurrentScene) {
 		pg_FirstFrameInScene = true;
+		sprintf(AuxString, "/setupNo %d", pg_CurrentSceneIndex); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
@@ -3774,25 +4277,26 @@ void StartNewScene(int ind_scene, double delta_time) {
 		for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
 			BrokenInterpolationVar[indVar] = false;
 			StepwiseInterpolationEffective[indVar] = false;
-			if (pg_CurrentScene->scene_interpolations[indVar].interpolation_mode == pg_keep_value) {
+			if (pg_CurrentScene->scene_interpolations[indVar].interpolation_mode == pg_keep_value
+				|| pg_CurrentScene->scene_interpolations[indVar].initialization_mode == pg_current_value) {
 				pg_keep_value_copy(pg_CurrentScene, indVar, pg_CurrentScene->scene_initial_parameters);
 			}
 		}
 	}
 	// stops ongoing flashes if there is one
 	flashCameraTrk_weight = 0.0f;
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	flashPhotoTrk_weight = 0.0f;
 	flashPhotoTrk_nbFrames = 0;
 #endif
 
-#if defined (TVW)
+#if defined(TVW)
 	// updates image and text directories
 	pg_update_visual_and_text_chapters(true);
 #endif
 }
 
-#if defined (TVW)
+#if defined(TVW)
 float starting_time(float elapsed_time_from_start) {
 	if (pg_NbScenes == 13) {
 		if (elapsed_time_from_start > pg_Scenario[2].scene_initial_time ) {
@@ -3834,15 +4338,13 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 		double coefInterpolation = 0.0f;
 		double twoStepInterpolation[3] = { 0.0f , 0.0f , 0.0f };
 
-		if (elapsed_time_from_start <= cur_scene->scene_initial_time
-			+ absoluteOffset) {
+		if (elapsed_time_from_start <= cur_scene->scene_initial_time + absoluteOffset) {
 			transformedInterpolation = 0.0;
 			twoStepInterpolation[0] = 1.0;
 			twoStepInterpolation[1] = 0.0;
 			twoStepInterpolation[2] = 0.0;
 		}
-		else if (elapsed_time_from_start >= cur_scene->scene_initial_time
-			+ absoluteOffset + absoluteDuration) {
+		else if (elapsed_time_from_start >= cur_scene->scene_initial_time + absoluteOffset + absoluteDuration) {
 			transformedInterpolation = 1.0;
 			twoStepInterpolation[0] = 0.0;
 			twoStepInterpolation[1] = 0.0;
@@ -3953,24 +4455,45 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 				else if ((transformedInterpolation == 0.0 && pg_FirstFrameInScene)) {
 					pg_update_variable(_PG_SCENARIO,
 						indP, cur_scene->scene_initial_parameters[indP]);
+					// set to false in case of offSet with later update
+					StepwiseInterpolationEffective[indP] = false;
 				}
 			}
 			// continuous interpolation
 			else if (cur_scene->scene_interpolations[indP].interpolation_mode != pg_bell_interpolation
 				&& cur_scene->scene_interpolations[indP].interpolation_mode != pg_sawtooth_interpolation) {
 				if (ScenarioVarTypes[indP] != _pg_string) {
-					interpolated_value
-						= (1.0F - transformedInterpolation)
-						* cur_scene->scene_initial_parameters[indP].val_num
-						+ transformedInterpolation
-						* cur_scene->scene_final_parameters[indP].val_num;
+					// make sure that variables are interpolated to their final value when they reach the target value
+					if (transformedInterpolation >= 1.f) {
+						//if (indP == _part_path_follow_0) {
+						//	printf("Final value\n");
+						//}
+						interpolated_value = cur_scene->scene_final_parameters[indP].val_num;
+					}
+					else {
+						//if (indP == _part_path_follow_0) {
+						//	printf("Interpolated value\n");
+						//}
+						interpolated_value
+							= (1.0F - transformedInterpolation)
+							* cur_scene->scene_initial_parameters[indP].val_num
+							+ transformedInterpolation
+							* cur_scene->scene_final_parameters[indP].val_num;
+					}
 
-					//if (indP == 45) {
+					//if (indP == _part_path_follow_0) {
 					//	printf("Scene %s param %d time from start %.2f interp %.2f transf_interp %.2f value %.2f\n", 
 					//		cur_scene->scene_IDs.c_str(), indP, elapsed_time_from_start, coefInterpolation, transformedInterpolation, interpolated_value);
 					//}
-					ScenarioValue int_val(interpolated_value, "");
-					pg_update_variable(_PG_SCENARIO, indP, int_val);
+
+					ScenarioValue interpolated_scene_value(interpolated_value, "");
+					pg_update_variable(_PG_SCENARIO, indP, interpolated_scene_value);
+
+					//if (indP == _part_path_follow_0) {
+					//	printf("val ini fin %.2f %.2f alpha %.2f value %.2f val %d/%d\n",
+					//		cur_scene->scene_initial_parameters[indP].val_num,
+					//		cur_scene->scene_final_parameters[indP].val_num, transformedInterpolation, interpolated_value, part_path_follow_0, *((bool*)ScenarioVarPointers[_part_path_follow_0]));
+					//}
 				}
 				else {
 					if (transformedInterpolation <= 0.5) {
@@ -4032,13 +4555,13 @@ void pg_run_callBacks(void) {
 void pg_update_scenario(void) {
 	// printf("VideoPb Update scenario \n");
 
-#if defined (TVW)
+#if defined(TVW)
 	pg_update_visual_and_text_chapters(false);
 #endif
 	// the current scene is not the interpolation scene between two scenes
 	if (pg_CurrentScene) {
 		if (pg_CurrentScene != &pg_InterpolationScene) {
-			double elapsed_time_from_start = CurrentClockTime - InitialScenarioTime;
+			double elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
 
 			// scans all scenes to find the current one and applies the corresponding interpolations
 			for (int ind_scene = 0; ind_scene < pg_NbScenes; ind_scene++) {
@@ -4058,7 +4581,7 @@ void pg_update_scenario(void) {
 						// a new scene is launched only if pg_CurrentScene->scene_change_when_ends
 						if (pg_CurrentScene->scene_change_when_ends) {
 							StartNewScene(ind_scene, 0);
-							elapsed_time_from_start = CurrentClockTime - InitialScenarioTime;
+							elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
 						}
 						// otherwise the current scene is prolonged, no interpolation takes place 
 						// the parameter values stay as they were 
@@ -4066,7 +4589,9 @@ void pg_update_scenario(void) {
 							// for time display + colors when reaching the end of the scene
 							remainingTimeInScene
 								= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - elapsed_time_from_start;
-							// printf( "time %.2f remainingTimeInScene %.2f\n" , elapsed_time_from_start , remainingTimeInScene);
+							if (!pg_last_scene_update) {
+								pg_last_scene_update = true;
+							}
 							return;
 						}
 					}
@@ -4088,11 +4613,11 @@ void pg_update_scenario(void) {
 		// the current scene is the interpolation scene
 		else {
 			// end of interpolation
-			if (CurrentClockTime > pg_CurrentScene->scene_final_time) {
+			if (pg_CurrentClockTime > pg_CurrentScene->scene_final_time) {
 				// starts the scene memorized for after the interpolation
 				StartNewScene(pg_SceneIndexAfterInterpolation, 0);
 				// for time display + colors when reaching the end of the scene
-				double elapsed_time_from_start = CurrentClockTime - InitialScenarioTime;
+				double elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
 				remainingTimeInScene
 					= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - elapsed_time_from_start;
 				// printf( "\ntime %.2f interp %.2f " , elapsed_time_from_start , coefInterpolation );
@@ -4104,10 +4629,10 @@ void pg_update_scenario(void) {
 			else {
 				// for time display + colors when reaching the end of the scene
 				remainingTimeInScene
-					= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - CurrentClockTime;
+					= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - pg_CurrentClockTime;
 				// printf( "\ntime %.2f interp %.2f " , elapsed_time_from_start , coefInterpolation );
 
-				pg_update_scene_variables(pg_CurrentScene, CurrentClockTime);
+				pg_update_scene_variables(pg_CurrentScene, pg_CurrentClockTime);
 			}
 		}
 	}
@@ -4119,11 +4644,11 @@ void pg_update_scenario(void) {
 ///////////////////////////////////////////////////////////////////////////////////
 
 void pg_process_key(int key) {
-	int mod = glutGetModifiers();
+	pg_key_modifier = glutGetModifiers();
 
 	// printf( "key (%d) mod %d\n" , key , mod );
 
-	if (!(mod & GLUT_ACTIVE_ALT)) {
+	if (!(pg_key_modifier & GLUT_ACTIVE_ALT)) {
 		// non special key that corresponds to a script
 		pg_keyStrokeScripts(key);
 		return;
@@ -4134,7 +4659,7 @@ void pg_process_key(int key) {
 		/* ------------------------------- beat */
 	case 'b':
 		auto_beat = !auto_beat;
-		lastBeatTime = CurrentClockTime;
+		lastBeatTime = pg_CurrentClockTime;
 		break;
 
 		/* ------------------------------- frame per second */
@@ -4171,11 +4696,6 @@ void pg_process_key(int key) {
 		break;
 #endif
 
-		/* ------------------------------- check connection to QT */
-	case 'q':
-		pg_send_message_udp((char *)"", (char *)"/QT_connected", (char *)"udp_TouchOSC_send");
-		break;
-
 		/* ------------------------------- snapshot */
 	case 's':
 		pg_draw_scene(_Jpg, false);
@@ -4184,7 +4704,7 @@ void pg_process_key(int key) {
 		pg_draw_scene(_Svg, false);
 		break;
 
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_cameraCaptFreq)
 		/* ------------------------------- current video background capture */
 	case 'v':
 		reset_camera = true;
@@ -4248,75 +4768,146 @@ void soundTrackonOff() {
 	sprintf(AuxString, "/soundtrack_volume %.5f", float(int(soundTrack_on)));
 	pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 }
-void PlayTrack(int indTrack) {
+
+void PlayTrack(int indTrack, double timeFromStart) {
 	if (nb_soundtracks > 0) {
-		// std::cout << "cwd: " << cwd << std::endl;
-		currentlyPlaying_trackNo = indTrack % nb_soundtracks;
-		// std::cout << "name: " << (cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]) << std::endl;
+		bool new_track = (indTrack >= 0 && currentlyPlaying_trackNo != indTrack % nb_soundtracks);
+		//std::cout << "new track ind: " << indTrack << " currentlyPlaying_trackNo:" << currentlyPlaying_trackNo << " nb_soundtracks:" << nb_soundtracks << std::endl;
+
+		if (new_track) {
+			// std::cout << "cwd: " << cwd << std::endl;
+			int previouslyPlayingSoundtrackNo = currentlyPlaying_trackNo;
+			currentlyPlaying_trackNo = indTrack % nb_soundtracks;
+			std::cout << "Playing soundtrack name: " << trackFileName[currentlyPlaying_trackNo] << std::endl;
+
+			if (trackFileName[currentlyPlaying_trackNo].find(':') == std::string::npos) {
+				sprintf(AuxString, "/soundtrack_fileName %s",
+					(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
+			}
+			else {
+				sprintf(AuxString, "/soundtrack_fileName %s", trackFileName[currentlyPlaying_trackNo].c_str());
+			}
+
 #ifdef PG_WITH_PUREDATA
-#ifdef CAVERNEPLATON
-		sprintf(AuxString, "/soundtrack_fileName %s",
-			("C:/sync.com/Sync/YN-works/YN_CavernePlaton_2019/CavernePartagee/" + trackFileName[currentlyPlaying_trackNo]).c_str());
-		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
-#else
-#if defined(BICHES)
-		sprintf(AuxString, "/soundtrack_fileName %s",
-			("C:/sync.com/Sync/LYM-videos/LYM_LesBiches_2020/" + trackFileName[currentlyPlaying_trackNo]).c_str());
-		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
-#else
-		if (trackFileName[currentlyPlaying_trackNo].find(':') == std::string::npos) {
-			sprintf(AuxString, "/soundtrack_fileName %s",
-				(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
+			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_PD_send");
+#endif
+
+#if defined(PG_WITH_PORTAUDIO)
+			if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < nb_soundtracks)|| pa_sound_data.pa_is_streaming()) {
+				printf("Closing stream (%s)\n", (char*)(trackFileName[previouslyPlayingSoundtrackNo]).c_str());
+				pa_sound_data.pa_stopMyStream();
+				pa_sound_data.pa_closeMyStream();
+			}
+			printf("Opening Wav file (%s)\n", (char*)(trackFileName[currentlyPlaying_trackNo]).c_str());
+			/* Open the soundfile */
+			soundfile_data.sound_file = sf_open((char*)(trackFileName[currentlyPlaying_trackNo]).c_str(),
+				SFM_READ, &soundfile_data.sound_file_info);
+			if (sf_error(soundfile_data.sound_file) != SF_ERR_NO_ERROR) {
+				fprintf(stderr, "%s\n", sf_strerror(soundfile_data.sound_file));
+				sprintf(ErrorStr, "Wav file not opened (%s)!", (char*)(trackFileName[currentlyPlaying_trackNo]).c_str()); ReportError(ErrorStr);
+				return;
+			}
+
+			// opening stream
+			int channelCount;
+			int sampleRate;
+			if (pa_sound_data.pa_openMyStream(Pa_GetDefaultOutputDevice(), &channelCount, &sampleRate)) {
+				printf("portaudio stream opened %d ch at %d Hz\n", channelCount, sampleRate);
+			}
+			else {
+				fprintf(stderr, "Error number: %d\n", paInit->result());
+				fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+				sprintf(ErrorStr, "Port audio stream not opened!"); ReportError(ErrorStr); throw 100;
+			}
+
+			// starting stream
+			if (pa_sound_data.pa_startMyStream()) {
+				printf("portaudio stream started\n");
+			}
+			else {
+				fprintf(stderr, "Error number: %d\n", paInit->result());
+				fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+				sprintf(ErrorStr, "Port audio stream not started!"); ReportError(ErrorStr); throw 100;
+			}
+
+			pg_track_sound_onset = false;
+			pg_track_sound_peak = false;
+			currentTrackSoundPeakIndex = 0;
+			currentTrackSoundOnsetIndex = 0;
+
+			if (currentlyPlaying_trackNo >= 0 && int(trackSoundtrackPeaks.size()) > currentlyPlaying_trackNo) {
+				nbTrackSoundPeakIndex = trackSoundtrackPeaks[currentlyPlaying_trackNo].size();
+			}
+			else {
+				nbTrackSoundPeakIndex = 0;
+			}
+			if (currentlyPlaying_trackNo >= 0 && int(trackSoundtrackOnsets.size()) > currentlyPlaying_trackNo) {
+				nbTrackSoundOnsetIndex = trackSoundtrackOnsets[currentlyPlaying_trackNo].size();
+			}
+			else {
+				nbTrackSoundOnsetIndex = 0;
+			}
+			printf("nbTrackSoundPeakIndex %d nbTrackSoundOnsetIndex %d\n", nbTrackSoundPeakIndex, nbTrackSoundOnsetIndex);
+#endif
+
+		}
+
+#if defined(PG_WITH_PORTAUDIO)
+		// start position seeking
+		if (timeFromStart > 0) {
+			if (sf_seek(soundfile_data.sound_file, sf_count_t(timeFromStart * soundfile_data.sound_file_info.samplerate), SEEK_SET) == -1) {
+				sprintf(ErrorStr, "Seek error in file (%s)!", (char*)(trackFileName[currentlyPlaying_trackNo]).c_str()); ReportError(ErrorStr);
+			}
+			soundfile_data.sound_file_StartReadingTime = RealTime() - trackSoundtrackOnsetsAndPeasksOffset[currentlyPlaying_trackNo] - timeFromStart;
 		}
 		else {
-			sprintf(AuxString, "/soundtrack_fileName %s",
-				trackFileName[currentlyPlaying_trackNo].c_str());
+			soundfile_data.sound_file_StartReadingTime = RealTime() - trackSoundtrackOnsetsAndPeasksOffset[currentlyPlaying_trackNo];
 		}
-		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
 #endif
-#endif
-#endif
+
 #ifdef PG_WITH_JUCE
 		sprintf(AuxString, "/JUCE_open_track \"%s\"",
 			(cwd + "/Data/" + project_name + "-data/soundtracks/" + trackFileName[currentlyPlaying_trackNo]).c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_SoundJUCE_send");
 		pg_send_message_udp((char *)"", (char *)"/JUCE_play_track", (char *)"udp_SoundJUCE_send");
 #endif
+
 		//sprintf(AuxString, "/soundtrack_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
 		//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 		sprintf(AuxString, "/track_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
-		printf("soundtrack #%d %s\n", currentlyPlaying_trackNo, trackFileName[currentlyPlaying_trackNo].c_str());
-		BrokenInterpolationVar[_playing_soundtrackNo] = true;
+		//printf("soundtrack #%d %s\n", currentlyPlaying_trackNo, trackFileName[currentlyPlaying_trackNo].c_str());
+		//BrokenInterpolationVar[_playing_soundtrackNo] = true;
 		currentlyPlaying_trackNo = indTrack;
 	}
 }
+
 void StopTrack(void) {
 #ifdef PG_WITH_PUREDATA
-#ifdef CAVERNEPLATON
-	if (currentlyPlaying_trackNo >= 0 && currentlyPlaying_trackNo < nb_soundtracks) {
-		sprintf(AuxString, "/soundtrack_fileName %s",
-			("C:/sync.com/Sync/YN-works/YN_CavernePlaton_2019/CavernePartagee/" + trackFileName[currentlyPlaying_trackNo]).c_str());
-		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
-	}
-#else
 	sprintf(AuxString, "/soundtrack_fileName %s", (char *)"void");
 	pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
 #endif
+
+#if defined(PG_WITH_PORTAUDIO)
+	if (pa_sound_data.pa_is_streaming()) {
+		pa_sound_data.pa_closeMyStream();
+	}
 #endif
+
 #ifdef PG_WITH_JUCE
 	sprintf(AuxString, "/JUCE_open_track \"%s\"", (char *)"void");
 	pg_send_message_udp((char *)"s", AuxString, (char *)"udp_SoundJUCE_send");
 	pg_send_message_udp((char *)"", (char *)"/JUCE_play_track", (char *)"udp_SoundJUCE_send");
 #endif
+
 	//sprintf(AuxString, "/soundtrack_shortName %s", trackShortName[currentlyPlaying_trackNo].c_str());
 	//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/track_shortName %s", "void");
 	pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
 	//printf("No soundtrack\n");
-	BrokenInterpolationVar[_playing_soundtrackNo] = true;
+	//BrokenInterpolationVar[_playing_soundtrackNo] = true;
 	currentlyPlaying_trackNo = -1;
 }
 #endif
@@ -4333,9 +4924,10 @@ void pg_launch_performance(int ind_scene) {
 
 	// restarts scenarios
 	restoreInitialTimesAndDurations();
-	InitialScenarioTime = CurrentClockTime - pg_Scenario[0].scene_initial_time;
-	AbsoluteInitialScenarioTime = CurrentClockTime - pg_Scenario[0].scene_initial_time;
-#if !defined (LIGHT)
+	InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[0].scene_initial_time;
+	AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[0].scene_initial_time;
+#if !defined(LIGHT)
+	sprintf(AuxString, "/setupNo 0"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	sprintf(AuxString, "/setup %s", pg_Scenario[0].scene_IDs.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/setup_1 %s", pg_Scenario[0].scene_Msg1.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/setup_2 %s", pg_Scenario[0].scene_Msg2.c_str()); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
@@ -4360,8 +4952,9 @@ void pg_launch_performance(int ind_scene) {
 	// lights up the LED
 	//pg_send_message_udp((char *)"f", (char *)"/launch 1", (char *)"udp_TouchOSC_send");
 
-#ifdef GN
+#if defined(var_GenerativeNights_planes)
 	initCA = 1.2f;
+	printf("initCA %.2f\n", initCA);
 #endif
 
 	StartNewScene(ind_scene, 0);
@@ -4378,21 +4971,25 @@ void setup(int scene_ind) {
 
 void setup_plus(int incay) {
 	// only one setup change per second to avoid repetition
-	if (CurrentClockTime - LastSetupChangeClockTime > 1) {
-		LastSetupChangeClockTime = CurrentClockTime;
+	//printf("pg_CurrentSceneIndex %d\n", pg_CurrentSceneIndex);
+	if (pg_CurrentClockTime - LastSetupChangeClockTime > 0.3f) {
+		LastSetupChangeClockTime = pg_CurrentClockTime;
 	}
 	else {
 		return;
 	}
 
 	if (pg_CurrentSceneIndex < 0) {
+		//printf("pg_launch_performance\n");
 		pg_launch_performance(0);
 	}
 	else {
 		if (incay + pg_CurrentSceneIndex < pg_NbScenes) {
+			//printf("new scene %d\n", incay + pg_CurrentSceneIndex);
 			StartNewScene(incay + pg_CurrentSceneIndex, 0);
 		}
 		else if (pg_CurrentSceneIndex != pg_NbScenes - 1) {
+			//printf("last scene %d\n", pg_NbScenes - 1);
 			StartNewScene(pg_NbScenes - 1, 0);
 		}
 	}
@@ -4413,10 +5010,11 @@ void pg_keyStrokeScripts(int key) {
 	case 'a':
 		setup_plus(1);
 		break;
+#if defined(var_path_record_1)
 	case 'b':
 		pg_NextRecordReplayPath();
 		break;
-
+#endif
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		// +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -4429,7 +5027,7 @@ void pg_keyStrokeScripts(int key) {
 		// advances to next scene and keeps the global timing
 	case's': {
 		restoreInitialTimesAndDurations();
-		double deltaTime = pg_Scenario[1 + pg_CurrentSceneIndex].scene_initial_time - (CurrentClockTime - InitialScenarioTime);
+		double deltaTime = pg_Scenario[1 + pg_CurrentSceneIndex].scene_initial_time - (pg_CurrentClockTime - InitialScenarioTime);
 		// if the scene has not yet begun
 		if (deltaTime > 0) {
 			int new_scene = ((1 + pg_CurrentSceneIndex) % pg_NbScenes);
@@ -4441,7 +5039,7 @@ void pg_keyStrokeScripts(int key) {
 			}
 			pg_Scenario[new_scene].scene_duration += deltaTime;
 			// unuseful because is already made through pg_Scenario[new_scene].scene_initial_time -= deltaTime;
-			//InitialScenarioTime = CurrentClockTime - pg_Scenario[new_scene].scene_initial_time;
+			//InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[new_scene].scene_initial_time;
 			StartNewScene(new_scene, 0);
 		}
 	}
@@ -4452,15 +5050,15 @@ void pg_keyStrokeScripts(int key) {
 		   // +++++++++++++++++   keystroke (T)  ++++++++++++++++++++++ 
 		   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case'T':
-		pg_writeMessageOnScreen((char*)"******");
+		pg_writeMessageOnScreen("******");
 		pg_IPClient* client;
 		// message to supercollider
 		if ((client = pg_UDP_client((char*)"udp_SC"))) {
 			pg_send_message_udp((char*)"f", (char*)"/testUDP 0", client);
 		}
 		// message to touch OSC
-		sprintf(AuxString, "/setup TEST_UDP"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-		//sprintf(AuxString, "/return_message returnUPD_%f", CurrentClockTime); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+		sprintf(AuxString, "/setup_1 TEST_UDP"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+		//sprintf(AuxString, "/return_message returnUPD_%f", pg_CurrentClockTime); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 		break;
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -4512,18 +5110,18 @@ bool flash_beat_generation(int flash_frequency) {
 }
 bool flash_continuous_generation(int flash_frequency) {
 	// flashes are made every frame if frequency is PG_LOOP_SIZE + 1
-	//printf("peak %d\n", int(pg_video_sound_peak));
+	//printf("peak %d\n", int(pg_movie_sound_peak));
 	if (flash_frequency == (PG_LOOP_SIZE + 1)) {
 		return true;
 	}
 	// flashes are made every video soundtrack peak (sound volume 1) if frequency is PG_LOOP_SIZE + 2
-	else if (flash_frequency == (PG_LOOP_SIZE + 2) && pg_video_sound_peak) {
-		//printf("peak %.5f left %d\n", CurrentClockTime - pg_movie_status.get_initialTime(), pg_movie_status.get_nbFramesLeft());
+	else if (flash_frequency == (PG_LOOP_SIZE + 2) && (pg_movie_sound_peak || pg_track_sound_peak)) {
+		//printf("peak %.5f left %d\n", pg_CurrentClockTime - pg_movie_status.get_initialTime(), pg_movie_status.get_nbFramesLeft());
 		return true;
 	}
 	// flashes are made every video soundtrack onset detected by aubio library if frequency is PG_LOOP_SIZE + 3
-	else if (flash_frequency == (PG_LOOP_SIZE + 3) && pg_video_sound_onset) {
-		//printf("onset %.5f left %d\n", CurrentClockTime - pg_movie_status.get_initialTime(), pg_movie_status.get_nbFramesLeft());
+	else if (flash_frequency == (PG_LOOP_SIZE + 3) && (pg_movie_sound_onset || pg_track_sound_onset)) {
+		//printf("onset %.5f left %d\n", pg_CurrentClockTime - pg_movie_status.get_initialTime(), pg_movie_status.get_nbFramesLeft());
 		return true;
 	}
 	return false;
@@ -4538,30 +5136,36 @@ void pg_flash_control(bool (*control_function)(int)) {
 		flashPixel = flashPixel_duration;
 	}
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_flashParticleInit_freq) && defined(var_part_initialization) && defined(var_part_timeToTargt)
 	if ((*control_function)(flashParticleInit_freq)) {
 		part_initialization = unsigned int(floor(rand_0_1 * pg_particle_initial_pos_speed_texID.size())) % pg_particle_initial_pos_speed_texID.size();
 		pg_targetFrameNo = pg_FrameNo + int(part_timeToTargt);
-		// printf( "flashTrkCA 0 (%.2f)\n" , flashTrkCA_weights[0] );
 	}
 #endif
 
-#ifdef PG_NB_CA_TYPES
-#if PG_NB_TRACKS >= 2
+#ifdef var_nb_CATypes
+#if defined(var_flashTrkCA_freq_0)
+	if ((*control_function)(flashTrkCA_freq_0)) {
+		flashTrkCA_weights[0] = 1.0;
+		flashTrkCA_weights_duration[0] = PG_FBO_PINGPONG_SIZE - 1;
+		// printf( "flashTrkCA 0 (%.2f)\n" , flashTrkCA_weights[0] );
+	}
+#endif
+#if defined(var_flashTrkCA_freq_1)
 	if ((*control_function)(flashTrkCA_freq_1)) {
 		flashTrkCA_weights[1] = 1.0;
 		flashTrkCA_weights_duration[1] = PG_FBO_PINGPONG_SIZE - 1;
 		// printf( "flashTrkCA 1 (%.2f)\n" , flashTrkCA_weights[1] );
 	}
 #endif
-#if PG_NB_TRACKS >= 3
+#if defined(var_flashTrkCA_freq_2)
 	if ((*control_function)(flashTrkCA_freq_2)) {
 		flashTrkCA_weights[2] = 1.0;
 		flashTrkCA_weights_duration[2] = PG_FBO_PINGPONG_SIZE - 1;
 		// printf( "flashTrkCA 2 (%.2f)\n" , flashTrkCA_weights[2] );
 	}
 #endif
-#if PG_NB_TRACKS >= 4
+#if defined(var_flashTrkCA_freq_3)
 	if ((*control_function)(flashTrkCA_freq_3)) {
 		flashTrkCA_weights[3] = 1.0;
 		flashTrkCA_weights_duration[3] = PG_FBO_PINGPONG_SIZE - 1;
@@ -4570,36 +5174,36 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(flashTrkPart_freq_0) 
 	if ((*control_function)(flashTrkPart_freq_0)) {
 		flashTrkPart_weights[0] = 1.0;
 		flashTrkPart_weights_duration[0] = PG_FBO_PINGPONG_SIZE - 1;
 		// printf( "flashTrkPart 0 (%.2f)\n" , flashTrkPart_weights[0] );
 	}
-#if PG_NB_TRACKS >= 2
+#endif
+#if defined(var_flashTrkPart_freq_1)
 	if ((*control_function)(flashTrkPart_freq_1)) {
 		flashTrkPart_weights[1] = 1.0;
 		flashTrkPart_weights_duration[1] = PG_FBO_PINGPONG_SIZE - 1;
 		// printf( "flashTrkPart 1 (%.2f)\n" , flashTrkPart_weights[1] );
 	}
 #endif
-#if PG_NB_TRACKS >= 3
+#if defined(var_flashTrkPart_freq_2)
 	if ((*control_function)(flashTrkPart_freq_2)) {
 		flashTrkPart_weights[2] = 1.0;
 		flashTrkPart_weights_duration[2] = PG_FBO_PINGPONG_SIZE - 1;
 		// printf( "flashTrkPart 2 (%.2f)\n" , flashTrkPart_weights[2] );
 	}
 #endif
-#if PG_NB_TRACKS >= 4
+#if defined(var_flashTrkPart_freq_3)
 	if ((*control_function)(flashTrkPart_freq_3)) {
 		flashTrkPart_weights[3] = 1.0;
 		flashTrkPart_weights_duration[3] = PG_FBO_PINGPONG_SIZE - 1;
 		// printf( "flashTrkPart 3 (%.2f)\n" , flashTrkPart_weights[3] );
 	}
 #endif
-#endif
 
-#if PG_NB_TRACKS >= 2
+#if defined(var_flashTrkBG_freq_1)
 	if ((*control_function)(flashTrkBG_freq_1)) {
 		// should only be flashed every second frame because of the way the pixels are spreaded
 		// otherwise the pixels are not emitted
@@ -4610,7 +5214,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 #endif
-#if PG_NB_TRACKS >= 3
+#if defined(var_flashTrkBG_freq_2)
 	if ((*control_function)(flashTrkBG_freq_2)) {
 		// should only be flashed every second frame because of the way the pixels are spreaded
 		// otherwise the pixels are not emitted
@@ -4621,7 +5225,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 #endif
-#if PG_NB_TRACKS >= 4
+#if defined(var_flashTrkBG_freq_3)
 	if ((*control_function)(flashTrkBG_freq_3)) {
 		// should only be flashed every second frame because of the way the pixels are spreaded
 		// otherwise the pixels are not emitted
@@ -4633,7 +5237,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	if ((*control_function)(flashCABG_freq)) {
 		flashCABG_weight = 1.0;
 		flashCABG_weight_duration = PG_FBO_PINGPONG_SIZE - 1;
@@ -4641,7 +5245,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_flashCAPart_freq) && defined(var_flashPartBG_freq) && defined(var_flashPartCA_freq) 
 	if ((*control_function)(flashCAPart_freq)) {
 		flashCAPart_weight = 1.0;
 		flashCAPart_weight_duration = PG_FBO_PINGPONG_SIZE - 1;
@@ -4658,11 +5262,229 @@ void pg_flash_control(bool (*control_function)(int)) {
 		// printf( "flashPartCA_freq (%d)\n" , flashPartCA_freq );
 	}
 #endif
+
+#if defined(var_Contact_flashchangeClipLeft_freq) && defined(var_Contact_flashchangeClip2Left_freq) \
+	&& defined(var_Contact_flashchangeClipRight_freq) && defined(var_Contact_flashchangeClip2Right_freq) \
+	&& defined(var_Contact_flashchangeScreenLayout_freq) && defined(var_Contact_flashchange_mesh_palette_freq) && defined(var_Contact_flashchange_mesh_anime_freq) \
+	&& defined(var_Contact_flashchangeRightHandPose_freq) && defined(var_Contact_flashchangeLeftHandPose_freq)
+	//std::vector<int> ContAct_clip_ranges_min;
+	//std::vector<int> ContAct_clip_ranges_max;
+	int clip_no_low = 0;
+	int clip_no_high = pg_nbClips - 1;
+
+#if defined(var_Contact_clip_in_range)
+	if (ContAct_clip_ranges_min.size() > 0 && ContAct_clip_ranges_min.size() == ContAct_clip_ranges_max.size()) {
+		// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
+		int range_selected = int(rand_0_1 * ContAct_clip_ranges_min.size()) % ContAct_clip_ranges_min.size();
+		int clip_no_low = ContAct_clip_ranges_min[range_selected];
+		int clip_no_high = ContAct_clip_ranges_max[range_selected];
+		int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
+		clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips;
+	}
+#endif
+
+	if ((*control_function)(Contact_flashchangeClipLeft_freq)) {
+		int clipSide = _clipLeft;
+		int clipRank = 0;
+		int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
+		clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips;
+		if (clipSide < _clipLR && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips > 0 && clip_no >= 0) {
+			clip_no = clip_no % pg_nbClips;
+			pg_play_clip_no(clipRank, clipSide, clip_no);
+		}
+	}
+	if ((*control_function)(Contact_flashchangeClip2Left_freq)) {
+		int clipSide = _clipLeft;
+		int clipRank = 1;
+		int clip_no_low = 0;
+		int clip_no_high = 26;
+		int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
+		clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips;
+		if (clipSide < _clipLR && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips > 0 && clip_no >= 0) {
+			clip_no = clip_no % pg_nbClips;
+			pg_play_clip_no(clipRank, clipSide, clip_no);
+		}
+	}
+	if ((*control_function)(Contact_flashchangeClipRight_freq)) {
+		int clipSide = _clipRight;
+		int clipRank = 0;
+		int clip_no_low = 0;
+		int clip_no_high = 26;
+		int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
+		clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips;
+		if (clipSide < _clipLR && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips > 0 && clip_no >= 0) {
+			clip_no = clip_no % pg_nbClips;
+			pg_play_clip_no(clipRank, clipSide, clip_no);
+		}
+	}
+	if ((*control_function)(Contact_flashchangeClip2Right_freq)) {
+		int clipSide = _clipRight;
+		int clipRank = 1;
+		int clip_no_low = 0;
+		int clip_no_high = 26;
+		int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
+		clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips;
+		if (clipSide < _clipLR && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips > 0 && clip_no >= 0) {
+			clip_no = clip_no % pg_nbClips;
+			pg_play_clip_no(clipRank, clipSide, clip_no);
+		}
+	}
+	if ((*control_function)(Contact_flashchangeScreenLayout_freq)) {
+		// screen layout is between O and 5
+		// O: Left / 1: RIght
+		// 2: L+R full size / 3: L+R half size side by side
+		// 4: 4 screens / 5: L+R half size on top of each other
+		int layout = int(rand_0_1 * 6) % 6;
+		(*((int*)ScenarioVarPointers[_ContAct_screenLayout])) = layout;
+		ContAct_screenLayout = layout;
+	}
+	if ((*control_function)(Contact_flashchange_mesh_palette_freq)) {
+		int level = int(rand_0_1 * 9) % 9;
+		(*((int*)ScenarioVarPointers[_Contact_mesh_palette])) = level;
+		Contact_mesh_palette = level;
+	}
+	if ((*control_function)(Contact_flashchange_mesh_anime_freq)) {
+		int anime = int(rand_0_1 * (_lastMesh_Anime + 1)) % (_lastMesh_Anime + 1);
+		(*((int*)ScenarioVarPointers[_Contact_mesh_anime])) = anime;
+		Contact_mesh_anime = anime;
+	}
+	if ((*control_function)(Contact_flashchange_mesh_motion_freq)) {
+		int motion = int(rand_0_1 * (_lastMesh_Motion + 1)) % (_lastMesh_Motion + 1);
+		(*((int*)ScenarioVarPointers[_Contact_mesh_motion])) = motion;
+		Contact_mesh_motion = motion;
+	}
+	bool fixedLeftPose = false;
+	bool fixedRightPose = false;
+	if ((*control_function)(Contact_flashchangeRightHandPose_freq)) {
+		fixedRightPose = true;
+	}
+	if ((*control_function)(Contact_flashchangeLeftHandPose_freq)) {
+		fixedLeftPose = true;
+	}
+	if (fixedRightPose || fixedLeftPose) {
+		int chosen_mesh_LibraryPose = -1;
+		// bianry animation between two indentical poses
+		(*((int*)ScenarioVarPointers[_Contact_mesh_anime])) = 1;
+		Contact_mesh_anime = 1;
+		// two poses are memorized: twice the randomly selected pose;
+		for (int indMeshFile = 0; indMeshFile < min(2, pg_nb_Mesh_files); indMeshFile++) {
+			if ((indMeshFile == 0 && fixedLeftPose) || (indMeshFile == 1 && fixedRightPose)) {
+				if (chosen_mesh_LibraryPose == -1) {
+					chosen_mesh_LibraryPose = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+				}
+				pg_nb_AnimationPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
+				copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose, 0);
+				copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose, 1);
+				//printf("ind Mesh %d chosen library pose %d \n", indMeshFile, chosen_mesh_LibraryPose);
+				// all the weights are set to zero except the first pose weight
+				for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+					pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+				}
+				pg_interpolation_weight_AnimationPose[indMeshFile][0] = 1.f;
+			}
+		}
+	}
+#endif
+
+#if defined(var_flashchange_invertAllLayers_freq)
+	if ((*control_function)(flashchange_invertAllLayers_freq)) {
+		invertAllLayers = !invertAllLayers;
+		*((bool*)ScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
+	}
+#endif
+	// random selection of an image in the list of available ones
+#if defined(var_flashchange_diaporama_freq)
+	if ((*control_function)(flashchange_diaporama_freq)) {
+		if (pg_nbCompressedImageDirs > 0) {
+			// goes to the first photo diaporama if it is not already selected and if there is one 
+			if (photo_diaporama < 0 && nb_photo_albums > 0) {
+				photo_diaporama = 0;
+			}
+			int cnt = 0;
+			int new_dir = -1;
+			do {
+				new_dir = int(rand_0_1 * pg_nbCompressedImageDirs) % pg_nbCompressedImageDirs;
+			} while (cnt++ < 10 && (new_dir == pg_CurrentDiaporamaDir || new_dir == 0)); // 0 is Fatima hand
+			pg_CurrentDiaporamaDir = new_dir;
+			//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			pg_launch_diaporama();
+		}
+	}
+#endif
+	// random selection of an image in the list of available ones
+	// first selects all the available ones in a random order
+	// second selects randomly one among the possible ones
+#if defined(var_Argenteuil_flashchange_diaporama_freq)
+	if ((*control_function)(Argenteuil_flashchange_diaporama_freq)) {
+		if (pg_nbCompressedImageDirs > 0) {
+			// first pass generates a permuation of the n images
+			if (var_Argenteuil_flashchange_diaporama_pass == -1) {
+				// 0 discarded because is Fatima hand
+				for (int ind = 1; ind < pg_nbCompressedImageDirs; ind++) {
+					imageRanksPermutation.push_back(ind);
+				}
+				// using built-in random generator:
+				std::random_device rd;
+				std::mt19937 g(rd());
+				std::shuffle(imageRanksPermutation.begin(), imageRanksPermutation.end(), g);
+				var_Argenteuil_flashchange_diaporama_pass = 0;
+			}
+			// first n paths selects the next permutation
+			if (var_Argenteuil_flashchange_diaporama_pass < pg_nbCompressedImageDirs - 1) {
+				pg_CurrentDiaporamaDir = imageRanksPermutation[var_Argenteuil_flashchange_diaporama_pass];
+			}
+			else {
+				// goes to the first photo diaporama if it is not already selected and if there is one 
+				if (photo_diaporama < 0 && nb_photo_albums > 0) {
+					photo_diaporama = 0;
+				}
+				int cnt = 0;
+				int new_dir = -1;
+				do {
+					new_dir = int(rand_0_1 * pg_nbCompressedImageDirs) % pg_nbCompressedImageDirs;
+				} while (cnt++ < 10 && (new_dir == pg_CurrentDiaporamaDir || new_dir == 0)); // 0 is Fatima hand
+				pg_CurrentDiaporamaDir = new_dir;
+			}
+
+			//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			pg_launch_diaporama();
+
+			// next pass
+			var_Argenteuil_flashchange_diaporama_pass++;
+		}
+	}
+#endif
+
+#if defined(var_flashchange_BGcolor_freq)
+	if ((*control_function)(flashchange_BGcolor_freq)) {
+		float BG_hue = rand_0_1;
+		HSVtoRGB(BG_hue, 1.f, 1.f, &BG_r, &BG_g, &BG_b);
+		//printf("RGB %.2f -> %.2f %.2f %.2f \n", BG_hue, BG_r, BG_g, BG_b);
+	}
+	else if (flashchange_BGcolor_freq == 0) {
+		BG_r = 0.f;
+		BG_g = 0.f;
+		BG_b = 0.f;
+	}
+#endif
+
+#if defined(var_flashchange_freeze_freq)
+	if ((*control_function)(flashchange_freeze_freq)) {
+		freeze = !freeze;
+		*((bool*)ScenarioVarPointers[_freeze]) = freeze;
+	}
+#endif
+
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // beat reception and corresponding events triggering
-#ifdef ATELIERSENFANTS
+#if defined(var_fingers)
 void NumberOfInteractionFingers(int nb_fingers) {
 	if (nb_fingers == 1) {
 		sprintf(AuxString, "/multixy/5/visible 0"); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_MultiTouch_send");
@@ -4697,9 +5519,10 @@ void ReceiveBeat(void) {
 #ifdef PG_WITH_SOUND_LEVELS_GUI_FEEDBACK
 	sprintf(AuxString, "/loop_beat %d", pg_BeatNo % PG_LOOP_SIZE); pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 #endif
+
+#if defined(var_path_record_1) && defined(var_path_replay_trackNo_1)
 	// loop start 
 	if ((pg_BeatNo % PG_LOOP_SIZE) == 0) {
-
 		for (int ind = 1; ind <= PG_NB_PATHS; ind++) {
 			// source track recording is on -> source track start 
 			if (synchr_start_recording_path[ind]) {
@@ -4716,8 +5539,9 @@ void ReceiveBeat(void) {
 			}
 		}
 	}
+#endif
 
-#ifdef PG_WITH_CAMERA_CAPTURE
+#if defined(var_flashCameraTrkBeat)
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// camera flash
 	if (is_flashCameraTrk
@@ -4730,7 +5554,8 @@ void ReceiveBeat(void) {
 		//	flashCameraTrk_weight , flashCameraTrk_decay, flashPhotoTrk_threshold);
 	}
 #endif
-#ifdef PG_WITH_PHOTO_FLASH
+
+#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	// photo flash
 	// weight is the current brightness of the lighting at each frame  until it reaches the threshold value and is then stopped 
 	if (is_flashPhotoTrk
@@ -4740,55 +5565,27 @@ void ReceiveBeat(void) {
 	}
 #endif
 
-	pg_flash_control(flash_beat_generation);
+	pg_flash_control(flash_beat_generation); 
 
-#ifdef PG_WITH_PHOTO_FLASH
-	// photo change flash
-#ifdef PIERRES
-	if (flashPhotoChangeBeat > 0) {
-#else
+#if defined(var_flashPhotoChangeBeat)
+		// photo change flash
 	if (flashPhotoChangeBeat > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == flashPhotoChangeBeat)) {
-#endif
 		// goes to the first photo diaporama if it is not already selected and if there is one 
 		if (photo_diaporama < 0 && nb_photo_albums > 0) {
 			photo_diaporama = 0;
 		}
-#ifdef PIERRES
-		if (PIERRES_countBeat == 0) {
-			pg_CurrentDiaporamaDir = min(pg_CurrentDiaporamaDir + 1, pg_nbCompressedImageDirs - 2);
 
-			// sequential selection in order and stays on the last image
-			if (pg_CurrentDiaporamaDir == 2 || pg_CurrentDiaporamaDir == 5 || pg_CurrentDiaporamaDir == 9 ||
-				pg_CurrentDiaporamaDir == 11 || pg_CurrentDiaporamaDir == 12) {
-				PIERRES_countBeat = 1;
-			}
-			else {
-				PIERRES_countBeat = 0;
-			}
-			if (pg_CurrentDiaporamaDir == 2 || pg_CurrentDiaporamaDir == 5 || pg_CurrentDiaporamaDir == 9 ||
-				pg_CurrentDiaporamaDir == 11 || pg_CurrentDiaporamaDir == 12) {
-				master_scale_pulse = 0.15f;
-			}
-			else {
-				master_scale_pulse = 0.f;
-			}
-			*((float*)ScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
-		}
-		else {
-			PIERRES_countBeat--;
-		}
-#else
 		// random selection and loopiing
 		pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir + int(rand_0_1 * pg_nbCompressedImageDirs)) % pg_nbCompressedImageDirs;
-#endif
 		//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+
 		sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		pg_launch_diaporama();
 	}
 #endif
 
-#if defined (TVW)
+#if defined(TVW)
 	// updates display messages according to text_swap_freq (4)
 	// for a swap duration of message_swap_duration
 	if (AbsoluteInitialScenarioTime != InitialRealTime - 1000000.f
@@ -4815,7 +5612,7 @@ void ReceiveBeat(void) {
 			DisplayText1Alpha = 0.0f;
 			DisplayText2Alpha = 1.0f;
 		}
-		DisplayTextSwapInitialTime = CurrentClockTime;
+		DisplayTextSwapInitialTime = pg_CurrentClockTime;
 	}
 
 	// updates display images according to image_swap_freq
@@ -4824,7 +5621,7 @@ void ReceiveBeat(void) {
 	if (AbsoluteInitialScenarioTime != InitialRealTime - 1000000.f
 		&& pg_CurrentDiaporamaDir != -1
 		// && image_swap_freq > 0
-		&& ((CurrentClockTime - LastImageSwap) >= photo_diaporama_plateau)) {
+		&& ((pg_CurrentClockTime - LastImageSwap) >= photo_diaporama_plateau)) {
 		int nextCompressedImage;
 		if ((nextCompressedImage
 			= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
@@ -4835,18 +5632,7 @@ void ReceiveBeat(void) {
 	}
 #endif
 
-#ifdef ULM
-	if (randomClipArts) {
-		int indImage = int(floor(randomValue * (pg_nb_ClipArt - 0.00001))) % pg_nb_ClipArt;
-		pg_ClipArt_Scale[indImage] = randomValue * 2 + 0.1f;
-		pg_ClipArt_Rotation[indImage] = randomValue * 360;
-		pg_ClipArt_Translation_X[indImage] = randomValue * 1024 / pg_ClipArt_Scale[indImage];
-		pg_ClipArt_Translation_Y[indImage] = randomValue * 768 / pg_ClipArt_Scale[indImage];
-		ClipArt_OnOff(indImage + 1);
-	}
-#endif
-
-#ifdef CAVERNEPLATON
+#if defined(var_Caverne_BackColor)
 	if (Caverne_BackColor) {
 		Caverne_BackColorRed = rand_0_1;
 		Caverne_BackColorGreen = rand_0_1;
@@ -4896,18 +5682,25 @@ void ReceiveBeat(void) {
 	}
 #endif
 
-#ifdef ENSO
+#if defined(var_penStrokeAtBeat)
 	if (penStrokeAtBeat) {
 		FourFrameStrokeNb = 5;
 		FourFrameStroke_x = int(640 + 2 * rand_0_1);
 		FourFrameStroke_y = int(180 + 2 * rand_0_1);
 	}
 #endif
+
+#if defined(var_Argenteuil_flash_move_track1_freq)
+	if (Argenteuil_flash_move_track1_freq > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == Argenteuil_flash_move_track1_freq)) {
+		Argenteuil_track_x_transl_1 = 200.f + (rand_0_1 - 0.5f) * 300.f;
+		Argenteuil_track_y_transl_1 = 100.f + (rand_0_1 - 0.5f) * 150.f;
+	}
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // photo flash launching
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBright)
 void pg_Make_flashPhoto(void) {
 	flashPhotoTrk_weight = 1.0f;
 	flashPhotoTrk_nbFrames = 0;
@@ -4931,15 +5724,13 @@ void pg_Make_flashCamera(void) {
 	//    break;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 // UDP BASED COMMANDS
 ///////////////////////////////////////////////////////////////////////////////////
-void pg_aliasScript(char* address, char* string_argument_0,
+void pg_aliasScript(string address_string, string string_argument_0,
 	float float_arguments[MAX_OSC_ARGUMENTS], int nb_arguments) {
-	std::string address_string(address);
-#ifdef ATELIERSENFANTS
-	float control_color[3];
+#if (defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)) || (defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart))
+		float control_color[3] = {0};
 #endif
 
 	// unregistered command (either scenario variable or program defined command)
@@ -4962,7 +5753,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 #if defined(PG_LIGHTS_CONTROL_IN_PYTHON)
 		// OSC message for lighting
 		else if (address_string.length() > DMX_command_beginning_length
-			&& (0 == address_string.compare(0, DMX_command_beginning_length, DMX_command_beginning))) {
+			&& (0 == address_string.compare(0, DMX_command_beginning_length, DMX_command_beginning))
+			&& pg_nb_light_groups > 0) {
 			// this is a light change command that has to be turned into a DMX command according to the address and the value
 			// addresses are /light/[0-9]+/(dimmer|color|strobe|grey)
 			// splits the argument separated by /
@@ -5304,7 +6096,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
 #endif
 		}
-#endif		
+#endif
 		// OSC message for sensors
 		else if ((address_string.length() >= MSS_sensor_command_beginning.length()
 			&& (0 == address_string.compare(0, MSS_sensor_command_beginning.length(), MSS_sensor_command_beginning)))
@@ -5313,17 +6105,17 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			// OKAY this is a MSS and sensor command that is forwarded to pg_sensors.py
 			// printf("MSS and sensor command %s\n", address);
 			if (nb_arguments == 1) {
-				sprintf(AuxString, "/%s %.5f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_MSS_sensor_send");
+				sprintf(AuxString, "/%s %.5f", address_string.c_str(), float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_MSS_sensor_send");
 			}
 			else if (nb_arguments == 2) {
-				sprintf(AuxString, "/%s %.5f %.5f", address, float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_MSS_sensor_send");
+				sprintf(AuxString, "/%s %.5f %.5f", address_string.c_str(), float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_MSS_sensor_send");
 			}
 			else {
-				sprintf(AuxString, "/%s", address); pg_send_message_udp((char*)"", AuxString, (char*)"udp_MSS_sensor_send");
+				sprintf(AuxString, "/%s", address_string.c_str()); pg_send_message_udp((char*)"", AuxString, (char*)"udp_MSS_sensor_send");
 			}
 		}
 		else {
-			sprintf(ErrorStr, "Unknown command (%s)!", address); ReportError(ErrorStr);
+			sprintf(ErrorStr, "Unknown command (%s)!", address_string.c_str()); ReportError(ErrorStr);
 		}
 		return;
 	}
@@ -5344,8 +6136,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// ====================================== 
 	case _testUDP: {
 		// from TouchOSC, Lola's sound program or Usine
-		sprintf(AuxString, "*** OK ***");
-		pg_writeMessageOnScreen(AuxString);
+		pg_writeMessageOnScreen("*** OK ***");
 		sprintf(AuxString, "/setup UDP_test_received"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 #ifdef KOMPARTSD
 		pg_IPClient * client;
@@ -5369,8 +6160,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 	case _QT_connected: {
-		sprintf(AuxString, "*** QT ***"); 
-		pg_writeMessageOnScreen(AuxString);
+		pg_writeMessageOnScreen("*** QT ***");
 		break;
 	}
 
@@ -5380,8 +6170,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _PD_connected: {
 		// from Yukao's PD
 		pg_send_message_udp((char *)"s", (char *)"/PD_connected 1", (char *)"udp_TouchOSC_send");
-		sprintf(AuxString, "*** PD ***"); 
-		pg_writeMessageOnScreen(AuxString);
+		pg_writeMessageOnScreen("*** PD ***");
 		break;
 	}
 	case _return_message: {
@@ -5422,7 +6211,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++   keystroke (ESC)  ++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _quit: {
-		quit();
+		pg_quit();
 		break;
 	}
 
@@ -5437,7 +6226,15 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _Note2:
 	case _Note3: 
 	{
-#ifdef FORET
+		int argt0 = int(round(float_arguments[0]));
+		if (argt0 >= 0) {
+			pg_MIDINote = argt0;
+		}
+		else {
+			pg_MIDINote = 0;
+		}
+
+#if defined(FORET)
 		if (rand_0_1 < 0.3) {
 			// goes to the first photo diaporama if it is not already selected and if there is one 
 			if (photo_diaporama < 0 && nb_photo_albums > 0) {
@@ -5458,79 +6255,57 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 #endif
-//#ifdef PIERRES
-//		int argt0 = int(round(float_arguments[0]));
-//		if (argt0 == 64) {
-//			ClipArt_OnOff(1); break;
-//		}
-//		else if (argt0 == 65) {
-//			ClipArt_OnOff(2); break;
-//		}
-//		else if (argt0 == 67) {
-//			ClipArt_OnOff(3); break;
-//		}
-//		else if (argt0 == 69) {
-//			ClipArt_OnOff(4); break;
-//		}
-//		else if (argt0 == 71) {
-//			ClipArt_OnOff(5); break;
-//		}
-//		else if (argt0 == 72) {
-//			ClipArt_OnOff(6); break;
-//		}
-//#endif
-#if defined(SONG) || defined(FORET)  || defined(CORE)
-		{
-			int argt0 = int(round(float_arguments[0]));
-			if (argt0 >= 0) {
-				pg_MIDINote = argt0;
-			}
-			else {
-				pg_MIDINote = 0;
-			}
-			if (MIDIwithBrush) {
-				pen_brush = int(nb_pen_brushes * 3 * rand_0_1) % (nb_pen_brushes * 3);
-				BrokenInterpolationVar[_pen_brush] = true;
-				printf("new brush %d\n", pen_brush);
-			}
-			if (MIDIwithColor) {
-				if (nb_pen_colorPresets > 0) {
-					current_pen_colorPreset = int(nb_pen_colorPresets * rand_0_1) % nb_pen_colorPresets;
-					printf("new palette %d\n", current_pen_colorPreset);
-					BrokenInterpolationVar[_pen_color] = true;
-					*((float*)ScenarioVarPointers[_pen_color]) = pen_colorPreset_values[current_pen_colorPreset];
-					// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
-					// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-					// sprintf(AuxString, "/message palette%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
-					sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-				}
-			}
-#ifdef PG_WITH_CAMERA_CAPTURE
-			if (MIDIwithCameraFlash) {
-				printf("Flash camera\n");
-				pg_Make_flashCamera();
-			}
-#endif
-			if (MIDIwithPhotoFlash) {
-				printf("Flash photo\n");
-				pg_Make_flashPhoto();
-			}
-			if (MIDIwithBeat) {
-				pg_BeatNo++;
-				printf("beat %d\n", pg_BeatNo);
-				ReceiveBeat();
-			}
-#ifdef FORET
-			if (MIDIwithStroke) {
-				FourFrameStrokeNb = 5;
-				FourFrameStroke_x = int(window_width * rand_0_1);
-				FourFrameStroke_y = int(window_height * rand_0_1);
-			}
-#endif
+#if defined(var_MIDIwithBrush)
+		if (MIDIwithBrush) {
+			pen_brush = int(nb_pen_brushes * 3 * rand_0_1) % (nb_pen_brushes * 3);
+			BrokenInterpolationVar[_pen_brush] = true;
+			printf("new brush %d\n", pen_brush);
 		}
-#else
-		if (pg_CurrentSceneIndex > 0) {
-#ifdef PG_WITH_CAMERA_CAPTURE
+#endif
+#if defined(var_MIDIwithColor)
+		if (MIDIwithColor) {
+			if (nb_pen_colorPresets > 0) {
+				current_pen_colorPreset = int(nb_pen_colorPresets * rand_0_1) % nb_pen_colorPresets;
+				printf("new palette %d\n", current_pen_colorPreset);
+#if defined(var_pen_color)
+				BrokenInterpolationVar[_pen_color] = true;
+				*((float*)ScenarioVarPointers[_pen_color]) = pen_colorPreset_values[current_pen_colorPreset];
+#endif
+				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
+				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
+				// sprintf(AuxString, "/message palette%s", pen_colorPresets_names[current_pen_colorPreset].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
+				sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+#endif
+#if defined(var_MIDIwithCameraFlash)
+		if (MIDIwithCameraFlash) {
+			printf("Flash camera\n");
+			pg_Make_flashCamera();
+		}
+#endif
+#if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
+		if (MIDIwithPhotoFlash) {
+			printf("Flash photo\n");
+			pg_Make_flashPhoto();
+		}
+#endif
+#if defined(var_MIDIwithBeat)
+		if (MIDIwithBeat) {
+			pg_BeatNo++;
+			printf("beat %d\n", pg_BeatNo);
+			ReceiveBeat();
+		}
+#endif
+#if defined(var_MIDIwithStroke)
+		if (MIDIwithStroke) {
+			FourFrameStrokeNb = 5;
+			FourFrameStroke_x = int(workingWindow_width * rand_0_1);
+			FourFrameStroke_y = int(workingWindow_width * rand_0_1);
+		}
+#endif
+#if defined(var_cameraCaptFreq) && defined(var_flashCameraTrkBright)
+		if (flashCameraTrkBright > 0) {
 			is_flashCameraTrk = false;
 			flashCameraTrk_weight = flashCameraTrkBright;
 			flashCameraTrk_threshold = std::min(std::max(0.0f, 1.0f - flashCameraTrk_decay * flashCameraTrkBright), 1.0f);
@@ -5538,15 +6313,14 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			//	flashCameraTrk_weight, flashCameraTrk_decay, flashPhotoTrk_threshold);
 			//printf("start flash\n");
 			//    break;
-#endif
 		}
 #endif
-	break;
+		break;
 	}
 	// beats in Alchemy
 	case _Velocity1:
 	{
-#ifdef ALKEMI
+#if defined(var_alKemi)
 		int argt0 = int(round(float_arguments[0]));
 		if (argt0 > 0) {
 			pg_BeatNo++;
@@ -5556,10 +6330,12 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_flashPhotoTrkBeat)
 	case _flashPhoto: {
 		if (flashPhotoTrkBeat == 0) {
+#if defined(var_flashPhotoTrkBright)
 			pg_Make_flashPhoto();
+#endif
 		}
 		else {
 			// will be launched when the beat corresponds
@@ -5599,12 +6375,13 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		// printf("%s\n", AuxString);
 #endif
 
-#ifndef PEN_HSV
+#if defined(var_pen_color) && defined(var_pen_grey)
 		compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, true);
-#else
+#endif
+#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 		compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pulsed_pen_color, true);
 #endif
-#if !defined (LIGHT)
+#if !defined(LIGHT)
 		sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(pulsed_pen_color[0] * 255), int(pulsed_pen_color[1] * 255), int(pulsed_pen_color[2] * 255));
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		//printf("%s\n", AuxString);
@@ -5614,12 +6391,13 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, false);
 		sprintf(AuxString, "/BG_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorBG[0] * 255), int(pulsed_repop_colorBG[1] * 255), int(pulsed_repop_colorBG[2] * 255)); 
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-#ifndef PEN_HSV
-		compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, false);
-#else
-		compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
 #endif
+#if defined(var_part_initialization) 
+#if defined(var_repop_colorPart) && defined(var_repop_greyPart)
+		compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, false);
+#endif
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)		
+		compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
 #endif
 		sprintf(AuxString, "/Part_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorPart[0] * 255), int(pulsed_repop_colorPart[1] * 255), int(pulsed_repop_colorPart[2] * 255)); 
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -5656,6 +6434,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		else {
 			pg_MIDINote = 0;
 		}
+#if defined(var_MIDIwithBrush)
 		if (MIDIwithBrush) {
 			if (nb_pen_brushes > 0) {
 				pen_brush = int(nb_pen_brushes * 3 * rand_0_1) % (nb_pen_brushes * 3);
@@ -5663,8 +6442,10 @@ void pg_aliasScript(char* address, char* string_argument_0,
 				printf("new brush %d\n", pen_brush);
 			}
 		}
+#endif
+#if defined(var_MIDIwithColor)
 		if (MIDIwithColor) {
-#if !defined(ATELIERSENFANTS) && !defined(LIGHT)
+#if !defined(LIGHT)
 			//if (nb_pen_colorPresets > 0) {
 			//	current_pen_colorPreset = pg_MIDINote % nb_pen_colorPresets;
 			//	printf("new palette %d\n", current_pen_colorPreset);
@@ -5678,8 +6459,10 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			if (nb_pen_colorPresets > 0) {
 				current_pen_colorPreset = int(nb_pen_colorPresets * rand_0_1) % nb_pen_colorPresets;
 				printf("new palette %d\n", current_pen_colorPreset);
+#if defined(var_pen_color)
 				BrokenInterpolationVar[_pen_color] = true;
 				*((float*)ScenarioVarPointers[_pen_color]) = pen_colorPreset_values[current_pen_colorPreset];
+#endif
 				sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			}
 #else
@@ -5687,24 +6470,27 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			// TODO
 #endif
 		}
-#ifdef PG_WITH_CAMERA_CAPTURE
+#endif
+#if defined(var_MIDIwithCameraFlash)
 		if (MIDIwithCameraFlash) {
 			printf("Flash camera\n");
 			pg_Make_flashCamera();
 		}
 #endif
-#ifdef PG_WITH_PHOTO_FLASH
+#if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
 		if (MIDIwithPhotoFlash) {
 			printf("Flash photo\n");
 			pg_Make_flashPhoto();
 		}
 #endif
+#if defined(var_MIDIwithBeat)
 		if (MIDIwithBeat) {
 			pg_BeatNo++;
 			printf("beat %d\n", pg_BeatNo);
 			ReceiveBeat();
 		}
-#ifdef FORET
+#endif
+#if defined(var_MIDIwithStroke)
 		if (MIDIwithStroke) {
 			FourFrameStrokeNb = 5;
 			FourFrameStroke_x = int(window_width * rand_0_1);
@@ -5717,7 +6503,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// ======================================== 
 	// flash on/off values
 	// ======================================== 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	case _flashTrkCA_onOff: {
 		switch (currentDrawingTrack) {
 		case 0:
@@ -5729,7 +6515,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 				flashTrkCA_freq_0 = flashTrkCA_freq_0_saved;
 			}
 			break;
-#if PG_NB_TRACKS >= 2
+#if defined(var_flashTrkCA_freq_1)
 		case 1:
 			if (flashTrkCA_freq_1 > 0) {
 				flashTrkCA_freq_1_saved = flashTrkCA_freq_1;
@@ -5740,7 +6526,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			}
 			break;
 #endif
-#if PG_NB_TRACKS >= 3
+#if defined(var_flashTrkCA_freq_2)
 		case 2:
 			if (flashTrkCA_freq_2 > 0) {
 				flashTrkCA_freq_2_saved = flashTrkCA_freq_2;
@@ -5751,7 +6537,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			}
 			break;
 #endif
-#if PG_NB_TRACKS >= 4
+#if defined(var_flashTrkCA_freq_3)
 		case 3:
 			if (flashTrkCA_freq_3 > 0) {
 				flashTrkCA_freq_3_saved = flashTrkCA_freq_3;
@@ -5767,7 +6553,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	}
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_flashTrkPart_freq_0)
 	case _flashTrkPart_onOff: {
 		switch (currentDrawingTrack) {
 		case 0:
@@ -5779,7 +6565,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 				flashTrkPart_freq_0 = flashTrkPart_freq_0_saved;
 			}
 			break;
-#if PG_NB_TRACKS >= 2
+#if defined(var_flashTrkPart_freq_1)
 		case 1:
 			if (flashTrkPart_freq_1 > 0) {
 				flashTrkPart_freq_1_saved = flashTrkPart_freq_1;
@@ -5790,7 +6576,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			}
 			break;
 #endif
-#if PG_NB_TRACKS >= 3
+#if defined(var_flashTrkPart_freq_2)
 		case 2:
 			if (flashTrkPart_freq_2 > 0) {
 				flashTrkPart_freq_2_saved = flashTrkPart_freq_2;
@@ -5801,7 +6587,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			}
 			break;
 #endif
-#if PG_NB_TRACKS >= 4
+#if defined(var_flashTrkPart_freq_3)
 		case 3:
 			if (flashTrkPart_freq_3 > 0) {
 				flashTrkPart_freq_3_saved = flashTrkPart_freq_3;
@@ -5826,13 +6612,13 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			pg_snapshot((char*)"jpg");
 			pg_snapshot((char*)"svg");
 		}
+		break;
+	}
 
-#ifdef GN
+#if defined(var_GenerativeNights_planes)
 		// ====================================== 
 		// relaunches CA initialization, in case it does not work                  
 		// ====================================== 
-		break;
-		}
 	case _initialBGCapture: {
 		initialBGCapture = true;
 
@@ -5843,9 +6629,9 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	}
 	case _initCA: {
 		initCA = 1.2f;
-#endif
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ TRACK SHIFT +++++++++++++++++++++++++++ 
@@ -5859,103 +6645,103 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 
-#ifdef PG_WITH_CAMERA_CAPTURE
-	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#if defined(var_cameraCaptFreq)
+								// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CAMERA PARAMETERS +++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraWB_R_plus: {
 		*((float*)ScenarioVarPointers[_cameraWB_R]) += 100.f;
-		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_R]);
 		break;
 	}
 	case _cameraWB_R_minus: {
 		*((float*)ScenarioVarPointers[_cameraWB_R]) -= 100.f;
-		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_R]);
 		break;
 	}
 	case _cameraWB_B_plus: {
 		*((float*)ScenarioVarPointers[_cameraWB_B]) += 100.f;
-		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_B]);
 		break;
 	}
 	case _cameraWB_B_minus: {
 		*((float*)ScenarioVarPointers[_cameraWB_B]) -= 100.f;
-		pg_webCam_capture.set(CV_CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_B]);
 		break;
 	}
 	case _cameraExposure_plus: {
 		*((float*)ScenarioVarPointers[_cameraExposure]) += 1.f;
-		pg_webCam_capture.set(CV_CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
+		pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraExposure]);
 		break;
 	}
 	case _cameraExposure_minus: {
 		*((float*)ScenarioVarPointers[_cameraExposure]) -= 1.f;
-		pg_webCam_capture.set(CV_CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
+		pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraExposure]);
 		break;
 	}
 	case _cameraGain_plus: {
 		*((float*)ScenarioVarPointers[_cameraGain]) += 1.f;
-		pg_webCam_capture.set(CV_CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
+		pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGain]);
 		break;
 	}
 	case _cameraGain_minus: {
 		*((float*)ScenarioVarPointers[_cameraGain]) -= 1.f;
-		pg_webCam_capture.set(CV_CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
+		pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGain]);
 		break;
 	}
 	case _cameraBrightness_plus: {
 		*((float*)ScenarioVarPointers[_cameraBrightness]) += 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
+		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraBrightness]);
 		break;
 	}
 	case _cameraBrightness_minus: {
 		*((float*)ScenarioVarPointers[_cameraBrightness]) -= 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
+		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraBrightness]);
 		break;
 	}
 	case _cameraSaturation_plus: {
 		*((float*)ScenarioVarPointers[_cameraSaturation]) += 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
+		pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraSaturation]);
 		break;
 	}
 	case _cameraSaturation_minus: {
 		*((float*)ScenarioVarPointers[_cameraSaturation]) -= 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
+		pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraSaturation]);
 		break;
 	}
 	case _cameraContrast_plus: {
 		*((float*)ScenarioVarPointers[_cameraContrast]) += 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
+		pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraContrast]);
 		break;
 	}
 	case _cameraContrast_minus: {
 		*((float*)ScenarioVarPointers[_cameraContrast]) -= 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
+		pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraContrast]);
 		break;
 	}
 	case _cameraGamma_plus: {
 		*((float*)ScenarioVarPointers[_cameraGamma]) += 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
+		pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGamma]);
 		break;
 	}
 	case _cameraGamma_minus: {
 		*((float*)ScenarioVarPointers[_cameraGamma]) -= 10.f;
-		pg_webCam_capture.set(CV_CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
+		pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
 		CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGamma]);
 		break;
 	}
@@ -5966,9 +6752,13 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		delayedCameraWeight = 11;
 		break;
 	}
+
+	case _reset_camera_params: {
+		pg_initWebcamParameters();
+		break;
+	}
 #endif
 
-#ifdef PIERRES
 	case _processing_video: {
 		int argt0 = int(round(float_arguments[0]));
 		sprintf(AuxString, "/video %d", argt0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_Processing_send");
@@ -5987,8 +6777,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		printf("Processing message %s\n", AuxString);
 		break;
 	}
-#endif
-#if defined (PIERRES)
+
+#if defined(PIERRES)
 	case _TopLeft: {
 		VP1KeystoneYTopLeft = -float_arguments[0] + 0;
 		VP1KeystoneXTopLeft = float_arguments[1] + 0;
@@ -6043,6 +6833,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		flashCAPart_weight_duration = PG_FBO_PINGPONG_SIZE - 1;
 		break;
 
+#if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_master_offsetX) && defined(var_photo_diaporama)
 	case _flashMaster:
 		master = 1.f;
 		*((float*)ScenarioVarPointers[_master]) = master;
@@ -6063,12 +6854,15 @@ void pg_aliasScript(char* address, char* string_argument_0,
 
 		flashMaster = max(1, int(rand_0_1 * float_arguments[0]));
 		break;
+#endif
 
+#if defined(var_path_record_1)
 	case _NextRecordReplayPath:
 		if (float_arguments[0] > 0) {
 			pg_NextRecordReplayPath();
 		}
 		break;
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ INTERFACE SELECTION +++++++++++++++++++ 
@@ -6098,33 +6892,33 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PEN POSITION ++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if !defined (LIGHT)
+#if !defined(LIGHT)
 	case _pen_xy: {
-		CurrentMousePos_x[0] = int(leftWindowWidth * float_arguments[0]);
+		CurrentMousePos_x[0] = int(workingWindow_width * float_arguments[0]);
 		CurrentMousePos_y[0] = int(window_height * float_arguments[1]);
 		sprintf(AuxString, "/pen_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	}
 	case _pen2_xy: {
-		CurrentMousePos_x[1] = int(leftWindowWidth * float_arguments[0]);
+		CurrentMousePos_x[1] = int(workingWindow_width * float_arguments[0]);
 		CurrentMousePos_y[1] = int(window_height * float_arguments[1]);
 		sprintf(AuxString, "/pen2_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	}
 	case _pen3_xy: {
-		CurrentMousePos_x[2] = int(leftWindowWidth * float_arguments[0]);
+		CurrentMousePos_x[2] = int(workingWindow_width * float_arguments[0]);
 		CurrentMousePos_y[2] = int(window_height * float_arguments[1]);
 		sprintf(AuxString, "/pen3_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	}
 	case _pen4_xy: {
-		CurrentMousePos_x[3] = int(leftWindowWidth * float_arguments[0]);
+		CurrentMousePos_x[3] = int(workingWindow_width * float_arguments[0]);
 		CurrentMousePos_y[3] = int(window_height * float_arguments[1]);
 		sprintf(AuxString, "/pen4_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	}
 	case _pen5_xy: {
-		CurrentMousePos_x[4] = int(leftWindowWidth * float_arguments[0]);
+		CurrentMousePos_x[4] = int(workingWindow_width * float_arguments[0]);
 		CurrentMousePos_y[4] = int(window_height * float_arguments[1]);
 		sprintf(AuxString, "/pen5_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		break;
@@ -6157,10 +6951,10 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PART EXIT/STROKE/COLOR MODE +++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#if defined(var_partStroke_mode) 
 	case _partStroke_mode_0: {
 		*((int *)ScenarioVarPointers[_partStroke_mode]) = 0;
 
@@ -6200,6 +6994,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+#endif
+#if defined(var_partColor_mode) 
 	case _partColor_mode_0: {
 		*((int *)ScenarioVarPointers[_partColor_mode]) = 0;
 
@@ -6239,6 +7035,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+#endif
+#if defined(var_partExit_mode) 
 	case _partExit_mode_0: {
 		*((int *)ScenarioVarPointers[_partExit_mode]) = 0;
 
@@ -6307,8 +7105,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 #endif
 
 
-#ifdef PG_WITH_CAMERA_CAPTURE
-	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#if defined(var_cameraCaptFreq)
+				   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraCumul_plus: {
@@ -6327,7 +7125,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			BrokenInterpolationVar[_pen_brush] = true;
 			if (pen_brush >= 1) { // large radius for the image brushes
 				pen_radiusMultiplier = 50.0f;
-#if defined(PIERRES) || defined(ENSO) || defined(ATELIERSENFANTS) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(CORE)
+#if defined(FORET) || defined(CORE)
 				pen_radiusMultiplier = 1.0f;
 #endif
 			}
@@ -6343,7 +7141,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			BrokenInterpolationVar[_pen_brush] = true;
 			if (pen_brush >= 1) { // large radius for the image brushes
 				pen_radiusMultiplier = 50.0f;
-#if defined(PIERRES) || defined(ENSO) || defined(ATELIERSENFANTS) || defined(SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(ALKEMI) || defined(CORE)
+#if defined(FORET) || defined(CORE)
 				pen_radiusMultiplier = 1.0f;
 #endif
 			}
@@ -6363,17 +7161,6 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		*((int*)ScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
 		break;
 
-#if defined(PIERRES)
-	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-	// +++++++++++++++++ BRUSH DASH INCREASE ++++++++++++++++++++++++ 
-	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-	case _pen_position_dash_plus: {
-		pen_position_dash = (pen_position_dash + 1) % 5;
-		BrokenInterpolationVar[_pen_position_dash] = true;
-		break;
-	}
-#endif
-
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PIXEL MODE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -6388,16 +7175,16 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	case _CA1Type_plus: {
-		CA1Type = (CA1Type + 1) % PG_NB_CA_TYPES;
+		CA1Type = (CA1Type + 1) % nb_CATypes;
 		BrokenInterpolationVar[_CA1Type] = true;
 		// printf("CA1Type %d\n", CA1Type);
 		*((int *)ScenarioVarPointers[_CA1Type]) = CA1Type;
 		break;
 	}
 	case _CA1Type_minus: {
-		CA1Type = (CA1Type - 1 + PG_NB_CA_TYPES) % PG_NB_CA_TYPES;
+		CA1Type = (CA1Type - 1 + nb_CATypes) % nb_CATypes;
 		BrokenInterpolationVar[_CA1Type] = true;
 		// printf("CA1Type %d\n", CA1Type);
 		*((int *)ScenarioVarPointers[_CA1Type]) = CA1Type;
@@ -6433,7 +7220,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 	case _sensor_layout_plus: {
 		sensor_layout = (sensor_layout + 1) % PG_NB_MAX_SENSOR_LAYOUTS;
 		BrokenInterpolationVar[_sensor_layout] = true;
@@ -6457,20 +7244,24 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	}
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PARTICLE MODES ++++++++++++++++++++++++
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#if defined(var_partExit_mode) 
 	case _partExit_mode_plus: {
 		partExit_mode = (partExit_mode + 1) % PG_NB_PARTEXIT_MODES;
 		BrokenInterpolationVar[_partExit_mode] = true;
 		break;
 	}
+#endif
+#if defined(var_partStroke_mode) 
 	case _partStroke_mode_plus: {
 		partStroke_mode = (partStroke_mode + 1) % PG_NB_PARTSTROKE_MODES;
 		BrokenInterpolationVar[_partStroke_mode] = true;
 		break;
 	}
+#endif
+#if defined(var_partColor_mode) 
 	case _partColor_mode_plus: {
 		partColor_mode = (partColor_mode + 1) % PG_NB_PARTCOLOR_MODES;
 		BrokenInterpolationVar[_partColor_mode] = true;
@@ -6483,15 +7274,17 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _pen_BW: {
-#ifndef PEN_HSV
-			if (pen_grey > 0) {
+#if defined(var_pen_grey)
+		if (pen_grey > 0) {
 				pen_grey = 0.0f;
 			}								
 			else {
 				pen_grey = 1.0f;
 			}
 			BrokenInterpolationVar[_pen_grey] = true;
-#else
+#endif
+#if defined(var_pen_value)
+
 			if (pen_value > 0) {
 				pen_value = 0.0f;
 			}
@@ -6513,7 +7306,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		// printf("repop color %.1f\n", repop_grey);
 		break;
 	}
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	case _repopCA_BW: {
 		if (repop_greyCA > 0) {
 			repop_greyCA = 0.0f;
@@ -6526,9 +7319,9 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	case _repopPart_BW: {
-#ifndef PART_HSV
+#if defined(var_repop_greyPart)
 		if (repop_greyPart > 0) {
 			repop_greyPart = 0.0f;
 		}
@@ -6536,7 +7329,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			repop_greyPart = 1.0f;
 		}
 		BrokenInterpolationVar[_repop_greyPart] = true;
-#else
+#endif
+#if defined(var_repop_valuePart)
 		if (repop_valuePart > 0) {
 			repop_valuePart = 0.0f;
 		}
@@ -6571,6 +7365,11 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++ DIAPORAMA +++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
+#ifdef var_photo_diaporama
+	case _diaporama_random: {
+			diaporama_random();
+		}
+		break;
 	case _diaporama_plus: {
 		if (pg_nbCompressedImageDirs > 0) {
 			// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -6585,6 +7384,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+
 	case _diaporama_minus: {
 		if (pg_nbCompressedImageDirs > 0) {
 			pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir - 1 + pg_nbCompressedImageDirs) % pg_nbCompressedImageDirs;
@@ -6598,7 +7398,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _flash_photo_diaporama: {
 		if (pg_nbCompressedImageDirs > 0 && float_arguments[0] >= 0) {
 			pg_CurrentDiaporamaDir = int(float_arguments[0]) % pg_nbCompressedImageDirs;
-			pg_CurrentDiaporamaEnd = float_arguments[1] + CurrentClockTime;
+			pg_CurrentDiaporamaEnd = float_arguments[1] + pg_CurrentClockTime;
 			photoWeight = 1.f;
 			printf("flash_photo_diaporama %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], pg_FrameNo);
 			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
@@ -6606,21 +7406,21 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ TRACK NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA)
+#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA) || defined(PG_WITH_PORTAUDIO)
 	case _soundtrack_plus: {
 		if (nb_soundtracks > 0) {
-			if (currentlyPlaying_trackNo >= 0) {
-				currentlyPlaying_trackNo = (currentlyPlaying_trackNo + 1) % nb_soundtracks;
+			if (currentlyPlaying_trackNo < 0) {
+				PlayTrack(0, 0.);
 			}
 			else {
-				currentlyPlaying_trackNo = 0;
+				PlayTrack((currentlyPlaying_trackNo + 1) % nb_soundtracks, 0.);
 			}
-			PlayTrack(currentlyPlaying_trackNo);
 			BrokenInterpolationVar[_playing_soundtrackNo] = true;
 			*((int *)ScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
 		}
@@ -6628,15 +7428,44 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	}
 	case _soundtrack_minus: {
 		if (nb_soundtracks > 0) {
-			if (currentlyPlaying_trackNo >= 0) {
-				currentlyPlaying_trackNo = (currentlyPlaying_trackNo + nb_soundtracks - 1) % nb_soundtracks;
+			if (currentlyPlaying_trackNo < 0) {
+				PlayTrack(0, 0.);
 			}
 			else {
-				currentlyPlaying_trackNo = 0;
+				PlayTrack((currentlyPlaying_trackNo + nb_soundtracks - 1) % nb_soundtracks, 0.);
 			}
-			PlayTrack(currentlyPlaying_trackNo);
 			BrokenInterpolationVar[_playing_soundtrackNo] = true;
 			*((int*)ScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
+		}
+		break;
+	}
+	case _soundtrack_seek: {
+		int soundTrack_no = int(float_arguments[0]);
+		double seek_position = 0.;
+		if (nb_arguments >= 2) {
+			seek_position = double(float_arguments[1]);
+		}
+
+		// seek inside the current track or a new track
+		if (soundTrack_no >= 0 && soundTrack_no < nb_soundtracks) {
+			if (currentlyPlaying_trackNo != soundTrack_no) {
+				printf("soundtrack_seek: currentlyPlaying_trackNo %d != soundTrack_no %d\n", currentlyPlaying_trackNo, soundTrack_no);
+				StopTrack();
+				BrokenInterpolationVar[_playing_soundtrackNo] = true;
+				*((int*)ScenarioVarPointers[_playing_soundtrackNo]) = soundTrack_no;
+				currentlyPlaying_trackNo = soundTrack_no;
+			}
+			PlayTrack(currentlyPlaying_trackNo, seek_position);
+		}
+		// stop playing a track
+		else if (soundTrack_no < 0) {
+			if (playing_soundtrackNo >= 0) {
+				printf("soundtrack_seek: playing_soundtrackNo neg %d\n", soundTrack_no);
+				StopTrack();
+			}
+			BrokenInterpolationVar[_playing_soundtrackNo] = true;
+			*((int*)ScenarioVarPointers[_playing_soundtrackNo]) = -1;
+			currentlyPlaying_trackNo = -1;
 		}
 		break;
 	}
@@ -6652,6 +7481,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	}
 #endif
 
+#if defined(var_movieCaptFreq)
 	case _movie_loop_onOff: {
 		movie_loop = !movie_loop;
 		sprintf(AuxString, "/movie_loop_onOff %d", int(movie_loop));
@@ -6659,12 +7489,13 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		printf("Movie loop On/Off %d\n", int(movie_loop));
 		break;
 	}
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PALETTE NO ++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#ifndef PEN_HSV
+#if defined(var_pen_color)
 	case _pen_colorPreset_minus: {
 		if (nb_pen_colorPresets > 0) {
 			current_pen_colorPreset = (current_pen_colorPreset - 1 + nb_pen_colorPresets) % nb_pen_colorPresets;
@@ -6867,6 +7698,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// +++++++++++++++++ MOVIE NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
+#if defined(var_movieCaptFreq)
 	case _movie_plus: {
 		if (nb_movies > 0) {
 			playing_movieNo = (playing_movieNo + 1) % nb_movies;
@@ -6896,14 +7728,30 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
-
+#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 	// +++++++++++++++++ CLIP NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#ifdef PG_WITH_CLIPS
+#if defined(var_cameraCaptFreq)
+	case _camera_close: {
+		// release webCam
+		if (pg_webCam_capture.isOpened()) {
+			pg_webCam_capture.release();
+		}
+		break;
+	}
+	case _camera_open: {
+		// release webCam
+		if (!pg_webCam_capture.isOpened() && cameraNo < 0 && -cameraNo - 1 < nb_webCam) {
+			pg_openCameraCaptureAndLoadFrame();
+		}
+		break;
+	}
+#endif
+#if defined(var_clipCaptFreq)
 	case _clip_plus: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips > 0) {
@@ -6943,6 +7791,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+#endif
 
 	// +++++++++++++++++ CLIP NUDGE AND SCRATCH ++++++++++++++++++ 
 	// jog wheel controls with two arguments
@@ -6950,49 +7799,48 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	// y: 1 for clockwise rotation, 0 for anticlockwise rotation
 
 	// SCRATCHING
+#if defined(var_clip_scratch_factor3)
 	case _clip_scratch: {
 		float angle_pos = 0.f;
 		float prec_angle_pos = 0.f;
 		double prec_angle_time = 0.;
 		bool is_forward = true;
 		int clipSide = int(float_arguments[0]);
-		for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
-			if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
-				if (nb_arguments >= 1) {
-					angle_pos = float_arguments[1];
-				}
-				if (nb_arguments >= 2) {
-					is_forward = (float_arguments[2] > 0.);
-				}
-				prec_angle_pos = pg_clip_status[clipSide].get_last_scratch_angle(&prec_angle_time);
-				// it is not the first interaction after a release
-				if (prec_angle_pos >= 0) {
-					float delta_angle = angle_pos - prec_angle_pos;
-					// if we go over noon, the angle difference should be increased by 1
-					// for clockwise: e.g. angle_pos = 0.1 prec_angle_pos = 0.9 delta_angle = (0.1 -  0.9) + 1. = 0.2
-					// otherwise delta_angle = 0.9 - 0.7 = 0.2
-					if (is_forward && delta_angle < -0.5f) {
-						delta_angle = delta_angle + 1.f;
-					}
-					// for anti-clockwise: e.g. angle_pos = 0.9 prec_angle_pos = 0.1 delta_angle = (0.9 -  0.1) - 1. = -0.2
-					// otherwise delta_angle = 0.7 - 0.9 = -0.2
-					else if (!is_forward && delta_angle > 0.5f) {
-						delta_angle = delta_angle - 1.f;
-					}
-					pg_clip_status[clipSide].scratch_offset_position(indClipRank, delta_angle * clip_scratch_factor);
-				}
-				else {
-					// pas d'incidence sur le jeu
-				}
-				pg_clip_status[clipSide].set_last_scratch_angle(angle_pos, CurrentClockTime);
+		if (clipSide < _clipLR && clipSide >= 0) {
+			if (nb_arguments >= 1) {
+				angle_pos = float_arguments[1];
 			}
+			if (nb_arguments >= 2) {
+				is_forward = (float_arguments[2] > 0.);
+			}
+			prec_angle_pos = pg_clip_status[clipSide].get_last_scratch_angle(&prec_angle_time);
+			// it is not the first interaction after a release
+			if (prec_angle_pos >= 0) {
+				float delta_angle = angle_pos - prec_angle_pos;
+				// if we go over noon, the angle difference should be increased by 1
+				// for clockwise: e.g. angle_pos = 0.1 prec_angle_pos = 0.9 delta_angle = (0.1 -  0.9) + 1. = 0.2
+				// otherwise delta_angle = 0.9 - 0.7 = 0.2
+				if (is_forward && delta_angle < -0.5f) {
+					delta_angle = delta_angle + 1.f;
+				}
+				// for anti-clockwise: e.g. angle_pos = 0.9 prec_angle_pos = 0.1 delta_angle = (0.9 -  0.1) - 1. = -0.2
+				// otherwise delta_angle = 0.7 - 0.9 = -0.2
+				else if (!is_forward && delta_angle > 0.5f) {
+					delta_angle = delta_angle - 1.f;
+				}
+				pg_clip_status[clipSide].scratch_offset_position( delta_angle * clip_scratch_factor);
+			}
+			else {
+				// pas d'incidence sur le jeu
+			}
+			pg_clip_status[clipSide].set_last_scratch_angle(angle_pos, pg_CurrentClockTime);
 		}
 		break;
 	}
 	case _clip_scratch_touch_press: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
-			pg_clip_status[clipSide].set_last_scratch_angle(-1., CurrentClockTime);
+			pg_clip_status[clipSide].set_last_scratch_angle(-1., pg_CurrentClockTime);
 			pg_clip_status[clipSide].set_scratch_pressed(true);
 		}
 		break;
@@ -7000,63 +7848,15 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _clip_scratch_touch_release: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
-			pg_clip_status[clipSide].set_last_scratch_angle(-1., CurrentClockTime);
+			pg_clip_status[clipSide].set_last_scratch_angle(-1., pg_CurrentClockTime);
 			pg_clip_status[clipSide].set_scratch_pressed(false);
 		}
 		break;
 	}
-
+#endif
 	// TEMPO BENDING
+#if defined(var_clipCaptFreq) and defined(var_clip_nudge_factor)
 	case _clip_nudge: {
-		//float angle_pos = 0.f;
-		//float prec_angle_pos = 0.f;
-		//double prec_angle_time = 0.;
-		//bool is_forward = true;
-		//int clipSide = int(float_arguments[0]);
-		//if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo() >= 0) {
-		//	if (nb_arguments >= 1) {
-		//		angle_pos = float_arguments[1];
-		//	}
-		//	if (nb_arguments >= 2) {
-		//		is_forward = (float_arguments[2] > 0.);
-		//	}
-		//	prec_angle_pos = pg_clip_status[clipSide].get_last_nudge_angle(&prec_angle_time);
-		//	// it is not the first interaction after a release
-		//	if (prec_angle_pos >= 0) {
-		//		float delta_angle = angle_pos - prec_angle_pos;
-		//		// if we go over noon, the angle difference should be increased by 1
-		//		// for clockwise: e.g. angle_pos = 0.1 prec_angle_pos = 0.9 delta_angle = (0.1 -  0.9) + 1. = 0.2
-		//		// otherwise delta_angle = 0.9 - 0.7 = 0.2
-		//		if (is_forward && delta_angle < -0.5f) {
-		//			delta_angle = delta_angle + 1.f;
-		//		}
-		//		// for anti-clockwise: e.g. angle_pos = 0.9 prec_angle_pos = 0.1 delta_angle = (0.9 -  0.1) - 1. = -0.2
-		//		// otherwise delta_angle = 0.7 - 0.9 = -0.2
-		//		else if (!is_forward && delta_angle > 0.5f) {
-		//			delta_angle = delta_angle - 1.f;
-		//		}
-		//		double new_FPS = pg_clip_status[clipSide].get_currentFPS() + delta_angle * clip_nudge_factor;
-		//		double max_FPS = 3 * double(clipCaptFreq);
-		//		double min_FPS = 1;
-		//		// avoids ]-min_FPS, +min_FPS[
-		//		if (new_FPS > 0 && new_FPS < min_FPS) {
-		//			new_FPS = -min_FPS;
-		//		}
-		//		else if (new_FPS <= 0 && new_FPS > -min_FPS) {
-		//			new_FPS = min_FPS;
-		//		}
-		//		// avoids -max_FPS[, ]+max_FPS
-		//		else {
-		//			new_FPS = min(max(-max_FPS, new_FPS), max_FPS);
-		//		}
-		//		pg_clip_status[clipSide].set_currentFPS(new_FPS);
-		//		//printf("current speed %.3f\n", pg_clip_status.get_currentFPS());
-		//	}
-		//	else {
-		//		// pas d'incidence sur le jeu
-		//	}
-		//	pg_clip_status[clipSide].set_last_nudge_angle(angle_pos, CurrentClockTime);
-		//}
 		int clipSide = int(float_arguments[0]);
 		for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 			if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7079,19 +7879,21 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _clip_nudge_touch_press: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
-			pg_clip_status[clipSide].set_last_nudge_angle(-1., CurrentClockTime);
+			pg_clip_status[clipSide].set_last_nudge_angle(-1., pg_CurrentClockTime);
 		}
 		break;
 	}
 	case _clip_nudge_touch_release: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
-			pg_clip_status[clipSide].set_last_nudge_angle(-1., CurrentClockTime);
+			pg_clip_status[clipSide].set_last_nudge_angle(-1., pg_CurrentClockTime);
 		}
 		break;
 	}
+#endif
 
-	// CUE MANAGEMENT
+#if defined(var_clipCaptFreq)
+								  // CUE MANAGEMENT
 	case _clip_cue_onOff: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
@@ -7135,6 +7937,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+#if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_cue_jump: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
@@ -7150,7 +7953,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
-					   // goto cue: makes a difference whether or not the clip is playing (jump vs call)
+#endif
+	// goto cue: makes a difference whether or not the clip is playing (jump vs call)
 	case _clip_cue_call: {
 		int clipSide = int(float_arguments[0]);
 		int clipCueNo = int(float_arguments[1]);
@@ -7176,6 +7980,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
+	
 					   // FX
 	case _clip_fx: {
 		int clipSide = int(float_arguments[0]);
@@ -7183,66 +7988,113 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		if (clipSide == _clipLeft) {
 			switch (fxNo) {
 			case 0:
+				fx_dry_wet = float_arguments[2];
 				// dry_wet
 				break;
 			case 1: {
 				float val = float_arguments[2];
 				if (val < 1.f / 3.f) {
-					pg_clip_status[_clipLeft].clip_g = 0.f;
-					pg_clip_status[_clipRight].clip_g = 0.f;
-					pg_clip_status[_clipLeft].clip_r = 0.f;
-					pg_clip_status[_clipRight].clip_r = 0.f;
-					pg_clip_status[_clipLeft].clip_b = 1.f;
-					pg_clip_status[_clipRight].clip_b = 1.f;
+					pg_clip_status[_clipLeft].clip_g_channel_level[0] = 0.f;
+					pg_clip_status[_clipRight].clip_g_channel_level[0] = 0.f;
+					pg_clip_status[_clipLeft].clip_r_channel_level[0] = 0.f;
+					pg_clip_status[_clipRight].clip_r_channel_level[0] = 0.f;
+					pg_clip_status[_clipLeft].clip_b_channel_level[0] = 1.f;
+					pg_clip_status[_clipRight].clip_b_channel_level[0] = 1.f;
+					pg_clip_status[_clipLeft].clip_g_channel_level[1] = 0.f;
+					pg_clip_status[_clipRight].clip_g_channel_level[1] = 0.f;
+					pg_clip_status[_clipLeft].clip_r_channel_level[1] = 0.f;
+					pg_clip_status[_clipRight].clip_r_channel_level[1] = 0.f;
+					pg_clip_status[_clipLeft].clip_b_channel_level[1] = 1.f;
+					pg_clip_status[_clipRight].clip_b_channel_level[1] = 1.f;
 				}
 				else if (val < 2.f / 3.f) {
-					pg_clip_status[_clipLeft].clip_b = 0.f;
-					pg_clip_status[_clipRight].clip_b = 0.f;
-					pg_clip_status[_clipLeft].clip_r = 0.f;
-					pg_clip_status[_clipRight].clip_r = 0.f;
-					pg_clip_status[_clipLeft].clip_g = 1.f;
-					pg_clip_status[_clipRight].clip_g = 1.f;
+					pg_clip_status[_clipLeft].clip_b_channel_level[0] = 0.f;
+					pg_clip_status[_clipRight].clip_b_channel_level[0] = 0.f;
+					pg_clip_status[_clipLeft].clip_r_channel_level[0] = 0.f;
+					pg_clip_status[_clipRight].clip_r_channel_level[0] = 0.f;
+					pg_clip_status[_clipLeft].clip_g_channel_level[0] = 1.f;
+					pg_clip_status[_clipRight].clip_g_channel_level[0] = 1.f;
+					pg_clip_status[_clipLeft].clip_b_channel_level[1] = 0.f;
+					pg_clip_status[_clipRight].clip_b_channel_level[1] = 0.f;
+					pg_clip_status[_clipLeft].clip_r_channel_level[1] = 0.f;
+					pg_clip_status[_clipRight].clip_r_channel_level[1] = 0.f;
+					pg_clip_status[_clipLeft].clip_g_channel_level[1] = 1.f;
+					pg_clip_status[_clipRight].clip_g_channel_level[1] = 1.f;
 				}
 				else {
-					pg_clip_status[_clipLeft].clip_b = 0.f;
-					pg_clip_status[_clipRight].clip_b = 0.f;
-					pg_clip_status[_clipLeft].clip_g = 0.f;
-					pg_clip_status[_clipRight].clip_g = 0.f;
-					pg_clip_status[_clipLeft].clip_r = 1.f;
-					pg_clip_status[_clipRight].clip_r = 1.f;
+					pg_clip_status[_clipLeft].clip_b_channel_level[0] = 0.f;
+					pg_clip_status[_clipRight].clip_b_channel_level[0] = 0.f;
+					pg_clip_status[_clipLeft].clip_g_channel_level[0] = 0.f;
+					pg_clip_status[_clipRight].clip_g_channel_level[0] = 0.f;
+					pg_clip_status[_clipLeft].clip_r_channel_level[0] = 1.f;
+					pg_clip_status[_clipRight].clip_r_channel_level[0] = 1.f;
+					pg_clip_status[_clipLeft].clip_b_channel_level[1] = 0.f;
+					pg_clip_status[_clipRight].clip_b_channel_level[1] = 0.f;
+					pg_clip_status[_clipLeft].clip_g_channel_level[1] = 0.f;
+					pg_clip_status[_clipRight].clip_g_channel_level[1] = 0.f;
+					pg_clip_status[_clipLeft].clip_r_channel_level[1] = 1.f;
+					pg_clip_status[_clipRight].clip_r_channel_level[1] = 1.f;
 				}
 			}
 				  break;
 			case 2:
 				echo = float_arguments[2];
-				*((float*)ScenarioVarPointers[_echo]) = echo;
+				*((float*)ScenarioVarPointers[_echo]) = echo * fx_dry_wet;
 				break;
 			case 3:
 				photo_gamma = float_arguments[2];
-				*((float*)ScenarioVarPointers[_photo_gamma]) = photo_gamma;
+				*((float*)ScenarioVarPointers[_photo_gamma]) = photo_gamma * fx_dry_wet;
 				break;
 			}
 		}
 		else {
 			switch (fxNo) {
 			case 0:
+				fx_dry_wet = float_arguments[2];
 				// dry_wet
 				break;
 			case 1:
-				flashTrkBG_freq_2 = max(0, min(9, int(floor(float_arguments[2] * 10))));
+				flashTrkBG_freq_2 = max(0, min(9, int(floor(float_arguments[2] * 10 * fx_dry_wet))));
 				*((int*)ScenarioVarPointers[_flashTrkBG_freq_2]) = flashTrkBG_freq_2;
 				break;
 			case 2:
 				photo_satur = float_arguments[2];
-				*((float*)ScenarioVarPointers[_photo_satur]) = photo_satur;
+				*((float*)ScenarioVarPointers[_photo_satur]) = photo_satur * fx_dry_wet;
 				break;
 			case 3:
-				pg_clip_status[_clipLeft].jump_frame_freq = int(float_arguments[2] * 10);
-				pg_clip_status[_clipRight].jump_frame_freq = int(float_arguments[2] * 10);
+				pg_clip_status[_clipLeft].jump_frame_freq = int(float_arguments[2] * 10 * fx_dry_wet);
+				pg_clip_status[_clipRight].jump_frame_freq = int(float_arguments[2] * 10 * fx_dry_wet);
 				break;
 			}
 		}
 		break;
+	}
+
+				 // FX
+	case _clip_fx_std: {
+		int fxNo = int(float_arguments[0]);
+		switch (fxNo) {
+		case 0:
+			repop_part = 1.f - repop_part;
+			*((float*)ScenarioVarPointers[_repop_part]) = repop_part;
+			break;
+		case 1:
+			pixel_radius = 1.f - pixel_radius;
+			*((float*)ScenarioVarPointers[_pixel_radius]) = pixel_radius;
+			break;
+		case 2:
+			pixel_acc = 0.0001f;
+			*((float*)ScenarioVarPointers[_pixel_acc]) = pixel_acc;
+			break;
+		case 3:
+			CAdecay = 0.f;
+			*((float*)ScenarioVarPointers[_CAdecay]) = CAdecay;
+			break;
+		case 4:
+			part_size_pulse = 0.5f;
+			*((float*)ScenarioVarPointers[_part_size_pulse]) = part_size_pulse;
+			break;
+		}
 	}
 				 // EQ
 	case _clip_equalizer: {
@@ -7252,18 +8104,18 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			if (clipSide < _clipLR && clipSide >= 0) {
 				switch (eqNo) {
 				case 0:
-					pg_clip_status[clipSide].clip_r = float_arguments[2];
-					sprintf(AuxString, "/clip_eq_red %.2f", pg_clip_status[clipSide].clip_r);
+					pg_clip_status[clipSide].clip_r_channel_level[0] = float_arguments[2];
+					sprintf(AuxString, "/clip_eq_red %.2f", pg_clip_status[clipSide].clip_r_channel_level[0]);
 					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 					break;
 				case 1:
-					pg_clip_status[clipSide].clip_g = float_arguments[2];
-					sprintf(AuxString, "/clip_eq_green %.2f", pg_clip_status[clipSide].clip_g);
+					pg_clip_status[clipSide].clip_g_channel_level[0] = float_arguments[2];
+					sprintf(AuxString, "/clip_eq_green %.2f", pg_clip_status[clipSide].clip_g_channel_level[0]);
 					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 					break;
 				case 2:
-					pg_clip_status[clipSide].clip_b = float_arguments[2];
-					sprintf(AuxString, "/clip_eq_blue %.2f", pg_clip_status[clipSide].clip_b);
+					pg_clip_status[clipSide].clip_b_channel_level[0] = float_arguments[2];
+					sprintf(AuxString, "/clip_eq_blue %.2f", pg_clip_status[clipSide].clip_b_channel_level[0]);
 					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 					break;
 				}
@@ -7272,57 +8124,77 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		else if (nb_arguments == 4) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
-					pg_clip_status[clipSide].clip_r = float_arguments[1];
-					pg_clip_status[clipSide].clip_g = float_arguments[2];
-					pg_clip_status[clipSide].clip_b = float_arguments[3];
-					sprintf(AuxString, "/clip_eq_red %.2f", pg_clip_status[clipSide].clip_r);
-					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(AuxString, "/clip_eq_green %.2f", pg_clip_status[clipSide].clip_g);
-					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(AuxString, "/clip_eq_blue %.2f", pg_clip_status[clipSide].clip_b);
-					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				pg_clip_status[clipSide].clip_r_channel_level[0] = float_arguments[1];
+				pg_clip_status[clipSide].clip_g_channel_level[0] = float_arguments[2];
+				pg_clip_status[clipSide].clip_b_channel_level[0] = float_arguments[3];
+				sprintf(AuxString, "/clip_eq_red %.2f", pg_clip_status[clipSide].clip_r_channel_level[0]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/clip_eq_green %.2f", pg_clip_status[clipSide].clip_g_channel_level[0]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/clip_eq_blue %.2f", pg_clip_status[clipSide].clip_b_channel_level[0]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			}
 		}
 		break;
 	}
-						// NEW RANDOM CLIP
+#if PG_NB_PARALLEL_CLIPS >= 2
+	// EQ
+	case _clip2_equalizer: {
+		int clipSide = int(float_arguments[0]);
+		if (nb_arguments == 3) {
+			int eqNo = int(float_arguments[1]);
+			if (clipSide < _clipLR && clipSide >= 0) {
+				switch (eqNo) {
+				case 0:
+					pg_clip_status[clipSide].clip_r_channel_level[1] = float_arguments[2];
+					sprintf(AuxString, "/clip_eq_red %.2f", pg_clip_status[clipSide].clip_r_channel_level[1]);
+					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+					break;
+				case 1:
+					pg_clip_status[clipSide].clip_g_channel_level[1] = float_arguments[2];
+					sprintf(AuxString, "/clip_eq_green %.2f", pg_clip_status[clipSide].clip_g_channel_level[1]);
+					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+					break;
+				case 2:
+					pg_clip_status[clipSide].clip_b_channel_level[1] = float_arguments[2];
+					sprintf(AuxString, "/clip_eq_blue %.2f", pg_clip_status[clipSide].clip_b_channel_level[1]);
+					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+					break;
+				}
+			}
+		}
+		else if (nb_arguments == 4) {
+			int clipSide = int(float_arguments[0]);
+			if (clipSide < _clipLR && clipSide >= 0) {
+				pg_clip_status[clipSide].clip_r_channel_level[1] = float_arguments[1];
+				pg_clip_status[clipSide].clip_g_channel_level[1] = float_arguments[2];
+				pg_clip_status[clipSide].clip_b_channel_level[1] = float_arguments[3];
+				sprintf(AuxString, "/clip_eq_red %.2f", pg_clip_status[clipSide].clip_r_channel_level[1]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/clip_eq_green %.2f", pg_clip_status[clipSide].clip_g_channel_level[1]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/clip_eq_blue %.2f", pg_clip_status[clipSide].clip_b_channel_level[1]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+		break;
+	}
+#endif
+	// NEW RANDOM CLIP
 	case _clip_new: {
 		int clipSide = int(float_arguments[0]);
-		if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips > 0) {
-			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
-				int i = 0;
-				int clipNo = -1;
-				if (nb_arguments == 1) {
-					clipNo = int(floor(rand_0_1 * pg_nbClips)) % pg_nbClips;
-					while (i++ < 10 && clipNo == pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)) {
-						clipNo = int(floor(rand_0_1 * pg_nbClips)) % pg_nbClips;
-					}
-				}
-				else if (nb_arguments == 3 || nb_arguments == 2) {
-					if ((nb_arguments == 3 && (float_arguments[1] > float_arguments[2])) || float_arguments[1] < 0) {
-						if (nb_arguments == 2)
-							sprintf(ErrorStr, "Incorrect new clip arguments (%.2f)!", float_arguments[1]); ReportError(ErrorStr);
-						if (nb_arguments == 3)
-							sprintf(ErrorStr, "Incorrect new clip arguments (%.2f, %.2f)!", float_arguments[1], float_arguments[2]); ReportError(ErrorStr);
-					}
-					int clipMin = int(float_arguments[1]);
-					int clipMax = pg_nbClips;
-					if (nb_arguments == 3) {
-						clipMax = int(float_arguments[2]);
-					}
-					clipNo = int(floor(rand_0_1 * (clipMax - clipMin + 1))) % (clipMax - clipMin + 1) + clipMin;
-					while (i++ < 10 && clipNo == pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)) {
-						clipNo = int(floor(rand_0_1 * (clipMax - clipMin + 1))) % (clipMax - clipMin + 1) + clipMin;
-					}
-				}
-				if (clipNo >= 0 && clipNo < pg_nbClips) {
-					pg_play_clip_no(indClipRank, clipSide, clipNo);
-				}
-			}
-		}
+		clip_new(0, clipSide, nb_arguments, float_arguments);
 		break;
 	}
-				  // NEW SELECTED CLIP
+#if PG_NB_PARALLEL_CLIPS >= 2
+	case _clip2_new: {
+		int clipSide = int(float_arguments[0]);
+		clip_new(1, clipSide, nb_arguments, float_arguments);
+		break;
+	}
+#endif
+
+	// NEW SELECTED CLIP
 	case _clip_sample: {
 		int clipSide = int(float_arguments[0]);
 		int clip_no = int(float_arguments[1]);
@@ -7333,25 +8205,51 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	}
-	case _clip2_sample: {
+	// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
+	case _clip_sample_range: {
 		int clipSide = int(float_arguments[0]);
-		int clip_no = int(float_arguments[1]);
-		if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips > 0 && clip_no >= 0) {
+		int clipRank = int(float_arguments[1]);
+		int clip_no_low = int(float_arguments[2]);
+		int clip_no_high = int(float_arguments[3]);
+		int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
+		clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips;
+		if (clipSide < _clipLR && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips > 0 && clip_no >= 0) {
 			clip_no = clip_no % pg_nbClips;
-			pg_play_clip_no(1, clipSide, clip_no);
-
+			pg_play_clip_no(clipRank, clipSide, clip_no);
 		}
 		break;
 	}
-					  // CLIP FADE IN/OUT
+#if PG_NB_PARALLEL_CLIPS >= 2
+   // NEW SELECTED CLIP IN CASE OF TWO DECKS ON EACH SIDE
+	case _clip2_sample: {
+			int clipSide = int(float_arguments[0]);
+			int clip_no = int(float_arguments[1]);
+			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips > 0 && clip_no >= 0) {
+				clip_no = clip_no % pg_nbClips;
+				pg_play_clip_no(1, clipSide, clip_no);
+
+			}
+		break;
+	}
+#endif
+	// LEFT OR RIGHT CLIP FADE IN/OUT
 	case _clip_fader: {
 		int clipSide = int(float_arguments[0]);
 		if (clipSide < _clipLR && clipSide >= 0) {
-			pg_clip_status[clipSide].clip_level = float_arguments[1];
+			// pg_clip_status[clipSide].clip_level[0] = float_arguments[1];
 		}
 		break;
 	}
-					// CLIP PLAY STOP
+#if PG_NB_PARALLEL_CLIPS >= 2
+	case _clip2_fader: {
+		int clipSide = int(float_arguments[0]);
+		if (clipSide < _clipLR && clipSide >= 0) {
+			// pg_clip_status[clipSide].clip_level[1] = float_arguments[1];
+		}
+		break;
+	}
+#endif
+	// CLIP PLAY STOP
 	case _clip_autoplay_left: {
 		pg_clip_status[_clipLeft].clip_autoplay[0] = (float_arguments[0] == 1.f);
 		break;
@@ -7363,17 +8261,18 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _clip_play_left: {
 		pg_clip_status[_clipLeft].clip_play[0] = (float_arguments[0] == 1.f);
 		if (pg_clip_status[_clipLeft].clip_play[0]) {
-			pg_clip_status[_clipLeft].set_lastPlayedFrameTime(0, CurrentClockTime);
+			pg_clip_status[_clipLeft].set_lastPlayedFrameTime(0, pg_CurrentClockTime);
 		}
 		break;
 	}
 	case _clip_play_right: {
 		pg_clip_status[_clipRight].clip_play[0] = (float_arguments[0] == 1.f);
 		if (pg_clip_status[_clipRight].clip_play[0]) {
-			pg_clip_status[_clipRight].set_lastPlayedFrameTime(0, CurrentClockTime);
+			pg_clip_status[_clipRight].set_lastPlayedFrameTime(0, pg_CurrentClockTime);
 		}
 		break;
 	}
+#if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_autoplay_left: {
 		pg_clip_status[_clipLeft].clip_autoplay[1] = (float_arguments[0] == 1.f);
 		break;
@@ -7383,19 +8282,20 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 	case _clip2_play_left: {
-		pg_clip_status[_clipLeft].clip_play[1] = (float_arguments[0] == 1.f);
-		if (pg_clip_status[_clipLeft].clip_play[1]) {
-			pg_clip_status[_clipLeft].set_lastPlayedFrameTime(1, CurrentClockTime);
-		}
+			pg_clip_status[_clipLeft].clip_play[1] = (float_arguments[0] == 1.f);
+			if (pg_clip_status[_clipLeft].clip_play[1]) {
+				pg_clip_status[_clipLeft].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
+			}
 		break;
 	}
 	case _clip2_play_right: {
-		pg_clip_status[_clipRight].clip_play[1] = (float_arguments[0] == 1.f);
-		if (pg_clip_status[_clipRight].clip_play[1]) {
-			pg_clip_status[_clipRight].set_lastPlayedFrameTime(1, CurrentClockTime);
-		}
+			pg_clip_status[_clipRight].clip_play[1] = (float_arguments[0] == 1.f);
+			if (pg_clip_status[_clipRight].clip_play[1]) {
+				pg_clip_status[_clipRight].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
+			}
 		break;
 	}
+#endif
 #endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -7410,12 +8310,12 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		resend_all_light_variables = true;
 		break;
 	}
-	case _setup: {
+	case _setupNo: {
 		setup(int(round(float_arguments[0])));
 		break;
 	}
 	case _setupName: {
-		std::string sceneID = std::string(string_argument_0);
+		std::string sceneID = string_argument_0;
 		std::regex newLines_re("\n+");
 		std::regex dquotes_re("\"");
 		sceneID = std::regex_replace(sceneID, newLines_re, "");
@@ -7425,7 +8325,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 			setup(ind_scene);
 		}
 		else {
-			sprintf(ErrorStr, "Unknown scene ID %s in /setupName OSC command (%d)!", string_argument_0, ind_scene); ReportError(ErrorStr);
+			sprintf(ErrorStr, "Unknown scene ID %s in /setupName OSC command (%d)!", string_argument_0.c_str(), ind_scene); ReportError(ErrorStr);
 
 		}
 		break;
@@ -7442,6 +8342,18 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	}
+	case _master_incay: {
+		pg_master_incay_duration = double(float_arguments[0]);
+		pg_master_incay_start_time = pg_CurrentClockTime;
+		pg_master_incay_start_value = master;
+		break;
+	}
+	case _master_decay: {
+		pg_master_decay_duration = double(float_arguments[0]);
+		pg_master_decay_start_time = pg_CurrentClockTime;
+		pg_master_decay_start_value = master;
+		break;
+	}
 	case _setup_plus_5: {
 		setup_plus(5);
 		break;
@@ -7456,8 +8368,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	}
 	case _setup_plus_keep_total_dur: {
 		if (pg_CurrentScene) {
-			double elapsedTime = (CurrentClockTime - InitialScenarioTime) - pg_CurrentScene->scene_initial_time;
-			double deltaTime = pg_Scenario[1 + pg_CurrentSceneIndex].scene_initial_time - (CurrentClockTime - InitialScenarioTime);
+			double elapsedTime = (pg_CurrentClockTime - InitialScenarioTime) - pg_CurrentScene->scene_initial_time;
+			double deltaTime = pg_Scenario[1 + pg_CurrentSceneIndex].scene_initial_time - (pg_CurrentClockTime - InitialScenarioTime);
 			// only accepted if the current scene has been on for a while
 			if (elapsedTime > 15
 				// if the scene has not begun since a short while
@@ -7473,7 +8385,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		break;
 	}
 
-#ifdef PG_WITH_CLIP_ART
+#if defined(var_activeClipArts)
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SVG GPU +++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -7517,9 +8429,9 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		printf("SVG GPU rotate %.2f\n", float_arguments[0]);
 		break;
 	case _ClipArt_xy: 
-		pg_ClipArt_Translation_X[pg_last_activated_ClipArt] = float_arguments[0] * leftWindowWidth;
+		pg_ClipArt_Translation_X[pg_last_activated_ClipArt] = float_arguments[0] * workingWindow_width;
 		pg_ClipArt_Translation_Y[pg_last_activated_ClipArt] = float_arguments[1] * window_height;
-		printf("SVG GPU translate %.2fx%.2f\n", float_arguments[0] * leftWindowWidth, float_arguments[1] * window_height);
+		printf("SVG GPU translate %.2fx%.2f\n", float_arguments[0] * workingWindow_width, float_arguments[1] * window_height);
 		break;
 	case _ClipArt_nat_color: 
 		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_nat; 
@@ -7545,34 +8457,43 @@ void pg_aliasScript(char* address, char* string_argument_0,
 	case _ClipArt_magenta_color:
 		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_magenta;
 		break;
+	case _ClipArt_black_color:
+		pg_ClipArt_Colors[pg_last_activated_ClipArt] = ClipArt_black;
+		break;
 	case _ClipArt_translations:
 		for(int indImage = 0; indImage < pg_nb_ClipArt && (2 * indImage + 1) < nb_arguments; indImage++) {
-			pg_ClipArt_Translation_X[indImage] = float_arguments[2 * indImage] * leftWindowWidth;
+			pg_ClipArt_Translation_X[indImage] = float_arguments[2 * indImage] * workingWindow_width;
 			pg_ClipArt_Translation_Y[indImage] = float_arguments[2 * indImage + 1] * window_height;
 		}
-		// printf("SVG GPU translate %.2fx%.2f\n", float_arguments[0] * leftWindowWidth, float_arguments[1] * window_height);
+		// printf("SVG GPU translate %.2fx%.2f\n", float_arguments[0] * workingWindow_width, float_arguments[1] * window_height);
 		break;
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	case _Mesh_onOff: Mesh_OnOff(int(float_arguments[0]) + 1); break;
-#ifdef CAVERNEPLATON
+#endif
+#if defined(var_mobileMeshes)
+	case _Mesh_mobile_onOff: Mesh_mobile_OnOff(int(float_arguments[0]) + 1); break;
+#endif
+
+#ifdef var_Caverne_Mesh_Profusion
 	case _Caverne_Mesh_Profusion_on: for (int indMesh = 7; indMesh < pg_nb_Mesh_files; indMesh++) { Caverne_Mesh_Profusion_On(indMesh); }; break;
 	case _Caverne_Mesh_Profusion_off: for (int indMesh = 7; indMesh < pg_nb_Mesh_files; indMesh++) { Caverne_Mesh_Profusion_Off(indMesh); }; break;
 	case _Caverne_Mesh_7Solids_on: for (int indMesh = 0; indMesh < 7; indMesh++) { Mesh_On(indMesh + 1); Mesh_mobile_Off(indMesh + 1); }; break;
 	case _Caverne_Mesh_7Solids_off: for (int indMesh = 0; indMesh < 7; indMesh++) { Mesh_Off(indMesh + 1); Mesh_mobile_Off(indMesh + 1); }; break;
 	case _Caverne_BackColor_onOff: Caverne_BackColor = !Caverne_BackColor; break;
 #endif
-	case _Mesh_mobile_onOff: Mesh_mobile_OnOff(int(float_arguments[0]) + 1); break;
-#ifndef TEMPETE
+#if defined(var_activeMeshes)
 	case _Mesh_light_x: mesh_light_x = float_arguments[0]; printf("MESH light x %.2f\n", float_arguments[0]);  break;
 	case _Mesh_light_y: mesh_light_y = float_arguments[0]; printf("MESH light y %.2f\n", float_arguments[0]);  break;
 	case _Mesh_light_z: mesh_light_z = float_arguments[0]; printf("MESH light z %.2f\n", float_arguments[0]);  break;
 #endif
-#endif
 	case _take_snapshot:
 		pg_draw_scene(_Jpg, false);
 		sprintf(AuxString, "/snapshot_ID Snap_%04d", indJpgSnapshot); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		break;
+	case _muteRightScreen_onOff:
+		muteRightScreen = !muteRightScreen;
 		break;
 	case _isClearAllLayers:
 		isClearAllLayers = 1;
@@ -7584,12 +8505,10 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		else {
 			CurrentCursorStylusvsRubber = pg_Rubber;
 		}
-#ifdef ATELIERSENFANTS
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(StylusvsRubberButtonsPaths, StylusvsRubberButtonLabelsPaths, StylusvsRubberButtonValues, false, CurrentCursorStylusvsRubber);
-#endif
 		break;
-#ifdef ATELIERSENFANTS
+#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	case _pen_hue_sat_value:
 		pen_hue = float_arguments[0];
 		BrokenInterpolationVar[_pen_hue] = true;
@@ -7604,6 +8523,8 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		//printf("color2 msg %s\n", AuxString);
 		break;
+#endif
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	case _repop_hue_sat_valuePart:
 		repop_huePart = float_arguments[0];
 		BrokenInterpolationVar[_repop_huePart] = true;
@@ -7619,6 +8540,7 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		//printf("color2 msg %s\n", AuxString);
 		break;
 #endif
+#if defined(var_path_replay_trackNo_1)
 	case _path_replay_stopAll:
 		for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
 			if (is_path_replay[pathNo]) {
@@ -7630,14 +8552,19 @@ void pg_aliasScript(char* address, char* string_argument_0,
 		}
 		break;
 	case _path_replay_playAll:
+		printf("play all tracks %.3f\n", pg_CurrentClockTime);
 		for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
-			if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].nbRecordedFrames > 0) {
+			if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].path_nbRecordedFrames > 0) {
 				pg_path_replay_trackNo_onOff(pathNo, 1);
 				//sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
 				//pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 				//printf("replay off track was currently read (%s)\n", AuxString);
 			}
 		}
+		break;
+#endif
+	case _clear_path_group:
+		clear_path_group();
 		break;
 #ifdef PG_METAWEAR
 	case _mw_mss_pos: {
@@ -7658,13 +8585,13 @@ void pg_aliasScript(char* address, char* string_argument_0,
 #endif
 
 	default: {
-			sprintf(ErrorStr, "Command not found (%s)!", address); ReportError(ErrorStr);
+			sprintf(ErrorStr, "Command not found (%s)!", address_string.c_str()); ReportError(ErrorStr);
 			break;
 		}
 	}
 }
 
-#ifdef PG_WITH_CLIP_ART
+#if defined(var_activeClipArts)
 void ClipArt_OnOff(int indImage) {
 	if (indImage <= pg_nb_ClipArt && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArts always visible
 		bool isImageOn = activeClipArts & (1 << (indImage - 1));
@@ -7707,7 +8634,7 @@ void ClipArt_On(int indImage) {
 }
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 void Mesh_OnOff(int indImage) {
 	if (indImage <= pg_nb_Mesh_files) {
 		bool isImageOn = activeMeshes & (1 << (indImage - 1));
@@ -7723,7 +8650,6 @@ void Mesh_OnOff(int indImage) {
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
-#if defined(CAVERNEPLATON)
 void Mesh_On(int indImage) {
 	if (indImage <= pg_nb_Mesh_files) {
 		bool isImageOn = activeMeshes & (1 << (indImage - 1));
@@ -7747,15 +8673,18 @@ void Mesh_Off(int indImage) {
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
+#if defined(var_Caverne_Mesh_Profusion)
 void Caverne_Mesh_Profusion_On(int indImage) {
 	pg_CaverneActveMesh[indImage] = !pg_CaverneActveMesh[indImage];
-	pg_CaverneMeshBirthTime[indImage] = CurrentClockTime;
-	pg_CaverneMeshDeathTime[indImage] = CurrentClockTime + 100000.f;
+	pg_CaverneMeshBirthTime[indImage] = pg_CurrentClockTime;
+	pg_CaverneMeshDeathTime[indImage] = pg_CurrentClockTime + 100000.f;
 }
 void Caverne_Mesh_Profusion_Off(int indImage) {
-	pg_CaverneMeshDeathTime[indImage] = CurrentClockTime + pg_CaverneMeshWakeupTime[indImage] / 3.f;
+	pg_CaverneMeshDeathTime[indImage] = pg_CurrentClockTime + pg_CaverneMeshWakeupTime[indImage] / 3.f;
 }
 #endif
+#endif
+#if defined(var_mobileMeshes)
 void Mesh_mobile_OnOff(int indImage) {
 	if (indImage <= pg_nb_Mesh_files) {
 		bool isImageOn = mobileMeshes & (1 << (indImage - 1));
@@ -7892,7 +8821,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		pulsed_color[indChannel] = grey + pulse_average * grey_pulse;
 		if (pulse_average != 0) {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
-#ifdef ALKEMI
+#if defined(var_alKemi)
 				pulsed_color[indChannel]
 					+= color_spectrum_coef * bandpass_3color_palette[indColorBandPass][indChannel] * (pulse[indColorBandPass] / (3.f * pulse_average));
 #else
@@ -7903,7 +8832,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		}
 		else {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
-#ifdef ALKEMI
+#if defined(var_alKemi)
 				pulsed_color[indChannel]
 					+= color_spectrum_coef * bandpass_3color_palette[indColorBandPass][indChannel] / 3.f;
 #else
@@ -7926,7 +8855,6 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 	}
 
 	// the colors for drawing are inverted in case of inverted rendering, so that the drawing colors are not seen inverted
-#if !defined(ULM)
 	if (invertAllLayers) {
 		pulsed_color[0] = value - pulsed_color[0];
 		pulsed_color[1] = value - pulsed_color[1];
@@ -7938,7 +8866,6 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		pulsed_color[1] += value - new_value;
 		pulsed_color[2] += value - new_value;
 	}
-#endif
 }
 
 // from https://www.codespeedy.com/hsv-to-rgb-in-cpp/
@@ -8038,7 +8965,6 @@ void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_p
 	//printf("pulsed color RGB %.2f %.2f %.2f \n", pulsed_color[0], pulsed_color[1], pulsed_color[2]);
 
 	// the hues for drawing are inverted in case of inverted rendering, so that the drawing hues are not seen inverted
-#if !defined(ULM)
 	if (invertAllLayers) {
 		pulsed_color[0] = pulsed_value - pulsed_color[0];
 		pulsed_color[1] = pulsed_value - pulsed_color[1];
@@ -8050,7 +8976,6 @@ void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_p
 		pulsed_color[1] += pulsed_value - new_value;
 		pulsed_color[2] += pulsed_value - new_value;
 	}
-#endif
 }
 
 #ifdef PG_LIGHTS_CONTROL_IN_PG
@@ -8063,7 +8988,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 		|| light1_strobe != light1_strobe_prec || light1_strobe_pulse != light1_strobe_pulse_prec
 		|| ((light1_grey_pulse != 0 || light1_color_pulse != 0 || light1_dimmer_pulse != 0 || light1_strobe_pulse != 0)
 			&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 		// video background and light color are the same and randomly changed
 		|| Caverne_BackColorRed != Caverne_BackColorRed_prec
 		|| Caverne_BackColorGreen != Caverne_BackColorGreen_prec
@@ -8085,7 +9010,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			light1_strobe_prec = light1_strobe;
 			light1_strobe_pulse_prec = light1_strobe_pulse;
 		}
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 		// video background and light color are the same and randomly changed
 		if (Caverne_BackColor && pg_nb_light_groups > 0) {
 			pg_light_groups[0].set_color( Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
@@ -8243,7 +9168,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 		|| light8_strobe != light8_strobe_prec || light8_strobe_pulse != light8_strobe_pulse_prec
 		|| ((light8_grey_pulse != 0 || light8_color_pulse != 0 || light8_dimmer_pulse != 0 || light8_strobe_pulse != 0)
 			&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 		// video background and light color are the same and randomly changed
 		|| (Caverne_BackColor && Caverne_BackColorFlash != Caverne_BackColorFlash_prec)
 #endif
@@ -8261,7 +9186,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 		light8_dimmer_pulse_prec = light8_dimmer_pulse;
 		light8_strobe_prec = light8_strobe;
 		light8_strobe_pulse_prec = light8_strobe_pulse;
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 		// video background and light color are the same and randomly changed
 		if (Caverne_BackColor && Caverne_BackColorFlash != Caverne_BackColorFlash_prec) {
 			if (Caverne_BackColorFlash) {
@@ -8281,7 +9206,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 #endif
 
 	if (oneLightChanged) {
-#ifdef CAVERNEPLATON
+#ifdef var_Caverne_BackColor
 		//printf("pg_light_groups[7].get_group_val(_dimmer) %.2f           pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7].get_group_val(_dimmer), pg_light_groups[0].get_color()[0]);
 #endif
 		pulse_light_prec[0] = pulse[0];
@@ -8295,7 +9220,7 @@ void pg_update_pulsed_colors(void) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// PEN PULSED COLOR
 	// blending the two closest palettes of the pulsed pen color
-#ifndef PEN_HSV
+#if defined(var_pen_color) && defined(var_pen_grey)
 	if (pen_color != pen_color_prec || pen_color_pulse != pen_color_pulse_prec
 		|| pen_grey != pen_grey_prec || pen_grey_pulse != pen_grey_pulse_prec
 		|| ((pen_grey_pulse != 0 || pen_color_pulse != 0)
@@ -8309,7 +9234,8 @@ void pg_update_pulsed_colors(void) {
 		pulse_prec[1] = pulse[1];
 		pulse_prec[2] = pulse[2];
 	}
-#else
+#endif
+#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	if (pen_hue != pen_hue_prec || pen_hue_pulse != pen_hue_pulse_prec
 		|| pen_sat != pen_sat_prec || pen_sat_pulse != pen_sat_pulse_prec
 		|| pen_value != pen_value_prec || pen_value_pulse != pen_value_pulse_prec
@@ -8328,6 +9254,7 @@ void pg_update_pulsed_colors(void) {
 	}
 #endif
 	pulsed_pen_color[3] = 1.f;
+
 
 	/***************************** SHOULD BE REACTIVATED WHEN THE INTERFACE CAN DISPLAY COLORS */
 	//sprintf(AuxString, "/pen_colorPenPalette %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f",
@@ -8368,7 +9295,7 @@ void pg_update_pulsed_colors(void) {
 	}
 #endif
 
-#ifdef PG_NB_CA_TYPES
+#ifdef var_nb_CATypes
 	if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
 		|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
 		|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
@@ -8383,8 +9310,8 @@ void pg_update_pulsed_colors(void) {
 		pulse_prec[2] = pulse[2];
 	}
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-#ifndef PART_HSV
+#if defined(var_part_initialization) 
+#if defined(var_repop_colorPart) && defined(var_repop_greyPart)
 	if (repop_colorPart != repop_colorPart_prec || repop_colorPart_pulse != repop_colorPart_pulse_prec
 		|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
 		|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
@@ -8398,7 +9325,8 @@ void pg_update_pulsed_colors(void) {
 		pulse_prec[1] = pulse[1];
 		pulse_prec[2] = pulse[2];
 	}
-#else
+#endif
+#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	if (repop_huePart != repop_huePart_prec || repop_huePart_pulse != repop_huePart_pulse_prec
 		|| repop_satPart != repop_satPart_prec || repop_satPart_pulse != repop_satPart_pulse_prec
 		|| repop_valuePart != repop_valuePart_prec || repop_valuePart_pulse != repop_valuePart_pulse_prec
@@ -8433,55 +9361,70 @@ void pg_update_pulsed_colors(void) {
 // TRACK LIB FUNCTIONS
 //////////////////////////////////////////////////////////////
 
+#if defined(var_path_record_1) 
 void pg_path_recording_onOff(int indPath ) {
   // switches between recording on/off 
   bool is_path_record = false;
   switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
   case 1:
 	  is_path_record = !pg_Path_Status[1].isActiveRecording;
 	  *((bool *)ScenarioVarPointers[_path_record_1]) = is_path_record;
 	  break;
+#if defined(var_path_record_2) 
   case 2:
 	  is_path_record = !pg_Path_Status[2].isActiveRecording;
 	  *((bool *)ScenarioVarPointers[_path_record_2]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_3) 
   case 3:
 	  is_path_record = !pg_Path_Status[3].isActiveRecording;
 	  *((bool *)ScenarioVarPointers[_path_record_3]) = is_path_record;
 	  break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4) 
   case 4:
 	  is_path_record = !pg_Path_Status[4].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_4]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_5) 
   case 5:
 	  is_path_record = !pg_Path_Status[5].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_5]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_6) 
   case 6:
 	  is_path_record = !pg_Path_Status[6].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_6]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_7) 
   case 7:
 	  is_path_record = !pg_Path_Status[7].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_7]) = is_path_record;
 	  break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8) 
   case 8:
 	  is_path_record = !pg_Path_Status[8].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_8]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_9) 
   case 9:
 	  is_path_record = !pg_Path_Status[9].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_9]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_10) 
   case 10:
 	  is_path_record = !pg_Path_Status[10].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_10]) = is_path_record;
 	  break;
+#endif
+#if defined(var_path_record_11) 
   case 11:
 	  is_path_record = !pg_Path_Status[11].isActiveRecording;
 	  *((bool*)ScenarioVarPointers[_path_record_11]) = is_path_record;
@@ -8505,7 +9448,7 @@ void pg_path_recording_onOff(int indPath ) {
 	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 
 	// recording can only be made with one finger
-#ifdef ATELIERSENFANTS
+#if defined(var_fingers)
 	NumberOfInteractionFingers(1);
 #endif
   } else {
@@ -8515,45 +9458,61 @@ void pg_path_recording_onOff(int indPath ) {
 	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
   }
 }
+#endif
 
+#if defined(var_path_replay_trackNo_1) || defined(var_path_record_1)
 void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 	bool ispath_record = false;
 	switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 	case 1:
 		ispath_record = path_record_1;
 		break;
+#if defined(var_path_record_2) 
 	case 2:
 		ispath_record = path_record_2;
 		break;
+#endif
+#if defined(var_path_record_3) 
 	case 3:
 		ispath_record = path_record_3;
 		break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4) 
 	case 4:
 		ispath_record = path_record_4;
 		break;
+#endif
+#if defined(var_path_record_5) 
 	case 5:
 		ispath_record = path_record_5;
 		break;
+#endif
+#if defined(var_path_record_6) 
 	case 6:
 		ispath_record = path_record_6;
 		break;
+#endif
+#if defined(var_path_record_7) 
 	case 7:
 		ispath_record = path_record_7;
 		break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8) 
 	case 8:
 		ispath_record = path_record_8;
 		break;
+#endif
+#if defined(var_path_record_9) 
 	case 9:
 		ispath_record = path_record_9;
 		break;
+#endif
+#if defined(var_path_record_10) 
 	case 10:
 		ispath_record = path_record_10;
 		break;
+#endif
+#if defined(var_path_record_11) 
 	case 11:
 		ispath_record = path_record_11;
 		break;
@@ -8580,41 +9539,57 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 	pg_path_replay_trackNo_stop(indPath);
 
 	switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_1) 
 	case 1:
 		*((int *)ScenarioVarPointers[_path_replay_trackNo_1]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_2) 
 	case 2:
 		*((int *)ScenarioVarPointers[_path_replay_trackNo_2]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_3) 
 	case 3:
 		*((int *)ScenarioVarPointers[_path_replay_trackNo_3]) = -1;
 		break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_4) 
 	case 4:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_4]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_5) 
 	case 5:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_5]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_6) 
 	case 6:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_6]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_7) 
 	case 7:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_7]) = -1;
 		break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_8) 
 	case 8:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_8]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_9) 
 	case 9:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_9]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_10) 
 	case 10:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_10]) = -1;
 		break;
+#endif
+#if defined(var_path_replay_trackNo_11) 
 	case 11:
 		*((int*)ScenarioVarPointers[_path_replay_trackNo_11]) = -1;
 		break;
@@ -8623,44 +9598,60 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 
   }
 }
+#endif
 
+#if defined(var_path_record_1) 
 void pg_path_recording_start(int indPath) {
 	switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 	case 1:
 		*((bool *)ScenarioVarPointers[_path_record_1]) = true;
 		break;
+#if defined(var_path_record_2) 
 	case 2:
 		*((bool *)ScenarioVarPointers[_path_record_2]) = true;
 		break;
+#endif
+#if defined(var_path_record_3) 
 	case 3:
 		*((bool *)ScenarioVarPointers[_path_record_3]) = true;
 		break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4) 
 	case 4:
 		*((bool*)ScenarioVarPointers[_path_record_4]) = true;
 		break;
+#endif
+#if defined(var_path_record_5) 
 	case 5:
 		*((bool*)ScenarioVarPointers[_path_record_5]) = true;
 		break;
+#endif
+#if defined(var_path_record_6) 
 	case 6:
 		*((bool*)ScenarioVarPointers[_path_record_6]) = true;
 		break;
+#endif
+#if defined(var_path_record_7) 
 	case 7:
 		*((bool*)ScenarioVarPointers[_path_record_7]) = true;
 		break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8) 
 	case 8:
 		*((bool*)ScenarioVarPointers[_path_record_8]) = true;
 		break;
+#endif
+#if defined(var_path_record_9) 
 	case 9:
 		*((bool*)ScenarioVarPointers[_path_record_9]) = true;
 		break;
+#endif
+#if defined(var_path_record_10) 
 	case 10:
 		*((bool*)ScenarioVarPointers[_path_record_10]) = true;
 		break;
+#endif
+#if defined(var_path_record_11) 
 	case 11:
 		*((bool*)ScenarioVarPointers[_path_record_11]) = true;
 		break;
@@ -8668,49 +9659,65 @@ void pg_path_recording_start(int indPath) {
 	}
 	if (indPath >= 1 && indPath <= PG_NB_PATHS) {
 		pg_Path_Status[indPath].isActiveRecording = true;
-		pg_Path_Status[indPath].nbRecordedFrames = 0;
+		pg_Path_Status[indPath].path_nbRecordedFrames = 0;
 		pg_Path_Status[indPath].readSpeedScale = 1.0f;
 		// printf("start recording track %d\n",indPath);
 	}
 }
+#endif
 
+#if defined(var_path_record_1) 
 void pg_path_recording_stop(int indPath) {
 	switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 	case 1:
 		*((bool *)ScenarioVarPointers[_path_record_1]) = false;
 		break;
+#if defined(var_path_record_2) 
 	case 2:
 		*((bool *)ScenarioVarPointers[_path_record_2]) = false;
 		break;
+#endif
+#if defined(var_path_record_3) 
 	case 3:
 		*((bool *)ScenarioVarPointers[_path_record_3]) = false;
 		break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_record_4) 
 	case 4:
 		*((bool*)ScenarioVarPointers[_path_record_4]) = false;
 		break;
+#endif
+#if defined(var_path_record_5) 
 	case 5:
 		*((bool*)ScenarioVarPointers[_path_record_5]) = false;
 		break;
+#endif
+#if defined(var_path_record_6) 
 	case 6:
 		*((bool*)ScenarioVarPointers[_path_record_6]) = false;
 		break;
+#endif
+#if defined(var_path_record_7) 
 	case 7:
 		*((bool*)ScenarioVarPointers[_path_record_7]) = false;
 		break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_record_8) 
 	case 8:
 		*((bool*)ScenarioVarPointers[_path_record_8]) = false;
 		break;
+#endif
+#if defined(var_path_record_9) 
 	case 9:
 		*((bool*)ScenarioVarPointers[_path_record_9]) = false;
 		break;
+#endif
+#if defined(var_path_record_10) 
 	case 10:
 		*((bool*)ScenarioVarPointers[_path_record_10]) = false;
 		break;
+#endif
+#if defined(var_path_record_11) 
 	case 11:
 		*((bool*)ScenarioVarPointers[_path_record_11]) = false;
 		break;
@@ -8723,50 +9730,66 @@ void pg_path_recording_stop(int indPath) {
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
+#endif
 
+#if defined(var_path_replay_trackNo_1) || defined(var_path_record_1)
 void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, is_path_replay[indPath], pg_Path_Status[indPath].nbRecordedFrames);
 	if (indPath >= 1 && indPath <= PG_NB_PATHS
 		&& !is_path_replay[indPath]
-		&& pg_Path_Status[indPath].nbRecordedFrames > 0) {
+		&& pg_Path_Status[indPath].path_nbRecordedFrames > 0) {
 		is_path_replay[indPath] = true;
 		//printf("replay path No %d on track %d with %d frames\n", indPath, trackNo, pg_Path_Status[indPath].nbRecordedFrames);
 		switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 		case 1:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_1]) = trackNo;
 			break;
+#if defined(var_path_replay_trackNo_2) 
 		case 2:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_2]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_3) 
 		case 3:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_3]) = trackNo;
 			break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_4) 
 		case 4:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_4]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_5) 
 		case 5:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_5]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_6) 
 		case 6:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_6]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_7) 
 		case 7:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_7]) = trackNo;
 			break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_8) 
 		case 8:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_8]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_9) 
 		case 9:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_9]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_10) 
 		case 10:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_10]) = trackNo;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_11) 
 		case 11:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_11]) = trackNo;
 			break;
@@ -8783,6 +9806,9 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 		//printf("ind reading %d\n", pg_Path_Status[indPath].indReading);
 	}
 }
+#endif
+
+#if defined(var_path_replay_trackNo_1) || defined(var_path_record_1)
 void pg_path_replay_trackNo_stop(int indPath) {
 	if (indPath >= 1 && indPath <= PG_NB_PATHS
 		&& is_path_replay[indPath]) {
@@ -8807,41 +9833,55 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		paths_RadiusY[indPath] = 0.0F;
 		// printf( "-> start_read_path\n"  );
 		switch (indPath) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
 		case 1:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_1]) = -1;
 			break;
+#if defined(var_path_replay_trackNo_2) 
 		case 2:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_2]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_3) 
 		case 3:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_3]) = -1;
 			break;
 #endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_4) 
 		case 4:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_4]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_5) 
 		case 5:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_5]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_6) 
 		case 6:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_6]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_7) 
 		case 7:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_7]) = -1;
 			break;
 #endif
-#if PG_NB_PATHS == 11
+#if defined(var_path_replay_trackNo_8) 
 		case 8:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_8]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_9) 
 		case 9:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_9]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_10) 
 		case 10:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_10]) = -1;
 			break;
+#endif
+#if defined(var_path_replay_trackNo_11) 
 		case 11:
 			*((int*)ScenarioVarPointers[_path_replay_trackNo_11]) = -1;
 			break;
@@ -8851,14 +9891,15 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	}
 }
+#endif
 
 
 //////////////////////////////////////////////////////////////
 // MISC LIB FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-void pg_writeMessageOnScreen( char *text ) {
-  strcpy( ScreenMessage , text ); 
+void pg_writeMessageOnScreen( string text ) {
+  ScreenMessage = text; 
   double newtime = RealTime(); 
   messageTransparency = 1.0; 
   LastScreenMessageDecayTime = newtime; 
@@ -8879,4 +9920,5 @@ void pg_snapshot( char * type ) {
 	sprintf( ErrorStr , "Incorrect screenshot type (%s): expected svg or png or jpg!" , type ); ReportError( ErrorStr );
   }
 }
+
 

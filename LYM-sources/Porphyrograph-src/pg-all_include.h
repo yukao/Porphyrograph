@@ -73,11 +73,20 @@ namespace fs = std::filesystem;
 #include <fstream>
 #include <conio.h>
 #include <random>
+#include <cstdlib>      // std::rand, std::srand
 #include <algorithm>    // std::max / min
 
 #include <stdarg.h>
 
+// memory leak tracing
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
 #define rand_0_1 (float(rand()) / float(RAND_MAX))
+template<typename T>
+constexpr auto rand_0_x(T x) { return (x * rand_0_1); }
+template<typename T>
+constexpr auto rand_x(T x) { return ( x * (2 * rand_0_1 - 1.f)); }
 
 #ifndef INT_MAX
         #include <limits.h>
@@ -154,15 +163,21 @@ namespace fs = std::filesystem;
 #include <opencv/highgui.h>
 #else
 // opencv include files
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/calib3d.hpp>
+#define HAVE_OPENCV_CALIB3D
+#define HAVE_OPENCV_HIGHGUI
+#define HAVE_OPENCV_IMGPROC
+#define HAVE_OPENCV_VIDEO
+#define HAVE_OPENCV_VIDEOIO
+#include <opencv2/opencv.hpp>
 #endif
 using namespace cv;
 
-// liblo OSC library
-#include "lo/lo.h"
+// oscpp library
+#include <oscpp/server.hpp>
+#include <oscpp/print.hpp>
+#include <oscpp/client.hpp>
+#include <memory>
+#include <stdexcept>
 
 #include <list>
 #include <vector>
@@ -185,45 +200,36 @@ using std::ifstream;
 
 #ifdef _WIN32
 #ifndef PG_WACOM_TABLET
-// #define PG_WACOM_TABLET
+#define PG_WACOM_TABLET
 #endif
 #endif // _WIN32
 
-#if defined(ALKEMI)
 #define PG_FBO_PINGPONG_SIZE 2
-#define PG_SLOW_TRACK_TRANSLATION 1
-#else
-#define PG_FBO_PINGPONG_SIZE 2
-#endif
 
-#if defined (TVW) || defined (KOMPARTSD) || defined(LIGHT) // || defined (REUTLINGEN)
+#if defined(TVW) || defined(KOMPARTSD) || defined(LIGHT)
 #define PG_NB_TRACKS 2   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
-#elif defined (GN) || defined (CAAUDIO) || defined (CRITON)
+#elif defined(CAAUDIO) || defined(CRITON)
 #define PG_NB_TRACKS 1   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
-#elif defined (BONNOTTE) || defined(SONG) || defined(CORE)
+#elif defined(CORE)
 #define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #else
 // NB TRACKS -> ***** ALSO TO BE CHANGED IN DRAWING AND COMPOSITION FRAGMENT SHADERS ****
 #define PG_NB_TRACKS 3   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 #endif
 
-#if !defined (TVW) && !defined (REUTLINGEN) && !defined (BICHES)
-#define PG_WITH_PHOTO_DIAPORAMA
-#endif
-
-#if defined (VOLUSPA)
+#if defined(VOLUSPA)
 #define PG_WITH_BLUR
 #endif
 
-#if defined (ARAKNIT) || defined(CAVERNEPLATON) || defined(SONG) || defined(FORET) || defined(LIGHT) || defined(PIERRES) || defined(CORE)
-#if defined (ARAKNIT) || defined(CAVERNEPLATON)
+#if defined(ARAKNIT) || defined(FORET) || defined(LIGHT) || defined(CORE)
+#if defined(var_light1_dimmer)
 // light variables inside scenario
 #define PG_LIGHTS_CONTROL_IN_PG
 #else
 // curve based control in Python
 #define PG_LIGHTS_CONTROL_IN_PYTHON
 #endif
-#if defined (ARAKNIT) || defined(CAVERNEPLATON) || defined(SONG) || defined(FORET) || defined(LIGHT) || defined(PIERRES) || defined(CORE)
+#if defined(ARAKNIT) || defined(FORET) || defined(LIGHT) || defined(CORE)
 // light DMX command in porphyrograpa
 #define PG_LIGHTS_DMX_IN_PG
 #include <controller_library.h>
@@ -234,6 +240,10 @@ using std::ifstream;
 #endif
 #endif
 
+#if defined(CORE)
+#define PG_WITH_PORTAUDIO
+#endif
+
 
 #if defined(SOMETHING)
 #define PG_MIDI
@@ -242,11 +252,10 @@ using std::ifstream;
 #endif
 
 
-#if defined (TVW) || defined (GN) || defined (CRITON) || defined(LIGHT)
+#if defined(TVW) || defined(CRITON) || defined(LIGHT)
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
-#elif defined (CAVERNEPLATON) || defined (PIERRES) || defined (ENSO) || defined (ATELIERSENFANTS) || defined (SONG) \
-	 || defined(ALKEMI) || defined(FORET) || defined (SOUNDINITIATIVE) || defined(CORE)
+#elif defined(FORET) || defined(CORE)
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 11 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 11   // **** ALSO TO BE CHANGED IN UPDATE AND PARTICLE ANIMATION FRAGMENT SHADER ****
 #else
@@ -255,7 +264,7 @@ using std::ifstream;
 #endif
 
 // for a tactile entry, there is no mouseover and the path has to be broken if the distance between two consecutive points is too big
-#if defined (ATELIERSENFANTS)
+#if defined(var_fingers)
 #define PG_TACTILE_TABLET
 #endif
 
@@ -264,7 +273,7 @@ using std::ifstream;
 #define PG_CAMERA_REST_DELAY 240
 
 // NB OF POSSIBLE CURSORS THROUGH HAND INTERFACE
-#if defined (ATELIERSENFANTS)
+#if defined(var_fingers)
 #define PG_NB_CURSORS_MAX 5
 #else
 #define PG_NB_CURSORS_MAX 1
@@ -275,10 +284,7 @@ using std::ifstream;
 #endif
 
 // HSV color system instead of Palettes + grey
-#if defined (ATELIERSENFANTS)
-#define PEN_HSV
-#define PART_HSV
-#else
+#if !defined(var_fingers)
 #define PG_NB_CURSORS_MAX 1
 #endif
 
@@ -288,12 +294,6 @@ using std::ifstream;
 // sun ray Perlin noise
 // camera noise
 // video noise
-
-// WITHOUT USE OF WEBCAM
-#if !defined (CAAUDIO) && !defined (TEMPETE) && !defined (DAWN) && !defined (RIVETS) && !defined (KOMPARTSD) \
-	&& !defined (BICHES) && !defined (ARAKNIT)  && !defined (PIERRES) && !defined (FORET) && !defined(LIGHT) && !defined(ALKEMI)
-#define PG_WITH_CAMERA_CAPTURE
-#endif
 
 #ifndef CRITON
 #define PG_WITH_PUREDATA
@@ -312,69 +312,59 @@ using std::ifstream;
 #undef PG_NB_PIXEL_MODES
 #else
 #define PG_NB_PIXEL_MODES 3
-#if !defined(ALKEMI) && !defined(PIERRES) && !defined(ENSO) && !defined(FORET) && !defined(GN)
-#define PG_WITH_CLIP_ART
-#endif
 // no pixels
 // pixels
 // firework
 #endif
 
-#if defined(SOUNDINITIATIVE)
-//#define PG_MIRRORED_SECOND_SCREEN
-#endif
-
 // NB CA TYPES
-#if defined(GN) || defined(ALKEMI)
-#define PG_NB_CA_TYPES 8
-//#define CA_SQUENCR                0
-//#define CA_TOTALISTIC             1
-//#define CA_GENERATION             2
-//#define CA_GAL_BIN_MOORE          3
-//#define CA_GAL_BIN_NEUMANN        4
-//#define CA_NEUMANN_BINARY         5
-#elif defined(CAAUDIO) || defined(RIVETS)
-#define PG_NB_CA_TYPES 7
-//#define CA_TOTALISTIC             0
-//#define CA_GENERATION             1
-//#define CA_GAL_BIN_MOORE			2
-//#define CA_GAL_BIN_NEUMANN		3
-//#define CA_NEUMANN_BINARY         4
-#elif defined(TVW)
-#define PG_NB_CA_TYPES 5
-//#define CA_PREY                    0
-//#define CA_DISLOCATION             1
-//#define CA_PROTOCELLS              2
-//#define CA_SOCIAL_PD               3
-//#define CA_PATHS                   4
-//#define CA_LETSGO                  5
-#elif defined(CRITON)
-#define PG_NB_CA_TYPES 1
-//#define CA_PROTOCELLS                    0
-#elif defined(KOMPARTSD) || defined(LIGHT)
-#undef PG_NB_CA_TYPES
-#elif defined(CAVERNEPLATON) || defined(PIERRES) || defined (ENSO) || defined(SONG) || defined(FORET)|| defined(SOUNDINITIATIVE) || defined(CORE)
-#define PG_NB_CA_TYPES 7
-#else
-#define PG_NB_CA_TYPES 4
-//const uint CA_CYCLIC = 0;
-//const uint CA_CYCLIC_1 = 1;
-//const uint GOL_1 = 2;
-//const uint CA_PROTOCELLS = 3;
-#endif
+//#if defined(var_alKemi)
+//#define PG_NB_CA_TYPES 5
+////#define CA_PREY                0
+////#define CA_DISLOCATION         1
+////#define CA_PROTOCELLS          2
+////#define CA_SOCIAL_PD           3
+////#define CA_PATHS               4
+//#elif (defined(RIVETS) || defined(FORET) || defined(CAAUDIO) || defined(CORE)) && !defined(SOUNDINITATIVE)
+//#define PG_NB_CA_TYPES 7
+////const uint CA_DISLOCATION = 0;
+////const uint CA_CYCLIC_1 = 1;
+////const uint CA_PROTOCELLS = 2;
+////const uint GOL_1 = 3;
+////const uint CA_CYCLIC = 4;
+////const uint CA_PREY = 5;
+////const uint CA_SOCIAL_PD = 6;
+//
+//#elif defined(TVW)
+//#define PG_NB_CA_TYPES 5
+////#define CA_PREY                    0
+////#define CA_DISLOCATION             1
+////#define CA_PROTOCELLS              2
+////#define CA_SOCIAL_PD               3
+////#define CA_PATHS                   4
+////#define CA_LETSGO                  5
+//#elif defined(CRITON)
+//#define PG_NB_CA_TYPES 1
+////#define CA_PROTOCELLS                    0
+//#elif defined(KOMPARTSD) || defined(LIGHT)
+//#undef PG_NB_CA_TYPES
+//#else
+//#define PG_NB_CA_TYPES 4
+////const uint CA_CYCLIC = 0;
+////const uint CA_CYCLIC_1 = 1;
+////const uint GOL_1 = 2;
+////const uint CA_PROTOCELLS = 3;
+//#endif
 
 // NB CA SUB-TYPES
 #define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
-#if defined(TVW) || defined (BONNOTTE) || defined (TEMPETE) || defined (DAWN) || defined (RIVETS) || defined (ETOILES) \
-		|| defined (BICHES)  || defined (ATELIERSENFANTS) || defined (CAVERNEPLATON) || defined (PIERRES) || defined (ENSO) || defined(SONG) \
-		|| defined(FORET) || defined(SOUNDINITIATIVE) || defined(CORE)
+#if defined(TVW) || defined(RIVETS) || defined(FORET) || defined(CORE)
 #define TEXTURED_QUAD_PARTICLES
-#elif defined (DASEIN)
+#elif defined(DASEIN)
 #define CURVE_PARTICLES
-#elif defined (DEMO) || defined (DEMO_BEZIER) || defined (VOLUSPA)|| defined (INTERFERENCE) \
-		|| defined (CAAUDIO) || defined (REUTLINGEN) || defined (ULM) || defined (ARAKNIT)
+#elif defined(VOLUSPA) || defined(CAAUDIO) || defined(ARAKNIT)
 #define LINE_SPLAT_PARTICLES
 #endif
 
@@ -382,102 +372,52 @@ using std::ifstream;
 #define PG_PARTICLE_CURVE_DEGREE 3
 #endif
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 // NB PARTICLE MODES
 #define PG_NB_PARTMOVE_MODES 5
 
 #define PG_NB_PARTREPOP_MODES 2
 #define PARTREPOP_GRID 1
-
-#define PG_NB_PARTEXIT_MODES 3
-#define PG_NB_PARTSTROKE_MODES 4
-#define PG_NB_PARTCOLOR_MODES 3
 #endif
 
 // CLIPS
-#if defined (SOUNDINITIATIVE) || defined(CORE)
-#define PG_WITH_CLIPS
+#if defined(CORE)
 // different clips on right and left screens
 #define PG_NB_PARALLEL_CLIPS 2
 #endif
 
 // MASTER's MASK
-#if defined (CAVERNEPLATON) || defined (INTERFERENCE) || defined (PIERRES) || defined (ENSO) || defined (ARAKNIT) || defined (VOLUSPA) \
-		|| defined (SONG) || defined (FORET) || defined (SOUNDINITIATIVE) || defined(CORE)
+#if defined(ARAKNIT) || defined(VOLUSPA) ||  defined(FORET) || defined(CORE)
 #define PG_WITH_MASTER_MASK
 #endif
 
-// BURST's MASK
-#if defined (PIERRES)
-#define PG_WITH_BURST_MASK
-//#define PG_WITH_PHOTO_HOMOGRAPHY
-#endif
-
 // SENSORS
-#if defined (CAAUDIO)
-// #define PG_SENSORS
-// #define PG_NB_SENSORS 1
-// #define PG_NB_MAX_SENSOR_ACTIVATIONS 2
+#if defined(CAAUDIO)
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined (DEMO) || defined (DEMO_BEZIER) || defined (GN) || defined (REUTLINGEN) \
-		|| defined (BICHES) || defined (ATELIERSENFANTS) || defined (CAVERNEPLATON) || defined(FORET) || defined(CORE)
-#define PG_SENSORS
+#if defined(FORET) || defined(CORE)
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
 #define BEAT_DURATION (1.0f)
 #define PG_RENOISE
 #endif
-#if defined (CAVERNEPLATON) || defined (TEMPETE) || defined (ENSO) || defined (ETOILES) || defined (CORE)
-#define PG_MESHES
-#if defined (TEMPETE) || defined(ENSO)
-// FBO capture of Master to be displayed on a mesh for augmented reality
-#define PG_AUGMENTED_REALITY
-#if defined (TEMPETE)
+#if defined(TEMPETE)
 #define PG_SECOND_MESH_CAMERA
 #endif
-#endif
-#endif
-//#if defined (ARAKNIT) // || defined(CAVERNEPLATON)
-//#define PG_METAWEAR
-//#endif
-#ifdef PG_SENSORS
+
 #define PG_SENSOR_TEXTURE_WIDTH 100
 #define PG_SENSOR_GEOMETRY_WIDTH 10
 #define PG_NB_MAX_SENSOR_LAYOUTS 4
 #define PG_NB_MAX_SAMPLE_SETUPS 3
-#endif
-#ifdef SUPERCOLLIDER
-#define PG_NB_SENSOR_GROUPS 12
-#endif
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined (DEMO_BEZIER) || defined (CAVERNEPLATON) || defined (SONG) || defined (FORET) || defined (SOUNDINITIATIVE) \
-		|| defined (PIERRES) || defined (ENSO) || defined (TEMPETE) || defined (DAWN) ||defined (RIVETS) || defined (ULM) || defined (BICHES) \
-		|| defined (ATELIERSENFANTS) || defined (VOLUSPA) || defined (ETOILES) || defined (ARAKNIT) || defined (LIGHT) || defined(ALKEMI) || defined(CORE)
+#if defined(KOMPARTSD) || defined(FORET) ||defined(RIVETS) || defined(VOLUSPA) || defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
 #define PG_BEZIER_PATHS
 #endif
 
-// PHOTO FLASH ON CA IN ADDITION TO CAMERA FLASH
-#if defined (CAVERNEPLATON) || defined (SONG) || defined(FORET) || defined (SOUNDINITIATIVE) || defined (PIERRES) || defined (ENSO) || defined (ULM) \
-		|| defined (TEMPETE) || defined (ETOILES) || defined(CORE)
-#define PG_WITH_PHOTO_FLASH
-#endif
-
-// REPOP DENSITY TEXTURE FOR NON HOMOGENEOUS REPOP
-#if defined (ETOILES) || defined (BICHES) || defined (CAVERNEPLATON) || defined (SONG) || defined(FORET) \
-		|| defined (SOUNDINITIATIVE) || defined (ENSO) || defined(CORE)
-#define PG_WITH_REPOP_DENSITY
-#endif
-
-
 #ifdef _WIN32
-	//#ifdef PG_WACOM_TABLET
-		#include "../share/freeglut-wacom/include/GL/freeglut.h"
-	//#else // PG_WACOM_TABLET
-	//       #include "../share/freeglut-3.0.0/include/GL/freeglut.h"
-	//#endif // _WIN32
+	#include "../share/freeglut-wacom/include/GL/freeglut.h"
 #endif
 #ifdef LINUX
 	#include <GL/freeglut.h>
@@ -490,94 +430,44 @@ using std::ifstream;
 	#include <GLUT/glut.h>
 #endif // __APPLE_CC__
 
-#ifdef GN
-#include "pg_script_header_GN.h"
-#endif
 #if defined(TVW)
 #include "pg_script_header_TVW.h"
 #endif
-#if defined (CRITON)
+#if defined(CRITON)
 #include "pg_script_header_Criton.h"
 #endif
-#if defined (KOMPARTSD)
+#if defined(KOMPARTSD)
 #include "pg_script_header_KompartSD.h"
 #endif
-#if defined (LIGHT)
+#if defined(LIGHT)
 #include "pg_script_header_Light.h"
 #endif
-#if defined (REUTLINGEN)
-#include "pg_script_header_Reutlingen.h"
-#endif
-#if defined (BICHES)
-#include "pg_script_header_Biches.h"
-#endif
-#if defined (ATELIERSENFANTS)
-#include "pg_script_header_AteliersEnfants.h"
-#endif
-#if defined (CAVERNEPLATON)
-#include "pg_script_header_CavernePlaton.h"
-#endif
-#if defined (PIERRES)
-#include "pg_script_header_Pierres.h"
-#endif
-#if defined (ENSO)
-#include "pg_script_header_Enso.h"
-#endif
-#if defined (TEMPETE)
-#include "pg_script_header_Tempete.h"
-#endif
-#if defined (DAWN)
-#include "pg_script_header_Dawn.h"
-#endif
-#if defined (RIVETS)
+#if defined(RIVETS)
 #include "pg_script_header_Rivets.h"
 #endif
-#if defined (ULM)
-#include "pg_script_header_Ulm.h"
-#endif
-#ifdef SONG
-#include "pg_script_header_Song.h"
-#endif
-#ifdef CORE
+#if defined(CORE)
 #include "pg_script_header_Core.h"
 #endif
-#ifdef FORET
+#if defined(FORET)
 #include "pg_script_header_Foret.h"
 #endif
-#ifdef SOUNDINITIATIVE
-#include "pg_script_header_SoundInitiative.h"
-#endif
-#ifdef ALKEMI
-#include "pg_script_header_alKemi.h"
-#endif
-#if defined (DEMO) || defined (DEMO_BEZIER)
-#include "pg_script_header_demo.h"
-#endif
-#ifdef VOLUSPA
+#if defined(VOLUSPA)
 #include "pg_script_header_voluspa.h"
 #endif
-#ifdef ARAKNIT
+#if defined(ARAKNIT)
 #include "pg_script_header_araknit.h"
 #endif
-#if defined (ETOILES)
-#include "pg_script_header_etoiles.h"
-#endif
-#ifdef INTERFERENCE
-#include "pg_script_header_interference.h"
-#endif
-#ifdef CAAUDIO
+#if defined(CAAUDIO)
 #include "pg_script_header_CAaudio.h"
 #endif
-#ifdef DASEIN
-#include "pg_script_header_dasein.h"
-#endif
-#ifdef BONNOTTE
-#include "pg_script_header_bonnotte.h"
+
+#if defined(var_MmeShanghai_brokenGlass)
+#define PG_AUGMENTED_REALITY
 #endif
 
 #include "pg-udp.h"
 //#include "pg-USB.h"
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 #include "pg-mesh.h"
 #endif
 #include "pg-script.h"
@@ -586,7 +476,7 @@ using std::ifstream;
 
 #include "pg-shader.h"
 #include "pg-stroke.h"
-#ifdef PG_WITH_CLIP_ART
+#if defined(var_activeClipArts)
 #include "pg-svg-clip-art.h"
 #endif
 #include "pg-init.h"
@@ -594,7 +484,10 @@ using std::ifstream;
 #include "pg-main.h"
 #include "pg-conf.h"
 
-#include "pg-gstreamer.h"
+//#include "pg-gstreamer.h"
+#ifdef PG_WITH_PORTAUDIO
+#include "pg-audio.h"
+#endif
 
 
 // end of standard included files

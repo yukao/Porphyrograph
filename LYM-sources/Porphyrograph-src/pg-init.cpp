@@ -33,13 +33,13 @@ GLfloat pg_orthoWindowProjMatrix[16];
 GLfloat doubleProjMatrix[16];
 GLfloat pg_identityViewMatrix[16];
 GLfloat pg_identityModelMatrix[16];
-#if defined (PIERRES)
+#if defined(PIERRES)
 GLfloat pg_homographyForTexture[9];
 #endif
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 GLfloat modelMatrixSensor[16];
 #endif
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 GLfloat **modelMatrixMeshes;
 #endif
 
@@ -80,7 +80,7 @@ float quadMaster_texCoords[] = {
 };
 unsigned int quadMaster_indices[PG_SIZE_QUAD_ARRAY] = { 2, 1, 0, 3 };
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 unsigned int quadSensor_vao = 0;
 // quad for sensors
 float quadSensor_points[] = {
@@ -106,12 +106,21 @@ float quadSensor_texCoords[] = {
 struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
 #endif
 
-#ifdef PG_MESHES
-unsigned int **mesh_vao = NULL;
+#if defined(var_activeMeshes)
+unsigned int** mesh_vao = NULL;
 vector <vector <string>> mesh_IDs;
-int *nbMeshesPerMeshFile = NULL;
-int **nbFacesPerMesh = NULL;
+float** mesh_barycenter = NULL;
+int *pg_nbObjectsPerMeshFile = NULL;
+int **pg_nbFacesPerMeshFile = NULL;
 unsigned int **mesh_index_vbo = NULL;
+int *pg_nb_bones = NULL;
+Bone** TabBones = NULL;
+int* pg_nb_LibraryPoses = NULL;
+int* pg_nb_AnimationPoses = NULL;
+float** pg_interpolation_weight_AnimationPose = NULL;
+int* pg_nb_MotionPoses = NULL;
+MotionPose** pg_motionPoses = NULL;
+float** pg_interpolation_weight_MotionPose = NULL;
 #endif
 
 // particle curves
@@ -120,7 +129,7 @@ GLfloat *pg_Particle_control_points;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 GLfloat *pg_Particle_vertices;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
@@ -137,9 +146,9 @@ unsigned int *pg_Particle_indices;
 // comet texture
 GLuint comet_texture_2D_texID = NULL_ID;
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES)
+#if defined(TEXTURED_QUAD_PARTICLES)
 // blurred disk texture
-GLuint blurredDisk_texture_2D_texID = NULL_ID;
+std::vector<GLuint>  blurredDisk_texture_2D_texID;
 #endif
 
 /////////////////////////////////////////////////////////////////
@@ -159,16 +168,19 @@ GLuint drawBuffers[16] = {
 /////////////////////////////////////////////
 // FBO 
 GLuint pg_FBO_Update[PG_FBO_PINGPONG_SIZE]; // PG_FBO_UPDATE_NBATTACHTS
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
-
+#if defined(var_activeClipArts) || defined(var_part_initialization)
+GLuint pg_FBO_SVGandParticleRendering = 0; // SVG and particle rendering
+#endif
+#if defined(var_part_initialization) 
 GLuint pg_FBO_ParticleAnimation[2]; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
-GLuint pg_FBO_ParticleRendering = 0; // particle rendering
 GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
-GLuint pg_FBO_ParticleRendering_texID = 0; // particle rendering + stencil
+#endif
+#if defined(var_activeClipArts) || defined(var_part_initialization)
+GLuint pg_FBO_SVGandParticleRendering_texID = 0; // particle rendering + stencil
 #endif
 GLuint pg_FBO_Mixing_capturedFB_prec[2] = { 0,0 }; //  drawing memory on odd and even frames for echo
-// GLuint FBO_CameraFrame = 0; //  video preprocessing outcome
-#ifdef PG_AUGMENTED_REALITY
+// Augmented Reality: FBO capture of Master to be displayed on a mesh
+#if defined(PG_AUGMENTED_REALITY)
 GLuint pg_FBO_Master_capturedFB_prec = 0; // master output memory for mapping on mesh
 #endif
 
@@ -592,7 +604,7 @@ int stb__arial_50_usascii_a[95] = { 199,199,254,398,398,637,478,137,
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 void InterfaceInitializations(void) {
-#if !defined (LIGHT)
+#if !defined(LIGHT)
 	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
 	for (int ind = 0; ind < nb_pen_colorPresets; ind++) {
 		sprintf(AuxString, "/pen_colorPreset_name%d %s",
@@ -603,14 +615,14 @@ void InterfaceInitializations(void) {
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 
-#ifdef PG_WITH_CLIP_ART
+#if defined(var_activeClipArts)
 	// SVG GPU INTERFACE VARIABLE INITIALIZATION
 	for (int indImage = 0; indImage < pg_nb_ClipArt; indImage++) {
 		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, ((activeClipArts == -1) || (activeClipArts & (1 << (indImage - 1))))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 #endif
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes) && defined(var_mobileMeshes)
 	// MESH INTERFACE VARIABLE INITIALIZATION
 	for (int indImage = 0; indImage < pg_nb_Mesh_files; indImage++) {
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -655,7 +667,9 @@ int p[512] = { 151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53,
 	81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 
 	106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 
 	205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180 };
-double noise(double x, double y, double z) {
+
+// Perlin noise
+double PerlinNoise(double x, double y, double z) {
 	int X = (int)floor(x) & 255,
 		Y = (int)floor(y) & 255,
 		Z = (int)floor(z) & 255;
@@ -802,36 +816,26 @@ void pg_initGeometry_quads(void) {
 	// QUAD FOR DRAWING AND COMPOSITION
 	// point positions and texture coordinates
 	quadDraw_points[1] = (float)window_height;
-	quadDraw_points[3] = (float)leftWindowWidth;
-	quadDraw_points[9] = (float)leftWindowWidth;
+	quadDraw_points[3] = (float)workingWindow_width;
+	quadDraw_points[9] = (float)workingWindow_width;
 	quadDraw_points[10] = (float)window_height;
 
 	quadDraw_texCoords[1] = (float)window_height;
-	quadDraw_texCoords[2] = (float)leftWindowWidth;
-	quadDraw_texCoords[6] = (float)leftWindowWidth;
+	quadDraw_texCoords[2] = (float)workingWindow_width;
+	quadDraw_texCoords[6] = (float)workingWindow_width;
 	quadDraw_texCoords[7] = (float)window_height;
 
-#ifdef PG_MIRRORED_SECOND_SCREEN
 	quadMaster_points[1] = (float)window_height;
-	quadMaster_points[3] = (float)doubleWindowWidth * 1.5f;
-	quadMaster_points[9] = (float)doubleWindowWidth * 1.5f;
+	quadMaster_points[3] = (float)window_width;
+	quadMaster_points[9] = (float)window_width;
 	quadMaster_points[10] = (float)window_height;
+	//printf("quad master rectangle dimensions %d %d\n", int(quadMaster_points[3]), int(quadMaster_points[1]));
 
 	quadMaster_texCoords[1] = (float)window_height;
-	quadMaster_texCoords[2] = (float)doubleWindowWidth * 1.5f;
-	quadMaster_texCoords[6] = (float)doubleWindowWidth * 1.5f;
+	quadMaster_texCoords[2] = (float)window_width;
+	quadMaster_texCoords[6] = (float)window_width;
 	quadMaster_texCoords[7] = (float)window_height;
-#else
-	quadMaster_points[1] = (float)window_height;
-	quadMaster_points[3] = (float)doubleWindowWidth;
-	quadMaster_points[9] = (float)doubleWindowWidth;
-	quadMaster_points[10] = (float)window_height;
 
-	quadMaster_texCoords[1] = (float)window_height;
-	quadMaster_texCoords[2] = (float)doubleWindowWidth;
-	quadMaster_texCoords[6] = (float)doubleWindowWidth;
-	quadMaster_texCoords[7] = (float)window_height;
-#endif
 	printOglError(21);
 
 	/////////////////////////////////////////////////////////////////////
@@ -863,7 +867,7 @@ void pg_initGeometry_quads(void) {
 	// texture coordinates are location 1
 	glBindBuffer(GL_ARRAY_BUFFER, quadDraw_texCoord_vbo);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1); // don't forget this!
+	glEnableVertexAttribArray(1); 
 
 	// vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABQuad]);
@@ -901,7 +905,7 @@ void pg_initGeometry_quads(void) {
 	// texture coordinates are location 1
 	glBindBuffer(GL_ARRAY_BUFFER, quadMaster_texCoord_vbo);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1); // don't forget this!
+	glEnableVertexAttribArray(1); 
 
 	// vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABQuadMaster]);
@@ -909,7 +913,7 @@ void pg_initGeometry_quads(void) {
 		quadMaster_indices, GL_STATIC_DRAW);
 	printOglError(23);
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 	/////////////////////////////////////////////////////////////////////
 	// QUADS FOR SENSORS
 	// point positions and texture coordinates
@@ -962,7 +966,7 @@ void pg_initGeometry_quads(void) {
 	// texture coordinates are location 1
 	glBindBuffer(GL_ARRAY_BUFFER, quadSensor_texCoord_vbo);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1); // don't forget this!
+	glEnableVertexAttribArray(1); 
 
 								  // printf("Sensor size  %d\n" , PG_SENSOR_GEOMETRY_WIDTH );
 
@@ -982,7 +986,7 @@ void pg_initGeometry_quads(void) {
 		int heightInt = indSens / 4;
 		int widthInt = indSens % 4;
 		int heightStep = window_height / (4 + 1);
-		int widthStep = leftWindowWidth / (4 + 1);
+		int widthStep = workingWindow_width / (4 + 1);
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = (float)widthStep + widthInt * (float)widthStep;
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = (float)heightStep + heightInt * (float)heightStep;
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
@@ -992,18 +996,18 @@ void pg_initGeometry_quads(void) {
 	indLayout = 1;
 	// central sensor
 	indSens = 0;
-	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = leftWindowWidth / 2.0f;
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = workingWindow_width / 2.0f;
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f;
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 	for (indSens = 1; indSens < 5; indSens++) {
 		float radius = window_height / 5.0f;
-		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = leftWindowWidth / 2.0f + radius * (float)cos(indSens * 2.0 * M_PI / 4.0f);
+		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = workingWindow_width / 2.0f + radius * (float)cos(indSens * 2.0 * M_PI / 4.0f);
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f + radius * (float)sin(indSens * 2.0 * M_PI / 4.0f);
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 	}
 	for (indSens = 5; indSens < PG_NB_SENSORS; indSens++) {
 		float radius = window_height / 3.0f;
-		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = leftWindowWidth / 2.0f + radius * (float)cos(indSens * 2.0 * M_PI / 11.0f);
+		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = workingWindow_width / 2.0f + radius * (float)cos(indSens * 2.0 * M_PI / 11.0f);
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f + radius * (float)sin(indSens * 2.0 * M_PI / 11.0f);
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 	}
@@ -1012,14 +1016,14 @@ void pg_initGeometry_quads(void) {
 	indLayout = 2;
 	// central sensor
 	indSens = 0;
-	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = leftWindowWidth / 2.0f;
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = workingWindow_width / 2.0f;
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f;
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 	for (int indRay = 0; indRay < 5; indRay++) {
 		float angle = indRay * 2.0f * (float)M_PI / 5.0f;
 		for (indSens = 1 + indRay * 3; indSens < 1 + indRay * 3 + 3; indSens++) {
 			float radius = ((indSens - 1) % 3 + 1) * window_height / 10.0f;
-			sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = leftWindowWidth / 2.0f + radius * (float)cos(angle);
+			sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = workingWindow_width / 2.0f + radius * (float)cos(angle);
 			sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f + radius * (float)sin(angle);
 			sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 		}
@@ -1029,32 +1033,32 @@ void pg_initGeometry_quads(void) {
 	// will be transformed into a random layout each time it is invoked
 	indLayout = 3;
 	for (indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = leftWindowWidth / 2.0f;
+		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens] = workingWindow_width / 2.0f;
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 1] = window_height / 2.0f;
 		sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 3 * indSens + 2] = 0.1f;
 	}
 #else
 	// right
 	indLayout = 0;
-	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(7 * leftWindowWidth / 8);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(7 * workingWindow_width / 8);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(window_height / 2);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
 
 	// center
 	indLayout = 1;
-	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(leftWindowWidth / 2);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(workingWindow_width / 2);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(window_height / 2);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
 
 	// top
 	indLayout = 2;
-	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(leftWindowWidth / 2);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(workingWindow_width / 2);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(7 * window_height / 8);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
 
 	// corner
 	indLayout = 3;
-	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(7 * leftWindowWidth / 8);
+	sensorLayouts[indLayout * 3 * PG_NB_SENSORS] = (float)(7 * workingWindow_width / 8);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 1] = (float)(7 * window_height / 8);
 	sensorLayouts[indLayout * 3 * PG_NB_SENSORS + 2] = 0.1f;
 
@@ -1134,40 +1138,67 @@ void pg_initGeometry_quads(void) {
 	///////////////////////////////////////////////////////////////////////////////////////
 	// sample choice
 	sensor_sample_setUp_interpolation();
-
-	// float sample_choice[ PG_NB_SENSORS];
-	// // all possible sensor layouts
-	//int sensor_sample_setUps[ PG_NB_MAX_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
-	//  {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
-	//   {16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31},
-	//   {32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47}};
 #endif
 
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 	/////////////////////////////////////////////////////////////////////
 	// LOADS MESHES FROM BLENDER FILES
 	// point positions and texture coordinates
+	pg_nb_Mesh_objects = 0;
+	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+		load_mesh_objects(pg_Mesh_fileNames[indMeshFile], indMeshFile);
+		pg_nb_Mesh_objects += pg_nbObjectsPerMeshFile[indMeshFile];
+	}
+	printf("Loaded %d mesh objects \n", pg_nb_Mesh_objects);
 
-	// OLD_MESH mesh data
-	//pointBuffer = new GLfloat *[pg_nb_Mesh_files];
-	//texCoordBuffer = new GLfloat *[pg_nb_Mesh_files];
-	//normalBuffer = new GLfloat *[pg_nb_Mesh_files];
-	//indexBuffer = new GLuint *[pg_nb_Mesh_files];
-	//for (int indMeshInFile = 0; indMeshInFile < pg_nb_Mesh_files; indMeshInFile++) {
-	//	pointBuffer[indMeshInFile] = NULL;
-	//	texCoordBuffer[indMeshInFile] = NULL;
-	//	normalBuffer[indMeshInFile] = NULL;
-	//	indexBuffer[indMeshInFile] = NULL;
-	//}
+	// Mme Changhai: broken glass objects initialization
+#if defined(var_MmeShanghai_brokenGlass)
+	pg_MmeShanghaiActveMeshObjects = new bool*[pg_nb_Mesh_files];
+	pg_MmeShanghaiMeshObjectWakeupTime = new double*[pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Rotation_angle = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Rotation_X = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Rotation_Y = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Rotation_Z = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Translation_X = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Translation_Y = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Translation_Z = new float* [pg_nb_Mesh_files];
+	pg_MmeShanghai_Object_Rotation_Ini_angle = new float* [pg_nb_Mesh_files];
 
 	for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
-		load_mesh_obj(pg_Mesh_fileNames[indMeshFile], indMeshFile);
+		pg_MmeShanghaiActveMeshObjects[indMeshFile] = new bool[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile] = new double[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Rotation_angle[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Rotation_X[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Rotation_Y[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Rotation_Z[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Translation_X[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Translation_Y[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Translation_Z[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshFile] = new float[pg_nbObjectsPerMeshFile[indMeshFile]];
+		for (int indMeshObjectInFile = 0; indMeshObjectInFile < pg_nbObjectsPerMeshFile[indMeshFile]; indMeshObjectInFile++) {
+			pg_MmeShanghaiActveMeshObjects[indMeshFile][indMeshObjectInFile] = false;
+			pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Rotation_angle[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Rotation_X[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Rotation_Y[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Rotation_Z[indMeshFile][indMeshObjectInFile] = 1.f;
+			pg_MmeShanghai_Object_Translation_X[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Translation_Y[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Translation_Z[indMeshFile][indMeshObjectInFile] = 0.f;
+			pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshFile][indMeshObjectInFile] = 0.f;
+		}
+		for (int indMeshSubPart = 0; indMeshSubPart < pg_MmeShanghai_NbMeshSubParts[indMeshFile]; indMeshSubPart++) {
+			pg_MmeShanghai_MeshSubParts[indMeshFile][indMeshSubPart] = new bool[pg_nbObjectsPerMeshFile[indMeshFile]];
+			loadMeshSubParts(pg_MmeShanghai_MeshSubPart_FileNames[indMeshFile][indMeshSubPart], pg_MmeShanghai_MeshSubParts[indMeshFile][indMeshSubPart], pg_nbObjectsPerMeshFile[indMeshFile]);
+		}
 	}
+#endif
 #endif
 
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+
+#if defined(var_part_initialization) 
 	/////////////////////////////////////////////////////////////////////
 	// PARTICLES TO BE TESSELATED
 	// initializes the arrays that contains the positions and the indices of the particles
@@ -1186,7 +1217,7 @@ void pg_initGeometry_quads(void) {
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 	// vertex buffer objects and vertex array
 	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
 	// vertices
@@ -1205,25 +1236,25 @@ void pg_initGeometry_quads(void) {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 	glEnableVertexAttribArray(0);
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 	// radius is location 1
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
 	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1); // don't forget this!
+	glEnableVertexAttribArray(1); 
 								  // color is location 2
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(2); // don't forget this!
+	glEnableVertexAttribArray(2); 
 #endif
 #if defined CURVE_PARTICLES
 								  // radius is location 1
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
 	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1); // don't forget this!
+	glEnableVertexAttribArray(1); 
 								  // color is location 2
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(2); // don't forget this!
+	glEnableVertexAttribArray(2); 
 #endif
 
 #ifdef CURVE_PARTICLES
@@ -1232,7 +1263,7 @@ void pg_initGeometry_quads(void) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
 		pg_Particle_indices, GL_STATIC_DRAW);
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 	// vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * sizeof(unsigned int),
@@ -1243,15 +1274,15 @@ void pg_initGeometry_quads(void) {
 	glBindVertexArray(0);
 	printOglError(32);
 
-	printf("Geometry initialized %dx%d & %dx%d\n", leftWindowWidth, window_height,
-		doubleWindowWidth, window_height);
+	printf("Geometry initialized %dx%d & %dx%d\n", workingWindow_width, window_height,
+		window_width, window_height);
 }
 
 /////////////////////////////////////////////////////////////////
 // SENSOR INITIALIZATION
 /////////////////////////////////////////////////////////////////
 
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 void SensorInitialization(void) {
 #ifdef PG_RENOISE
 	sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
@@ -1299,7 +1330,7 @@ void assignSensorPositions(void) {
 	// random layout: regenerate
 	else {
 		for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
-			sensorPositions[3 * indSensor] = leftWindowWidth / 2.0f + leftWindowWidth / 2.0f * (2.0f * rand_0_1 - 1.0f);
+			sensorPositions[3 * indSensor] = workingWindow_width / 2.0f + workingWindow_width / 2.0f * (2.0f * rand_0_1 - 1.0f);
 			sensorPositions[3 * indSensor + 1] = window_height / 2.0f + window_height / 2.0f * (2.0f * rand_0_1 - 1.0f);
 			sensorPositions[3 * indSensor + 2] = 0.1f;
 		}
@@ -1314,8 +1345,8 @@ void assignSensorActivations(void) {
 	}
 	// incremental sensor activation
 	if (sensor_activation == 5) {
-		sensor_last_activation_time = CurrentClockTime;
-		//printf("initial activ %f %d\n", CurrentClockTime, sensor_activation);
+		sensor_last_activation_time = pg_CurrentClockTime;
+		//printf("initial activ %f %d\n", pg_CurrentClockTime, sensor_activation);
 	}
 }
 
@@ -1378,18 +1409,72 @@ void sensor_sample_setUp_interpolation(void) {
 #endif
 
 
-#ifdef PG_MESHES
+#if defined(var_activeMeshes)
 void MeshInitialization(void) {
-	mesh_vao = new unsigned int *[pg_nb_Mesh_files];
-	mesh_index_vbo = new unsigned int *[pg_nb_Mesh_files];
-	nbMeshesPerMeshFile = new int[pg_nb_Mesh_files];
-	nbFacesPerMesh = new int *[pg_nb_Mesh_files];
+	mesh_vao = new unsigned int* [pg_nb_Mesh_files];
+	mesh_index_vbo = new unsigned int* [pg_nb_Mesh_files];
+	mesh_barycenter = new float* [pg_nb_Mesh_files];
+	pg_nbObjectsPerMeshFile = new int[pg_nb_Mesh_files];
+	pg_nbFacesPerMeshFile = new int* [pg_nb_Mesh_files];
+	pg_nb_bones = new int[pg_nb_Mesh_files];
+	TabBones = new Bone * [pg_nb_Mesh_files];
+	pg_nb_AnimationPoses = new int[pg_nb_Mesh_files];
+	pg_nb_LibraryPoses = new int[pg_nb_Mesh_files];
+	pg_interpolation_weight_AnimationPose = new float* [pg_nb_Mesh_files];
+	for (int ind = 0; ind < pg_nb_Mesh_files; ind++) {
+		mesh_vao[ind] = NULL;
+		mesh_index_vbo[ind] = NULL;
+		mesh_barycenter[ind] = NULL;
+		pg_nbFacesPerMeshFile[ind] = NULL;
+		TabBones[ind] = NULL;
+		pg_nb_AnimationPoses[ind] = 0;
+		pg_nb_LibraryPoses[ind] = 0;
+		pg_interpolation_weight_AnimationPose[ind] = new float[PG_MAX_ANIMATION_POSES];
+		for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+			pg_interpolation_weight_AnimationPose[ind][indPose] = 0.f;
+		}
+	}
+
+	pg_nb_MotionPoses = new int[pg_nb_Mesh_files];
+	pg_interpolation_weight_MotionPose = new float* [pg_nb_Mesh_files];
+	for (int ind = 0; ind < pg_nb_Mesh_files; ind++) {
+		pg_nb_MotionPoses[ind] = 0;
+		pg_interpolation_weight_MotionPose[ind] = new float[PG_MAX_ANIMATION_POSES];
+		for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+			pg_interpolation_weight_MotionPose[ind][indPose] = 0.f;
+		}
+	}
+	pg_motionPoses = new MotionPose* [pg_nb_Mesh_files];
+	for (int ind = 0; ind < pg_nb_Mesh_files; ind++) {
+		pg_motionPoses[ind] = new MotionPose[PG_MAX_ANIMATION_POSES]();
+	}
 
 	// shader variable pointers
 	uniform_mesh_model = new GLint[pg_nb_Mesh_files];
 	uniform_mesh_view = new GLint[pg_nb_Mesh_files];
 	uniform_mesh_proj = new GLint[pg_nb_Mesh_files];
 	uniform_mesh_light = new GLint[pg_nb_Mesh_files];
+
+	// animation variable pointers
+	mesh_startAnime = new double[pg_nb_Mesh_files];
+	mesh_anime_precTime = new double[pg_nb_Mesh_files];
+	mesh_precedingAnime = new int[pg_nb_Mesh_files];
+	mesh_positiveChange = new bool[pg_nb_Mesh_files];
+	mesh_negativeChange = new bool[pg_nb_Mesh_files];
+	for (int indMesh = 0; indMesh < pg_nb_Mesh_files; indMesh++) {
+		mesh_startAnime[indMesh] = -1;
+		mesh_anime_precTime[indMesh] = -1;
+		mesh_positiveChange[indMesh] = false;
+		mesh_precedingAnime[indMesh] = false;
+	}
+	// motion variable pointers
+	mesh_startMotion = new double[pg_nb_Mesh_files];
+	mesh_motion_precTime = new double[pg_nb_Mesh_files];
+	mesh_precedingMotion = new int[pg_nb_Mesh_files];
+	for (int indMesh = 0; indMesh < pg_nb_Mesh_files; indMesh++) {
+		mesh_startMotion[indMesh] = -1;
+		mesh_motion_precTime[indMesh] = -1;
+	}
 }
 
 #endif
@@ -1420,8 +1505,8 @@ bool pg_initFBOTextures(GLuint *textureID, int nb_attachments, bool with_stencil
 		glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexStorage2D(GL_TEXTURE_RECTANGLE, 1, GL_RGBA32F,
-			leftWindowWidth, window_height);
-		// printf("FBO size %d %d \n" , leftWindowWidth , window_height );
+			workingWindow_width, window_height);
+		// printf("FBO size %d %d \n" , workingWindow_width , window_height );
 		glFramebufferTexture2D(GL_FRAMEBUFFER,
 			GL_COLOR_ATTACHMENT0 + indAtt,
 			GL_TEXTURE_RECTANGLE,
@@ -1436,7 +1521,7 @@ bool pg_initFBOTextures(GLuint *textureID, int nb_attachments, bool with_stencil
 		GLuint depthAndStencilBuffer;
 		glGenRenderbuffers(1, &depthAndStencilBuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, depthAndStencilBuffer);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, leftWindowWidth, window_height);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, workingWindow_width, window_height);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthAndStencilBuffer);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthAndStencilBuffer);
 		/*
@@ -1444,8 +1529,8 @@ bool pg_initFBOTextures(GLuint *textureID, int nb_attachments, bool with_stencil
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_UNSIGNED_INT_24_8,
-			leftWindowWidth, window_height);
-		// printf("FBO size %d %d \n" , leftWindowWidth , window_height );
+			workingWindow_width, window_height);
+		// printf("FBO size %d %d \n" , workingWindow_width , window_height );
 		glFramebufferTexture2D(GL_FRAMEBUFFER,
 			GL_DEPTH24_STENCIL8,
 			GL_TEXTURE_2D,
@@ -1496,7 +1581,7 @@ bool pg_initFBO(void) {
 		pg_FBO_Update_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(PG_FBO_PINGPONG_SIZE * PG_FBO_UPDATE_NBATTACHTS, pg_FBO_Update_texID);
-	printf("FBO Update size %d %d attachments %d\n", leftWindowWidth, window_height, PG_FBO_UPDATE_NBATTACHTS);
+	printf("FBO Update size %d %d attachments %d\n", workingWindow_width, window_height, PG_FBO_UPDATE_NBATTACHTS);
 	for (int indFB = 0; indFB < PG_FBO_PINGPONG_SIZE; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Update[indFB]);
 		pg_initFBOTextures(pg_FBO_Update_texID + indFB * PG_FBO_UPDATE_NBATTACHTS, 
@@ -1506,7 +1591,7 @@ bool pg_initFBO(void) {
 	// printf("FBO UPDATE     %d %d    %d %d %d   %d %d %d \n", pg_FBO_Update[0], pg_FBO_Update[1], pg_FBO_Update_texID[0], pg_FBO_Update_texID[1], pg_FBO_Update_texID[2], pg_FBO_Update_texID[3], pg_FBO_Update_texID[4], pg_FBO_Update_texID[5]);
 	printOglError(341);
 
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES) || defined (CURVE_PARTICLES) 
+#if defined(var_part_initialization) 
 	// FBO: multi-attachment for particle animation 
 	glGenFramebuffers(2, pg_FBO_ParticleAnimation);
 	// initializations to NULL
@@ -1514,7 +1599,7 @@ bool pg_initFBO(void) {
 		pg_FBO_ParticleAnimation_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS, pg_FBO_ParticleAnimation_texID);
-	printf("FBO Particle animation size %d %d attachments %d\n", leftWindowWidth, window_height, PG_FBO_PARTICLEANIMATION_NBATTACHTS);
+	printf("FBO Particle animation size %d %d attachments %d\n", workingWindow_width, window_height, PG_FBO_PARTICLEANIMATION_NBATTACHTS);
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_ParticleAnimation[indFB]);
 		pg_initFBOTextures(pg_FBO_ParticleAnimation_texID + indFB * PG_FBO_PARTICLEANIMATION_NBATTACHTS, 
@@ -1523,14 +1608,16 @@ bool pg_initFBO(void) {
 	}
 	//printf("FBO ANIMATION       %d %d      %d %d %d   %d %d %d \n", pg_FBO_ParticleAnimation[0], pg_FBO_ParticleAnimation[1], pg_FBO_ParticleAnimation_texID[0], pg_FBO_ParticleAnimation_texID[1], pg_FBO_ParticleAnimation_texID[2], pg_FBO_ParticleAnimation_texID[3], pg_FBO_ParticleAnimation_texID[4], pg_FBO_ParticleAnimation_texID[5]);
 	printOglError(341);
+#endif
 
+#if defined(var_activeClipArts) || defined(var_part_initialization)
 	// FBO: particle drawing output 
-	glGenFramebuffers(1, &pg_FBO_ParticleRendering);  // drawing memory on odd and even frames for echo 
-	glGenTextures(1, &pg_FBO_ParticleRendering_texID);
-	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_ParticleRendering);
-	// pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1, false);
-	printf("FBO Particle rendering size %d %d\n", leftWindowWidth, window_height);
-	pg_initFBOTextures(&pg_FBO_ParticleRendering_texID, 1, true);
+	glGenFramebuffers(1, &pg_FBO_SVGandParticleRendering);  // drawing memory on odd and even frames for echo 
+	glGenTextures(1, &pg_FBO_SVGandParticleRendering_texID);
+	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_SVGandParticleRendering);
+	// pg_initFBOTextures(&pg_FBO_SVGandParticleRendering_texID, 1, false);
+	printf("FBO Particle rendering size %d %d\n", workingWindow_width, window_height);
+	pg_initFBOTextures(&pg_FBO_SVGandParticleRendering_texID, 1, true);
 	glDrawBuffers(1, drawBuffers);
 	printOglError(344);
 #endif
@@ -1542,12 +1629,13 @@ bool pg_initFBO(void) {
 		pg_FBO_Mixing_capturedFB_prec_texID[indFB] = 0;
 	}
 	glGenTextures(2, pg_FBO_Mixing_capturedFB_prec_texID);
-	printf("FBO Mixing animation size %d %d attachments %d\n", leftWindowWidth, window_height, 2);
+	printf("FBO Mixing animation size %d %d attachments %d\n", workingWindow_width, window_height, 2);
 	for (int indFB = 0; indFB < 2; indFB++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec[indFB]);
 		pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID + indFB, 1, false);
 		glDrawBuffers(1, drawBuffers);
 	}
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #ifdef PG_AUGMENTED_REALITY
 	// FBO: composition output for echo
 	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh 
@@ -1555,7 +1643,7 @@ bool pg_initFBO(void) {
 	pg_FBO_Master_capturedFB_prec_texID = 0;
 	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
 	glBindFramebuffer(GL_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec);
-	printf("FBO Master size %d %d attachments %d\n", leftWindowWidth, window_height, 1);
+	printf("FBO Master size %d %d attachments %d\n", workingWindow_width, window_height, 1);
 	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false);
 	glDrawBuffers(1, drawBuffers);
 #endif
@@ -1571,7 +1659,7 @@ bool pg_initFBO(void) {
 void pg_initRenderingMatrices(void) {
 	memset((char *)pg_identityViewMatrix, 0, 16 * sizeof(float));
 	memset((char *)pg_identityModelMatrix, 0, 16 * sizeof(float));
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 	memset((char *)modelMatrixSensor, 0, 16 * sizeof(float));
 #endif
 	pg_identityViewMatrix[0] = 1.0f;
@@ -1582,7 +1670,7 @@ void pg_initRenderingMatrices(void) {
 	pg_identityModelMatrix[5] = 1.0f;
 	pg_identityModelMatrix[10] = 1.0f;
 	pg_identityModelMatrix[15] = 1.0f;
-#ifdef PG_SENSORS
+#ifdef var_sensor_layout
 	modelMatrixSensor[0] = 1.0f;
 	modelMatrixSensor[5] = 1.0f;
 	modelMatrixSensor[10] = 1.0f;
@@ -1591,7 +1679,7 @@ void pg_initRenderingMatrices(void) {
 
 	// ORTHO
 	float l = 0.0f;
-	float r = (float)leftWindowWidth;
+	float r = (float)workingWindow_width;
 	float b = 0.0f;
 	float t = (float)window_height;
 	float n = -1.0f;
@@ -1603,11 +1691,11 @@ void pg_initRenderingMatrices(void) {
 		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0f };
 	memcpy((char *)pg_orthoWindowProjMatrix, mat, 16 * sizeof(float));
 	// printf("Orthographic projection l %.2f r %.2f b %.2f t %.2f n %.2f f %.2f\n" , l,r,b,t,n,f);
-#if defined (PIERRES)
+#if defined(PIERRES)
 	memcpy((char*)pg_homographyForTexture, mat, 9 * sizeof(float));
 #endif
 
-	r = (float)doubleWindowWidth;
+	r = (float)window_width;
 	GLfloat mat2[] = {
 		(GLfloat)(2.0f / (r - l)), 0.0, 0.0, 0.0,
 		0.0, (GLfloat)(2.0f / (t - b)), 0.0, 0.0,
@@ -1719,14 +1807,14 @@ void pg_screenMessage_update(void) {
 		int pixelRank = 0;
 		int lengthMax = message_pixel_length;
 		memset(pg_screenMessageBitmap, (GLubyte)0, lengthMax * 4);
-		// strcpy( ScreenMessage , "abcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuv");
+		// ScreenMessage = string( "abcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuv");
 
-		// strcpy( ScreenMessage , "abcdefghijkl");
+		// ScreenMessage = ("abcdefghijkl");
 		// lengthMax = 30;
 
-		for (char *c = ScreenMessage; *c != '\0' && pixelRank < lengthMax; c++)
+		for (unsigned int indCh = 0; indCh < ScreenMessage.length() && pixelRank < lengthMax; indCh++)
 		{
-			char cur_car = *c;
+			char cur_car = ScreenMessage[indCh];
 			// if( cur_car == 'é' || 
 			// 	  cur_car == 'è' || 
 			// 	  cur_car == 'ê' || 
@@ -1779,8 +1867,8 @@ void pg_screenMessage_update(void) {
 			GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER,
 			GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 			0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 			GL_RGBA8,           // Internal colour format to convert to
@@ -1795,14 +1883,14 @@ void pg_screenMessage_update(void) {
 	}
 }
 
-#if defined (TVW) || defined (ETOILES)
+#if defined(TVW) || defined(ETOILES)
 ///////////////////////////////////////////////////////
 // Message Uploads
 
 bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	bool valRet = true;
 	NbDisplayTexts = 0;
-#if defined (TVW)
+#if defined(TVW)
 	NbDisplayTexts = PG_NB_DISPLAY_MESSAGES;
 #else
 	// line count
@@ -1837,7 +1925,7 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	if (myReadFile.is_open()) {
 		while (!myReadFile.eof() && indtext < NbDisplayTexts) {
 			std::getline(myReadFile, DisplayTextList[indtext]); // Saves the line in DisplayTextList[indtext].
-#if defined (TVW)
+#if defined(TVW)
 		    // std::cout << DisplayTextList[indtext]+"\n"; // Prints our STRING.
 			while (!myReadFile.eof() && (DisplayTextList[indtext].find("request =>", 0, strlen("request =>")) == 0)) {
 				DisplayTextFirstInChapter[indChapter++] = indtext;
@@ -1993,8 +2081,8 @@ int pg_displayMessage_update(int indMesg) {
 		GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER,
 		GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
 		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 		GL_RGBA8,           // Internal colour format to convert to
@@ -2026,7 +2114,7 @@ void pg_initParticlePosition_Texture( void ) {
 
 	// the used width is a multiple of (PG_PARTICLE_CURVE_DEGREE + 1) so that each set of control
 	// point coordinates is on a single line
-	int width_used = leftWindowWidth - leftWindowWidth % (PG_PARTICLE_CURVE_DEGREE + 1);
+	int width_used = workingWindow_width - workingWindow_width % (PG_PARTICLE_CURVE_DEGREE + 1);
 
 	for (int indParticle = 0; indParticle < nb_particles; indParticle++) {
 		int ind_index = indParticle * (PG_PARTICLE_CURVE_DEGREE + 1);
@@ -2081,7 +2169,7 @@ void pg_initParticlePosition_Texture( void ) {
 		}
 	}
 #endif
-#if defined (TEXTURED_QUAD_PARTICLES) || defined (LINE_SPLAT_PARTICLES)
+#if defined(var_part_initialization)
 	// the vertices position contain column and row of the vertices coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader
@@ -2097,9 +2185,9 @@ void pg_initParticlePosition_Texture( void ) {
 		int ind_index = indParticle;
 
 		// col 
-		pg_Particle_vertices[ind_point + 0] = float(indParticle % leftWindowWidth);
+		pg_Particle_vertices[ind_point + 0] = float(indParticle % workingWindow_width);
 		// row
-		pg_Particle_vertices[ind_point + 1] = float(indParticle / leftWindowWidth);
+		pg_Particle_vertices[ind_point + 1] = float(indParticle / workingWindow_width);
 		pg_Particle_vertices[ind_point + 2] = 0.f;
 
 		// radius
