@@ -15,7 +15,7 @@
 * 02111-1307, USA.
 */
 
-#version 420
+#version 460
 
 // comet texture
 layout (binding = 2) uniform sampler2D uniform_ParticleSplat_texture_fs_decal; // splat texture

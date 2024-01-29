@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 430
+#version 460
 
 float	 CAdecay;
 float	 trkDecay_0;

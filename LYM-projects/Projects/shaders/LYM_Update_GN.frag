@@ -5,7 +5,7 @@ LYM alK & Drawing Machine (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 430
+#version 460
 
 #include_declarations
 
@@ -197,30 +197,33 @@ uniform vec2 uniform_Update_fs_2fv_initCA_1stPlaneFrameNo;
 
 /////////////////////////////////////
 // INPUT
-layout (binding = 0) uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 1) uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
-layout (binding = 2) uniform sampler3D    uniform_Update_texture_fs_Brushes;  // pen patterns
-layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
-layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
-layout (binding = 5) uniform samplerRect  uniform_Update_texture_fs_Movie_frame;  // movie textures
-layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 7) uniform sampler2D    uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 8) uniform sampler2D    uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 9)  uniform sampler2D   uniform_Update_texture_fs_Clip0;  // second clip left texture
-layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Clip1;  // second clip right texture
-layout (binding = 11) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
+layout (binding = 0) uniform samplerRect   uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 1) uniform samplerRect   uniform_Update_texture_fs_PreviousCA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 2) uniform samplerRect   uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
+layout (binding = 3) uniform sampler3D     uniform_Update_texture_fs_Brushes;  // pen patterns
+layout (binding = 4) uniform samplerRect   uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 5) uniform samplerRect   uniform_Update_texture_fs_Camera_BG;     // camera BG texture
+layout (binding = 6) uniform samplerRect   uniform_Update_texture_fs_Movie_frame;  // movie textures
+layout (binding = 7) uniform sampler3D     uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 8)  uniform samplerRect  uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 9) uniform sampler2D     uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 10) uniform sampler2D    uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip0;  // second clip left texture
+layout (binding = 12)  uniform sampler2D   uniform_Update_texture_fs_Clip1;  // second clip right texture
+layout (binding = 13)  uniform samplerRect uniform_Update_texture_fs_Part_render;   // FBO capture of particle rendering
+layout (binding = 14) uniform samplerRect  uniform_Update_texture_fs_Trk0;         // 3-cycle ping-pong localColor step n (FBO attachment 1)
 #if PG_NB_TRACKS >= 2
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 7)
+layout (binding = 15) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 17) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-// layout (binding = 8) uniform samplerRect  fs_lookupTable8;  // initial background video texture
-layout (binding = 15) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
-layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
 
 /////////////////////////////////////
 // CA & TRACK COLOR OUTPUT
@@ -335,25 +338,8 @@ return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
 
 vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   // FLAT
-  if(noiseType == 0 )  {
     return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
                             snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
-  }
-  // SUN RAYS
-  else if(noiseType == 1 ) {
-    vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
-                     length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
-    return vec2(snoise( pos , noiseUpdateScale * 10 ) ,
-                            snoise( pos + vec2(2.0937,9.4872) , noiseUpdateScale * 10 ));
-  }
-  // CAMERA
-  else if(noiseType == 2 ) {
-    return texture(uniform_Update_texture_fs_Camera_frame, decalCoords + usedNeighborOffset ).rg;
-  }
-  // MOVIE
-  else {
-    return texture(uniform_Update_texture_fs_Movie_frame, movieCoord + usedNeighborOffset/ movieWH ).rg;
-  }
 }
 
 
@@ -1508,18 +1494,18 @@ void main() {
     isBegin = (isBeginOrEnd > 0);
     isEnd = (isBeginOrEnd < 0);
 
-    if(Cursor < 0) {
+/*    if(Cursor < 0) {
       float curTrack_grayLevel
         = out_gray_drawing(
                  3 * radiusX_beginOrEnd_radiusY_brushID.x, current_brushID );
       out_track_FBO[0].rgb *= (1 - curTrack_grayLevel);
-   }
+    }
     else {
-      track_0_opacity 
+*/      track_0_opacity 
         += out_gray_drawing(
                   radiusX_beginOrEnd_radiusY_brushID.x, current_brushID );
-    }
-
+/*    }
+*/
     // drawing occurs on background
     if( track_0_opacity > 0 ) {
       // newtrack = 0;

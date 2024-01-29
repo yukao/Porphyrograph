@@ -19,7 +19,7 @@ based on Francesco Caruso GLSLParametricCurves
 https://github.com/fcaruso/GLSLParametricCurve
 */
 
-#version 420
+#version 460
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 

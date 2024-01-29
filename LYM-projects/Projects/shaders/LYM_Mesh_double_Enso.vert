@@ -5,7 +5,7 @@ LYM maisonSens & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 460
 
 layout(location = 0) in vec3 position;                     // espace objet
 layout(location = 1) in vec2 texcoord;

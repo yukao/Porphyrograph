@@ -19,7 +19,7 @@ based on Francesco Caruso GLSLParametricCurves
 https://github.com/fcaruso/GLSLParametricCurve
 */
 
-#version 420
+#version 460
 
 // comet texture
 uniform sampler2D fs_comet; // control point positions

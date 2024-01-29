@@ -5,7 +5,7 @@ File: effe/shaders/LYM_Drawing_effe-FS.glsl
 LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
-#version 420
+#version 460
 
 #include_declarations
 

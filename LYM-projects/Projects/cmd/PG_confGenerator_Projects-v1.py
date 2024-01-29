@@ -60,6 +60,7 @@ def main(main_args) :
 	ShaderBodyDecl_name = ""
 	ShaderBodyBind_name = ""
 	UpdateBody_name = ""
+	Nb_Configurations = 1
 
 	##################################################################
 	# ARGUMENTS
@@ -731,11 +732,11 @@ def main(main_args) :
 						sys.exit(0)
 					
 					if(ParticleAnimation_fs_index == 0) :
-						ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data;\n")
-						ShaderBodyDecl.write("GLint uniform_ParticleAnimation_scenario_var_data;\n")
-						ShaderBodyBind.write("  bindAndCheckUniform(&uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", pg_shader_ParticleAnimation);\n")
+						ShaderHeader.write("extern GLint *uniform_ParticleAnimation_scenario_var_data;\n")
+						ShaderBodyDecl.write("GLint *uniform_ParticleAnimation_scenario_var_data = NULL;\n")
+						ShaderBodyBind.write("  pg_allocateBindAndCheckUniform(indConfig, &uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", _pg_shader_ParticleAnimation);\n")
 					
-					ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + " ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] = "
+					ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + " ParticleAnimation_scenario_var_data[pg_current_configuration_rank][" + str(ParticleAnimation_fs_index) + "] = "
 
 					if(ParticleAnimation_fs_types[ParticleAnimation_fs_index] == "bool" or ParticleAnimation_fs_types[ParticleAnimation_fs_index] == "path") :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + ParticleAnimation_fs_IDs[ParticleAnimation_fs_index] + " = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
@@ -778,11 +779,11 @@ def main(main_args) :
 					sys.exit(0)
 
 				if(Update_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_Update_scenario_var_data;\n")
-					ShaderBodyDecl.write("GLint uniform_Update_scenario_var_data;\n")
-					ShaderBodyBind.write("  bindAndCheckUniform(&uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", pg_shader_Update);\n")
+					ShaderHeader.write("extern GLint *uniform_Update_scenario_var_data;\n")
+					ShaderBodyDecl.write("GLint *uniform_Update_scenario_var_data = NULL;\n")
+					ShaderBodyBind.write("  pg_allocateBindAndCheckUniform(indConfig, &uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", _pg_shader_Update);\n")
 
-				Update_bindingString_cpp = Update_bindingString_cpp + " Update_scenario_var_data[" + str(Update_fs_index) + "] = "
+				Update_bindingString_cpp = Update_bindingString_cpp + " Update_scenario_var_data[pg_current_configuration_rank][" + str(Update_fs_index) + "] = "
 				if(Update_fs_types[Update_fs_index] == "bool" or Update_fs_types[Update_fs_index] == "path") :
 					Update_body_glsl = Update_body_glsl + "  " + Update_fs_IDs[Update_fs_index] + " = (uniform_Update_scenario_var_data[" + str(Update_fs_index) + "] > 0 ? true : false);\n";
 				elif(Update_fs_types[Update_fs_index] == "int") :
@@ -824,11 +825,11 @@ def main(main_args) :
 					sys.exit(0)
 
 				if(Mixing_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_Mixing_scenario_var_data;\n")
-					ShaderBodyDecl.write("GLint uniform_Mixing_scenario_var_data;\n")
-					ShaderBodyBind.write("  bindAndCheckUniform(&uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", pg_shader_Mixing);\n")
+					ShaderHeader.write("extern GLint *uniform_Mixing_scenario_var_data;\n")
+					ShaderBodyDecl.write("GLint *uniform_Mixing_scenario_var_data = NULL;\n")
+					ShaderBodyBind.write("  pg_allocateBindAndCheckUniform(indConfig, &uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", _pg_shader_Mixing);\n")
 				
-				Mixing_bindingString_cpp = Mixing_bindingString_cpp + " Mixing_scenario_var_data[" + str(Mixing_fs_index) + "] = "
+				Mixing_bindingString_cpp = Mixing_bindingString_cpp + " Mixing_scenario_var_data[pg_current_configuration_rank][" + str(Mixing_fs_index) + "] = "
 				if(Mixing_fs_types[Mixing_fs_index] == "bool" or Mixing_fs_types[Mixing_fs_index] == "path") :
 					Mixing_body_glsl = Mixing_body_glsl + "  " + Mixing_fs_IDs[Mixing_fs_index] + " = (uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "] > 0 ? true : false);\n";
 				elif(Mixing_fs_types[Mixing_fs_index] == "int") :
@@ -872,12 +873,12 @@ def main(main_args) :
 						sys.exit(0)
 
 					if(ParticleRender_fs_index == 0) :
-						ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data\n")
-						ShaderBodyDecl.write("GLint uniform_ParticleRender_scenario_var_data\n")
-						ShaderBodyBind.write("  bindAndCheckUniform(&uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", pg_shader_Particle);\n")
+						ShaderHeader.write("extern GLint *uniform_ParticleRender_scenario_var_data;\n")
+						ShaderBodyDecl.write("GLint *uniform_ParticleRender_scenario_var_data = NULL;\n")
+						ShaderBodyBind.write("  pg_allocateBindAndCheckUniform(indConfig, &uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", _pg_shader_Particle);\n")
 					
 
-					ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + " ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] = "
+					ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + " ParticleRender_scenario_var_data[pg_current_configuration_rank][" + str(ParticleRender_fs_index) + "] = "
 					if(ParticleRender_fs_types[ParticleRender_fs_index] == "bool" or ParticleRender_fs_types[ParticleRender_fs_index] == "path") :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + ParticleRender_fs_IDs[ParticleRender_fs_index] + " = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
 					elif(ParticleRender_fs_types[ParticleRender_fs_index] == "int") :
@@ -919,11 +920,11 @@ def main(main_args) :
 					sys.exit(0)
 
 				if(Master_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_Master_scenario_var_data;\n")
-					ShaderBodyDecl.write("GLint uniform_Master_scenario_var_data;\n")
-					ShaderBodyBind.write("  bindAndCheckUniform(&uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", pg_shader_Master);\n")
+					ShaderHeader.write("extern GLint *uniform_Master_scenario_var_data;\n")
+					ShaderBodyDecl.write("GLint *uniform_Master_scenario_var_data = NULL;\n")
+					ShaderBodyBind.write("  pg_allocateBindAndCheckUniform(indConfig, &uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", _pg_shader_Master);\n")
 				
-				Master_bindingString_cpp = Master_bindingString_cpp + " Master_scenario_var_data[" + str(Master_fs_index) + "] = "
+				Master_bindingString_cpp = Master_bindingString_cpp + " Master_scenario_var_data[pg_current_configuration_rank][" + str(Master_fs_index) + "] = "
 				if(Master_fs_types[Master_fs_index] == "bool" or Master_fs_types[Master_fs_index] == "path") :
 					Master_body_glsl = Master_body_glsl + "  " + Master_fs_IDs[Master_fs_index] + " = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "] > 0 ? true : false);\n";
 				elif(Master_fs_types[Master_fs_index] == "int") :
@@ -954,49 +955,54 @@ def main(main_args) :
 	if(withParticleShaders) :
 		if(ParticleAnimation_fs_index > 0) :
 			ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "uniform float uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
-			ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + " glUniform1fv(uniform_ParticleAnimation_scenario_var_data, " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data);\n"
-			ShaderBodyDecl.write("float ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n")
-			ShaderHeader.write("extern float ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n")
+			ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + " glUniform1fv(uniform_ParticleAnimation_scenario_var_data[pg_current_configuration_rank], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data[pg_current_configuration_rank]);\n"
+			ShaderBodyDecl.write("float *ParticleAnimation_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+			ShaderHeader.write("extern float *ParticleAnimation_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+			ShaderBodyBind.write("  ParticleAnimation_scenario_var_data[indConfig] = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 		
 
 
 	if(Update_fs_index > 0) :
 		Update_head_glsl = Update_head_glsl + "uniform float uniform_Update_scenario_var_data[" + str(Update_fs_index) + "];\n"
-		Update_bindingString_cpp = Update_bindingString_cpp + " glUniform1fv(uniform_Update_scenario_var_data, " + str(Update_fs_index) + ", Update_scenario_var_data);\n"
-		ShaderBodyDecl.write("float Update_scenario_var_data[" + str(Update_fs_index) + "];\n")
-		ShaderHeader.write("extern float Update_scenario_var_data[" + str(Update_fs_index) + "];\n")
+		Update_bindingString_cpp = Update_bindingString_cpp + " glUniform1fv(uniform_Update_scenario_var_data[pg_current_configuration_rank], " + str(Update_fs_index) + ", Update_scenario_var_data[pg_current_configuration_rank]);\n"
+		ShaderBodyDecl.write("float *Update_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderHeader.write("extern float *Update_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderBodyBind.write("  Update_scenario_var_data[indConfig] = new float[" + str(Update_fs_index) + "];\n")
 
 	if(Mixing_fs_index > 0) :
 		Mixing_head_glsl = Mixing_head_glsl + "uniform float uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n"
-		Mixing_bindingString_cpp = Mixing_bindingString_cpp + " glUniform1fv(uniform_Mixing_scenario_var_data, " + str(Mixing_fs_index) + ", Mixing_scenario_var_data);\n"
-		ShaderBodyDecl.write("float Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n")
-		ShaderHeader.write("extern float Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n")
+		Mixing_bindingString_cpp = Mixing_bindingString_cpp + " glUniform1fv(uniform_Mixing_scenario_var_data[pg_current_configuration_rank], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data[pg_current_configuration_rank]);\n"
+		ShaderBodyDecl.write("float *Mixing_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderHeader.write("extern float *Mixing_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderBodyBind.write("  Mixing_scenario_var_data[indConfig] = new float[" + str(Mixing_fs_index) + "];\n")
 
 	if(withParticleShaders) :
 		if(ParticleRender_fs_index > 0) :
 			ParticleRender_head_glsl = ParticleRender_head_glsl + "uniform float uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
-			ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + " glUniform1fv(uniform_ParticleRender_scenario_var_data, " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data);\n"
-			ShaderBodyDecl.write("float ParticleRender_scenario_var_data[ParticleRender_fs_index];\n")
-			ShaderHeader.write("extern float ParticleRender_scenario_var_data[ParticleRender_fs_index];\n")
+			ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + " glUniform1fv(uniform_ParticleRender_scenario_var_data[pg_current_configuration_rank], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data[pg_current_configuration_rank]);\n"
+			ShaderBodyDecl.write("float *ParticleRender_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+			ShaderHeader.write("extern float *ParticleRender_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+			ShaderBodyBind.write("  ParticleRender_scenario_var_data[indConfig] = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 		
 
 	if(Master_fs_index > 0) :
 		Master_head_glsl = Master_head_glsl + "uniform float uniform_Master_scenario_var_data[" + str(Master_fs_index) + "];\n"
-		Master_bindingString_cpp = Master_bindingString_cpp + " glUniform1fv(uniform_Master_scenario_var_data, " + str(Master_fs_index) + ", Master_scenario_var_data);\n"
-		ShaderBodyDecl.write("float Master_scenario_var_data[" + str(Master_fs_index) + "];\n")
-		ShaderHeader.write("extern float Master_scenario_var_data[" + str(Master_fs_index) + "];\n")
+		Master_bindingString_cpp = Master_bindingString_cpp + " glUniform1fv(uniform_Master_scenario_var_data[pg_current_configuration_rank], " + str(Master_fs_index) + ", Master_scenario_var_data[pg_current_configuration_rank]);\n"
+		ShaderBodyDecl.write("float *Master_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderHeader.write("extern float *Master_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderBodyBind.write("  Master_scenario_var_data[indConfig] = new float[" + str(Master_fs_index) + "];\n")
 
 	# draws the bindings grouped by shader in the draw.cpp file
 
 	if(withParticleShaders) :
-		UpdateBody.write("\n glUseProgram(shader_programme[pg_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
+		UpdateBody.write("\n glUseProgram(shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
 
-	UpdateBody.write("\n glUseProgram(shader_programme[pg_shader_Update]);\n" + Update_bindingString_cpp)
-	UpdateBody.write("\n glUseProgram(shader_programme[pg_shader_Mixing]);\n" + Mixing_bindingString_cpp)
+	UpdateBody.write("\n glUseProgram(shader_programme[pg_current_configuration_rank][_pg_shader_Update]);\n" + Update_bindingString_cpp)
+	UpdateBody.write("\n glUseProgram(shader_programme[pg_current_configuration_rank][_pg_shader_Mixing]);\n" + Mixing_bindingString_cpp)
 	if(withParticleShaders) :
-		UpdateBody.write("\n glUseProgram(shader_programme[pg_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
+		UpdateBody.write("\n glUseProgram(shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
 
-	UpdateBody.write("\n glUseProgram(shader_programme[pg_shader_Master]);\n" + Master_bindingString_cpp)
+	UpdateBody.write("\n glUseProgram(shader_programme[pg_current_configuration_rank][_pg_shader_Master]);\n" + Master_bindingString_cpp)
 
 	# manages the inclusions inside the shader files to generate the linearized shader files
 	if(withParticleShaders) :

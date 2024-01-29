@@ -19,7 +19,7 @@ based on Francesco Caruso GLSLParametricCurves
 https://github.com/fcaruso/GLSLParametricCurve
 */
 
-#version 420
+#version 460
 // comet texture
 layout (binding = 1) uniform sampler2D uniform_ParticleSplat_BlurredDisk_texture_fs_decal; // control point positions
 

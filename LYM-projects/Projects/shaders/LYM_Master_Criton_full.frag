@@ -5,7 +5,7 @@ LYM effe & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 460
 
 float     blendTransp;
 bool      invertAllLayers;

@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 430
+#version 460
 
 #include_declarations
 
@@ -182,11 +182,6 @@ vec4 out_track_FBO[PG_NB_TRACKS];
 ////////////////////////////////////
 // PARTICLE UPDATE
 
-// PARTICLE PASS OUTPUT
-#ifdef SPLAT_PARTICLES
-vec4 out_particlesRendering;
-#endif
-
 ////////////////////////////////////
 // PEN STROKE CALCULATION
 float signed_rx;
@@ -287,27 +282,33 @@ uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
 
 /////////////////////////////////////
 // INPUT
-layout (binding = 0) uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 1) uniform samplerRect uniform_Update_texture_fs_PreviousCA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 2) uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
-layout (binding = 3) uniform sampler3D   uniform_Update_texture_fs_Brushes;  // pen patterns
-layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
-layout (binding = 5) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-layout (binding = 6) uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 7) uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-#ifdef SPLAT_PARTICLES
-layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-#endif
-layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 0) uniform samplerRect   uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 1) uniform samplerRect   uniform_Update_texture_fs_PreviousCA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 2) uniform samplerRect   uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
+layout (binding = 3) uniform sampler3D     uniform_Update_texture_fs_Brushes;  // pen patterns
+layout (binding = 4) uniform samplerRect   uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 5) uniform samplerRect   uniform_Update_texture_fs_Camera_BG;     // camera BG texture
+layout (binding = 6) uniform samplerRect   uniform_Update_texture_fs_Movie_frame;   // movie textures
+layout (binding = 7) uniform sampler3D     uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 8)  uniform samplerRect  uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 9) uniform sampler2D     uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 10) uniform sampler2D    uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip0;         // second clip left texture
+layout (binding = 12)  uniform sampler2D   uniform_Update_texture_fs_Clip1;         // second clip right texture
+layout (binding = 13)  uniform samplerRect uniform_Update_texture_fs_Part_render;   // FBO capture of particle rendering
+layout (binding = 14) uniform samplerRect  uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 15) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 17) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
+layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -2125,26 +2126,6 @@ void main() {
     }
     out_track_FBO[indCurTrack].rgb *= flashValueCoef;
   }
-
-  ///////////////////////////////////////////////////
-  // PARTICLE FLASHES ON CA & TRACKS
-  // copies particle rendering at preceding step (for particle flashes)
-#ifdef SPLAT_PARTICLES
-  out_particlesRendering 
-    = texture( uniform_Update_texture_fs_Part_render , decalCoords );
-
-  // particle flash on CA
-  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
-                  * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
-
-  // particle flash on BG track
-  vec3 cumulatedColor = flashToBGCumul + uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght.w 
-                      * out_particlesRendering.rgb;
-  float maxCumulatedColor = maxCol( cumulatedColor );
-  if( maxCumulatedColor <= 1.0 ) {
-    flashToBGCumul = cumulatedColor;
-  }
-#endif
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
