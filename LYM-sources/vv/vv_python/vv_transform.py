@@ -208,12 +208,12 @@ def main(main_args) :
 			input_file_name = arg
 		elif opt in ("-o", "--outputfile"):
 			output_file_name = arg
-		elif opt in ("--nb_layers"):
+		elif opt == "--nb_layers":
 			nb_layers = force_num(arg)
-		elif opt in ("--chapter_no"):
+		elif opt == "--chapter_no":
 			chapter_no = force_num(arg)
 		#  SVG path transformation
-		elif opt in ("--transformation"):
+		elif opt == "--transformation":
 			transf_string = arg
 			single_transf_strings = re.split(r'/', transf_string.rstrip())
 			for single_transf_string in single_transf_strings :
@@ -226,26 +226,26 @@ def main(main_args) :
 		#  SVG path transformation percentage
 		elif opt in ["--percent_transf1", "--percent_transf"]:
 			percent_transf[1] = max(min(force_num(arg),1),0)
-		elif opt in ("--percent_transf2"):
+		elif opt == "--percent_transf2":
 			percent_transf[2] = max(min(force_num(arg),1),0)
-		elif opt in ("--percent_transf3"):
+		elif opt == "--percent_transf3":
 			percent_transf[3] = max(min(force_num(arg),1),0)
-		elif opt in ("--percent_transf4"):
+		elif opt == "--percent_transf4":
 			percent_transf[4] = max(min(force_num(arg),1),0)
-		elif opt in ("--percent_transf5"):
+		elif opt == "--percent_transf5":
 			percent_transf[5] = max(min(force_num(arg),1),0)
 		#  SVG path links percentage
-		elif opt in ("--percent_links"):
+		elif opt == "--percent_links":
 			percent_links = force_num(arg)
 			percent_links = max(min(percent_links,1),0)
 		#  SVG path links percentage
-		elif opt in ("--stroke_color_links"):
+		elif opt == "--stroke_color_links":
 			stroke_color_links = arg
 		#  SVG path transformation life time in frames
-		elif opt in ("--nb_frames"):
+		elif opt == "--nb_frames":
 			nb_frames_life = int(force_num(arg))
 		#  SVG path transformation remaining frames of life until the end of the scene
-		elif opt in ("--percent_life"):
+		elif opt == "--percent_life":
 			percent_life = int(force_num(arg))
 		# SVG path translation
 		elif opt in ["--translation1","--translation"] and  TRANSLATE in single_transfs:

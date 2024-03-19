@@ -61,7 +61,7 @@ SRC_BASE = pg-conf.cpp \
       pg-udp.cpp 
 
 HDR_BASE = config.h pg-all_include.h \
-      pg-conf.h pg_script_header_Criton.h pg_shader_header_Criton.h\
+      pg-conf.h \
       pg-init.h \
       pg-main.h \
       pg-script.h \

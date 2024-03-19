@@ -71,17 +71,17 @@ def main(main_args):
 			path_colors = re.split(r' +',path_colors_string.rstrip())
 		elif opt in ("-o", "--outputfile"):
 			output_file_name = arg
-		elif opt in ("--nb-files"):
+		elif opt == "--nb-files":
 			nb_files = to_num(arg)
-		elif opt in ("--fill_and_stroke_from_group"):
+		elif opt == "--fill_and_stroke_from_group":
 			fill_and_stroke_from_group = arg
-		elif opt in ("--add_id"):
+		elif opt == "--add_id":
 			add_id = arg
-		elif opt in ("--width"):
+		elif opt == "--width":
 			width = arg
-		elif opt in ("--height"):
+		elif opt == "--height":
 			height = arg
-		elif opt in ("--output-format"):
+		elif opt == "--output-format":
 			output_format_string = arg
 			if not(output_format_string in file_format.keys()) :
 				print( USAGE )

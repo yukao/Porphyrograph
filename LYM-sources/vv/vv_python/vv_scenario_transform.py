@@ -85,9 +85,9 @@ def main(main_args) :
 	for opt, arg in opts:
 		if opt in ("-i", "--inputfile"):
 			scenario_file_name = arg
-		elif opt in ("--chapter_no"):
+		elif opt == "--chapter_no":
 			scenario_chapter_no = arg
-		elif opt in ("--with_fill_and_stroke"):
+		elif opt == "--with_fill_and_stroke":
 			with_fill_and_stroke = (arg == "True" or arg == "true" or arg == "TRUE" or arg == True)
 		else:
 			assert False, "unhandled option"

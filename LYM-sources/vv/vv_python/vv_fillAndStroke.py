@@ -39,12 +39,6 @@ def main(main_args) :
 	# ARGUMENTS OF THE COMMAND
 	##################################################################
 	style = ""
-	fill_color =     ["","#000000","#000000","#000000","#000000","#000000","#000000","#000000","#000000"]
-	fill_opacity =   ['0','1','1','1','1','1','1','1','1']
-	stroke_color =   ["","#000000","#000000","#000000","#000000","#000000","#000000","#000000","#000000"]
-	stroke_opacity = ['0','1','1','1','1','1','1','1','1']
-	stroke_width =   ['0','0','0','0','0','0','0','0','0']
-	blur =           ['0','0','0','0','0','0','0','0','0']
 	nb_layers = 8
 	temperature = 6600.0
 	saturation = 0.0
@@ -53,138 +47,180 @@ def main(main_args) :
 
 	try:
 		opts, args = getopt.getopt(main_args,"i:o:",["inputfile=","outputfile=","nb-layers=",\
-			"fill_color_bg=","fill_color_l1=","fill_color_l2=","fill_color_l3=","fill_color_l4=","fill_color_l5=","fill_color_l6=","fill_color_l7=","fill_color_l8=",\
-			"fill_opacity_l1=","fill_opacity_l2=","fill_opacity_l3=","fill_opacity_l4=","fill_opacity_l5=","fill_opacity_l6=","fill_opacity_l7=","fill_opacity_l8=",\
-			"stroke_color_bg=","stroke_color_l1=","stroke_color_l2=","stroke_color_l3=","stroke_color_l4=","stroke_color_l5=","stroke_color_l6=","stroke_color_l7=","stroke_color_l8=",\
-			"stroke_opacity_l1=","stroke_opacity_l2=","stroke_opacity_l3=","stroke_opacity_l4=","stroke_opacity_l5=","stroke_opacity_l6=","stroke_opacity_l7=","stroke_opacity_l8=",\
-			"stroke_width_l1=","stroke_width_l2=","stroke_width_l3=","stroke_width_l4=","stroke_width_l5=","stroke_width_l6=","stroke_width_l7=","stroke_width_l8=",\
+			"fill_color_bg=","fill_color_l1=","fill_color_l2=","fill_color_l3=","fill_color_l4=","fill_color_l5=","fill_color_l6=","fill_color_l7=","fill_color_l8=","fill_color_l9=","fill_color_l10=",\
+			"fill_opacity_bg=","fill_opacity_l1=","fill_opacity_l2=","fill_opacity_l3=","fill_opacity_l4=","fill_opacity_l5=","fill_opacity_l6=","fill_opacity_l7=","fill_opacity_l8=","fill_opacity_l9=","fill_opacity_l10=",\
+			"stroke_color_bg=","stroke_color_l1=","stroke_color_l2=","stroke_color_l3=","stroke_color_l4=","stroke_color_l5=","stroke_color_l6=","stroke_color_l7=","stroke_color_l8=","stroke_color_l9=","stroke_color_l10=",\
+			"stroke_opacity_l1=","stroke_opacity_l2=","stroke_opacity_l3=","stroke_opacity_l4=","stroke_opacity_l5=","stroke_opacity_l6=","stroke_opacity_l7=","stroke_opacity_l8=","stroke_opacity_l9=","stroke_opacity_l10=",\
+			"stroke_width_l1=","stroke_width_l2=","stroke_width_l3=","stroke_width_l4=","stroke_width_l5=","stroke_width_l6=","stroke_width_l7=","stroke_width_l8=","stroke_width_l9=","stroke_width_l10=",\
 			"temperature=","saturation=","brightness=",\
-			"blur_l1=","blur_l2=","blur_l3=","blur_l4=","blur_l5=","blur_l6=","blur_l7=","blur_l8=",\
+			"blur_l1=","blur_l2=","blur_l3=","blur_l4=","blur_l5=","blur_l6=","blur_l7=","blur_l8=","blur_l9=","blur_l10=",\
 			"stroke_color=","stroke_opacity=","stroke_width=","fill_and_stroke_mode="])
 	except getopt.GetoptError:
 		print(USAGE)
 		sys.exit(2)
+
 	for opt, arg in opts:
+		if opt == "--nb-layers":
+			nb_layers = to_num(arg)
+
+	fill_color =     [None] * (nb_layers + 1)
+	fill_opacity =   [None] * (nb_layers + 1)
+	stroke_color =   [None] * (nb_layers + 1)
+	stroke_opacity = [None] * (nb_layers + 1)
+	stroke_width =   [None] * (nb_layers + 1)
+	blur =           [None] * (nb_layers + 1)
+
+	for opt, arg in opts:
+		# print("income argument: ", opt, "value", arg)
 		if opt in ("-i", "--inputfile"):
 			input_file_name = arg
 		elif opt in ("-o", "--outputfile"):
 			output_file_name = arg
-		elif opt in ("--nb-layers"):
+		elif opt == "--nb-layers":
 			nb_layers = to_num(arg)
-		elif opt in ("--fill_color_bg"):
+		elif opt == "--fill_color_bg":
 			fill_color_bg = arg
-		elif opt in ("--fill_color_l1"):
+		elif opt == "--fill_color_l1":
 			fill_color[1] = arg
-		elif opt in ("--fill_color_l2"):
+		elif opt == "--fill_color_l2":
 			fill_color[2] = arg
-		elif opt in ("--fill_color_l3"):
+		elif opt == "--fill_color_l3":
 			fill_color[3] = arg
-		elif opt in ("--fill_color_l4"):
+		elif opt == "--fill_color_l4":
 			fill_color[4] = arg
-		elif opt in ("--fill_color_l5"):
+		elif opt == "--fill_color_l5":
 			fill_color[5] = arg
-		elif opt in ("--fill_color_l6"):
+		elif opt == "--fill_color_l6":
 			fill_color[6] = arg
-		elif opt in ("--fill_color_l7"):
+		elif opt == "--fill_color_l7":
 			fill_color[7] = arg
-		elif opt in ("--fill_color_l8"):
+		elif opt == "--fill_color_l8":
 			fill_color[8] = arg
-		elif opt in ("--fill_opacity_l1"):
+		elif opt == "--fill_color_l9":
+			fill_color[9] = arg
+		elif opt == "--fill_color_l10":
+			fill_color[10] = arg
+		elif opt == "--fill_opacity_bg":
+			fill_opacity_bg = to_num(arg)
+		elif opt == "--fill_opacity_l1":
 			fill_opacity[1] = to_num(arg)
-		elif opt in ("--fill_opacity_l2"):
+		elif opt == "--fill_opacity_l2":
 			fill_opacity[2] = to_num(arg)
-		elif opt in ("--fill_opacity_l3"):
+		elif opt == "--fill_opacity_l3":
 			fill_opacity[3] = to_num(arg)
-		elif opt in ("--fill_opacity_l4"):
+		elif opt == "--fill_opacity_l4":
 			fill_opacity[4] = to_num(arg)
-		elif opt in ("--fill_opacity_l5"):
+		elif opt == "--fill_opacity_l5":
 			fill_opacity[5] = to_num(arg)
-		elif opt in ("--fill_opacity_l6"):
+		elif opt == "--fill_opacity_l6":
 			fill_opacity[6] = to_num(arg)
-		elif opt in ("--fill_opacity_l7"):
+		elif opt == "--fill_opacity_l7":
 			fill_opacity[7] = to_num(arg)
-		elif opt in ("--fill_opacity_l8"):
+		elif opt == "--fill_opacity_l8":
 			fill_opacity[8] = to_num(arg)
-		elif opt in ("--stroke_color_l1"):
+		elif opt == "--fill_opacity_l9":
+			fill_opacity[9] = to_num(arg)
+		elif opt == "--fill_opacity_l10":
+			fill_opacity[10] = to_num(arg)
+		elif opt == "--stroke_color_l1":
 			stroke_color[1] = arg
-		elif opt in ("--stroke_color_l2"):
+		elif opt == "--stroke_color_l2":
 			stroke_color[2] = arg
-		elif opt in ("--stroke_color_l3"):
+		elif opt == "--stroke_color_l3":
 			stroke_color[3] = arg
-		elif opt in ("--stroke_color_l4"):
+		elif opt == "--stroke_color_l4":
 			stroke_color[4] = arg
-		elif opt in ("--stroke_color_l5"):
+		elif opt == "--stroke_color_l5":
 			stroke_color[5] = arg
-		elif opt in ("--stroke_color_l6"):
+		elif opt == "--stroke_color_l6":
 			stroke_color[6] = arg
-		elif opt in ("--stroke_color_l7"):
+		elif opt == "--stroke_color_l7":
 			stroke_color[7] = arg
-		elif opt in ("--stroke_color_l8"):
+		elif opt == "--stroke_color_l8":
 			stroke_color[8] = arg
-		elif opt in ("--stroke_opacity_l1"):
+		elif opt == "--stroke_color_l9":
+			stroke_color[9] = arg
+		elif opt == "--stroke_color_l10":
+			stroke_color[10] = arg
+		elif opt == "--stroke_opacity_l1":
 			stroke_opacity[1] = to_num(arg)
-		elif opt in ("--stroke_opacity_l2"):
+		elif opt == "--stroke_opacity_l2":
 			stroke_opacity[2] = to_num(arg)
-		elif opt in ("--stroke_opacity_l3"):
+		elif opt == "--stroke_opacity_l3":
 			stroke_opacity[3] = to_num(arg)
-		elif opt in ("--stroke_opacity_l4"):
+		elif opt == "--stroke_opacity_l4":
 			stroke_opacity[4] = to_num(arg)
-		elif opt in ("--stroke_opacity_l5"):
+		elif opt == "--stroke_opacity_l5":
 			stroke_opacity[5] = to_num(arg)
-		elif opt in ("--stroke_opacity_l6"):
+		elif opt == "--stroke_opacity_l6":
 			stroke_opacity[6] = to_num(arg)
-		elif opt in ("--stroke_opacity_l7"):
+		elif opt == "--stroke_opacity_l7":
 			stroke_opacity[7] = to_num(arg)
-		elif opt in ("--stroke_opacity_l8"):
+		elif opt == "--stroke_opacity_l8":
 			stroke_opacity[8] = to_num(arg)
-		elif opt in ("--stroke_width_l1"):
+		elif opt == "--stroke_opacity_l9":
+			stroke_opacity[9] = to_num(arg)
+		elif opt == "--stroke_opacity_l10":
+			stroke_opacity[10] = to_num(arg)
+		elif opt == "--stroke_width_l1":
 			stroke_width[1] = to_num(arg)
-		elif opt in ("--stroke_width_l2"):
+		elif opt == "--stroke_width_l2":
 			stroke_width[2] = to_num(arg)
-		elif opt in ("--stroke_width_l3"):
+		elif opt == "--stroke_width_l3":
 			stroke_width[3] = to_num(arg)
-		elif opt in ("--stroke_width_l4"):
+		elif opt == "--stroke_width_l4":
 			stroke_width[4] = to_num(arg)
-		elif opt in ("--stroke_width_l5"):
+		elif opt == "--stroke_width_l5":
 			stroke_width[5] = to_num(arg)
-		elif opt in ("--stroke_width_l6"):
+		elif opt == "--stroke_width_l6":
 			stroke_width[6] = to_num(arg)
-		elif opt in ("--stroke_width_l7"):
+		elif opt == "--stroke_width_l7":
 			stroke_width[7] = to_num(arg)
-		elif opt in ("--stroke_width_l8"):
+		elif opt == "--stroke_width_l8":
 			stroke_width[8] = to_num(arg)
-		elif opt in ("--blur_l1"):
+		elif opt == "--stroke_width_l9":
+			stroke_width[9] = to_num(arg)
+		elif opt == "--stroke_width_l10":
+			stroke_width[10] = to_num(arg)
+		elif opt == "--blur_l1":
 			blur[1] = to_num(arg)
-		elif opt in ("--blur_l2"):
+		elif opt == "--blur_l2":
 			blur[2] = to_num(arg)
-		elif opt in ("--blur_l3"):
+		elif opt == "--blur_l3":
 			blur[3] = to_num(arg)
-		elif opt in ("--blur_l4"):
+		elif opt == "--blur_l4":
 			blur[4] = to_num(arg)
-		elif opt in ("--blur_l5"):
+		elif opt == "--blur_l5":
 			blur[5] = to_num(arg)
-		elif opt in ("--blur_l6"):
+		elif opt == "--blur_l6":
 			blur[6] = to_num(arg)
-		elif opt in ("--blur_l7"):
+		elif opt == "--blur_l7":
 			blur[7] = to_num(arg)
-		elif opt in ("--blur_l8"):
+		elif opt == "--blur_l8":
 			blur[8] = to_num(arg)
-		elif opt in ("--stroke_color"):
+		elif opt == "--blur_l9":
+			blur[9] = to_num(arg)
+		elif opt == "--blur_l10":
+			blur[10] = to_num(arg)
+		elif opt == "--stroke_color":
 			for ind_layer in range(nb_layers) :
 				stroke_color[ind_layer+1] = arg
-		elif opt in ("--stroke_opacity"):
+		elif opt == "--stroke_opacity":
 			for ind_layer in range(nb_layers) :
 				stroke_opacity[ind_layer+1] = to_num(arg)
-		elif opt in ("--stroke_width"):
+		elif opt == "--stroke_width":
 			for ind_layer in range(nb_layers) :
 				stroke_width[ind_layer+1] = to_num(arg)
-		elif opt in ("--temperature"):
+		elif opt == "--fill_color":
+			for ind_layer in range(nb_layers) :
+				fill_color[ind_layer+1] = to_num(arg)
+		elif opt == "--temperature":
 			temperature = to_num(arg)
-		elif opt in ("--saturation"):
+		elif opt == "--saturation":
 			saturation = to_num(arg)
-		elif opt in ("--brightness"):
+		elif opt == "--brightness":
 			brightness = to_num(arg)
-		elif opt in ("--fill_and_stroke_mode"):
+		elif opt == "--fill_and_stroke_mode":
 			if arg == "by_groups" :
 				fill_and_stroke_mode = "by_groups"
 			elif arg == "by_paths" :
@@ -196,6 +232,7 @@ def main(main_args) :
 				sys.exit(2)		
 		else:
 			print("argts", main_args)
+			print("unhandled option", opt)
 			assert False, "unhandled option"
 			print(USAGE)
 			sys.exit(2)		
@@ -225,7 +262,7 @@ def main(main_args) :
 		if( re.search(r'<metadata>', line) != None ) :
 			one_def = False
 			for ind_layer in range(nb_layers) :
-				if(len(blur) > (ind_layer + 2) and blur[ind_layer + 1] > 0):
+				if(len(blur) > (ind_layer + 2) and blur[ind_layer + 1] != None  and blur[ind_layer + 1] != '0.f' and blur[ind_layer + 1] > 0):
 					if(not one_def):
 						# prints the defs opening
 						FILEout.write('<defs id="defs_blurs">\n')
@@ -244,7 +281,7 @@ def main(main_args) :
 
 		##################################################################
 		# GROUP LINE: changes blur and, fill and stroke if "by_groups" mode
-		elif( re.search(r'^<g ', line) != None and group_no <= 8) :
+		elif( re.search(r'^<g ', line) != None and group_no <= nb_layers) :
 			# background rectangle
 			if(group_no == 1) :
 				FILEout.write('''<rect
@@ -253,7 +290,7 @@ def main(main_args) :
 		height=\"2190\"
 		width=\"3870\"
 		id=\"rect834\"
-		style=\"opacity:1; fill:'''+fill_color_bg+'''; fill-opacity:1; stroke:none;\" />\n''')
+		style=\"opacity:1; fill:'''+fill_color_bg+'''; fill-opacity:'''+format(fill_opacity_bg, '.8f')+'''; stroke:none;\" />\n''')
 			
 			# typical group line
 			# <g transform="translate(0.000000,2160.000000) scale(0.100000,-0.100000)" style="fill:#c0c0c0" stroke="none">
@@ -261,34 +298,36 @@ def main(main_args) :
 			if fill_and_stroke_mode == "by_groups" :
 				# sets stroke color, stroke width and stroke opacity 
 				sel_stroke_color = stroke_color[group_no]
-				# transforms color according to temperature
-				if(temperature != 6600):			
-					sel_stroke_color = temperature_balance(sel_stroke_color, temperature)
-				if(brightness != 0 or saturation != 0):			
-					sel_stroke_color = color_hsv_balance (sel_stroke_color, 0.0, saturation, brightness) # hue not changed (this is managed through temperature)
-				sel_stroke_opacity = stroke_opacity[group_no]
-				sel_stroke_width = stroke_width[group_no]
-				line = re.sub(r'stroke="none"', '', line)
-				line = re.sub(r'stroke:[^;]+;', '', line)
-				line = re.sub(r'stroke-width:[^;]+;', '', line)
-				line = re.sub(r'stroke-opacity:[^;]+;', '', line)
-				# print("sel_stroke_color sel_stroke_width sel_stroke_opacity", sel_stroke_color, " ", sel_stroke_width, " ", sel_stroke_opacity)
-				line = re.sub(r'fill:', 'stroke:'+str(sel_stroke_color)+'; stroke-width:'+format(float(sel_stroke_width), '.8f')+'px; stroke-opacity:'+format(float(sel_stroke_opacity), '.8f')+'; fill:', line)
+				if(sel_stroke_color != None):
+					# transforms color according to temperature
+					if(temperature != 6600):			
+						sel_stroke_color = temperature_balance(sel_stroke_color, temperature)
+					if(brightness != 0 or saturation != 0):			
+						sel_stroke_color = color_hsv_balance (sel_stroke_color, 0.0, saturation, brightness) # hue not changed (this is managed through temperature)
+					sel_stroke_opacity = stroke_opacity[group_no]
+					sel_stroke_width = stroke_width[group_no]
+					line = re.sub(r'stroke="none"', '', line)
+					line = re.sub(r'stroke:[^;]+;', '', line)
+					line = re.sub(r'stroke-width:[^;]+;', '', line)
+					line = re.sub(r'stroke-opacity:[^;]+;', '', line)
+					# print("sel_stroke_color sel_stroke_width sel_stroke_opacity", sel_stroke_color, " ", sel_stroke_width, " ", sel_stroke_opacity)
+					line = re.sub(r'fill:', 'stroke:'+str(sel_stroke_color)+'; stroke-width:'+format(float(sel_stroke_width), '.8f')+'px; stroke-opacity:'+format(float(sel_stroke_opacity), '.8f')+'; fill:', line)
 				
 				# sets fill color, fill opacity and possible blur
 				sel_fill_color = fill_color[group_no]
-				if(temperature != 6600):			
-					sel_fill_color = temperature_balance(sel_fill_color, temperature)
-				if(brightness != 0 or saturation != 0):			
-					sel_fill_color = color_hsv_balance (sel_fill_color, 0.0, saturation, brightness) # hue not changed (this is managed through temperature)
-				sel_fill_opacity = fill_opacity[group_no]
-				sel_blur = blur[group_no]
-				if(sel_blur <= 0):
-					line = re.sub(r'fill-opacity:[^;]+;', '', line)
-					line = re.sub(r'fill:#([0-9a-fA-F]+);', 'fill:'+str(sel_fill_color)+'; fill-opacity:'+format(sel_fill_opacity, '.8f')+'; ', line)
-				else:
-					line = re.sub(r'fill-opacity:[^;]+;', '', line)
-					line = re.sub(r'fill:#([0-9a-fA-F]+);', 'fill:'+str(sel_fill_color)+'; fill-opacity:'+format(sel_fill_opacity, '.8f')+'; filter:url(#blur'+str(group_no)+');', line)
+				if(sel_fill_color != None):
+					if(temperature != 6600):			
+						sel_fill_color = temperature_balance(sel_fill_color, temperature)
+					if(brightness != 0 or saturation != 0):			
+						sel_fill_color = color_hsv_balance (sel_fill_color, 0.0, saturation, brightness) # hue not changed (this is managed through temperature)
+					sel_fill_opacity = fill_opacity[group_no]
+					sel_blur = blur[group_no]
+					if(sel_blur != '0.f' and sel_blur <= 0):
+						line = re.sub(r'fill-opacity:[^;]+;', '', line)
+						line = re.sub(r'fill:#([0-9a-fA-F]+);', 'fill:'+str(sel_fill_color)+'; fill-opacity:'+format(sel_fill_opacity, '.8f')+'; ', line)
+					else:
+						line = re.sub(r'fill-opacity:[^;]+;', '', line)
+						line = re.sub(r'fill:#([0-9a-fA-F]+);', 'fill:'+str(sel_fill_color)+'; fill-opacity:'+format(sel_fill_opacity, '.8f')+'; filter:url(#blur'+str(group_no)+');', line)
 				
 				# group for a line beam from the C_LINES transformation
 				line = re.sub(r'(stroke\:url\(\#radialGradient001\);)', r'\1 stroke-width:15; ', line)
@@ -299,7 +338,7 @@ def main(main_args) :
 		
 		##################################################################
 		# PATH LINE: changes blur and, fill and stroke if "by_paths" mode
-		elif( re.search(r'^<path ', line) != None and path_no <= 8) :
+		elif( re.search(r'^<path ', line) != None and path_no <= nb_layers) :
 			
 			# typical path line
 			# <path id="drawing_blue" style="fill:#56b3e4;stroke-width:0.245929" d="M 504.85047..." />

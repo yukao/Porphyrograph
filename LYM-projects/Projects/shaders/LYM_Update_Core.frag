@@ -254,7 +254,7 @@ uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
 
-uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+uniform vec4 uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -1859,10 +1859,10 @@ void main() {
   //////////////////////////
   // variables 
   // frame number
-  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
+  frameNo = int(round(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.x));
 
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
+  Cursor = uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.y;
 
   // pixels position speed update parameters
   pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
@@ -2216,11 +2216,31 @@ void main() {
                * cameraWH;
  */
   // cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-              // added for wide angle lens that covers more than the drawing surface
-               * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
-  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
-               * movieWH;
+  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) );
+  // two images in case of double screen
+/*  if(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.w != 0) {
+    cameraCoord.x *= 2.;
+    if(cameraCoord.x >= 1) {
+      cameraCoord.x -= 1.;
+    }
+  }
+*/
+  // Zoom on camera
+  #ifdef var_cameraZoom
+    cameraCoord = (cameraCoord - vec2(0.5,0.5)) / cameraZoom +vec2(0.5,0.5);
+  #endif
+  // added for wide angle lens that covers more than the drawing surface
+  cameraCoord =  cameraCoord * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y );
+  // two images in case of double screen
+/*  if(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.w != 0) {
+    movieCoord.x *= 2.;
+    if(movieCoord.x >= 1) {
+      movieCoord.x -= 1.;
+    }
+  }
+*/  // from PoT coordinates to movie texture coordina
+  movieCoord *= movieWH;
 
   // image reading
   cameraOriginal = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
@@ -2339,6 +2359,9 @@ void main() {
   videocolor += movieWeight * movieImage;
   videoWeight += movieWeight;
 #endif
+
+  // videocolor = movieImage;
+  // videoWeight = 1.;
 
   // video_satur
   //  public-domain function by Darel Rex Finley
@@ -2619,7 +2642,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
+  flashToCACumul += uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.z
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track

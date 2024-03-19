@@ -3165,16 +3165,17 @@ void clearEcho_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_
 }
 void clear_path_group(void) {
 	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
-		pg_Path_Status[ind].isFirstFrame = false;
-		pg_Path_Status[ind].isActiveRecording = false;
-		pg_Path_Status[ind].isNormalized = false;
-		pg_Path_Status[ind].indReading = -1;
-		pg_Path_Status[ind].initialTimeRecording = 0.0f;
-		pg_Path_Status[ind].finalTimeRecording = 0.0f;
-		pg_Path_Status[ind].initialTimeReading = 0.0f;
-		pg_Path_Status[ind].lastPlayedFrameTime = 1.0F;
-		pg_Path_Status[ind].readSpeedScale = 1.0F;
-		pg_indPreviousFrameReading[ind] = 0;
+		pg_Path_Status[ind].path_isFirstFrame = false;
+		pg_Path_Status[ind].path_isActiveRecording = false;
+		pg_Path_Status[ind].path_indReading = -1;
+		pg_Path_Status[ind].path_initialTimeReading = 0.0f;
+		pg_Path_Status[ind].path_lastPlayedFrameTime = 1.0F;
+		pg_Path_Status[ind].path_indPreviousReading = 0;
+	}
+	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
+		for (int indCurve = 0; indCurve < pg_Path_Status[ind].nbCurves(pg_current_configuration_rank); indCurve++) {
+			pg_Path_Status[ind].setCurveValues(pg_current_configuration_rank, 1., 0., 0.);
+		}
 	}
 }
 void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
@@ -3186,27 +3187,27 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 			&& int(scenario_or_gui_command_value) - 1 != pg_current_SVG_path_group) {
 			//printf("old current path %d\n", current_path_group);
 			bool was_path_replay[PG_NB_PATHS + 1];
-			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_paths[pg_current_configuration_rank]; indPrerecPath++) {
+			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_pathCurves[pg_current_configuration_rank]; indPrerecPath++) {
 				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
-				if (pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath <= PG_NB_PATHS
-					&& pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_group == pg_current_SVG_path_group) {
-					was_path_replay[pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath]
-						= is_path_replay[pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath];
+				if (pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no <= PG_NB_PATHS
+					&& pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_group == pg_current_SVG_path_group) {
+					was_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no]
+						= is_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no];
 #if defined(var_path_replay_trackNo_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
-						if (is_path_replay[pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath]) {
-							//printf("Stops Replay indPath %d: %d\n", paths[indPrerecPath].indPath, is_path_replay[paths[indPrerecPath].indPath]);
+						if (is_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no]) {
+							//printf("Stops Replay path_no %d: %d\n", paths[indPrerecPath].path_no, is_path_replay[paths[indPrerecPath].indPath]);
 
-							(pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath);
+							(pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no);
 						}
 					}
 #endif
 #if defined(var_path_record_1)
 					if (ScenarioVarConfigurations[_path_record_1][pg_current_configuration_rank]) {
 						// is recording source -> has to stop recording source 
-						if (pg_Path_Status[pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath].isActiveRecording) {
-							//printf("Stops Recording indPath %d: %d\n", paths[indPrerecPath].indPath, pg_Path_Status[paths[indPrerecPath].indPath].isActiveRecording);
-							pg_path_recording_stop(pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath);
+						if (pg_Path_Status[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no].path_isActiveRecording) {
+							//printf("Stops Recording indPath %d: %d\n", paths[indPrerecPath].path_no, pg_Path_Status[paths[indPrerecPath].path_no].path_isActiveRecording);
+							pg_path_recording_stop(pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no);
 						}
 					}
 #endif
@@ -3215,27 +3216,27 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 			clear_path_group();
 			pg_current_SVG_path_group = int(scenario_or_gui_command_value) - 1;
 			//printf("new current path %d\n", current_path_group);
-			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_paths[pg_current_configuration_rank]; indPrerecPath++) {
+			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_pathCurves[pg_current_configuration_rank]; indPrerecPath++) {
 				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
-				if (pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath <= PG_NB_PATHS
-					&& pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_group == pg_current_SVG_path_group) {
+				if (pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no <= PG_NB_PATHS
+					&& pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_group == pg_current_SVG_path_group) {
 					//printf("load path for replay %s\n", paths[indPrerecPath].path_fileName.c_str());
 #if defined(var_path_replay_trackNo_1)&& defined(var_path_record_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]
 						&& ScenarioVarConfigurations[_path_record_1][pg_current_configuration_rank]) {
-						load_svg_path((char*)pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_fileName.c_str(),
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indTrack, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].pathRadius,
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_r_color, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_g_color, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_b_color,
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_readSpeedScale, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_ID, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].with_color_radius_from_scenario,
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].secondsforwidth, pg_current_configuration_rank);
+						load_svg_path((char*)pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_fileName.c_str(),
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_track, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].pathRadius,
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_r_color, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_g_color, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_b_color,
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_readSpeedScale, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_ID, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].with_color_radius_from_scenario,
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].secondsforwidth, pg_current_configuration_rank);
 					}
 #endif
 #if defined(var_path_replay_trackNo_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
 						// start reading if it was already reading
-						if (was_path_replay[pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath]) {
-							//printf("Starts Replay indPath %d: %d\n", paths[indPrerecPath].indPath, was_path_replay[paths[indPrerecPath].indPath]);
-							pg_path_replay_trackNo_start(pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indTrack);
+						if (was_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no]) {
+							//printf("Starts Replay indPath %d: %d\n", paths[indPrerecPath].path_no, was_path_replay[paths[indPrerecPath].path_no]);
+							pg_path_replay_trackNo_start(pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_track);
 						}
 					}
 #endif
@@ -3388,16 +3389,16 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 void reload_paths_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value) {
-			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_paths[pg_current_configuration_rank]; indPrerecPath++) {
-				if (pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath <= PG_NB_PATHS) {
+			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_pathCurves[pg_current_configuration_rank]; indPrerecPath++) {
+				if (pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no <= PG_NB_PATHS) {
 #if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]
 						&& ScenarioVarConfigurations[_path_record_1][pg_current_configuration_rank]) {
-						load_svg_path((char*)pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_fileName.c_str(),
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indPath, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].indTrack, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].pathRadius,
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_r_color, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_g_color, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_b_color,
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_readSpeedScale, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].path_ID, pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].with_color_radius_from_scenario,
-							pg_SVG_paths[pg_current_configuration_rank][indPrerecPath].secondsforwidth, pg_current_configuration_rank);
+						load_svg_path((char*)pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_fileName.c_str(),
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_track, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].pathRadius,
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_r_color, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_g_color, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_b_color,
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_readSpeedScale, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_ID, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].with_color_radius_from_scenario,
+							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].secondsforwidth, pg_current_configuration_rank);
 					}
 #endif
 				}
@@ -3464,10 +3465,10 @@ void path_replay_trackNo_11_callBack(pg_Parameter_Input_Type param_input_type, i
 #if defined(var_path_record_1)
 void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	//keystroke on/off command
-	//printf("begin callback path %d is track record %d (recorded %d)\n", pathNo, int(pg_Path_Status[pathNo].isActiveRecording), int(recorded_path[pathNo]));
+	//printf("begin callback path %d is track record %d (recorded %d)\n", pathNo, int(pg_Path_Status[pathNo].path_isActiveRecording), int(recorded_path[pathNo]));
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 		// is not currently recording -> starts recording 
-		if (!pg_Path_Status[pathNo].isActiveRecording) {
+		if (!pg_Path_Status[pathNo].path_isActiveRecording) {
 			recorded_path[pathNo] = true;
 			if (tracksSync) {
 				synchr_start_recording_path[pathNo] = true;
@@ -3487,7 +3488,7 @@ void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, 
 		// recording on 
 		if (scenario_or_gui_command_value) {
 			// starts recording 
-			if (!pg_Path_Status[pathNo].isActiveRecording) {
+			if (!pg_Path_Status[pathNo].path_isActiveRecording) {
 				recorded_path[pathNo] = true;
 				if (tracksSync) {
 					synchr_start_recording_path[pathNo] = true;
@@ -3499,15 +3500,15 @@ void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, 
 		}
 		// recording off 
 		else {
-			if (pg_Path_Status[pathNo].isActiveRecording) {
+			if (pg_Path_Status[pathNo].path_isActiveRecording) {
 				// stops recording 
 				pg_path_recording_onOff(pathNo);
 			}
 		}
 	}
 
-	//printf("end callback path record for path 1 recording %d active recording %d (recorded %d)\n", path_record_1, int(pg_Path_Status[1].isActiveRecording), recorded_path[1]);
-	//printf("end callback path record for path 2 recording %d active recording %d (recorded %d)\n", path_record_2, int(pg_Path_Status[2].isActiveRecording), recorded_path[2]);
+	//printf("end callback path record for path 1 recording %d active recording %d (recorded %d)\n", path_record_1, int(pg_Path_Status[1].path_isActiveRecording), recorded_path[1]);
+	//printf("end callback path record for path 2 recording %d active recording %d (recorded %d)\n", path_record_2, int(pg_Path_Status[2].path_isActiveRecording), recorded_path[2]);
 }
 #endif
 #if defined(var_path_record_1)
@@ -7010,7 +7011,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			&& ScenarioVarConfigurations[_pen_grey][pg_current_configuration_rank]) {
 			//printf("pulse %.2f %.2f %.2f avg %.2f\n", pulse[0], pulse[1], pulse[2], pulse_average);
 			//printf("pen_color %.2f pen_color_pulse %.2f pen_grey %.2f pen_grey_pulse %.2f pulsed_pen_color  %.2f %.2f %.2f %.2f\n", pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pulsed_pen_color[3]);
-			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, true);
+			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, _PG_PEN);
 		}
 #endif
 #if defined(var_pen_hue) & defined(var_pen_sat) && defined(var_pen_value)
@@ -7024,10 +7025,10 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(pulsed_pen_color[0] * 255), int(pulsed_pen_color[1] * 255), int(pulsed_pen_color[2] * 255));
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		//printf("%s\n", AuxString);
-		compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pulsed_repop_colorCA, false);
+		compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pulsed_repop_colorCA, _PG_REPOP);
 		sprintf(AuxString, "/CA_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorCA[0] * 255), int(pulsed_repop_colorCA[1] * 255), int(pulsed_repop_colorCA[2] * 255)); 
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, false);
+		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, _PG_REPOP);
 		sprintf(AuxString, "/BG_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorBG[0] * 255), int(pulsed_repop_colorBG[1] * 255), int(pulsed_repop_colorBG[2] * 255)); 
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
@@ -7036,7 +7037,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #if defined(var_repop_colorPart) && defined(var_repop_greyPart)
 			if (ScenarioVarConfigurations[_repop_colorPart][pg_current_configuration_rank]
 				&& ScenarioVarConfigurations[_repop_greyPart][pg_current_configuration_rank]) {
-				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, false);
+				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
 			}
 #endif
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
@@ -9483,7 +9484,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
 			printf("play all tracks %.3f\n", pg_CurrentClockTime);
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
-				if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].path_nbRecordedFrames > 0) {
+				if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank) > 0) {
 					pg_path_replay_trackNo_onOff(pathNo, 1);
 					//sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
 					//pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -9672,7 +9673,7 @@ void ClipArt_SubPathOnOff(int indPath) {
 //////////////////////////////////////////////////////////////
 // PULSE COLOR FUNCTIONS
 //////////////////////////////////////////////////////////////
-void compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], bool is_pen_color) {
+void compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], pg_ColorTarget color_target) {
 	float lowPalette[3];
 	int indLowPalette[3];
 	int indUpperPalette[3];
@@ -9716,7 +9717,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 	}
 
 	// stores the bandpass colors that will be shown in the palette interface in the Master shader for color visualization by user
-	if (is_pen_color) {
+	if (color_target == _PG_PEN) {
 		for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 			for (int indChannel = 0; indChannel < 3; indChannel++) {
 				pen_bandpass_3color_palette[indColorBandPass][indChannel] = bandpass_3color_palette[indColorBandPass][indChannel];
@@ -9732,7 +9733,8 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 	for (int indChannel = 0; indChannel < 3; indChannel++) {
 		// adding a base luminance
 		pulsed_color[indChannel] = grey + pulse_average * grey_pulse;
-		if (pulse_average != 0) {
+		// clip art color is not modulated by bandpass pulse contrary to the other colors which are modified to avoid monochromy
+		if (pulse_average != 0 && color_target != _PG_CLIP_ART) {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 #if defined(var_alKemi)
 				if (ScenarioVarConfigurations[_alKemi][pg_current_configuration_rank]) {
@@ -9926,7 +9928,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			) {
 			float rgb_color[_rgb];
 			if (pg_nb_light_groups > 0) {
-				compute_pulsed_palette_color(light1_color, light1_color_pulse, light1_grey, light1_grey_pulse, rgb_color, false);
+				compute_pulsed_palette_color(light1_color, light1_color_pulse, light1_grey, light1_grey_pulse, rgb_color, _PG_LIGHT);
 				pg_light_groups[0].set_color(rgb_color);
 				pg_light_groups[0].set_group_val(_dimmer, light1_dimmer * (1.f + pulse_average * light1_dimmer_pulse));
 				pg_light_groups[0].set_group_val(_strobe, light1_strobe * (1.f + pulse_average * light1_strobe_pulse));
@@ -9963,7 +9965,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| ((light2_grey_pulse != 0 || light2_color_pulse != 0 || light2_dimmer_pulse != 0 || light2_strobe_pulse != 0)
 				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light2_color, light2_color_pulse, light2_grey, light2_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light2_color, light2_color_pulse, light2_grey, light2_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[1].set_color(rgb_color);
 			pg_light_groups[1].set_group_val(_dimmer, light2_dimmer * (1.f + pulse_average * light2_dimmer_pulse));
 			pg_light_groups[1].set_group_val(_strobe, light2_strobe * (1.f + pulse_average * light2_strobe_pulse));
@@ -9988,7 +9990,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| ((light3_grey_pulse != 0 || light3_color_pulse != 0 || light3_dimmer_pulse != 0 || light3_strobe_pulse != 0)
 				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light3_color, light3_color_pulse, light3_grey, light3_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light3_color, light3_color_pulse, light3_grey, light3_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[2].set_color(rgb_color);
 			pg_light_groups[2].set_group_val(_dimmer, light3_dimmer * (1.f + pulse_average * light3_dimmer_pulse));
 			pg_light_groups[2].set_group_val(_strobe, light3_strobe * (1.f + pulse_average * light3_strobe_pulse));
@@ -10013,7 +10015,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| ((light4_grey_pulse != 0 || light4_color_pulse != 0 || light4_dimmer_pulse != 0 || light4_strobe_pulse != 0)
 				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light4_color, light4_color_pulse, light4_grey, light4_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light4_color, light4_color_pulse, light4_grey, light4_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[3].set_color(rgb_color);
 			pg_light_groups[3].set_group_val(_dimmer, light4_dimmer * (1.f + pulse_average * light4_dimmer_pulse));
 			pg_light_groups[3].set_group_val(_strobe, light4_strobe * (1.f + pulse_average * light4_strobe_pulse));
@@ -10038,7 +10040,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| ((light5_grey_pulse != 0 || light5_color_pulse != 0 || light5_dimmer_pulse != 0 || light5_strobe_pulse != 0)
 				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light5_color, light5_color_pulse, light5_grey, light5_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light5_color, light5_color_pulse, light5_grey, light5_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[4].set_color(rgb_color);
 			pg_light_groups[4].set_group_val(_dimmer, light5_dimmer * (1.f + pulse_average * light5_dimmer_pulse));
 			pg_light_groups[4].set_group_val(_strobe, light5_strobe * (1.f + pulse_average * light5_strobe_pulse));
@@ -10063,7 +10065,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| ((light6_grey_pulse != 0 || light6_color_pulse != 0 || light6_dimmer_pulse != 0 || light6_strobe_pulse != 0)
 				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light6_color, light6_color_pulse, light6_grey, light6_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light6_color, light6_color_pulse, light6_grey, light6_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[5].set_color(rgb_color);
 			pg_light_groups[5].set_group_val(_dimmer, light6_dimmer * (1.f + pulse_average * light6_dimmer_pulse));
 			pg_light_groups[5].set_group_val(_strobe, light6_strobe * (1.f + pulse_average * light6_strobe_pulse));
@@ -10089,7 +10091,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))
 			) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light7_color, light7_color_pulse, light7_grey, light7_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light7_color, light7_color_pulse, light7_grey, light7_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[6].set_color(rgb_color);
 			pg_light_groups[6].set_group_val(_dimmer, light7_dimmer * (1.f + pulse_average * light7_dimmer_pulse));
 			pg_light_groups[6].set_group_val(_strobe, light7_strobe * (1.f + pulse_average * light7_strobe_pulse));
@@ -10119,7 +10121,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 #endif
 			) {
 			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light8_color, light8_color_pulse, light8_grey, light8_grey_pulse, rgb_color, false);
+			compute_pulsed_palette_color(light8_color, light8_color_pulse, light8_grey, light8_grey_pulse, rgb_color, _PG_LIGHT);
 			pg_light_groups[7].set_color(rgb_color);
 			pg_light_groups[7].set_group_val(_dimmer, light8_dimmer * (1.f + pulse_average * light8_dimmer_pulse));
 			pg_light_groups[7].set_group_val(_strobe, light8_strobe * (1.f + pulse_average * light8_strobe_pulse));
@@ -10176,7 +10178,7 @@ void pg_update_pulsed_colors(void) {
 			|| pen_grey != pen_grey_prec || pen_grey_pulse != pen_grey_pulse_prec
 			|| ((pen_grey_pulse != 0 || pen_color_pulse != 0)
 				&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, true);
+			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, _PG_PEN);
 			pen_color_prec = pen_color;
 			pen_color_pulse_prec = pen_color_pulse;
 			pen_grey_prec = pen_grey;
@@ -10229,7 +10231,7 @@ void pg_update_pulsed_colors(void) {
 		|| repop_greyBG != repop_greyBG_prec || repop_greyBG_pulse != repop_greyBG_pulse_prec
 		|| ((repop_greyBG_pulse != 0 || repop_colorBG_pulse != 0)
 			&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, false);
+		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, _PG_REPOP);
 		repop_colorBG_prec = repop_colorBG;
 		repop_colorBG_pulse_prec = repop_colorBG_pulse;
 		repop_greyBG_prec = repop_greyBG;
@@ -10256,7 +10258,7 @@ void pg_update_pulsed_colors(void) {
 			|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
 			|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
 				&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-			compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pulsed_repop_colorCA, false);
+			compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pulsed_repop_colorCA, _PG_REPOP);
 			repop_colorCA_prec = repop_colorCA;
 			repop_colorCA_pulse_prec = repop_colorCA_pulse;
 			repop_greyCA_prec = repop_greyCA;
@@ -10276,7 +10278,7 @@ void pg_update_pulsed_colors(void) {
 				|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
 				|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
 					&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, false);
+				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
 				repop_colorPart_prec = repop_colorPart;
 				repop_colorPart_pulse_prec = repop_colorPart_pulse;
 				repop_greyPart_prec = repop_greyPart;
@@ -10333,13 +10335,13 @@ void pg_path_recording_onOff(int indPath ) {
   bool is_path_record = false;
   switch (indPath) {
   case 1:
-	  is_path_record = !pg_Path_Status[1].isActiveRecording;
+	  is_path_record = !pg_Path_Status[1].path_isActiveRecording;
 	  *((bool *)ScenarioVarPointers[_path_record_1]) = is_path_record;
 	  break;
 #if defined(var_path_record_2)
   case 2:
 	  if (ScenarioVarConfigurations[_path_record_2][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[2].isActiveRecording;
+		  is_path_record = !pg_Path_Status[2].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_2]) = is_path_record;
 	  }
 	  break;
@@ -10347,7 +10349,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_3)
   case 3:
 	  if (ScenarioVarConfigurations[_path_record_3][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[3].isActiveRecording;
+		  is_path_record = !pg_Path_Status[3].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_3]) = is_path_record;
 	  }
 	  break;
@@ -10355,7 +10357,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_4)
   case 4:
 	  if (ScenarioVarConfigurations[_path_record_4][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[4].isActiveRecording;
+		  is_path_record = !pg_Path_Status[4].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_4]) = is_path_record;
 	  }
 	  break;
@@ -10363,7 +10365,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_5)
   case 5:
 	  if (ScenarioVarConfigurations[_path_record_5][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[5].isActiveRecording;
+		  is_path_record = !pg_Path_Status[5].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_5]) = is_path_record;
 	  }
 	  break;
@@ -10371,7 +10373,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_6)
   case 6:
 	  if (ScenarioVarConfigurations[_path_record_6][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[6].isActiveRecording;
+		  is_path_record = !pg_Path_Status[6].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_6]) = is_path_record;
 	  }
 	  break;
@@ -10379,7 +10381,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_7)
   case 7:
 	  if (ScenarioVarConfigurations[_path_record_7][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[7].isActiveRecording;
+		  is_path_record = !pg_Path_Status[7].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_7]) = is_path_record;
 	  }
 	  break;
@@ -10387,7 +10389,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_8)
   case 8:
 	  if (ScenarioVarConfigurations[_path_record_8][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[8].isActiveRecording;
+		  is_path_record = !pg_Path_Status[8].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_8]) = is_path_record;
 	  }
 	  break;
@@ -10395,7 +10397,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_9)
   case 9:
 	  if (ScenarioVarConfigurations[_path_record_9][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[9].isActiveRecording;
+		  is_path_record = !pg_Path_Status[9].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_9]) = is_path_record;
 	  }
 	  break;
@@ -10403,7 +10405,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_10)
   case 10:
 	  if (ScenarioVarConfigurations[_path_record_10][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[10].isActiveRecording;
+		  is_path_record = !pg_Path_Status[10].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_10]) = is_path_record;
 	  }
 	  break;
@@ -10411,7 +10413,7 @@ void pg_path_recording_onOff(int indPath ) {
 #if defined(var_path_record_11)
   case 11:
 	  if (ScenarioVarConfigurations[_path_record_11][pg_current_configuration_rank]) {
-		  is_path_record = !pg_Path_Status[11].isActiveRecording;
+		  is_path_record = !pg_Path_Status[11].path_isActiveRecording;
 		  *((bool*)ScenarioVarPointers[_path_record_11]) = is_path_record;
 	  }
 	  break;
@@ -10708,9 +10710,11 @@ void pg_path_recording_start(int indPath) {
 #endif
 	}
 	if (indPath >= 1 && indPath <= PG_NB_PATHS) {
-		pg_Path_Status[indPath].isActiveRecording = true;
-		pg_Path_Status[indPath].path_nbRecordedFrames = 0;
-		pg_Path_Status[indPath].readSpeedScale = 1.0f;
+		pg_Path_Status[indPath].path_isActiveRecording = true;
+		//pg_Path_Status[indPath].set_path_curve_nbRecordedFrames(pg_current_configuration_rank, 0);
+		//pg_Path_Status[indPath].set_path_curve_readSpeedScale(pg_current_configuration_rank, 1.);
+		PathCurve_Params& curve = pg_Path_Status[indPath].getCurrentCurve(pg_current_configuration_rank);
+		curve.PathCurve_Params_init();
 		// printf("start recording track %d\n",indPath);
 	}
 }
@@ -10795,8 +10799,8 @@ void pg_path_recording_stop(int indPath) {
 #endif
 	}
 	if (indPath >= 1 && indPath <= PG_NB_PATHS
-		&& pg_Path_Status[indPath].isActiveRecording == true) {
-		pg_Path_Status[indPath].isActiveRecording = false;
+		&& pg_Path_Status[indPath].path_isActiveRecording == true) {
+		pg_Path_Status[indPath].path_isActiveRecording = false;
 		sprintf(AuxString, "/path_record_%d 0", indPath);
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 	}
@@ -10805,12 +10809,12 @@ void pg_path_recording_stop(int indPath) {
 
 #if defined(var_path_replay_trackNo_1)
 void pg_path_replay_trackNo_start(int indPath, int trackNo) {
-	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, is_path_replay[indPath], pg_Path_Status[indPath].nbRecordedFrames);
+	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, is_path_replay[indPath], pg_PathCurve_Params[pg_current_configuration_rank][indPath].nbRecordedFrames);
 	if (indPath >= 1 && indPath <= PG_NB_PATHS
 		&& !is_path_replay[indPath]
-		&& pg_Path_Status[indPath].path_nbRecordedFrames > 0) {
+		&& pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank) > 0) {
 		is_path_replay[indPath] = true;
-		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].path_nbRecordedFrames, is_path_replay[indPath]);
+		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
 		switch (indPath) {
 		case 1:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_1]) = trackNo;
@@ -10888,13 +10892,13 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 		}
 		// first time reading: starts from beginning
 		// otherwise starts from where it is
-		//if (pg_Path_Status[indPath].indReading < 0) {
+		//if (pg_Path_Status[indPath].path_indReading < 0) {
 			// restarts from beginning, not from where it was
-			pg_Path_Status[indPath].indReading = 0;
+			pg_Path_Status[indPath].path_indReading = 0;
 		//}
-		pg_Path_Status[indPath].isFirstFrame = true;
+		pg_Path_Status[indPath].path_isFirstFrame = true;
 		//printf("-> start_read_path %d\n", indPath);
-		//printf("ind reading %d\n", pg_Path_Status[indPath].indReading);
+		//printf("ind reading %d\n", pg_Path_Status[indPath].path_indReading);
 	}
 }
 #endif

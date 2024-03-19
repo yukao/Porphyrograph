@@ -190,7 +190,7 @@ def main(main_args) :
 
 		# Get last 3 character
 		file_extension = full_input_file_name[-3:]
-		print(full_input_file_name, file_extension)
+		print("file name:", full_input_file_name, " ext:", file_extension)
 		if(file_extension == "mp4") :
 			# ffmpeg conversion 
 			print("ffmpeg -i "+" -ss "+start_time+" -to "+end_time+" -r "+str(fps)+" "+full_png_output_file_name+"_%5d.png")
@@ -235,6 +235,8 @@ def main(main_args) :
 
 			# if indImage > 3 :
 			# 	return 0
+			if indImage <= 58 :
+				continue
 
 			scene_percentage = 0.0
 			if(nb_files > 1) :
@@ -294,7 +296,6 @@ def main(main_args) :
 			# color map deduced from the quantization of the first image in the movie
 			# and kept all along the movie for every frame
 			else:
-				# middle image used to define the color map
 				# if the number of colors in the color map does not correspond to the 
 				# number of layers in the scenario file, the number of layer is adapted
 				# however it can happen that by relaunching the extraction of the frames
@@ -310,7 +311,7 @@ def main(main_args) :
 					print("Build color table from image ", source_image, "with", nb_layers, "colors")
 					nb_required_colors = nb_layers
 					while True :
-						print("number of required colors", nb_required_colors)
+						# print("number of required colors", nb_required_colors)
 						# print("convert "+source_image+" -quantize YUV -dither None -colors "+str(nb_required_colors)+" "+os.path.join(tmp_dir,"color_map.png"))
 						os.system("convert "+source_image+" -quantize YUV -dither None -colors "+str(nb_required_colors)+" "+os.path.join(tmp_dir,"color_map.png"))
 						

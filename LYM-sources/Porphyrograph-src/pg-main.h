@@ -111,7 +111,6 @@ extern int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
 extern int CurrentCursorStylusvsRubber;
 #define pg_Stylus  1
 #define pg_Rubber -1
-#define PG_OUT_OF_SCREEN_CURSOR -1000
 #define PG_IDLE_CURSOR -5
 // current tablet pen pressure and orientation
 extern float tabletPressureRadius;

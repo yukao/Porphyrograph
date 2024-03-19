@@ -367,7 +367,7 @@ void transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfigur
 	//printf("\n");
 
 	// VAO
-	mesh_vao[indMeshFile][indObjectInMesh] = 0;
+	mesh_vao[indMeshFile][indMeshFile][indObjectInMesh] = 0;
 	glGenVertexArrays(1, &(mesh_vao[indConfiguration][indMeshFile][indObjectInMesh]));
 	glBindVertexArray(mesh_vao[indConfiguration][indMeshFile][indObjectInMesh]);
 
@@ -1100,11 +1100,11 @@ void load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigurat
 		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(pg_nbFacesPerMeshFile[indConfiguration][indMeshFile]));
 	//printf("File mesh %s has %d objects\n", mesh_file_name.c_str(), nbMeshObjectsInFile);
 	if (nbMeshObjectsInFile > 0) {
-		//for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
-		//	printf("   Object %d Nb faces %d vertices %d tex coord %d normals %d\n", ind,
-		//		pg_nbFacesPerMeshFile[indConfiguration][indMeshFile][ind], nbVerticesPerMesh[ind],
-		//		nbTexCoordsPerMesh[ind], nbNormalsPerMesh[ind]);
-		//}
+		for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
+			//printf("   Object %d Nb faces %d vertices %d tex coord %d normals %d\n", ind,
+			//	pg_nbFacesPerMeshFile[indConfiguration][indMeshFile][ind], nbVerticesPerMesh[ind],
+			//	nbTexCoordsPerMesh[ind], nbNormalsPerMesh[ind]);
+		}
 	}
 	else {
 		//printf("File mesh withouth objects\n");

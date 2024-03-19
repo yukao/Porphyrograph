@@ -187,50 +187,54 @@ def main(main_args):
 			output_ini = int(to_num(val_init["output_ini"]))
 
 		for indImageInput in range(val_init["imageInputIndex"], val_fin["imageInputIndex"] + 1, input_step) :
-				countInput = "%05d" % indImageInput
-				countOutput = "%05d" % indImageOutput 
-				tmp_dir = val_init["tmp_directory"]
+			countInput = "%05d" % indImageInput
+			countOutput = "%05d" % indImageOutput 
+			tmp_dir = val_init["tmp_directory"]
 
-				# if(indImageInput > 8) :
-				# 	return
+			# if(indImageInput > 8) :
+			# 	return
+			# if(indImageInput < 1250) :
+			#	indImageOutput += output_step
+			# 	continue
 
-				scene_percentage = 0.0
-				if(val_fin["imageInputIndex"] != val_init["imageInputIndex"]) :
-					scene_percentage = float(indImageInput - val_init["imageInputIndex"]) / (val_fin["imageInputIndex"] - val_init["imageInputIndex"])
-				
-				scene_percentage = clamp(scene_percentage)
+			scene_percentage = 0.0
+			if(val_fin["imageInputIndex"] != val_init["imageInputIndex"]) :
+				scene_percentage = float(indImageInput - val_init["imageInputIndex"]) / (val_fin["imageInputIndex"] - val_init["imageInputIndex"])
+			
+			scene_percentage = clamp(scene_percentage)
 
-				for var_name in var_names :
-					val_interp[var_name] = interpolate(var_types[var_name], val_init[var_name], val_fin[var_name], interp[var_name], scene_percentage)
-				
-				if indImageOutput % output_step == output_ini :
-					print ("inkscape/convert: ", val_init["svg_input_file_name"]+"_"+str(countInput)+".svg", "->", val_init["png_output_file_name"]+"_"+str(countOutput)+".png")
-					# converts the SVG into a bitmap, larger than the final image for a better quality and to crop the border
-					# background color should not be visible because a rectangle covering the whole page as been added in the fill and stroke step
-					if "tmp_png_w" in val_interp :
-						tmp_png_w = int(val_interp["tmp_png_w"])
-					if "tmp_png_h" in val_interp :
-						tmp_png_h = int(val_interp["tmp_png_h"])
-					print("inkscape -w "+str(tmp_png_w)+" -h "+str(tmp_png_h)+" --export-area-page -b \\" + val_interp["background_color"] + " -y " + str(val_interp["background_opacity"]) + " --export-filename="+os.path.join(tmp_dir, "tmp_large.png")+" "+str(full_svg_input_file_name)+"_"+str(countInput)+".svg 1> "+os.path.join(tmp_dir, "tmp_inkscape_output.txt")+" 2>&1")
-					os.system( "inkscape -w "+str(tmp_png_w)+" -h "+str(tmp_png_h)+" --export-area-page -b \\" + val_interp["background_color"] + " -y " + str(val_interp["background_opacity"]) + " --export-filename="+os.path.join(tmp_dir, "tmp_large.png")+" "+str(full_svg_input_file_name)+"_"+str(countInput)+".svg 1> "+os.path.join(tmp_dir, "tmp_inkscape_output.txt")+" 2>&1")
+			for var_name in var_names :
+				val_interp[var_name] = interpolate(var_types[var_name], val_init[var_name], val_fin[var_name], interp[var_name], scene_percentage)
+			
+			if indImageOutput % output_step == output_ini :
+				print ("inkscape/convert: ", val_init["svg_input_file_name"]+"_"+str(countInput)+".svg", "->", val_init["png_output_file_name"]+"_"+str(countOutput)+".png")
+				# converts the SVG into a bitmap, larger than the final image for a better quality and to crop the border
+				# background color should not be visible because a rectangle covering the whole page as been added in the fill and stroke step
+				if "tmp_png_w" in val_interp :
+					tmp_png_w = int(val_interp["tmp_png_w"])
+				if "tmp_png_h" in val_interp :
+					tmp_png_h = int(val_interp["tmp_png_h"])
+				print("inkscape -w "+str(tmp_png_w)+" -h "+str(tmp_png_h)+" --export-area-page -b \\" + val_interp["background_color"] + " -y " + str(val_interp["background_opacity"]) + " --export-filename="+os.path.join(tmp_dir, "tmp_large.png")+" "+str(full_svg_input_file_name)+"_"+str(countInput)+".svg 1> "+os.path.join(tmp_dir, "tmp_inkscape_output.txt")+" 2>&1")
+				os.system( "inkscape -w "+str(tmp_png_w)+" -h "+str(tmp_png_h)+" --export-area-page -b \\" + val_interp["background_color"] + " -y " + str(val_interp["background_opacity"]) + " --export-filename="+os.path.join(tmp_dir, "tmp_large.png")+" "+str(full_svg_input_file_name)+"_"+str(countInput)+".svg 1> "+os.path.join(tmp_dir, "tmp_inkscape_output.txt")+" 2>&1")
 
-					# cropping and downscale of the png inmages
-					crop_offset_x = int(val_interp["crop_offset_x"])
-					crop_offset_y = int(val_interp["crop_offset_y"])
-					crop_size_x = int(val_interp["crop_size_x"])
-					crop_size_y = int(val_interp["crop_size_y"])
-					if "final_png_w" in val_interp :
-						final_png_w = int(val_interp["final_png_w"])
-					if "final_png_h" in val_interp :
-						final_png_h = int(val_interp["final_png_h"])
-					# print("convert "+str(tmp_dir)+"tmp_large.png -crop "+str(crop_size_x)+"x"+str(crop_size_y)+"+"+str(crop_offset_x)+"+"+str(crop_offset_y)+" -resize "+str(final_png_w)+"x"+str(final_png_h)+"! -background white -alpha off -type TrueColor -define png:color-type=2 "+str(full_png_output_file_name)+"_"+str(countOutput)+".png")
-					os.system("convert "+os.path.join(tmp_dir, "tmp_large.png")+" -crop "+str(crop_size_x)+"x"+str(crop_size_y)+"+"+str(crop_offset_x)+"+"+str(crop_offset_y)+" -resize "+str(final_png_w)+"x"+str(final_png_h)+"! -background white -alpha off -type TrueColor -define png:color-type=2 "+str(full_png_output_file_name)+"_"+str(countOutput)+".png")
+				# cropping and downscale of the png inmages
+				crop_offset_x = int(val_interp["crop_offset_x"])
+				crop_offset_y = int(val_interp["crop_offset_y"])
+				crop_size_x = int(val_interp["crop_size_x"])
+				crop_size_y = int(val_interp["crop_size_y"])
+				if "final_png_w" in val_interp :
+					final_png_w = int(val_interp["final_png_w"])
+				if "final_png_h" in val_interp :
+					final_png_h = int(val_interp["final_png_h"])
+				# print("convert "+str(tmp_dir)+"tmp_large.png -crop "+str(crop_size_x)+"x"+str(crop_size_y)+"+"+str(crop_offset_x)+"+"+str(crop_offset_y)+" -resize "+str(final_png_w)+"x"+str(final_png_h)+"! -background white -alpha off -type TrueColor -define png:color-type=2 "+str(full_png_output_file_name)+"_"+str(countOutput)+".png")
+				# os.system("convert "+os.path.join(tmp_dir, "tmp_large.png")+" -crop "+str(crop_size_x)+"x"+str(crop_size_y)+"+"+str(crop_offset_x)+"+"+str(crop_offset_y)+" -resize "+str(final_png_w)+"x"+str(final_png_h)+"! -background white -alpha off -type TrueColor -define png:color-type=2 "+str(full_png_output_file_name)+"_"+str(countOutput)+".png")
+				os.system("convert "+os.path.join(tmp_dir, "tmp_large.png")+" -crop "+str(crop_size_x)+"x"+str(crop_size_y)+"+"+str(crop_offset_x)+"+"+str(crop_offset_y)+" -resize "+str(final_png_w)+"x"+str(final_png_h)+"! -background none -alpha on "+str(full_png_output_file_name)+"_"+str(countOutput)+".png")
 
-					# removes input frame
-					print ("rm: ", str(full_svg_input_file_name)+"_"+str(countInput)+".svg")
-					os.system("rm -f " + str(full_svg_input_file_name)+"_"+str(countInput)+".svg")
+				# removes input frame
+				# print ("rm: ", str(full_svg_input_file_name)+"_"+str(countInput)+".svg")
+				# os.system("rm -f " + str(full_svg_input_file_name)+"_"+str(countInput)+".svg")
 
-				indImageOutput += output_step
+			indImageOutput += output_step
 		
 		# /scene line
 		values_line =	next(readCSV)

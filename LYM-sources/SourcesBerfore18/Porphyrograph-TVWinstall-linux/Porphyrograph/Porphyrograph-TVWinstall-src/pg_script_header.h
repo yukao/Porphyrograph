@@ -45,7 +45,7 @@ enum InterpVarIDs{
   _brushRadius = 0,
   _RGBpalette,
   _local_color_gray,
-  _blendTransp,
+  _master,
   _particleMode,
   _part_acc_factor,
   _particle_texture_ID,
@@ -78,7 +78,7 @@ enum InterpVarIDs{
   _flashVideoLength,
   _flashVideoBright,
   _flashVideoBeat,
-  _BGSubtr,
+  _camera_BG_subtr,
   _CAType,
   _CASubType,
   _clearCA,
@@ -110,7 +110,7 @@ enum InterpVarIDs{
 extern float brushRadius         ;
 extern float RGBpalette          ;
 extern float local_color_gray    ;
-extern float blendTransp         ;
+extern float master         ;
 extern int   particleMode        ;
 extern float part_acc_factor     ;
 extern float particle_texture_ID ;
@@ -143,7 +143,7 @@ extern float videoExposure       ;
 extern float flashVideoLength    ;
 extern float flashVideoBright    ;
 extern int   flashVideoBeat      ;
-extern int   BGSubtr             ;
+extern int   camera_BG_subtr             ;
 extern int   CAType              ;
 extern int   CASubType           ;
 extern bool  clearCA             ;

@@ -68,33 +68,33 @@ def main(main_args) :
 		print(USAGE)
 		sys.exit(2)
 	for opt, arg in opts:
-		if opt in ("-i", "--inputfile") :
+		if opt in ("-i", "--inputfile"):
 			input_file_name = arg
-		elif opt in ("-o", "--outputfile") :
+		elif opt in ("-o", "--outputfile"):
 			output_file_name_SVGs = arg
-		elif opt in ("--nb-layers") :
+		elif opt == "--nb-layers":
 			nb_layers = int(force_num(arg))
 			if(nb_layers < 1) :
 				print("Unprocessed number of layers "+nb_layers+", currently only 1 or more layers are accepted")
 				sys.exit(2)
-		elif opt in ("--dimming") :
+		elif opt == "--dimming":
 			dimming = force_num(arg)
-		elif opt in ("--with_piecewise_curve") :
+		elif opt == "--with_piecewise_curve":
 			with_piecewise_curve = arg
-		elif opt in ("--invert") :
+		elif opt == "--invert":
 			invert = (force_num(arg) != 0)
-		elif opt in ("--tmp") :
+		elif opt == "--tmp":
 			tmp_dir = arg
-		elif opt in ("--crop") :
+		elif opt == "--crop":
 			crop = arg
-		elif opt in ("--resize") :
+		elif opt == "--resize":
 			resize = arg
-		elif opt in ("--image_mode") :
+		elif opt == "--image_mode":
 			image_mode = arg
 			if(image_mode != "color" and image_mode != "wb") :
 				print("image mmode should be either \"color\" or \"wb\"")
 				sys.exit(2)
-		elif opt in ("--color_map") :
+		elif opt == "--color_map":
 			color_map = arg
 		else:
 			assert False, "unhandled option"
@@ -106,7 +106,7 @@ def main(main_args) :
 	dimensions = resize.split("x")
 	width = 2 * to_num(dimensions[0])
 	height = 2 * to_num(dimensions[1])
-	print("w x h", width, height)
+	# print("w x h", width, height)
 
 	################################################
 	# possible color inversion
@@ -138,6 +138,8 @@ def main(main_args) :
 		if(len(color_list) != nb_layers) :
 			print("Color table unexpected size:", len(color_list), "instead of ", nb_layers)
 			sys.exit(2)
+		# else :
+		# 	print("Color table expected size:", nb_layers)
 		FILEin.close()
 
 		# possible dimming towards the brightest color
@@ -153,17 +155,19 @@ def main(main_args) :
 
 		# converts another image with the color map of a first one (for color coherence within movie shots)
 		if(color_map != None) :
-			print("convert "+new_input_file_name+" -quantize YUV -dither None -colors "+str(nb_layers)+" -remap "+color_map+" "+os.path.join(tmp_dir, "quant.png"))
-			os.system("convert "+new_input_file_name+" -quantize YUV -dither None -colors "+str(nb_layers)+" -remap "+color_map+" "+os.path.join(tmp_dir, "quant.png"))
+			# print("color map exists convert "+new_input_file_name+" -quantize YUV -dither None -colors "+str(nb_layers)+" -remap "+color_map+" "+os.path.join(tmp_dir, "quant.png"))
+			os.system("convert "+new_input_file_name+" -dither None -colors "+str(nb_layers)+" -remap "+color_map+" "+os.path.join(tmp_dir, "quant.png"))
 		else:
+			# print("convert "+new_input_file_name+" -quantize YUV -dither None -colors "+str(nb_layers)+" "+os.path.join(tmp_dir, "quant.png"))
 			os.system("convert "+new_input_file_name+" -quantize YUV -dither None -colors "+str(nb_layers)+" "+os.path.join(tmp_dir, "quant.png"))
 			# generate color table
+			os.system("color map recalculated convert "+os.path.join(tmp_dir, "quant.png")+" -format %c -depth 8 histogram:info:->"+os.path.join(tmp_dir, "color_table.txt"))
 			os.system("convert "+os.path.join(tmp_dir, "quant.png")+" -format %c -depth 8 histogram:info:->"+os.path.join(tmp_dir, "color_table.txt"))
 
 		# separate the image into nb_layers masks that correspond to each color
 		# from the table and the brightest colors
 		# colors are retrieved from the table ranged from the darkest to the brightest
-		#creates BW images for further tracing with potrace + recolorization afterwards
+		# creates BW images for further tracing with potrace + recolorization afterwards
 		# each mask corresponds to the current color and all the darker ones
 		# the traced images will be layered from the brightest (the largest one because showing all colors, normally covering the whole image)
 		# to the darkest (the smallest one because only showing its color) (see lim1-4-quant-YUV-nodith.xcf)
@@ -182,6 +186,8 @@ def main(main_args) :
 			command_line = command_line + os.path.join(tmp_dir, "quant"+str(layerNo+1)+".png")+" "
 			# print(command_line)
 			os.system(command_line)
+
+		# sys.exit(2)
 
 	################################################
 	# IMAGE RESIZE (COLORS)

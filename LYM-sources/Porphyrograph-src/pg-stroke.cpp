@@ -49,9 +49,17 @@
 // or an average 1/60 s duration is chosen. The readSpeedScale value can
 // be adjusted in the scenario to replay at an appropriate speed
 //float **pg_Path_TimeStamp = NULL;
-struct pg_Path_Status_Struct* pg_Path_Status = NULL;
-struct pg_Path_Data_Struct** pg_Path_Data = NULL;
-int *pg_indPreviousFrameReading = NULL;
+
+// SVG paths from scenario
+int                      pg_nb_SVG_pathCurves[_NbConfigurations] = { 0 };
+SVG_pathCurve*			 pg_SVG_pathCurves[_NbConfigurations] = { NULL };
+// struct PathCurve_Params* pg_PathCurve_Params[_NbConfigurations] = { NULL };
+// struct PathCurveFrame** pg_PathCurveFrame_Data[_NbConfigurations] = { NULL };
+
+int						 pg_nb_SVG_path_groups[_NbConfigurations] = { 0 };
+int						 pg_current_SVG_path_group = 0;
+
+Path_Status* pg_Path_Status = NULL;
 
 #ifdef PG_BEZIER_PATHS
 // convex hull shipped to the GPU
@@ -107,30 +115,22 @@ void CatmullRom_Evaluate(vec2* pOut_result, vec2* p0, vec2* p1, vec2* p2, vec2* 
 //////////////////////////////////////////////////////////////////
 // INITIALIZATION OF THE TABLES THAT CONTAIN THE STROKE PARAMETERS
 //////////////////////////////////////////////////////////////////
-void pg_initStrokes( void ) {
+// called ones for all the paths
+void pg_initPaths(void) {
+	pg_Path_Status = new Path_Status[PG_NB_PATHS + 1];
+	// printf("Path initialization size %d\n", max_mouse_recording_frames (obsolete with vectors));
+	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
+		pg_Path_Status[ind].Path_Status_init();
+	}
+}
+// called for each configuraiton for the path curves associated with the paths
+void pg_initPathCurves(int indConfiguration) {
   // looks for specific variables (brush radius, local color, brush
 
   // mouse pointer tracks recording initialization
-  pg_Path_Data = new pg_Path_Data_Struct * [PG_NB_PATHS + 1];
-  pg_Path_Status = new struct pg_Path_Status_Struct[PG_NB_PATHS + 1];
-  pg_indPreviousFrameReading = new int[PG_NB_PATHS + 1];
-  // printf("Path initialization size %d\n", max_mouse_recording_frames);
-  for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
-	  pg_Path_Data[ind]
-		  = new pg_Path_Data_Struct[max_mouse_recording_frames];
-	  pg_Path_Status[ind].isFirstFrame = false;
-	  pg_Path_Status[ind].isActiveRecording = false;
-	  pg_Path_Status[ind].isNormalized = false;
-	  pg_Path_Status[ind].path_nbRecordedFrames = 0;
-	  pg_Path_Status[ind].indReading = -1;
-	  pg_Path_Status[ind].initialTimeRecording = 0.0f;
-	  pg_Path_Status[ind].finalTimeRecording = 0.0f;
-	  pg_Path_Status[ind].initialTimeReading = 0.0f;
-	  pg_Path_Status[ind].lastPlayedFrameTime = 1.0F;
-	  pg_Path_Status[ind].readSpeedScale = 1.0F;
-	  pg_indPreviousFrameReading[ind] = 0;
-  }
+  pg_SVG_pathCurves[indConfiguration] = new SVG_pathCurve[pg_nb_SVG_pathCurves[indConfiguration]]();
 
+  // printf("Path initialization size %d\n", max_mouse_recording_frames (obsolete with vectors));
   for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
 	  synchr_start_recording_path[ind] = false;
 	  synchr_start_path_replay_trackNo[ind] = -1;
@@ -243,33 +243,18 @@ float    pg_ScanFloatString(int* p_c,
 }
 
 void BezierSubdivideAboveLength(glm::vec2 controlPoints[4], int indPath, int* indFrame, float path_r_color, float path_g_color, float path_b_color,
-	float path_radius, bool with_color__brush_radius_from_scenario, float *path_length, double p_secondsforwidth) {
+	float path_radius, bool with_color__brush_radius_from_scenario, float *path_length, double p_secondsforwidth, int indConfiguration) {
 	float curveLength = Bezier_length(controlPoints, 20);
 	if (curveLength < 1) {
 		// copies current fixed parameters
 		if (with_color__brush_radius_from_scenario) {
-			pg_Path_Data[indPath][*indFrame].path_Color_r = path_r_color;
-			pg_Path_Data[indPath][*indFrame].path_Color_g = path_g_color;
-			pg_Path_Data[indPath][*indFrame].path_Color_b = path_b_color;
-			pg_Path_Data[indPath][*indFrame].path_Color_a = 1.0;
-			pg_Path_Data[indPath][*indFrame].path_BrushID = 0;
-			pg_Path_Data[indPath][*indFrame].path_RadiusX = path_radius;
-			pg_Path_Data[indPath][*indFrame].path_RadiusY = path_radius;
+			pg_Path_Status[indPath].setFrameValues(indConfiguration, *indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, path_radius, path_radius);
 			//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 		}
-		pg_Path_Data[indPath][*indFrame].Pos_x_prev = controlPoints[0].x;
-		pg_Path_Data[indPath][*indFrame].Pos_y_prev = controlPoints[0].y;
-		pg_Path_Data[indPath][*indFrame].path_Pos_xL = controlPoints[1].x;
-		pg_Path_Data[indPath][*indFrame].path_Pos_yL = controlPoints[1].y;
-		pg_Path_Data[indPath][*indFrame].path_Pos_xR = controlPoints[2].x;
-		pg_Path_Data[indPath][*indFrame].path_Pos_yR = controlPoints[2].y;
-		pg_Path_Data[indPath][*indFrame].path_Pos_x = controlPoints[3].x;
-		pg_Path_Data[indPath][*indFrame].path_Pos_y = controlPoints[3].y;
-
 		*path_length += curveLength;
-		pg_Path_Data[indPath][*indFrame].TimeStamp = *path_length / workingWindow_width * p_secondsforwidth;
-		
-		(pg_Path_Status[indPath].path_nbRecordedFrames)++;
+		pg_Path_Status[indPath].setFramePositionsTimeStamp(indConfiguration, *indFrame, controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y,
+			controlPoints[2].x, controlPoints[2].y, controlPoints[3].x, controlPoints[3].y, *path_length / workingWindow_width * p_secondsforwidth);
+		pg_Path_Status[indPath].pushFrame(indConfiguration);
 		(*indFrame)++;
 	}
 	else {
@@ -292,9 +277,9 @@ void BezierSubdivideAboveLength(glm::vec2 controlPoints[4], int indPath, int* in
 		controlPointsCurve2[0] = controlPointsCurve1[3];
 
 		BezierSubdivideAboveLength(controlPointsCurve1, indPath, indFrame, path_r_color, path_g_color, path_b_color,
-			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth);
+			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indConfiguration);
 		BezierSubdivideAboveLength(controlPointsCurve2, indPath, indFrame, path_r_color, path_g_color, path_b_color,
-			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth);
+			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indConfiguration);
 	}
 }
 
@@ -302,9 +287,13 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 	glm::mat4 *p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
 	float precedingCurrentPoint[2], float  currentPoint[2], 
 	bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario, 
-	float *path_length, double p_secondsforwidth, int *p_nbRecordedTimeStamps) {
+	float *path_length, double p_secondsforwidth, int *p_nbRecordedTimeStamps, int indConfiguration,
+	bool timeStamps_loaded) {
+	// current char in string
 	int            curChar = ' ';
 	int            indChar = 0;
+	// frame number that is already known if the time stamps are given
+	// if not, the frame stack has to be increased as the number of frames increases
 	int            indFrame = 0;
 	// printf("[%s]\n", pathString);
 	// used to calculate transformed coordinates of a point when applying a global transformation to the curve
@@ -313,7 +302,7 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 	// length of the full curve
 	*path_length = 0.f;
 	if (!withRecordingOfStrokeParameters) {
-		pg_Path_Data[indPath][indFrame].TimeStamp = *path_length / workingWindow_width * p_secondsforwidth;
+		pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, *path_length / workingWindow_width * p_secondsforwidth);
 	}
 
 	//std::cout << glm::to_string(*p_M_transf) << std::endl;
@@ -326,9 +315,9 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 		curChar = pathString[indChar++];
 	}
 	while (indChar <= (int)strlen(pathString) && curChar != EOF  && curChar != '"') {
-		if (indFrame >= max_mouse_recording_frames) {
-			sprintf(ErrorStr, "Error: configuration file parameter value %d is too low for recording the full path", max_mouse_recording_frames); ReportError(ErrorStr);
-		}
+		//if (indFrame >= max_mouse_recording_frames (obsolete with vectors)) {
+		//	sprintf(ErrorStr, "Error: configuration file parameter value %d is too low for recording the full path", max_mouse_recording_frames (obsolete with vectors)); ReportError(ErrorStr);
+		//}
 		switch (curChar) {
 		case 'm':
 		case 'M':
@@ -382,95 +371,75 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 				// point is added so that the rendering in porphyrograph jumps to the new current point
 				if ((precedingCurrentPoint[0] != currentPoint[0]
 					|| precedingCurrentPoint[1] != currentPoint[1])
-					&& indFrame < max_mouse_recording_frames
+					//&& indFrame < max_mouse_recording_frames (obsolete with vectors)
 					&& indFrame > 0) {
 					// copies current fixed parameters
 					if (!withRecordingOfStrokeParameters) {
-						pg_Path_Data[indPath][indFrame].path_Color_r = path_r_color;
-						pg_Path_Data[indPath][indFrame].path_Color_g = path_g_color;
-						pg_Path_Data[indPath][indFrame].path_Color_b = path_b_color;
-						pg_Path_Data[indPath][indFrame].path_Color_a = 1.0;
-						pg_Path_Data[indPath][indFrame].path_BrushID = 0;
-						pg_Path_Data[indPath][indFrame].path_RadiusX = pathRadius;
-						pg_Path_Data[indPath][indFrame].path_RadiusY = pathRadius;
+						pg_Path_Status[indPath].setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 
+							1.f, 0, pathRadius, pathRadius);
 						//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 					}
 					// shifts parameters one value ahead due to additional point
 					else {
 						//printf("move is to a point different from the preceding current point at frame #%d\n", indFrame);
-						for (int indFrameAux = *p_nbRecordedTimeStamps - 1; indFrameAux >= indFrame; indFrameAux--) {
+						for (int indFrameAux = pg_Path_Status[indPath].nbFrames(indConfiguration) - 1; indFrameAux >= indFrame; indFrameAux--) {
 							if (with_color__brush_radius_from_scenario) {
-								pg_Path_Data[indPath][indFrame].path_Color_r = path_r_color;
-								pg_Path_Data[indPath][indFrame].path_Color_g = path_g_color;
-								pg_Path_Data[indPath][indFrame].path_Color_b = path_b_color;
-								pg_Path_Data[indPath][indFrame].path_Color_a = 1.0;
-								pg_Path_Data[indPath][indFrame].path_BrushID = 0;
-								pg_Path_Data[indPath][indFrame].path_RadiusX = pathRadius;
-								pg_Path_Data[indPath][indFrame].path_RadiusY = pathRadius;
+								pg_Path_Status[indPath].setFrameValues(indConfiguration, indFrameAux, path_r_color, path_g_color, path_b_color, 
+									1.f, 0, pathRadius, pathRadius);
 							}
 							else {
-								pg_Path_Data[indPath][indFrameAux + 1].path_Color_r = pg_Path_Data[indPath][indFrameAux].path_Color_r;
-								pg_Path_Data[indPath][indFrameAux + 1].path_Color_g = pg_Path_Data[indPath][indFrameAux].path_Color_g;
-								pg_Path_Data[indPath][indFrameAux + 1].path_Color_b = pg_Path_Data[indPath][indFrameAux].path_Color_b;
-								pg_Path_Data[indPath][indFrameAux + 1].path_Color_a = pg_Path_Data[indPath][indFrameAux].path_Color_a;
-								pg_Path_Data[indPath][indFrameAux + 1].path_BrushID = pg_Path_Data[indPath][indFrameAux].path_BrushID;
-								pg_Path_Data[indPath][indFrameAux + 1].path_RadiusX = pg_Path_Data[indPath][indFrameAux].path_RadiusX;
-								pg_Path_Data[indPath][indFrameAux + 1].path_RadiusY = pg_Path_Data[indPath][indFrameAux].path_RadiusY;
+								pg_Path_Status[indPath].copyFrameValues(indConfiguration, indFrameAux, indFrameAux + 1);
+								pg_Path_Status[indPath].copyFrameTimeStamp(indConfiguration, indFrameAux, indFrameAux + 1);
 							}
-							pg_Path_Data[indPath][indFrameAux + 1].TimeStamp = pg_Path_Data[indPath][indFrameAux].TimeStamp;
 						}
 						*p_nbRecordedTimeStamps += 1;
 					}
 					vec0 = (*p_M_transf) * glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1);
-					pg_Path_Data[indPath][indFrame].Pos_x_prev = vec0.x;
-					pg_Path_Data[indPath][indFrame].Pos_y_prev = vec0.y;
-					pg_Path_Data[indPath][indFrame].path_Pos_x = PG_OUT_OF_SCREEN_CURSOR;
-					pg_Path_Data[indPath][indFrame].path_Pos_y = PG_OUT_OF_SCREEN_CURSOR;
+					pg_Path_Status[indPath].setFramePositionsCurrentPrevious(indConfiguration, indFrame, vec0.x, vec0.y, 
+						PG_OUT_OF_SCREEN_CURSOR, PG_OUT_OF_SCREEN_CURSOR);
 					// printf("src move to %d %f %f\n" , indFrame ,
 					// 	     pg_Path_Pos_x[ indPath ][ indFrame ] , 
 					// 	     pg_Path_Pos_y[ indPath ][ indFrame ]);
 
 					if (!withRecordingOfStrokeParameters) {
-						pg_Path_Data[indPath][indFrame].TimeStamp = *path_length / workingWindow_width * p_secondsforwidth;
+						pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, *path_length / workingWindow_width * p_secondsforwidth);
 					}
 					// otherwise keep the same timeStamp
 
+					// adds the frames because they were not added while reading the time stamps
+					pg_Path_Status[indPath].pushFrame(indConfiguration);
 					indFrame++;
 					//printf("End of point and path data loading: nbRecordedFrames %d, lentgh: %.2f\n", nbRecordedFrames, path_length);
 				}
 
 				// move from out of screen point to the current point
-				if (indFrame < max_mouse_recording_frames) {
-					// copies current fixed parameters
-					if (!withRecordingOfStrokeParameters || with_color__brush_radius_from_scenario) {
-						pg_Path_Data[indPath][indFrame].path_Color_r = path_r_color;
-						pg_Path_Data[indPath][indFrame].path_Color_g = path_g_color;
-						pg_Path_Data[indPath][indFrame].path_Color_b = path_b_color;
-						pg_Path_Data[indPath][indFrame].path_Color_a = 1.0;
-						pg_Path_Data[indPath][indFrame].path_BrushID = 0;
-						pg_Path_Data[indPath][indFrame].path_RadiusX = pathRadius;
-						pg_Path_Data[indPath][indFrame].path_RadiusY = pathRadius;
-						pg_Path_Data[indPath][indFrame].TimeStamp = *path_length / workingWindow_width * p_secondsforwidth;
-						//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
-					}
-					pg_Path_Data[indPath][indFrame].Pos_x_prev = PG_OUT_OF_SCREEN_CURSOR;
-					pg_Path_Data[indPath][indFrame].Pos_y_prev = PG_OUT_OF_SCREEN_CURSOR;
-					vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
-					pg_Path_Data[indPath][indFrame].path_Pos_x = vec0.x;
-					pg_Path_Data[indPath][indFrame].path_Pos_y = vec0.y;
-					// printf("src move to %d %f %f\n" , indFrame ,
-					// 	     pg_Path_Pos_x[ indPath ][ indFrame ] , 
-					// 	     pg_Path_Pos_y[ indPath ][ indFrame ]);
-
-					if (!withRecordingOfStrokeParameters) {
-						pg_Path_Data[indPath][indFrame].TimeStamp = *path_length / workingWindow_width * p_secondsforwidth;
-					}
-
-					precedingCurrentPoint[0] = currentPoint[0];
-					precedingCurrentPoint[1] = currentPoint[1];
-
-					indFrame++;
+				//if (indFrame < max_mouse_recording_frames (obsolete with vectors)) {
+				// copies current fixed parameters
+				if (!withRecordingOfStrokeParameters || with_color__brush_radius_from_scenario) {
+					pg_Path_Status[indPath].setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
+					pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, *path_length / workingWindow_width * p_secondsforwidth);
+					//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 				}
+				vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
+				pg_Path_Status[indPath].setFramePositionsCurrentPrevious(indConfiguration, indFrame, PG_OUT_OF_SCREEN_CURSOR, PG_OUT_OF_SCREEN_CURSOR, vec0.x, vec0.y);
+				// printf("src move to %d %f %f\n" , indFrame ,
+				// 	     pg_Path_Pos_x[ indPath ][ indFrame ] , 
+				// 	     pg_Path_Pos_y[ indPath ][ indFrame ]);
+
+				if (!withRecordingOfStrokeParameters) {
+					pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, *path_length / workingWindow_width * p_secondsforwidth);
+				}
+				else {
+					pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, pg_Path_Status[indPath].getTimeStamp(unsigned int(indFrame)));
+				}
+
+				precedingCurrentPoint[0] = currentPoint[0];
+				precedingCurrentPoint[1] = currentPoint[1];
+
+				// adds the frames because they were not added while reading the time stamps
+				pg_Path_Status[indPath].pushFrame(indConfiguration);
+				indFrame++;
+				//}
 			}
 		}
 		break;
@@ -531,7 +500,9 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 
 				//////////////////////////////
 				// last Bezier control point
-				if ((nbCurvePoints) % 3 == 2 && indFrame < max_mouse_recording_frames) {
+				if ((nbCurvePoints) % 3 == 2 
+					//&& indFrame < max_mouse_recording_frames (obsolete with vectors)
+					) {
 					vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
 					controlPoints[3] = glm::vec2(vec0.x, vec0.y);
 
@@ -541,28 +512,18 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 					// no work on time stamp calculation: recorded curve
 					if (withRecordingOfStrokeParameters) {
 						if (with_color__brush_radius_from_scenario) {
-							pg_Path_Data[indPath][indFrame].path_Color_r = path_r_color;
-							pg_Path_Data[indPath][indFrame].path_Color_g = path_g_color;
-							pg_Path_Data[indPath][indFrame].path_Color_b = path_b_color;
-							pg_Path_Data[indPath][indFrame].path_Color_a = 1.0;
-							pg_Path_Data[indPath][indFrame].path_BrushID = 0;
-							pg_Path_Data[indPath][indFrame].path_RadiusX = pathRadius;
-							pg_Path_Data[indPath][indFrame].path_RadiusY = pathRadius;
+							pg_Path_Status[indPath].setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
 							//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 						}
-						pg_Path_Data[indPath][indFrame].Pos_x_prev = controlPoints[0].x;
-						pg_Path_Data[indPath][indFrame].Pos_y_prev = controlPoints[0].y;
-						pg_Path_Data[indPath][indFrame].path_Pos_xL = controlPoints[1].x;
-						pg_Path_Data[indPath][indFrame].path_Pos_yL = controlPoints[1].y;
-						pg_Path_Data[indPath][indFrame].path_Pos_xR = controlPoints[2].x;
-						pg_Path_Data[indPath][indFrame].path_Pos_yR = controlPoints[2].y;
-						pg_Path_Data[indPath][indFrame].path_Pos_x = controlPoints[3].x;
-						pg_Path_Data[indPath][indFrame].path_Pos_y = controlPoints[3].y;
+						pg_Path_Status[indPath].setFramePositions(indConfiguration, indFrame, controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y,
+							controlPoints[2].x, controlPoints[2].y, controlPoints[3].x, controlPoints[3].y);
 
 						// curve length addtion
 						float curveLength = Bezier_length(controlPoints, 20);
 						*path_length += curveLength;
 
+						// adds the frames because they were not added while reading the time stamps
+						pg_Path_Status[indPath].pushFrame(indConfiguration);
 						indFrame++;
 					}
 					// Inkscape based path edition: the time stamps should be calculated from lenght and the 
@@ -571,24 +532,28 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 						//std::cout << glm::to_string(glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1)) << std::endl;
 						// if( indFrame < 5 ) {
 							//printf("src curve to %d %f %f\n" , indFrame ,
-								//pg_Path_Data[indPath][indFrame].path_Pos_x, pg_Path_Data[indPath][indFrame].path_Pos_y);
+								//pg_PathCurveFrame_Data[indConfiguration][indPath][indFrame].path_Pos_x, pg_PathCurveFrame_Data[indConfiguration][indPath][indFrame].path_Pos_y);
 						// }
 
 						BezierSubdivideAboveLength(controlPoints, indPath, &indFrame, path_r_color, path_g_color, path_b_color,
-							pathRadius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth);
+							pathRadius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indConfiguration);
 					}
 				}
 
 				//////////////////////////////
 				// right tangent of the first (and current) Bezier control point
-				else if ((nbCurvePoints) % 3 == 0 && indFrame > 0 && indFrame < max_mouse_recording_frames) {
+				else if ((nbCurvePoints) % 3 == 0 && indFrame > 0 
+					//&& indFrame < max_mouse_recording_frames (obsolete with vectors)
+					) {
 					vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
 					controlPoints[1] = glm::vec2(vec0.x, vec0.y);
 				}
 
 				//////////////////////////////
 				// left tangent of the second (and next) Bezier control point
-				else if ((nbCurvePoints) % 3 == 1 && indFrame < max_mouse_recording_frames) {
+				else if ((nbCurvePoints) % 3 == 1 
+					//&& indFrame < max_mouse_recording_frames (obsolete with vectors)
+					) {
 					vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
 					controlPoints[2] = glm::vec2(vec0.x, vec0.y);
 				}
@@ -666,52 +631,43 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 					currentPoint[1] = precedingCurrentPoint[1];
 				}
 
-				if (indFrame < max_mouse_recording_frames) {
+				//if (indFrame < max_mouse_recording_frames (obsolete with vectors)) {
 					// copies current fixed parameters
-					if (!withRecordingOfStrokeParameters || with_color__brush_radius_from_scenario) {
-						pg_Path_Data[indPath][indFrame].path_Color_r = path_r_color;
-						pg_Path_Data[indPath][indFrame].path_Color_g = path_g_color;
-						pg_Path_Data[indPath][indFrame].path_Color_b = path_b_color;
-						pg_Path_Data[indPath][indFrame].path_Color_a = 1.0;
-						pg_Path_Data[indPath][indFrame].path_BrushID = 0;
-						pg_Path_Data[indPath][indFrame].path_RadiusX = pathRadius;
-						pg_Path_Data[indPath][indFrame].path_RadiusY = pathRadius;
-					}
-					vec0 = (*p_M_transf) * glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1);
-					pg_Path_Data[indPath][indFrame].Pos_x_prev = vec0.x;
-					pg_Path_Data[indPath][indFrame].Pos_y_prev = vec0.y;
-					vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
-					pg_Path_Data[indPath][indFrame].path_Pos_x = vec0.x;
-					pg_Path_Data[indPath][indFrame].path_Pos_y = vec0.y;
-
-					// left tangent of current point is preceding point
-					// and right tangent of preceding point is the current point
-					pg_Path_Data[indPath][indFrame].path_Pos_xL
-						= pg_Path_Data[indPath][indFrame].Pos_x_prev;
-					pg_Path_Data[indPath][indFrame].path_Pos_yL
-						= pg_Path_Data[indPath][indFrame].Pos_y_prev;
-					pg_Path_Data[indPath][indFrame].path_Pos_xR
-						= pg_Path_Data[indPath][indFrame].path_Pos_x;
-					pg_Path_Data[indPath][indFrame].path_Pos_yR
-						= pg_Path_Data[indPath][indFrame].path_Pos_y;
-
-					// curve length addtion
-					glm::vec2 precPoint(pg_Path_Data[indPath][indFrame].Pos_x_prev, pg_Path_Data[indPath][indFrame].Pos_y_prev);
-					glm::vec2 curPoint(pg_Path_Data[indPath][indFrame].path_Pos_x, pg_Path_Data[indPath][indFrame].path_Pos_y);
-					*path_length += glm::distance(precPoint, curPoint);
-
-					if (!withRecordingOfStrokeParameters) {
-						pg_Path_Data[indPath][indFrame].TimeStamp = *path_length / workingWindow_width * p_secondsforwidth;
-					}
-
-					// printf("new line to %d %f %f\n" , indFrame ,
-					// 	   pg_Path_Pos_x[ indPath ][ indFrame ] , 
-					// 	   pg_Path_Pos_y[ indPath ][ indFrame ]);
-					precedingCurrentPoint[0] = currentPoint[0];
-					precedingCurrentPoint[1] = currentPoint[1];
-
-					indFrame++;
+				if (!withRecordingOfStrokeParameters || with_color__brush_radius_from_scenario) {
+					pg_Path_Status[indPath].setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
 				}
+				vec0 = (*p_M_transf) * glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1);
+				glm::vec4 vec1 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
+				pg_Path_Status[indPath].setFramePositionsCurrentPrevious(indConfiguration, indFrame, vec0.x, vec0.y, vec1.x, vec1.y);
+
+				// left tangent of current point is preceding point
+				// and right tangent of preceding point is the current point
+				pg_Path_Status[indPath].setFramePositionsLeftRightCopy(indConfiguration, indFrame);
+
+				// curve length addtion
+				glm::vec2 precPoint(pg_Path_Status[indPath].getFramePositionX_prev(indConfiguration, indFrame), pg_Path_Status[indPath].getFramePositionY_prev(indConfiguration, indFrame));
+				glm::vec2 curPoint(pg_Path_Status[indPath].getFramePositionX(indConfiguration, indFrame), pg_Path_Status[indPath].getFramePositionY(indConfiguration, indFrame));
+				*path_length += glm::distance(precPoint, curPoint);
+
+				if (!withRecordingOfStrokeParameters) {
+					pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, *path_length / workingWindow_width * p_secondsforwidth);
+				}
+				else {
+					pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indFrame, pg_Path_Status[indPath].getTimeStamp(unsigned int(indFrame)));
+				}
+
+				//printf("new line to %d %.2f %.2f - %.2f %.2f\n" , indFrame, vec0.x, vec0.y, vec1.x, vec1.y);
+				//printf("new line to %d %.2f %.2f - %.2f %.2f\n", indFrame,
+				//	pg_Path_Status[indPath].getFramePositionX(indConfiguration, indFrame), pg_Path_Status[indPath].getFramePositionY(indConfiguration, indFrame),
+				//	pg_Path_Status[indPath].getFramePositionX_prev(indConfiguration, indFrame), pg_Path_Status[indPath].getFramePositionY_prev(indConfiguration, indFrame));
+
+				precedingCurrentPoint[0] = currentPoint[0];
+				precedingCurrentPoint[1] = currentPoint[1];
+
+				// adds the frames because they were not added while reading the time stamps
+				pg_Path_Status[indPath].pushFrame(indConfiguration);
+				indFrame++;
+				//}
 			}
 		}
 		break;
@@ -735,44 +691,52 @@ int LoadPathPointsFromXML(char *pathString, int indPath,
 	//printf("Number of frames counted from XML Path %d\n", indFrame);
 	return indFrame;
 }
-void LoadPathColorsFromXML(string pathString, int indPath, int * nbRecordedFrames) {
+void LoadPathColorsFromXML(string pathString, int indPath, int * nbRecordedFrames, int indConfiguration) {
 	std::stringstream  sstream;
 	sstream.clear();
 	std::replace(pathString.begin(), pathString.end(), ',', ' ');
 	sstream.str(pathString);
-	unsigned int       indFrame = 0;
-	while (sstream >> pg_Path_Data[indPath][indFrame].path_Color_r && sstream >> pg_Path_Data[indPath][indFrame].path_Color_g 
-		&& sstream >> pg_Path_Data[indPath][indFrame].path_Color_b && sstream >> pg_Path_Data[indPath][indFrame].path_Color_a) {
+	unsigned int indFrame = 0;
+	float r, g, b, a;
+	while (sstream >> r && sstream >> g && sstream >> b && sstream >> a) {
+		pg_Path_Status[indPath].setFrameColor(indConfiguration, indFrame, r, g, b, a);
 		++indFrame;
 	}
 	*nbRecordedFrames = indFrame;
 }
 
-void LoadPathBrushesFromXML(string pathString, int indPath, int * nbRecordedFrames) {
+void LoadPathBrushesFromXML(string pathString, int indPath, int * nbRecordedFrames, int indConfiguration) {
 	std::stringstream  sstream;
 	sstream.clear();
 	std::replace(pathString.begin(), pathString.end(), ',', ' ');
 	sstream.str(pathString);
 	unsigned int       indFrame = 0;
-	while (sstream >> pg_Path_Data[indPath][indFrame].path_BrushID && sstream >> pg_Path_Data[indPath][indFrame].path_RadiusX
-		&& sstream >> pg_Path_Data[indPath][indFrame].path_RadiusY) {
+	int br;
+	float rx, ry;
+	while (sstream >> br && sstream >> rx && sstream >> ry) {
+		pg_Path_Status[indPath].setFrameBrushRadius(indConfiguration, indFrame, br, rx, ry);
 		++indFrame;
 	}
 	*nbRecordedFrames = indFrame;
 }
-void LoadPathTimeStampsFromXML(string pathString, int indPath, int * nbRecordedFrames) {
+void LoadPathTimeStampsFromXML(string pathString, int indPath, int * nbRecordedFrames, int indConfiguration) {
 	std::stringstream  sstream;
 	sstream.clear();
 	sstream.str(pathString);
 	//printf("TS string %.s\n", pathString.c_str());
-	int       indFrame = 0;
-	while (indFrame < max_mouse_recording_frames && sstream >> pg_Path_Data[indPath][indFrame].TimeStamp) {
+	int indFrame = 0;
+	double ts;
+	while (
+		//indFrame < max_mouse_recording_frames (obsolete with vectors) && 
+		sstream >> ts) {
+		pg_Path_Status[indPath].pushTimeStamp(ts);
+		// adds a new frame for each timestamp (and they will not be added when reading the points
 		++indFrame;
 	}
 	*nbRecordedFrames = indFrame;
 	//for (int indFrame = 0; indFrame < nbRecordedFrames; indFrame++) {
-	//	sstream >> pg_Path_Data[indPath][indFrame].TimeStamp;
-	//	//printf("TS %.2f\n", pg_Path_Data[indPath][indFrame].TimeStamp);
+	//	sstream >> pg_PathCurveFrame_Data[indConfiguration][indPath][indFrame].TimeStamp;
+	//	//printf("TS %.2f\n", pg_PathCurveFrame_Data[indConfiguration][indPath][indFrame].TimeStamp);
 	//}
 }
 
@@ -1525,7 +1489,7 @@ void stroke_geometry_calculation(int indPath, int curr_position_x, int curr_posi
 }
 
 // path scaling
-void scale_wrtScreenCenter(float* scaled_Xcoord, float* scaled_Ycoord, float orig_Xcoord, float orig_Ycoord, float scaleX, float scaleY) {
+void path_scale_wrtScreenCenter(float* scaled_Xcoord, float* scaled_Ycoord, float orig_Xcoord, float orig_Ycoord, float scaleX, float scaleY) {
 	if (scaleX != 0) {
 		*scaled_Xcoord = orig_Xcoord * scaleX + 0.5f * workingWindow_width * (1.f / scaleX - 1.f) * scaleX;
 		//*scaled_Xcoord = orig_Xcoord * scaleX;
@@ -1535,38 +1499,41 @@ void scale_wrtScreenCenter(float* scaled_Xcoord, float* scaled_Ycoord, float ori
 		//*scaled_Ycoord = orig_Ycoord * scaleY;
 	}
 }
+// path tanslation
+void path_transl(float* translated_Xcoord, float* translated_Ycoord, float orig_Xcoord, float orig_Ycoord, float translX, float translY) {
+	*translated_Xcoord = orig_Xcoord + translX;
+	*translated_Ycoord = orig_Ycoord + translY;
+}
 
 #if defined(var_path_replay_trackNo_1)
 // replays a path that has been loaded or previously recorded
 void pg_replay_one_path(int pathNo, double theTime) {
 	//printf("replay path %d\n" , pathNo );
-// int indFrameReading = pg_Path_Status[ pathNo ].indReading;
+// int indFrameReading = pg_Path_Status[ pathNo ].path_indReading;
 
 	// does not replay a path if the path replay is active for a multitouch interaction
-	if (pg_Path_Status[pathNo].path_nbRecordedFrames <= 0) {
+	if (pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank) <= 0) {
 		return;
 	}	
 	
 	// does not replay a path if the path replay is active for a multitouch interaction
 	if (freeze) {
-		pg_Path_Status[pathNo].initialTimeReading += pg_CurrentClockTime - PrecedingClockTime;
-		pg_Path_Status[pathNo].lastPlayedFrameTime += pg_CurrentClockTime - PrecedingClockTime;
+		pg_Path_Status[pathNo].path_initialTimeReading += pg_CurrentClockTime - PrecedingClockTime;
+		pg_Path_Status[pathNo].path_lastPlayedFrameTime += pg_CurrentClockTime - PrecedingClockTime;
 		return;
 	}
 
 	// records the initial time and uses the elapsed reading
 	// time and the elapsed recording time to play in synch
-	if (pg_Path_Status[pathNo].isFirstFrame) {
-		pg_Path_Status[pathNo].initialTimeReading = theTime; // -pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].TimeStamp + pg_Path_Status[pathNo].initialTimeRecording;
-		pg_Path_Status[pathNo].lastPlayedFrameTime = theTime; // -pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].TimeStamp + pg_Path_Status[pathNo].initialTimeRecording;
-		pg_Path_Status[pathNo].isFirstFrame = false;
-		pg_indPreviousFrameReading[pathNo] = 0;
-		//printf("Initial time reading %.2f time %.2f path first time stamp %.2f path initial time recording %.2f\n", pg_Path_Status[pathNo].initialTimeReading, 
-		//	theTime, pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].TimeStamp, pg_Path_Status[pathNo].initialTimeRecording);
+	if (pg_Path_Status[pathNo].path_isFirstFrame) {
+		pg_Path_Status[pathNo].path_initialTimeReading = theTime;
+		pg_Path_Status[pathNo].path_lastPlayedFrameTime = theTime;
+		pg_Path_Status[pathNo].path_isFirstFrame = false;
+		pg_Path_Status[pathNo].path_indPreviousReading = 0;
 	}
 
 	// does not advance the path if the speed is null or negative
-	double readingSpeed = pg_Path_Status[pathNo].readSpeedScale;
+	double readingSpeed = pg_Path_Status[pathNo].get_path_curve_readSpeedScale(pg_current_configuration_rank);
 #if defined(var_path_replay_speed)
 	if (ScenarioVarConfigurations[_path_replay_speed][pg_current_configuration_rank]) {
 		readingSpeed *= path_replay_speed;
@@ -1582,40 +1549,40 @@ void pg_replay_one_path(int pathNo, double theTime) {
 #ifdef PG_SYNC_REPLAY
 	// if minimally one frame has elapsed
 	do {
-		double timeLapseSinceLastFrame = (theTime - pg_Path_Status[pathNo].lastPlayedFrameTime) * readingSpeed;
+		double timeLapseSinceLastFrame = (theTime - pg_Path_Status[pathNo].path_lastPlayedFrameTime) * readingSpeed;
 		double recordingTimeSinceLastFrame;
-		if (pg_Path_Status[pathNo].indReading > 0) {
-			recordingTimeSinceLastFrame = pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].TimeStamp
-				- pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading - 1].TimeStamp;
+		if (pg_Path_Status[pathNo].path_indReading > 0) {
+			recordingTimeSinceLastFrame = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading)
+				- pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading - 1);
 		}
-		else if (pg_Path_Status[pathNo].indReading == 0) {
-			recordingTimeSinceLastFrame = pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].TimeStamp
-				- pg_Path_Status[pathNo].initialTimeRecording;
+		else if (pg_Path_Status[pathNo].path_indReading == 0) {
+			recordingTimeSinceLastFrame = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading)
+				- pg_Path_Status[pathNo].get_path_curve_initialTimeRecording(pg_current_configuration_rank);
 		}
-		else { // if (pg_Path_Status[pathNo].indReading < 0)
+		else { // if (pg_PathCurve_Params[pg_current_configuration_rank][pathNo].path_indReading < 0)
 			//printf("empty path\n");
 			return;
 		}
 
 		//if (pathNo == 1) {
-		//	printf("Ind %d frame no %d speedscale %.4f readingSpeed %.4f rec time %.4f read time %.4f\n", pathNo, pg_Path_Status[pathNo].indReading,
-		//		pg_Path_Status[pathNo].readSpeedScale, readingSpeed, recordingTimeSinceLastFrame, timeLapseSinceLastFrame);
+		//	printf("Ind %d frame no %d speedscale %.4f readingSpeed %.4f rec time %.4f read time %.4f\n", pathNo, pg_Path_Status[pathNo].path_indReading,
+		//		pg_PathCurve_Params[pg_current_configuration_rank][pathNo].pathCurve_readSpeedScale, readingSpeed, recordingTimeSinceLastFrame, timeLapseSinceLastFrame);
 		//}
 		// the negtive values correspond to a curve break. If they are jumped over the first 
 		// following point should be negative
-		if (pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].path_Pos_x < 0
-			|| pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].path_Pos_y < 0) {
+		if (pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading) < 0
+			|| pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading) < 0) {
 			isCurveBreakEnd = true;
 		}
-		if (pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].Pos_x_prev < 0
-			|| pg_Path_Data[pathNo][pg_Path_Status[pathNo].indReading].Pos_y_prev < 0) {
+		if (pg_Path_Status[pathNo].getFramePositionX_prev(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading) < 0
+			|| pg_Path_Status[pathNo].getFramePositionY_prev(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading) < 0) {
 			isCurveBreakBegin = true;
 		}
 		if (recordingTimeSinceLastFrame < timeLapseSinceLastFrame) {
-			pg_Path_Status[pathNo].indReading++;
-			pg_Path_Status[pathNo].lastPlayedFrameTime = pg_Path_Status[pathNo].lastPlayedFrameTime + recordingTimeSinceLastFrame / readingSpeed;
+			pg_Path_Status[pathNo].path_indReading++;
+			pg_Path_Status[pathNo].path_lastPlayedFrameTime = pg_Path_Status[pathNo].path_lastPlayedFrameTime + recordingTimeSinceLastFrame / readingSpeed;
 			//if (pathNo == 1) {
-			//	printf("current time %.4f lastPlayedFrameTime %.4f\n", theTime, pg_Path_Status[pathNo].lastPlayedFrameTime);
+			//	printf("current time %.4f path_lastPlayedFrameTime %.4f\n", theTime, pg_Path_Status[pathNo].path_lastPlayedFrameTime);
 			//}
 		}
 		else {
@@ -1629,16 +1596,16 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		// loopiing or stopping in the end when last frame is reached
 		if (path_replay_loop == true) {
 			// loops at the end
-			if (pg_Path_Status[pathNo].indReading >= pg_Path_Status[pathNo].path_nbRecordedFrames) {
-				pg_Path_Status[pathNo].indReading = 0;
-				pg_Path_Status[pathNo].isFirstFrame = true;
+			if (pg_Path_Status[pathNo].path_indReading >= pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank)) {
+				pg_Path_Status[pathNo].path_indReading = 0;
+				pg_Path_Status[pathNo].path_isFirstFrame = true;
 				isCurveBreakEnd = true;
 				break;
 			}
 		}
 		else {
 			// stops at the end
-			if (pg_Path_Status[pathNo].indReading >= pg_Path_Status[pathNo].path_nbRecordedFrames) {
+			if (pg_Path_Status[pathNo].path_indReading >= pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank)) {
 				pg_path_replay_trackNo_onOff(pathNo, -1);
 				isEnd[pathNo] = true;
 				isBegin[pathNo] = false;
@@ -1647,47 +1614,47 @@ void pg_replay_one_path(int pathNo, double theTime) {
 			}
 		}
 	} while (true);
-	//printf("theRecordingElapsedTime %.2f theReadingElapsedTime %.2f ind reading %d\n", theRecordingElapsedTime, theReadingElapsedTime, pg_Path_Status[pathNo].indReading);
+	//printf("theRecordingElapsedTime %.2f theReadingElapsedTime %.2f ind reading %d\n", theRecordingElapsedTime, theReadingElapsedTime, pg_Path_Status[pathNo].path_indReading);
 #else
 	// the negtive values correspond to a curve break. If they are jumped over the first 
 	// following point should be negative
-	if (pg_Path_Data[pathNo].path_Pos_x[pg_Path_Status[pathNo].indReading] < 0
-		|| pg_Path_Data[pathNo].path_Pos_y[pg_Path_Status[pathNo].indReading] < 0) {
+	if (pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, .path_Pos_x[pg_Path_Status[pathNo].path_indReading) < 0
+		|| pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, .path_Pos_y[pg_Path_Status[pathNo].path_indReading) < 0) {
 		isCurveBreakEnd = true;
 	}
-	if (pg_Path_Data[pathNo].Pos_x_prev[pg_Path_Status[pathNo].indReading] < 0
-		|| pg_Path_Data[pathNo].Pos_y_prev[pg_Path_Status[pathNo].indReading] < 0) {
+	if (pg_Path_Status[pathNo].getFramePositionX_prev(pg_current_configuration_rank, .Pos_x_prev[pg_Path_Status[pathNo].path_indReading) < 0
+		|| pg_Path_Status[pathNo].getFramePositionY_prev(pg_current_configuration_rank, .Pos_y_prev[pg_Path_Status[pathNo].path_indReading) < 0) {
 		isCurveBreakBegin = true;
 	}
 
 	if (path_replay_loop == true) {
 		// loops at the end
-		if (pg_Path_Status[pathNo].indReading
-			>= pg_Path_Status[pathNo].path_nbRecordedFrames) {
-			pg_Path_Status[pathNo].indReading = 0;
+		if (pg_Path_Status[pathNo].path_indReading
+			>= pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank){
+			pg_Path_Status[pathNo].path_indReading = 0;
 			isCurveBreakEnd = true;
 			break;
 		}
 	}
 	else {	// stops at the end
-		if (pg_Path_Status[pathNo].indReading
-			>= pg_Path_Status[pathNo].path_nbRecordedFrames) {
-			pg_Path_Status[pathNo].indReading = pg_Path_Status[pathNo].path_nbRecordedFrames - 1;
+		if (pg_Path_Status[pathNo].path_indReading
+			>= pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank)) {
+			pg_Path_Status[pathNo].path_indReading = pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank) - 1;
 			isCurveBreakEnd = false;
 			break;
 		}
 	}
-	pg_Path_Status[pathNo].indReading++;
+	pg_Path_Status[pathNo].path_indReading++;
 #endif
 
 	///////////////////////////////////////////////////////////
 	// previous frame for tangent and position
 	// management of previous mouse position with
 	// consideration for looping
-	int indFrameReading = pg_Path_Status[pathNo].indReading;
+	int indFrameReading = pg_Path_Status[pathNo].path_indReading;
 	if (isCurveBreakBegin) {
-		//pg_indPreviousFrameReading[pathNo] = 0;
-		//indFrameReading = pg_indPreviousFrameReading[pathNo] + 1;
+		//pg_Path_Status[pathNo].path_indPreviousReading = 0;
+		//indFrameReading = pg_Path_Status[pathNo].path_indPreviousReading + 1;
 		paths_x_prev[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y_prev[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 #ifdef PG_BEZIER_PATHS
@@ -1696,42 +1663,42 @@ void pg_replay_one_path(int pathNo, double theTime) {
 #endif
 	}
 	else {
+		paths_x_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
+		paths_y_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
+#if defined(var_path_translX) && defined(var_path_translY)
+		if (ScenarioVarConfigurations[_path_translX][pg_current_configuration_rank]
+			&& ScenarioVarConfigurations[_path_translY][pg_current_configuration_rank]) {
+			path_transl(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
+				path_translX, path_translY);
+	}
+#endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
 		if (ScenarioVarConfigurations[_path_scaleX][pg_current_configuration_rank]
 			&& ScenarioVarConfigurations[_path_scaleY][pg_current_configuration_rank]) {
-			scale_wrtScreenCenter(&paths_x_prev[pathNo], &paths_y_prev[pathNo],
-				(float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x,
-				(float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y,
+			path_scale_wrtScreenCenter(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_scaleX, path_scaleY);
 		}
-		else {
-			paths_x_prev[pathNo] = pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x;
-			paths_y_prev[pathNo] = pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y;
-		}
-#else
-		paths_x_prev[pathNo] = pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x;
-		paths_y_prev[pathNo] = pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y;
 #endif
 #ifdef PG_BEZIER_PATHS
+		paths_xL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
+		paths_yL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
+#if defined(var_path_translX) && defined(var_path_translY)
+		if (ScenarioVarConfigurations[_path_translX][pg_current_configuration_rank]
+			&& ScenarioVarConfigurations[_path_translY][pg_current_configuration_rank]) {
+			path_transl(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
+				path_translX, path_translY);
+		}
+#endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
 		if (ScenarioVarConfigurations[_path_scaleX][pg_current_configuration_rank]
 			&& ScenarioVarConfigurations[_path_scaleY][pg_current_configuration_rank]) {
-			scale_wrtScreenCenter(&paths_xL[pathNo], &paths_yL[pathNo],
-				2 * (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x - (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_xR,
-				2 * (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y - (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_yR,
+			path_scale_wrtScreenCenter(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_scaleX, path_scaleY);
 		}
-		else {
-			paths_xL[pathNo] = 2 * (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x - (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_xR;
-			paths_yL[pathNo] = 2 * (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y - (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_yR;
-		}
-#else
-		paths_xL[pathNo] = 2 * (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x - (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_xR;
-		paths_yL[pathNo] = 2 * (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y - (float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_yR;
 #endif
 #endif
 	}
-	//printf("prev frame %d curr frame %d\n", pg_indPreviousFrameReading[pathNo], indFrameReading);
+	//printf("prev frame %d curr frame %d\n", pg_Path_Status[pathNo].path_indPreviousReading, indFrameReading);
 
 	///////////////////////////////////////////////////////////
 	// next frame for tangent and position
@@ -1747,39 +1714,43 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	}
 	else {
 #ifdef PG_BEZIER_PATHS
+		paths_xR[pathNo] = pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, indFrameReading);
+		paths_yR[pathNo] = pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, indFrameReading);
+		paths_x[pathNo] = pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, indFrameReading);
+		paths_y[pathNo] = pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, indFrameReading);
+		//printf("Path %d Point ini %.2f %.2f %.2f %.2f\n",
+		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
+#if defined(var_path_translX) && defined(var_path_translY)
+		if (ScenarioVarConfigurations[_path_translX][pg_current_configuration_rank]
+			&& ScenarioVarConfigurations[_path_translY][pg_current_configuration_rank]) {
+			path_transl(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
+				path_translX, path_translY);
+			path_transl(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
+				path_translX, path_translY);
+		}
+#endif
+		//printf("Path %d Point transl %.2f %.2f %.2f %.2f\n",
+		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
 		if (ScenarioVarConfigurations[_path_scaleX][pg_current_configuration_rank]
 			&& ScenarioVarConfigurations[_path_scaleY][pg_current_configuration_rank]) {
-			scale_wrtScreenCenter(&paths_xR[pathNo], &paths_yR[pathNo],
-				(float)pg_Path_Data[pathNo][indFrameReading].path_Pos_xR,
-				(float)pg_Path_Data[pathNo][indFrameReading].path_Pos_yR,
+			path_scale_wrtScreenCenter(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_scaleX, path_scaleY);
-			scale_wrtScreenCenter(&paths_x[pathNo], &paths_y[pathNo],
-				(float)pg_Path_Data[pathNo][indFrameReading].path_Pos_x,
-				(float)pg_Path_Data[pathNo][indFrameReading].path_Pos_y,
+			path_scale_wrtScreenCenter(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
 				path_scaleX, path_scaleY);
 		}
-		else {
-			paths_xR[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_xR;
-			paths_yR[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_y;
-			paths_x[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_x;
-			paths_y[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_y;
-		}
-#else
-		paths_xR[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_xR;
-		paths_yR[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_y;
-		paths_x[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_x;
-		paths_y[pathNo] = pg_Path_Data[pathNo][indFrameReading].path_Pos_y;
 #endif
+		//printf("Path %d Point scale %.2f %.2f %.2f %.2f\n",
+		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #endif
 	}
 
 	///////////////////////////////////////////////////////////
 	// line begin or line end
 	// begin
-	if ((pg_indPreviousFrameReading[pathNo] > 0
-		&& pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo] - 1].path_Pos_x < 0
-		&& pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo] - 1].path_Pos_y < 0)
+	if ((pg_Path_Status[pathNo].path_indPreviousReading > 0
+		&& pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading - 1) < 0
+		&& pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading - 1) < 0)
 		&& paths_x_prev[pathNo] >= 0 && paths_y_prev[pathNo] >= 0 && paths_x[pathNo] >= 0 && paths_y[pathNo] >= 0) {
 		isBegin[pathNo] = true;
 	}
@@ -1789,23 +1760,24 @@ void pg_replay_one_path(int pathNo, double theTime) {
 
 	// end
 	if (paths_x_prev[pathNo] >= 0 && paths_y_prev[pathNo] >= 0 && paths_x[pathNo] >= 0 && paths_y[pathNo] >= 0
-		&& pg_Path_Data[pathNo][(indFrameReading + 1) % pg_Path_Status[pathNo].path_nbRecordedFrames].path_Pos_x < 0
-		&& pg_Path_Data[pathNo][(indFrameReading + 1) % pg_Path_Status[pathNo].path_nbRecordedFrames].path_Pos_y < 0) {
+		&& pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, (indFrameReading + 1) % pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank)) < 0
+		&& pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, (indFrameReading + 1) % pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank)) < 0) {
 		isEnd[pathNo] = true;
 	}
 	else {
 		isEnd[pathNo] = false;
 	}
 
-	//printf("Path %d Point %.2f %.2f %.2f %.2f frame %d %d tot frames %d begin/end %d/%d %d/%d \n", 
+	//printf("Path %d Point %.2f %.2f %.2f %.2f frame %d %d tot frames %d (curve %d) begin/end %d/%d %d/%d \n", 
 	//	pathNo, 
-	//	(float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_x,
-	//	(float)pg_Path_Data[pathNo][pg_indPreviousFrameReading[pathNo]].path_Pos_y, 
-	//	(float)pg_Path_Data[pathNo][indFrameReading].path_Pos_x,
-	//	(float)pg_Path_Data[pathNo][indFrameReading].path_Pos_y,
-	//	pg_indPreviousFrameReading[pathNo],
+	//	paths_xR[pathNo],
+	//	paths_yR[pathNo],
+	//	paths_x[pathNo],
+	//	paths_y[pathNo],
+	//	pg_Path_Status[pathNo].path_indPreviousReading,
 	//	indFrameReading,
-	//	pg_Path_Status[pathNo].path_nbRecordedFrames,
+	//	pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank),
+	//	pg_Path_Status[pathNo].path_currentPathCurve[pg_current_configuration_rank],
 	//	isBegin[pathNo], isEnd[pathNo],
 	//	isCurveBreakBegin,
 	//	isCurveBreakEnd);
@@ -1817,15 +1789,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	if (pen_saturation_replay == 0 && pen_saturation_replay_pulse == 0
 		&& pen_hue_replay == 0 && pen_hue_replay_pulse == 0
 		&& pen_value_replay == 0 && pen_value_replay_pulse == 0) {
-		paths_Color_r[pathNo] = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_r;
-		paths_Color_g[pathNo] = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_g;
-		paths_Color_b[pathNo] = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_b;
+		paths_Color_r[pathNo] = (float)pg_Path_Status[pathNo].getFrameColor_r(pg_current_configuration_rank, indFrameReading);
+		paths_Color_g[pathNo] = (float)pg_Path_Status[pathNo].getFrameColor_g(pg_current_configuration_rank, indFrameReading);
+		paths_Color_b[pathNo] = (float)pg_Path_Status[pathNo].getFrameColor_b(pg_current_configuration_rank, indFrameReading);
 		//printf("RGB: %.2f %.2f %.2f \n", paths_Color_r[pathNo], paths_Color_g[pathNo], paths_Color_b[pathNo]);
 	}
 	else {
-		float r = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_r;
-		float g = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_g;
-		float b = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_b;
+		float r = (float)pg_Path_Status[pathNo].getFrameColor_r(pg_current_configuration_rank, indFrameReading);
+		float g = (float)pg_Path_Status[pathNo].getFrameColor_g(pg_current_configuration_rank, indFrameReading);
+		float b = (float)pg_Path_Status[pathNo].getFrameColor_b(pg_current_configuration_rank, indFrameReading);
 
 		float h, s, v;
 		RGBtoHSV(r, g, b, &h, &s, &v);
@@ -1851,24 +1823,24 @@ void pg_replay_one_path(int pathNo, double theTime) {
 
 		//printf("RGB: In %.2f %.2f %.2f OUT SV %.2f %.2f OUT %.2f %.2f %.2f \n", r, g, b, s, v, paths_Color_r[pathNo], paths_Color_g[pathNo], paths_Color_b[pathNo]);
 	}
-	paths_Color_a[pathNo] = (float)pg_Path_Data[pathNo][indFrameReading].path_Color_a;
+	paths_Color_a[pathNo] = (float)pg_Path_Status[pathNo].getFrameColor_a(pg_current_configuration_rank, indFrameReading);
 
-	//if (pg_indPreviousFrameReading[pathNo] < indFrameReading - 1) {
+	//if (pg_Path_Status[pathNo].path_indPreviousReading < indFrameReading - 1) {
 	//	paths_Color_r[pathNo] = 1.f;
 	//	paths_Color_g[pathNo] = 0.f;
 	//	paths_Color_b[pathNo] = 0.f;
 	//}
 
 	// management of brush ID (w/wo possible interpolation)
-	int brushNo = pg_Path_Data[pathNo][indFrameReading].path_BrushID + pen_brush_replay;
+	int brushNo = pg_Path_Status[pathNo].getFrameBrush(pg_current_configuration_rank, indFrameReading) + pen_brush_replay;
 	while (brushNo < 0) {
 		brushNo += (nb_pen_brushes[pg_current_configuration_rank] * 3);
 	}
 	paths_BrushID[pathNo] = brushNo % (nb_pen_brushes[pg_current_configuration_rank] * 3);
 	// management of brush radius (w/wo possible interpolation)
-	paths_RadiusX[pathNo] = (float)pg_Path_Data[pathNo][indFrameReading].path_RadiusX * pen_radius_replay
+	paths_RadiusX[pathNo] = (float)pg_Path_Status[pathNo].getFrameRadiusX(pg_current_configuration_rank, indFrameReading) * pen_radius_replay
 		* (1.f + pulse_average * pen_radius_replay_pulse);
-	paths_RadiusY[pathNo] = (float)pg_Path_Data[pathNo][indFrameReading].path_RadiusY * pen_radius_replay
+	paths_RadiusY[pathNo] = (float)pg_Path_Status[pathNo].getFrameRadiusY(pg_current_configuration_rank, indFrameReading) * pen_radius_replay
 		* (1.f + pulse_average * pen_radius_replay_pulse);
 
 	//if (is_path_replay[pathNo]) {
@@ -1876,7 +1848,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	//		paths_x[pathNo], paths_y[pathNo], paths_RadiusX[pathNo], pen_radius_replay, paths_Color_r[pathNo], paths_Color_g[pathNo], paths_Color_b[pathNo], paths_Color_a[pathNo], paths_BrushID[pathNo]);
 	//}
 
-	pg_indPreviousFrameReading[pathNo] = indFrameReading;
+	pg_Path_Status[pathNo].path_indPreviousReading = indFrameReading;
 }
 #endif
 
@@ -1940,7 +1912,7 @@ void pg_replay_paths(double theTime) {
 				//printf("flight screen absolute coordinates %d x %d\n",
 				//	int(cur_Novak_flight_points[indPath].x), int(cur_Novak_flight_points[indPath].y));
 				float pulsed_Novak_flight_color[4];
-				compute_pulsed_palette_color(pen_color_replay, pen_color_replay_pulse, pen_grey_replay, pen_grey_replay_pulse, pulsed_Novak_flight_color, true);
+				compute_pulsed_palette_color(pen_color_replay, pen_color_replay_pulse, pen_grey_replay, pen_grey_replay_pulse, pulsed_Novak_flight_color, _PG_PEN);
 
 				stroke_geometry_calculation(indPath, int(cur_Novak_flight_2D_points[indPath].x), int(cur_Novak_flight_2D_points[indPath].y));
 				// tells the shader that it should be drawn on the current drawing track
@@ -2073,6 +2045,10 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 		Pulsed_CurrentMousePos_x[indPath] = CurrentMousePos_x[indPath];
 		Pulsed_CurrentMousePos_y[indPath] = CurrentMousePos_y[indPath];
 		//printf("current position %d,%d \n", Pulsed_CurrentMousePos_x[indPath], Pulsed_CurrentMousePos_y[indPath]);
+
+		//if (double_window) {
+		//	Pulsed_CurrentMousePos_x[indPath] = Pulsed_CurrentMousePos_x[indPath] / 2 % workingWindow_width;
+		//}
 
 // pen position variation from pulse used in PIERRES
 #if defined(var_pen_position_pulse)
@@ -2230,76 +2206,74 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 		// RECORDING PATH
 		///////////////////////////////////////////////////////////////////////
 		for (int indRecordingPath = 1; indRecordingPath <= PG_NB_PATHS; indRecordingPath++) {
-			if (pg_Path_Status[indRecordingPath].isActiveRecording
-				&& pg_Path_Status[indRecordingPath].path_nbRecordedFrames < max_mouse_recording_frames) {
-				int indFrameRec = pg_Path_Status[indRecordingPath].path_nbRecordedFrames;
+			if (pg_Path_Status[indRecordingPath].path_isActiveRecording
+				//&& pg_Path_Status[indRecordingPath].nbFrames(pg_current_configuration_rank) < max_mouse_recording_frames (obsolete with vectors)
+				) {
+				int indFrameRec = pg_Path_Status[indRecordingPath].nbFrames(pg_current_configuration_rank);
 				// printf( "rec track %d frame %d\n",indRecordingPath,indFrameRec );
 
 				// records the initial time and the current time to play in sync
 				if (indFrameRec == 0) {
-					pg_Path_Status[indRecordingPath].initialTimeRecording = theTime;
+					pg_Path_Status[indRecordingPath].set_path_curve_initialTimeRecording(pg_current_configuration_rank, theTime);
 				}
-				pg_Path_Status[indRecordingPath].finalTimeRecording = theTime;
-				pg_Path_Data[indRecordingPath][indFrameRec].TimeStamp = theTime;
-
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Color_r = min(1.f, pulsed_pen_color[0]);
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Color_g = min(1.f, pulsed_pen_color[1]);
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Color_b = min(1.f, pulsed_pen_color[2]);
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Color_a = min(1.f, pen_color_a);
+				pg_Path_Status[indRecordingPath].set_path_curve_finalTimeRecording(pg_current_configuration_rank, theTime);
+				pg_Path_Status[indRecordingPath].setFrameTimeStamp(pg_current_configuration_rank, indFrameRec, theTime);
+				pg_Path_Status[indRecordingPath].setFrameColor(pg_current_configuration_rank, indFrameRec, min(1.f, pulsed_pen_color[0]), min(1.f, pulsed_pen_color[1]), min(1.f, pulsed_pen_color[2]), min(1.f, pen_color_a));
 
 				//if (indFrameRec < 10) {
 				//	printf("capture %.2f %.2f %.2f %.2f\n",
-				//		pg_Path_Data[indRecordingPath][indFrameRec].path_Color_r, pg_Path_Data[indRecordingPath][indFrameRec].path_Color_g, 
-				//		pg_Path_Data[indRecordingPath][indFrameRec].path_Color_b, pg_Path_Data[indRecordingPath][indFrameRec].path_Color_a);
+				//		pg_PathCurveFrame_Data[pg_current_configuration_rank][indRecordingPath][indFrameRec].path_Color_r, pg_PathCurveFrame_Data[pg_current_configuration_rank][indRecordingPath][indFrameRec].path_Color_g, 
+				//		pg_PathCurveFrame_Data[pg_current_configuration_rank][indRecordingPath][indFrameRec].path_Color_b, pg_PathCurveFrame_Data[pg_current_configuration_rank][indRecordingPath][indFrameRec].path_Color_a);
 				//}
 
-				pg_Path_Data[indRecordingPath][indFrameRec].path_BrushID = pen_brush;
-
 #ifdef PG_WACOM_TABLET
-				pg_Path_Data[indRecordingPath][indFrameRec].path_RadiusX
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+				pg_Path_Status[indRecordingPath].setFrameBrushRadius(pg_current_configuration_rank, indFrameRec, pen_brush, 
+					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
 					+ tabletPressureRadius * pen_radius_pressure_coef
-					+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef;
-				pg_Path_Data[indRecordingPath][indFrameRec].path_RadiusY
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+					+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef,
+					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
 					+ tabletPressureRadius * pen_radius_pressure_coef
-					+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
+					+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef);
 #else
-				pg_Path_Data[indRecordingPath][indFrameRec].path_RadiusX
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
-				pg_Path_Data[indRecordingPath][indFrameRec].path_RadiusY
-					= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
+				pg_Path_Status[indRecordingPath].setFrameBrushRadius(pg_current_configuration_rank, indFrameRec, pen_brush,
+					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse,
+					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
 #endif
+
 
 				// printf( "Track src rec %d Ind %d tan %d %d / prev pos %d %d\n" , indRecordingPath + 1 , indFrameRec - 1 , (int)pg_Path_Pos_xL[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_yL[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_xR[ indRecordingPath ][ indFrameRec - 1 ] , (int)pg_Path_Pos_yR[ indRecordingPath ][ indFrameRec - 1 ] );
 
 				// first control point
-				pg_Path_Data[indRecordingPath][indFrameRec].Pos_x_prev = paths_x_prev[0];
-				pg_Path_Data[indRecordingPath][indFrameRec].Pos_y_prev = paths_y_prev[0];
+				float loc_Pos_x_prev = paths_x_prev[0];
+				float loc_Pos_y_prev = paths_y_prev[0];
 
 #ifdef PG_BEZIER_PATHS
 				// second control point
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_xL = paths_xL[0];
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_yL = paths_yL[0];
+				float loc_path_Pos_xL = paths_xL[0];
+				float loc_path_Pos_yL = paths_yL[0];
 
 				// third control point
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_xR = paths_xR[0];
-				pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_yR = paths_yR[0];
+				float loc_path_Pos_xR = paths_xR[0];
+				float loc_path_Pos_yR = paths_yR[0];
 #endif
 
 				// fourth control points (next curve first control point)
+				float loc_path_Pos_x;
+				float loc_path_Pos_y;
 				if (indFrameRec >= 1) {
-					pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_x = paths_x[0];
-					pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_y = paths_y[0];
+					loc_path_Pos_x = paths_x[0];
+					loc_path_Pos_y = paths_y[0];
 				}
 				else {
 					// move first step: current point with negative coordinates and null second control points
-					pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_x = PG_OUT_OF_SCREEN_CURSOR;
-					pg_Path_Data[indRecordingPath][indFrameRec].path_Pos_y = PG_OUT_OF_SCREEN_CURSOR;
+					loc_path_Pos_x = PG_OUT_OF_SCREEN_CURSOR;
+					loc_path_Pos_y = PG_OUT_OF_SCREEN_CURSOR;
 				}
+				pg_Path_Status[indRecordingPath].setFramePositions(pg_current_configuration_rank, indFrameRec,
+					loc_Pos_x_prev, loc_Pos_y_prev, loc_path_Pos_xL, loc_path_Pos_yL, loc_path_Pos_xR, loc_path_Pos_yR, loc_path_Pos_x, loc_path_Pos_y);
 
 				// moving forward in the recording
-				(pg_Path_Status[indRecordingPath].path_nbRecordedFrames)++;
+				pg_Path_Status[indRecordingPath].pushFrame(pg_current_configuration_rank);
 			}
 			// RECORDING SOURCE TRACK
 		}
@@ -2311,7 +2285,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 // LOADS A TRACK FROM A ClipArt FILE
 //////////////////////////////////////////////////////////////////
 #if defined(var_path_replay_trackNo_1)
-void load_svg_path(char *fileName, int indPath, int indTrack,
+void load_svg_path(char *fileName, int indPath, int path_track,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, 
 	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
 	if (indPath >= 1 && indPath <= PG_NB_PATHS) {
@@ -2437,13 +2411,13 @@ void load_svg_path(char *fileName, int indPath, int indTrack,
 		// loads track
 		int indDepth = 0;
 		readsvg(&indDepth, indPath, fileName, pathRadius, path_r_color, path_g_color, path_b_color, 
-			readSpeedScale, path_ID, p_with_color__brush_radius_from_scenario, secondsforwidth);
+			readSpeedScale, path_ID, p_with_color__brush_radius_from_scenario, secondsforwidth, indConfiguration);
 	}
 }
 #endif
 
 void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
-	float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth) {
+	float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
 	string         val;
 	float          ClipArt_translation[2] = { 0.0 , 0.0 };
 	float          ClipArt_rotation[3] = { 0.0, 0.0 , 0.0 };
@@ -2553,28 +2527,29 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 				string string_path_brushes;
 				string string_path_timeStamps;
 
-				pg_Path_Status[indPath].isFirstFrame = false;
-				pg_Path_Status[indPath].isActiveRecording = false;
-				pg_Path_Status[indPath].isNormalized = false;
-				pg_Path_Status[indPath].path_nbRecordedFrames = 0;
-				pg_Path_Status[indPath].indReading = -1;
-				pg_Path_Status[indPath].initialTimeRecording = init_time;
-				pg_Path_Status[indPath].finalTimeRecording = fin_time;
-				pg_Path_Status[indPath].initialTimeReading = 0.0f;
-				pg_Path_Status[indPath].readSpeedScale = readSpeedScale;
+				pg_Path_Status[indPath].path_isFirstFrame = false;
+				pg_Path_Status[indPath].path_isActiveRecording = false;
+				pg_Path_Status[indPath].path_indReading = -1;
+				pg_Path_Status[indPath].path_initialTimeReading = 0.0f;
+				pg_Path_Status[indPath].setCurveValues(indConfiguration, readSpeedScale, init_time, fin_time);
+				pg_Path_Status[indPath].emptyFrame(indConfiguration);
 
 				// reads until the end of the file to capture the path and its initial and final time
 				do {
 					found = line.find(" initial_time=\"", 0);
 					if (found != std::string::npos) {
+						double it;
 						sstream.str(line.substr(found + strlen(" initial_time=\"")));
-						sstream >> pg_Path_Status[indPath].initialTimeRecording;
+						sstream >> it;
+						pg_Path_Status[indPath].set_path_curve_initialTimeRecording(indConfiguration, it);
 					}
 
 					found = line.find(" final_time=\"", 0);
 					if (found != std::string::npos) {
+						double ft;
 						sstream.str(line.substr(found + strlen(" final_time=\"")));
-						sstream >> pg_Path_Status[indPath].finalTimeRecording;
+						sstream >> ft;
+						pg_Path_Status[indPath].set_path_curve_finalTimeRecording(indConfiguration, ft);
 					}
 
 					found = line.find(" id=\"", 0);
@@ -2586,7 +2561,7 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 
 					found = line.find(" d=\"", 0);
 					if (found != std::string::npos) {
-						 //printf("read path points\n");
+						// printf("read path points\n");
 						// copies the beginning of the path
 						string_path_points = line.substr(found + 4);
 						found = line.find("z\"", 0);
@@ -2652,21 +2627,22 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 				if (string_path_points != "") {
 					int nbRecordedTimeStamps = 0;
 
-					//printf("load path points\n");
+					// printf("load path points\n");
 					currentPoint[0] = 0.0;
 					currentPoint[1] = 0.0;
 					precedingCurrentPoint[0] = 0.0;
 					precedingCurrentPoint[1] = 0.0;
 					if (string_path_colors != "" && string_path_brushes != "" && string_path_timeStamps != "") {
 						//printf("load path time stamps\n");
-						LoadPathTimeStampsFromXML(string_path_timeStamps, indPath, &nbRecordedTimeStamps);
+						pg_Path_Status[indPath].PathCurve_TimeStamps_init();
+						LoadPathTimeStampsFromXML(string_path_timeStamps, indPath, &nbRecordedTimeStamps, indConfiguration);
 						// the number of frames is given by the number of time stamps, the other data should be coherent
 						// however edition through inkscape could make these data incoherent if the number of points on the curve changes
 						//printf("recorded timestamps %d\n", nbRecordedTimeStamps);
 
 						//printf("load path colors\n");
 						int nbRecordedColors = 0;
-						LoadPathColorsFromXML(string_path_colors, indPath, &nbRecordedColors);
+						LoadPathColorsFromXML(string_path_colors, indPath, &nbRecordedColors, indConfiguration);
 						//printf("recorded colors %d / %d\n", nbRecordedColors, nbRecordedTimeStamps);
 						if (nbRecordedColors != nbRecordedTimeStamps) {
 							sprintf(ErrorStr, "XML path loading error: incorrect number of color frames %d vs time stamps %d!", nbRecordedColors, nbRecordedTimeStamps); ReportError(ErrorStr); throw 152;
@@ -2674,29 +2650,34 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 
 						//printf("load path brushes\n");
 						int nbRecordedBrushes = 0;
-						LoadPathBrushesFromXML(string_path_brushes, indPath, &nbRecordedBrushes);
+						LoadPathBrushesFromXML(string_path_brushes, indPath, &nbRecordedBrushes, indConfiguration);
 						//printf("recorded brushes %d / %d\n", nbRecordedBrushes, nbRecordedTimeStamps);
 						if (nbRecordedBrushes != nbRecordedTimeStamps) {
 							sprintf(ErrorStr, "XML path loading error: incorrect number of brush frames %d vs time stamps %d!", nbRecordedBrushes, nbRecordedTimeStamps); ReportError(ErrorStr); throw 152;
 						}
 
-						//printf("load path points\n");
+						// printf("load path points\n");
 						// possible edition through Inkscape might increase the number of recorded frames
-						int nbPointsInPath = LoadPathPointsFromXML((char*)string_path_points.c_str(), indPath, &M_transf, pathRadius, path_r_color, path_g_color, path_b_color,
+						int nbPointsInPath = LoadPathPointsFromXML((char*)string_path_points.c_str(), indPath, 
+							&M_transf, pathRadius, path_r_color, path_g_color, path_b_color,
 							precedingCurrentPoint, currentPoint, true, p_with_color__brush_radius_from_scenario, &path_length, secondsforwidth,
-							&nbRecordedTimeStamps);
-						if (nbPointsInPath < 1 || nbPointsInPath > max_mouse_recording_frames) {
-							sprintf(ErrorStr, "XML path loading error: incorrect number of points %d should be between 1 and %d!", nbPointsInPath, max_mouse_recording_frames); ReportError(ErrorStr); throw 152;
+							&nbRecordedTimeStamps, indConfiguration, timeStamps_loaded);
+						// printf("path points loaded\n");
+						//if (nbPointsInPath < 1 || nbPointsInPath > max_mouse_recording_frames (obsolete with vectors)) {
+						//	sprintf(ErrorStr, "XML path loading error: incorrect number of points %d should be between 1 and %d!", nbPointsInPath, max_mouse_recording_frames (obsolete with vectors)); ReportError(ErrorStr); throw 152;
+						//}
+						if (nbPointsInPath < 1) {
+							sprintf(ErrorStr, "XML path loading error: empty XML path %d!", nbPointsInPath); ReportError(ErrorStr); throw 152;
 						}
 						if (nbPointsInPath != nbRecordedTimeStamps) {
 							sprintf(ErrorStr, "XML path loading correction: number of points in path %d does not match number of time stamps %d!", nbPointsInPath, nbRecordedTimeStamps); ReportError(ErrorStr);
 							if (nbPointsInPath < nbRecordedTimeStamps) {
 								// the timestamps are retimed to match the actual number of points in the path
-								double current_finalTimeRecording = pg_Path_Data[indPath][nbPointsInPath - 1].TimeStamp;
+								double current_finalTimeRecording = pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, nbPointsInPath - 1);
 								if (current_finalTimeRecording > 0) {
-									double time_ratio = pg_Path_Status[indPath].finalTimeRecording / current_finalTimeRecording;
+									double time_ratio = pg_Path_Status[indPath].get_path_curve_finalTimeRecording(indConfiguration) / current_finalTimeRecording;
 									for (int indFrame = 0; indFrame < nbPointsInPath; indFrame++) {
-										pg_Path_Data[indPath][indFrame].TimeStamp *= time_ratio;
+										pg_Path_Status[indPath].setFrameTimeStamp(pg_current_configuration_rank, indFrame, pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, indFrame) * time_ratio);
 									}
 								}
 							}
@@ -2704,46 +2685,42 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 								// fake additional timestamps are added and the initial timestamps are retimed to match the actual number of points in the path
 								double time_ratio = float(nbRecordedTimeStamps) / float(nbPointsInPath);
 								for (int indFrame = 0; indFrame < nbRecordedTimeStamps; indFrame++) {
-									pg_Path_Data[indPath][indFrame].TimeStamp *= time_ratio;
+									pg_Path_Status[indPath].setFrameTimeStamp(pg_current_configuration_rank, indFrame, pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, indFrame)* time_ratio);
 								}
 								for (int indFrame = nbRecordedTimeStamps; indFrame < nbPointsInPath; indFrame++) {
-									pg_Path_Data[indPath][indFrame].TimeStamp = pg_Path_Status[indPath].finalTimeRecording * float(indFrame) / float(nbPointsInPath);
+									pg_Path_Status[indPath].setFrameTimeStamp(pg_current_configuration_rank, indFrame, pg_Path_Status[indPath].get_path_curve_finalTimeRecording(pg_current_configuration_rank) * float(indFrame) / float(nbPointsInPath));
 								}
 								// number of points is greater than the number of brushes, the brushes are completed with the last one
 								// number of points is greater than the number of colors, the colors are completed with the last one
 								for (int indFrame = nbRecordedTimeStamps; indFrame < nbPointsInPath; indFrame++) {
-									pg_Path_Data[indPath][indFrame].TimeStamp = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].TimeStamp;
+									pg_Path_Status[indPath].setFrameTimeStamp(pg_current_configuration_rank, indFrame, pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, nbRecordedTimeStamps - 1));
 									if (p_with_color__brush_radius_from_scenario) {
-										pg_Path_Data[indPath][indFrame].path_Color_r = path_r_color;
-										pg_Path_Data[indPath][indFrame].path_Color_g = path_g_color;
-										pg_Path_Data[indPath][indFrame].path_Color_b = path_b_color;
-										pg_Path_Data[indPath][indFrame].path_Color_a = 1.0;
-										pg_Path_Data[indPath][indFrame].path_BrushID = 0;
-										pg_Path_Data[indPath][indFrame].path_RadiusX = pathRadius;
-										pg_Path_Data[indPath][indFrame].path_RadiusY = pathRadius;
+										pg_Path_Status[indPath].setFrameValues(pg_current_configuration_rank, indFrame, path_r_color, path_g_color, path_b_color, 1.0, 0, pathRadius, pathRadius);
 									}
 									else {
-										pg_Path_Data[indPath][indFrame].path_Color_r = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_Color_r;
-										pg_Path_Data[indPath][indFrame].path_Color_g = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_Color_g;
-										pg_Path_Data[indPath][indFrame].path_Color_b = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_Color_b;
-										pg_Path_Data[indPath][indFrame].path_Color_a = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_Color_a;
-										pg_Path_Data[indPath][indFrame].path_BrushID = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_BrushID;
-										pg_Path_Data[indPath][indFrame].path_RadiusX = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_RadiusX;
-										pg_Path_Data[indPath][indFrame].path_RadiusY = pg_Path_Data[indPath][nbRecordedTimeStamps - 1].path_RadiusY;
+										pg_Path_Status[indPath].copyFrameValues(indConfiguration, nbRecordedTimeStamps - 1, indFrame);
 									}
 								}
 							}
 						}
-						pg_Path_Status[indPath].path_nbRecordedFrames = nbPointsInPath;
+						if (pg_Path_Status[indPath].nbFrames(indConfiguration) != nbPointsInPath) {
+							sprintf(ErrorStr, "XML path loading error Nb 1: unexpected frame number of frames %d after reading XML path of %d points!", pg_Path_Status[indPath].nbFrames(indConfiguration), nbPointsInPath); ReportError(ErrorStr); throw 152;
+						}
+						//pg_Path_Status[indPath].set_path_curve_nbRecordedFrames(indConfiguration, nbPointsInPath);
 					}
 					else {
-						pg_Path_Status[indPath].path_nbRecordedFrames = LoadPathPointsFromXML((char*)string_path_points.c_str(), indPath, &M_transf, pathRadius, path_r_color, path_g_color, path_b_color,
-							precedingCurrentPoint, currentPoint, false, true, &path_length, secondsforwidth, &nbRecordedTimeStamps);
+						int nbPointsInPath = 0;
+						nbPointsInPath = LoadPathPointsFromXML((char*)string_path_points.c_str(), indPath, &M_transf, pathRadius, path_r_color, path_g_color, path_b_color,
+							precedingCurrentPoint, currentPoint, false, true, &path_length, secondsforwidth, &nbRecordedTimeStamps, indConfiguration,
+							timeStamps_loaded);
+						if (pg_Path_Status[indPath].nbFrames(indConfiguration) != nbPointsInPath) {
+							sprintf(ErrorStr, "XML path loading error Nb2: unexpected frame number of frames %d after reading XML path of %d points!", pg_Path_Status[indPath].nbFrames(indConfiguration), nbPointsInPath); ReportError(ErrorStr); throw 152;
+						}
 						//printf("End of point loading (without path data (color, radius,, time stamps...)) nbRecordedFrames: %d, lentgh: %.2f\n",
-							//pg_Path_Status[indPath].path_nbRecordedFrames, path_length);
+						//pg_Path_Status[indPath].nbFrames(indConfiguration), path_length);
 						// calculation of time stamps according to the length and the speed (uniform speed)
-						pg_Path_Status[indPath].initialTimeRecording = 0.;
-						pg_Path_Status[indPath].finalTimeRecording = path_length / workingWindow_width * secondsforwidth;
+						pg_Path_Status[indPath].set_path_curve_initialTimeRecording(indConfiguration, 0.);
+						pg_Path_Status[indPath].set_path_curve_finalTimeRecording(indConfiguration, path_length / workingWindow_width * secondsforwidth);
 					}
 					break;
 				}
@@ -2753,21 +2730,20 @@ void readsvg(int *fileDepth, int indPath, char *fileName, float pathRadius, floa
 	val.clear();
 	fin.close();
 
-
 	// uniform reading speed
 	double interFrameDuration = 1.f / 60.f;
 	if (!timeStamps_loaded) {
-		if (pg_Path_Status[indPath].path_nbRecordedFrames > 0 &&
-			pg_Path_Status[indPath].finalTimeRecording > pg_Path_Status[indPath].initialTimeRecording) {
-			interFrameDuration = (pg_Path_Status[indPath].finalTimeRecording - pg_Path_Status[indPath].initialTimeRecording)
-				/ pg_Path_Status[indPath].path_nbRecordedFrames;
+		if (pg_Path_Status[indPath].nbFrames(indConfiguration) > 0 &&
+			pg_Path_Status[indPath].get_path_curve_finalTimeRecording(indConfiguration) > pg_Path_Status[indPath].get_path_curve_initialTimeRecording(indConfiguration)) {
+			interFrameDuration = (pg_Path_Status[indPath].get_path_curve_finalTimeRecording(indConfiguration) - pg_Path_Status[indPath].get_path_curve_initialTimeRecording(indConfiguration))
+				/ pg_Path_Status[indPath].nbFrames(indConfiguration);
 		}
-		for (int indPoint = 0; indPoint < pg_Path_Status[indPath].path_nbRecordedFrames; indPoint++) {
-			pg_Path_Data[indPath][indPoint].TimeStamp = indPoint * interFrameDuration + pg_Path_Status[indPath].initialTimeRecording;
+		for (int indPoint = 0; indPoint < pg_Path_Status[indPath].nbFrames(indConfiguration) ; indPoint++) {
+			pg_Path_Status[indPath].setFrameTimeStamp(indConfiguration, indPoint, indPoint * interFrameDuration + pg_Path_Status[indPath].get_path_curve_initialTimeRecording(indConfiguration));
 		}
 	}
-	//printf("ind Path %d Nb Frames %d int time %.3f fin time %.3f frameDuration %.3f\n", indPath, pg_Path_Status[indPath].path_nbRecordedFrames,
-	//	pg_Path_Status[indPath].initialTimeRecording, pg_Path_Status[indPath].finalTimeRecording, interFrameDuration);
+	//printf("ind Path %d Nb Frames %d int time %.3f fin time %.3f frameDuration %.3f\n", indPath, pg_Path_Status[indPath].nbFrames(indConfiguration),
+	//	pg_Path_Status[indPath].get_path_curve_initialTimeRecording(indConfiguration), pg_Path_Status[indPath].get_path_curve_finalTimeRecording(indConfiguration), interFrameDuration);
 }
 
 
@@ -2782,7 +2758,7 @@ void writesvg(cv::String imageFileName) {
 	// for all paths
 	for (int indPath = 1; indPath <= PG_NB_PATHS; indPath++) {
 		// only writes non empty paths
-		if (pg_Path_Status[indPath].path_nbRecordedFrames > 0) {
+		if (pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank) > 0) {
 
 			string fileName = imageFileName;
 			string suffix = format("_%02d.svg", indPath);
@@ -2800,25 +2776,25 @@ void writesvg(cv::String imageFileName) {
 			fprintf(fileClipArt, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!-- Created with Inkscape (http://www.inkscape.org/) -->\n\n<svg\n   xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n   xmlns:cc=\"http://creativecommons.org/ns#\"\n   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n   xmlns:svg=\"http://www.w3.org/2000/svg\"\n   xmlns=\"http://www.w3.org/2000/svg\"\n   version=\"1.1\"\n   width=\"%d\"\n   height=\"%d\"\n   id=\"svg2\">\n  <defs\n     id=\"defs4\" />\n  <metadata\n     id=\"metadata7\">\n    <rdf:RDF>\n      <cc:Work\n         rdf:about=\"\">\n        <dc:format>image/svg+xml</dc:format>\n        <dc:type\n           rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" />\n        <dc:title></dc:title>\n      </cc:Work>\n    </rdf:RDF>\n  </metadata>\n  <g\n     transform=\"translate(0.0,0.0)\"\n     id=\"layer1\">\n", workingWindow_width, window_height);
 
 			fprintf(fileClipArt, "    <path\n       initial_time=\"%f\"\n       final_time=\"%f\"\n",
-				pg_Path_Status[indPath].initialTimeRecording,
-				pg_Path_Status[indPath].finalTimeRecording);
+				pg_Path_Status[indPath].get_path_curve_initialTimeRecording(pg_current_configuration_rank),
+				pg_Path_Status[indPath].get_path_curve_finalTimeRecording(pg_current_configuration_rank));
 			std::ostringstream  path_points;
 			std::ostringstream  path_colors;
 			std::ostringstream  path_brushes;
 			std::ostringstream  path_timeStamps;
 			int indFrameIni = 0;
-			while (pg_Path_Data[indPath][indFrameIni].path_Pos_x < 0.0
-				&& pg_Path_Data[indPath][indFrameIni].path_Pos_y < 0.0
-				&& indFrameIni < pg_Path_Status[indPath].path_nbRecordedFrames) {
+			while (pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrameIni) < 0.0
+				&& pg_Path_Status[indPath].getFramePositionY(pg_current_configuration_rank, indFrameIni) < 0.0
+				&& indFrameIni < pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank)) {
 				indFrameIni++;
 			}
-			if (indFrameIni < pg_Path_Status[indPath].path_nbRecordedFrames) {
-				path_points << "       d=\"M " << pg_Path_Data[indPath][indFrameIni].path_Pos_x << ',' << pg_Path_Data[indPath][indFrameIni].path_Pos_y << ' ';
-				path_colors << "       colors=\"" << pg_Path_Data[indPath][indFrameIni].path_Color_r << ',' << pg_Path_Data[indPath][indFrameIni].path_Color_g << ',' << pg_Path_Data[indPath][indFrameIni].path_Color_b << ',' << pg_Path_Data[indPath][indFrameIni].path_Color_a << ' ';;
-				path_brushes << "       brushes=\"" << pg_Path_Data[indPath][indFrameIni].path_BrushID << ',' << pg_Path_Data[indPath][indFrameIni].path_RadiusX << ',' << pg_Path_Data[indPath][indFrameIni].path_RadiusY << ' ';
-				path_timeStamps << "       timeStamps=\"" << pg_Path_Data[indPath][indFrameIni].TimeStamp << ' ';
+			if (indFrameIni < pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank)) {
+				path_points << "       d=\"M " << pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrameIni) << ',' << pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrameIni) << ' ';
+				path_colors << "       colors=\"" << pg_Path_Status[indPath].getFrameColor_r(pg_current_configuration_rank, indFrameIni) << ',' << pg_Path_Status[indPath].getFrameColor_g(pg_current_configuration_rank, indFrameIni) << ',' << pg_Path_Status[indPath].getFrameColor_b(pg_current_configuration_rank, indFrameIni) << ',' << pg_Path_Status[indPath].getFrameColor_a(pg_current_configuration_rank, indFrameIni) << ' ';
+				path_brushes << "       brushes=\"" << pg_Path_Status[indPath].getFrameBrush(pg_current_configuration_rank, indFrameIni) << ',' << pg_Path_Status[indPath].getFrameRadiusX(pg_current_configuration_rank, indFrameIni) << ',' << pg_Path_Status[indPath].getFrameRadiusY(pg_current_configuration_rank, indFrameIni) << ' ';
+				path_timeStamps << "       timeStamps=\"" << pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, indFrameIni) << ' ';
 			}
-			for (int indFrame = indFrameIni + 1; indFrame < pg_Path_Status[indPath].path_nbRecordedFrames; indFrame++) {
+			for (int indFrame = indFrameIni + 1; indFrame < pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank); indFrame++) {
 				// skips identical frame
 				// if( pg_Path_Pos_x[ indPath ][ indFrame ] 
 				//     == pg_Path_Pos_x[ indPath ][ indFrame - 1 ] 
@@ -2827,26 +2803,26 @@ void writesvg(cv::String imageFileName) {
 				//   continue;
 				// }
 				// move point with a new curve
-				if (pg_Path_Data[indPath][indFrame].Pos_x_prev < 0.0
-					&& pg_Path_Data[indPath][indFrame].Pos_y_prev < 0.0
-					&& pg_Path_Data[indPath][indFrame].path_Pos_x >= 0.0
-					&& pg_Path_Data[indPath][indFrame].path_Pos_y >= 0.0) {
-					path_points << "M " << pg_Path_Data[indPath][indFrame].path_Pos_x << ',' << pg_Path_Data[indPath][indFrame].path_Pos_y << ' ';
-					path_colors << pg_Path_Data[indPath][indFrame].path_Color_r << ',' << pg_Path_Data[indPath][indFrame].path_Color_g << ',' << pg_Path_Data[indPath][indFrame].path_Color_b << ',' << pg_Path_Data[indPath][indFrame].path_Color_a << ' ';
-					path_brushes << pg_Path_Data[indPath][indFrame].path_BrushID << ',' << pg_Path_Data[indPath][indFrame].path_RadiusX << ',' << pg_Path_Data[indPath][indFrame].path_RadiusY << ' ';
-					path_timeStamps << pg_Path_Data[indPath][indFrame].TimeStamp << ' ';
+				if (pg_Path_Status[indPath].getFramePositionX_prev(pg_current_configuration_rank, indFrame) < 0.0
+					&& pg_Path_Status[indPath].getFramePositionY_prev(pg_current_configuration_rank, indFrame) < 0.0
+					&& pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrame) >= 0.0
+					&& pg_Path_Status[indPath].getFramePositionY(pg_current_configuration_rank, indFrame) >= 0.0) {
+					path_points << "M " << pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFramePositionY(pg_current_configuration_rank, indFrame) << ' ';
+					path_colors << pg_Path_Status[indPath].getFrameColor_r(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameColor_g(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameColor_b(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameColor_a(pg_current_configuration_rank, indFrame) << ' ';
+					path_brushes << pg_Path_Status[indPath].getFrameBrush(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameRadiusX(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameRadiusY(pg_current_configuration_rank, indFrame) << ' ';
+					path_timeStamps << pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, indFrame) << ' ';
 				}
 				// curve point
-				else if (pg_Path_Data[indPath][indFrame].Pos_x_prev >= 0.0
-					&& pg_Path_Data[indPath][indFrame].Pos_y_prev >= 0.0
-					&& pg_Path_Data[indPath][indFrame].path_Pos_x >= 0.0
-					&& pg_Path_Data[indPath][indFrame].path_Pos_y >= 0.0) {
-					path_points << "C " << pg_Path_Data[indPath][indFrame].path_Pos_xL << ',' << pg_Path_Data[indPath][indFrame].path_Pos_yL << ' ';
-					path_points << pg_Path_Data[indPath][indFrame].path_Pos_xR << ',' << pg_Path_Data[indPath][indFrame].path_Pos_yR << ' ';
-					path_points << pg_Path_Data[indPath][indFrame].path_Pos_x << ',' << pg_Path_Data[indPath][indFrame].path_Pos_y << ' ';
-					path_colors << pg_Path_Data[indPath][indFrame].path_Color_r << ',' << pg_Path_Data[indPath][indFrame].path_Color_g << ',' << pg_Path_Data[indPath][indFrame].path_Color_b << ',' << pg_Path_Data[indPath][indFrame].path_Color_a << ' ';
-					path_brushes << pg_Path_Data[indPath][indFrame].path_BrushID << ',' << pg_Path_Data[indPath][indFrame].path_RadiusX << ',' << pg_Path_Data[indPath][indFrame].path_RadiusY << ' ';
-					path_timeStamps << pg_Path_Data[indPath][indFrame].TimeStamp << ' ';
+				else if (pg_Path_Status[indPath].getFramePositionX_prev(pg_current_configuration_rank, indFrame) >= 0.0
+					&& pg_Path_Status[indPath].getFramePositionY_prev(pg_current_configuration_rank, indFrame) >= 0.0
+					&& pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrame) >= 0.0
+					&& pg_Path_Status[indPath].getFramePositionY(pg_current_configuration_rank, indFrame) >= 0.0) {
+					path_points << "C " << pg_Path_Status[indPath].getFramePositionXL(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFramePositionYL(pg_current_configuration_rank, indFrame) << ' ';
+					path_points << pg_Path_Status[indPath].getFramePositionXR(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFramePositionYR(pg_current_configuration_rank, indFrame) << ' ';
+					path_points << pg_Path_Status[indPath].getFramePositionX(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFramePositionY(pg_current_configuration_rank, indFrame) << ' ';
+					path_colors << pg_Path_Status[indPath].getFrameColor_r(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameColor_g(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameColor_b(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameColor_a(pg_current_configuration_rank, indFrame) << ' ';
+					path_brushes << pg_Path_Status[indPath].getFrameBrush(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameRadiusX(pg_current_configuration_rank, indFrame) << ',' << pg_Path_Status[indPath].getFrameRadiusY(pg_current_configuration_rank, indFrame) << ' ';
+					path_timeStamps << pg_Path_Status[indPath].getFrameTimeStamp(pg_current_configuration_rank, indFrame) << ' ';
 				}
 			}
 			// writes the strings that have been stored previously

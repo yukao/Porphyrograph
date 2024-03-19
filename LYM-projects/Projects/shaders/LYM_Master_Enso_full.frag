@@ -11,29 +11,53 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 // #define ATELIERS_PORTATIFS
 #define CAVERNEPLATON
 
+#define var_mute_second_screen
 bool	  mute_second_screen;
+#define var_invertAllLayers
 bool	  invertAllLayers;
+#define var_cursorSize
 int		cursorSize;
+#define var_master
 float	 master;
+#define var_CAMasterWeight
 float	 CAMasterWeight;
+#define var_PartMasterWeight
 float	 PartMasterWeight;
+#define var_trackMasterWeight_0
 float	 trackMasterWeight_0;
+#define var_trackMasterWeight_1
 float	 trackMasterWeight_1;
+#define var_trackMasterWeight_2
 float	 trackMasterWeight_2;
+#define var_trackMasterWeight_3
 float	 trackMasterWeight_3;
+#define var_currentMaskTrack
 int		currentMaskTrack;
+#define var_master_scale
 float	 master_scale;
+#define var_master_scale_pulse
 float	 master_scale_pulse;
+#define var_master_scale_ratio
 float	 master_scale_ratio;
+#define var_master_offsetX
 float	 master_offsetX;
+#define var_master_offsetY
 float	 master_offsetY;
+#define var_master_mask_opacity_1
 float	 master_mask_opacity_1;
+#define var_master_mask_opacity_2
 float	 master_mask_opacity_2;
+#define var_master_mask_opacity_3
 float	 master_mask_opacity_3;
+#define var_master_mask_opacity_4
 float	 master_mask_opacity_4;
+#define var_master_mask_opacity_5
 float	 master_mask_opacity_5;
+#define var_master_crop_x
 float	 master_crop_x;
+#define var_master_crop_y
 float	 master_crop_y;
+#define var_master_crop_width
 float	 master_crop_width;
 uniform float uniform_Master_scenario_var_data[24];
 
@@ -76,7 +100,7 @@ layout (binding = 7) uniform sampler3D uniform_Master_texture_fs_Mask;  // mask 
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec3 uniform_Master_fs_3fv_width_height_timeFromStart;
+uniform vec4 uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
 
 uniform ivec4 uniform_Master_fs_4iv_master_mask_opacity1;
@@ -113,8 +137,8 @@ void main() {
   master_crop_y = uniform_Master_scenario_var_data[22];
   master_crop_width = uniform_Master_scenario_var_data[23];
 
-  float width = uniform_Master_fs_3fv_width_height_timeFromStart.x;
-  float height = uniform_Master_fs_3fv_width_height_timeFromStart.y;
+  float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
+  float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) , 
                       decalCoords.y);
   // vertical mirror
@@ -136,7 +160,7 @@ void main() {
 
 
   // mute screen
-  if(mute_second_screen && decalCoords.x > width) {
+  if(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.w != 0 && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }

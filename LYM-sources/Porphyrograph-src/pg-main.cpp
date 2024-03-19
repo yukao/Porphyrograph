@@ -187,6 +187,9 @@ int main(int argcMain, char **argvMain) {
 		pg_shader_programme = new unsigned int* [_NbConfigurations];
 		pg_ConfigurationFileNames = new string[_NbConfigurations];
 		pg_ScenarioFileNames = new string[_NbConfigurations];
+
+		pg_initPaths();
+
 		for (int ind = 1; ind < argc; ind += 2) {
 			pg_shader_programme[(ind - 1) / 2] = new unsigned int[_pg_shader_TotalNbTypes];
 			for (int ind_shader_type = 0; ind_shader_type < _pg_shader_TotalNbTypes; ind_shader_type++) {
@@ -294,7 +297,7 @@ int main(int argcMain, char **argvMain) {
 	/////////////////////////////////////////////////////////////////////////
 	// ClipArt GPU INITIALIZATION
 #if defined(var_activeClipArts)
-	// loads the shaders
+	// loads the ClipArts and lists them
 	pg_loadAllClipArts();
 	pg_listAllClipArts();
 #endif
@@ -917,6 +920,8 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 
 	MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
 
+	//printf("remapped xy %d %d\n", mappedX, mappedY);
+
 	// drawing
 	if (press > 0.05 && mappedX >= 2 && mappedX < workingWindow_width - 2 && mappedY >= 2 && mappedY < window_height - 2) {
 		//printf("pen writing %d %d\n", mappedX, mappedY);
@@ -926,8 +931,8 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 #if !defined(LIGHT)
 		// visual feedback on a drawing interface on the tablet, if there is one
 		float x_tab = float(CurrentMousePos_x[0]) / workingWindow_width;
-		float y_tab = 1.f - float(CurrentMousePos_y[0]) / window_height;
-		sprintf(AuxString, "/pen_xy %.2f %.2f", y_tab, x_tab); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		float y_tab = float(CurrentMousePos_y[0]) / window_height;
+		sprintf(AuxString, "/pen_xy %.2f %.2f", x_tab, y_tab); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
 
 		if (CurrentCursorStylusvsRubber == pg_Stylus || CurrentCursorStylusvsRubber == pg_Rubber) {
@@ -1015,6 +1020,7 @@ void window_idle_browse( void ) {
 void window_idle_browse(int step) {
 	 //printf("begin window_idle_browse\n");
 	// fprintf( pg_csv_log_file, "%.10f begin Time #\n" , RealTime() );
+	//printf("cameraWeight %.3f\n", cameraWeight);
 
 	// -------------------- idle function recall ------------------------- //
 	glutTimerFunc(int(minimal_interframe_latency * 1000),

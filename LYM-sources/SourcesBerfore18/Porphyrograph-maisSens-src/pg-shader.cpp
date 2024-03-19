@@ -92,7 +92,7 @@ GLint uniform_MeshDisplay_fs_2i_FBOwh;
 // TRACK DISPLAY SHADER TEXTURE IDS
 GLint uniform_MeshDisplay_texture_fs_decal;        // particles
 GLint uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width; // frame number & breathingg coeficient
-GLint uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText; // output opacity
+GLint uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText; // output opacity
 GLint uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG;   // particle vs mesh drawing
 GLint uniform_MeshDisplay_fs_4fv_textFrontier_wmin_wmax_wminWidth_wmaxWidth;
 GLint uniform_MeshDisplay_fs_4fv_textFrontier_hmin_hmax_hminWidth_hmaxWidth;
@@ -409,8 +409,8 @@ void pg_loadAllShaders( void ) {
     = glGetUniformLocation(shader_MeshDisplay_programme, "fs_decal" ); // particles
   uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width 
     = glGetUniformLocation(shader_MeshDisplay_programme, "uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width");
-  uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText 
-    = glGetUniformLocation(shader_MeshDisplay_programme, "uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText");
+  uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText 
+    = glGetUniformLocation(shader_MeshDisplay_programme, "uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText");
   uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG
     = glGetUniformLocation(shader_MeshDisplay_programme, "uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG");   // particle vs mesh drawing
 
@@ -426,12 +426,12 @@ void pg_loadAllShaders( void ) {
        || (uniform_MeshDisplay_fs_2i_FBOwh == -1)
        || (uniform_MeshDisplay_texture_fs_decal == -1)
        || (uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width == -1)
-       || (uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText == -1)
+       || (uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText == -1)
        || (uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG == -1)
        || (uniform_MeshDisplay_fs_4fv_textFrontier_wmin_wmax_wminWidth_wmaxWidth == -1)
        || (uniform_MeshDisplay_fs_4fv_textFrontier_hmin_hmax_hminWidth_hmaxWidth == -1)
        ) {
-	  fprintf(stderr, "Could not bind uniforms MeshDisplay uniform_MeshDisplay_gs_proj : %d, uniform_MeshDisplay_gs_view : %d, uniform_MeshDisplay_gs_model : %d, uniform_MeshDisplay_vp_2i_FBOwh: %d, uniform_MeshDisplay_fs_2i_FBOwh: %d, uniform_MeshDisplay_texture_fs_decal : %d, uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width : %d, uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText : %d, uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG: %d , uniform_MeshDisplay_fs_4fv_textFrontier_wmin_wmax_wminWidth_wmaxWidth : %d , uniform_MeshDisplay_fs_4fv_textFrontier_hmin_hmax_hminWidth_hmaxWidth : %d\n", uniform_MeshDisplay_vp_projection, uniform_MeshDisplay_vp_view, uniform_MeshDisplay_vp_model, uniform_MeshDisplay_vp_2i_FBOwh, uniform_MeshDisplay_fs_2i_FBOwh , uniform_MeshDisplay_texture_fs_decal, uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width, uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText, uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG, uniform_MeshDisplay_fs_4fv_textFrontier_wmin_wmax_wminWidth_wmaxWidth, uniform_MeshDisplay_fs_4fv_textFrontier_hmin_hmax_hminWidth_hmaxWidth);
+	  fprintf(stderr, "Could not bind uniforms MeshDisplay uniform_MeshDisplay_gs_proj : %d, uniform_MeshDisplay_gs_view : %d, uniform_MeshDisplay_gs_model : %d, uniform_MeshDisplay_vp_2i_FBOwh: %d, uniform_MeshDisplay_fs_2i_FBOwh: %d, uniform_MeshDisplay_texture_fs_decal : %d, uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width : %d, uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText : %d, uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG: %d , uniform_MeshDisplay_fs_4fv_textFrontier_wmin_wmax_wminWidth_wmaxWidth : %d , uniform_MeshDisplay_fs_4fv_textFrontier_hmin_hmax_hminWidth_hmaxWidth : %d\n", uniform_MeshDisplay_vp_projection, uniform_MeshDisplay_vp_view, uniform_MeshDisplay_vp_model, uniform_MeshDisplay_vp_2i_FBOwh, uniform_MeshDisplay_fs_2i_FBOwh , uniform_MeshDisplay_texture_fs_decal, uniform_MeshDisplay_fs_4fv_FrameNo_breathing_meshFrontier_X_Width, uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText, uniform_MeshDisplay_fs_4i_isLineDrawing_isLeftCam_isDisplayLookAt_withMeshOnBlueBG, uniform_MeshDisplay_fs_4fv_textFrontier_wmin_wmax_wminWidth_wmaxWidth, uniform_MeshDisplay_fs_4fv_textFrontier_hmin_hmax_hminWidth_hmaxWidth);
     // return 0;
   }
 

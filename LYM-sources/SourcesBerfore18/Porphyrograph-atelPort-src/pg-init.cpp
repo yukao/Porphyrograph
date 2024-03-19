@@ -1080,9 +1080,9 @@ void pg_initParticlePosition_Texture( void ) {
 		pg_Particle_control_points[ind_point + 2] = 0.f;
 
 		//// u 
-		//curve_texCoords[ind_point + 0] = 0.f;
+		//pg_ClipArt_texCoords[ind_point + 0] = 0.f;
 		//// v
-		//curve_texCoords[ind_point + 1] = 0.f;
+		//pg_ClipArt_texCoords[ind_point + 1] = 0.f;
 
 		pg_Particle_indices[ind_index] = ind_index;
 
@@ -1097,13 +1097,13 @@ void pg_initParticlePosition_Texture( void ) {
 
 			//// u 
 			//if (indControlPoint == 0) {
-			//	curve_texCoords[ind_point + 0] = 0.f;
+			//	pg_ClipArt_texCoords[ind_point + 0] = 0.f;
 			//}
 			//else {
-			//	curve_texCoords[ind_point + 0] = 1.f;
+			//	pg_ClipArt_texCoords[ind_point + 0] = 1.f;
 			//}
 			//// v
-			//curve_texCoords[ind_point + 1] = 0.f;
+			//pg_ClipArt_texCoords[ind_point + 1] = 0.f;
 
 			pg_Particle_indices[ind_index] = ind_index;
 

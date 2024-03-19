@@ -1,61 +1,4 @@
-bool  double_window       ;
-bool  wide_screen         ;
-int   window_width        ;
-int   window_height       ;
-int   window_x            ;
-int   window_y            ;
-float minimal_interframe_latency;
-float time_scale          ;
-float initial_time        ;
-int   camID               ;
-int   message_pixel_length;
-bool  trace_output_frame_number;
-bool  trace_time          ;
-int   first_frame_number  ;
-int   last_frame_number   ;
-int   max_mouse_recording_frames;
-int   max_network_message_length;
-int   nb_particles        ;
-VarTypes ConfigurationVarTypes[_MaxConfigurationVarIDs] = { 
-	_pg_bool,
-	_pg_bool,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_int,
-	_pg_bool,
-	_pg_bool,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-};
-void * ConfigurationVarPointers[_MaxConfigurationVarIDs] = { 
-	(void *)&double_window,
-	(void *)&wide_screen,
-	(void *)&window_width,
-	(void *)&window_height,
-	(void *)&window_x,
-	(void *)&window_y,
-	(void *)&minimal_interframe_latency,
-	(void *)&time_scale,
-	(void *)&initial_time,
-	(void *)&camID,
-	(void *)&message_pixel_length,
-	(void *)&trace_output_frame_number,
-	(void *)&trace_time,
-	(void *)&first_frame_number,
-	(void *)&last_frame_number,
-	(void *)&max_mouse_recording_frames,
-	(void *)&max_network_message_length,
-	(void *)&nb_particles,
-};
+// SCENARIO VARIABLES
 bool  auto_beat           ;
 bool  auto_pulse          ;
 bool  clearAllLayers      ;
@@ -214,7 +157,9 @@ float part_gravity        ;
 float part_gravity_pulse  ;
 float pulsed_part_Hshift  ;
 float pulsed_part_Vshift  ;
-float noiseScale          ;
+float noiseUpdateScale    ;
+float noiseParticleScale_pulse;
+float noiseParticleScale  ;
 float noiseScale_pulse    ;
 int   noiseType           ;
 float noiseLineScale      ;
@@ -389,7 +334,8 @@ bool  freeze              ;
 float sound_env_min       ;
 float sound_env_max       ;
 float audioInput_weight   ;
-float soundtrack_weight   ;
+float soundtrack_PD_weight;
+float soundtrack_PA_weight;
 float isDisplayLookAt     ;
 float with_mesh           ;
 float with_blue           ;
@@ -603,6 +549,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -773,6 +721,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_bool,
 	_pg_bool,
+	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -989,7 +938,9 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&part_gravity_pulse,
 	(void *)&pulsed_part_Hshift,
 	(void *)&pulsed_part_Vshift,
-	(void *)&noiseScale,
+	(void *)&noiseUpdateScale,
+	(void *)&noiseParticleScale_pulse,
+	(void *)&noiseParticleScale,
 	(void *)&noiseScale_pulse,
 	(void *)&noiseType,
 	(void *)&noiseLineScale,
@@ -1164,7 +1115,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&sound_env_min,
 	(void *)&sound_env_max,
 	(void *)&audioInput_weight,
-	(void *)&soundtrack_weight,
+	(void *)&soundtrack_PD_weight,
+	(void *)&soundtrack_PA_weight,
 	(void *)&isDisplayLookAt,
 	(void *)&with_mesh,
 	(void *)&with_blue,
@@ -1482,6 +1434,10 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scen
 void playing_movieNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	playing_movieNo_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
 }
+void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void movieCaptFreq_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	movieCaptFreq_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 void photo_diaporama_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	photo_diaporama_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
@@ -1526,9 +1482,13 @@ void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, float 
 void audioInput_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	audioInput_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
 }
-void soundtrack_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
-void soundtrack_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	soundtrack_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void soundtrack_PD_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	soundtrack_PD_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void soundtrack_PA_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void soundtrack_PA_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	soundtrack_PA_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
 }
 void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void MIDIwithBeat_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1721,6 +1681,8 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
 	&partMove_target_callBack_generic,
 	&partMove_rand_callBack_generic,
 	NULL,
@@ -1770,7 +1732,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	&cameraNo_callBack_generic,
 	&playing_movieNo_callBack_generic,
-	NULL,
+	&movieCaptFreq_callBack_generic,
 	&photo_diaporama_callBack_generic,
 	NULL,
 	NULL,
@@ -1884,7 +1846,8 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	&sound_env_min_callBack_generic,
 	&sound_env_max_callBack_generic,
 	&audioInput_weight_callBack_generic,
-	&soundtrack_weight_callBack_generic,
+	&soundtrack_PD_weight_callBack_generic,
+	&soundtrack_PA_weight_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -2097,7 +2060,9 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"part_gravity_pulse",
   (char *)"pulsed_part_Hshift",
   (char *)"pulsed_part_Vshift",
-  (char *)"noiseScale",
+  (char *)"noiseUpdateScale",
+  (char *)"noiseParticleScale_pulse",
+  (char *)"noiseParticleScale",
   (char *)"noiseScale_pulse",
   (char *)"noiseType",
   (char *)"noiseLineScale",
@@ -2272,7 +2237,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"sound_env_min",
   (char *)"sound_env_max",
   (char *)"audioInput_weight",
-  (char *)"soundtrack_weight",
+  (char *)"soundtrack_PD_weight",
+  (char *)"soundtrack_PA_weight",
   (char *)"isDisplayLookAt",
   (char *)"with_mesh",
   (char *)"with_blue",
@@ -2486,6 +2452,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2635,6 +2603,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2872,7 +2841,9 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"part_gravity_pulse",
   (char *)"pulsed_part_Hshift",
   (char *)"pulsed_part_Vshift",
-  (char *)"noiseScale",
+  (char *)"noiseUpdateScale",
+  (char *)"noiseParticleScale_pulse",
+  (char *)"noiseParticleScale",
   (char *)"noiseScale_pulse",
   (char *)"noiseType",
   (char *)"noiseLineScale",
@@ -3047,7 +3018,8 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"sound_env_min",
   (char *)"sound_env_max",
   (char *)"audioInput_weight",
-  (char *)"soundtrack_weight",
+  (char *)"soundtrack_PD_weight",
+  (char *)"soundtrack_PA_weight",
   (char *)"isDisplayLookAt",
   (char *)"with_mesh",
   (char *)"with_blue",

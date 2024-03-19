@@ -72,9 +72,9 @@ def main(main_args) :
 	for opt, arg in opts:
 		if opt in ("-i", "--inputfile"):
 			scenario_file_name = arg
-		elif opt in ("--plot"):
+		elif opt == "--plot":
 			is_plot = arg
-		elif opt in ("--extrema"):
+		elif opt == "--extrema":
 			is_extrema = arg
 		else:
 			assert False, "unhandled option"

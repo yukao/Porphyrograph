@@ -94,7 +94,7 @@ enum InterpVarIDs{
   _with_mesh,
   _with_blue,
   _with_whiteText,
-  _blendTransp,
+  _master,
   _projLocX,
   _projLocY,
   _projLocZ,

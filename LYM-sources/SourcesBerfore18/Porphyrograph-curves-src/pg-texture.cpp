@@ -391,7 +391,7 @@ bool pg_initTextures(void) {
 	pg_bezierCurve_Pos_Texture_texID = 0;
 	pg_bezierCurve_Pos_Texture =
 		(GLfloat *)pg_generateTexture(&(pg_bezierCurve_Pos_Texture_texID), pg_float_tex_format,
-			PG_WIDTH , (PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 4) / PG_WIDTH + 1);   
+			PG_WIDTH , (PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 4) / PG_WIDTH + 1);   
 			// 4 floats per point because of RGBA format - BA can be used for other purposes
 	if (!pg_bezierCurve_Pos_Texture) {
 		printf("Error: pg_bezierCurve_Pos_Texture not allocated!"); throw 336;
@@ -417,7 +417,7 @@ void pg_writeBezierCurveTextures(void) {
 
 	// sets the values of the texture
 	int index = 0;
-	for (int indCurve = 0; indCurve < PG_NB_BEZIER_CURVES; indCurve++) {
+	for (int indCurve = 0; indCurve < PG_NB_VECTOR_CLIPART; indCurve++) {
 		pg_bezierCurve_Pos_Texture[index + 0] = randomValue * PG_WIDTH;
 		pg_bezierCurve_Pos_Texture[index + 1] = randomValue * PG_HEIGHT;
 		pg_bezierCurve_Pos_Texture[index + 2] = 0.f;
@@ -448,14 +448,14 @@ void pg_writeBezierCurveTextures(void) {
 		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
 		GL_RGBA32F,            // Components: Internal colour format to convert to
 		PG_WIDTH ,          // Image width
-		(PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 4) / PG_WIDTH + 1,          // Image height
+		(PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 4) / PG_WIDTH + 1,          // Image height
 		0,                 // Border width in pixels (can either be 1 or 0)
 		GL_RGBA, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 		GL_FLOAT,  // Image data type
 		(GLvoid *)pg_bezierCurve_Pos_Texture);        // The actual image data itself
 
 	printf("Bezier Curve control point position texture values text size %dx%d\n", 
-		PG_WIDTH, (PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 4) / PG_WIDTH + 1);
+		PG_WIDTH, (PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 4) / PG_WIDTH + 1);
 
 	printOglError(12);
 }

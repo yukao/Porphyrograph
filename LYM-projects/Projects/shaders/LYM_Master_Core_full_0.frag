@@ -71,9 +71,7 @@ float	 master_mask_scale_ratio;
 float	 master_mask_offsetX;
 #define var_master_mask_offsetY
 float	 master_mask_offsetY;
-#define var_Argenteuil_bugs
-float	 Argenteuil_bugs;
-uniform float uniform_Master_scenario_var_data[32];
+uniform float uniform_Master_scenario_var_data[31];
 
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
 
@@ -158,7 +156,6 @@ void main() {
   master_mask_scale_ratio = uniform_Master_scenario_var_data[28];
   master_mask_offsetX = uniform_Master_scenario_var_data[29];
   master_mask_offsetY = uniform_Master_scenario_var_data[30];
-  Argenteuil_bugs = uniform_Master_scenario_var_data[31];
 
   float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
   float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;

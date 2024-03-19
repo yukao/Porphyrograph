@@ -28,7 +28,7 @@ https://github.com/fcaruso/GLSLParametricCurve
 #ifndef PG_BEZIERCURVE_H
 #define PG_BEZIERCURVE_H
 
-#define PG_NB_BEZIER_CURVES 3000
+#define PG_NB_VECTOR_CLIPART 3000
 #define randomValue ((float)rand()/(float)RAND_MAX)
 #define PG_CURVE_DEGREE 3
 

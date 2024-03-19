@@ -55,7 +55,7 @@ enum InterpVarIDs{
   _local_color_g,
   _local_color_b,
   _local_color_a,
-  _blendTransp,
+  _master,
   _particleMode,
   _part_acc_factor,
   _particle_texture_ID,
@@ -135,7 +135,7 @@ extern float local_color_r       ;
 extern float local_color_g       ;
 extern float local_color_b       ;
 extern float local_color_a       ;
-extern float blendTransp         ;
+extern float master         ;
 extern int   particleMode        ;
 extern float part_acc_factor     ;
 extern float particle_texture_ID ;

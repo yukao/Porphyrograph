@@ -216,8 +216,6 @@ int sample_groups[PG_NB_SENSOR_GROUPS][4] =
 
 // current sensor
 int currentSensor = 0;
-// sensor follows mouse
-bool sensorFollowMouse_onOff = false;
 #endif
 
 /////////////////////////////////////////////////////////////////
@@ -232,6 +230,10 @@ float CameraCurrent_focus = 0.0f;
 float CameraCurrent_gamma = 0.0f;
 float CameraCurrent_WB_B = 0.0f;
 float CameraCurrent_WB_R = 0.0f;
+
+/////////////////////////////////////////////////////////////////
+// VIDEO PARAMETERS
+int precedingVideoTrack = -1;
 
 /////////////////////////////////////////////////////////////////
 // textures bitmaps and associated IDs
@@ -573,34 +575,34 @@ void media_status::reset_movie(int nbTotFramesLeft) {
 media_status::~media_status() {
 
 }
-void pg_loadFirstVideo(void) {
-	if (ScenarioVarConfigurations[_movieCaptFreq][pg_current_configuration_rank]) {
-		if (playing_movieNo >= 0 && playing_movieNo < nb_movies[pg_current_configuration_rank] && playing_movieNo != currentlyPlaying_movieNo) {
-			pg_movie_frame.setTo(Scalar(0, 0, 0));
-
-			currentlyPlaying_movieNo = playing_movieNo;
-
-			// texture ID initialization (should not be inside a thread)
-			if (pg_movie_texture_texID == NULL_ID) {
-				glGenTextures(1, &pg_movie_texture_texID);
-			}
-
-			is_movieLoading = true;
-			if (movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].find(':') == std::string::npos) {
-				printf("Loading movie %s\n",
-					(cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
-			}
-			else {
-				printf("Loading movie %s\n",
-					movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
-			}
-			sprintf(AuxString, "/movie_shortName %s", movieShortName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
-			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-
-			pg_initVideoMoviePlayback_nonThreaded(&movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]);
-		}
-	}
-}
+//void pg_loadFirstVideo(void) {
+//	if (ScenarioVarConfigurations[_movieCaptFreq][pg_current_configuration_rank]) {
+//		if (playing_movieNo >= 0 && playing_movieNo < nb_movies[pg_current_configuration_rank] && playing_movieNo != currentlyPlaying_movieNo) {
+//			pg_movie_frame.setTo(Scalar(0, 0, 0));
+//
+//			currentlyPlaying_movieNo = playing_movieNo;
+//
+//			// texture ID initialization (should not be inside a thread)
+//			if (pg_movie_texture_texID == NULL_ID) {
+//				glGenTextures(1, &pg_movie_texture_texID);
+//			}
+//
+//			is_movieLoading = true;
+//			if (movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].find(':') == std::string::npos) {
+//				printf("Loading movie %s\n",
+//					(cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
+//			}
+//			else {
+//				printf("Loading movie %s\n",
+//					movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
+//			}
+//			sprintf(AuxString, "/movie_shortName %s", movieShortName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
+//			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+//
+//			pg_initVideoMoviePlayback_nonThreaded(&movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]);
+//		}
+//	}
+//}
 #endif
 
 // checks whether a peak or an onset are passed or closer than one frame
@@ -2513,9 +2515,9 @@ void pg_update_shader_Update_uniforms(void) {
 	//printf("Signs %d \n", currentDrawingTrack);
 
 	// CA type, frame no, flashback and current track
-	glUniform3f(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght[pg_current_configuration_rank],
+	glUniform4f(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[pg_current_configuration_rank],
 		(GLfloat)pg_ConfigurationFrameNo,
-		(GLfloat)CurrentCursorStylusvsRubber, flashPartCA_weight);
+		(GLfloat)CurrentCursorStylusvsRubber, flashPartCA_weight, (GLfloat)double_window);
 
 	// movie size, flash camera and copy tracks
 	// copy to layer above (+1) or to layer below (-1)
@@ -3116,7 +3118,7 @@ void pg_update_shader_Mesh_uniforms(void) {
 #if defined(var_Contact_mesh_palette)
 			if (ScenarioVarConfigurations[_Contact_mesh_palette][pg_current_configuration_rank]) {
 				float pulsed_color[3];
-				compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, true);
+				compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, _PG_PEN);
 				glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_current_configuration_rank], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(Contact_mesh_palette));
 			}
 #endif
@@ -3831,7 +3833,7 @@ void pg_ClipArtRenderingPass(void) {
 	}
 	:*/
 	if (moving_messages >= 0) {
-		pg_Display_ClipArt_Text(&pg_Ind_Current_DisplayText, moving_messages);
+		pg_Display_ClipArt_Text(&pg_Ind_Current_DisplayText, int(moving_messages));
 	}
 #else
 	pg_Display_All_ClipArt(activeClipArts);

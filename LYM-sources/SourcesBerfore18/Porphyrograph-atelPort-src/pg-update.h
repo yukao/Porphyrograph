@@ -125,7 +125,7 @@ enum DrawingMode{ _Render=0 , _Svg , _Png , _Jpg , _Video };
 extern bool is_automatic_snapshots;
 
 // mute/unmute the right screen output in double screen
-extern bool mute_screen;
+extern bool mute_second_screen;
 
 // projection and view matrices transmitted to the shader
 extern GLfloat projMatrix[16];

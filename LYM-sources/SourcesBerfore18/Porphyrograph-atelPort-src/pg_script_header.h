@@ -51,12 +51,12 @@ enum InterpVarIDs{
   _pen_grey,
   _repop_grey,
   _pen_color_a,
-  _blendTransp,
+  _master,
   _pixel_mode,
-  _pixel_acc_factor,
+  _pixel_acc,
   _noiseScale,
-  _pixel_acc_center_0,
-  _pixel_acc_center_1,
+  _pixel_acc_shiftX,
+  _pixel_acc_shiftY,
   _pixel_radius,
   _repop_BG,
   _repop_CA,
@@ -72,7 +72,7 @@ enum InterpVarIDs{
   _echoNeg,
   _pen_radius_pulse,
   _pixel_radius_pulse,
-  _part_radius_pulse,
+  _part_size_pulse,
   _pen_radius_replay_pulse,
   _repop_part_pulse,
   _flashPartCA_freq,
@@ -129,14 +129,14 @@ enum InterpVarIDs{
   _path_record_5,
   _path_record_6,
   _path_record_7,
-  _path_repop_0,
-  _path_repop_1,
-  _path_repop_2,
-  _path_repop_3,
-  _path_repop_4,
-  _path_repop_5,
-  _path_repop_6,
-  _path_repop_7,
+  _part_path_repop_0,
+  _part_path_repop_1,
+  _part_path_repop_2,
+  _part_path_repop_3,
+  _part_path_repop_4,
+  _part_path_repop_5,
+  _part_path_repop_6,
+  _part_path_repop_7,
   _part_path_follow_0,
   _part_path_follow_1,
   _part_path_follow_2,
@@ -175,7 +175,7 @@ enum InterpVarIDs{
   _cameraSobel,
   _movieSobel,
   _playing_movieNo,
-  _BGSubtr,
+  _camera_BG_subtr,
   _CAstep,
   _interfaceMode,
   _CAcolorSpread,
@@ -190,7 +190,7 @@ enum InterpVarIDs{
   _photo_diaporama_plateau,
   _sound_env_min,
   _sound_env_max,
-  _currentBGCapture,
+  _reset_camera,
   _partDecay_sign,
   _partDecay,
   _part_initialization,
@@ -203,9 +203,9 @@ enum InterpVarIDs{
   _part_damp_targtRad,
   _part_timeToTargt,
   _part_field_weight,
-  _partRepopRadius,
+  _part_size,
   _part_acc_factor,
-  _part_damp_factor,
+  _part_damp,
   _repop_hue_pulse,
   _part_acc_pulse,
   _hide,
@@ -216,8 +216,8 @@ enum InterpVarIDs{
   _track_y_transl_0,
   _track_y_transl_1,
   _echo_Hshift_pulse,
-  _part_Vshift_pulse,
-  _tracks_Hshift_pulse,
+  _pulsed_part_Vshift,
+  _pulsed_tracks_Hshift,
   _flashWeight_pulse,
   _repop_path,
   _particle_type,
@@ -229,12 +229,12 @@ extern float repop_color         ;
 extern float pen_grey            ;
 extern float repop_grey          ;
 extern float pen_color_a         ;
-extern float blendTransp         ;
+extern float master         ;
 extern int   pixel_mode          ;
-extern float pixel_acc_factor    ;
+extern float pixel_acc    ;
 extern float noiseScale          ;
-extern float pixel_acc_center_0  ;
-extern float pixel_acc_center_1  ;
+extern float pixel_acc_shiftX  ;
+extern float pixel_acc_shiftY  ;
 extern float pixel_radius        ;
 extern float repop_BG            ;
 extern float repop_CA            ;
@@ -250,7 +250,7 @@ extern float echo                ;
 extern float echoNeg             ;
 extern float pen_radius_pulse    ;
 extern float pixel_radius_pulse  ;
-extern float part_radius_pulse   ;
+extern float part_size_pulse   ;
 extern float pen_radius_replay_pulse;
 extern float repop_part_pulse    ;
 extern int   flashPartCA_freq    ;
@@ -307,14 +307,14 @@ extern bool  path_record_4       ;
 extern bool  path_record_5       ;
 extern bool  path_record_6       ;
 extern bool  path_record_7       ;
-extern bool  path_repop_0        ;
-extern bool  path_repop_1        ;
-extern bool  path_repop_2        ;
-extern bool  path_repop_3        ;
-extern bool  path_repop_4        ;
-extern bool  path_repop_5        ;
-extern bool  path_repop_6        ;
-extern bool  path_repop_7        ;
+extern bool  part_path_repop_0        ;
+extern bool  part_path_repop_1        ;
+extern bool  part_path_repop_2        ;
+extern bool  part_path_repop_3        ;
+extern bool  part_path_repop_4        ;
+extern bool  part_path_repop_5        ;
+extern bool  part_path_repop_6        ;
+extern bool  part_path_repop_7        ;
 extern bool  part_path_follow_0  ;
 extern bool  part_path_follow_1  ;
 extern bool  part_path_follow_2  ;
@@ -353,7 +353,7 @@ extern float movieWeight         ;
 extern float cameraSobel         ;
 extern float movieSobel          ;
 extern int   playing_movieNo     ;
-extern bool  BGSubtr             ;
+extern bool  camera_BG_subtr             ;
 extern int   CAstep              ;
 extern bool  interfaceMode       ;
 extern bool  CAcolorSpread       ;
@@ -368,7 +368,7 @@ extern float photo_diaporama_fade;
 extern float photo_diaporama_plateau;
 extern float sound_env_min       ;
 extern float sound_env_max       ;
-extern bool  currentBGCapture    ;
+extern bool  reset_camera    ;
 extern float partDecay_sign      ;
 extern float partDecay           ;
 extern int   part_initialization ;
@@ -381,9 +381,9 @@ extern int   partColor_mode      ;
 extern float part_damp_targtRad  ;
 extern float part_timeToTargt    ;
 extern float part_field_weight   ;
-extern float partRepopRadius     ;
+extern float part_size     ;
 extern float part_acc_factor     ;
-extern float part_damp_factor    ;
+extern float part_damp    ;
 extern float repop_hue_pulse     ;
 extern float part_acc_pulse      ;
 extern bool  hide                ;
@@ -394,8 +394,8 @@ extern int   track_x_transl_1    ;
 extern int   track_y_transl_0    ;
 extern int   track_y_transl_1    ;
 extern float echo_Hshift_pulse   ;
-extern float part_Vshift_pulse   ;
-extern float tracks_Hshift_pulse ;
+extern float pulsed_part_Vshift   ;
+extern float track_x_transl_0_pulse ;
 extern float flashWeight_pulse   ;
 extern float repop_path          ;
 extern int   particle_type       ;

@@ -25,6 +25,7 @@ from operator import itemgetter
 def main():
 	#  	 the images from PNG files
 	dir_name = "/mnt/c/sync.com/Sync/LYM-videos/YN_Rivets_2020/stills"
+	dir_name = "/mnt/c/sync.com/Sync/YN-works/YN_residence_CRD_Argenteuil_2022/KaraokeFeteDUConservatoire/UptownFunk"
 
 	if False :
 		for i in range(16845, 16988, 1) :
@@ -33,13 +34,21 @@ def main():
 			print("cp " + dir_name + "P1050704_" + count + ".svg " + dir_name + "dawn_" + new_count + ".svg" )
 			system("cp " + dir_name + "P1050704_" + count + ".svg " + dir_name + "dawn_" + new_count + ".svg" )
 		return 1
-	else :
+	if False :
 		for f in listdir(dir_name) :
 			file_name = join(dir_name, f)
 			if isfile(file_name) :
 				resized_file_name = re.sub(r'.png', r'_resized.jpg', file_name)
 				print("convert " + file_name + " -resize 1080x608  -quality 75 " + resized_file_name )
 				system("convert " + file_name + " -resize 1080x608  -quality 75 " + resized_file_name )
+	if True :
+		system("mkdir ",dirname+"_resized")
+		for f in listdir(dir_name) :
+			file_name = join(dir_name, f)
+			if isfile(file_name) :
+				resized_file_name = re.sub(r'.jpg', r'_resized.jpg', file_name)
+				print("convert " + file_name + " -resize 66%  -quality 75 " + resized_file_name )
+				system("convert " + file_name + " -resize 66%  -quality 75 -gravity center -background black -extent 1920x1080 " + resized_file_name )
 
 if __name__ == "__main__":
 	import sys

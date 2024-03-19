@@ -7,78 +7,141 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 460
 
+#define var_camera_BG_subtr
 bool	  camera_BG_subtr;
+#define var_CAdecay
 float	 CAdecay;
+#define var_trkDecay_0
 float	 trkDecay_0;
+#define var_trkDecay_1
 float	 trkDecay_1;
+#define var_trkDecay_2
 float	 trkDecay_2;
+#define var_trkDecay_3
 float	 trkDecay_3;
+#define var_currentDrawingTrack
 int		currentDrawingTrack;
+#define var_currentVideoTrack
 int		currentVideoTrack;
+#define var_currentPhotoTrack
 int		currentPhotoTrack;
+#define var_path_replay_trackNo_1
 int		path_replay_trackNo_1;
+#define var_path_replay_trackNo_2
 int		path_replay_trackNo_2;
+#define var_path_replay_trackNo_3
 int		path_replay_trackNo_3;
+#define var_path_replay_trackNo_4
 int		path_replay_trackNo_4;
+#define var_path_replay_trackNo_5
 int		path_replay_trackNo_5;
+#define var_path_replay_trackNo_6
 int		path_replay_trackNo_6;
+#define var_path_replay_trackNo_7
 int		path_replay_trackNo_7;
+#define var_path_replay_trackNo_8
 int		path_replay_trackNo_8;
+#define var_path_replay_trackNo_9
 int		path_replay_trackNo_9;
+#define var_path_replay_trackNo_10
 int		path_replay_trackNo_10;
+#define var_path_replay_trackNo_11
 int		path_replay_trackNo_11;
-float	 noiseScale;
+#define var_noiseUpdateScale
+float	 noiseUpdateScale;
+#define var_noiseType
 int		noiseType;
+#define var_noiseLineScale
 float	 noiseLineScale;
+#define var_noiseAngleScale
 float	 noiseAngleScale;
+#define var_noiseCenterX
 float	 noiseCenterX;
+#define var_noiseCenterY
 float	 noiseCenterY;
+#define var_pixel_acc
 float	 pixel_acc;
+#define var_pixel_acc_shiftX
 float	 pixel_acc_shiftX;
+#define var_pixel_acc_shiftY
 float	 pixel_acc_shiftY;
+#define var_pixel_radius
 float	 pixel_radius;
+#define var_pixel_mode
 int		pixel_mode;
+#define var_repop_CA
 float	 repop_CA;
+#define var_repop_BG
 float	 repop_BG;
+#define var_BG_CA_repop_density
 int		BG_CA_repop_density;
+#define var_cameraGamma
 float	 cameraGamma;
+#define var_camera_gamma
 float	 camera_gamma;
+#define var_cameraThreshold
 float	 cameraThreshold;
+#define var_cameraWeight
 float	 cameraWeight;
+#define var_cameraSobel
 float	 cameraSobel;
+#define var_movieWeight
 float	 movieWeight;
+#define var_movieSobel
 float	 movieSobel;
+#define var_invertMovie
 bool	  invertMovie;
+#define var_invertCamera
 bool	  invertCamera;
+#define var_video_satur
 float	 video_satur;
-float	 video_satur_pulse;
+#define var_video_gamma
 float	 video_gamma;
+#define var_video_threshold
 float	 video_threshold;
+#define var_photoWeight
 float	 photoWeight;
+#define var_photo_satur
 float	 photo_satur;
-float	 photo_satur_pulse;
+#define var_photo_value
 float	 photo_value;
-float	 photo_value_pulse;
+#define var_photo_gamma
 float	 photo_gamma;
-float	 photo_gamma_pulse;
+#define var_photo_threshold
 float	 photo_threshold;
+#define var_photo_scale
 float	 photo_scale;
+#define var_mask_scale
 float	 mask_scale;
+#define var_photo_contrast
 float	 photo_contrast;
+#define var_mask_contrast
 float	 mask_contrast;
+#define var_CAParams1
 float	 CAParams1;
+#define var_CAParams2
 float	 CAParams2;
+#define var_CAParams3
 float	 CAParams3;
+#define var_CAParams4
 float	 CAParams4;
+#define var_CAParams5
 float	 CAParams5;
+#define var_CAParams6
 float	 CAParams6;
+#define var_CAParams7
 float	 CAParams7;
+#define var_CAParams8
 float	 CAParams8;
+#define var_cameraCumul
 int		cameraCumul;
+#define var_CAstep
 int		CAstep;
+#define var_CAcolorSpread
 bool	  CAcolorSpread;
+#define var_freeze
 bool	  freeze;
-uniform float uniform_Update_scenario_var_data[71];
+uniform float uniform_Update_scenario_var_data[67];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -402,8 +465,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseUpdateScale) {
+  v *= noiseUpdateScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -464,22 +527,22 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
 // FLAT
-return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
 }
 
 vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   // FLAT
   if(noiseType == 0 )  {
-    return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+    return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
   }
   // SUN RAYS
   else if(noiseType == 1 ) {
     vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
                      length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
-    return vec2(snoise( pos , noiseScale * 10 ) ,
-                            snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
+    return vec2(snoise( pos , noiseUpdateScale * 10 ) ,
+                            snoise( pos + vec2(2.0937,9.4872) , noiseUpdateScale * 10 ));
   }
   // CAMERA
   else if(noiseType == 2 ) {
@@ -1882,7 +1945,7 @@ void main() {
   path_replay_trackNo_9 = int(uniform_Update_scenario_var_data[17]);
   path_replay_trackNo_10 = int(uniform_Update_scenario_var_data[18]);
   path_replay_trackNo_11 = int(uniform_Update_scenario_var_data[19]);
-  noiseScale = uniform_Update_scenario_var_data[20];
+  noiseUpdateScale = uniform_Update_scenario_var_data[20];
   noiseType = int(uniform_Update_scenario_var_data[21]);
   noiseLineScale = uniform_Update_scenario_var_data[22];
   noiseAngleScale = uniform_Update_scenario_var_data[23];
@@ -1906,33 +1969,29 @@ void main() {
   invertMovie = (uniform_Update_scenario_var_data[41] > 0 ? true : false);
   invertCamera = (uniform_Update_scenario_var_data[42] > 0 ? true : false);
   video_satur = uniform_Update_scenario_var_data[43];
-  video_satur_pulse = uniform_Update_scenario_var_data[44];
-  video_gamma = uniform_Update_scenario_var_data[45];
-  video_threshold = uniform_Update_scenario_var_data[46];
-  photoWeight = uniform_Update_scenario_var_data[47];
-  photo_satur = uniform_Update_scenario_var_data[48];
-  photo_satur_pulse = uniform_Update_scenario_var_data[49];
-  photo_value = uniform_Update_scenario_var_data[50];
-  photo_value_pulse = uniform_Update_scenario_var_data[51];
-  photo_gamma = uniform_Update_scenario_var_data[52];
-  photo_gamma_pulse = uniform_Update_scenario_var_data[53];
-  photo_threshold = uniform_Update_scenario_var_data[54];
-  photo_scale = uniform_Update_scenario_var_data[55];
-  mask_scale = uniform_Update_scenario_var_data[56];
-  photo_contrast = uniform_Update_scenario_var_data[57];
-  mask_contrast = uniform_Update_scenario_var_data[58];
-  CAParams1 = uniform_Update_scenario_var_data[59];
-  CAParams2 = uniform_Update_scenario_var_data[60];
-  CAParams3 = uniform_Update_scenario_var_data[61];
-  CAParams4 = uniform_Update_scenario_var_data[62];
-  CAParams5 = uniform_Update_scenario_var_data[63];
-  CAParams6 = uniform_Update_scenario_var_data[64];
-  CAParams7 = uniform_Update_scenario_var_data[65];
-  CAParams8 = uniform_Update_scenario_var_data[66];
-  cameraCumul = int(uniform_Update_scenario_var_data[67]);
-  CAstep = int(uniform_Update_scenario_var_data[68]);
-  CAcolorSpread = (uniform_Update_scenario_var_data[69] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[70] > 0 ? true : false);
+  video_gamma = uniform_Update_scenario_var_data[44];
+  video_threshold = uniform_Update_scenario_var_data[45];
+  photoWeight = uniform_Update_scenario_var_data[46];
+  photo_satur = uniform_Update_scenario_var_data[47];
+  photo_value = uniform_Update_scenario_var_data[48];
+  photo_gamma = uniform_Update_scenario_var_data[49];
+  photo_threshold = uniform_Update_scenario_var_data[50];
+  photo_scale = uniform_Update_scenario_var_data[51];
+  mask_scale = uniform_Update_scenario_var_data[52];
+  photo_contrast = uniform_Update_scenario_var_data[53];
+  mask_contrast = uniform_Update_scenario_var_data[54];
+  CAParams1 = uniform_Update_scenario_var_data[55];
+  CAParams2 = uniform_Update_scenario_var_data[56];
+  CAParams3 = uniform_Update_scenario_var_data[57];
+  CAParams4 = uniform_Update_scenario_var_data[58];
+  CAParams5 = uniform_Update_scenario_var_data[59];
+  CAParams6 = uniform_Update_scenario_var_data[60];
+  CAParams7 = uniform_Update_scenario_var_data[61];
+  CAParams8 = uniform_Update_scenario_var_data[62];
+  cameraCumul = int(uniform_Update_scenario_var_data[63]);
+  CAstep = int(uniform_Update_scenario_var_data[64]);
+  CAcolorSpread = (uniform_Update_scenario_var_data[65] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[66] > 0 ? true : false);
 
   //////////////////////////
   // TRACK DECAY
@@ -1967,7 +2026,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseUpdateScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   pixelTextureCoordinatesPOT_XY = decalCoordsPOT 
                   + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
@@ -2553,8 +2612,8 @@ void main() {
       //  modifies speed according to acceleration
       vec2 pixel_acceleration;
       // FLAT
-        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseScale * 100 ),
-                                snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseScale * 100 ));
+        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseUpdateScale * 100 ),
+                                snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
       // }
 
       vec2 acceleration;

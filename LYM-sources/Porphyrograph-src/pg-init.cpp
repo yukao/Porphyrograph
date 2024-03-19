@@ -1876,6 +1876,10 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	std::cout << "Nb of messages: #" << NbDisplayTexts << " from " << basefilename << "\n";
 	DisplayText_rand_translX = new float[DisplayText_maxLen];
 	DisplayText_rand_translY = new float[DisplayText_maxLen];
+	for (int ind = 0; ind < DisplayText_maxLen; ind++) {
+		DisplayText_rand_translX[ind] = 0.f;
+		DisplayText_rand_translY[ind] = 0.f;
+	}
 
 	// init
 	DisplayTextList = new string[NbDisplayTexts];

@@ -321,7 +321,7 @@ void parse_mesh_obj( FILE *file )
 	nbpointsMesh[NbMesh] = NbFacesMesh[NbMesh] * 3;
 	nbtexCoordsMesh[NbMesh] = NbFacesMesh[NbMesh] * 3;
 	// printf ( "%s", line );
-	printf( "Mesh %d Vertices %d texCoords %d Faces %d\n" , 
+	printf( "Parsed mesh %d Vertices %d texCoords %d Faces %d\n" , 
 		NbMesh , NbFacesMesh[NbMesh] * 3 , NbFacesMesh[NbMesh] * 3 , NbFacesMesh[NbMesh] );
 	NbMesh++;
   }
@@ -384,7 +384,7 @@ void load_mesh_obj( void ) {
 	glEnableVertexAttribArray (1); // don't forget this!
 	glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 
-	glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMesh]);
+	// glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[indMesh]);
 
 	// printf("Load Mesh %d vao ID %d vbo ID %d nbfaces %d\n" ,indMesh , mesh_vao[indMesh], mesh_index_vbo[indMesh], NbFacesMesh[indMesh]);
 	glBindVertexArray(0); // Disable our Vertex Buffer Object

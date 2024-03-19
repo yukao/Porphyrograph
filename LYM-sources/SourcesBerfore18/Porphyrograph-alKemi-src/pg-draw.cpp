@@ -1636,7 +1636,7 @@ void pg_update_scene( void ) {
   // FINAL SHADER UNIFORM VARIABLES
   glUseProgram(shader_Final_programme);
   glUniform4f(uniform_Final_fs_4fv_transparency_invert_leftwidth_rightVMargin, 
-	      blendTransp, (invertAllLayers ? 1.0f : -1.0f) , 
+	      master, (invertAllLayers ? 1.0f : -1.0f) , 
 	      (GLfloat)leftWindowWidth , (GLfloat)rightWindowVMargin );
 
   glUniform1f(uniform_Final_fs_height, (GLfloat)window_height );

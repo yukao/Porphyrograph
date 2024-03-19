@@ -339,7 +339,7 @@ void pg_initializationScript(void) {
 	flashCameraTrk_weight = 0.0f;
 
 	// background subraction
-	currentBGCapture = true;
+	reset_camera = true;
 
 	// particle initialization reset
 	part_initialization = -1;
@@ -658,19 +658,8 @@ void pg_logFirstLineSceneVariables(void) {
 void hide_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// sprintf(AuxString, "/message_can Exposure_%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_QT_send");
-		if (!hide) {
-			glutPositionWindow(window_x, window_y);
-			// printf(" WIDE\n");
-		}
-		else {
-			if (double_window) {
-				glutPositionWindow(window_x + doubleWindowWidth / 2, window_y);
-			}
-			else {
-				glutPositionWindow(window_x + doubleWindowWidth, window_y);
-			}
-			// printf(" NARROW\n");
-		}
+		glutPositionWindow(window_x, window_y);
+		// printf(" WIDE\n");
 	}
 }
 void beat_delay_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
@@ -851,14 +840,14 @@ void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		// printf("pen_radiusMultiplier %.2f\n", pen_radiusMultiplier);
 	}
 }
-//void pixel_acc_center_0_callBack( pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value) {
+//void pixel_acc_shiftX_callBack( pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value) {
 //	if(param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-//		sprintf( AuxString , "/message_can part_center_HV_%.1f_%.1f" , pixel_acc_center_0 , pixel_acc_center_1 ); pg_send_message_udp( (char *)"s" , (char *)AuxString , (char *)"udp_QT_send" );
+//		sprintf( AuxString , "/message_can part_center_HV_%.1f_%.1f" , pixel_acc_shiftX , pixel_acc_shiftY ); pg_send_message_udp( (char *)"s" , (char *)AuxString , (char *)"udp_QT_send" );
 //	}
 //}
-//void pixel_acc_center_1_callBack( pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value) {
+//void pixel_acc_shiftY_callBack( pg_Parameter_Input_Type param_input_type , float scenario_or_gui_command_value) {
 //	if(param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-//		sprintf( AuxString , "/message_can part_center_HV_%.1f_%.1f" , pixel_acc_center_0, pixel_acc_center_1); pg_send_message_udp( (char *)"s" , (char *)AuxString , (char *)"udp_QT_send" );
+//		sprintf( AuxString , "/message_can part_center_HV_%.1f_%.1f" , pixel_acc_shiftX, pixel_acc_shiftY); pg_send_message_udp( (char *)"s" , (char *)AuxString , (char *)"udp_QT_send" );
 //	}
 //}
 void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
@@ -1335,13 +1324,13 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		      float scenario_or_gui_command_value ) {
 	// save previous values of variables that have to know their previous value in their 
 
-	float step = 0.0f;
-	if (parm_keystroke_type == _PG_KEYSTROKE_MINUS) {
-		step = StepMinus[indParam];
-	}
-	else {
-		step = StepPlus[indParam];
-	}
+	//float step = 0.0f;
+	//if (parm_keystroke_type == _PG_KEYSTROKE_MINUS) {
+	//	step = StepMinus[indParam];
+	//}
+	//else {
+	//	step = StepPlus[indParam];
+	//}
 	if (param_input_type == _PG_SCENARIO) {
 		if (BrokenInterpolationVar[indParam]) {
 			return;
@@ -1355,9 +1344,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			*((float *)ScenarioVarPointers[indParam]) = scenario_or_gui_command_value;
 		}
-		else if (param_input_type == _PG_KEYSTROKE) {
-			*((float *)ScenarioVarPointers[indParam]) += step;
-		}
+		//else if (param_input_type == _PG_KEYSTROKE) {
+		//	*((float *)ScenarioVarPointers[indParam]) += step;
+		//}
 		if (ScenarioVarCallbacks[indParam]) {
 			(*ScenarioVarCallbacks[indParam])(param_input_type,scenario_or_gui_command_value);
 		}
@@ -1381,9 +1370,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 				*((int *)ScenarioVarPointers[indParam]) = (int)round(scenario_or_gui_command_value);
 			}
 		}
-		else if (param_input_type == _PG_KEYSTROKE) {
-			*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
-		}
+		//else if (param_input_type == _PG_KEYSTROKE) {
+		//	*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
+		//}
 		if (ScenarioVarCallbacks[indParam]) {
 			(*ScenarioVarCallbacks[indParam])(param_input_type,scenario_or_gui_command_value);
 		}
@@ -1619,7 +1608,7 @@ void pg_process_key( int key ) {
     
   /* ------------------------------- current video background capture */
   case 'v':
-	  currentBGCapture = true;
+	  reset_camera = true;
 	  break;
 
  default:
@@ -1647,8 +1636,8 @@ void launch(void) {
 	isClearCA = 1; // clean CA layer
 	isClearAllLayers = 1; // clears bg layer
 	initCA = 1.0f;
-	mute_screen = false; // double screen
-	sprintf(AuxString, "/mute_screen_can %d", int(mute_screen));
+	mute_second_screen = false; // double screen
+	sprintf(AuxString, "/mute_second_screen_can %d", int(mute_second_screen));
 	pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 
 	pg_LaunchFrameNo = pg_FrameNo;
@@ -1706,41 +1695,41 @@ void setup_minus(void) {
 
 void pg_keyStrokeScripts(int key) {
   pg_Keystroke_Input_Type CommandType = _PG_KEYSTROKE_VOID;
-  char *CmdChar = NULL;
-  int indChar = -1;
-  bool oneCommandIssued = false;
+  //char *CmdChar = NULL;
+  //int indChar = -1;
+  //bool oneCommandIssued = false;
 
-  char * ptCh = CmdCharMinus;
-  while ((CmdChar = strchr(ptCh,key)) != NULL) {
-	  CommandType = _PG_KEYSTROKE_MINUS;
-	  indChar = CmdChar - CmdCharMinus;
-	  if (indChar >= 0) {
-		  pg_update_variable(_PG_KEYSTROKE, CommandType,
-				    indChar, 0.0F );
-		  oneCommandIssued = true;
-	  }
-	  ptCh = CmdChar + 1;
-  }
-  if( oneCommandIssued ) {
-    return;
-  }
-  ptCh = CmdCharPlus;
-  if ((CmdChar = strchr(ptCh,key)) != NULL) {
-	  CommandType = _PG_KEYSTROKE_PLUS;
-	  indChar = CmdChar - CmdCharPlus;
-	  // printf("indChar %d\n", indChar);
-	  if (indChar >= 0) {
-		  pg_update_variable(_PG_KEYSTROKE, CommandType,
-				    indChar, 0.0F );
-		  oneCommandIssued = true;
-	  }
-	  ptCh = CmdChar + 1;
-  }
-  if( oneCommandIssued ) {
-    return;
-  }
+  //char * ptCh = CmdCharMinus;
+  //while ((CmdChar = strchr(ptCh,key)) != NULL) {
+	 // CommandType = _PG_KEYSTROKE_MINUS;
+	 // indChar = CmdChar - CmdCharMinus;
+	 // if (indChar >= 0) {
+		//  pg_update_variable(_PG_KEYSTROKE, CommandType,
+		//		    indChar, 0.0F );
+		//  oneCommandIssued = true;
+	 // }
+	 // ptCh = CmdChar + 1;
+  //}
+  //if( oneCommandIssued ) {
+  //  return;
+  //}
+  //ptCh = CmdCharPlus;
+  //if ((CmdChar = strchr(ptCh,key)) != NULL) {
+	 // CommandType = _PG_KEYSTROKE_PLUS;
+	 // indChar = CmdChar - CmdCharPlus;
+	 // // printf("indChar %d\n", indChar);
+	 // if (indChar >= 0) {
+		//  pg_update_variable(_PG_KEYSTROKE, CommandType,
+		//		    indChar, 0.0F );
+		//  oneCommandIssued = true;
+	 // }
+	 // ptCh = CmdChar + 1;
+  //}
+  //if( oneCommandIssued ) {
+  //  return;
+  //}
 
-  // printf("indChar %d pixel_acc_factor %d\n", indChar, _pixel_acc_factor);
+  // printf("indChar %d pixel_acc %d\n", indChar, _pixel_acc);
 
   switch (key) {
   
@@ -1759,8 +1748,8 @@ void pg_keyStrokeScripts(int key) {
     // background subtraction modes (Z) 
     // ======================================== 
   case'y':
-     BGSubtr = !BGSubtr;
-     BrokenInterpolationVar[ _BGSubtr ] = true;
+     camera_BG_subtr = !camera_BG_subtr;
+     BrokenInterpolationVar[ _camera_BG_subtr ] = true;
     break;
 
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -2111,17 +2100,17 @@ void pg_aliasScript(char *command_symbol,
 		// +++++++++++++++++ PARTICLE INITIALIZATION +++++++++++++++
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	}
-	else if (strcmp(newCommand, "currentBGCapture") == 0) {
-		currentBGCapture = true;
+	else if (strcmp(newCommand, "reset_camera") == 0) {
+		reset_camera = true;
 		// pg_send_message_udp((char *)"s", (char *)"/message_can camera_background_capture", (char *)"udp_QT_send");
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		// +++++++++++++++++ MUTE/UNMUTE LEFT SCREEN +++++++++++++++ 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	}
-	else if (strcmp(newCommand, "mute_screen") == 0) {
-		mute_screen = !mute_screen;
-		sprintf(AuxString, "/mute_screen_can %d", int(mute_screen));
+	else if (strcmp(newCommand, "mute_second_screen") == 0) {
+		mute_second_screen = !mute_second_screen;
+		sprintf(AuxString, "/mute_second_screen_can %d", int(mute_second_screen));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_QT_send");
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -2186,11 +2175,13 @@ void pg_aliasScript(char *command_symbol,
 		float value = (pulsed_pen_color[0] < pulsed_pen_color[1]) ? pulsed_pen_color[1] : pulsed_pen_color[0];
 		value = (value < pulsed_pen_color[2]) ? pulsed_pen_color[2] : value;
 		// printf( "pulsed_pen_color: %f %f %f\n" , pulsed_pen_color[0] , pulsed_pen_color[1] , pulsed_pen_color[2] );
+#if !defined (CAVERNEPLATON) && !defined(ULM)
 		if (invertAllLayers) {
 			pulsed_pen_color[0] = value - pulsed_pen_color[0];
 			pulsed_pen_color[1] = value - pulsed_pen_color[1];
 			pulsed_pen_color[2] = value - pulsed_pen_color[2];
 		}
+#endif
 		sprintf(AuxString, "/pen_colorPalette_can %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f",
 			base_color[0], base_color[1], base_color[2], base_color[3], base_color[4], base_color[5], base_color[6], base_color[7], base_color[8]);
 		pg_send_message_udp((char *)"f f f f f f f f f", AuxString, (char *)"udp_QT_send");
@@ -2222,11 +2213,13 @@ void pg_aliasScript(char *command_symbol,
 		value = (pulsed_repop_color[0] < pulsed_repop_color[1]) ? pulsed_repop_color[1] : pulsed_repop_color[0];
 		value = (value < pulsed_repop_color[2]) ? pulsed_repop_color[2] : value;
 		// printf( "pulsed_repop_color: %f %f %f\n" , pulsed_repop_color[0] , pulsed_repop_color[1] , pulsed_repop_color[2] );
+#if !defined (CAVERNEPLATON) && !defined(ULM)
 		if (invertAllLayers) {
 			pulsed_repop_color[0] = value - pulsed_repop_color[0];
 			pulsed_repop_color[1] = value - pulsed_repop_color[1];
 			pulsed_repop_color[2] = value - pulsed_repop_color[2];
 		}
+#endif
 		sprintf(AuxString, "/repop_colorPalette_can %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f",
 			base_color[0], base_color[1], base_color[2], base_color[3], base_color[4], base_color[5], base_color[6], base_color[7], base_color[8]);
 		pg_send_message_udp((char *)"f f f f f f f f f", AuxString, (char *)"udp_QT_send");

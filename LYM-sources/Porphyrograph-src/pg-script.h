@@ -57,6 +57,7 @@ enum pg_Keystroke_Input_Type {
 	_PG_KEYSTROKE_MINUS = 0, _PG_KEYSTROKE_PLUS, _PG_KEYSTROKE_VOID
 };
 
+enum pg_ColorTarget {_PG_PEN = 0, _PG_REPOP, _PG_CLIP_ART, _PG_LIGHT};
 
 
 //////////////////////////////////////////////
@@ -436,7 +437,7 @@ void Mesh_Off(int indImage);
 void Mesh_On(int indImage);
 void ClipArt_SubPathOnOff(int indPath);
 void pg_update_pulsed_colors(void);
-void compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], bool is_pen_color);
+void compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], pg_ColorTarget color_target);
 void HSVtoRGB(float h, float s, float v, float* r, float* g, float* b);
 void RGBtoHSV(float r, float g, float b, float* h, float* s, float* v);
 void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_pulse, float value, float value_pulse, float pulsed_color[3], bool is_pen_color);

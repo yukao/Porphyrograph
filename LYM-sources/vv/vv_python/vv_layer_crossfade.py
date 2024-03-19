@@ -79,10 +79,10 @@ def main(main_args) :
 			input_file_name_list = re.split(r' +',input_file_name_list.rstrip())
 		elif opt in ("-o", "--outputfile"):
 			output_file_name = arg
-		elif opt in ("--nb-layers"):
+		elif opt == "--nb-layers":
 			nb_layers = int(force_num(arg))
 		#  SVG path transformation
-		elif opt in ("--composition-mode"):
+		elif opt == "--composition-mode":
 			composition_mode_string = arg
 			if not(composition_mode_string in composition_mode_list.keys()) :
 				print(USAGE)
@@ -90,45 +90,45 @@ def main(main_args) :
 				return 0
 			composition_mode = composition_mode_list[composition_mode_string]
 		#  SVG path transformation percentage
-		elif opt in ("--nb-files"):
+		elif opt == "--nb-files":
 			nb_files = int(force_num(arg))
-		elif opt in ("--fill_color_bg"):
+		elif opt == "--fill_color_bg":
 			arg_fill_color[0]  = arg
-		elif opt in ("--fill_color_l1"):
+		elif opt == "--fill_color_l1":
 			arg_fill_color[1] = arg
-		elif opt in ("--fill_color_l2"):
+		elif opt == "--fill_color_l2":
 			arg_fill_color[2] = arg
-		elif opt in ("--fill_color_l3"):
+		elif opt == "--fill_color_l3":
 			arg_fill_color[3] = arg
-		elif opt in ("--fill_color_l4"):
+		elif opt == "--fill_color_l4":
 			arg_fill_color[4] = arg
-		elif opt in ("--fill_color_l5"):
+		elif opt == "--fill_color_l5":
 			arg_fill_color[5] = arg
-		elif opt in ("--fill_color_l6"):
+		elif opt == "--fill_color_l6":
 			arg_fill_color[6] = arg
-		elif opt in ("--fill_color_l7"):
+		elif opt == "--fill_color_l7":
 			arg_fill_color[7] = arg
-		elif opt in ("--fill_color_l8"):
+		elif opt == "--fill_color_l8":
 			arg_fill_color[8] = arg
-		elif opt in ("--stroke_color_l1"):
+		elif opt == "--stroke_color_l1":
 			arg_stroke_color[1] = arg
-		elif opt in ("--stroke_color_l2"):
+		elif opt == "--stroke_color_l2":
 			arg_stroke_color[2] = arg
-		elif opt in ("--stroke_color_l3"):
+		elif opt == "--stroke_color_l3":
 			arg_stroke_color[3] = arg
-		elif opt in ("--stroke_color_l4"):
+		elif opt == "--stroke_color_l4":
 			arg_stroke_color[4] = arg
-		elif opt in ("--stroke_color_l5"):
+		elif opt == "--stroke_color_l5":
 			arg_stroke_color[5] = arg
-		elif opt in ("--stroke_color_l6"):
+		elif opt == "--stroke_color_l6":
 			arg_stroke_color[6] = arg
-		elif opt in ("--stroke_color_l7"):
+		elif opt == "--stroke_color_l7":
 			arg_stroke_color[7] = arg
-		elif opt in ("--stroke_color_l8"):
+		elif opt == "--stroke_color_l8":
 			arg_stroke_color[8] = arg
-		elif opt in ("--file1_file2_color_blend"):
+		elif opt == "--file1_file2_color_blend":
 			file1_file2_color_blend = clamp(force_num(arg))
-		elif opt in ("--ind_old_clip"):
+		elif opt == "--ind_old_clip":
 			ind_old_clip = int(force_num(arg))
 		# SVG path translation
 		else:

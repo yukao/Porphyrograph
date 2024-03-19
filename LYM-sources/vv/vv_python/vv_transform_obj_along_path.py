@@ -1206,24 +1206,24 @@ def main(main_args) :
 			input_file_name = arg
 		elif opt in ("-o", "--outputfile"):
 			output_file_name = arg
-		elif opt in ("--nb_layers"):
+		elif opt == "--nb_layers":
 			nb_layers = force_num(arg)
-		elif opt in ("--chapter_no"):
+		elif opt == "--chapter_no":
 			chapter_no = force_num(arg)
-		elif opt in ("--drawing_path_IDs"):
+		elif opt == "--drawing_path_IDs":
 			drawing_path_IDs = arg
-		elif opt in ("--csv_obj_data_storage"):
+		elif opt == "--csv_obj_data_storage":
 			csv_obj_data_storage = arg
-		elif opt in ("--first_frame_input"):
+		elif opt == "--first_frame_input":
 			first_frame_input = arg
-		elif opt in ("--objects_directory"):
+		elif opt == "--objects_directory":
 			objects_directory = arg
-		elif opt in ("--objects_file"):
+		elif opt == "--objects_file":
 			objects_file = arg
-		elif opt in ("--objects_IDs"):
+		elif opt == "--objects_IDs":
 			objects_IDs = arg
 			objects_IDs_strings = re.split(r'/', objects_IDs.rstrip())
-		elif opt in ("--transformation"):
+		elif opt == "--transformation":
 			transf_string = arg
 			single_transf_strings = re.split(r'/', transf_string.rstrip())
 			for single_transf_string in single_transf_strings :
@@ -1236,35 +1236,35 @@ def main(main_args) :
 		#  SVG path transformation percentage
 		elif opt in ["--percent_transf1", "--percent_transf"]:
 			percent_transf[1] = max(min(force_num(arg),1),0)
-		elif opt in ("--scale_x_obj_layer1"):
+		elif opt == "--scale_x_obj_layer1":
 			scale_x_obj_layer1 = force_num(arg)
-		elif opt in ("--scale_y_obj_layer1"):
+		elif opt == "--scale_y_obj_layer1":
 			scale_y_obj_layer1 = force_num(arg)
-		elif opt in ("--scale_x_obj_layer2"):
+		elif opt == "--scale_x_obj_layer2":
 			scale_x_obj_layer2 = force_num(arg)
-		elif opt in ("--scale_y_obj_layer2"):
+		elif opt == "--scale_y_obj_layer2":
 			scale_y_obj_layer2 = force_num(arg)
-		elif opt in ("--interval_obj_layer1"):
+		elif opt == "--interval_obj_layer1":
 			interval_obj_layer1 = force_num(arg)
-		elif opt in ("--interval_obj_layer2"):
+		elif opt == "--interval_obj_layer2":
 			interval_obj_layer2 = force_num(arg)
-		elif opt in ("--growth_obj_layer1"):
+		elif opt == "--growth_obj_layer1":
 			growth_obj_layer1 = force_num(arg)
-		elif opt in ("--growth_obj_layer2"):
+		elif opt == "--growth_obj_layer2":
 			growth_obj_layer2 = force_num(arg)
-		elif opt in ("--rand_scale_x_obj_layer1"):
+		elif opt == "--rand_scale_x_obj_layer1":
 			rand_scale_x_obj_layer1 = force_num(arg)
-		elif opt in ("--rand_scale_x_obj_layer2"):
+		elif opt == "--rand_scale_x_obj_layer2":
 			rand_scale_x_obj_layer2 = force_num(arg)
-		elif opt in ("--rand_rotation_obj_layer1"):
+		elif opt == "--rand_rotation_obj_layer1":
 			rand_rotation_obj_layer1 = force_num(arg)
-		elif opt in ("--rand_rotation_obj_layer2"):
+		elif opt == "--rand_rotation_obj_layer2":
 			rand_rotation_obj_layer2 = force_num(arg)
-		elif opt in ("--sun_x"):
+		elif opt == "--sun_x":
 			sun_x = force_num(arg)
-		elif opt in ("--sun_y"):
+		elif opt == "--sun_y":
 			sun_y = force_num(arg)
-		elif opt in ("--sound_volume"):
+		elif opt == "--sound_volume":
 			sound_volume = force_num(arg)
 		else:
 			msg = "unhandled option ["+opt+"]"

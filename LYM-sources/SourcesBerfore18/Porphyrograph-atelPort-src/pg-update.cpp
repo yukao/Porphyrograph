@@ -48,7 +48,7 @@ float paths_RadiusY[PG_NB_PATHS + 1];
 bool is_automatic_snapshots = true;
 
 // mute/unmute the right screen output in double screen
-bool mute_screen = true;
+bool mute_second_screen = true;
 
 /////////////////////////////////////////////////////////////////
 // CAMERA PARAMETERS
@@ -240,7 +240,7 @@ void one_frame_variables_reset(void) {
 	// /////////////////////////
 	// clear layer reset
 	// does not reset if camera capture is still ongoing
-	if (!currentBGCapture && !secondCBGCapture) {
+	if (!reset_camera && !secondCBGCapture) {
 		isClearAllLayers = 0;
 	}
 	// clear CA reset
@@ -300,87 +300,87 @@ void camera_and_video_frame_updates(void) {
 #endif
 		}
 		else {
-			// threaded
-			if (false) {
-				if (!pg_MovieFrame_buffer_data.transfering) { // currentVideoTrack <=> video off
-															  // frame capture
-															  // printf("frame capture\n");
-															  // thread for the transfer to GPU
-					int indFreeOpenGLContext = GetFreeOpenGLContext();
-					// printf("opengl context #%d\n", indFreeOpenGLContext);
-
-					if (indFreeOpenGLContext >= 0) {
-						pg_MovieFrame_buffer_data.transfering = true;
-						pg_MovieFrame_buffer_data.transferred = false;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].fname = pg_MovieFrame_buffer_data.fname;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].photo_buffer_data = &pg_MovieFrame_buffer_data;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].textureID = pg_movie_texture_texID;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].is_rectangle = true;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].components = GL_RGB;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].datatype = GL_UNSIGNED_BYTE;
-						ThreadOpenGLTextureData[indFreeOpenGLContext].texturefilter = GL_LINEAR;
-						// printf("Load movie frame text ID %d\n", pg_camera_texture_texID);
-
-						// Assuming that this is the main thread
-						ThreadOpenGLTextureData[indFreeOpenGLContext].hdc = wglGetCurrentDC(); // GetDC(hwnd);
-						HGLRC mainContext = wglGetCurrentContext();
-						if (!ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext) {
-							ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext
-								= wglCreateContext(ThreadOpenGLTextureData[indFreeOpenGLContext].hdc);
-						}
-						wglShareLists(mainContext, ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext); // Order matters
-
-#ifdef WIN32
-						DWORD rc;
-						HANDLE  hThread = CreateThread(
-							NULL,                   // default security attributes
-							0,                      // use default stack size  
-							pg_threaded_loadMovieFrame,		    // thread function name
-							(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext],// argument to thread function 
-							0,                      // use default creation flags 
-							&rc);   // returns the thread identifier 
-						if (hThread == NULL) {
-							std::cout << "Error:unable to create camera frame thread pg_threaded_loadPhotoData" << std::endl;
-						}
-						CloseHandle(hThread);
-						// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// should only be closed when the thread is finished + assigned NULL value
-						// make code so that only one reading (or writing thread) is called at a time
-						// because of concurrent call to glTexImage2D that might be a source of problem
-						// a texture has been loaded in RAM
-						// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#else
-						pthread_t reading_thread;
-						int rc;
-						rc = pthread_create(&reading_thread, NULL,
-							pg_threaded_loadMovieFrame, (void *)(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext]);
-						if (rc) {
-							std::cout << "Error:unable to create thread pg_threaded_loadPhotoData" << rc << std::endl;
-							pthread_exit(NULL);
-						}
-#endif
-					}
-				}
-			}
+//			// threaded
+//			if (false) {
+//				if (!pg_MovieFrame_buffer_data.transfering) { // currentVideoTrack <=> video off
+//															  // frame capture
+//															  // printf("frame capture\n");
+//															  // thread for the transfer to GPU
+//					int indFreeOpenGLContext = GetFreeOpenGLContext();
+//					// printf("opengl context #%d\n", indFreeOpenGLContext);
+//
+//					if (indFreeOpenGLContext >= 0) {
+//						pg_MovieFrame_buffer_data.transfering = true;
+//						pg_MovieFrame_buffer_data.transferred = false;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].fname = pg_MovieFrame_buffer_data.fname;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].photo_buffer_data = &pg_MovieFrame_buffer_data;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].textureID = pg_movie_texture_texID;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].is_rectangle = true;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].components = GL_RGB;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].datatype = GL_UNSIGNED_BYTE;
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].texturefilter = GL_LINEAR;
+//						// printf("Load movie frame text ID %d\n", pg_camera_texture_texID);
+//
+//						// Assuming that this is the main thread
+//						ThreadOpenGLTextureData[indFreeOpenGLContext].hdc = wglGetCurrentDC(); // GetDC(hwnd);
+//						HGLRC mainContext = wglGetCurrentContext();
+//						if (!ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext) {
+//							ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext
+//								= wglCreateContext(ThreadOpenGLTextureData[indFreeOpenGLContext].hdc);
+//						}
+//						wglShareLists(mainContext, ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext); // Order matters
+//
+//#ifdef WIN32
+//						DWORD rc;
+//						HANDLE  hThread = CreateThread(
+//							NULL,                   // default security attributes
+//							0,                      // use default stack size  
+//							pg_threaded_loadMovieFrame,		    // thread function name
+//							(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext],// argument to thread function 
+//							0,                      // use default creation flags 
+//							&rc);   // returns the thread identifier 
+//						if (hThread == NULL) {
+//							std::cout << "Error:unable to create camera frame thread pg_threaded_loadPhotoData" << std::endl;
+//						}
+//						CloseHandle(hThread);
+//						// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//						// should only be closed when the thread is finished + assigned NULL value
+//						// make code so that only one reading (or writing thread) is called at a time
+//						// because of concurrent call to glTexImage2D that might be a source of problem
+//						// a texture has been loaded in RAM
+//						// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//#else
+//						pthread_t reading_thread;
+//						int rc;
+//						rc = pthread_create(&reading_thread, NULL,
+//							pg_threaded_loadMovieFrame, (void *)(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext]);
+//						if (rc) {
+//							std::cout << "Error:unable to create thread pg_threaded_loadPhotoData" << rc << std::endl;
+//							pthread_exit(NULL);
+//						}
+//#endif
+//					}
+//				}
+//			}
 			// non threaded
-			else {
-				Mat pg_movie_frame;
-				pg_movie_capture >> pg_movie_frame;
-				pg_movie_nbFrames--;
-				if (pg_movie_frame.data) {
-					glEnable(GL_TEXTURE_RECTANGLE);
-					glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
-					glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
-						0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-						GL_RGB,            // Internal colour format to convert to
-						pg_movie_frame_width,          // Image width  i.e. 640 for Kinect in standard mode
-						pg_movie_frame_height,          // Image height i.e. 480 for Kinect in standard mode
-						0,                 // Border width in pixels (can either be 1 or 0)
-						GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-						GL_UNSIGNED_BYTE,  // Image data type
-						(char *)pg_movie_frame.data);        // The actual image data itself
-				}
+			//else {
+			Mat pg_movie_frame;
+			pg_movie_capture >> pg_movie_frame;
+			pg_movie_nbFrames--;
+			if (pg_movie_frame.data) {
+				glEnable(GL_TEXTURE_RECTANGLE);
+				glBindTexture(GL_TEXTURE_RECTANGLE, pg_movie_texture_texID);
+				glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
+					0,                 // Pyramid level (for mip-mapping) - 0 is the top level
+					GL_RGB,            // Internal colour format to convert to
+					pg_movie_frame_width,          // Image width  i.e. 640 for Kinect in standard mode
+					pg_movie_frame_height,          // Image height i.e. 480 for Kinect in standard mode
+					0,                 // Border width in pixels (can either be 1 or 0)
+					GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
+					GL_UNSIGNED_BYTE,  // Image data type
+					(char *)pg_movie_frame.data);        // The actual image data itself
 			}
+			//}
 		}
 	}
 
@@ -400,67 +400,67 @@ void camera_and_video_frame_updates(void) {
 
 		// thread for the transfer to GPU
 		// threaded
-		if (false) {
-			int indFreeOpenGLContext = GetFreeOpenGLContext();
-			// printf("opengl context #%d\n", indFreeOpenGLContext);
-
-			if (indFreeOpenGLContext >= 0) {
-				pg_CameraFrame_buffer_data.transfering = true;
-				pg_CameraFrame_buffer_data.transferred = false;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].fname = pg_camera_capture_name;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].photo_buffer_data = &pg_CameraFrame_buffer_data;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].textureID = pg_camera_texture_texID;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].is_rectangle = true;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].components = GL_RGB;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].datatype = GL_UNSIGNED_BYTE;
-				ThreadOpenGLTextureData[indFreeOpenGLContext].texturefilter = GL_LINEAR;
-				// printf("Load camera frame text ID %d\n", pg_camera_texture_texID);
-
-				// Assuming that this is the main thread
-				ThreadOpenGLTextureData[indFreeOpenGLContext].hdc = wglGetCurrentDC(); // GetDC(hwnd);
-				HGLRC mainContext = wglGetCurrentContext();
-				if (!ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext) {
-					ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext
-						= wglCreateContext(ThreadOpenGLTextureData[indFreeOpenGLContext].hdc);
-				}
-				wglShareLists(mainContext, ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext); // Order matters
-
-#ifdef WIN32
-				DWORD rc;
-				HANDLE  hThread = CreateThread(
-					NULL,                   // default security attributes
-					0,                      // use default stack size  
-					pg_threaded_loadCameraFrame,		    // thread function name
-					(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext],// argument to thread function 
-					0,                      // use default creation flags 
-					&rc);   // returns the thread identifier 
-				if (hThread == NULL) {
-					std::cout << "Error:unable to create camera frame thread pg_threaded_loadPhotoData" << std::endl;
-				}
-				CloseHandle(hThread);
-				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				// should only be closed when the thread is finished + assigned NULL value
-				// make code so that only one reading (or writing thread) is called at a time
-				// because of concurrent call to glTexImage2D that might be a source of problem
-				// a texture has been loaded in RAM
-				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#else
-				pthread_t reading_thread;
-				int rc;
-				rc = pthread_create(&reading_thread, NULL,
-					pg_threaded_loadCameraFrame, (void *)(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext]);
-				if (rc) {
-					std::cout << "Error:unable to create thread pg_threaded_loadPhotoData" << rc << std::endl;
-					pthread_exit(NULL);
-				}
-#endif
-			}
-		}
+//		if (false) {
+//			int indFreeOpenGLContext = GetFreeOpenGLContext();
+//			// printf("opengl context #%d\n", indFreeOpenGLContext);
+//
+//			if (indFreeOpenGLContext >= 0) {
+//				pg_CameraFrame_buffer_data.transfering = true;
+//				pg_CameraFrame_buffer_data.transferred = false;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].fname = pg_camera_capture_name;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].photo_buffer_data = &pg_CameraFrame_buffer_data;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].textureID = pg_camera_texture_texID;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].is_rectangle = true;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].components = GL_RGB;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].datatype = GL_UNSIGNED_BYTE;
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].texturefilter = GL_LINEAR;
+//				// printf("Load camera frame text ID %d\n", pg_camera_texture_texID);
+//
+//				// Assuming that this is the main thread
+//				ThreadOpenGLTextureData[indFreeOpenGLContext].hdc = wglGetCurrentDC(); // GetDC(hwnd);
+//				HGLRC mainContext = wglGetCurrentContext();
+//				if (!ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext) {
+//					ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext
+//						= wglCreateContext(ThreadOpenGLTextureData[indFreeOpenGLContext].hdc);
+//				}
+//				wglShareLists(mainContext, ThreadOpenGLTextureData[indFreeOpenGLContext].loaderContext); // Order matters
+//
+//#ifdef WIN32
+//				DWORD rc;
+//				HANDLE  hThread = CreateThread(
+//					NULL,                   // default security attributes
+//					0,                      // use default stack size  
+//					pg_threaded_loadCameraFrame,		    // thread function name
+//					(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext],// argument to thread function 
+//					0,                      // use default creation flags 
+//					&rc);   // returns the thread identifier 
+//				if (hThread == NULL) {
+//					std::cout << "Error:unable to create camera frame thread pg_threaded_loadPhotoData" << std::endl;
+//				}
+//				CloseHandle(hThread);
+//				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//				// should only be closed when the thread is finished + assigned NULL value
+//				// make code so that only one reading (or writing thread) is called at a time
+//				// because of concurrent call to glTexImage2D that might be a source of problem
+//				// a texture has been loaded in RAM
+//				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//#else
+//				pthread_t reading_thread;
+//				int rc;
+//				rc = pthread_create(&reading_thread, NULL,
+//					pg_threaded_loadCameraFrame, (void *)(void *)& ThreadOpenGLTextureData[indFreeOpenGLContext]);
+//				if (rc) {
+//					std::cout << "Error:unable to create thread pg_threaded_loadPhotoData" << rc << std::endl;
+//					pthread_exit(NULL);
+//				}
+//#endif
+//			}
+//		}
 		// non threaded
-		else {
+		//else {
 			// printf("*** non threaded camera frame capture %d\n", pg_FrameNo);
 			loadCameraFrame(false);
-		}
+		//}
 	}
 }
 #endif
@@ -497,18 +497,18 @@ void pg_update_scene(void) {
 	bool repop_channels[PG_NB_PATHS + 1];
 	int nb_repop_channels = 0;
 #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7
-	nb_repop_channels += int(path_repop_0) + int(path_repop_1) + int(path_repop_2) + int(path_repop_3);
-	repop_channels[0] = path_repop_0;
-	repop_channels[1] = path_repop_1;
-	repop_channels[2] = path_repop_2;
-	repop_channels[3] = path_repop_3;
+	nb_repop_channels += int(part_path_repop_0) + int(part_path_repop_1) + int(part_path_repop_2) + int(part_path_repop_3);
+	repop_channels[0] = part_path_repop_0;
+	repop_channels[1] = part_path_repop_1;
+	repop_channels[2] = part_path_repop_2;
+	repop_channels[3] = part_path_repop_3;
 #endif
 #if PG_NB_PATHS == 7
-	nb_repop_channels += int(path_repop_4) + int(path_repop_5) + int(path_repop_6) + int(path_repop_7);
-	repop_channels[4] = path_repop_4;
-	repop_channels[5] = path_repop_5;
-	repop_channels[6] = path_repop_6;
-	repop_channels[7] = path_repop_7;
+	nb_repop_channels += int(part_path_repop_4) + int(part_path_repop_5) + int(part_path_repop_6) + int(part_path_repop_7);
+	repop_channels[4] = part_path_repop_4;
+	repop_channels[5] = part_path_repop_5;
+	repop_channels[6] = part_path_repop_6;
+	repop_channels[7] = part_path_repop_7;
 #endif
 	int selected_channel = int(floor(randomValue * (nb_repop_channels - 0.00001)));
 	int nbActChannels = 0;
@@ -528,7 +528,7 @@ void pg_update_scene(void) {
 	glUniform4f(uniform_Update_fs_4fv_clearAllLayers_clearCA_pixelRadius_pulsedShift,
 		(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
 		pixel_radius + pulse_average * pixel_radius_pulse,
-		fabs(pulse_average - pulse_average_prec) * part_Vshift_pulse);
+		fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
 
 	//if (isClearAllLayers > 0) {
 	//	printf("-> clear all layers\n");
@@ -703,7 +703,7 @@ void pg_update_scene(void) {
 	glUniform4f(uniform_Update_fs_4fv_repop_part_path_acc_damp_factor,
 		min(.9f , repop_part + pulse_average * repop_part_pulse),
 		min(.9f , repop_path + pulse_average * repop_part_pulse),
-		part_acc_factor + pulse_average * part_acc_pulse, part_damp_factor);
+		part_acc_factor + pulse_average * part_acc_pulse, part_damp);
 	//printf("repop part path %.2f %.2f\n",
 	//	min(.9f, repop_part + pulse_average * repop_part_pulse),
 	//	min(.9f, repop_path + pulse_average * repop_part_pulse));
@@ -740,7 +740,7 @@ void pg_update_scene(void) {
 
 	glUseProgram(shader_programme[pg_shader_Particle]);
 	glUniform3f(uniform_ParticleSplat_gs_3fv_partRadius_partType_highPitchPulse,
-				(partRadius + pulse_average * part_radius_pulse * partRadius) / 512.f,
+				(partRadius + pulse_average * part_size_pulse * partRadius) / 512.f,
 				(GLfloat)particle_type,
 				pulse[2]);
 #ifdef ATELIERS_PORTATIFS
@@ -779,8 +779,8 @@ void pg_update_scene(void) {
 #endif
 
 	//printf("pulsed particle radius %.4f rad %.4f pulse %.4f coef %.4f\n", 
-	//	(partRadius + pulse_average * part_radius_pulse * partRadius) / 512.f,
-	//	partRadius / 512.f, pulse_average, part_radius_pulse);
+	//	(partRadius + pulse_average * part_size_pulse * partRadius) / 512.f,
+	//	partRadius / 512.f, pulse_average, part_size_pulse);
 
 	/////////////////////////////////////////////////////////////////////////
 	// MIXING SHADER UNIFORM VARIABLES
@@ -800,10 +800,10 @@ void pg_update_scene(void) {
 	// hoover cursor
 	glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift,
 		(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
-		(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * tracks_Hshift_pulse);
+		(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
 	// screen size
-	glUniform3f(uniform_Master_fs_3fv_width_height_mute_screen,
-		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(int(mute_screen)));
+	glUniform3f(uniform_Master_fs_3fv_width_height_mute_second_screen,
+		(GLfloat)leftWindowWidth, (GLfloat)window_height, GLfloat(int(mute_second_screen)));
 	// printf("hoover %d %d\n",CurrentCursorHooverPos_x, CurrentCursorHooverPos_y);
 
 

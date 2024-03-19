@@ -1,2 +1,2 @@
-cd C:\sync.com\Sync\LYM-projects
-"C:\Program Files\pd\bin\pd.exe" -noprefs -nodac -open C:/sync.com/Sync/LYM-projects/Projects/interface/LYM_core.pd 
+cd C:\home\LYM-projects
+"C:\Program Files\pd\bin\pd.exe" -noprefs -nodac -open C:/home/LYM-projects/Projects/interface/LYM_core.pd 

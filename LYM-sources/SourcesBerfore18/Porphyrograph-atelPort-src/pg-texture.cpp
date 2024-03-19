@@ -1112,9 +1112,9 @@ void loadCameraFrame(bool initial_capture) {
 			pg_camera_frame.data);        // The actual image data itself
 												// /////////////////////////
 												// reads BG camera frame for image subtraction
-		if (currentBGCapture || secondCBGCapture) { // currentVideoTrack <=> video off
+		if (reset_camera || secondCBGCapture) { // currentVideoTrack <=> video off
 			printf("*** non threaded current BG video capture frame %d\n" , pg_FrameNo);
-			currentBGCapture = false;
+			reset_camera = false;
 
 			// makes a second video capture 
 			secondCBGCapture = !secondCBGCapture;
@@ -1172,9 +1172,9 @@ void* pg_threaded_loadCameraFrame(void * lpParam) {
 
 		// /////////////////////////
 		// reads BG camera frame for image subtraction
-		if (currentBGCapture || secondCBGCapture) { // currentVideoTrack <=> video off
+		if (reset_camera || secondCBGCapture) { // currentVideoTrack <=> video off
 			// printf("**** threaded current BG video capture %d\n", pg_FrameNo);
-			currentBGCapture = false;
+			reset_camera = false;
 
 			// makes a second video capture 
 			secondCBGCapture = !secondCBGCapture;

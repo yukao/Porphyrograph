@@ -78,7 +78,7 @@ def main(main_args) :
 	for opt, arg in opts:
 		if opt in ("-i", "--inputfile"):
 			scenario_file_name = arg
-		elif opt in ("--chapter_no"):
+		elif opt == "--chapter_no":
 			scenario_chapter_no = arg
 		else:
 			assert False, "unhandled option"
@@ -205,6 +205,7 @@ def main(main_args) :
 		print("read sound data")
 		with_sound_data = read_sound_data(val_init)
 		with_onset_data = read_onset_data(val_init)
+		print("with sound data", with_sound_data)
 
 		##################################################################
 		# SCANS ALL THE FRAMES IN THE MOVIE
@@ -215,6 +216,7 @@ def main(main_args) :
 		for indFrameInput in range(val_init["imageInputIndex"], val_fin["imageInputIndex"] + pas, pas):
 			countInput = "%05d" % indFrameInput
 			countOutput = "%05d" % indFrameOutput
+			# print("Image index In: ", countInput, " Out: ", countOutput)
 
 			# if (indFrameInput < 5135 or indFrameInput > 5136) :
 			# if (indFrameInput != 14500 and indFrameInput != 14700) :
@@ -223,9 +225,9 @@ def main(main_args) :
 			# if not((ind_scene == 9 and indFrameInput % 10 == 0) or (ind_scene == 10 and indFrameInput % 40 == 0) or (ind_scene == 11 and indFrameInput % 40 == 0))  :
 			# 	indFrameOutput += 1
 			# 	continue
-			if indFrameInput <= 2680 or indFrameInput >= 2702 :
-				indFrameOutput += 1
-				continue
+			# if indFrameInput <= 2680 or indFrameInput >= 2702 :
+			# 	indFrameOutput += 1
+			# 	continue
 
 			# scene percentage at this frame 
 			scene_percentage = 0
@@ -239,8 +241,8 @@ def main(main_args) :
 				val_interp[var_name] = interpolate(var_types[var_name], val_init[var_name], val_fin[var_name], interp[var_name], scene_percentage)
 				# print( "var name [",var_name,"] value: ",val_init[var_name], " ", val_fin[var_name], " ", interp[var_name], " ", val_interp[var_name])
 			
-			# if(trace_only) :
-			# 	print("Ind image {0:d} Scene percentage {0:.2f}".format(indFrameInput, scene_percentage))
+			if(trace_only) :
+				print("Ind image {0:d} Scene percentage {0:.2f}".format(indFrameInput, scene_percentage))
 
 			# SVG input file name
 			full_svg_input_file_name = os.path.join(val_init["svg_input_directory"], val_init["svg_input_file_name"])
@@ -252,6 +254,7 @@ def main(main_args) :
 			
 			# reads the sound volume corresponding to the soundtrack at the timecode of the current frame
 			envelope_sound_volume = 0
+			peaked_envelope_sound_volume = 0
 			smoothed_envelope_sound_volume = 0
 			onset_sound_volume = 0
 			sound_volume = 0
@@ -306,7 +309,7 @@ def main(main_args) :
 					"-i", full_svg_input_file_name]
 
 				# LAYERS COLOR AND OPACITY
-				interp_fill_color_bg = '#000000'
+				interp_fill_color_bg = '#FFFFFF'
 				interp_fill_color_l1 = '#000000'
 				interp_fill_color_l2 = '#000000'
 				interp_fill_color_l3 = '#000000'
@@ -315,6 +318,9 @@ def main(main_args) :
 				interp_fill_color_l6 = '#000000'
 				interp_fill_color_l7 = '#000000'
 				interp_fill_color_l8 = '#000000'
+				interp_fill_color_l9 = '#000000'
+				interp_fill_color_l10 = '#000000'
+				interp_fill_opacity_bg = '1.0'
 				interp_fill_opacity_l1 = '1.0'
 				interp_fill_opacity_l2 = '1.0'
 				interp_fill_opacity_l3 = '1.0'
@@ -323,6 +329,8 @@ def main(main_args) :
 				interp_fill_opacity_l6 = '1.0'
 				interp_fill_opacity_l7 = '1.0'
 				interp_fill_opacity_l8 = '1.0'
+				interp_fill_opacity_l9 = '1.0'
+				interp_fill_opacity_l10 = '1.0'
 				# background rectangle when the layers do not cover the whole pictures
 				# as in a grayscale image where layers span from black to light gray
 				if("fill_color_bg" in val_interp) :
@@ -379,6 +387,24 @@ def main(main_args) :
 						interp_pulsed_fill_color_l8 = val_interp["pulsed_fill_color_l8"]
 						interp_fill_color_l8 = interpolate(var_types["fill_color_l8"], interp_fill_color_l8, interp_pulsed_fill_color_l8, 'l', sound_volume)
 					fillAndStroke_argts.extend(["--fill_color_l8", interp_fill_color_l8])
+				if("fill_color_l9" in val_interp) :
+					interp_fill_color_l9 = val_interp["fill_color_l9"]
+					if(with_sound_data and "pulsed_fill_color_l9" in val_interp) :
+						interp_pulsed_fill_color_l9 = val_interp["pulsed_fill_color_l9"]
+						interp_fill_color_l9 = interpolate(var_types["fill_color_l9"], interp_fill_color_l9, interp_pulsed_fill_color_l9, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--fill_color_l9", interp_fill_color_l9])
+				if("fill_color_l10" in val_interp) :
+					interp_fill_color_l10 = val_interp["fill_color_l10"]
+					if(with_sound_data and "pulsed_fill_color_l10" in val_interp) :
+						interp_pulsed_fill_color_l10 = val_interp["pulsed_fill_color_l10"]
+						interp_fill_color_l10 = interpolate(var_types["fill_color_l10"], interp_fill_color_l10, interp_pulsed_fill_color_l10, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--fill_color_l10", interp_fill_color_l10])
+				if("fill_opacity_bg" in val_interp) :
+					interp_fill_opacity_bg = val_interp["fill_opacity_bg"]
+					if(with_sound_data and "pulsed_fill_opacity_bg" in val_interp) :
+						interp_pulsed_fill_opacity_bg = val_interp["pulsed_fill_opacity_bg"]
+						interp_fill_opacity_bg = interpolate(var_types["fill_opacity_bg"], interp_fill_opacity_bg, interp_pulsed_fill_opacity_bg, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--fill_opacity_bg", format(interp_fill_opacity_bg, '.8f')])
 				if("fill_opacity_l1" in val_interp) :
 					interp_fill_opacity_l1 = val_interp["fill_opacity_l1"]
 					if(with_sound_data and "pulsed_fill_opacity_l1" in val_interp) :
@@ -427,6 +453,18 @@ def main(main_args) :
 						interp_pulsed_fill_opacity_l8 = val_interp["pulsed_fill_opacity_l8"]
 						interp_fill_opacity_l8 = interpolate(var_types["fill_opacity_l8"], interp_fill_opacity_l8, interp_pulsed_fill_opacity_l8, 'l', sound_volume)
 					fillAndStroke_argts.extend(["--fill_opacity_l8", format(interp_fill_opacity_l8, '.8f')])
+				if("fill_opacity_l9" in val_interp) :
+					interp_fill_opacity_l9 = val_interp["fill_opacity_l9"]
+					if(with_sound_data and "pulsed_fill_opacity_l9" in val_interp) :
+						interp_pulsed_fill_opacity_l9 = val_interp["pulsed_fill_opacity_l9"]
+						interp_fill_opacity_l9 = interpolate(var_types["fill_opacity_l9"], interp_fill_opacity_l9, interp_pulsed_fill_opacity_l9, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--fill_opacity_l9", format(interp_fill_opacity_l9, '.8f')])
+				if("fill_opacity_l10" in val_interp) :
+					interp_fill_opacity_l10 = val_interp["fill_opacity_l10"]
+					if(with_sound_data and "pulsed_fill_opacity_l10" in val_interp) :
+						interp_pulsed_fill_opacity_l10 = val_interp["pulsed_fill_opacity_l10"]
+						interp_fill_opacity_l10 = interpolate(var_types["fill_opacity_l10"], interp_fill_opacity_l10, interp_pulsed_fill_opacity_l10, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--fill_opacity_l10", format(interp_fill_opacity_l10, '.8f')])
 
 				
 				# STROKES COLOR, WIDTH, AND OPACITY
@@ -438,6 +476,8 @@ def main(main_args) :
 				interp_stroke_color_l6 = '#000000'
 				interp_stroke_color_l7 = '#000000'
 				interp_stroke_color_l8 = '#000000'
+				interp_stroke_color_l9 = '#000000'
+				interp_stroke_color_l10 = '#000000'
 				interp_stroke_opacity_l1 = '1.0'
 				interp_stroke_opacity_l2 = '1.0'
 				interp_stroke_opacity_l3 = '1.0'
@@ -446,6 +486,8 @@ def main(main_args) :
 				interp_stroke_opacity_l6 = '1.0'
 				interp_stroke_opacity_l7 = '1.0'
 				interp_stroke_opacity_l8 = '1.0'
+				interp_stroke_opacity_l9 = '1.0'
+				interp_stroke_opacity_l10 = '1.0'
 				interp_stroke_width_l1 = '0.0'
 				interp_stroke_width_l2 = '0.0'
 				interp_stroke_width_l3 = '0.0'
@@ -454,6 +496,8 @@ def main(main_args) :
 				interp_stroke_width_l6 = '0.0'
 				interp_stroke_width_l7 = '0.0'
 				interp_stroke_width_l8 = '0.0'
+				interp_stroke_width_l9 = '0.0'
+				interp_stroke_width_l10 = '0.0'
 				interp_stroke_color = '#000000'
 				interp_stroke_opacity = '1.0'
 				interp_stroke_width = '0.0'
@@ -507,6 +551,18 @@ def main(main_args) :
 						interp_pulsed_stroke_color_l8 = val_interp["pulsed_stroke_color_l8"]
 						interp_stroke_color_l8 = interpolate(var_types["stroke_color_l8"], interp_stroke_color_l8, interp_pulsed_stroke_color_l8, 'l', sound_volume)
 					fillAndStroke_argts.extend(["--stroke_color_l8", interp_stroke_color_l8])
+				if("stroke_color_l9" in val_interp) :
+					interp_stroke_color_l9 = val_interp["stroke_color_l9"]
+					if(with_sound_data and "pulsed_stroke_color_l9" in val_interp) :
+						interp_pulsed_stroke_color_l9 = val_interp["pulsed_stroke_color_l9"]
+						interp_stroke_color_l9 = interpolate(var_types["stroke_color_l9"], interp_stroke_color_l9, interp_pulsed_stroke_color_l9, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--stroke_color_l9", interp_stroke_color_l9])
+				if("stroke_color_l10" in val_interp) :
+					interp_stroke_color_l10 = val_interp["stroke_color_l10"]
+					if(with_sound_data and "pulsed_stroke_color_l10" in val_interp) :
+						interp_pulsed_stroke_color_l10 = val_interp["pulsed_stroke_color_l10"]
+						interp_stroke_color_l10 = interpolate(var_types["stroke_color_l10"], interp_stroke_color_l10, interp_pulsed_stroke_color_l10, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--stroke_color_l10", interp_stroke_color_l10])
 				if("stroke_opacity_l1" in val_interp) :
 					interp_stroke_opacity_l1 = val_interp["stroke_opacity_l1"]
 					if(with_sound_data and "pulsed_stroke_opacity_l1" in val_interp) :
@@ -555,6 +611,18 @@ def main(main_args) :
 						interp_pulsed_stroke_opacity_l8 = val_interp["pulsed_stroke_opacity_l8"]
 						interp_stroke_opacity_l8 = interpolate(var_types["stroke_opacity_l8"], interp_stroke_opacity_l8, interp_pulsed_stroke_opacity_l8, 'l', sound_volume)
 					fillAndStroke_argts.extend(["--stroke_opacity_l8", format(interp_stroke_opacity_l8, '.8f')])
+				if("stroke_opacity_l9" in val_interp) :
+					interp_stroke_opacity_l9 = val_interp["stroke_opacity_l9"]
+					if(with_sound_data and "pulsed_stroke_opacity_l9" in val_interp) :
+						interp_pulsed_stroke_opacity_l9 = val_interp["pulsed_stroke_opacity_l9"]
+						interp_stroke_opacity_l9 = interpolate(var_types["stroke_opacity_l9"], interp_stroke_opacity_l9, interp_pulsed_stroke_opacity_l9, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--stroke_opacity_l9", format(interp_stroke_opacity_l9, '.8f')])
+				if("stroke_opacity_l10" in val_interp) :
+					interp_stroke_opacity_l10 = val_interp["stroke_opacity_l10"]
+					if(with_sound_data and "pulsed_stroke_opacity_l10" in val_interp) :
+						interp_pulsed_stroke_opacity_l10 = val_interp["pulsed_stroke_opacity_l10"]
+						interp_stroke_opacity_l10 = interpolate(var_types["stroke_opacity_l10"], interp_stroke_opacity_l10, interp_pulsed_stroke_opacity_l10, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--stroke_opacity_l10", format(interp_stroke_opacity_l10, '.8f')])
 				if("stroke_width_l1" in val_interp) :
 					interp_stroke_width_l1 = val_interp["stroke_width_l1"]
 					if(with_sound_data and "pulsed_stroke_width_l1" in val_interp) :
@@ -603,13 +671,25 @@ def main(main_args) :
 						interp_pulsed_stroke_width_l8 = val_interp["pulsed_stroke_width_l8"]
 						interp_stroke_width_l8 = interpolate(var_types["stroke_width_l8"], interp_stroke_width_l8, interp_pulsed_stroke_width_l8, 'l', sound_volume)
 					fillAndStroke_argts.extend(["--stroke_width_l8", format(interp_stroke_width_l8, '.8f')])
+				if("stroke_width_l9" in val_interp) :
+					interp_stroke_width_l9 = val_interp["stroke_width_l9"]
+					if(with_sound_data and "pulsed_stroke_width_l9" in val_interp) :
+						interp_pulsed_stroke_width_l9 = val_interp["pulsed_stroke_width_l9"]
+						interp_stroke_width_l9 = interpolate(var_types["stroke_width_l9"], interp_stroke_width_l9, interp_pulsed_stroke_width_l9, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--stroke_width_l9", format(interp_stroke_width_l9, '.8f')])
+				if("stroke_width_l10" in val_interp) :
+					interp_stroke_width_l10 = val_interp["stroke_width_l10"]
+					if(with_sound_data and "pulsed_stroke_width_l10" in val_interp) :
+						interp_pulsed_stroke_width_l10 = val_interp["pulsed_stroke_width_l10"]
+						interp_stroke_width_l10 = interpolate(var_types["stroke_width_l10"], interp_stroke_width_l10, interp_pulsed_stroke_width_l10, 'l', sound_volume)
+					fillAndStroke_argts.extend(["--stroke_width_l10", format(interp_stroke_width_l10, '.8f')])
 
 				if("stroke_color" in val_interp) :
 					interp_stroke_color = val_interp["stroke_color"]
 					if(with_sound_data and "pulsed_stroke_color" in val_interp) :
 						interp_pulsed_stroke_color = val_interp["pulsed_stroke_color"]
 						interp_stroke_color = interpolate(var_types["stroke_color"], interp_stroke_color, interp_pulsed_stroke_color, 'l', sound_volume)
-					fillAndStroke_argts.extend(["--stroke_color", format(interp_stroke_color, '.8f')])
+					fillAndStroke_argts.extend(["--stroke_color", format(interp_stroke_color, 's')])
 				if("stroke_opacity" in val_interp) :
 					interp_stroke_opacity = val_interp["stroke_opacity"]
 					if(with_sound_data and "pulsed_stroke_opacity" in val_interp) :
@@ -653,30 +733,58 @@ def main(main_args) :
 				interp_blur_l6 = '0.0'
 				interp_blur_l7 = '0.0'
 				interp_blur_l8 = '0.0'
+				interp_blur_l9 = '0.0'
+				interp_blur_l10 = '0.0'
 				if("blur_l1" in val_interp) :
 					interp_blur_l1 = format(val_interp["blur_l1"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l1", interp_blur_l1])
+					fillAndStroke_argts.extend(["--blur_l1", interp_blur_l1])
+				else :
+					fillAndStroke_argts.extend(["--blur_l1", '0.f'])
 				if("blur_l2" in val_interp) :
 					interp_blur_l2 = format(val_interp["blur_l2"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l2", interp_blur_l2])
+					fillAndStroke_argts.extend(["--blur_l2", interp_blur_l2])
+				else :
+					fillAndStroke_argts.extend(["--blur_l2", '0.f'])
 				if("blur_l3" in val_interp) :
 					interp_blur_l3 = format(val_interp["blur_l3"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l3", interp_blur_l3])
+					fillAndStroke_argts.extend(["--blur_l3", interp_blur_l3])
+				else :
+					fillAndStroke_argts.extend(["--blur_l3", '0.f'])
 				if("blur_l4" in val_interp) :
 					interp_blur_l4 = format(val_interp["blur_l4"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l4", interp_blur_l4])
+					fillAndStroke_argts.extend(["--blur_l4", interp_blur_l4])
+				else :
+					fillAndStroke_argts.extend(["--blur_l4", '0.f'])
 				if("blur_l5" in val_interp) :
 					interp_blur_l5 = format(val_interp["blur_l5"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l5", interp_blur_l5])
+					fillAndStroke_argts.extend(["--blur_l5", interp_blur_l5])
+				else :
+					fillAndStroke_argts.extend(["--blur_l5", '0.f'])
 				if("blur_l6" in val_interp) :
 					interp_blur_l6 = format(val_interp["blur_l6"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l6", interp_blur_l6])
+					fillAndStroke_argts.extend(["--blur_l6", interp_blur_l6])
+				else :
+					fillAndStroke_argts.extend(["--blur_l6", '0.f'])
 				if("blur_l7" in val_interp) :
 					interp_blur_l7 = format(val_interp["blur_l7"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l7", interp_blur_l7])
+					fillAndStroke_argts.extend(["--blur_l7", interp_blur_l7])
+				else :
+					fillAndStroke_argts.extend(["--blur_l7", '0.f'])
 				if("blur_l8" in val_interp) :
 					interp_blur_l8 = format(val_interp["blur_l8"], '.8f')
-				fillAndStroke_argts.extend(["--blur_l8", interp_blur_l8])
+					fillAndStroke_argts.extend(["--blur_l8", interp_blur_l8])
+				else :
+					fillAndStroke_argts.extend(["--blur_l8", '0.f'])
+				if("blur_l9" in val_interp) :
+					interp_blur_l9 = format(val_interp["blur_l9"], '.8f')
+					fillAndStroke_argts.extend(["--blur_l9", interp_blur_l9])
+				else :
+					fillAndStroke_argts.extend(["--blur_l9", '0.f'])
+				if("blur_l10" in val_interp) :
+					interp_blur_l10 = format(val_interp["blur_l10"], '.8f')
+					fillAndStroke_argts.extend(["--blur_l10", interp_blur_l10])
+				else :
+					fillAndStroke_argts.extend(["--blur_l10", '0.f'])
 
 				if("fill_and_stroke_mode" in val_interp) :
 					fillAndStroke_argts.extend(["--fill_and_stroke_mode", str(val_interp["fill_and_stroke_mode"])])
@@ -691,8 +799,8 @@ def main(main_args) :
 				# os.system("cp "+os.path.join(tmp_dir+"tmp_transformed.svg")+" "+full_svg_output_file_name)
 
 			# removes input frame
-			print ("rm: ", full_svg_input_file_name)
-			os.system("rm -f " + full_svg_input_file_name)
+			# print ("rm: ", full_svg_input_file_name)
+			# os.system("rm -f " + full_svg_input_file_name)
 
 			# moves forward on output frames
 			indFrameOutput += 1

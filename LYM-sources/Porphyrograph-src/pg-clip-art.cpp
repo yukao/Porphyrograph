@@ -41,7 +41,7 @@ void initializeNVPathRender(const char *programName) {
 void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile, int indConfiguration) {
 	string splitFileName = fileName;
 	splitFileName.replace(fileName.length() - 4, 0, "_split");
-	sprintf(ErrorStr,"python  C:\\sync.com\\Sync\\LYM-sources\\vv\\vv_python\\utils\\vv_one_SVG_tag_per_line.py -i ./%s -o ./%s",
+	sprintf(ErrorStr,"python  C:\\home\\LYM-sources\\vv\\vv_python\\utils\\vv_one_SVG_tag_per_line.py -i ./%s -o ./%s",
 		fileName.c_str(), splitFileName.c_str());
 	system(ErrorStr);
 
@@ -226,7 +226,7 @@ static void OpenGLIntColors(unsigned int color) {
 }
 static void OpenGLPaletteColors(Color &col, float palette_pulse) {
 	float pulsed_color[3] = { 0.f };
-	compute_pulsed_palette_color(col.color, palette_pulse, col.grey, palette_pulse, pulsed_color, false);
+	compute_pulsed_palette_color(col.color, palette_pulse, col.grey, palette_pulse, pulsed_color, _PG_CLIP_ART);
 	unsigned int red, green, blue;
 	red = unsigned int(pulsed_color[0] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
 	green = unsigned int(pulsed_color[1] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
@@ -372,7 +372,7 @@ static void pg_Display_One_ClipArt(pg_ClipArt_Colors_Types color, int indClipArt
 	else {
 		//printf("config %d active clipart display %d layer %d color %d\n", pg_current_configuration_rank, indClipArt, indLayer, 
 		//	ClipArt_path_fill_color[pg_current_configuration_rank][indClipArt][indLayer]);
-		// original clip art color forsurface filling
+		// original clip art color for surface filling
 		OpenGLIntColors(ClipArt_path_fill_color[pg_current_configuration_rank][indClipArt][indLayer]);
 	}
 	glStencilFillPathNV(ClipArt_file_baseID[pg_current_configuration_rank][indClipArt] + indLayer, GL_COUNT_UP_NV, 0x1F);
@@ -480,7 +480,7 @@ void pg_Display_All_ClipArt(int activeFiles) {
 }
 
 void pg_listAllClipArts(void) {
-	printf("Clip Arts:\n");
+	printf("Listing ClipArts:\n");
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (int indClipArt = 0; indClipArt < pg_nb_ClipArt[indConfiguration]; indClipArt++) {
@@ -497,27 +497,64 @@ void pg_listAllClipArts(void) {
 //////////////////////////////////////////////////
 // RENDERING OF MESSAGE THROUGH ClipArt GPU CHARACTERS
 float pg_Translate_ClipArt_Text(int indDisplayText) {
-	return float(log(indDisplayText/3.f) * 110);
+	return float(log(indDisplayText/3.f) * 210 + 160);
 	// return ((indDisplayText % 370) / 10) * 30.f;
 }
+void convertTextStringToClipartIndices(std::vector<int> *indClipArts, string displayed_text) {
+	// decomposition of the string into characters and svg index lookup
+	for (unsigned int indChar = 0; indChar < displayed_text.size(); indChar++) {
+		// indChar character code
+		char curChar = displayed_text.at(indChar);
+		int indClipArt = -1;
+#ifdef ETOILES
+		/* TEASEER ETOiLES */
+		if (curChar >= '0' && curChar <= '9') {
+			indClipArt = curChar - '0';
+		}
+		else {
+			switch (curChar) {
+			case '.':  indClipArt = 10; break;
+			case ',':  indClipArt = 11; break;
+			case '+':  indClipArt = 12; break;
+			case '-':  indClipArt = 13; break;
+			case 'e':  indClipArt = 14; break;
+			}
+		}
+#else
+		// corresponding index of clipart (the cliparts are declared in the scenario file)
+		if (curChar >= 'A' && curChar <= 'Z') {
+			indClipArt = curChar - 'A';
+		}
+		else {
+			switch (curChar) {
+			case ' ':  indClipArt = 26; break;
+			case '\'':  indClipArt = 27; break;
+			}
+		}
+#endif
+		(*indClipArts)[indChar] = indClipArt;
+	}
+}
 void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
-	if ((*ind_Current_DisplayText) >= 0 && (*ind_Current_DisplayText) < NbDisplayTexts
-		&& pg_shader_programme[pg_current_configuration_rank][_pg_shader_ClipArt]) {
-		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ClipArt]);
-		//glDisable(GL_DEPTH_TEST);
+	for (int indLine = 0; indLine < 60; indLine++) {
+		if ((*ind_Current_DisplayText) >= 0 && (*ind_Current_DisplayText) < NbDisplayTexts
+			&& pg_shader_programme[pg_current_configuration_rank][_pg_shader_ClipArt]) {
+			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ClipArt]);
+			//glDisable(GL_DEPTH_TEST);
 
-		//glClearStencil(0);
-		// glClearColor(1, 1, 1, 1);
+			//glClearStencil(0);
+			// glClearColor(1, 1, 1, 1);
 
-		// glEnable(GL_BLEND);
-		glEnable(GL_STENCIL_TEST);
-		glStencilFunc(GL_NOTEQUAL, 0, 0x1F);
-		glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+			// glEnable(GL_BLEND);
+			glEnable(GL_STENCIL_TEST);
+			glStencilFunc(GL_NOTEQUAL, 0, 0x1F);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
-		glClear(GL_STENCIL_BUFFER_BIT);
-		glMatrixPushEXT(GL_PROJECTION); {
+			glClear(GL_STENCIL_BUFFER_BIT);
+			glMatrixPushEXT(GL_PROJECTION);
 			glMatrixLoadIdentityEXT(GL_PROJECTION);
 			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
+			glMatrixPushEXT(GL_MODELVIEW);
 			std::string displayed_text("");
 #ifdef ETOILES
 			int digit_rank = (*ind_Current_DisplayText) / 10;
@@ -531,7 +568,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					else {
 						digit_value = 0;
 					}
-					displayed_text.push_back(char('0'+digit_value));
+					displayed_text.push_back(char('0' + digit_value));
 					if (curDigitRank == 0) {
 						displayed_text += std::string(".");
 					}
@@ -557,82 +594,76 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 			}
 			std::cout << "text " << displayed_text << " rank " << (*ind_Current_DisplayText) << std::endl;
 #else
-			displayed_text = DisplayTextList[(*ind_Current_DisplayText)];
+			// the string to display is loaded from a text file
+			int ind_current_displayed_line = max(0, (*ind_Current_DisplayText) - 10 * indLine);
+			displayed_text = DisplayTextList[ind_current_displayed_line];
 #endif
-				
+
+			vector<int> indClipArts(displayed_text.size(), 26);
+			convertTextStringToClipartIndices(&indClipArts, displayed_text);
+
 			// decomposition of the string into characters and svg index lookup
 			for (unsigned int indChar = 0; indChar < displayed_text.size(); indChar++) {
-				char curChar = displayed_text.at(indChar);
-				int indClipArt = -1;
-#ifdef ETOILES
-				/* TEASEER ETOiLES */
-				if (curChar >= '0' && curChar <= '9') {
-					indClipArt = curChar - '0';
-				}
-				else {
-					switch (curChar) {
-					case '.':  indClipArt = 10; break;
-					case ',':  indClipArt = 11; break;
-					case '+':  indClipArt = 12; break;
-					case '-':  indClipArt = 13; break;
-					case 'e':  indClipArt = 14; break;
-					}
-				}
-#else
-				if (curChar >= 'A' && curChar <= 'Z') {
-					indClipArt = curChar - 'A';
-				}
-				else {
-					switch (curChar) {
-					case ' ':  indClipArt = 26; break;
-					case '\'':  indClipArt = 27; break;
-					}
-				}
-#endif
+				// displays the character
+				int indClipArt = indClipArts[indChar];
 				if (indClipArt >= 0 && indClipArt < pg_nb_ClipArt[pg_current_configuration_rank]) {
 					//printf("active clipart display %d\n", indClipArt);
-					glMatrixPushEXT(GL_MODELVIEW); {
-						glMatrixLoadIdentityEXT(GL_MODELVIEW);
-						float y_transl = 0.f;
-						if (mobile) {
-							y_transl = pg_Translate_ClipArt_Text((*ind_Current_DisplayText));
-						}
-						else {
-							y_transl = pg_ClipArt_Translation_Y[pg_current_configuration_rank][indClipArt];
-						}
-#ifdef ETOILES
-						glTranslatef(100.f + 100.f * indChar, y_transl, 0);
-#else
-						if (mobile == 2 && indChar < unsigned int(DisplayText_maxLen)) {
-							DisplayText_rand_translX[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f);
-							DisplayText_rand_translY[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f) + rand_0_1 * 0.2f * (1.f + float(current_scene_percent) * 10.f);
-						}
-						glTranslatef(pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt] * 1.5f 
-							+ pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt] * indChar + DisplayText_rand_translX[indChar], 
-							y_transl + DisplayText_rand_translY[indChar], 0);
-#endif
-						//glRotatef(pg_ClipArt_Rotation[pg_current_configuration_rank][indClipArt], 0, 0, 1);
-						//glScalef(pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], 1);
-						for (int indPath = 0;
-							indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt];
-							indPath++) {
-							if (indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt]
-								&& pg_ClipArt_SubPath[pg_current_configuration_rank][indClipArt][indPath] == true) {
-								//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath] 
-								//	<< " ind PATH " << indPath << " ind CLIPART " << indClipArt << std::endl;
-#ifndef ETOILES
-								float scale = pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt];
-								glScalef(scale, scale, scale);
-#endif
-								pg_Display_One_ClipArt(pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath], indClipArt, indPath);
-							}
-						}
+					glMatrixLoadIdentityEXT(GL_MODELVIEW);
+					float y_transl = 0.f;
+					// value given by the variable moving_messages in the scenario
+					// the message is moving vertically (log based falling function)
+					if (mobile) {
+						y_transl = pg_Translate_ClipArt_Text(ind_current_displayed_line) - indLine * 32;
 					}
-					glMatrixPopEXT(GL_MODELVIEW);
+					// the translation is given in the scenario file together with the clipart declaration at the bottom of the scenario
+					else {
+						y_transl = pg_ClipArt_Translation_Y[pg_current_configuration_rank][indClipArt];
+					}
+#ifdef ETOILES
+					glTranslatef(100.f + 100.f * indChar, y_transl, 0);
+#else
+					// message with some random motion
+					if (mobile == 2 && indChar < unsigned int(DisplayText_maxLen)) {
+						DisplayText_rand_translX[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f);
+						DisplayText_rand_translY[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f) + rand_0_1 * 0.2f * (1.f + float(current_scene_percent) * 10.f);
+					}
+					else {
+						DisplayText_rand_translX[indChar] = 0.f;
+						DisplayText_rand_translY[indChar] = 0.f;
+					}
+
+					// XxY translation of the character
+					// Y translation is given by motion or by scenario
+					// X translation is the scenario translation + the horizontal shift due to position in the string
+					glTranslatef(pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt] * 1.5f
+						+ pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt] * indChar + DisplayText_rand_translX[indChar],
+						y_transl + DisplayText_rand_translY[indChar], 0);
+#endif
+					//glRotatef(pg_ClipArt_Rotation[pg_current_configuration_rank][indClipArt], 0, 0, 1);
+					//glScalef(pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], 1);
+					// the clipart can be made of several sub-paths, only display the ones that are not been set to off
+					for (int indPath = 0;
+						indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt];
+						indPath++) {
+						//if (pg_ClipArt_SubPath[pg_current_configuration_rank][indClipArt][indPath] == true) {
+							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath] 
+							//	<< " ind PATH " << indPath << " ind CLIPART " << indClipArt << std::endl;
+#ifndef ETOILES
+						float scale = pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt];
+						glScalef(scale, scale, scale);
+#endif
+						pg_Display_One_ClipArt(pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath], indClipArt, indPath);
+						//}
+						//else {
+						//	printf("subpath not visible\n");
+						//}
+					}
+					}
 				}
-			}
-		} glMatrixPopEXT(GL_PROJECTION);
-		glDisable(GL_STENCIL_TEST);
+			glMatrixPopEXT(GL_MODELVIEW);
+			glMatrixPopEXT(GL_PROJECTION);
+			glDisable(GL_STENCIL_TEST);
+		}
 	}
 #ifdef ETOILES
 	if (pg_FrameNo % 3 == 0) {
@@ -650,8 +681,9 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 //////////////////////////////////////////////////
 // LOAD ALL CLIPARTS
 void pg_loadAllClipArts(void) {
+	//std::cout << "Loading ClipArts\n";
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
-		std::cout << "    " << indConfiguration << ": ";
+		//std::cout << "    " << indConfiguration << ": ";
 		if (ScenarioVarConfigurations[_activeClipArts][indConfiguration]) {
 			const char* ClipArt_programName = "nvpr_ClipArt";
 			//std::cout << "Loading " << pg_nb_ClipArt[indConfiguration] << " ClipArt\n";
@@ -662,7 +694,7 @@ void pg_loadAllClipArts(void) {
 				ClipArt_path_fill_color[indConfiguration] = new unsigned int* [pg_nb_ClipArt[indConfiguration]];
 				int nb_tot_paths = 0;
 				for (int indClipArtFile = 0; indClipArtFile < pg_nb_ClipArt[indConfiguration]; indClipArtFile++) {
-					std::cout << "Data/" + project_name + "-data/ClipArts/" + pg_ClipArt_fileNames[indConfiguration][indClipArtFile] << " (" << pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile] << " paths), ";
+					//std::cout << "Data/" + project_name + "-data/ClipArts/" + pg_ClipArt_fileNames[indConfiguration][indClipArtFile] << " (" << pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile] << " paths), ";
 					ClipArt_path_fill_color[indConfiguration][indClipArtFile] = new unsigned int[pg_nb_tot_SvgGpu_paths[indConfiguration]];
 					ClipArt_file_baseID[indConfiguration][indClipArtFile] = ClipArt_path_baseID[indConfiguration] + nb_tot_paths;
 					LoadClipArtPathsToGPU("Data/" + project_name + "-data/ClipArts/" + pg_ClipArt_fileNames[indConfiguration][indClipArtFile],

@@ -23,7 +23,6 @@
 
 #ifndef _WIN32
 #include "config.h"
-#include <dirent.h>
 #endif // !_WIN32
 
 #include <stdio.h>
@@ -44,7 +43,11 @@ namespace fs = std::filesystem;
 #include <string.h>
 #include <cstdio>
 #include <cstring>
+#ifdef _WIN32
 #include <dirent.h>
+#else
+#include "/usr/include/dirent.h"
+#endif
 #include <regex>
 
 #include <time.h>
@@ -52,7 +55,7 @@ namespace fs = std::filesystem;
 #include <fcntl.h>
 #include <errno.h>
 #include <fstream>
-#include <conio.h>
+//#include <conio.h>
 #include <random>
 #include <cstdlib>      // std::rand, std::srand
 #include <algorithm>    // std::max / min
@@ -61,7 +64,7 @@ namespace fs = std::filesystem;
 
 // memory leak tracing
 #define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
+//#include <crtdbg.h>
 
 #define rand_0_1 (float(rand()) / float(RAND_MAX))
 template<typename T>

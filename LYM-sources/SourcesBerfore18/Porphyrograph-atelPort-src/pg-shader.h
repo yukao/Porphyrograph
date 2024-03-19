@@ -190,7 +190,7 @@ extern GLint uniform_Master_vp_model;
 extern GLint uniform_Master_vp_view;
 extern GLint uniform_Master_vp_proj;
 extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-extern GLint uniform_Master_fs_3fv_width_height_mute_screen;
+extern GLint uniform_Master_fs_3fv_width_height_mute_second_screen;
 
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_decal;         // previous pass output

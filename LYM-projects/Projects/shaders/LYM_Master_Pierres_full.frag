@@ -265,10 +265,10 @@ void main() {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(coords/vec2(2048,2048), 
       0.5833333333)).g * master_mask_opacity_4;
   }
-/*  if(master_mask_opacity_5 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(coords/vec2(2048,2048), 
-      0.75)).g * master_mask_opacity_5;
+  if(master_mask_opacity_5 > 0) {
+    maskColor += master_mask_opacity_5;
   }
+/*
   if(master_mask_opacity_6 > 0) {
     maskColor += texture(uniform_Master_texture_fs_Mask, vec3(coords/vec2(2048,2048), 
       0.9166666667)).g * master_mask_opacity_6;
@@ -276,17 +276,6 @@ void main() {
 */  
   maskColor = clamp(maskColor, 0, 1);
   outColor0.rgb *= maskColor;
-  // outColor0.rgb *= 1;
-  // vertical mirror
-
-  // the fifth mask is used to guide rehearsals without the ground by blending
-  // the ground color or other elements such as landmarks for the position of "meuleuse stone"
-  // or "crater stones"
-  if(master_mask_opacity_5 > 0) {
-    outColor0.rgb = mix( outColor0.rgb, texture(uniform_Master_texture_fs_Mask, vec3(coords/vec2(2048,2048), 
-      0.75)).rgb, master_mask_opacity_5);
-  }
-
 
   // lateral cropping
   if(decalCoords.x < master_crop_x || decalCoords.x > master_crop_y) {

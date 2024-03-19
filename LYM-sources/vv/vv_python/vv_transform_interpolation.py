@@ -297,13 +297,13 @@ def main(main_args) :
 			input_file_name = arg
 		elif opt in ("-o", "--outputfile"):
 			output_file_name = arg
-		elif opt in ("--target_file_name"):
+		elif opt == "--target_file_name":
 			target_file_name = arg
-		elif opt in ("--nb_layers"):
+		elif opt == "--nb_layers":
 			nb_layers = force_num(arg)
-		elif opt in ("--chapter_no"):
+		elif opt == "--chapter_no":
 			chapter_no = force_num(arg)
-		elif opt in ("--transformation"):
+		elif opt == "--transformation":
 			transf_string = arg
 			single_transf_strings = re.split(r'/', transf_string.rstrip())
 			for single_transf_string in single_transf_strings :
@@ -316,7 +316,7 @@ def main(main_args) :
 		#  SVG path transformation percentage
 		elif opt in ["--percent_transf1", "--percent_transf"]:
 			percent_transf[1] = max(min(force_num(arg),1),0)
-		elif opt in ("--sound_volume"):
+		elif opt == "--sound_volume":
 			sound_volume = force_num(arg)
 		else:
 			msg = "unhandled option ["+opt+"]"

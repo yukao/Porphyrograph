@@ -165,9 +165,9 @@ GLuint pg_vaoID[pg_VAOCount];
 GLuint pg_vboID[pg_VBOCount];
 GLuint pg_shaderID[pg_ShaderCount];
 
-GLfloat *curve_points;
-//GLfloat *curve_texCoords;
-unsigned int *curve_indices;
+GLfloat *pg_ClipArt_points;
+//GLfloat *pg_ClipArt_texCoords;
+unsigned int *pg_ClipArt_indices;
 
 // geometrical data
 #define PG_NBFACES_QUAD 2
@@ -231,55 +231,55 @@ GLuint comet_texture_2D_texID = 0;
 /////////////////////////////////////////////////
 // BEZIER CURVES INITIALIZATION
 
-void initBezierCurveData()
+void initVectorClipArtData()
 {
 	// the control point position contain column and row of the control point coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader
-	curve_points = new float[PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 3];
-	//curve_texCoords = new float[PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 2];
-	curve_indices = new unsigned int[PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1)];
+	pg_ClipArt_points = new float[PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 3];
+	//pg_ClipArt_texCoords = new float[PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 2];
+	pg_ClipArt_indices = new unsigned int[PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1)];
 
 	// the used width is a multiple of (PG_CURVE_DEGREE + 1) so that each set of control
 	// point coordinates is on a single line
 	int width_used = PG_WIDTH - PG_WIDTH % (PG_CURVE_DEGREE + 1);
 
-	for (int indCurve = 0; indCurve < PG_NB_BEZIER_CURVES; indCurve++) {
+	for (int indCurve = 0; indCurve < PG_NB_VECTOR_CLIPART; indCurve++) {
 		int ind_index = indCurve * (PG_CURVE_DEGREE + 1);
 		int ind_point = ind_index * 3;
 		// col 
-		curve_points[ind_point + 0] = float((indCurve * (PG_CURVE_DEGREE + 1) + 0) % width_used);
+		pg_ClipArt_points[ind_point + 0] = float((indCurve * (PG_CURVE_DEGREE + 1) + 0) % width_used);
 		// row
-		curve_points[ind_point + 1] = float((indCurve * (PG_CURVE_DEGREE + 1) + 0) / width_used);
-		curve_points[ind_point + 2] = 0.f;
+		pg_ClipArt_points[ind_point + 1] = float((indCurve * (PG_CURVE_DEGREE + 1) + 0) / width_used);
+		pg_ClipArt_points[ind_point + 2] = 0.f;
 
 		//// u 
-		//curve_texCoords[ind_point + 0] = 0.f;
+		//pg_ClipArt_texCoords[ind_point + 0] = 0.f;
 		//// v
-		//curve_texCoords[ind_point + 1] = 0.f;
+		//pg_ClipArt_texCoords[ind_point + 1] = 0.f;
 
-		curve_indices[ind_index] = ind_index;
+		pg_ClipArt_indices[ind_index] = ind_index;
 
 		ind_point += 3;
 		ind_index++;
 		for (int indControlPoint = 0; indControlPoint < PG_CURVE_DEGREE; indControlPoint++) {
 			// col 
-			curve_points[ind_point + 0] = float((indCurve * (PG_CURVE_DEGREE + 1) + indControlPoint + 1) % width_used);
+			pg_ClipArt_points[ind_point + 0] = float((indCurve * (PG_CURVE_DEGREE + 1) + indControlPoint + 1) % width_used);
 			// row
-			curve_points[ind_point + 1] = float((indCurve * (PG_CURVE_DEGREE + 1) + indControlPoint + 1) / width_used);
-			curve_points[ind_point + 2] = 0.f;
+			pg_ClipArt_points[ind_point + 1] = float((indCurve * (PG_CURVE_DEGREE + 1) + indControlPoint + 1) / width_used);
+			pg_ClipArt_points[ind_point + 2] = 0.f;
 
 			//// u 
 			//if (indControlPoint == 0) {
-			//	curve_texCoords[ind_point + 0] = 0.f;
+			//	pg_ClipArt_texCoords[ind_point + 0] = 0.f;
 			//}
 			//else {
-			//	curve_texCoords[ind_point + 0] = 1.f;
+			//	pg_ClipArt_texCoords[ind_point + 0] = 1.f;
 			//}
 			//// v
-			//curve_texCoords[ind_point + 1] = 0.f;
+			//pg_ClipArt_texCoords[ind_point + 1] = 0.f;
 
-			curve_indices[ind_index] = ind_index;
+			pg_ClipArt_indices[ind_index] = ind_index;
 
 			ind_point += 3;
 			ind_index++;
@@ -375,10 +375,10 @@ void initVAOs()
 	// vertex buffer objects and vertex array
 	glBindVertexArray(pg_vaoID[pg_VAOCurve]);
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOCurve]);
-	glBufferData(GL_ARRAY_BUFFER, PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 3 * sizeof(float), curve_points, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 3 * sizeof(float), pg_ClipArt_points, GL_STATIC_DRAW);
 
 	//glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOCurveTexCoords]);
-	//glBufferData(GL_ARRAY_BUFFER, PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * 2 * sizeof(float), curve_texCoords, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * 2 * sizeof(float), pg_ClipArt_texCoords, GL_STATIC_DRAW);
 
 	// vertex positions are location 0
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOCurve]);
@@ -392,8 +392,8 @@ void initVAOs()
 
 	// vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABCurve]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1) * sizeof(unsigned int),
-		curve_indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1) * sizeof(unsigned int),
+		pg_ClipArt_indices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -695,13 +695,13 @@ void drawBezierCurves()
 	glBindVertexArray(pg_vaoID[pg_VAOCurve]);
 
 	glPatchParameteri(GL_PATCH_VERTICES, (PG_CURVE_DEGREE + 1));  // number of vertices in each patch
-	// glDrawArrays(GL_PATCHES, 0, PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1));
+	// glDrawArrays(GL_PATCHES, 0, PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1));
 	// Index buffer for indexed rendering
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABCurve]);
 	// Draw the triangles !
 	glDrawElements(
 		GL_PATCHES,      // mode
-		PG_NB_BEZIER_CURVES * (PG_CURVE_DEGREE + 1),    // count
+		PG_NB_VECTOR_CLIPART * (PG_CURVE_DEGREE + 1),    // count
 		GL_UNSIGNED_INT,   // type
 		(void*)0           // element array buffer offset
 	);
@@ -905,7 +905,7 @@ int main(int argc, char* argv[])
 	initGL();
 
 	// Bezier curve & quad data initialization
-	initBezierCurveData();
+	initVectorClipArtData();
 	initQuadCurveData();
 
 	// Bezier curve textures initialization

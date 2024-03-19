@@ -751,7 +751,7 @@ void updateMouseEnvironmentVariablesAndTables(double theTime) {
 			// management of brush radius (w/wo possible interpolation)
 
 #ifdef ATELIERS_PORTATIFS
-			// pen_radius_replay_pulse = part_radius_pulse;
+			// pen_radius_replay_pulse = part_size_pulse;
 #endif
 			paths_RadiusX[indPath] = (float)pg_Path_RadiusX[indPath][indFrameReading]
 				+ pulse_average * pen_radius_replay_pulse;
@@ -854,7 +854,7 @@ void updateMouseEnvironmentVariablesAndTables(double theTime) {
 	// +++ pen path (#0) update   +++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #ifdef ATELIERS_PORTATIFS
-		//pen_radius_pulse = part_radius_pulse;
+		//pen_radius_pulse = part_size_pulse;
 #endif
 	if (mouse_x_prev != mouse_x
 		|| mouse_y_prev != mouse_y) {

@@ -340,23 +340,28 @@ uniform mat3 fs_homographyForTexture;
 layout (binding = 0)  uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
 layout (binding = 1)  uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
 layout (binding = 2) uniform sampler3D    uniform_Update_texture_fs_Brushes;  // pen patterns
-layout (binding = 3)  uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
-layout (binding = 4)  uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-// layout (binding = 4)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 5)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 6)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
+layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
+layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 8)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 9)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Clip0;  // photo_0 texture
+layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip1;  // photo_1 texture
+layout (binding = 12)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 15) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
+layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE

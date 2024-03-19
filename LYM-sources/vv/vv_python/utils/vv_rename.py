@@ -22,14 +22,14 @@ from operator import itemgetter
 
 def main(main_args):
 	#  	 the images from PNG files
-	dir_ini_name = "/mnt/d/LYM-videos-sources/YN_LaLectureDesPierres_2021/SVG_movies/movie_SVGs/LLDP_054/"
-	dir_name = "/mnt/d/LYM-videos-sources/YN_LaLectureDesPierres_2021/SVG_movies/movie_SVGs/LLDP_054/"
+	dir_ini_name = "/mnt/e/LYM-videos-sources/YN_Rivets_2021/Videos-rivets/Crain_video_pont_de_photos/SVG_movies/movie_PNGs/pont_crain/"
+	dir_name = "/mnt/e/LYM-videos-sources/YN_Rivets_2021/Videos-rivets/Crain_video_pont_de_photos/SVG_movies/movie_PNGs/pont_crain/"
 
-	for i in range(1, 451, 1) :
-		count = "%05d" % i
+	for i in range(0, 6060, 1) :
+		count = "%03d" % i
 		new_count = "%05d" % i
-		print("mv -f " + dir_ini_name + "LLDP_054_" + count + "_filled.svg " + dir_name + "LLDP_054_filled_" + new_count + ".svg" )
-		os.system("mv -f " + dir_ini_name + "LLDP_054_" + count + "_filled.svg " + dir_name + "LLDP_054_filled_" + new_count + ".svg" )
+		print("mv -f " + dir_ini_name + "pont_crain_" + count + ".png " + dir_name + "pont_crain_" + count + ".png " )
+		os.system("mv -f " + dir_ini_name + "pont_crain_" + count + ".png " + dir_name + "pont_crain_" + new_count + ".png " )
 	return 1
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 460
 
 #include_declarations
 
@@ -14,8 +14,6 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 // CONST
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-#define PG_VIDEO_ACTIVE
-#define PG_WITH_CAMERA_CAPTURE
 #define PG_NB_TRACKS 4
 #define PG_NB_PATHS 11
 
@@ -24,9 +22,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 #define PG_MAX_PATH_ANIM_DATA         2
 
 // VIDEO UPDATE
-#ifdef PG_VIDEO_ACTIVE
   vec2 movieWH;
-#endif
 #ifdef PG_WITH_CAMERA_CAPTURE
   vec2 cameraWH;
 #endif
@@ -185,13 +181,9 @@ layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Pa
 layout (binding = 6) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
 layout (binding = 7) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
-#ifdef PG_REPOP_DENSITY
 layout (binding = 8)  uniform samplerRect uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density texture
-#ifdef PG_WITH_CAMERA_CAPTURE
 layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
-#ifdef PG_VIDEO_ACTIVE
 layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
-#endif
 layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
 layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
@@ -202,53 +194,6 @@ layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_T
 #if PG_NB_TRACKS >= 4
 layout (binding = 14) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-#else // camera capture
-#ifdef PG_VIDEO_ACTIVE
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
-#endif
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
-#if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
-#endif
-#if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
-#endif
-#if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
-#endif
-#endif // camera capture
-#else // repop density
-#ifdef PG_WITH_CAMERA_CAPTURE
-layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
-#ifdef PG_VIDEO_ACTIVE
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
-#endif
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
-#if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
-#endif
-#if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
-#endif
-#if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
-#endif
-#else // camera capture
-#ifdef PG_VIDEO_ACTIVE
-layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
-#endif
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
-#if PG_NB_TRACKS >= 2
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
-#endif
-#if PG_NB_TRACKS >= 3
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
-#endif
-#if PG_NB_TRACKS >= 4
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
-#endif
-#endif // camera capture
-#endif // repop density
 
 /////////////////////////////////////
 // PARTICLE OUTPUT
@@ -279,8 +224,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseParticleScale) {
+  v *= noiseParticleScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -341,8 +286,8 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
   // FLAT
-  return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+  return vec2(snoise( texCoordLoc , noiseParticleScale * 100 ),
+                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseParticleScale * 100 ));
 }
 
 // random noise
@@ -350,7 +295,7 @@ vec2 generativeNoise(vec2 texCoordLoc) {
 // after (c) Ronja Böhringer
 //get a scalar random value from a 3d value
 // 2-step computation due to lack of precision
-/*int rand3D(vec3 value, float threshold){
+int rand3D(vec3 value, float threshold){
     //make value smaller to avoid artefacts
     vec3 smallValue = sin(value);
     //get scalar value from 3d vector
@@ -371,59 +316,13 @@ vec2 generativeNoise(vec2 texCoordLoc) {
     }
     return 0;
   }
-*/
 
-//get a scalar random value from a 3d value
-/*int rand3D(vec3 p3, float threshold){
-    float random = fract(43757.5453*sin(dot(p3, vec3(12.9898,78.233,45.777883))));
-    if(random > threshold - 0.01) {
-      return 0;
+int rand3D_new(vec3 value, float threshold){
+  if( snoise( value.xy + vec2(2.0937,9.4872) , noiseParticleScale * 100 )  < threshold) {
+    return 1;
     }
     else {
-      return 1;
-    }
-}
-*/
-// A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
-uint hash( uint x ) {
-    x += ( x << 10u );
-    x ^= ( x >>  6u );
-    x += ( x <<  3u );
-    x ^= ( x >> 11u );
-    x += ( x << 15u );
-    return x;
-}
-
-// Compound versions of the hashing algorithm I whipped together.
-uint hash( uvec2 v ) { return hash( v.x ^ hash(v.y)                         ); }
-uint hash( uvec3 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z)             ); }
-uint hash( uvec4 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z) ^ hash(v.w) ); }
-
-
-
-// Construct a float with half-open range [0:1] using low 23 bits.
-// All zeroes yields 0.0, all ones yields the next smallest representable value below 1.0.
-float floatConstruct( uint m ) {
-    const uint ieeeMantissa = 0x007FFFFFu; // binary32 mantissa bitmask
-    const uint ieeeOne      = 0x3F800000u; // 1.0 in IEEE binary32
-
-    m &= ieeeMantissa;                     // Keep only mantissa bits (fractional part)
-    m |= ieeeOne;                          // Add fractional part to 1.0
-
-    float  f = uintBitsToFloat( m );       // Range [1:2]
-    return f - 1.0;                        // Range [0:1]
-}
-
-
-
-// Pseudo-random value in half-open range [0:1].
-int rand3D( vec3  v , float threshold) {
-    float random =  floatConstruct(hash(floatBitsToUint(v))); 
-    if(random > threshold - 0.01) {
       return 0;
-    }
-    else {
-      return 1;
     }
 }
 
@@ -576,11 +475,6 @@ void particle_out( void ) {
     
     vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.25 ) );
     vec4 radius_random = uniform_ParticleAnimation_path_data[0 * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
-#ifdef PG_REPOP_DENSITY
-    if( Part_repop_density >= 0 && repop_part > 0) {
-          repop_density_weight = texture(uniform_ParticleAnimation_texture_fs_RepopDensity,decalCoords).r;
-    }
-#endif
     // particle "ADDITION"
     if( repop_part > 0
         && rand3D(vec3(decalCoordsPOT, radius_random.z), repop_part * repop_density_weight) != 0) {
@@ -925,7 +819,7 @@ void particle_out( void ) {
     out_position_speed_particle.zw = headCurrentSpeed * (0.3 * index) * normalizedLookAt;
     // oscillation of non tail or head points
     // if(index ==1 || index==2) {
-    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseScale * 100 ) - 0.5)
+    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseParticleScale * 100 ) - 0.5)
     //     * vec2(lookatHead.y,-lookatHead.x);
     // }
 
@@ -967,7 +861,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseParticleScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   vec2  pixelTextureCoordinatesXY = decalCoordsPOT + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
 
@@ -1052,7 +946,7 @@ void main() {
       = clamp( out_color_radius_particle.rgb , 0.0 , 1.0 );
 
     //////////////////////////////////////////////
-    // resets pixel speed and position if trackO returns to black
+    // resets particle speed and position if trackO returns to black
     if( graylevel(out_color_radius_particle.rgb) <= 0 ) {
       out_position_speed_particle.xy = vec2(-10000); 
       out_position_speed_particle.zw = vec2(0); 

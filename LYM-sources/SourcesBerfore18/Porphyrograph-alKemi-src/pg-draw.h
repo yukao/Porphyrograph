@@ -147,6 +147,6 @@ void* writejpg(void * lpParam);
 void pg_initGeometry_track_line( int indTrack , bool is_target );
 
 // interpolation between different setups
-void sample_setUp_interpolation( void );
+void sensor_sample_setUp_interpolation( void );
 
 #endif

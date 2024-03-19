@@ -591,7 +591,7 @@
 #X text 251 170 MIN MAX AUTOM;
 #X obj 22 258 cnv 15 150 35 empty autom_env_min_can 20.0 0 18 1 36
 -204800 -33289 0;
-#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 58.7 0 18 1 36
+#X obj 186 257 cnv 15 150 35 empty autom_env_max_can 57.9 0 18 1 36
 -262130 -33289 0;
 #X obj 23 322 cnv 15 150 35 empty sound_env_min_can 40.0 0 18 1 48
 -4032 -33289 0;
@@ -626,9 +626,12 @@
 #X obj 157 226 *~ 1;
 #X obj 58 242 *~ 1;
 #X obj 331 163 print;
+#X obj 125 147 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
 #X connect 0 0 1 0;
 #X connect 1 0 17 0;
 #X connect 1 1 16 0;
+#X connect 1 2 19 0;
 #X connect 2 0 1 0;
 #X connect 3 0 15 0;
 #X connect 4 0 14 0;
@@ -647,8 +650,9 @@
 #X connect 16 0 9 1;
 #X connect 17 0 6 0;
 #X connect 17 0 9 0;
+#X connect 19 0 0 0;
 #X restore 190 51 pd play_soundtrack;
-#X text 196 34 SOUNDTRACKS;
+#X text 186 34 SOUNDTRACKS;
 #X obj 280 11 bng 40 250 50 0 empty empty empty 0 -6 0 8 -258699 -1
 -1;
 #X connect 0 0 7 0;

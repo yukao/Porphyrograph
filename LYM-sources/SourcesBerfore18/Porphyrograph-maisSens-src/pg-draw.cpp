@@ -2632,7 +2632,7 @@ void pg_update_scene( void ) {
 			  (GLfloat)FrameNo , (GLfloat)breathing , meshFrontier_X , meshFrontier_width );
 
   // mesh display FS parameters
-  glUniform3f(uniform_MeshDisplay_fs_3fv_blendTransp_isFlatRendering_whiteText , blendTransp ,
+  glUniform3f(uniform_MeshDisplay_fs_3fv_master_isFlatRendering_whiteText , blendTransp ,
 	    (flat_view? 1.0f : 0.0f) , (with_whiteText? 1.0f : 0.0f) );
 
   // texture left and right frontier

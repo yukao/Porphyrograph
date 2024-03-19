@@ -276,23 +276,28 @@ uniform mat3 fs_homographyForTexture;
 layout (binding = 0)  uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
 layout (binding = 1)  uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
 layout (binding = 2) uniform sampler3D    uniform_Update_texture_fs_Brushes;  // pen patterns
-layout (binding = 3)  uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
-layout (binding = 4)  uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
-// layout (binding = 4)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 5)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
-layout (binding = 6)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
-layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
-layout (binding = 8) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
+layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
+layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 8)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture
+layout (binding = 9)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture
+layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Clip0;  // photo_0 texture
+layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip1;  // photo_1 texture
+layout (binding = 12)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 9) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 10) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 15) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 11) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 12) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
+layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Burst_Mask; // mask for pixel burst
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -336,8 +341,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseUpdateScale) {
+  v *= noiseUpdateScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -398,22 +403,22 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
 // FLAT
-return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                        snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
 }
 
 vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   // FLAT
   if(noiseType == 0 )  {
-    return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+    return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
+                            snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
   }
   // SUN RAYS
   else if(noiseType == 1 ) {
     vec2 pos = vec2( atan((noiseCenterX-texCoordLoc.x)/(noiseCenterY-texCoordLoc.y)) * (noiseAngleScale * 10),
                      length(vec2(noiseCenterX,noiseCenterY) - texCoordLoc) / (noiseLineScale) );
-    return vec2(snoise( pos , noiseScale * 10 ) ,
-                            snoise( pos + vec2(2.0937,9.4872) , noiseScale * 10 ));
+    return vec2(snoise( pos , noiseUpdateScale * 10 ) ,
+                            snoise( pos + vec2(2.0937,9.4872) , noiseUpdateScale * 10 ));
   }
 #ifdef CAMERA
   // CAMERA
@@ -1850,7 +1855,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseUpdateScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   pixelTextureCoordinatesPOT_XY = decalCoordsPOT 
                   + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 

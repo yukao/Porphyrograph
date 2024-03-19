@@ -85,12 +85,6 @@ double                   nextSvgCapture;
 bool                     outputSvg;
 int						 indSvgSnapshot;
 
-// SVG paths from scenario
-int                      pg_nb_SVG_paths[_NbConfigurations] = { 0 };
-SVG_path*				 pg_SVG_paths[_NbConfigurations] = { NULL };
-int						 pg_current_SVG_path_group = 0;
-int						 pg_nb_SVG_path_groups[_NbConfigurations] = { 0 };
-
 // VIDEO capture
 string                   Video_file_name;
 int                      beginVideo_file;
@@ -1453,36 +1447,61 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 	string temp2;
 
 	////////////////////////////
-	////// ClipArt PATHS
-	// initializes the tracks for recording the strokes
-	// has to be made before loading the scenario that may load predefined svg paths
-	// and has to be made after the configuration file loading that has 
-	// the value max_mouse_recording_frames for the max number of points to memorize
-	pg_initStrokes();
+	////// SVG PATHS
 
-	// Number of ClipArt paths
+	// Number of SVG pathCurves
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string svg_paths
 	if (ID.compare("svg_paths") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	pg_nb_SVG_paths[indConfiguration] = 0;
+	pg_nb_SVG_pathCurves[indConfiguration] = 0;
 	pg_current_SVG_path_group = 0;
-	sstream >> pg_nb_SVG_paths[indConfiguration];
+	sstream >> pg_nb_SVG_pathCurves[indConfiguration];
 	//printf("nb svg paths %d\n", nb_paths[indConfiguration]);
-	pg_SVG_paths[indConfiguration] = new SVG_path[pg_nb_SVG_paths[indConfiguration]]();
 
-	for (int indPath = 0; indPath < pg_nb_SVG_paths[indConfiguration]; indPath++) {
+	// first parses the full list of paths to check which paths have associated curves and how many pathCurves are associated to each active path
+	vector<string> vec_path_fileName;
+	vector<int> vec_pathNo;
+	vector<int> vec_path_indTrack;
+	vector<float> vec_path_radius;
+	vector<float> vec_path_r_color;
+	vector<float> vec_path_g_color;
+	vector<float> vec_path_b_color;
+	vector<float> vec_path_readSpeedScale;
+	vector<string> vec_path_ID;
+	vector<int> vec_path_group;
+	vector<bool> vec_with_color_radius_from_scenario;
+	vector<double> vec_secondsforwidth;
+	for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
+		string fileName = "";
+		string ID = "";
+		string path_ID = "";
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string svg_path
-		sstream >> temp; // file name
-		string fileName = "Data/" + project_name + "-data/SVGs/" + temp;
+		sstream >> fileName; // file name
+		if (fileName.find(':') == std::string::npos) {
+			fileName = "Data/" + project_name + "-data/SVGs/" + fileName;
+		}
+		//printf("Filename %s\n", fileName.c_str());
 		sstream >> temp2;
-		int pathRank = my_stoi(temp2);
+		int pathNo = my_stoi(temp2);
+		// adds a new curve to the path, the curve is made of one empty frame 
+		// the addition of a new frame is made by filling the back frame and pushing a new one when another one is built
+		if (pathNo <= PG_NB_PATHS && pathNo >= 0) {
+			// pg_Path_Status[pathRank].path_nb_pathCurves[indConfiguration]++;	  // curves associated with each path
+			PathCurve_Params curve;
+			curve.PathCurve_Params_init();
+			pg_Path_Status[pathNo].path_PathCurves[indConfiguration].push_back(curve);
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect scenario file SVG path %d number (\"%s\"), pathRank should be between 0 and %d",
+				pathNo, fileName.c_str(), PG_NB_PATHS); ReportError(ErrorStr); throw 100;
+		}
 		sstream >> temp2;
-		int indTrack = my_stoi(temp2);
+		int path_track = my_stoi(temp2);
 		sstream >> temp2;
 		float pathRadius = my_stof(temp2);
 		sstream >> temp2;
@@ -1493,13 +1512,12 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		float path_b_color = my_stof(temp2);
 		sstream >> temp2;
 		float path_readSpeedScale = my_stof(temp2);
-		string path_ID = "";
 		sstream >> path_ID;
 		sstream >> temp2;
 		int path_group = my_stoi(temp2);
 		if (path_group <= 0) {
-			sprintf(ErrorStr, "Error: incorrect scenario file group %d for SVG path path %d number (\"%s\"), path group should be stricly positive",
-				indTrack, pathRank, fileName.c_str()); ReportError(ErrorStr); throw 100;
+			sprintf(ErrorStr, "Error: incorrect scenario file group %d for SVG path %d number (\"%s\"), path group should be stricly positive",
+				path_track, pathNo, fileName.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		else {
 			pg_nb_SVG_path_groups[indConfiguration] = max(pg_nb_SVG_path_groups[indConfiguration], path_group);
@@ -1509,40 +1527,19 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		sstream >> temp2;
 		double secondsforwidth = my_stod(temp2);
 
-		//printf("path no %d group %d\n", paths[indConfiguration][indPath].pathRank, paths[indConfiguration][indPath].path_group);
-		pg_SVG_paths[indConfiguration][indPath].SVG_path_init(pathRank, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale,
-			path_ID, fileName, path_group, with_color_radius_from_scenario, secondsforwidth);
-		//printf("path no %d group %d\n", paths[indConfiguration][indPath].indPath, paths[indConfiguration][indPath].path_group);
-		// checks whether the paths are not duplicated
-		for (int indAux = 0; indAux < indPath; indAux++) {
-			if (pg_SVG_paths[indConfiguration][indAux].indPath == pg_SVG_paths[indConfiguration][indPath].indPath
-				&& pg_SVG_paths[indConfiguration][indAux].path_group == pg_SVG_paths[indConfiguration][indPath].path_group) {
-				sprintf(ErrorStr, "Error: incorrect configuration file paths %d and %d have the same path index %d and same path group %d", 
-					indAux, indPath, pg_SVG_paths[indConfiguration][indAux].indPath, pg_SVG_paths[indConfiguration][indAux].path_group); ReportError(ErrorStr); throw 100;
-			}
-		}
-
-		//printf("indPath %d indTrack %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
-		//	pathRank, indTrack, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
-		if (indTrack >= 0 && indTrack < PG_NB_TRACKS && pathRank >= 1 && pathRank <= PG_NB_PATHS) {
-			if (path_group - 1 == pg_current_SVG_path_group) {
-				//printf("Loading ClipArt path %s track %d\n", (char*)("Data/" + project_name + "-data/ClipArt/" + temp).c_str(), indTrack);
-#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
-				if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
-					load_svg_path((char*)fileName.c_str(),
-						pathRank, indTrack, pathRadius, path_r_color, path_g_color, path_b_color,
-						path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth, indConfiguration);
-				}
-#endif
-			}
-		}
-		else {
-			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path %d number (\"%s\")",
-				indTrack, pathRank, fileName.c_str()); ReportError(ErrorStr); throw 100;
-		}
-		//std::cout << "svg_path #" << pathRank << ": " << "Data/" + project_name + "-data/ClipArt/" + temp << " track #" << indTrack << "\n";
+		vec_path_fileName.push_back(fileName);
+		vec_pathNo.push_back(pathNo);
+		vec_path_indTrack.push_back(path_track);
+		vec_path_radius.push_back(pathRadius);
+		vec_path_r_color.push_back(path_r_color);
+		vec_path_g_color.push_back(path_g_color);
+		vec_path_b_color.push_back(path_b_color);
+		vec_path_readSpeedScale.push_back(path_readSpeedScale);
+		vec_path_ID.push_back(path_ID);
+		vec_path_group.push_back(path_group);
+		vec_with_color_radius_from_scenario.push_back(with_color_radius_from_scenario);
+		vec_secondsforwidth.push_back(secondsforwidth);
 	}
-
 	// /svg_paths
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
@@ -1550,16 +1547,95 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 	if (ID.compare("/svg_paths") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
+
+	// initializes the tracks for recording the strokes
+	// has to be made before loading the scenario that may load predefined svg paths
+	// and has to be made after the configuration file loading that has 
+	// the value max_mouse_recording_frames (obsolete with vectors) for the max number of points to memorize
+
+	// before calling pg_initPathCurves, initialize path_nb_pathCurves[indConfiguration] for each path
+	// each path should have minimally one curve which is used to record/replay live
+	for (int indPath = 1; indPath <= PG_NB_PATHS; indPath++) {
+		if (pg_Path_Status[indPath].path_PathCurves[indConfiguration].size() == 0) {
+			PathCurve_Params curve;
+			curve.PathCurve_Params_init();
+			pg_Path_Status[indPath].path_PathCurves[indConfiguration].push_back(curve);
+		}
+	}
+	pg_initPathCurves(indConfiguration);
+
+
+	for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
+		string fileName = vec_path_fileName.back();
+		vec_path_fileName.pop_back();
+		int pathNo = vec_pathNo.back();
+		vec_pathNo.pop_back();
+		int path_track = vec_path_indTrack.back();
+		vec_path_indTrack.pop_back();
+		float pathRadius = vec_path_radius.back();
+		vec_path_radius.pop_back();
+		float path_r_color = vec_path_r_color.back();
+		vec_path_r_color.pop_back();
+		float path_g_color = vec_path_g_color.back();
+		vec_path_g_color.pop_back();
+		float path_b_color = vec_path_b_color.back();
+		vec_path_b_color.pop_back();
+		float path_readSpeedScale = vec_path_readSpeedScale.back();
+		vec_path_readSpeedScale.pop_back();
+		string path_ID = vec_path_ID.back();
+		vec_path_ID.pop_back();
+		int path_group = vec_path_group.back();
+		vec_path_group.pop_back();
+		bool with_color_radius_from_scenario = vec_with_color_radius_from_scenario.back();
+		vec_with_color_radius_from_scenario.pop_back();
+		double secondsforwidth = vec_secondsforwidth.back();
+		vec_secondsforwidth.pop_back();
+
+		//printf("path no %d group %d\n", indPathCurve, path_group);
+		//printf("path ID %s radius %.3f\n", path_ID.c_str(), pathRadius);
+		//printf("path no %d group %d\n", paths[indConfiguration][indPathCurve].indPathCurve, paths[indConfiguration][indPathCurve].path_group);
+		// checks whether there are other curves in the same path
+		int rankInPath = 0;
+		for (int indAux = 0; indAux < indPathCurve; indAux++) {
+			if (pg_SVG_pathCurves[indConfiguration][indAux].path_no == pg_SVG_pathCurves[indConfiguration][indPathCurve].path_no) {
+				rankInPath++;
+				//sprintf(ErrorStr, "Error: incorrect configuration file paths %d and %d have the same path index %d and same path group %d", 
+				//	indAux, indPathCurve, pg_SVG_pathCurves[indConfiguration][indAux].indPath, pg_SVG_pathCurves[indConfiguration][indAux].path_group); ReportError(ErrorStr); throw 100;
+			}
+		}
+		pg_SVG_pathCurves[indConfiguration][indPathCurve].SVG_path_init(pathNo, rankInPath, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale,
+			path_ID, fileName, path_group, with_color_radius_from_scenario, secondsforwidth);
+
+		//printf("indPathCurve %d path_track %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
+		//	pathRank, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
+		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
+			if (path_group - 1 == pg_current_SVG_path_group) {
+				//printf("Loading ClipArt path %s track %d\n", (char*)("Data/" + project_name + "-data/ClipArt/" + temp).c_str(), path_track);
+#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
+				if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
+					load_svg_path((char*)fileName.c_str(),
+						pathNo, path_track, pathRadius, path_r_color, path_g_color, path_b_color,
+						path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth, indConfiguration);
+				}
+#endif
+			}
+		}
+		else {
+			sprintf(ErrorStr, "Error: incorrect scenario file track %d for SVG path number %d (\"%s\") track number should be between 0 and %d and path number between 1 and %d\n",
+				path_track, pathNo, fileName.c_str(), PG_NB_TRACKS, PG_NB_PATHS); ReportError(ErrorStr); throw 100;
+		}
+		//std::cout << "svg_path #" << pathNo << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << path_track << "\n";
+	}
 }
 
 void pg_listAllSVG_paths(void) {
 	printf("Listing SVG paths:\n");
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
-		for (int indPath = 0; indPath < pg_nb_SVG_paths[indConfiguration]; indPath++) {
+		for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
 			if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
-				std::cout << pg_SVG_paths[indConfiguration][indPath].path_fileName << " (" << pg_SVG_paths[indConfiguration][indPath].indPath << ", "
-					<< pg_SVG_paths[indConfiguration][indPath].path_group << "), ";
+				std::cout << pg_SVG_pathCurves[indConfiguration][indPathCurve].path_fileName << " (" << pg_SVG_pathCurves[indConfiguration][indPathCurve].path_no << ", "
+					<< pg_SVG_pathCurves[indConfiguration][indPathCurve].path_group << "), ";
 			}
 		}
 		std::cout << std::endl;
@@ -1599,7 +1675,7 @@ void ParseScenarioClipArt(std::ifstream& scenarioFin, int indConfiguration) {
 
 	sstream >> pg_nb_ClipArt[indConfiguration];
 	printf("Nb clip arts %d config %d\n", pg_nb_ClipArt[indConfiguration], indConfiguration);
-	printf("Loading clipArts:\n");
+	//printf("Loading clipArts:\n");
 	pg_nb_paths_in_ClipArt[indConfiguration] = new int[pg_nb_ClipArt[indConfiguration]];
 		pg_ClipArt_fileNames[indConfiguration] = new string[pg_nb_ClipArt[indConfiguration]];
 
@@ -1624,17 +1700,17 @@ void ParseScenarioClipArt(std::ifstream& scenarioFin, int indConfiguration) {
 		sstream >> pg_ClipArt_fileNames[indConfiguration][indClipArtFile]; // file name
 		sstream >> pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; // number of paths in the file
 		pg_nb_tot_SvgGpu_paths[indConfiguration] += pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile];
-		printf("%s, ", pg_ClipArt_fileNames[indConfiguration][indClipArtFile].c_str());
+		//printf("%s, ", pg_ClipArt_fileNames[indConfiguration][indClipArtFile].c_str());
 		//printf("ind path file %d name %s nb paths %d, ", indClipArtFile, pg_ClipArt_fileNames[indConfiguration][indClipArtFile].c_str(), pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]);
 
 		pg_ClipArt_SubPath[indConfiguration][indClipArtFile] = new bool[pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]];
-		for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-			pg_ClipArt_SubPath[indConfiguration][indClipArtFile][indPath] = true;
+		for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+			pg_ClipArt_SubPath[indConfiguration][indClipArtFile][indPathCurve] = true;
 		}
 
 		pg_ClipArt_Colors[indConfiguration][indClipArtFile] = new pg_ClipArt_Colors_Types[pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]];
-		for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-			pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPath] = ClipArt_nat;
+		for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+			pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPathCurve] = ClipArt_nat;
 		}
 
 		// image initial geometry
@@ -1645,28 +1721,28 @@ void ParseScenarioClipArt(std::ifstream& scenarioFin, int indConfiguration) {
 		sstream >> pg_ClipArt_Rotation[indConfiguration][indClipArtFile];
 		sstream >> ID;
 		if (ID.compare("nat") == 0) {
-			for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPath] = ClipArt_nat;
+			for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPathCurve] = ClipArt_nat;
 			}
 		}
 		else if (ID.compare("white") == 0) {
-			for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPath] = ClipArt_white;
+			for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPathCurve] = ClipArt_white;
 			}
 		}
 		else if (ID.compare("red") == 0) {
-			for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPath] = ClipArt_red;
+			for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPathCurve] = ClipArt_red;
 			}
 		}
 		else if (ID.compare("green") == 0) {
-			for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPath] = ClipArt_green;
+			for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPathCurve] = ClipArt_green;
 			}
 		}
 		else if (ID.compare("blue") == 0) {
-			for (int indPath = 0; indPath < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPath++) {
-				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPath] = ClipArt_blue;
+			for (int indPathCurve = 0; indPathCurve < pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile]; indPathCurve++) {
+				pg_ClipArt_Colors[indConfiguration][indClipArtFile][indPathCurve] = ClipArt_blue;
 			}
 		}
 		else {
@@ -2434,7 +2510,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	// checks that the number of variables is what is expected
 	//sstream >> ID;
 	if (!sstream.eof()) {
-		sprintf(ErrorStr, "Error: too many initial variable values %s\n", sstream.str().c_str()); ReportError(ErrorStr); throw 50;
+		sprintf(ErrorStr, "Error: too many initial variable values %s: expected %d\n", sstream.str().c_str(), ScenarioVarNb[indConfiguration]); ReportError(ErrorStr); throw 50;
 	}
 
 	//std::cout << "\n";

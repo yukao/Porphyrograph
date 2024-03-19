@@ -97,11 +97,9 @@ float	 repop_part;
 float	 repop_path;
 #define var_Part_repop_density
 int		Part_repop_density;
-#define var_Part_repop_color_mode
-int		Part_repop_color_mode;
 #define var_freeze
 bool	  freeze;
-uniform float uniform_ParticleAnimation_scenario_var_data[47];
+uniform float uniform_ParticleAnimation_scenario_var_data[46];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -1003,8 +1001,7 @@ void main() {
   repop_part = uniform_ParticleAnimation_scenario_var_data[42];
   repop_path = uniform_ParticleAnimation_scenario_var_data[43];
   Part_repop_density = int(uniform_ParticleAnimation_scenario_var_data[44]);
-  Part_repop_color_mode = int(uniform_ParticleAnimation_scenario_var_data[45]);
-  freeze = (uniform_ParticleAnimation_scenario_var_data[46] > 0 ? true : false);
+  freeze = (uniform_ParticleAnimation_scenario_var_data[45] > 0 ? true : false);
 
   //////////////////////////
   // variables 

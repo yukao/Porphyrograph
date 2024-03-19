@@ -144,6 +144,10 @@ extern float CameraCurrent_gamma;
 extern float CameraCurrent_WB_B;
 extern float CameraCurrent_WB_R;
 
+/////////////////////////////////////////////////////////////////
+// VIDEO PARAMETERS
+extern int precedingVideoTrack;
+
 // video texture ID, image and camera
 extern GLuint pg_camera_texture_texID;
 extern GLuint pg_movie_texture_texID;
@@ -407,7 +411,7 @@ public:
 			group_val[light_param] = value;
 			if (light_param == _palette_color || light_param == _grey) {
 				float rgb_color[_rgb];
-				compute_pulsed_palette_color(group_val[_palette_color], group_val_pulse[_palette_color], group_val[_grey], group_val_pulse[_grey], rgb_color, false);
+				compute_pulsed_palette_color(group_val[_palette_color], group_val_pulse[_palette_color], group_val[_grey], group_val_pulse[_grey], rgb_color, _PG_LIGHT);
 				group_val[_red] = rgb_color[_rgb_red];
 				group_val[_green] = rgb_color[_rgb_green];
 				group_val[_blue] = rgb_color[_rgb_blue];
@@ -421,7 +425,7 @@ public:
 			group_val_pulse[light_param] = value;
 			if (light_param == _palette_color || light_param == _grey) {
 				float rgb_color[_rgb];
-				compute_pulsed_palette_color(group_val[_palette_color], group_val_pulse[_palette_color], group_val[_grey], group_val_pulse[_grey], rgb_color, false);
+				compute_pulsed_palette_color(group_val[_palette_color], group_val_pulse[_palette_color], group_val[_grey], group_val_pulse[_grey], rgb_color, _PG_LIGHT);
 				group_val[_red] = rgb_color[_rgb_red];
 				group_val[_green] = rgb_color[_rgb_green];
 				group_val[_blue] = rgb_color[_rgb_blue];
@@ -950,7 +954,7 @@ extern double sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 
 
 // FUNCTIONS
-void pg_loadFirstVideo(void);
+//void pg_loadFirstVideo(void);
 void window_display(void);
 void pg_automatic_var_reset_or_update(void);
 void pg_update_shader_uniforms(void);

@@ -150,7 +150,7 @@ extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[_NbConfigu
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc[_NbConfigurations];
 #endif
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[_NbConfigurations];
-extern GLint uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght[_NbConfigurations];
+extern GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[_NbConfigurations];
 #if defined(var_nb_CATypes)
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts[_NbConfigurations];
 #endif

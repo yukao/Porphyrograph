@@ -124,7 +124,7 @@ GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[_NbConfigurations
 GLint uniform_Update_fs_4fv_CAseed_type_size_loc[_NbConfigurations] = {-1};
 #endif
 GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[_NbConfigurations] = {-1};
-GLint uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght[_NbConfigurations] = {-1};
+GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[_NbConfigurations] = {-1};
 #if defined(var_nb_CATypes)
 GLint uniform_Update_fs_4fv_flashTrkCAWghts[_NbConfigurations] = {-1};
 #endif
@@ -709,7 +709,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_CAseed_type_size_loc, "uniform_Update_fs_4fv_CAseed_type_size_loc", _pg_shader_Update);
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght", _pg_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght, "uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght", _pg_shader_Update);
+		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow, "uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow", _pg_shader_Update);
 #if defined(var_nb_CATypes)
 		if (ScenarioVarConfigurations[_nb_CATypes][indConfig]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkCAWghts, "uniform_Update_fs_4fv_flashTrkCAWghts", _pg_shader_Update);

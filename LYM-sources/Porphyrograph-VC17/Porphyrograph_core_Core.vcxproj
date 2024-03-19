@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Porphyrograph-src\pg-audio.cpp" />
+    <ClCompile Include="..\Porphyrograph-src\pg-clip-art.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-conf.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-init.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-light.cpp" />
@@ -20,7 +21,6 @@
     <ClCompile Include="..\Porphyrograph-src\pg-script.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-shader.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-stroke.cpp" />
-    <ClCompile Include="..\Porphyrograph-src\pg-svg-clip-art.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-texture.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-udp.cpp" />
     <ClCompile Include="..\Porphyrograph-src\pg-update.cpp" />
@@ -28,6 +28,7 @@
   <ItemGroup>
     <ClInclude Include="..\Porphyrograph-src\pg-all_include.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-audio.h" />
+    <ClInclude Include="..\Porphyrograph-src\pg-clip-art.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-conf.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-init.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-light.h" />
@@ -36,7 +37,6 @@
     <ClInclude Include="..\Porphyrograph-src\pg-script.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-shader.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-stroke.h" />
-    <ClInclude Include="..\Porphyrograph-src\pg-svg-clip-art.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-texture.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-udp.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-update.h" />

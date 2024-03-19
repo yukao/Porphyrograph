@@ -175,7 +175,7 @@ GLint uniform_Master_vp_model;
 GLint uniform_Master_vp_view;
 GLint uniform_Master_vp_proj;
 GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-GLint uniform_Master_fs_3fv_width_height_mute_screen;
+GLint uniform_Master_fs_3fv_width_height_mute_second_screen;
 
 // MASTER SHADER TEXTURE IDS
 GLint uniform_Master_texture_fs_decal;         // previous pass output
@@ -750,8 +750,8 @@ void pg_loadAllShaders(void) {
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "vp_projMatrix");
 	uniform_Master_fs_4fv_xy_frameno_pulsedShift
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_4fv_xy_frameno_pulsedShift");
-	uniform_Master_fs_3fv_width_height_mute_screen
-		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_3fv_width_height_mute_screen");
+	uniform_Master_fs_3fv_width_height_mute_second_screen
+		= glGetUniformLocation(shader_programme[pg_shader_Master], "uniform_Master_fs_3fv_width_height_mute_second_screen");
 
 	uniform_Master_texture_fs_decal
 		= glGetUniformLocation(shader_programme[pg_shader_Master], "fs_decal"); // previous pass output
@@ -791,9 +791,9 @@ void pg_loadAllShaders(void) {
 		|| (uniform_Master_texture_fs_lookupTable6 == -1)
 #endif
 		|| (uniform_Master_fs_4fv_xy_frameno_pulsedShift == -1)
-		|| (uniform_Master_fs_3fv_width_height_mute_screen == -1)
+		|| (uniform_Master_fs_3fv_width_height_mute_second_screen == -1)
 		) {
-		fprintf(stderr, "Could not bind uniforms Master uniform_Master_vp_proj : %d, uniform_Master_vp_view : %d, uniform_Master_vp_model : %d , uniform_Master_texture_fs_decal: %d, uniform_Master_texture_fs_lookupTable1: %d, uniform_Master_texture_fs_lookupTable2: %d, uniform_Master_fs_4fv_xy_frameno_pulsedShift : %d, uniform_Master_fs_3fv_width_height_mute_screen : %d\n", uniform_Master_vp_proj, uniform_Master_vp_view, uniform_Master_vp_model, uniform_Master_texture_fs_decal, uniform_Master_texture_fs_lookupTable1, uniform_Master_texture_fs_lookupTable2, uniform_Master_fs_4fv_xy_frameno_pulsedShift, uniform_Master_fs_3fv_width_height_mute_screen);
+		fprintf(stderr, "Could not bind uniforms Master uniform_Master_vp_proj : %d, uniform_Master_vp_view : %d, uniform_Master_vp_model : %d , uniform_Master_texture_fs_decal: %d, uniform_Master_texture_fs_lookupTable1: %d, uniform_Master_texture_fs_lookupTable2: %d, uniform_Master_fs_4fv_xy_frameno_pulsedShift : %d, uniform_Master_fs_3fv_width_height_mute_second_screen : %d\n", uniform_Master_vp_proj, uniform_Master_vp_view, uniform_Master_vp_model, uniform_Master_texture_fs_decal, uniform_Master_texture_fs_lookupTable1, uniform_Master_texture_fs_lookupTable2, uniform_Master_fs_4fv_xy_frameno_pulsedShift, uniform_Master_fs_3fv_width_height_mute_second_screen);
 		fprintf(stderr, "Could not bind uniforms Master uniform_Master_texture_fs_lookupTable3: %d\n", uniform_Master_texture_fs_lookupTable3);
 #if PG_NB_TRACKS >= 2
 		fprintf(stderr, "Could not bind uniforms Master uniform_Master_texture_fs_lookupTable4: %d\n", uniform_Master_texture_fs_lookupTable4);

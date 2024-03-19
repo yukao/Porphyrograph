@@ -366,13 +366,13 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		      pg_Keystroke_Input_Type parm_keystroke_type,
 		      int indParam,
 		      float scenario_or_gui_command_value ) {
-	float step = 0.0f;
-	if (parm_keystroke_type == _PG_KEYSTROKE_MINUS) {
-		step = StepMinus[indParam];
-	}
-	else {
-		step = StepPlus[indParam];
-	}
+	//float step = 0.0f;
+	//if (parm_keystroke_type == _PG_KEYSTROKE_MINUS) {
+	//	step = StepMinus[indParam];
+	//}
+	//else {
+	//	step = StepPlus[indParam];
+	//}
 	if (param_input_type == _PG_SCENARIO) {
 		if (BrokenInterpolationVar[indParam]) {
 			return;
@@ -386,9 +386,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			*((float *)ScenarioVarPointers[indParam]) = scenario_or_gui_command_value;
 		}
-		else if (param_input_type == _PG_KEYSTROKE) {
-			*((float *)ScenarioVarPointers[indParam]) += step;
-		}
+		//else if (param_input_type == _PG_KEYSTROKE) {
+		//	*((float *)ScenarioVarPointers[indParam]) += step;
+		//}
 		if (ScenarioVarCallbacks[indParam]) {
 			(*ScenarioVarCallbacks[indParam])(param_input_type,scenario_or_gui_command_value);
 		}
@@ -397,9 +397,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			*((int *)ScenarioVarPointers[indParam]) = (int)myround(scenario_or_gui_command_value);
 		}
-		else if (param_input_type == _PG_KEYSTROKE) {
-			*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
-		}
+		//else if (param_input_type == _PG_KEYSTROKE) {
+		//	*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
+		//}
 		if (ScenarioVarCallbacks[indParam]) {
 			(*ScenarioVarCallbacks[indParam])(param_input_type,scenario_or_gui_command_value);
 		}
@@ -589,7 +589,7 @@ void pg_process_special_key( int key ) {
 
 void pg_keyStrokeScripts(int key) {
   pg_Keystroke_Input_Type CommandType = _PG_KEYSTROKE_VOID;
-  char *CmdChar = NULL;
+ /* char *CmdChar = NULL;
   int indChar = -1;
   bool oneCommandIssued = false;
 
@@ -620,7 +620,7 @@ void pg_keyStrokeScripts(int key) {
   }
   if( oneCommandIssued ) {
     return;
-  }
+  }*/
 
   // printf("indChar %d part_acc_factor %d\n", indChar, _part_acc_factor);
 

@@ -123,67 +123,6 @@ extern double                   nextSvgCapture;
 extern bool                     outputSvg;
 extern int						indSvgSnapshot;
 
-// ClipArt PATHs from scenario
-extern int                      pg_nb_SVG_paths[_NbConfigurations];
-class SVG_path {
-public:
-	int indPath;
-	int indTrack;
-	float pathRadius;
-	float path_r_color;
-	float path_g_color;
-	float path_b_color;
-	float path_readSpeedScale;
-	string path_ID;
-	string path_fileName;
-	int path_group;
-	bool with_color_radius_from_scenario;
-	double secondsforwidth;
-	SVG_path(void) {
-		indPath = 1;
-		indTrack = 1;
-		pathRadius = 1;
-		path_r_color = 1;
-		path_g_color = 1;
-		path_b_color = 1;
-		path_readSpeedScale = 1;
-		path_ID = "";
-		path_fileName = "";
-		path_group = 0;
-		with_color_radius_from_scenario = false;
-		secondsforwidth = 10.;
-	}
-	void SVG_path_init(int p_indPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color,
-		float p_path_b_color, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group,
-		bool p_with_color__brush_radius_from_scenario, double p_secondsforwidth) {
-		indPath = p_indPath;
-		indTrack = p_indTrack;
-		pathRadius = p_pathRadius;
-		path_r_color = p_path_r_color;
-		path_g_color = p_path_g_color;
-		path_b_color = p_path_b_color;
-		path_readSpeedScale = p_path_readSpeedScale;
-		path_ID = p_path_ID;
-		path_fileName = p_path_fileName;
-		// no path group provided in the scenario file
-		if (p_path_group <= 0) {
-			path_group = 0;
-		}
-		// path group number is provided inside the scenario
-		else {
-			path_group = p_path_group - 1;
-		}
-		with_color_radius_from_scenario = p_with_color__brush_radius_from_scenario;
-		secondsforwidth = p_secondsforwidth;
-	}
-	~SVG_path() {
-		path_ID = "";
-	}
-};
-extern SVG_path *pg_SVG_paths[_NbConfigurations];
-extern int pg_current_SVG_path_group;
-extern int						 pg_nb_SVG_path_groups[_NbConfigurations];
-
 // VIDEO capture
 extern string                   Video_file_name;
 extern int                      beginVideo_file;

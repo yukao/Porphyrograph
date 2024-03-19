@@ -597,25 +597,25 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		      int indParam,
 		      float scenario_or_gui_command_value ) {
 	// save previous values of variables that have to know their previous value in their callback
-	float step = 0.0f;
+	//float step = 0.0f;
 	char mess[50];
 
-	if (parm_keystroke_type == _PG_KEYSTROKE_MINUS) {
-		step = StepMinus[indParam];
+	//if (parm_keystroke_type == _PG_KEYSTROKE_MINUS) {
+	//	step = StepMinus[indParam];
 
-		sprintf(mess, "%.2f %s",
-			*((float *)ScenarioVarPointers[indParam])+StepMinus[indParam], CmdString[indParam]);
-		printf("%s\n", mess);
-		pg_writeMessageOnScreen((char *)mess);
-	}
-	else if (parm_keystroke_type == _PG_KEYSTROKE_PLUS) {
-		step = StepPlus[indParam];
+	//	sprintf(mess, "%.2f %s",
+	//		*((float *)ScenarioVarPointers[indParam])+StepMinus[indParam], CmdString[indParam]);
+	//	printf("%s\n", mess);
+	//	pg_writeMessageOnScreen((char *)mess);
+	//}
+	//else if (parm_keystroke_type == _PG_KEYSTROKE_PLUS) {
+	//	step = StepPlus[indParam];
 
-		sprintf(mess, "%.2f %s",
-			*((float *)ScenarioVarPointers[indParam]) + StepMinus[indParam], CmdString[indParam]);
-		printf("%s\n", mess);
-		pg_writeMessageOnScreen((char *)mess);
-	}
+	//	sprintf(mess, "%.2f %s",
+	//		*((float *)ScenarioVarPointers[indParam]) + StepMinus[indParam], CmdString[indParam]);
+	//	printf("%s\n", mess);
+	//	pg_writeMessageOnScreen((char *)mess);
+	//}
 	if (param_input_type == _PG_SCENARIO) {
 		if (BrokenInterpolationVar[indParam]) {
 			return;
@@ -629,9 +629,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			*((float *)ScenarioVarPointers[indParam]) = scenario_or_gui_command_value;
 		}
-		else if (param_input_type == _PG_KEYSTROKE) {
-			*((float *)ScenarioVarPointers[indParam]) += step;
-		}
+		//else if (param_input_type == _PG_KEYSTROKE) {
+		//	*((float *)ScenarioVarPointers[indParam]) += step;
+		//}
 		if (ScenarioVarCallbacks[indParam]) {
 			(*ScenarioVarCallbacks[indParam])(param_input_type,scenario_or_gui_command_value);
 		}
@@ -640,9 +640,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type,
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			*((int *)ScenarioVarPointers[indParam]) = (int)round(scenario_or_gui_command_value);
 		}
-		else if (param_input_type == _PG_KEYSTROKE) {
-			*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
-		}
+		//else if (param_input_type == _PG_KEYSTROKE) {
+		//	*((int *)ScenarioVarPointers[indParam]) = (*((int *)ScenarioVarPointers[indParam]) + (int)step + (int)MaxValues[indParam] + 1) % ((int)MaxValues[indParam] + 1);
+		//}
 		if (ScenarioVarCallbacks[indParam]) {
 			(*ScenarioVarCallbacks[indParam])(param_input_type,scenario_or_gui_command_value);
 		}
@@ -852,38 +852,38 @@ void pg_launch_performance(void) {
 
 void pg_keyStrokeScripts(int key) {
   pg_Keystroke_Input_Type CommandType = _PG_KEYSTROKE_VOID;
-  char *CmdChar = NULL;
-  int indChar = -1;
-  bool oneCommandIssued = false;
+  //char *CmdChar = NULL;
+  //int indChar = -1;
+  //bool oneCommandIssued = false;
 
-  char * ptCh = CmdCharMinus;
-  while ((CmdChar = strchr(ptCh,key)) != NULL) {
-	  CommandType = _PG_KEYSTROKE_MINUS;
-	  indChar = CmdChar - CmdCharMinus;
-	  if (indChar >= 0) {
-		  pg_update_variable(_PG_KEYSTROKE, CommandType,
-				    indChar, 0.0F );
-		  oneCommandIssued = true;
-	  }
-	  ptCh = CmdChar + 1;
-  }
-  if( oneCommandIssued ) {
-    return;
-  }
-  ptCh = CmdCharPlus;
-  if ((CmdChar = strchr(ptCh,key)) != NULL) {
-	  CommandType = _PG_KEYSTROKE_PLUS;
-	  indChar = CmdChar - CmdCharPlus;
-	  if (indChar >= 0) {
-		  pg_update_variable(_PG_KEYSTROKE, CommandType,
-				    indChar, 0.0F );
-		  oneCommandIssued = true;
-	  }
-	  ptCh = CmdChar + 1;
-  }
-  if( oneCommandIssued ) {
-    return;
-  }
+  //char * ptCh = CmdCharMinus;
+  //while ((CmdChar = strchr(ptCh,key)) != NULL) {
+	 // CommandType = _PG_KEYSTROKE_MINUS;
+	 // indChar = CmdChar - CmdCharMinus;
+	 // if (indChar >= 0) {
+		//  pg_update_variable(_PG_KEYSTROKE, CommandType,
+		//		    indChar, 0.0F );
+		//  oneCommandIssued = true;
+	 // }
+	 // ptCh = CmdChar + 1;
+  //}
+  //if( oneCommandIssued ) {
+  //  return;
+  //}
+  //ptCh = CmdCharPlus;
+  //if ((CmdChar = strchr(ptCh,key)) != NULL) {
+	 // CommandType = _PG_KEYSTROKE_PLUS;
+	 // indChar = CmdChar - CmdCharPlus;
+	 // if (indChar >= 0) {
+		//  pg_update_variable(_PG_KEYSTROKE, CommandType,
+		//		    indChar, 0.0F );
+		//  oneCommandIssued = true;
+	 // }
+	 // ptCh = CmdChar + 1;
+  //}
+  //if( oneCommandIssued ) {
+  //  return;
+  //}
 
   // printf("indChar %d part_acc_factor %d\n", indChar, _part_acc_factor);
 
@@ -904,9 +904,9 @@ void pg_keyStrokeScripts(int key) {
     // background subtraction modes (Z)
     // ========================================
   case'y':
-     BGSubtr = (BGSubtr + 1) % 3;
-     printf("BGstbtr %d\n",BGSubtr);
-     BrokenInterpolationVar[ _BGSubtr ] = true;
+     camera_BG_subtr = (camera_BG_subtr + 1) % 3;
+     printf("BGstbtr %d\n",camera_BG_subtr);
+     BrokenInterpolationVar[ _camera_BG_subtr ] = true;
     break;
 
     // ========================================
@@ -1096,7 +1096,7 @@ void pg_aliasScript(char *command_symbol,
 		// +++++++++++++++++ VIDEO CAPTURE ++++++++++++++++++++++++
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	}
-	else if (strcmp(newCommand, "currentBGCapture") == 0) {
+	else if (strcmp(newCommand, "reset_camera") == 0) {
 		is_currentBG_capture = true;
 		pg_send_message_udp((char *)"s", (char *)"/message_can CURRENT_BG_CAPTURE", (char *)"udp_PD_send");
 
@@ -1330,13 +1330,13 @@ void pg_aliasScript(char *command_symbol,
 		pg_apply_new_activeDrawingStroke();
 
 	}
-	else if (strcmp(newCommand, "BGSubtr_plus") == 0) {
-		BGSubtr = (BGSubtr + 1) % 3;
+	else if (strcmp(newCommand, "camera_BG_subtr_plus") == 0) {
+		camera_BG_subtr = (camera_BG_subtr + 1) % 3;
 		// only the two modes (init and current are used, not without BG subtr)
-		if (BGSubtr == 0) {
-			BGSubtr = (BGSubtr + 1) % 3;
+		if (camera_BG_subtr == 0) {
+			camera_BG_subtr = (camera_BG_subtr + 1) % 3;
 		}
-		BrokenInterpolationVar[_BGSubtr] = true;
+		BrokenInterpolationVar[_camera_BG_subtr] = true;
 	}
 	else {
 		for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
