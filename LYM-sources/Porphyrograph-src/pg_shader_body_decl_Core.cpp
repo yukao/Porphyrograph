@@ -1,8 +1,8 @@
-GLint uniform_ParticleAnimation_scenario_var_data[1] = {NULL};
-GLint uniform_Update_scenario_var_data[1] = {NULL};
-GLint uniform_Mixing_scenario_var_data[1] = {NULL};
-GLint uniform_ParticleRender_scenario_var_data[1] = {NULL};
-GLint uniform_Master_scenario_var_data[1] = {NULL};
+GLint uniform_ParticleAnimation_scenario_var_data[1] = {0};
+GLint uniform_Update_scenario_var_data[1] = {0};
+GLint uniform_Mixing_scenario_var_data[1] = {0};
+GLint uniform_ParticleRender_scenario_var_data[1] = {0};
+GLint uniform_Master_scenario_var_data[1] = {0};
 float *ParticleAnimation_scenario_var_data[1];
 float *Update_scenario_var_data[1];
 float *Mixing_scenario_var_data[1];

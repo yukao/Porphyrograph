@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 460
 
 #include_declarations
 
@@ -14,17 +14,17 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 // CONST
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-#define PG_VIDEO_ACTIVE
+#define PG_WITH_CAMERA_CAPTURE
 #define PG_NB_TRACKS 4
-#define PG_NB_PATHS 7
+#define PG_NB_PATHS 11
 
 #define PG_PATH_ANIM_POS              0
 #define PG_PATH_ANIM_RAD              1
 #define PG_MAX_PATH_ANIM_DATA         2
 
 // VIDEO UPDATE
-#ifdef PG_VIDEO_ACTIVE
-  vec2 movieWH;
+vec2 movieWH;
+#ifdef PG_WITH_CAMERA_CAPTURE
   vec2 cameraWH;
 #endif
 
@@ -139,6 +139,11 @@ vec4 out_target_position_color_radius_particle = vec4(1);
 // number of particles
 int nbParticles = 0;
 
+///////////////////////////////////////
+// REPOPULATION OF PARTICLES: DENSITY OF REPOPULATION
+float repop_density_weight = 1;
+vec3 textureDensityValue = vec3(0);
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // VARYINGS
@@ -178,19 +183,18 @@ layout (binding = 5) uniform samplerRect uniform_ParticleAnimation_texture_fs_Pa
 layout (binding = 6) uniform samplerRect uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad;  // 2-cycle ping-pong ParticleAnimation pass target position/color/radius of Particles step n (FBO attachment 4)
 // noise
 layout (binding = 7) uniform sampler3D   uniform_ParticleAnimation_texture_fs_Noise;  // noise texture
-#ifdef PG_VIDEO_ACTIVE
-layout (binding = 8) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
-layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
-#endif
-layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
+layout (binding = 8)  uniform samplerRect uniform_ParticleAnimation_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 9) uniform samplerRect uniform_ParticleAnimation_texture_fs_Camera_frame;  // camera texture
+layout (binding = 10) uniform samplerRect uniform_ParticleAnimation_texture_fs_Movie_frame;  // movie textures
+layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk0;  // 2-cycle ping-pong ParticleAnimation pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 11) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
+layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk1;  // 2-cycle ping-pong ParticleAnimation pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 12) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
+layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk2;  // 2-cycle ping-pong ParticleAnimation pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 13) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 14) uniform samplerRect uniform_ParticleAnimation_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
 
 /////////////////////////////////////
@@ -222,8 +226,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseScale) {
-  v *= noiseScale;
+float snoise(vec2 v , float noiseParticleScale) {
+  v *= noiseParticleScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -284,8 +288,8 @@ float snoise(vec2 v , float noiseScale) {
 
 vec2 generativeNoise(vec2 texCoordLoc) {
   // FLAT
-  return vec2(snoise( texCoordLoc , noiseScale * 100 ),
-                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseScale * 100 ));
+  return vec2(snoise( texCoordLoc , noiseParticleScale * 100 ),
+                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseParticleScale * 100 ));
 }
 
 // random noise
@@ -316,7 +320,7 @@ int rand3D(vec3 value, float threshold){
 }
 
 int rand3D_new(vec3 value, float threshold){
-  if( snoise( value.xy + vec2(2.0937,9.4872) , noiseScale * 100 )  < threshold) {
+  if( snoise( value.xy + vec2(2.0937,9.4872) , noiseParticleScale * 100 )  < threshold) {
     return 1;
   }
   else {
@@ -385,6 +389,7 @@ void particle_out( void ) {
       }
       return;
     }
+#ifdef PG_WITH_CAMERA_CAPTURE
     // camera
     else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES ) {
         if(partMove_target) { // reaches a target in several steps
@@ -405,6 +410,7 @@ void particle_out( void ) {
           out_color_radius_particle = vec4(target_color.rgb, part_size);
       }
     }
+#endif
     // movie
     else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES + 1 ) {
       if(partMove_target) { // reaches a target in several steps
@@ -427,7 +433,7 @@ void particle_out( void ) {
     }
     return;
   }
-  // position update according to speed, acceleration and damping
+  // random initialization of the particle positions (initial speed is null currently)
 
   //////////////////////////////////////////////////////////////////////
   // REPOP ALONG PATHS (A RANDOM PATH AMONG THE ACTIVE ONES IS CHOSEN AT EACH FRAME)
@@ -445,18 +451,20 @@ void particle_out( void ) {
       vec2 pen_prev = vec2( pen_pos_prev_cur.x, height - pen_pos_prev_cur.y);
       vec2 pen_curr = vec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w);
       vec2 orth = pen_prev - pen_curr;
-      if(length(orth) != 0) {
-        orth.xy = orth.yx;
-        orth.y *= -1;
-        orth = normalize(orth);
+      if(length(orth) < 10) {
+        if(length(orth) != 0) {
+          orth.xy = orth.yx;
+          orth.y *= -1;
+          orth = normalize(orth);
+        }
+        out_position_speed_particle.xy 
+          = mix(pen_curr, pen_prev, randomPart.z ); // linear position
+        out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius_random.x; // thickness
+        out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+        out_color_radius_particle 
+            = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
+                    part_size);
       }
-      out_position_speed_particle.xy 
-        = mix(pen_curr, pen_prev, randomPart.z ); // linear position
-      out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius_random.x; // thickness
-      out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-      out_color_radius_particle 
-          = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
-                  part_size);
     }
   }
 
@@ -465,22 +473,41 @@ void particle_out( void ) {
   // Uniform repopulation
   if( out_position_speed_particle.x == -10000) {
     // if the pixel noise is equal to frame % 8500 the cell is repopulated with a pixel
-    
+    /////////////////////////////////////////////////////////////////////
+    // RANDOM VALUES FOR POSITION
     vec4 randomValue = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( decalCoordsPOT , 0.25 ) );
     vec4 radius_random = uniform_ParticleAnimation_path_data[0 * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_RAD];
-    if( repop_part > 0
-        && rand3D(vec3(decalCoordsPOT, radius_random.z), repop_part) != 0) {
-         /////////////////////////////////////////////////////////////////////
-        // RANDOM INITIALIZATION
-        // head and tail are initialized with the same values
-        // reaches for regular grid position
-        float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
-        int rankGrid = int(rank * width * height);
-        out_position_speed_particle.xy 
-          = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
+    repop_density_weight = repop_part;
+
+    /////////////////////////////////////////////////////////////////////
+    // RANDOM INITIALIZATION
+    // head and tail are initialized with the same values
+    // reaches for regular grid position
+    float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+    int rankGrid = int(rank * width * height);
+    vec2 part_pos = vec2( rankGrid % int(width) , rankGrid / int(width) ); // position
+    vec3 part_color = uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz;
+
+#ifdef var_Part_repop_density
+    if( Part_repop_density >= 0 && repop_density_weight > 0) {
+      // ponderates the weight with the luminance of the pixel
+      vec2 texCoords = ivec2(part_pos / vec2(width, height) * vec2(width,height));
+      textureDensityValue = texture(uniform_ParticleAnimation_texture_fs_RepopDensity,texCoords).xyz;
+      repop_density_weight *= graylevel(textureDensityValue.rgb);
+#ifdef var_Part_repop_color_mode
+      if(Part_repop_color_mode == 1) {
+        part_color = textureDensityValue;
+      }
+#endif
+    }
+#endif
+
+    // particle "ADDITION"
+    if( rand3D(vec3(decalCoordsPOT, radius_random.z), repop_density_weight) != 0) {
+        out_position_speed_particle.xy = part_pos; // position
         out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-        out_color_radius_particle 
-          = vec4(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz,part_size);
+        out_color_radius_particle = vec4(part_color, part_size);
+        // out_color_radius_particle = vec4(textureDensityValue,part_size);
     }
   }
 
@@ -652,6 +679,8 @@ void particle_out( void ) {
   // PARTICLE: MOTION TOWARDS A TARGET
   if(partMove_target && frameNo < targetFrameNo && part_initialization < 0) { // reaches a grid
     // reaches for a target in a certain number of steps
+    // float rank = (decalCoords.x + decalCoords.y * width) / float(nbParticles);
+    // int rankGrid = int(rank * width * height);
     part_acceleration 
       = dvec2(out_target_position_color_radius_particle.xy
                   - out_position_speed_particle.xy);// * (1. - (targetFrameNo - frameNo)/part_timeToTargt);
@@ -679,7 +708,14 @@ void particle_out( void ) {
   // PARTICLE: RANDOM MOTION
   if(partMove_rand) { // random motion
     // random motion
-    part_acceleration = dvec2(randomPart.zw - dvec2(0.5));
+    part_acceleration = dvec2(randomPart.xy - dvec2(0.55));
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  // PARTICLE: GRAVITY
+  if(part_gravity != 0) { // random motion
+    // random motion
+    part_acceleration += dvec2(0, part_gravity);
   }
 
   if(length(part_acceleration) > 0) {
@@ -690,12 +726,28 @@ void particle_out( void ) {
   // SPEED UPDATE FROM ACCELERATION AND DAMPING
   dvec2 speed2D;
   // texture based acceleration shift
+  /*
   if(part_image_acceleration >= 0) {
     float rot_angle = part_field_weight * texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).r;
     float cosa = cos(rot_angle);
     float sina = sin(rot_angle);
     part_acceleration  
       = dmat2(cosa, -sina, sina, cosa) * part_acceleration;
+  }
+  */
+  if(part_image_acceleration >= 0) {
+    float grey_center = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).rgb);
+    float greyX = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy  + vec2(1,0)).rgb);
+    float greyY = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy  + vec2(0,1)).rgb);
+    float gradX = greyX - grey_center;
+    float gradY = greyY - grey_center;
+    float norm = length(vec2(gradX, gradY));
+    if(norm != 0) {
+      float cosa = gradX / norm;
+      float sina = gradY / norm;
+      part_acceleration  
+        = vec2(dmat2(cosa, -sina, sina, cosa) * part_acceleration);
+    }
   }
   // speed update from acceleration vector part_acceleration 
   // (with a factor equal to part_acc controlled by interface or scenario)
@@ -707,24 +759,24 @@ void particle_out( void ) {
 
   // reading the noise value for acceleration 
   double speed = length(speed2D);
-  if(part_image_acceleration < 0) {
+  if(part_image_acceleration < 0 && speed > 0) {
     speed2D  
       = normalize(speed2D 
         + part_field_weight * dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center)) * speed;
+      speed = length(speed2D);
   }
 
   // speed damping to reach a target
-  if( dist_to_target < part_damp_targtRad ) {
+  if(partMove_target && speed > 0 && dist_to_target < part_damp_targtRad) {
       speed2D -= 0.01 * dvec2((part_damp_targtRad - dist_to_target) / part_damp_targtRad) * speed2D;
   }
 
   // position update from new speed value
-  speed =length(speed2D);
   // with speed limit
+  speed = length(speed2D);
   if(speed > 50) {
     speed2D *= double(50/speed);
   }
-  // with random speed for static particles
   if(speed < 0.0001) {
     speed2D = dvec2(generativeNoise(pixelTextureCoordinatesXY));
   }
@@ -803,7 +855,7 @@ void particle_out( void ) {
     out_position_speed_particle.zw = headCurrentSpeed * (0.3 * index) * normalizedLookAt;
     // oscillation of non tail or head points
     // if(index ==1 || index==2) {
-    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseScale * 100 ) - 0.5)
+    //   out_position_speed_particle.zw += (snoise( decalCoords + vec2(9.4872,2.0937) , noiseParticleScale * 100 ) - 0.5)
     //     * vec2(lookatHead.y,-lookatHead.x);
     // }
 
@@ -845,7 +897,7 @@ void main() {
   // pixel texture + z offset according to the chosen texture
   vec2 position = vec2( 1.0 + sin(frameNo/50000.0),
                         1.0 + cos(frameNo/37000.0));
-  vec2 noisePositionOffset = vec2(snoise( position , noiseScale * 100 ) ,
+  vec2 noisePositionOffset = vec2(snoise( position , noiseParticleScale * 100 ) ,
                                   snoise( position + vec2(2.0937,9.4872) , 100 )); // 
   vec2  pixelTextureCoordinatesXY = decalCoordsPOT + 0.1 * noisePositionOffset; //+ 5.0 + sin(frameNo/10000.0) * 5) 
 
@@ -853,6 +905,10 @@ void main() {
   randomPart = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
 
   nbParticles = int(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.y);
+
+  
+  
+  
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -898,9 +954,10 @@ void main() {
   // VIDEO FRAME CAPTURE AND RENDERING
   // movie size
   movieWH = uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH.zw;
+#ifdef PG_WITH_CAMERA_CAPTURE
   // camera size
   cameraWH = uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH.xy;
-
+#endif
  
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -925,7 +982,7 @@ void main() {
       = clamp( out_color_radius_particle.rgb , 0.0 , 1.0 );
 
     //////////////////////////////////////////////
-    // resets pixel speed and position if trackO returns to black
+    // resets particle speed and position if trackO returns to black
     if( graylevel(out_color_radius_particle.rgb) <= 0 ) {
       out_position_speed_particle.xy = vec2(-10000); 
       out_position_speed_particle.zw = vec2(0); 

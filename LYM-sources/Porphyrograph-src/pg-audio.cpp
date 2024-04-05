@@ -179,7 +179,6 @@ bool pa_AudioOut::pa_checkAudioStream() {
         else if (Pa_IsStreamActive(pa_myStream) < 0) {
             printf("Error paBadStreamPtr %d\n", paBadStreamPtr);
             sprintf(ErrorStr, "Error audio streaming %d", Pa_IsStreamActive(pa_myStream)); ReportError(ErrorStr); throw 561;
-            return false;
         }
     }
     return false;

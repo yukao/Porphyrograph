@@ -23,6 +23,7 @@
 
 #ifndef _WIN32
 #include "config.h"
+#include <dirent.h>
 #endif // !_WIN32
 
 #include <stdio.h>
@@ -35,6 +36,7 @@ namespace fs = std::filesystem;
 #include <math.h>    // math constants such as M_PI
 // define the round function for Visual Studio (not include in math.h)
 #ifdef _WIN32
+	#include <conio.h>
 	//#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
 	//double round(double x) { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
 #endif // _WIN32
@@ -43,11 +45,7 @@ namespace fs = std::filesystem;
 #include <string.h>
 #include <cstdio>
 #include <cstring>
-#ifdef _WIN32
 #include <dirent.h>
-#else
-#include "/usr/include/dirent.h"
-#endif
 #include <regex>
 
 #include <time.h>
@@ -55,16 +53,16 @@ namespace fs = std::filesystem;
 #include <fcntl.h>
 #include <errno.h>
 #include <fstream>
-//#include <conio.h>
 #include <random>
 #include <cstdlib>      // std::rand, std::srand
 #include <algorithm>    // std::max / min
 
-#include <stdarg.h>
 
+#ifdef _WIN32
 // memory leak tracing
 #define _CRTDBG_MAP_ALLOC
-//#include <crtdbg.h>
+#include <crtdbg.h>
+#endif
 
 #define rand_0_1 (float(rand()) / float(RAND_MAX))
 template<typename T>
@@ -133,6 +131,7 @@ constexpr auto rand_x(T x) { return ( x * (2 * rand_0_1 - 1.f)); }
 #endif
 
 #define GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtc/matrix_transform.hpp>
@@ -174,7 +173,8 @@ using std::string;
 using std::ios;
 using std::cerr;
 using std::ifstream;
-#include <fstream>
+
+//GLEW
 #include <GL/glew.h>
 #ifdef _WIN32
 #include <GL/wglew.h>
@@ -192,7 +192,7 @@ using std::ifstream;
 #define PG_WITH_BLUR
 #endif
 
-#if defined(ARAKNIT) || defined(FORET) || defined(LIGHT) || defined(CORE)
+#if defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
 #if defined(var_light1_dimmer)
 // light variables inside scenario
 #define PG_LIGHTS_CONTROL_IN_PG
@@ -200,7 +200,7 @@ using std::ifstream;
 // curve based control in Python
 #define PG_LIGHTS_CONTROL_IN_PYTHON
 #endif
-#if defined(ARAKNIT) || defined(FORET) || defined(LIGHT) || defined(CORE)
+#if defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
 // light DMX command in porphyrograpa
 #define PG_LIGHTS_DMX_IN_PG
 #include <controller_library.h>
@@ -226,7 +226,7 @@ using std::ifstream;
 #if defined(TVW) || defined(CRITON) || defined(LIGHT)
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
-#elif defined(FORET) || defined(CORE)
+#elif defined(CORE)
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 11 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 11   // **** ALSO TO BE CHANGED IN UPDATE AND PARTICLE ANIMATION FRAGMENT SHADER ****
 #else
@@ -289,7 +289,7 @@ using std::ifstream;
 #define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
-#if defined(TVW) || defined(RIVETS) || defined(FORET) || defined(CORE)
+#if defined(TVW) || defined(CORE)
 #define TEXTURED_QUAD_PARTICLES
 #elif defined(DASEIN)
 #define CURVE_PARTICLES
@@ -316,7 +316,7 @@ using std::ifstream;
 #endif
 
 // MASTER's MASK
-#if defined(ARAKNIT) || defined(VOLUSPA) ||  defined(FORET) || defined(CORE)
+#if defined(ARAKNIT) || defined(VOLUSPA) ||  defined(CORE)
 #define PG_WITH_MASTER_MASK
 #endif
 
@@ -325,7 +325,7 @@ using std::ifstream;
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined(FORET) || defined(CORE)
+#if defined(CORE)
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
 #define BEAT_DURATION (1.0f)
@@ -341,7 +341,7 @@ using std::ifstream;
 #define PG_NB_MAX_SAMPLE_SETUPS 3
 
 // BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined(FORET) ||defined(RIVETS) || defined(VOLUSPA) || defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
+#if defined(KOMPARTSD) || defined(VOLUSPA) || defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
 #define PG_BEZIER_PATHS
 #endif
 
@@ -371,14 +371,8 @@ using std::ifstream;
 #if defined(LIGHT)
 #include "pg_script_header_Light.h"
 #endif
-#if defined(RIVETS)
-#include "pg_script_header_Rivets.h"
-#endif
 #if defined(CORE)
 #include "pg_script_header_Core.h"
-#endif
-#if defined(FORET)
-#include "pg_script_header_Foret.h"
 #endif
 #if defined(VOLUSPA)
 #include "pg_script_header_voluspa.h"
@@ -389,6 +383,8 @@ using std::ifstream;
 #if defined(CAAUDIO)
 #include "pg_script_header_CAaudio.h"
 #endif
+
+// #include "./pg_scripts/pg_script_header.h"
 
 #include "pg-init.h"
 #include "pg-udp.h"

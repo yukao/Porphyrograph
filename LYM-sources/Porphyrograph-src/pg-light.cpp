@@ -90,20 +90,17 @@ void FTDI_Reload()
  * Purpose  : Send Data (DMX or other packets) to the PRO
  * Parameters: Label, Pointer to Data Structure, Length of Data
  **/
-int FTDI_SendData(int label, unsigned char *data, int length)
+int FTDI_SendData(int label, unsigned char *data, unsigned int length)
 {
 	unsigned char end_code = DMX_END_CODE;
 	FT_STATUS res = 0;
-	DWORD bytes_to_write = length;
 	DWORD bytes_written = 0;
-	HANDLE event = NULL;
-	int size=0;
 	// Form Packet Header
 	unsigned char header[DMX_HEADER_LENGTH];
-	header[0] = DMX_START_CODE;
-	header[1] = label;
-	header[2] = length & OFFSET;
-	header[3] = length >> BYTE_LENGTH;
+	header[0] = (unsigned char)DMX_START_CODE;
+	header[1] = (unsigned char)label;
+	header[2] = (unsigned char)(length & OFFSET);
+	header[3] = (unsigned char)(length >> BYTE_LENGTH);
 	// Write The Header
 	res = FT_Write(	device_handle,(unsigned char *)header,DMX_HEADER_LENGTH,&bytes_written);
 	if (bytes_written != DMX_HEADER_LENGTH) return  NO_RESPONSE;
@@ -129,10 +126,8 @@ int FTDI_ReceiveData(int label, unsigned char *data, unsigned int expected_lengt
 
 	FT_STATUS res = 0;
 	DWORD length = 0;
-	DWORD bytes_to_read = 1;
 	DWORD bytes_read =0;
 	unsigned char byte = 0;
-	HANDLE event = NULL;
 	char buffer[600];
 	// Check for Start Code and matching Label
 	while (byte != label)
@@ -196,8 +191,6 @@ uint16_t FTDI_OpenDevice(int device_num)
 	uint8_t temp[4];
 	long version;
 	uint8_t major_ver,minor_ver,build_ver;
-	int recvd =0;
-	unsigned char byte = 0;
 	int size = 0;
 	int res = 0;
 	int tries =0;
@@ -220,9 +213,9 @@ uint16_t FTDI_OpenDevice(int device_num)
 		ftStatus = FT_GetDriverVersion(device_handle,(LPDWORD)&version);
 		if (ftStatus == FT_OK) 
 		{
-			major_ver = (int) version >> 16;
-			minor_ver = (int) version >> 8;
-			build_ver = (int) version & 0xFF;
+			major_ver = (uint8_t) (version >> 16);
+			minor_ver = (uint8_t) (version >> 8);
+			build_ver = (uint8_t) (version & 0xFF);
 			printf("Lighting: D2XX Driver Version:: %02d.%02d.%02d ",major_ver,minor_ver,build_ver);
 		}
 		else
@@ -744,14 +737,14 @@ void pg_SendDMX()
 // initialization function with everything to do the test
 void DMX_light_initialization(void)
 {
-	uint8_t Num_Devices =0;
-	uint16_t device_connected =0;
-	int i=0;
-	int device_num=0;
+	uint8_t Num_Devices = 0;
+	uint16_t device_connected = 0;
+	int i = 0;
+	int device_num = 0;
 	BOOL res = 0;
 	uint8_t hversion;
 
-	Num_Devices = FTDI_ListDevices(); 
+	Num_Devices = (uint8_t)FTDI_ListDevices();
 	printf("Lighting: %d DMX USB PRO Devices\n", Num_Devices);
 	// Number of Found Devices
 	if (Num_Devices == 0)

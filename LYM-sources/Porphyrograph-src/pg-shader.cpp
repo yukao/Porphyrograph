@@ -36,14 +36,8 @@
 #if defined(LIGHT)
 #include "pg_shader_body_decl_Light.cpp"
 #endif
-#if defined(RIVETS)
-#include "pg_shader_body_decl_Rivets.cpp"
-#endif
 #if defined(CORE)
 #include "pg_shader_body_decl_Core.cpp"
-#endif
-#if defined(FORET)
-#include "pg_shader_body_decl_Foret.cpp"
 #endif
 #if defined(VOLUSPA)
 #include "pg_shader_body_decl_voluspa.cpp"
@@ -54,6 +48,8 @@
 #if defined(CAAUDIO)
 #include "pg_shader_body_decl_CAaudio.cpp"
 #endif
+
+// #include "pg_scripts/pg_shader_body_decl.cpp"
 
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
@@ -120,7 +116,7 @@ GLint uniform_Update_homographyForTexture[_NbConfigurations] = {-1};
 GLint uniform_Update_vp_2fv_width_height[_NbConfigurations] = {-1};
 GLint uniform_Update_fs_4fv_W_H_time_currentScene[_NbConfigurations] = {-1};
 GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[_NbConfigurations] = {-1};
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined(CAAUDIO)
 GLint uniform_Update_fs_4fv_CAseed_type_size_loc[_NbConfigurations] = {-1};
 #endif
 GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[_NbConfigurations] = {-1};
@@ -172,7 +168,7 @@ GLint uniform_Update_texture_fs_CATable[_NbConfigurations] = {-1};
 #if defined(var_GenerativeNights_planes)
 GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo[_NbConfigurations] = {-1};
 #endif
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 GLint uniform_Update_texture_fs_Camera_BGIni[_NbConfigurations] = {-1};  // initial camera BG capture
 #endif
 GLint uniform_Update_texture_fs_pixel_acc[_NbConfigurations] = {-1};
@@ -193,7 +189,7 @@ GLint uniform_Update_texture_fs_Trk2[_NbConfigurations] = {-1};  // ping-pong tr
 #if PG_NB_TRACKS >= 4
 GLint uniform_Update_texture_fs_Trk3[_NbConfigurations] = {-1};  // ping-pong track 3 (FBO)
 #endif
-#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 GLint uniform_Update_texture_fs_Brushes[_NbConfigurations] = {-1};  // pen patterns
 #endif
 GLint uniform_Update_texture_fs_Camera_frame[_NbConfigurations] = {-1};  // camera frame
@@ -619,14 +615,8 @@ void pg_loadAllShaders(void) {
 #if defined(KOMPARTSD)
 #include "pg_shader_body_bind_Light.cpp"
 #endif
-#if defined(RIVETS)
-#include "pg_shader_body_bind_Rivets.cpp"
-#endif
 #if defined(CORE)
 #include "pg_shader_body_bind_Core.cpp"
-#endif
-#if defined(FORET)
-#include "pg_shader_body_bind_Foret.cpp"
 #endif
 #if defined(VOLUSPA)
 #include "pg_shader_body_bind_voluspa.cpp"
@@ -637,6 +627,9 @@ void pg_loadAllShaders(void) {
 #if defined(CAAUDIO)
 #include "pg_shader_body_bind_CAaudio.cpp"
 #endif
+
+// #include "pg_scripts/pg_shader_body_bind.cpp"
+
 
 	////////////////////////////////////////
 	// binding variables in shaders
@@ -705,7 +698,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_vp_2fv_width_height, "uniform_Update_vp_2fv_width_height", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_W_H_time_currentScene, "uniform_Update_fs_4fv_W_H_time_currentScene", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift, "uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift", _pg_shader_Update);
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined(CAAUDIO)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_CAseed_type_size_loc, "uniform_Update_fs_4fv_CAseed_type_size_loc", _pg_shader_Update);
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght", _pg_shader_Update);
@@ -782,8 +775,8 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_initCA_1stPlaneFrameNo, "uniform_Update_fs_2fv_initCA_1stPlaneFrameNo", _pg_shader_Update);
 		}
 #endif
-#if defined(var_camera_BG_ini_subtr)
-		if (ScenarioVarConfigurations[_camera_BG_ini_subtr][indConfig]) {
+#if defined(var_camera_BG_subtr)
+		if (ScenarioVarConfigurations[_camera_BG_subtr][indConfig]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Camera_BGIni, "uniform_Update_texture_fs_Camera_BGIni", _pg_shader_Update);  // initial background frame
 		}
 #endif
@@ -808,7 +801,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Trk3, "uniform_Update_texture_fs_Trk3", _pg_shader_Update);  // ping-pong track 3 (FBO)
 #endif
 		// textures
-#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Brushes, "uniform_Update_texture_fs_Brushes", _pg_shader_Update);  // pen patterns
 #endif
 

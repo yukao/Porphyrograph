@@ -199,11 +199,11 @@ string *pg_Texture_fileNamesSuffix[_NbConfigurations] = {NULL};
 // usages
 pg_Texture_Usages *pg_Texture_usages[_NbConfigurations] = {NULL};
 // rank (if used several times for the same usage)
-int *pg_Texture_Rank[_NbConfigurations] = {NULL};
+unsigned int *pg_Texture_Rank[_NbConfigurations] = {NULL};
 // 2D or 3D
 int *pg_Texture_Dimension[_NbConfigurations] = {NULL};
 // number of piled 2D textures for a 3D texture
-int *pg_Texture_Nb_Layers[_NbConfigurations] = {NULL};
+unsigned int *pg_Texture_Nb_Layers[_NbConfigurations] = {NULL};
 // dimensions
 int *pg_Texture_Size_X[_NbConfigurations] = {NULL};
 int *pg_Texture_Size_Y[_NbConfigurations] = {NULL};
@@ -1457,7 +1457,7 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 	pg_nb_SVG_pathCurves[indConfiguration] = 0;
-	pg_current_SVG_path_group = 0;
+	pg_current_SVG_path_group = 1;
 	sstream >> pg_nb_SVG_pathCurves[indConfiguration];
 	//printf("nb svg paths %d\n", nb_paths[indConfiguration]);
 
@@ -1476,11 +1476,11 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 	vector<double> vec_secondsforwidth;
 	for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
 		string fileName = "";
-		string ID = "";
+		string local_ID = "";
 		string path_ID = "";
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string svg_path
+		sstream >> local_ID; // string svg_path
 		sstream >> fileName; // file name
 		if (fileName.find(':') == std::string::npos) {
 			fileName = "Data/" + project_name + "-data/SVGs/" + fileName;
@@ -1514,13 +1514,13 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		float path_readSpeedScale = my_stof(temp2);
 		sstream >> path_ID;
 		sstream >> temp2;
-		int path_group = my_stoi(temp2);
-		if (path_group <= 0) {
+		int local_path_group = my_stoi(temp2);
+		if (local_path_group <= 0) {
 			sprintf(ErrorStr, "Error: incorrect scenario file group %d for SVG path %d number (\"%s\"), path group should be stricly positive",
-				path_track, pathNo, fileName.c_str()); ReportError(ErrorStr); throw 100;
+				local_path_group, pathNo, fileName.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		else {
-			pg_nb_SVG_path_groups[indConfiguration] = max(pg_nb_SVG_path_groups[indConfiguration], path_group);
+			pg_nb_SVG_path_groups[indConfiguration] = max(pg_nb_SVG_path_groups[indConfiguration], local_path_group);
 		}
 		sstream >> temp2;
 		bool with_color_radius_from_scenario = (my_stoi(temp2) != 0);
@@ -1536,7 +1536,7 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		vec_path_b_color.push_back(path_b_color);
 		vec_path_readSpeedScale.push_back(path_readSpeedScale);
 		vec_path_ID.push_back(path_ID);
-		vec_path_group.push_back(path_group);
+		vec_path_group.push_back(local_path_group);
 		vec_with_color_radius_from_scenario.push_back(with_color_radius_from_scenario);
 		vec_secondsforwidth.push_back(secondsforwidth);
 	}
@@ -1584,14 +1584,14 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		vec_path_readSpeedScale.pop_back();
 		string path_ID = vec_path_ID.back();
 		vec_path_ID.pop_back();
-		int path_group = vec_path_group.back();
+		int local_path_group = vec_path_group.back();
 		vec_path_group.pop_back();
 		bool with_color_radius_from_scenario = vec_with_color_radius_from_scenario.back();
 		vec_with_color_radius_from_scenario.pop_back();
 		double secondsforwidth = vec_secondsforwidth.back();
 		vec_secondsforwidth.pop_back();
 
-		//printf("path no %d group %d\n", indPathCurve, path_group);
+		//printf("path no %d group %d\n", indPathCurve, local_path_group);
 		//printf("path ID %s radius %.3f\n", path_ID.c_str(), pathRadius);
 		//printf("path no %d group %d\n", paths[indConfiguration][indPathCurve].indPathCurve, paths[indConfiguration][indPathCurve].path_group);
 		// checks whether there are other curves in the same path
@@ -1603,18 +1603,19 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 				//	indAux, indPathCurve, pg_SVG_pathCurves[indConfiguration][indAux].indPath, pg_SVG_pathCurves[indConfiguration][indAux].path_group); ReportError(ErrorStr); throw 100;
 			}
 		}
-		pg_SVG_pathCurves[indConfiguration][indPathCurve].SVG_path_init(pathNo, rankInPath, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale,
-			path_ID, fileName, path_group, with_color_radius_from_scenario, secondsforwidth);
+		pg_SVG_pathCurves[indConfiguration][indPathCurve].SVG_path_init(pathNo, rankInPath, path_track, pathRadius, 
+			path_r_color, path_g_color, path_b_color, path_readSpeedScale,
+			path_ID, fileName, local_path_group, with_color_radius_from_scenario, secondsforwidth);
 
 		//printf("indPathCurve %d path_track %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
 		//	pathRank, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-			if (path_group - 1 == pg_current_SVG_path_group) {
+			if (local_path_group == pg_current_SVG_path_group) {
 				//printf("Loading ClipArt path %s track %d\n", (char*)("Data/" + project_name + "-data/ClipArt/" + temp).c_str(), path_track);
 #if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 				if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
 					load_svg_path((char*)fileName.c_str(),
-						pathNo, path_track, pathRadius, path_r_color, path_g_color, path_b_color,
+						pathNo, pathRadius, path_r_color, path_g_color, path_b_color,
 						path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth, indConfiguration);
 				}
 #endif
@@ -2033,17 +2034,18 @@ void ParseScenarioTextures(std::ifstream& scenarioFin, int indConfiguration) {
 
 	pg_Texture_Size_X[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
 	pg_Texture_Size_Y[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Rank[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
+	pg_Texture_Rank[indConfiguration] = new unsigned int[pg_nb_Texture_files[indConfiguration]];
 	pg_Texture_Dimension[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Nb_Layers[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
+	pg_Texture_Nb_Layers[indConfiguration] = new unsigned int[pg_nb_Texture_files[indConfiguration]];
 	pg_Texture_Is_Rectangle[indConfiguration] = new bool[pg_nb_Texture_files[indConfiguration]];
 	pg_Texture_Invert[indConfiguration] = new bool[pg_nb_Texture_files[indConfiguration]];
 	pg_Texture_Nb_Bytes_per_Pixel[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
 	pg_Texture_texID[indConfiguration] = new GLuint[pg_nb_Texture_files[indConfiguration]];
 	memset((char*)pg_Texture_Size_X[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
 	memset((char*)pg_Texture_Size_Y[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
-	memset((char*)pg_Texture_Rank[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
+	memset((char*)pg_Texture_Rank[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(unsigned int));
 	memset((char*)pg_Texture_Dimension[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
+	memset((char*)pg_Texture_Nb_Layers[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(unsigned int));
 	memset((char*)pg_Texture_Is_Rectangle[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(bool));
 	memset((char*)pg_Texture_Invert[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(bool));
 	memset((char*)pg_Texture_Nb_Bytes_per_Pixel[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
@@ -2448,7 +2450,10 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	int nb_vars = 0;
-	for (int indP = 0; ((indP < _MaxInterpVarIDs + 1) && !sstream.eof()); indP++) {
+	for (int indP = 0; indP < _MaxInterpVarIDs + 1; indP++) {
+		if (sstream.eof()) {
+			sprintf(ErrorStr, "Error: scenario (index %d) of configuration %d missing fewer variables in scenario files than expected\n", indP, indConfiguration); ReportError(ErrorStr); throw 50;
+		}
 		sstream >> temp;
 		// first item is "ID"
 		if (indP > 0) {
@@ -3043,7 +3048,7 @@ int FindSceneById(std::string * sceneID) {
 
 
 void setWindowDimensions(void) {
-	if (double_window && window_width > 1920) {
+	if (double_window && (window_width > 1920)) {
 		if (wide_screen) {
 			workingWindow_width = window_width * 3 / 7;
 		}

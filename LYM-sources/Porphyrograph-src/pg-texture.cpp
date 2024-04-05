@@ -177,8 +177,8 @@ void remove_files_in_dir(std::string *dirpath) {
 	// std::cout << std::endl << "dir to get files of: " + *dirpath << std::endl;
 	// scans all the subdirectories until finding one that has the current 
 	// index + 1 as substring, typically 001_XXXX
-	struct dirent *subdirp;
-	while ((subdirp = readdir(dp))) {
+	struct dirent* subdirp = readdir(dp);
+	while (subdirp != NULL) {
 		string filepath = *dirpath + "/" + subdirp->d_name;
 		struct stat filestat;
 		if (stat(filepath.c_str(), &filestat)) continue; // colleccts file status and returns 0 on success
@@ -191,6 +191,7 @@ void remove_files_in_dir(std::string *dirpath) {
 				std::cout << "deleted (" << filepath << ")" << std::endl;
 			}
 		}
+		subdirp = readdir(dp);
 	}
 	// ends of the dir without finding the file, the file index will be reset
 	closedir(dp);
@@ -247,7 +248,7 @@ bool pg_loadAllTextures(void) {
 					indConfiguration)) {
 					if (pg_Texture_Rank[indConfiguration][indTextureFile] != pg_particle_initial_pos_speed_texID[indConfiguration].size()
 						|| pg_Texture_Rank[indConfiguration][indTextureFile] != pg_particle_initial_color_radius_texID[indConfiguration].size()) {
-						sprintf(ErrorStr, "Error: particle initialization texture #%d/%d rank incorrect (%d rank expected)!\n", pg_particle_initial_pos_speed_texID[indConfiguration].size(), pg_particle_initial_color_radius_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
+						sprintf(ErrorStr, "Error: particle initialization texture #%lu/%lu rank incorrect (%d rank expected)!\n", pg_particle_initial_pos_speed_texID[indConfiguration].size(), pg_particle_initial_color_radius_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
 					}
 				}
 			}
@@ -256,7 +257,7 @@ bool pg_loadAllTextures(void) {
 			else if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_part_acc
 				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
 				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (particle acc), ";
-				GLuint textureParticle_acc_ID = -1;
+				GLuint textureParticle_acc_ID = NULL_ID;
 				pg_loadTexture2D((char*)(pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile]).c_str(),
 					&textureParticle_acc_ID,
 					pg_Texture_Is_Rectangle[indConfiguration][indTextureFile],
@@ -307,7 +308,7 @@ bool pg_loadAllTextures(void) {
 				Master_Multilayer_Mask_texID[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
 			}
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined (PG_BEZIER_PATHS) || defined(CORE)
 			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_brush
 				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 3) {
 				Pen_texture_3D_texID[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
@@ -323,7 +324,7 @@ bool pg_loadAllTextures(void) {
 				pg_RepopDensity_texture_texID[indConfiguration].push_back(pg_Texture_texID[indConfiguration][indTextureFile]);
 				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (repop density), ";
 				if (pg_Texture_Rank[indConfiguration][indTextureFile] != pg_RepopDensity_texture_texID[indConfiguration].size()) {
-					sprintf(ErrorStr, "Error: repopulation texture density #%d rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
+					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
 				}
 			}
 #endif
@@ -359,7 +360,7 @@ bool pg_loadAllTextures(void) {
 				blurredDisk_texture_2D_texID[indConfiguration].push_back(pg_Texture_texID[indConfiguration][indTextureFile]);
 				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (splat), ";
 				if (pg_Texture_Rank[indConfiguration][indTextureFile] != blurredDisk_texture_2D_texID[indConfiguration].size()) {
-					sprintf(ErrorStr, "Error: texture splat image #%d rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
+					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
 				}
 			}
 #endif
@@ -377,7 +378,7 @@ bool pg_loadAllTextures(void) {
 			sprintf(ErrorStr, "Error: master mask texture (usage: master_mask) and multilayer master mask texture (usage: multilayer_master_mask) not provided for configuration %d scenario %s, check texture list with master mask usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
 #endif
-#if !defined (PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined (PG_BEZIER_PATHS) || defined(CORE)
 		if (Pen_texture_3D_texID[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: brush texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
@@ -544,11 +545,11 @@ void *pg_generateTexture(GLuint *textureID, pg_TextureFormat texture_format,
 // INITIALIZATION OF THE TRANSITION TABLES FOR THE CELLULAR AUTOMATA
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(var_CATable) && !(defined (RIVETS) || defined (CAAUDIO))
+#if defined(var_CATable) && !defined(CAAUDIO)
 #include "pg_CATable_GN.cpp"
 #endif
 
-#if defined(var_CATable) && (defined (RIVETS) || defined (CAAUDIO))
+#if defined(var_CATable) && defined(CAAUDIO)
 #include "pg_CATable_CAaudio.cpp"
 #endif
 
@@ -640,7 +641,7 @@ void writejpg(cv::String imageFileName) {
 
 // 3D texture loading + transfer to GPU
 bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
-	int nbTextures, int bytesperpixel,
+	unsigned int nbTextures, int bytesperpixel,
 	bool invert,
 	GLuint *textureID,
 	GLint components, GLenum format,
@@ -674,17 +675,17 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	if (is_image_tiff) {
 		vector<Mat> pages;
 #ifndef OPENCV_3
-		bool res = imreadmulti(fileName, pages, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
+		imreadmulti(fileName, pages, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
 #else
-		bool res = imreadmulti(fileName, pages, cv::IMREAD_UNCHANGED);   // Read the file
+		imreadmulti(fileName, pages, cv::IMREAD_UNCHANGED);   // Read the file
 #endif
 		if (pages.size() != nbTextures) {
-			sprintf(ErrorStr, "The number of layers does not match the value in the scenario file %s %d vs %d!\n", fileName.c_str(), pages.size(), nbTextures); ReportError(ErrorStr); throw 425;
+			sprintf(ErrorStr, "The number of layers does not match the value in the scenario file %s %lu vs %d!\n", fileName.c_str(), pages.size(), nbTextures); ReportError(ErrorStr); throw 425;
 			return false;
 		}
-		std::cout << fileName + cv::format(" (3D tiff %d ch %d layers), ", pages.at(0).channels(), pages.size());
+		std::cout << fileName + cv::format(" (3D tiff %d ch %lu layers), ", pages.at(0).channels(), pages.size());
 		long ind = 0;
-		for (int indTex = 0; indTex < nbTextures; indTex++) {
+		for (unsigned int indTex = 0; indTex < nbTextures; indTex++) {
 			// texture load through OpenCV
 			tiffLayerMatRGBInit = pages.at(indTex);
 #ifndef OPENCV_3
@@ -714,7 +715,7 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 				return false;
 			}
 			if (tiffLayerMatBGRFlipped.elemSize() != bytesperpixel) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected multilayer tiff image bytes per pixel %s %d/%d!\n", fileName.c_str(), tiffLayerMatBGRFlipped.elemSize(), bytesperpixel); ReportError(ErrorStr); throw 425;
+				sprintf(ErrorStr, "Unexpected multilayer tiff image bytes per pixel %s %lu/%d!\n", fileName.c_str(), tiffLayerMatBGRFlipped.elemSize(), bytesperpixel); ReportError(ErrorStr); throw 425;
 				return false;
 			}
 			//printf("texture loading layer %d bytes per pixel %ld\n", indTex, result.elemSize());
@@ -725,7 +726,7 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	}
 	else {
 		long ind = 0;
-		for (int indTex = 0; indTex < nbTextures; indTex++) {
+		for (unsigned int indTex = 0; indTex < nbTextures; indTex++) {
 			cv::String layerFilename = cv::format("%s_%03d%s", filePrefixName.c_str(),
 				(indTex + 1), fileSuffixName.c_str());
 			std::cout << layerFilename + " (3D-layer), ";
@@ -1320,7 +1321,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 				pg_camera_frame.data);        // The actual image data itself
 		}
 
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 		if (initialBGCapture || secondInitialBGCapture) { // currentVideoTrack <=> video off
 			printf("*** non threaded initial BG video capture frame %d\n", pg_FrameNo);
 			initialBGCapture = false;
@@ -1389,7 +1390,7 @@ void pg_initCameraFrameTexture(Mat *camera_frame) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// glGenerateMipmap(GL_TEXTURE_2D);
 
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 	// initial background
 	if (!pg_camera_BGIni_texture_texID) {
 		glGenTextures(1, &pg_camera_BGIni_texture_texID);
@@ -2010,8 +2011,6 @@ bool pg_load_compressed_photo(char* fileName, int width, int height, int indConf
 	unsigned int linearSize = *(unsigned int*)&(header[16]);
 	unsigned int mipMapCount = *(unsigned int*)&(header[24]);
 	unsigned int fourCC = *(unsigned int*)&(header[80]);
-	unsigned int ratio_h = 1;
-	unsigned int ratio_v = 1;
 
 	// Check for image size
 	if (width_from_header != u_int(width)) {
@@ -2183,7 +2182,7 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, boo
 }
 
 // only loads DDs in HD format width and height are power of two
-bool ClipFramesDataStruct::pg_loadClipFrames(char * fileName, int width, int height, bool verbose, int indConfiguration) {
+bool ClipFramesDataStruct::pg_loadClipFrames(char * fileName, int width, int height, int indConfiguration) {
 	int fileNameLength = int(strlen(fileName));
 	char* extension = fileName + fileNameLength - 4;
 	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
@@ -2290,7 +2289,7 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum 
 	return valret;
 }
 
-bool ClipFramesDataStruct::pg_toGPUClipFrames(int w, int h, GLint components, GLenum datatype, GLenum texturefilter, int indConfiguration) {
+bool ClipFramesDataStruct::pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indConfiguration) {
 	return pg_toGPUCompressedPhoto(w, h, texBuffID, texturefilter, indConfiguration);
 }
 
@@ -2617,7 +2616,7 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 #endif
 
 
-bool  pg_loadAllDiaporamas(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder) {
+bool  pg_loadAllDiaporamas(int nbImages, int nbFolders) {
 	bool valret = true;
 
 	printf("Load Diaporamas:\n");
@@ -2706,7 +2705,7 @@ bool  pg_loadAllDiaporamas(int ind_dir, int nbImages, int nbFolders, int maxFile
 						auto subDirIter = fs::directory_iterator(dir_entry);
 						for (auto& subdir_entry : subDirIter) {
 							if (indCompressedImage < pg_nbCompressedImages[indConfiguration] && subdir_entry.is_regular_file()) {
-								if (pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID == -1) {
+								if (pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID == NULL_ID) {
 									// allocates a texture ID for the image
 									glGenTextures(1, &(pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID));
 									pg_Photo_buffer_data[indConfiguration][indCompressedImage]->IDallocated = true;
@@ -2846,7 +2845,7 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 						if (indCompressedClipFrames < pg_nbCompressedClipFrames[indConfiguration] 
 							&& subdir_entry.is_regular_file() && nb_images_per_clip < clip_max_length[indConfiguration])
 						{
-							if (pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]->texBuffID == -1) {
+							if (pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]->texBuffID == NULL_ID) {
 								// allocates a texture ID for the image
 								glGenTextures(1, &(pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]->texBuffID));
 
@@ -2854,10 +2853,12 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 								//printf("file %s\n", (char *)subdir_entry.path().string().c_str());
 								//std::cout << "file " << subdir_entry.path().string() << std::endl;
 								valret &= pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]
-									->pg_loadClipFrames((char*)(subdir_entry.path().string().c_str()), clip_image_width[indConfiguration], clip_image_height[indConfiguration], false, indConfiguration);
+									->pg_loadClipFrames((char*)(subdir_entry.path().string().c_str()), 
+										clip_image_width[indConfiguration], clip_image_height[indConfiguration], indConfiguration);
 
 								// loads the compressed image into GPU
-								pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]->pg_toGPUClipFrames(clip_image_width[indConfiguration], clip_image_height[indConfiguration], GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
+								pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]->pg_toGPUClipFrames(clip_image_width[indConfiguration], 
+									clip_image_height[indConfiguration], GL_LINEAR, indConfiguration);
 								//printf("texture ID dir %d indCompressedClipFrames %d texID %d\n", indCompressedClipDirs, indCompressedClipFrames, pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID);
 
 								printOglError(8);

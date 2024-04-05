@@ -28,6 +28,8 @@
 #define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII
 #define FOURCC_DXT5 0x35545844 // Equivalent to "DXT5" in ASCII
 
+#define     NULL_ID   0
+
 // data structure for threads to use.
 // This is passed by void pointer so it can be any data type
 // that can be passed using a single void pointer (LPVOID).
@@ -70,7 +72,7 @@ public:
 		*PhotoName = 0;
 		IDallocated = false;
 		invert = false;
-		texBuffID = -1;
+		texBuffID = NULL_ID;
 	}
 	void release(void) {
 		w = -1;
@@ -95,16 +97,16 @@ public:
 	GLenum clipImgFormat;
 	ClipFramesDataStruct(void) {
 		clipImgFormat = 0;
-		texBuffID = -1;
+		texBuffID = NULL_ID;
 	}
 	~ClipFramesDataStruct(void) {
 		clipImgFormat = 0;
-		texBuffID = -1;
+		texBuffID = NULL_ID;
 	}
 	// calls to pg_loadClipFrames should be immediately followed by pg_toGPUClipFrames
 	// due to global storage variables imgPhotoCompressedFormat, imgPhotoCompressedBitmap, imgPhotoBGRInit, imgPhotoRGB;
-	bool pg_loadClipFrames(char* fileName, int width, int height, bool verbose, int indConfiguration);
-	bool pg_toGPUClipFrames(int w, int h, GLint components, GLenum datatype, GLenum texturefilter, int indConfiguration);
+	bool pg_loadClipFrames(char* fileName, int width, int height, int indConfiguration);
+	bool pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indConfiguration);
 };
 
 // additional contexts for threading transfer to GPU
@@ -318,7 +320,7 @@ bool pg_load_compressed_photo(char* fileName, int width, int height, int indConf
 
 // TEXTURE LOADING
 bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
-	int nbTextures, int bytesperpixel,
+	unsigned int nbTextures, int bytesperpixel,
 	bool invert,
 	GLuint *textureID,
 	GLint components, GLenum format,
@@ -386,5 +388,5 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 
 #endif
 
-bool  pg_loadAllDiaporamas(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder);
+bool  pg_loadAllDiaporamas(int nbImages, int nbFolders);
 bool  pg_ReadInitalClipFramesTextures(void);

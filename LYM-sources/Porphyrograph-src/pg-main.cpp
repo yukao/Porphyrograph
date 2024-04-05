@@ -332,7 +332,7 @@ int main(int argcMain, char **argvMain) {
 	// pg_ReadInitalImageTexturesTVW(0, 200, 28, -1);
 	pg_ReadInitalImageTexturesTVW(0, -1, -1, 15);
 #else
-	pg_loadAllDiaporamas(0, -1, -1, 15);
+	pg_loadAllDiaporamas(-1, -1);
 #endif
 #if defined(var_clipCaptFreq)
 	pg_ReadInitalClipFramesTextures();
@@ -697,7 +697,7 @@ bool pg_shutdown = false;
 void pg_quit( void ) {
 	// for Annika performance: save the svg paths before quitting (could perhaps be generalized)
 #ifdef KOMPARTSD
-	pg_draw_scene(_Svg, false);
+	pg_draw_scene(_Svg);
 	// sends the position of the cursor to the recorder for later replay
 	sprintf(AuxString, "/quit");
 	pg_IPClient * client;
@@ -744,7 +744,7 @@ void pg_quit( void ) {
 	printf("Main: soundtrack: %s\n", AuxString);
 #endif
 #ifdef PG_WITH_PORTAUDIO
-	PaError err = pa_sound_data.pa_closeMyStream();
+	pa_sound_data.pa_closeMyStream();
 	printf("close portaudio\n");
 	delete paInit;
 #endif

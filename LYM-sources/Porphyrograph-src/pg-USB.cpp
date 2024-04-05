@@ -1,9 +1,38 @@
 #include <iostream>
-#include "C:/sync.com/Sync/LYM-sources/share/libusb-1.0.26/libusb/libusb.h"
+#include <libusb-1.0/libusb.h>
+#include "pg-all_include.h"
+#ifdef _WIN32
 #include <conio.h>
-#include <iostream>
+#else
+#include <stdio.h>
+#include <sys/select.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+int _kbhit() {
+    static const int STDIN = 0;
+    static bool initialized = false;
 
+    if (! initialized) {
+        // Use termios to turn off line buffering
+        termios term;
+        tcgetattr(STDIN, &term);
+        term.c_lflag &= ~ICANON;
+        tcsetattr(STDIN, TCSANOW, &term);
+        setbuf(stdin, NULL);
+        initialized = true;
+    }
+
+    int bytesWaiting;
+    ioctl(STDIN, FIONREAD, &bytesWaiting);
+    return bytesWaiting;
+}
+#endif
+/*
+#include <iostream>
+*/
 using namespace std;
+
+
 
 ssize_t pg_nb_USBs = 0;
 libusb_device** pg_USB_devices = NULL; //pointer to pointer of device, used to retrieve a list of devices
@@ -59,7 +88,7 @@ int pg_init_USB(void) {
 		cout << "Init Error " << r << endl; //there was an error
 		return 1;
 	}
-	libusb_set_debug(pg_USB_context, 3); //set verbosity level to 3, as suggested in the documentation
+//	libusb_set_debug(pg_USB_context, 3); //set verbosity level to 3, as suggested in the documentation
 	pg_nb_USBs = libusb_get_device_list(pg_USB_context, &pg_USB_devices); //get the list of devices
 	if (pg_nb_USBs < 0) {
 		cout << "Get Device Error" << endl; //there was an error
@@ -158,12 +187,15 @@ int pg_find_USB_pedals(void) {
 // Interfaces : 2 ||| 
 // Number of alternate settings : 1 | Interface Number : 0 | Number of endpoints : 1 | Descriptor Type : 5 | EP Address : 129 | 
 // Number of alternate settings : 1 | Interface Number : 1 | Number of endpoints : 2 | Descriptor Type : 5 | EP Address : 130 | Descriptor Type : 5 | EP Address : 2 |
+#ifdef _WIN32
 int getch_noblock() {
 	if (_kbhit())
 		return _getch();
 	else
 		return -1;
 }
+#endif
+
 int read_USB_pedal(int indPedal) {
 	libusb_device_handle* dev_handle = NULL;
 	if (indPedal < pg_nb_USB_pedals) {
@@ -196,7 +228,11 @@ int read_USB_pedal(int indPedal) {
 		cout << "Read Error on Pedal" << indPedal << endl;
 
 	int ich;
+#ifdef _WIN32
 	ich = getch_noblock();
+#else
+	ich = _kbhit();
+#endif
 	if (ich == -1) {
 		cout << "no char input" << endl;
 	}

@@ -201,7 +201,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 		// sends OSC message through OSC bundle
 		// message that begins by an OSC address #/aaaa/aaa 
 		// whether or not the pattern is provided with the command
-		int pattern_size = int(output_pattern_stack[current_depth_output_stack - 1].length());
+		unsigned int pattern_size = output_pattern_stack[current_depth_output_stack - 1].length();
 
 		//lo_bundle osc_bundle = lo_bundle_new(LO_TT_IMMEDIATE);
 		//lo_message message_osc = lo_message_new();
@@ -263,7 +263,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 		// message that begins by an OSC address /aaaa/aaa 
 		// msg with more than one argument
 		if (output_pattern_stack[current_depth_output_stack - 1] != "") {
-			int pattern_size = int(output_pattern_stack[current_depth_output_stack - 1].length());
+			unsigned int pattern_size = output_pattern_stack[current_depth_output_stack - 1].length();
 
 			// pattern and argument size match
 			if (pattern_size == message_arguments.size() - 1) {
@@ -621,7 +621,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 			// pattern and argument size match
 			// error : pattern and message size differ
 			else {
-				sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %d)!", output_pattern_stack[current_depth_output_stack - 1].c_str(), output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size, message_arguments.size() - 1); ReportError(ErrorStr);
+				sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %lu)!", output_pattern_stack[current_depth_output_stack - 1].c_str(), output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size, message_arguments.size() - 1); ReportError(ErrorStr);
 			}
 			// error : pattern and message size differ
 		}
@@ -655,9 +655,6 @@ void pg_IPClient::sendIPmessages(void) {
 			if (IP_message_trace) {
 				printf("send message [%s, %s]\n", output_message_stack[current_depth_output_stack - 1].c_str(), output_pattern_stack[current_depth_output_stack - 1].c_str());
 			}
-
-			// copies the earliest message
-			int indLocalCommandLine = 0;
 
 			// records the emission time
 			last_IP_message_time = RealTime();
@@ -1064,8 +1061,8 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 
 	// tag length: the non blank chars at the beginning of the message
 	int tagLength = int(strlen(messString));
-	char *pch;
-	if ((pch = strchr(messString, ' '))) {
+	char *pch = strchr(messString, ' ');
+	if (pch != NULL) {
 		tagLength = int(pch - messString);
 	}
 

@@ -37,9 +37,6 @@
 
 #define   StringLength   1024
 
-#define     NULL_ID   0
-
-
 extern string ScreenMessage;
 extern GLfloat messageTransparency;
 extern bool NewScreenMessage;
@@ -144,7 +141,7 @@ void OpenGLInit( void );
 /// scene initialization
 void pg_init_scene( void );
 
-void pg_draw_scene( DrawingMode mode, bool threaded );
+void pg_draw_scene( DrawingMode mode );
 
 /// main window initialization
 void initGlutWindows( void );

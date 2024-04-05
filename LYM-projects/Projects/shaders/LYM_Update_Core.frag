@@ -296,9 +296,9 @@ layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Trk2;      
 #if PG_NB_TRACKS >= 4
 layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_Trk3;          // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
-layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
-layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
+// layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -1897,6 +1897,9 @@ void main() {
     textureDensityValue = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).rgb;
     repop_density_weight = graylevel(textureDensityValue);
   }
+  else {
+    repop_density_weight = 1;
+  }
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -2215,6 +2218,11 @@ void main() {
      cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
                * cameraWH;
  */
+ 
+/* // FlowingForms
+   cameraCoord = vec2(0.7 * (decalCoordsPOT.x + 0.15), 0.7 * (1. - decalCoordsPOT.y + 0.15) ) * cameraWH;
+*/
+
   // cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
   cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) );
   // two images in case of double screen
@@ -2490,6 +2498,7 @@ void main() {
             curTrack_grayLevel =  out_gray_drawing( 3 * radiusX_beginOrEnd_radiusY_brushID.x, 0 ); 
                                  // rubber radius is made 3 times larger than regular pen
             out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * pathColor.a);
+            out_track_FBO[indCurTrack].rgb += curTrack_grayLevel * 0.1 * pathColor.rgb;
             curTrack_color.rgb = vec3(0);
         }
         else { // normal stylus
@@ -2658,7 +2667,8 @@ void main() {
   // CA LAYER: CA "SPREADING" UPDATE
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
-  if( CA_on_off && (frameNo % CAstep == 0) ) {
+  // if( CA_on_off && (frameNo % CAstep == 0) ) 
+  {
     out4_CA = vec4(0.0);
     vec4 currentCA = out_attachment_FBO[pg_FBO_fs_CA_attacht]; // RGB: CA color ALPHA: CA state (ALPHA negative 
               // when first time writing on CA for skipping the first frame for CA update)
@@ -2675,7 +2685,7 @@ void main() {
       // currentCA.rgb = vec3(1,0,0);
     }
 
-     // calculates the new state of the automaton
+    // calculates the new state of the automaton
     CA_out( currentCA );
 
 

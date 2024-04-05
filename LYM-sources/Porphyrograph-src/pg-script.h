@@ -107,7 +107,7 @@ extern float pen_bandpass_3color_palette[3][3];
 #define CA_NEUMANN_BINARY         5
 #endif
 
-#if (defined (RIVETS) || defined (CAAUDIO)) && !defined(SOUNDINITATIVE)
+#if defined(CAAUDIO) && !defined(SOUNDINITATIVE)
 #define CA_TOTALISTIC             0
 #define CA_GENERATION             1
 #define CA_GAL_BIN_MOORE          2
@@ -331,7 +331,7 @@ extern double lastBeatTime;
 extern int pg_BeatNo;
 
 // +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined(CAAUDIO)
 enum pg_CAseed_types
 {
 	_pg_CAseed_dot_center = 0,

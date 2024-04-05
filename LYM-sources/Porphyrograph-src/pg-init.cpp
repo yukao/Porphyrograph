@@ -748,7 +748,7 @@ std::string GetCurrentWorkingDir(void) {
 
 #ifdef _WIN32
 static const double epoch = 116444736000000000.;
-int gettimeofday(struct timeval* tp, void* tzp) {
+int gettimeofday(struct timeval* tp) {
 	SYSTEMTIME system_time;
 	FILETIME file_time;
 	ULARGE_INTEGER ularge;
@@ -768,7 +768,7 @@ int gettimeofday(struct timeval* tp, void* tzp) {
 double pg_TimeAtApplicationLaunch = -1.;
 double RealTime(void) {
 	struct timeval time;
-	gettimeofday(&time, 0);
+	gettimeofday(&time);
 	double realtime = (double)time.tv_sec + ((double)time.tv_usec / 1000000.);
 	if (pg_TimeAtApplicationLaunch < 0) {
 		pg_TimeAtApplicationLaunch = realtime;

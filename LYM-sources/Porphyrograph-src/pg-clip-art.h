@@ -423,7 +423,7 @@ extern int ClipArt_stroke_color_swap;
 // display speed
 extern float				interframe_delay;
 
-void initializeNVPathRender(const char *programName);
+void initializeNVPathRender(void);
 void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile, int indConfiguration);
 void pg_Display_All_ClipArt(int activeFiles);
 float pg_Translate_ClipArt_Text(int indDisplayText);

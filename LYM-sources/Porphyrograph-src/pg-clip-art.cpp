@@ -30,7 +30,7 @@ bool has_NV_path_rendering = false;
 GLuint ClipArt_path_baseID[_NbConfigurations] = { 0 };
 GLuint *ClipArt_file_baseID[_NbConfigurations] = { NULL };
 unsigned int** ClipArt_path_fill_color[_NbConfigurations] = { NULL };
-void initializeNVPathRender(const char *programName) {
+void initializeNVPathRender(void) {
 	has_NV_path_rendering = (glutExtensionSupported("GL_NV_path_rendering") != 0);
 	if (!has_NV_path_rendering) {
 		sprintf(ErrorStr, "Error: required NV_path_rendering OpenGL extension is not present\n"); ReportError(ErrorStr);
@@ -76,35 +76,35 @@ void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile
 			switch (pg_ClipArt_Colors[indConfiguration][indClipArtFile][ind_gpu_path]) {
 			case ClipArt_nat:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0x888888"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0x888888"), nullptr, 16));
 				break;
 			case ClipArt_white:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path] 
-					= unsigned int(std::stoul(std::string("0xFFFFFF"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0xFFFFFF"), nullptr, 16));
 				break;
 			case ClipArt_red:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0xFF0000"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0xFF0000"), nullptr, 16));
 				break;
 			case ClipArt_green:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0x00FF00"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0x00FF00"), nullptr, 16));
 				break;
 			case ClipArt_blue:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0x0000FF"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0x0000FF"), nullptr, 16));
 				break;
 			case ClipArt_yellow:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0xFFFF00"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0xFFFF00"), nullptr, 16));
 				break;
 			case ClipArt_cyan:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0x00FFFF"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0x00FFFF"), nullptr, 16));
 				break;
 			case ClipArt_magenta:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
-					= unsigned int(std::stoul(std::string("0xFF00FF"), nullptr, 16));
+					= (unsigned int) (std::stoi(std::string("0xFF00FF"), nullptr, 16));
 				break;
 			}
 			std::size_t found = std::string::npos;
@@ -124,7 +124,7 @@ void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile
 						lineAux = lineAux.substr(0, found);
 						lineAux = std::string("0x") + lineAux;
 						//printf("File %d Fill color of path #%d: %s\n", indClipArtFile, ind_gpu_path, lineAux.c_str());
-						ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path] = unsigned int(std::stoul(lineAux, nullptr, 16));
+						ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path] = (unsigned int) (std::stoi(lineAux, nullptr, 16));
 					}
 				}
 				// looks for a path
@@ -222,20 +222,20 @@ static void OpenGLIntColors(unsigned int color) {
 	green = ((color - blue) / 256) % 256;
 	red = (color - blue - 256 * green) / (256 * 256);
 	//printf("color % d, red % d green % d blue % d\n", color, red, green, blue);
-	glColor3ub(unsigned char(red), unsigned char(green), unsigned char(blue));
+	glColor3ub((unsigned char)(red), (unsigned char)(green), (unsigned char)(blue));
 }
 static void OpenGLPaletteColors(Color &col, float palette_pulse) {
 	float pulsed_color[3] = { 0.f };
 	compute_pulsed_palette_color(col.color, palette_pulse, col.grey, palette_pulse, pulsed_color, _PG_CLIP_ART);
 	unsigned int red, green, blue;
-	red = unsigned int(pulsed_color[0] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
-	green = unsigned int(pulsed_color[1] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
-	blue = unsigned int(pulsed_color[2] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
+	red = (unsigned int)(pulsed_color[0] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
+	green = (unsigned int)(pulsed_color[1] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
+	blue = (unsigned int)(pulsed_color[2] * (col.alpha + pulse_average * palette_pulse) * 255) % 256;
 	//printf("color % d, red % d green % d blue % d\n", color, red, green, blue);
-	glColor3ub(unsigned char(red), unsigned char(green), unsigned char(blue));
+	glColor3ub((unsigned char)(red), (unsigned char)(green), (unsigned char)(blue));
 }
 
-static void pg_Display_One_ClipArt(pg_ClipArt_Colors_Types color, int indClipArt, int indLayer) {
+static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	int low_palette = -1;
 	float alpha = 0;
 	float palette_pulse = 0.f;
@@ -465,7 +465,7 @@ void pg_Display_All_ClipArt(int activeFiles) {
 								if (indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt]
 									&& pg_ClipArt_SubPath[pg_current_configuration_rank][indClipArt][indPath] == true) {
 									//printf("config %d active clipart display %d layer %d\n", pg_current_configuration_rank, indClipArt, indPath);
-									pg_Display_One_ClipArt(pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath], indClipArt, indPath);
+									pg_Display_One_ClipArt(indClipArt, indPath);
 								}
 							}
 						}
@@ -622,8 +622,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 #ifdef ETOILES
 					glTranslatef(100.f + 100.f * indChar, y_transl, 0);
 #else
-					// message with some random motion
-					if (mobile == 2 && indChar < unsigned int(DisplayText_maxLen)) {
+						if (mobile == 2 && indChar < (unsigned int)(DisplayText_maxLen)) {
 						DisplayText_rand_translX[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f);
 						DisplayText_rand_translY[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f) + rand_0_1 * 0.2f * (1.f + float(current_scene_percent) * 10.f);
 					}
@@ -652,7 +651,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 						float scale = pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt];
 						glScalef(scale, scale, scale);
 #endif
-						pg_Display_One_ClipArt(pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath], indClipArt, indPath);
+						pg_Display_One_ClipArt(indClipArt, indPath);
 						//}
 						//else {
 						//	printf("subpath not visible\n");
@@ -687,7 +686,7 @@ void pg_loadAllClipArts(void) {
 		if (ScenarioVarConfigurations[_activeClipArts][indConfiguration]) {
 			const char* ClipArt_programName = "nvpr_ClipArt";
 			//std::cout << "Loading " << pg_nb_ClipArt[indConfiguration] << " ClipArt\n";
-			initializeNVPathRender(ClipArt_programName);
+			initializeNVPathRender();
 			if (has_NV_path_rendering) {
 				ClipArt_path_baseID[indConfiguration] = glGenPathsNV(pg_nb_tot_SvgGpu_paths[indConfiguration]);
 				ClipArt_file_baseID[indConfiguration] = new GLuint[pg_nb_ClipArt[indConfiguration]];

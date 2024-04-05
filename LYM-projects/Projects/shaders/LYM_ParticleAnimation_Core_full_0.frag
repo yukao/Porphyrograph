@@ -135,7 +135,7 @@ vec2 pixelTextureCoordinatesXY; // the POT coordinates of the
 
 ///////////////////////////////////////////////////////////////////
 // PARTICLE IMAGE INITIALIZATION
-#define PG_NB_PARTICLE_INITIAL_IMAGES 6
+#define PG_NB_PARTICLE_INITIAL_IMAGES 9
 
 const uint pg_Part_pos_speed_FBO_ParticleAnimation_attcht = 0;
 const uint pg_Part_col_rad_FBO_ParticleAnimation_attcht = 1;
@@ -466,63 +466,63 @@ void particle_out( void ) {
 
     if(part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES) {
       vec4 target_color_radius = texture( uniform_ParticleAnimation_texture_fs_Part_init_col_rad , decalCoords );
+      out_color_radius_particle = vec4(target_color_radius.rgb, part_size);
       if(partMove_target) { // reaches a target in several steps
           out_target_position_color_radius_particle.xy
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords ).xy;
+
           out_target_position_color_radius_particle.z
             = target_color_radius.r * 255. + target_color_radius.g * 65025. + target_color_radius.b * 16581375.;
+            // = 0.2 * 255. + 0.2 * 65025. + 0.4 * 16581375.;
+
           out_target_position_color_radius_particle.w = part_size;
       }
       else { // instant positioning on the target
           out_position_speed_particle
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords );
-          // out_position_speed_particle.xy *= vec2(width,height);
-          // out_position_speed_particle = vec4(decalCoords,1,1);
-          out_color_radius_particle = vec4(target_color_radius.rgb, part_size);
-          // out_color_radius_particle = vec4(1,1,1,10);
       }
       return;
     }
 #ifdef PG_WITH_CAMERA_CAPTURE
     // camera
     else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES ) {
+        vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
+        vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Camera_frame , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
+        out_color_radius_particle = vec4(target_color.rgb, part_size);
         if(partMove_target) { // reaches a target in several steps
           out_target_position_color_radius_particle.xy
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_col_rad , decalCoords ).xy;
-          vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
-          vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Camera_frame , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
+
           out_target_position_color_radius_particle.z
             = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
+
           out_target_position_color_radius_particle.w = part_size;
+          out_position_speed_particle.zw = vec2(0,0);
       }
       else { // instant positioning on the target
           out_position_speed_particle
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords );
-          out_position_speed_particle.zw = vec2(0,0);
-          vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
-          vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Camera_frame , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
-          out_color_radius_particle = vec4(target_color.rgb, part_size);
       }
     }
 #endif
     // movie
     else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES + 1 ) {
+      vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
+      vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Movie_frame , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
+      out_color_radius_particle = vec4(target_color.rgb, part_size);
       if(partMove_target) { // reaches a target in several steps
           out_target_position_color_radius_particle.xy
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords ).xy;
-          vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
-          vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Movie_frame , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
+
           out_target_position_color_radius_particle.z
             = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
+
           out_target_position_color_radius_particle.w = part_size;
+          out_position_speed_particle.zw = vec2(0,0);
       }
       else { // instant positioning on the target
           out_position_speed_particle
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords );
-          out_position_speed_particle.zw = vec2(0,0);
-          vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
-          vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Movie_frame , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
-          out_color_radius_particle = vec4(target_color.rgb, part_size);
       }
     }
     return;
@@ -778,6 +778,8 @@ void particle_out( void ) {
     part_acceleration 
       = dvec2(out_target_position_color_radius_particle.xy
                   - out_position_speed_particle.xy);// * (1. - (targetFrameNo - frameNo)/part_timeToTargt);
+
+    /*
     dist_to_target = length(part_acceleration);
 
     int color = int(out_target_position_color_radius_particle.z);
@@ -786,7 +788,8 @@ void particle_out( void ) {
           = vec4((color%255)/255.,((color/255)%255)/255.,((color/65025)%255)/255.,
                   out_target_position_color_radius_particle.w);
     out_color_radius_particle 
-          = mix(targetColorRadius,out_color_radius_particle,(targetFrameNo - frameNo)/part_timeToTargt);
+          = mix(targetColorRadius,out_color_radius_particle,clamp((targetFrameNo - frameNo)/part_timeToTargt, 0., 1.));
+    */
 
     // ALSO INTERPOLATE COLOR
   }
@@ -820,6 +823,15 @@ void particle_out( void ) {
   // SPEED UPDATE FROM ACCELERATION AND DAMPING
   dvec2 speed2D;
   // texture based acceleration shift
+  /*
+  if(part_image_acceleration >= 0) {
+    float rot_angle = part_field_weight * texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).r;
+    float cosa = cos(rot_angle);
+    float sina = sin(rot_angle);
+    part_acceleration  
+      = dmat2(cosa, -sina, sina, cosa) * part_acceleration;
+  }
+  */
   if(part_image_acceleration >= 0) {
     float grey_center = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy ).rgb);
     float greyX = graylevel(texture( uniform_ParticleAnimation_texture_fs_Part_acc , out_position_speed_particle.xy  + vec2(1,0)).rgb);
@@ -854,18 +866,18 @@ void particle_out( void ) {
   // speed damping to reach a target
   if(partMove_target && speed > 0 && dist_to_target < part_damp_targtRad) {
       speed2D -= 0.01 * dvec2((part_damp_targtRad - dist_to_target) / part_damp_targtRad) * speed2D;
-      speed = length(speed2D);
   }
 
   // position update from new speed value
   // with speed limit
+  speed = length(speed2D);
   if(speed > 50) {
     speed2D *= double(50/speed);
   }
-/*if(speed < 0.0001) {
+  if(speed < 0.0001) {
     speed2D = dvec2(generativeNoise(pixelTextureCoordinatesXY));
   }
-*/
+
   out_position_speed_particle.zw = vec2(speed2D);
   out_position_speed_particle.xy += out_position_speed_particle.zw;
 

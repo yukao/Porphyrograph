@@ -122,7 +122,7 @@ struct ReceivedDmxCosStruct
 #define IO_ERROR 9
 
 
-int FTDI_SendData(int label, unsigned char *data, int length);
+int FTDI_SendData(int label, unsigned char *data, unsigned int length);
 int FTDI_ReceiveData(int label, unsigned char *data, unsigned int expected_length);
 uint8_t FTDI_SendDataToPro(uint8_t label, unsigned char *data, uint32_t length);
 void* Get_Pro_Handle();

@@ -255,11 +255,11 @@ extern string *pg_Texture_fileNamesSuffix[_NbConfigurations];
 // usages
 extern pg_Texture_Usages *pg_Texture_usages[_NbConfigurations];
 // rank (if used several times for the same usage)
-extern int *pg_Texture_Rank[_NbConfigurations];
+extern unsigned int *pg_Texture_Rank[_NbConfigurations];
 // 2D or 3D
 extern int *pg_Texture_Dimension[_NbConfigurations];
 // number of piled 2D textures forisClearAllLayers 3D texture
-extern int *pg_Texture_Nb_Layers[_NbConfigurations];
+extern unsigned int *pg_Texture_Nb_Layers[_NbConfigurations];
 // dimensions
 extern int *pg_Texture_Size_X[_NbConfigurations];
 extern int *pg_Texture_Size_Y[_NbConfigurations];

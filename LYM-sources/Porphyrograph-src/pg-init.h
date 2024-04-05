@@ -358,7 +358,7 @@ std::string GetCurrentWorkingDir(void);
 // time management
 double RealTime(void);
 #ifdef _WIN32
-int gettimeofday(struct timeval* tp, void* tzp);
+int gettimeofday(struct timeval* tp);
 #endif
 
 void MemoryUsage(void);

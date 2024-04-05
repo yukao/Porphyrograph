@@ -46,7 +46,7 @@ public:
 	SVG_pathCurve(void) {
 		path_no = 1;
 		rankInPath = 0;
-		path_group = 0;
+		path_group = 1;
 		path_track = 1;
 		pathRadius = 1;
 		path_r_color = 1;
@@ -73,11 +73,11 @@ public:
 		path_fileName = p_path_fileName;
 		// no path group provided in the scenario file
 		if (p_path_group <= 0) {
-			path_group = 0;
+			path_group = 1;
 		}
 		// path group number is provided inside the scenario
 		else {
-			path_group = p_path_group - 1;
+			path_group = p_path_group;
 		}
 		with_color_radius_from_scenario = p_with_color__brush_radius_from_scenario;
 		secondsforwidth = p_secondsforwidth;
@@ -696,18 +696,17 @@ int LoadPathPointsFromXML(char* pathString, int pathNo,
 	glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
 	float precedingCurrentPoint[2], float  currentPoint[2],
 	bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario,
-	float* path_length, double p_secondsforwidth, int *nb_timeStamps, int indConfiguration,
-	bool timeStamps_loaded);
+	float* path_length, double p_secondsforwidth, int *nb_timeStamps, int indConfiguration);
 void LoadPathColorsFromXML(string pathString, int pathNo, int* nbRecordedFrames, int indConfiguration);
 void LoadPathBrushesFromXML(string pathString, int pathNo, int* nbRecordedFrames, int indConfiguration);
-void LoadPathTimeStampsFromXML(string pathString, int pathNo, int* nbRecordedFrames, int indConfiguration);
+void LoadPathTimeStampsFromXML(string pathString, int pathNo, int* nbRecordedFrames);
 
 // loads a track from a svg file
 #if defined(var_path_replay_trackNo_1)
-void load_svg_path( char *fileName , int pathNo , int path_track , float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+void load_svg_path( char *fileName , int pathNo , float pathRadius, float path_r_color, float path_g_color, float path_b_color,
 	float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration);
 #endif
-void readsvg( int *fileDepth , int pathNo , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
+void readsvg(int pathNo , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
 	float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration);
 
 // CONVEX HULL 

@@ -24,6 +24,7 @@
 #ifndef PG_UPDATE_H
 #define PG_UPDATE_H
 
+#ifdef _CRTDBG_MAP_ALLOC
 // MEMORY LEAK CONTROL
 extern _CrtMemState s1;
 extern _CrtMemState s2;
@@ -39,7 +40,7 @@ extern _CrtMemState s11;
 extern _CrtMemState s12;
 extern _CrtMemState s13;
 extern _CrtMemState sDiff;
-
+#endif
 
 /////////////////////////////////////////////////////////////////
 // textures bitmaps and associated IDs
@@ -56,7 +57,7 @@ extern GLuint Master_Mask_texID[_NbConfigurations];
 extern GLuint Master_Multilayer_Mask_texID[_NbConfigurations];
 #endif
 
-#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 extern GLuint Pen_texture_3D_texID[_NbConfigurations];
 #endif
 extern GLuint Noise_texture_3D[_NbConfigurations];
@@ -152,7 +153,7 @@ extern int precedingVideoTrack;
 extern GLuint pg_camera_texture_texID;
 extern GLuint pg_movie_texture_texID;
 extern GLuint pg_camera_BG_texture_texID;
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 extern GLuint pg_camera_BGIni_texture_texID;
 #endif
 // extern IplImage *pg_camera_frame;
@@ -669,23 +670,23 @@ private:
 public:
 	media_status();
 	// number frames left until the end from current frame
-	int get_nbFramesLeft();
+	const int get_nbFramesLeft();
 	// number of frames read from the beginning of the movie
-	int get_nbFramesRead();
+	const int get_nbFramesRead();
 	// current time when movie started
-	double get_initialTime();
+	const double get_initialTime();
 	// initial total number of frames in the movie
-	int get_initialNbFrames();
+	const int get_initialNbFrames();
 	// checks whether a peak or an onset are passed or closer than one frame
-	void updateMoviePeakOrOnset(void);
+	const void updateMoviePeakOrOnset(void);
 	// sets the movie at a position from beginning
-	void set_position(int nb_frames_from_beginning);
+	const void set_position(int nb_frames_from_beginning);
 	// changes the movie initial time if capture frequency changes
-	void reset_initialTime(float new_captFreq);
+	const void reset_initialTime(float new_captFreq);
 	// reads one frame and updates the remaining number of frames in the movie
-	void read_one_frame();
+	const void read_one_frame();
 	// (re)starts the movie from begginning with its total number of frames
-	void reset_movie(int nbTotFramesLeft);
+	const void reset_movie(int nbTotFramesLeft);
 	~media_status();
 };
 extern media_status pg_movie_status;
@@ -814,7 +815,7 @@ extern clip_status pg_clip_status[_clipLR];
 extern int rankOfTopClip;
 #endif
 
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 extern bool secondInitialBGCapture;
 extern bool initialBGCapture;
 #endif
@@ -887,7 +888,6 @@ extern float repop_ColorPart_b;
 extern float paths_RadiusX[PG_NB_PATHS + 1];
 extern float paths_RadiusY[PG_NB_PATHS + 1];
 #ifdef PG_BEZIER_PATHS
-extern int path_next_in_hull[PG_NB_PATHS + 1][4];
 extern float paths_xL[PG_NB_PATHS + 1];
 extern float paths_yL[PG_NB_PATHS + 1];
 extern float paths_xR[PG_NB_PATHS + 1];
@@ -1002,7 +1002,7 @@ void Contact_pulse_rotation_translation_scale();
 void pg_calculate_homography_matrices(std::vector<cv::Point2f>* sourcePoints, std::vector<cv::Point2f>* destinationPoints, GLfloat matValues[], int dim);
 #endif
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
-void pg_draw_scene(DrawingMode mode, bool threaded);
+void pg_draw_scene(DrawingMode mode);
 
 
 #endif

@@ -23,6 +23,7 @@
 
 #include "pg-all_include.h"
 
+#ifdef _CRTDBG_MAP_ALLOC
 // MEMORY LEAK CONTROL
 _CrtMemState s1{};
 _CrtMemState s2{};
@@ -38,7 +39,7 @@ _CrtMemState s11{};
 _CrtMemState s12{};
 _CrtMemState s13{};
 _CrtMemState sDiff{};
-
+#endif
       
 /////////////////////////////////////////////////////////////////
 // config variables
@@ -261,7 +262,7 @@ GLuint Screen_Font_texture_Rectangle_texID = { NULL_ID };
 GLuint Display_Font_texture_Rectangle_texID[_NbConfigurations] = { NULL_ID };
 #endif
 
-#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 GLuint Pen_texture_3D_texID[_NbConfigurations] = { NULL_ID };
 #endif
 GLuint Noise_texture_3D[_NbConfigurations] = { NULL_ID };
@@ -322,7 +323,7 @@ GLuint Sensor_texture_rectangle[_NbConfigurations] = { NULL_ID };
 GLuint pg_camera_texture_texID = 0;
 GLuint pg_movie_texture_texID = 0;
 GLuint pg_camera_BG_texture_texID = 0;
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 GLuint pg_camera_BGIni_texture_texID = 0;
 #endif
 // IplImage *pg_camera_frame = NULL;
@@ -454,7 +455,7 @@ int playing_secondClipNoRight = -1;
 float fx_dry_wet = 0.f;
 #endif
 
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 bool secondInitialBGCapture = false;
 bool initialBGCapture = false;
 #endif
@@ -493,23 +494,23 @@ media_status::media_status() {
 	}
 }
 // number frames left until the end from current frame
-int media_status::get_nbFramesLeft() {
+const int media_status::get_nbFramesLeft() {
 	return nbFramesLeft;
 }
 // number of frames read from the beginning of the movie
-int media_status::get_nbFramesRead() {
+const int media_status::get_nbFramesRead() {
 	return initialMediaNbFrames - nbFramesLeft;
 }
 // current time when movie started
-double media_status::get_initialTime() {
+const double media_status::get_initialTime() {
 	return initialTime;
 }
 // initial total number of frames in the movie
-int media_status::get_initialNbFrames() {
+const int media_status::get_initialNbFrames() {
 	return initialMediaNbFrames;
 }
 // sets the movie at a position from beginning
-void media_status::set_position(int nb_frames_from_beginning) {
+const void media_status::set_position(int nb_frames_from_beginning) {
 	if (nb_frames_from_beginning <= 0) {
 		reset_movie(initialMediaNbFrames);
 		return;
@@ -527,7 +528,7 @@ void media_status::set_position(int nb_frames_from_beginning) {
 	updateMoviePeakOrOnset();
 }
 // changes the movie initial time if capture frequency changes
-void media_status::reset_initialTime(float new_captFreq) {
+const void media_status::reset_initialTime(float new_captFreq) {
 	if (movieCaptFreq > 0) {
 		int nb_frames_from_beginning = initialMediaNbFrames - nbFramesLeft;
 		double initialTimeBeforeChange = initialTime;
@@ -536,7 +537,7 @@ void media_status::reset_initialTime(float new_captFreq) {
 	}
 }
 
-void media_status::updateMoviePeakOrOnset() {
+const void media_status::updateMoviePeakOrOnset() {
 	double timeFromBeginning = pg_CurrentClockTime - initialTime;
 	if (int(movieSoundtrackPeaks[pg_current_configuration_rank].size()) > currentlyPlaying_movieNo 
 		&& int(movieSoundtrackOnsets[pg_current_configuration_rank].size()) > currentlyPlaying_movieNo
@@ -546,12 +547,12 @@ void media_status::updateMoviePeakOrOnset() {
 	}
 }
 // reads one frame and updates the remaining number of frames in the movie
-void media_status::read_one_frame() {
+const void media_status::read_one_frame() {
 	nbFramesLeft--;
 	updateMoviePeakOrOnset();
 }
 // (re)starts the movie from begginning with its total number of frames
-void media_status::reset_movie(int nbTotFramesLeft) {
+const void media_status::reset_movie(int nbTotFramesLeft) {
 	// printf("movie restarted\n");
 	nbFramesLeft = nbTotFramesLeft;
 	initialMediaNbFrames = nbFramesLeft;
@@ -1061,7 +1062,7 @@ void window_display(void) {
 #endif
 
 	// proper scene redrawing
-	pg_draw_scene(_Render, false);
+	pg_draw_scene( _Render );
 
 #if defined(PG_DEBUG)
 	OutputDebugStringW(_T("stat 2\n"));
@@ -1102,7 +1103,7 @@ void window_display(void) {
 			if (pg_FrameNo % stepSvgInFrames == 0
 				&& pg_FrameNo / stepSvgInFrames >= beginSvg &&
 				pg_FrameNo / stepSvgInFrames <= endSvg) {
-				pg_draw_scene(_Svg, true);
+				pg_draw_scene( _Svg );
 			}
 		}
 		else if (stepSvgInSeconds > 0) {
@@ -1113,7 +1114,7 @@ void window_display(void) {
 				&& pg_CurrentClockTime >= beginSvg &&
 				pg_CurrentClockTime <= endSvg) {
 				nextSvgCapture = max(nextSvgCapture + stepSvgInSeconds, pg_CurrentClockTime);
-				pg_draw_scene(_Svg, true);
+				pg_draw_scene( _Svg );
 			}
 		}
 	}
@@ -1127,7 +1128,7 @@ void window_display(void) {
 			if (pg_FrameNo % stepPngInFrames == 0
 				&& pg_FrameNo / stepPngInFrames >= beginPng &&
 				pg_FrameNo / stepPngInFrames <= endPng) {
-				pg_draw_scene(_Png, true);
+				pg_draw_scene( _Png );
 			}
 		}
 		else if (stepPngInSeconds > 0) {
@@ -1138,7 +1139,7 @@ void window_display(void) {
 				&& pg_CurrentClockTime >= beginPng &&
 				pg_CurrentClockTime <= endPng) {
 				nextPngCapture = max(nextPngCapture + stepPngInSeconds, pg_CurrentClockTime);
-				pg_draw_scene(_Png, true);
+				pg_draw_scene( _Png );
 			}
 		}
 	}
@@ -1152,7 +1153,7 @@ void window_display(void) {
 			if (pg_FrameNo % stepJpgInFrames == 0
 				&& pg_FrameNo / stepJpgInFrames >= beginJpg &&
 				pg_FrameNo / stepJpgInFrames <= endJpg) {
-				pg_draw_scene(_Jpg, true);
+				pg_draw_scene( _Jpg );
 			}
 		}
 		else if (stepJpgInSeconds > 0) {
@@ -1163,7 +1164,7 @@ void window_display(void) {
 				&& pg_CurrentClockTime >= beginJpg &&
 				pg_CurrentClockTime <= endJpg) {
 				nextJpgCapture = max(nextJpgCapture + stepJpgInSeconds, pg_CurrentClockTime);
-				pg_draw_scene(_Jpg, true);
+				pg_draw_scene( _Jpg );
 				//printf("nextJpgCapture %.2f pg_CurrentClockTime %.2f\n", nextJpgCapture, pg_CurrentClockTime);
 			}
 		}
@@ -1655,9 +1656,9 @@ void pg_automatic_var_reset_or_update(void) {
 	// /////////////////////////
 	// clear layer reset
 	// does not reset if camera capture is still ongoing
-#if defined(var_cameraCaptFreq) && defined(var_camera_BG_ini_subtr)
+#if defined(var_cameraCaptFreq) && defined(var_camera_BG_subtr)
 	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_camera_BG_ini_subtr][pg_current_configuration_rank]) {
+		&& ScenarioVarConfigurations[_camera_BG_subtr][pg_current_configuration_rank]) {
 		if ((reset_camera || (initialSecondBGCapture == 1)) && (initialBGCapture || secondInitialBGCapture)) {
 			isClearAllLayers = 0.f;
 		}
@@ -1709,7 +1710,7 @@ void pg_automatic_var_reset_or_update(void) {
 	}
 #endif
 
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined(CAAUDIO)
 	// CA seed
 	pg_CAseed_trigger = false;
 #endif
@@ -1959,163 +1960,11 @@ void pg_update_shader_var_data(void) {
 #if defined(KOMPARTSD)
 #include "pg_update_body_KompartSD.cpp"
 #endif
-#if defined(KOMPARTSD)
+#if defined(LIGHT)
 #include "pg_update_body_Light.cpp"
-#endif
-#if defined(RIVETS)
-#include "pg_update_body_Rivets.cpp"
 #endif
 #if defined(CORE)
 #include "pg_update_body_Core.cpp"
-	/*
-	if (pg_current_configuration_rank == 0 && pg_ConfigurationFrameNo % 1000 == 0) {
-		printf("Update0: ");
-		for (int ind = 0; ind < 54; ind++) {
-			printf("%0.5f ", Update_scenario_var_data[0][ind]);
-		}
-		printf("\n");
-		printf("Mixing0: ");
-		for (int ind = 0; ind < 8; ind++) {
-			printf("%0.5f ", Mixing_scenario_var_data[0][ind]);
-		}
-		printf("\n");
-		printf("Master0: ");
-		for (int ind = 0; ind < 16; ind++) {
-			printf("%0.5f ", Master_scenario_var_data[0][ind]);
-		}
-		printf("\n");
-	}
-	if (pg_current_configuration_rank == 1 && pg_ConfigurationFrameNo % 1000 == 0) {
-		printf("Update1: ");
-		for (int ind = 0; ind < 54; ind++) {
-			printf("%0.5f ", Update_scenario_var_data[1][ind]);
-		}
-		printf("\n");
-		printf("Mixing1: ");
-		for (int ind = 0; ind < 8; ind++) {
-			printf("%0.5f ", Mixing_scenario_var_data[1][ind]);
-		}
-		printf("\n");
-		printf("Master1: ");
-		for (int ind = 0; ind < 16; ind++) {
-			printf("%0.5f ", Master_scenario_var_data[1][ind]);
-		}
-		printf("\n");
-	}
-	*/
-	//printf("CAdecay %.6f\n", Update_scenario_var_data[1][0]);
-	//printf("trkDecay_0 %.6f\n", Update_scenario_var_data[1][1]);
-	//printf("trkDecay_1 %.6f\n", Update_scenario_var_data[1][2]);
-	//printf("trkDecay_2 %.6f\n", Update_scenario_var_data[1][3]);
-	//printf("trkDecay_3 %.6f\n", Update_scenario_var_data[1][4]);
-	//printf("currentDrawingTrack %.6f\n", Update_scenario_var_data[1][5]);
-	//printf("currentVideoTrack %.6f\n", Update_scenario_var_data[1][6]);
-	//printf("currentPhotoTrack %.6f\n", Update_scenario_var_data[1][7]);
-	//printf("path_replay_trackNo_1 %.6f\n", Update_scenario_var_data[1][8]);
-	//printf("path_replay_trackNo_2 %.6f\n", Update_scenario_var_data[1][9]);
-	//printf("path_replay_trackNo_3 %.6f\n", Update_scenario_var_data[1][10]);
-	//printf("path_replay_trackNo_4 %.6f\n", Update_scenario_var_data[1][11]);
-	//printf("path_replay_trackNo_5 %.6f\n", Update_scenario_var_data[1][12]);
-	//printf("path_replay_trackNo_6 %.6f\n", Update_scenario_var_data[1][13]);
-	//printf("path_replay_trackNo_7 %.6f\n", Update_scenario_var_data[1][14]);
-	//printf("path_replay_trackNo_8 %.6f\n", Update_scenario_var_data[1][15]);
-	//printf("path_replay_trackNo_9 %.6f\n", Update_scenario_var_data[1][16]);
-	//printf("path_replay_trackNo_10 %.6f\n", Update_scenario_var_data[1][17]);
-	//printf("path_replay_trackNo_11 %.6f\n", Update_scenario_var_data[1][18]);
-	//printf("noiseUpdateScale %.6f\n", Update_scenario_var_data[1][19]);
-	//printf("pixel_acc %.6f\n", Update_scenario_var_data[1][20]);
-	//printf("pixel_acc_shiftX %.6f\n", Update_scenario_var_data[1][21]);
-	//printf("pixel_acc_shiftY %.6f\n", Update_scenario_var_data[1][22]);
-	//printf("pixel_radius %.6f\n", Update_scenario_var_data[1][23]);
-	//printf("pixel_mode %.6f\n", Update_scenario_var_data[1][24]);
-	//printf("repop_CA %.6f\n", Update_scenario_var_data[1][25]);
-	//printf("repop_BG %.6f\n", Update_scenario_var_data[1][26]);
-	//printf("movieWeight %.6f\n", Update_scenario_var_data[1][27]);
-	//printf("movieSobel %.6f\n", Update_scenario_var_data[1][28]);
-	//printf("invertMovie %.6f\n", Update_scenario_var_data[1][29]);
-	//printf("video_satur %.6f\n", Update_scenario_var_data[1][30]);
-	//printf("video_value %.6f\n", Update_scenario_var_data[1][31]);
-	//printf("photoWeight %.6f\n", Update_scenario_var_data[1][32]);
-	//printf("photo_satur %.6f\n", Update_scenario_var_data[1][33]);
-	//printf("photo_value %.6f\n", Update_scenario_var_data[1][34]);
-	//printf("photo_gamma %.6f\n", Update_scenario_var_data[1][35]);
-	//printf("photo_threshold %.6f\n", Update_scenario_var_data[1][36]);
-	//printf("photo_rot %.6f\n", Update_scenario_var_data[1][37]);
-	//printf("photo_transl_x %.6f\n", Update_scenario_var_data[1][38]);
-	//printf("photo_transl_y %.6f\n", Update_scenario_var_data[1][39]);
-	//printf("mask_scale %.6f\n", Update_scenario_var_data[1][40]);
-	//printf("CAParams1 %.6f\n", Update_scenario_var_data[1][41]);
-	//printf("CAParams2 %.6f\n", Update_scenario_var_data[1][42]);
-	//printf("CAParams3 %.6f\n", Update_scenario_var_data[1][43]);
-	//printf("CAParams4 %.6f\n", Update_scenario_var_data[1][44]);
-	//printf("CAParams5 %.6f\n", Update_scenario_var_data[1][45]);
-	//printf("CAParams6 %.6f\n", Update_scenario_var_data[1][46]);
-	//printf("CAParams7 %.6f\n", Update_scenario_var_data[1][47]);
-	//printf("CAParams8 %.6f\n", Update_scenario_var_data[1][48]);
-	//printf("CAstep %.6f\n", Update_scenario_var_data[1][49]);
-	//printf("CAcolorSpread %.6f\n", Update_scenario_var_data[1][50]);
-	//printf("freeze %.6f\n", Update_scenario_var_data[1][51]);
-	//printf("invertCamera %.6f\n", Update_scenario_var_data[1][52]);
-	//printf("photo_scale %.6f\n", Update_scenario_var_data[1][53]);
-	//printf("cameraCumul %.6f\n", Update_scenario_var_data[1][54]);
-	//CAdecay 0.000000
-	//trkDecay_0 0.002090
-	//trkDecay_1 0.000323
-	//trkDecay_2 0.000000
-	//trkDecay_3 0.000000
-	//currentDrawingTrack 0.000000
-	//currentVideoTrack 2.000000
-	//currentPhotoTrack 2.000000
-	//path_replay_trackNo_1 - 1.000000
-	//path_replay_trackNo_2 - 1.000000
-	//path_replay_trackNo_3 - 1.000000
-	//path_replay_trackNo_4 - 1.000000
-	//path_replay_trackNo_5 - 1.000000
-	//path_replay_trackNo_6 - 1.000000
-	//path_replay_trackNo_7 - 1.000000
-	//path_replay_trackNo_8 - 1.000000
-	//path_replay_trackNo_9 - 1.000000
-	//path_replay_trackNo_10 - 1.000000
-	//path_replay_trackNo_11 - 1.000000
-	//noiseUpdateScale 0.063220
-	//pixel_acc 0.006100
-	//pixel_acc_shiftX 0.543100
-	//pixel_acc_shiftY 0.534780
-	//pixel_radius 0.180310
-	//pixel_mode 1.000000
-	//repop_CA 0.000000
-	//repop_BG 0.000000
-	//movieWeight 0.000000
-	//movieSobel 0.000000
-	//invertMovie 0.000000
-	//video_satur 0.000000
-	//video_value 0.000000
-	//photoWeight 0.000000
-	//photo_satur 0.000000
-	//photo_value 1.000000
-	//photo_gamma 1.000000
-	//photo_threshold 0.000000
-	//photo_rot 0.000000
-	//photo_transl_x 0.000000
-	//photo_transl_y 0.000000
-	//mask_scale 1.000000
-	//CAParams1 0.850000
-	//CAParams2 0.900000
-	//CAParams3 0.750000
-	//CAParams4 0.571000
-	//CAParams5 0.306000
-	//CAParams6 0.464000
-	//CAParams7 0.236000
-	//CAParams8 0.000000
-	//CAstep 1.000000
-	//CAcolorSpread 1.000000
-	//freeze 0.000000
-	//invertCamera 0.000000
-	//photo_scale 1.000000
-	//cameraCumul 0.000000
-#endif
-#if defined(FORET)
-#include "pg_update_body_Foret.cpp"
 #endif
 #if defined(VOLUSPA)
 #include "pg_update_body_voluspa.cpp"
@@ -2126,6 +1975,8 @@ void pg_update_shader_var_data(void) {
 #if defined(CAAUDIO)
 #include "pg_update_body_CAaudio.cpp"
 #endif
+
+// #include "pg_scripts/pg_update_body.cpp"
 	printOglError(510);
 }
 
@@ -2147,7 +1998,7 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 
 	// scren size and repop channel
 	// at each frame a random repop channel is chosen among the available ones
-	bool repop_channels[PG_NB_PATHS + 1];
+	bool repop_channels[PG_NB_PATHS + 1] = {0};
 	int nb_repop_channels = 0;
 #if defined(var_part_path_repop_0) && defined(var_part_path_repop_1) && defined(var_part_path_repop_2) && defined(var_part_path_repop_3)
 	if (ScenarioVarConfigurations[_part_path_repop_0][pg_current_configuration_rank]
@@ -2331,9 +2182,9 @@ void pg_update_shader_Update_uniforms(void) {
 		glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_current_configuration_rank],
 			(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
 			fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
-		if (isClearAllLayers > 0.f) {
-			printf("clear all\n");
-		}
+		//if (isClearAllLayers > 0.f) {
+		//	printf("clear all\n");
+		//}
 	}
 	else
 #endif
@@ -2341,13 +2192,13 @@ void pg_update_shader_Update_uniforms(void) {
 		glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_current_configuration_rank],
 			(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
 			0.f);
-		if (isClearAllLayers > 0.f) {
-			printf("clear all\n");
-		}
+		//if (isClearAllLayers > 0.f) {
+		//	printf("clear all\n");
+		//}
 	}
 	printOglError(5197);
 
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined(CAAUDIO)
 	if (pg_CAseed_trigger) {
 		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc[pg_current_configuration_rank],
 			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
@@ -2538,7 +2389,7 @@ void pg_update_shader_Update_uniforms(void) {
 		photo_offsetY = 0.52f - pg_Translate_ClipArt_Text(pg_Ind_Current_DisplayText) / window_height;
 	}
 #endif
-#if defined(var_photoJitterAmpl) && defined(var_photo_offsetX) && defined(var_photo_offsetY)
+#if defined(var_photoJitterAmpl) && defined(var_photo_offsetX) && defined(var_photo_offsetY) && defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	if (ScenarioVarConfigurations[_photoJitterAmpl][pg_current_configuration_rank]
 		&& ScenarioVarConfigurations[_photo_offsetX][pg_current_configuration_rank]
 		&& ScenarioVarConfigurations[_photo_offsetY][pg_current_configuration_rank]) {
@@ -2846,6 +2697,9 @@ void pg_update_shader_Update_uniforms(void) {
 		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
 			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 			0.f, 0.f);
+
+
+		//printf("CA  type subtype %d %d\n", CAInterpolatedType, CAInterpolatedSubType);
 	}
 #endif
 #if !defined(var_nb_CATypes) && defined(PG_WITH_BLUR)
@@ -3453,8 +3307,8 @@ void pg_UpdatePass(void) {
 		glUniform1i(uniform_Update_texture_fs_CATable[pg_current_configuration_rank], pg_CATable_Update_sampler);
 	}
 #endif
-#if defined(var_camera_BG_ini_subtr)
-	if (ScenarioVarConfigurations[_camera_BG_ini_subtr][pg_current_configuration_rank]) {
+#if defined(var_camera_BG_subtr)
+	if (ScenarioVarConfigurations[_camera_BG_subtr][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_Camera_BGIni[pg_current_configuration_rank], pg_Camera_BGIni_FBO_Update_sampler);
 	}
 #endif
@@ -3484,6 +3338,7 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_PreviousCA_FBO_Update_sampler);
 	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
+		//printf("pg_FBO_Update_texID\n");
 	} else {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
@@ -3491,7 +3346,7 @@ void pg_UpdatePass(void) {
 
 	// 2-cycle ping-pong speed/position of pixels step n step n (FBO attachment 1) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Pixels_FBO_Update_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Pixels_FBO_Update_attcht]);
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2	) * PG_FBO_UPDATE_NBATTACHTS + pg_Pixels_FBO_Update_attcht]);
 	//if (pg_FrameNo < 1000) {
 	//	printf("FBO Pixels Update textures config: %d IDs: %d\n", pg_current_configuration_rank, 
 	//		pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Pixels_FBO_Update_attcht]);
@@ -3500,7 +3355,7 @@ void pg_UpdatePass(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// pen patterns
-#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 	glActiveTexture(GL_TEXTURE0 + pg_Brushes_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Pen_texture_3D_texID[pg_current_configuration_rank]);
 #endif
@@ -3606,7 +3461,6 @@ void pg_UpdatePass(void) {
 	// second clips on left and right
 	glActiveTexture(GL_TEXTURE0 + pg_SecondClipLeft_Update_sampler);
 	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
 		&& playing_secondClipNoLeft >= 0
 		&& playing_secondClipNoLeft < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_secondClipNoLeft]
@@ -3751,10 +3605,10 @@ void pg_UpdatePass(void) {
 	}
 #endif 
 
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BGIni_FBO_Update_sampler);
-	if (ScenarioVarConfigurations[_camera_BG_ini_subtr][pg_current_configuration_rank]) {
+	if (ScenarioVarConfigurations[_camera_BG_subtr][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BGIni_texture_texID);
 	}
 	else {
@@ -5243,7 +5097,7 @@ void pg_MeshPass(void) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
 //////////////////////////////////////////////////////////////////////////////////////////////
-void pg_draw_scene(DrawingMode mode, bool threaded) {
+void pg_draw_scene(DrawingMode mode) {
 	// ******************** Svg output ********************
 	if (mode == _Svg) {
 		cv::String imageFileName;

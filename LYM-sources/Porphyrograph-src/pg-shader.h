@@ -38,14 +38,8 @@
 #if defined(LIGHT)
 #include "pg_shader_header_Light.h"
 #endif
-#if defined(RIVETS)
-#include "pg_shader_header_Rivets.h"
-#endif
 #if defined(CORE)
 #include "pg_shader_header_Core.h"
-#endif
-#if defined(FORET)
-#include "pg_shader_header_Foret.h"
 #endif
 #if defined(VOLUSPA)
 #include "pg_shader_header_voluspa.h"
@@ -56,6 +50,8 @@
 #if defined(CAAUDIO)
 #include "pg_shader_header_CAaudio.h"
 #endif
+
+// #include "pg_scripts/pg_shader_header.h"
 
 unsigned long pg_getFileLength(ifstream& file);
 void pg_printShaderCompileLog(GLuint obj);
@@ -146,7 +142,7 @@ extern GLint uniform_Update_homographyForTexture[_NbConfigurations];
 extern GLint uniform_Update_vp_2fv_width_height[_NbConfigurations];
 extern GLint uniform_Update_fs_4fv_W_H_time_currentScene[_NbConfigurations];
 extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[_NbConfigurations];
-#if defined(CAAUDIO) || defined(RIVETS)
+#if defined(CAAUDIO)
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc[_NbConfigurations];
 #endif
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[_NbConfigurations];
@@ -197,7 +193,7 @@ extern GLint uniform_Update_texture_fs_CATable[_NbConfigurations];
 #if defined(var_GenerativeNights_planes)
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo[_NbConfigurations];
 #endif
-#if defined(var_camera_BG_ini_subtr)
+#if defined(var_camera_BG_subtr)
 extern GLint uniform_Update_texture_fs_Camera_BGIni[_NbConfigurations];
 #endif
 extern GLint uniform_Update_texture_fs_pixel_acc[_NbConfigurations];
@@ -218,7 +214,7 @@ extern GLint uniform_Update_texture_fs_Trk2[_NbConfigurations];  // ping-pong tr
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Update_texture_fs_Trk3[_NbConfigurations];  // ping-pong track 3 (FBO)
 #endif
-#if !defined(PG_BEZIER_PATHS) || defined(FORET) || defined(CORE)
+#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 extern GLint uniform_Update_texture_fs_Brushes[_NbConfigurations];  // pen patterns
 #endif
 extern GLint uniform_Update_texture_fs_Camera_frame[_NbConfigurations];  // camera frame
