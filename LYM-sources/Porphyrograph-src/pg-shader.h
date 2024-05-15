@@ -103,7 +103,7 @@ extern GLint uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo[_Nb
 extern GLint uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[_NbConfigurations];
 extern GLint uniform_ParticleAnimation_path_data[_NbConfigurations];
 extern GLint uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo[_NbConfigurations];
-extern GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit[_NbConfigurations];
+extern GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed[_NbConfigurations];
 extern GLint uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH[_NbConfigurations];
 extern GLint uniform_ParticleAnimation_texture_fs_Trk0[_NbConfigurations];  // ping-pong track 0 (FBO)
 #if PG_NB_TRACKS >= 2

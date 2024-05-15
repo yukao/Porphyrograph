@@ -2220,6 +2220,16 @@ def to_num(val_init) :
 			return_value = val_init
 	return return_value
 
+def to_num_or_string(val_init) :
+	try:
+		return_value = int(val_init)
+	except ValueError:
+		try:
+			return_value = float(val_init)
+		except ValueError:
+			return_value = '"'+val_init+'"'
+	return return_value
+
 ##################################################################
 # VALUES INTERPOLATION
 ##################################################################

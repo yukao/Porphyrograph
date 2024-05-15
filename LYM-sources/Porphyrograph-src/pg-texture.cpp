@@ -42,8 +42,8 @@ Mat pg_camera_frame;
 // PhotoBufferDataStructOld describing a buffer of images stored in the GPU
 // these images are used to make piled rendering 
 // they are doubled by blend images used to smoothly change between images
-PhotoDataStruct pg_CameraFrame_buffer_data = PhotoDataStruct();
-PhotoDataStruct pg_MovieFrame_buffer_data = PhotoDataStruct();
+PhotoData pg_CameraFrame_buffer_data = PhotoData();
+PhotoData pg_MovieFrame_buffer_data = PhotoData();
 
 float pg_Photo_weight[PG_PHOTO_NB_TEXTURES] = { 0.0f , 0.0f };
 
@@ -51,9 +51,9 @@ float pg_Photo_weight[PG_PHOTO_NB_TEXTURES] = { 0.0f , 0.0f };
 // BLENDED MULTILAYER IMAGES FOR TVW
 ////////////////////////////////////////////////////////////////////
 #if defined(TVW)
-PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW] = { PhotoSwapDataStruct() };
+PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW] = { PhotoSwapData() };
 #else
-PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES] = { PhotoSwapDataStruct() };
+PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES] = { PhotoSwapData() };
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -86,16 +86,18 @@ std::string pg_MessageFile[_NbConfigurations];
 // IMAGE TEXTURES
 ////////////////////////////////////////////////////////////////////
 // Images used for displaying or for swapping
-// PhotoDataStruct describing a buffer of images stored in the GPU
+// PhotoData describing a buffer of images stored in the GPU
 // these images are used to make piled rendering 
 // they are doubled by swap images used to smoothly change between images
-PhotoDataStruct** pg_Photo_buffer_data[_NbConfigurations] = { NULL };
+vector<PhotoData*> pg_Photo_buffer_data[_NbConfigurations];
+vector<int> pg_nbCompressedImagesPerFolder[_NbConfigurations];
+vector<int> pg_firstCompressedFileInFolder[_NbConfigurations];
 int pg_nbCompressedImageDirs[_NbConfigurations] = { 0 };
-int* pg_nbCompressedImagesPerFolder[_NbConfigurations] = { NULL };
-int* pg_firstCompressedFileInFolder[_NbConfigurations] = { NULL };
 int pg_nbCompressedImages[_NbConfigurations] = { 0 };
+vector<string> pg_compressedImageDirsNames[_NbConfigurations];
+vector<vector<string>> pg_compressedImagesNames[_NbConfigurations];
 #if defined(TVW)
-PhotoDataStruct pg_Photo_mask_buffer_data[_NbConfigurations][PG_PHOTO_NB_TEXTURES_TVW / 3] = { PhotoDataStruct() };
+PhotoData pg_Photo_mask_buffer_data[_NbConfigurations][PG_PHOTO_NB_TEXTURES_TVW / 3] = { PhotoData() };
 // interpolation weight between image buffer swap buffer in each layer
 GLfloat pg_Photo_alphaSwap02[_NbConfigurations][PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
 GLfloat pg_Photo_alphaSwap35[_NbConfigurations][PG_PHOTO_NB_TEXTURES_TVW / 2] = { 0.0f, 0.0f, 0.0f };
@@ -143,7 +145,7 @@ cv::Mat imgPhotoRGB[_NbConfigurations];
 // SHORT CLIP IMAGE FILES
 ////////////////////////////////////////////////////////////////////
 std::string pg_ClipDirectory[_NbConfigurations];
-ClipFramesDataStruct** pg_ClipFrames_buffer_data[_NbConfigurations] = { NULL };
+ClipFramesData** pg_ClipFrames_buffer_data[_NbConfigurations] = { NULL };
 
 
 ////////////////////////////////////////////////////////////////////
@@ -1670,7 +1672,7 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 		}
 		return NULL;
 	}
-	strcpy(pg_MovieFrame_buffer_data.PhotoName, (movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
+	pg_MovieFrame_buffer_data.PhotoName = movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo];
 
 	//Grabs and returns a frame from movie
 	pg_movie_capture >> pg_FirstMovieFrame;
@@ -1724,7 +1726,7 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 		printf("Movie file [%s] not loaded!\n", (cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
 		return NULL;
 	}
-	strcpy(pg_MovieFrame_buffer_data.PhotoName, (cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
+	pg_MovieFrame_buffer_data.PhotoName = cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo];
 
 	// printf("Name %s Opened\n", pg_MovieFrame_buffer_data.PhotoName);
 
@@ -1979,17 +1981,17 @@ int nextFileIndexMemoryLoop(int currentDirIndex, int *currentFileIndex, bool asc
 
 /////////////////////////////////////////////
 // 2D image loading
-bool pg_load_compressed_photo(char* fileName, int width, int height, int indConfiguration) {
+bool pg_load_compressed_photo(string *fileName, int width, int height, int indConfiguration) {
 	FILE* fp;
 	unsigned char header[124];
 
 	/* try to open the file */
 	//printf("load image %s\n", fileName);
-	fp = fopen(fileName, "rb");
+	fp = fopen(fileName->c_str(), "rb");
 
 	// Check for invalid input
 	if (fp == NULL) {
-		sprintf(ErrorStr, "Could not open or find the 2D image %s!", fileName); ReportError(ErrorStr);
+		sprintf(ErrorStr, "Could not open or find the 2D image %s!", fileName->c_str()); ReportError(ErrorStr);
 		return false;
 	}
 
@@ -2015,14 +2017,14 @@ bool pg_load_compressed_photo(char* fileName, int width, int height, int indConf
 	// Check for image size
 	if (width_from_header != u_int(width)) {
 		sprintf(ErrorStr, "Unexpected dds diaporama image width %s %d instead of %d!",
-			fileName, width_from_header, width); ReportError(ErrorStr);
+			fileName->c_str(), width_from_header, width); ReportError(ErrorStr);
 		//ratio_h = u_int(w) / width_from_header;
 		//ratio_v = u_int(h) / height_from_header;
 		return false;
 	}
 	if (height_from_header != u_int(height)) {
 		sprintf(ErrorStr, "Unexpected dds diaporama image height %s %d instead of %d!",
-			fileName, height_from_header, height); ReportError(ErrorStr);
+			fileName->c_str(), height_from_header, height); ReportError(ErrorStr);
 		//ratio_h = u_int(w) / width_from_header;
 		//ratio_v = u_int(h) / height_from_header;
 		return false;
@@ -2031,7 +2033,7 @@ bool pg_load_compressed_photo(char* fileName, int width, int height, int indConf
 	// Check for image size
 	if (mipMapCount > 1) {
 		sprintf(ErrorStr, "Unexpected number of mipmaps %s %d!",
-			fileName, mipMapCount); ReportError(ErrorStr);
+			fileName->c_str(), mipMapCount); ReportError(ErrorStr);
 		return false;
 	}
 
@@ -2063,7 +2065,7 @@ bool pg_load_compressed_photo(char* fileName, int width, int height, int indConf
 		break;
 	default:
 		sprintf(ErrorStr, "Unexpected compression format %s %d!",
-			fileName, fourCC); ReportError(ErrorStr);
+			fileName->c_str(), fourCC); ReportError(ErrorStr);
 		free(imgPhotoCompressedBitmap[indConfiguration]);
 		imgPhotoCompressedBitmap[indConfiguration] = NULL;
 		return false;
@@ -2071,35 +2073,33 @@ bool pg_load_compressed_photo(char* fileName, int width, int height, int indConf
 	//printf("Loaded photo %s compressed format %d\n", fileName, imgPhotoCompressedFormat[indConfiguration]);
 	return true;
 }
-bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, bool verbose, int indConfiguration) {
-	int fileNameLength = int(strlen(PhotoName));
-	char * extension;
+bool PhotoData::pg_loadPhoto(bool toBeInverted, int width, int height, bool verbose, int indConfiguration) {
+	int fileNameLength = PhotoName.length();
+	string extension;
 
 	w = width;
 	h = height;
 	invert = toBeInverted;
 
-	const char * ptr = strrchr(PhotoName, '/');
-
 	if (fileNameLength < 4) {
-		printf("Incorrect photo file name [%s]\n", PhotoName);
+		printf("Incorrect photo file name [%s]\n", PhotoName.c_str());
 		return false;
 	}
-	extension = PhotoName + fileNameLength - 4;
+	extension = PhotoName.substr(PhotoName.find_last_of("."));
 
 	if (verbose) {
-		printf("Loading [%s] extension %s \n", (ptr ? ptr + 1 : PhotoName), extension);
+		printf("Loading [%s] extension %s \n",  PhotoName.c_str(), extension.c_str());
 	}
 
 	// DDS FILE
-	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
-		if (!pg_load_compressed_photo(PhotoName, w, h, indConfiguration)) {
-			*(PhotoName) = 0;
+	if (extension == ".dxt1" || extension == ".DXT1" || extension == ".DDS" || extension == ".dds") {
+		if (!pg_load_compressed_photo(&PhotoName, w, h, indConfiguration)) {
+			PhotoName = "";
 		}
 		photoFormat = GL_RGB;
 	}
 	// JPEG FILE
-	else if (strcmp(extension, ".jpg") == 0) {
+	else if (extension == ".jpg") {
 		// texture load through OpenCV
 #ifndef OPENCV_3
 		// threaded = false;
@@ -2137,20 +2137,20 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, boo
 			imgPhotoRGB = imgPhotoBGRInit[indConfiguration];
 		}
 #else
-		imgPhotoBGRInit[indConfiguration] = cv::imread(string(PhotoName), cv::IMREAD_UNCHANGED);   // Read the file
+		imgPhotoBGRInit[indConfiguration] = cv::imread(PhotoName, cv::IMREAD_UNCHANGED);   // Read the file
 																		   // Check for invalid input
 		if (!imgPhotoBGRInit[indConfiguration].data) {
-			sprintf(ErrorStr, "Could not open or find the 2D image %s!", PhotoName); ReportError(ErrorStr);
-			*(PhotoName) = 0;
+			sprintf(ErrorStr, "Could not open or find the 2D image %s!", PhotoName.c_str()); ReportError(ErrorStr);
+			PhotoName = "";
 			return false;
 		}
 		// Check for image size
 		if ((w > 0 && imgPhotoBGRInit[indConfiguration].cols != w)
 			|| (h > 0 && imgPhotoBGRInit[indConfiguration].rows != h)) {
 			sprintf(ErrorStr, "Unexpected jpg image size %s %d/%d %d/%d!",
-				PhotoName, imgPhotoBGRInit[indConfiguration].cols, w, imgPhotoBGRInit[indConfiguration].rows,
+				PhotoName.c_str(), imgPhotoBGRInit[indConfiguration].cols, w, imgPhotoBGRInit[indConfiguration].rows,
 				h); ReportError(ErrorStr);
-			*(PhotoName) = 0;
+			PhotoName = "";
 			return false;
 		}
 		w = imgPhotoBGRInit[indConfiguration].cols;
@@ -2174,7 +2174,7 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, boo
 	}
 	// UNKNOWN
 	else {
-		printf("Incorrect photo file name extension [%s]\n", PhotoName);
+		printf("Incorrect photo file name extension [%s/%s]\n", PhotoName.c_str(), extension.c_str());
 		return false;
 	}
 
@@ -2182,16 +2182,16 @@ bool PhotoDataStruct::pg_loadPhoto(bool toBeInverted, int width, int height, boo
 }
 
 // only loads DDs in HD format width and height are power of two
-bool ClipFramesDataStruct::pg_loadClipFrames(char * fileName, int width, int height, int indConfiguration) {
-	int fileNameLength = int(strlen(fileName));
-	char* extension = fileName + fileNameLength - 4;
-	if (strcmp(extension, "dxt1") == 0 || strcmp(extension, "DXT1") == 0 || strcmp(extension, ".DDS") == 0 || strcmp(extension, ".dds") == 0) {
+bool ClipFramesData::pg_loadClipFrames(string *fileName, int width, int height, int indConfiguration) {
+	int fileNameLength = fileName->length();
+	string extension = fileName->substr(fileName->find_last_of("."));
+	if (extension == ".dxt1" || extension == ".DXT1" || extension == ".DDS" || extension == ".dds") {
 		if (pg_load_compressed_photo(fileName, width, height, indConfiguration)) {
 			clipImgFormat = GL_RGB;
 			return true;
 		}
 	}
-	*(fileName) = 0;
+	*fileName = "";
 	return false;
 }
 
@@ -2225,7 +2225,7 @@ bool pg_toGPUCompressedPhoto(int width, int height, GLuint textureID, GLenum tex
 	return false;
 }
 
-bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum datatype, GLenum texturefilter, int indConfiguration) {
+bool PhotoData::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum datatype, GLenum texturefilter, int indConfiguration) {
 	/* // components GL_RGB8,
 	// datatype GL_UNSIGNED_BYTE
 	// format GL_RGB
@@ -2289,7 +2289,7 @@ bool PhotoDataStruct::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum 
 	return valret;
 }
 
-bool ClipFramesDataStruct::pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indConfiguration) {
+bool ClipFramesData::pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indConfiguration) {
 	return pg_toGPUCompressedPhoto(w, h, texBuffID, texturefilter, indConfiguration);
 }
 
@@ -2438,11 +2438,11 @@ bool pg_swap_image(int indcomprImage) {
 		// trace
 		int indOld = pg_Photo_swap_buffer_data[indAvailableSwapImage].indOldPhoto;
 		if (indOld < pg_nbCompressedImages[indConfiguration]) {
-			char* ptr1 = strrchr(pg_Photo_buffer_data[pg_current_configuration_rank][indcomprImage]->PhotoName, '/');
-			char* ptr2 = strrchr(pg_Photo_buffer_data[pg_current_configuration_rank][indOld]->PhotoName, '/');
+			char* ptr1 = strrchr(pg_Photo_buffer_data[pg_current_configuration_rank][indcomprImage]->PhotoName.c_str(), '/');
+			char* ptr2 = strrchr(pg_Photo_buffer_data[pg_current_configuration_rank][indOld]->PhotoName.c_str(), '/');
 			printf("Swap image (%s replaces %s layer %d (dur %.2f))\n",
-				(ptr1 ? ptr1 + 1 : pg_Photo_buffer_data[pg_current_configuration_rank][indcomprImage]->PhotoName),
-				(ptr2 ? ptr2 + 1 : pg_Photo_buffer_data[pg_current_configuration_rank][indOld]->PhotoName),
+				(ptr1 ? ptr1 + 1 : pg_Photo_buffer_data[pg_current_configuration_rank][indcomprImage]->PhotoName.c_str()),
+				(ptr2 ? ptr2 + 1 : pg_Photo_buffer_data[pg_current_configuration_rank][indOld]->PhotoName.c_str()),
 				indAvailableSwapImage, photo_diaporama_fade);
 
 			// launches swapping
@@ -2478,9 +2478,9 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 
 	///////////////////////////////////////////////
 	// NULL INITIALIZATIONS
-	pg_nbCompressedImagesPerFolder[indConfiguration] = NULL;
-	pg_firstCompressedFileInFolder[indConfiguration] = NULL;
-	pg_Photo_buffer_data[indConfiguration] = NULL;
+	pg_nbCompressedImagesPerFolder[indConfiguration].clear();
+	pg_firstCompressedFileInFolder[indConfiguration].clear();
+	pg_Photo_buffer_data[indConfiguration].clear();
 	pg_CurrentDiaporamaDir = 0;
 	pg_CurrentDiaporamaFile = 0;
 
@@ -2550,13 +2550,13 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 	}
 	pg_nbCompressedImagesPerFolder[indConfiguration] = new int[pg_nbCompressedImageDirs[indConfiguration]];
 	pg_firstCompressedFileInFolder[indConfiguration] = new int[pg_nbCompressedImageDirs[indConfiguration]];
-	pg_Photo_buffer_data[indConfiguration] = new PhotoDataStruct *[pg_nbCompressedImages[indConfiguration]];
+	pg_Photo_buffer_data[indConfiguration] = new PhotoData *[pg_nbCompressedImages[indConfiguration]];
 	for (int ind = 0; ind < pg_nbCompressedImages[indConfiguration]; ind++) {
-		pg_Photo_buffer_data[indConfiguration][ind] = new PhotoDataStruct();
+		pg_Photo_buffer_data[indConfiguration].push_back(new PhotoData());
 	}
 	for (int ind = 0; ind < pg_nbCompressedImageDirs[indConfiguration]; ind++) {
-		pg_nbCompressedImagesPerFolder[indConfiguration][ind] = 0;
-		pg_firstCompressedFileInFolder[indConfiguration][ind] = -1;
+		pg_nbCompressedImagesPerFolder[indConfiguration].push_back(0);
+		pg_firstCompressedFileInFolder[indConfiguration].push_back(-1);
 	}
 	int indCompressedImage = 0;
 	std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages[indConfiguration] << " images from " << pg_nbCompressedImageDirs[indConfiguration] << " folders" << std::endl;
@@ -2616,20 +2616,25 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 #endif
 
 
-bool  pg_loadAllDiaporamas(int nbImages, int nbFolders) {
+void  pg_initDiaporamas(void) {
+	///////////////////////////////////////////////
+	// NULL INITIALIZATIONS
+	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+		pg_nbCompressedImagesPerFolder[indConfiguration].clear();
+		pg_firstCompressedFileInFolder[indConfiguration].clear();
+		pg_Photo_buffer_data[indConfiguration].clear();
+		pg_nbCompressedImages[indConfiguration] = 0;
+		pg_nbCompressedImageDirs[indConfiguration] = 0;
+		pg_compressedImageDirsNames[indConfiguration].clear();
+		pg_compressedImagesNames[indConfiguration].clear();
+	}
+}
+bool  pg_loadAllDiaporamas(void) {
 	bool valret = true;
 
 	printf("Load Diaporamas:\n");
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
-		///////////////////////////////////////////////
-		// NULL INITIALIZATIONS
-		pg_nbCompressedImagesPerFolder[indConfiguration] = NULL;
-		pg_firstCompressedFileInFolder[indConfiguration] = NULL;
-		pg_Photo_buffer_data[indConfiguration] = NULL;
-		//pg_CurrentDiaporamaDir = 0;
-		//pg_CurrentDiaporamaFile = 0;
-
 		////////////////////////////////////////////
 		// CAPTURE DIAPORAMA
 		//std::cout << "Directory name " << pg_ImageDirectory[indConfiguration] << std::endl;
@@ -2639,113 +2644,121 @@ bool  pg_loadAllDiaporamas(int nbImages, int nbFolders) {
 		}
 
 		////////////////////////////////////////////
-		// COUNTS IMAGES AND FOLDERS
-		if (nbImages <= 0 || nbFolders <= 0) {
-			pg_nbCompressedImages[indConfiguration] = 0;
-			pg_nbCompressedImageDirs[indConfiguration] = 0;
-			std::cout << pg_ImageDirectory[indConfiguration] << " (";
-			if (fs::is_directory(pg_ImageDirectory[indConfiguration])) {
-				auto dirIter = fs::directory_iterator(pg_ImageDirectory[indConfiguration]);
-				for (auto& dir_entry : dirIter)
-				{
-					if (dir_entry.is_directory())
-					{
-						++pg_nbCompressedImageDirs[indConfiguration];
-
-						auto subDirIter = fs::directory_iterator(dir_entry);
-						for (auto& subdir_entry : subDirIter)
-						{
-							if (subdir_entry.is_regular_file())
-							{
-								++pg_nbCompressedImages[indConfiguration];
-							}
-						}
-					}
-				}
-			}
-		}
-		else {
-			pg_nbCompressedImages[indConfiguration] = nbImages;
-			pg_nbCompressedImageDirs[indConfiguration] = nbFolders;
-		}
-
-		////////////////////////////////////////////
 		// LOADS IMAGES FROM FOLDERS
-		if (pg_nbCompressedImageDirs[indConfiguration] <= 0) {
-			//std::cout << "Multilayer Diaporama loading completed 0 files." << std::endl;
-			std::cout << "0 images) ";
-			std::cout << std::endl;
-			continue;
-		}
-		pg_nbCompressedImagesPerFolder[indConfiguration] = new int[pg_nbCompressedImageDirs[indConfiguration]];
-		pg_firstCompressedFileInFolder[indConfiguration] = new int[pg_nbCompressedImageDirs[indConfiguration]];
-		pg_Photo_buffer_data[indConfiguration] = new PhotoDataStruct * [pg_nbCompressedImages[indConfiguration]];
-		for (int ind = 0; ind < pg_nbCompressedImages[indConfiguration]; ind++) {
-			pg_Photo_buffer_data[indConfiguration][ind] = new PhotoDataStruct();
-		}
-		for (int ind = 0; ind < pg_nbCompressedImageDirs[indConfiguration]; ind++) {
-			pg_nbCompressedImagesPerFolder[indConfiguration][ind] = 0;
-			pg_firstCompressedFileInFolder[indConfiguration][ind] = -1;
-		}
 		int indCompressedImage = 0;
 		int indCompressedImageDirs = 0;
-		//std::cout << "Loading Multilayer Diaporama " << pg_nbCompressedImages[indConfiguration] << " images from " << pg_nbCompressedImageDirs[indConfiguration] << " folders" << std::endl;
-		std::cout << pg_nbCompressedImages[indConfiguration] << " images from " << pg_nbCompressedImageDirs[indConfiguration] << " folders), ";
-		//pg_CurrentDiaporamaDir = 0;
-		//pg_CurrentDiaporamaFile = 0;
+		std::cout << pg_ImageDirectory[indConfiguration] << " (";
+		// scans a diaporama
 		if (fs::is_directory(pg_ImageDirectory[indConfiguration])) {
 			auto dirIter = fs::directory_iterator(pg_ImageDirectory[indConfiguration]);
 			for (auto& dir_entry : dirIter)
 			{
-				if (indCompressedImageDirs < pg_nbCompressedImageDirs[indConfiguration]) {
-					pg_firstCompressedFileInFolder[indConfiguration][indCompressedImageDirs] = indCompressedImage;
-
-					if (dir_entry.is_directory()) {
-						int initialFileIndex = indCompressedImage;
-						auto subDirIter = fs::directory_iterator(dir_entry);
-						for (auto& subdir_entry : subDirIter) {
-							if (indCompressedImage < pg_nbCompressedImages[indConfiguration] && subdir_entry.is_regular_file()) {
-								if (pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID == NULL_ID) {
-									// allocates a texture ID for the image
-									glGenTextures(1, &(pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID));
-									pg_Photo_buffer_data[indConfiguration][indCompressedImage]->IDallocated = true;
-
-									// stores the photo file name
-									strcpy(pg_Photo_buffer_data[indConfiguration][indCompressedImage]->PhotoName, (char*)(subdir_entry.path().string().c_str()));
-
-									// loads the images with a size that corresponds to the screen size
-									valret &= pg_Photo_buffer_data[indConfiguration][indCompressedImage]
-										->pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
-
-									// loads the compressed image into GPU
-									pg_Photo_buffer_data[indConfiguration][indCompressedImage]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
-									// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID);
-
-									printOglError(8);
-
-									++indCompressedImage;
-								}
-							}
-						}
-						pg_nbCompressedImagesPerFolder[indConfiguration][indCompressedImageDirs] = indCompressedImage - initialFileIndex;
-						++indCompressedImageDirs;
-					}
+				if (dir_entry.is_directory()) {
+					pg_AddDirectoryToDiaporamas(&indCompressedImage, &indCompressedImageDirs, &valret, indConfiguration, dir_entry);
 				}
 			}
 		}
-
-		//std::cout << "Multilayer Diaporama loading completed " << pg_nbCompressedImages[indConfiguration] << " files." << std::endl;
+		if (pg_nbCompressedImageDirs[indConfiguration] <= 0) {
+			std::cout << "0 images) ";
+			std::cout << std::endl;
+		}
+		else {
+			std::cout << pg_nbCompressedImages[indConfiguration] << " images from " << pg_nbCompressedImageDirs[indConfiguration] << " folders), ";
+		}
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
 
 	// INITIALIZES SWAP
-	for (int indBuffer = 0; indBuffer < PG_PHOTO_NB_TEXTURES;
-		indBuffer++) {
+	for (int indBuffer = 0; indBuffer < PG_PHOTO_NB_TEXTURES; indBuffer++) {
 		pg_Photo_swap_buffer_data[indBuffer].swapping = false;
 		pg_Photo_swap_buffer_data[indBuffer].indOldPhoto = indBuffer;
 		pg_Photo_swap_buffer_data[indBuffer].indSwappedPhoto = indBuffer;
 	}
+	return valret;
+}
+void pg_AddDirectoryToDiaporamas(int* indCompressedImage, int* indCompressedImageDirs, bool *valRet, int indConfiguration, fs::directory_entry dir_entry) {
+	int initialFileIndex = *indCompressedImage;
+	auto subDirIter = fs::directory_iterator(dir_entry);
+	++pg_nbCompressedImageDirs[indConfiguration];
+	pg_firstCompressedFileInFolder[indConfiguration].push_back(*indCompressedImage);
+	vector<string>dir_fileNames;
+	// scans image files inside a diaporama
+	for (auto& subdir_entry : subDirIter) {
+		if (subdir_entry.is_regular_file()) {
+			++pg_nbCompressedImages[indConfiguration];
+			pg_Photo_buffer_data[indConfiguration].push_back(new PhotoData());
+
+			// allocates a texture ID for the image
+			glGenTextures(1, &(pg_Photo_buffer_data[indConfiguration][*indCompressedImage]->texBuffID));
+			pg_Photo_buffer_data[indConfiguration][*indCompressedImage]->IDallocated = true;
+
+			// stores the photo file name
+			pg_Photo_buffer_data[indConfiguration][*indCompressedImage]->PhotoName = subdir_entry.path().string();
+
+			// loads the images with a size that corresponds to the screen size
+			*valRet &= pg_Photo_buffer_data[indConfiguration][*indCompressedImage]
+				->pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
+
+			// loads the compressed image into GPU
+			pg_Photo_buffer_data[indConfiguration][*indCompressedImage]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
+			// printf("texture ID indCompressedImage %d\n", pg_Photo_buffer_data[indConfiguration][indCompressedImage]->texBuffID);
+
+			printOglError(8);
+
+			dir_fileNames.push_back(subdir_entry.path().string());
+			++(*indCompressedImage);
+		}
+	}
+	pg_compressedImagesNames[indConfiguration].push_back(dir_fileNames);
+	pg_compressedImageDirsNames[indConfiguration].push_back(dir_entry.path().string());
+	pg_nbCompressedImagesPerFolder[indConfiguration].push_back(*indCompressedImage - initialFileIndex);
+	++(*indCompressedImageDirs);
+}
+int rankInVector(string *element, vector<string> *vec) {
+	int count = 0;
+	for (auto& it : *vec) {
+		if (it == *element) {
+			return count;
+		}
+		count++;
+	}
+	return -1;
+}
+bool  pg_addNewDiaporamas(int curent_config) {
+	bool valret = true;
+
+	printf("Add new Diaporamas:\n");
+	std::cout << "    " << curent_config << ": ";
+
+	////////////////////////////////////////////
+	// LOADS IMAGES FROM FOLDERS
+	int indCompressedImage = pg_nbCompressedImages[curent_config];
+	int indCompressedImageDirs = pg_nbCompressedImageDirs[curent_config];
+	std::cout << pg_ImageDirectory[curent_config] << " (";
+	// scans a diaporama
+	if (fs::is_directory(pg_ImageDirectory[curent_config])) {
+		auto dirIter = fs::directory_iterator(pg_ImageDirectory[curent_config]);
+		for (auto& dir_entry : dirIter)
+		{
+			if (dir_entry.is_directory()) {
+				// new directory, not found in the vector of the directory ;
+				string dirname = dir_entry.path().string();
+				if (rankInVector(&dirname, &(pg_compressedImageDirsNames[curent_config])) == -1) {
+					pg_AddDirectoryToDiaporamas(&indCompressedImage, &indCompressedImageDirs, &valret, curent_config, dir_entry);
+				}
+			}
+		}
+	}
+	if (pg_nbCompressedImageDirs[curent_config] <= 0) {
+		std::cout << "0 images) ";
+		std::cout << std::endl;
+	}
+	else {
+		std::cout << pg_nbCompressedImages[curent_config] << " images from " << pg_nbCompressedImageDirs[curent_config] << " folders), ";
+	}
+	std::cout << std::endl;
+
 	return valret;
 }
 
@@ -2811,9 +2824,9 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 		}
 
 		// allocates clip data
-		pg_ClipFrames_buffer_data[indConfiguration] = new ClipFramesDataStruct * [pg_nbCompressedClipFrames[indConfiguration]];
+		pg_ClipFrames_buffer_data[indConfiguration] = new ClipFramesData * [pg_nbCompressedClipFrames[indConfiguration]];
 		for (int ind = 0; ind < pg_nbCompressedClipFrames[indConfiguration]; ind++) {
-			pg_ClipFrames_buffer_data[indConfiguration][ind] = new ClipFramesDataStruct();
+			pg_ClipFrames_buffer_data[indConfiguration][ind] = new ClipFramesData();
 		}
 
 		int indCompressedClipFrames = 0;
@@ -2852,8 +2865,9 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 								// loads the images with a size that corresponds to the screen size
 								//printf("file %s\n", (char *)subdir_entry.path().string().c_str());
 								//std::cout << "file " << subdir_entry.path().string() << std::endl;
+								string dirName = subdir_entry.path().string();
 								valret &= pg_ClipFrames_buffer_data[indConfiguration][indCompressedClipFrames]
-									->pg_loadClipFrames((char*)(subdir_entry.path().string().c_str()), 
+									->pg_loadClipFrames(&dirName,
 										clip_image_width[indConfiguration], clip_image_height[indConfiguration], indConfiguration);
 
 								// loads the compressed image into GPU

@@ -332,7 +332,8 @@ int main(int argcMain, char **argvMain) {
 	// pg_ReadInitalImageTexturesTVW(0, 200, 28, -1);
 	pg_ReadInitalImageTexturesTVW(0, -1, -1, 15);
 #else
-	pg_loadAllDiaporamas(-1, -1);
+	pg_initDiaporamas();
+	pg_loadAllDiaporamas();
 #endif
 #if defined(var_clipCaptFreq)
 	pg_ReadInitalClipFramesTextures();
@@ -812,24 +813,22 @@ void pg_quit( void ) {
   CurrentWindow = NULL;
 
   // printf("releaseUDP\n");
-  if (IP_Servers) {
+  if (nb_IP_Servers > 0) {
     for (int ind = 0; ind < nb_IP_Servers; ind++) {
       delete IP_Servers[ind];
       IP_Servers[ind] = NULL;
     }
-    
-    delete [] IP_Servers;
-    IP_Servers = NULL;
+    IP_Servers.clear();
+	nb_IP_Servers = 0;
   }
   
-  if (IP_Clients) {
+  if (nb_IP_Clients > 0) {
     for (int ind = 0; ind < nb_IP_Clients; ind++) {
       delete IP_Clients[ind];
       IP_Clients[ind] = NULL;
     }
-    
-    delete [] IP_Clients;
-    IP_Clients = NULL;
+	IP_Clients.clear();
+	nb_IP_Clients = 0;
   }
   
   if (ErrorStr) {
@@ -977,7 +976,7 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 }
 #else
 void window_mouseFunc_browse(int button, int state, int x, int y) {
-	// printf( "click button %d (%d,%d)\n" , button , x , y );
+	 printf( "click button %d (%d,%d)\n" , button , x , y );
 	int mappedX = x;
 	int mappedY = y;
 
@@ -987,7 +986,7 @@ void window_mouseFunc_browse(int button, int state, int x, int y) {
 	CurrentMousePos_y[0] = mappedY;
 	CurrentCursorHooverPos_x = mappedX;
 	CurrentCursorHooverPos_y = mappedY;
-	if (button == 0) {
+	if (button == 0 || button == 7) {
 		CurrentCursorStylusvsRubber = pg_Stylus;
 	}
 	else if (button == 2) {
@@ -996,7 +995,7 @@ void window_mouseFunc_browse(int button, int state, int x, int y) {
 }
 
 void window_motionFunc_browse(int x, int y) {
-	// printf( "active button (%d,%d)\n" , x , y );
+	 printf( "active button (%d,%d)\n" , x , y );
 	CurrentMousePos_x[0] = x;
 	CurrentMousePos_y[0] = y;
 	CurrentCursorHooverPos_x = x;
@@ -1004,7 +1003,7 @@ void window_motionFunc_browse(int x, int y) {
 }
 
 void window_passiveMotionFunc_browse(int x, int y) {
-	// printf( "passive button (%d,%d)\n" , x , y );
+	 printf( "passive button (%d,%d)\n" , x , y );
     CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
     CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
     CurrentCursorHooverPos_x = x;

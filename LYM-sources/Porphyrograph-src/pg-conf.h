@@ -130,9 +130,9 @@ extern int                      endVideo_file;
 extern bool                     outputVideo_file;
 
 // UDP serversisClearAllLayersnd clients
-extern pg_IPServer            **IP_Servers;
+extern vector<pg_IPServer*>		IP_Servers;
 extern int                      nb_IP_Servers;
-extern pg_IPClient            **IP_Clients;
+extern vector<pg_IPClient*>		IP_Clients;
 extern int                      nb_IP_Clients;
 
 extern string					pg_csv_file_name;

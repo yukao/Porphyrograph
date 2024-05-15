@@ -2149,9 +2149,8 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo[pg_current_configuration_rank],
 		repop_ColorPart_r, repop_ColorPart_g, repop_ColorPart_b, GLfloat(pg_FrameNo));
 	// clear layer, flash pixel, flash CA -> Part
-	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit[pg_current_configuration_rank],
-		GLfloat(flashCAPart_weight), GLfloat(nb_particles), GLfloat(isClearAllLayers),
-		GLfloat(pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size()));
+	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed[pg_current_configuration_rank],
+		GLfloat(flashCAPart_weight), GLfloat(nb_particles), GLfloat(isClearAllLayers), *((float*)ScenarioVarPointers[_part_size]));
 
 	// movie size, flash camera and copy tracks
 	// copy to layer above (+1) or to layer below (-1)
@@ -2768,6 +2767,7 @@ void pg_update_shader_ParticleRender_uniforms(void) {
 		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
 		(GLfloat)particle_type,
 		pulse[2], float(workingWindow_width) / float(window_height));
+	//printf("part size gs: %.3f\n", (part_size + pulse_average * part_size_pulse * part_size));
 
 	///////////////////////////////////////////////////////////////////////
 	bool assigned = false;

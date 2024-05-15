@@ -92,9 +92,9 @@ int                      endVideo_file;
 bool                     outputVideo_file;
 
 // UDP servers and clients
-pg_IPServer            **IP_Servers;
+vector<pg_IPServer*>     IP_Servers;
 int                      nb_IP_Servers;
-pg_IPClient            **IP_Clients;
+vector<pg_IPClient*>     IP_Clients;
 int                      nb_IP_Clients;
 
 // nb configuration and scenario files
@@ -526,10 +526,10 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	int nb_unloaded_IP_Servers = 0;
 	int nb_unloaded_IP_Clients = 0;
 	if (indConfiguration ==  0) {
-		IP_Servers = NULL;
+		IP_Servers.clear();
 		nb_IP_Servers = 0;
 
-		IP_Clients = NULL;
+		IP_Clients.clear();
 		nb_IP_Clients = 0;
 	}
 	else {
@@ -545,10 +545,10 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"udp_local_server\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 	if (indConfiguration ==  0) {
-		sstream >> nb_IP_Servers;
+		nb_IP_Servers = 0;
 	}
 	else {
-		sstream >> nb_unloaded_IP_Servers;
+		nb_unloaded_IP_Servers = 0;
 	}
 	// std::cout << "Nb servers: " << nb_IP_Servers << "\n";
 
@@ -560,40 +560,55 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	std::getline(confFin, line);
 
 	if (indConfiguration == 0) {
-		IP_Servers = new pg_IPServer * [nb_IP_Servers];
-		for (int ind_IP_Server = 0; ind_IP_Server < nb_IP_Servers; ind_IP_Server++) {
-			IP_Servers[ind_IP_Server] = new pg_IPServer();
-
+		// IP_Servers = new pg_IPServer * [nb_IP_Servers];
+		while(true) {
 			std::getline(confFin, line);
 			stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "server"
-			sstream >> IP_Servers[ind_IP_Server]->id;
-			sstream >> IP_Servers[ind_IP_Server]->Local_server_port;
+			sstream >> ID; // string "server" or end with "/udp_local_server"
+			if (ID.compare("/udp_local_server") == 0) {
+				break;
+			}
+			else if (ID.compare("server") != 0) {
+				sprintf(ErrorStr, "Error: incorrect configuration file expected string \"server\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+			}
+			IP_Servers.push_back(new pg_IPServer());
+			sstream >> IP_Servers[nb_IP_Servers]->id;
+			sstream >> IP_Servers[nb_IP_Servers]->Local_server_port;
 			sstream >> ID;
 			for (int ind = 0; ind < Emptypg_UDPMessageFormat; ind++) {
 				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
-					IP_Servers[ind_IP_Server]->receive_format = (pg_UDPMessageFormat)ind;
+					IP_Servers[nb_IP_Servers]->receive_format = (pg_UDPMessageFormat)ind;
 					break;
 				}
 			}
-			if (IP_Servers[ind_IP_Server]->receive_format == Emptypg_UDPMessageFormat) {
+			if (IP_Servers[nb_IP_Servers]->receive_format == Emptypg_UDPMessageFormat) {
 				sprintf(ErrorStr, "Error: unknown receive message format [%s]!", ID.c_str()); ReportError(ErrorStr); throw 249;
 			}
-			sstream >> IP_Servers[ind_IP_Server]->IP_message_trace;
-			sstream >> IP_Servers[ind_IP_Server]->depth_input_stack;
-			sstream >> IP_Servers[ind_IP_Server]->OSC_duplicate_removal;
+			sstream >> IP_Servers[nb_IP_Servers]->IP_message_trace;
+			sstream >> IP_Servers[nb_IP_Servers]->depth_input_stack;
+			sstream >> IP_Servers[nb_IP_Servers]->OSC_duplicate_removal;
 			// printf("serveur %d duplicate removal %d\n", ind_IP_Server, IP_Servers[ind_IP_Server]->OSC_duplicate_removal);
-			sstream >> IP_Servers[ind_IP_Server]->OSC_endian_reversal;
+			sstream >> IP_Servers[nb_IP_Servers]->OSC_endian_reversal;
+			nb_IP_Servers++;
 		}
 	}
 	else {
-		for (int ind_IP_Server = 0; ind_IP_Server < nb_unloaded_IP_Servers; ind_IP_Server++) {
+		while (true) {
 			std::getline(confFin, line);
+			stringstreamStoreLine(&sstream, &line);
+			sstream >> ID; // string "server" or end with "/udp_local_server"
+			if (ID.compare("/udp_local_server") == 0) {
+				break;
+			}
+			else if (ID.compare("server") != 0) {
+				sprintf(ErrorStr, "Error: incorrect configuration file expected string \"server\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+			}
+			nb_unloaded_IP_Servers++;
 		}
 	}
 
-	// /udp_local_server
-	std::getline(confFin, line);
+	//// /udp_local_server
+	//std::getline(confFin, line);
 
 	// udp_remote_client Number of clients
 	std::getline(confFin, line);
@@ -603,10 +618,10 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"udp_remote_client\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 	if (indConfiguration == 0) {
-		sstream >> nb_IP_Clients;
+		nb_IP_Clients = 0;
 	}
 	else {
-		sstream >> nb_unloaded_IP_Clients;
+		nb_unloaded_IP_Clients = 0;
 	}
 	// std::cout << "Nb clients: " << nb_IP_Clients << "\n";
 
@@ -618,43 +633,58 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	std::getline(confFin, line);
 
 	if (indConfiguration == 0) {
-		IP_Clients = new pg_IPClient * [nb_IP_Clients];
-		for (int ind_IP_Client = 0; ind_IP_Client < nb_IP_Clients; ind_IP_Client++) {
-			IP_Clients[ind_IP_Client] = new pg_IPClient();
-
+		//IP_Clients = new pg_IPClient * [nb_IP_Clients];
+		while (true) {
 			std::getline(confFin, line);
 			stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "Client"
-			sstream >> IP_Clients[ind_IP_Client]->id;
-			sstream >> IP_Clients[ind_IP_Client]->Remote_server_IP;
-			sstream >> IP_Clients[ind_IP_Client]->Remote_server_port;
+			sstream >> ID; // string "client" or end with "/udp_remote_client"
+			if (ID.compare("/udp_remote_client") == 0) {
+				break;
+			}
+			else if (ID.compare("client") != 0) {
+				sprintf(ErrorStr, "Error: incorrect configuration file expected string \"client\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+			}
+			IP_Clients.push_back(new pg_IPClient());
+			sstream >> IP_Clients[nb_IP_Clients]->id;
+			sstream >> IP_Clients[nb_IP_Clients]->Remote_server_IP;
+			sstream >> IP_Clients[nb_IP_Clients]->Remote_server_port;
 			sstream >> ID;
 			for (int ind = 0; ind < Emptypg_UDPMessageFormat; ind++) {
 				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
-					IP_Clients[ind_IP_Client]->send_format = (pg_UDPMessageFormat)ind;
+					IP_Clients[nb_IP_Clients]->send_format = (pg_UDPMessageFormat)ind;
 					break;
 				}
 			}
-			if (IP_Clients[ind_IP_Client]->send_format == Emptypg_UDPMessageFormat) {
+			if (IP_Clients[nb_IP_Clients]->send_format == Emptypg_UDPMessageFormat) {
 				sprintf(ErrorStr, "Error: unknown receive message format [%s]!", ID.c_str()); ReportError(ErrorStr); throw 249;
 			}
-			sstream >> IP_Clients[ind_IP_Client]->IP_message_trace;
-			sstream >> IP_Clients[ind_IP_Client]->max_depth_output_stack;
-			sstream >> IP_Clients[ind_IP_Client]->OSC_endian_reversal;
-			// std::cout << "OSC_trace: " << IP_Clients[ind_IP_Client]->IP_message_trace << "\n";
-			//std::cout << "IP_Clients[ ind_IP_Client ]->id: " << IP_Clients[ind_IP_Client]->id << "\n";
-			//std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_IP: " << ind_IP_Client << " " << IP_Clients[ind_IP_Client]->Remote_server_IP << "\n";
-			//std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_port: " << IP_Clients[ind_IP_Client]->Remote_server_port << "\n";
+			sstream >> IP_Clients[nb_IP_Clients]->IP_message_trace;
+			sstream >> IP_Clients[nb_IP_Clients]->max_depth_output_stack;
+			sstream >> IP_Clients[nb_IP_Clients]->OSC_endian_reversal;
+			// std::cout << "OSC_trace: " << IP_Clients[nb_IP_Clients]->IP_message_trace << "\n";
+			//std::cout << "IP_Clients[ nb_IP_Clients ]->id: " << IP_Clients[nb_IP_Clients]->id << "\n";
+			//std::cout << "IP_Clients[ nb_IP_Clients ]->Remote_server_IP: " << nb_IP_Clients << " " << IP_Clients[nb_IP_Clients]->Remote_server_IP << "\n";
+			//std::cout << "IP_Clients[ nb_IP_Clients ]->Remote_server_port: " << IP_Clients[nb_IP_Clients]->Remote_server_port << "\n";
+			nb_IP_Clients++;
 		}
 	}
 	else {
-		for (int ind_IP_Client = 0; ind_IP_Client < nb_unloaded_IP_Clients; ind_IP_Client++) {
+		while (true) {
 			std::getline(confFin, line);
+			stringstreamStoreLine(&sstream, &line);
+			sstream >> ID; // string "client" or end with "/udp_remote_client"
+			if (ID.compare("/udp_remote_client") == 0) {
+				break;
+			}
+			else if (ID.compare("client") != 0) {
+				sprintf(ErrorStr, "Error: incorrect configuration file expected string \"client\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+			}
+			nb_unloaded_IP_Clients++;
 		}
 	}
 
-	// /udp_remote_client
-	std::getline(confFin, line);
+	//// /udp_remote_client
+	//std::getline(confFin, line);
 
 	////////////////////////////////////
 	////// CAMERAS

@@ -2014,9 +2014,6 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 			= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
 			+ tabletPressureRadius * pen_radius_pressure_coef
 			+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
-		if (indPath == 0) {
-			sprintf(AuxString, "/pen_radius %.0f", float(int(paths_RadiusX[indPath]))); pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_TouchOSC_send");
-		}
 		//if (indPath == 0) {
 		//	printf("message %s\n", AuxString);
 		//	printf("PEN pen_radius %f pulse_average pen_radius_pulse %.2f %.2f muliplied radius %.2f en radius calculated [%.2f %.2f]\n",
@@ -2028,6 +2025,9 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 		paths_RadiusY[indPath] = pen_radius * pen_radiusMultiplier
 			+ pulse_average * pen_radius_pulse;
 #endif
+		if (indPath == 0) {
+			sprintf(AuxString, "/pen_radius %.0f", float(int(paths_RadiusX[indPath]))); pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		}
 		// printf("PEN brush ID radius %d %.2f\n" , pen_brush, pen_radius );
 
 
@@ -2245,7 +2245,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 #else
 				pg_Path_Status[indRecordingPath].setFrameBrushRadius(pg_current_configuration_rank, indFrameRec, pen_brush,
 					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse,
-					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
+					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse);
 #endif
 
 

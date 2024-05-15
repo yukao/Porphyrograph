@@ -258,7 +258,7 @@ uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_
 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
-uniform vec4 uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit; // 
+uniform vec4 uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH; //
  
 uniform vec4 uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts;   // 
@@ -466,7 +466,8 @@ void particle_out( void ) {
 
     if(part_initialization < PG_NB_PARTICLE_INITIAL_IMAGES) {
       vec4 target_color_radius = texture( uniform_ParticleAnimation_texture_fs_Part_init_col_rad , decalCoords );
-      out_color_radius_particle = vec4(target_color_radius.rgb, part_size);
+      // particles are initialized unpulsed
+      out_color_radius_particle = vec4(target_color_radius.rgb, part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */);
       if(partMove_target) { // reaches a target in several steps
           out_target_position_color_radius_particle.xy
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords ).xy;
@@ -475,7 +476,7 @@ void particle_out( void ) {
             = target_color_radius.r * 255. + target_color_radius.g * 65025. + target_color_radius.b * 16581375.;
             // = 0.2 * 255. + 0.2 * 65025. + 0.4 * 16581375.;
 
-          out_target_position_color_radius_particle.w = part_size;
+          out_target_position_color_radius_particle.w = part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */;
       }
       else { // instant positioning on the target
           out_position_speed_particle
@@ -488,7 +489,8 @@ void particle_out( void ) {
     else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES ) {
         vec2 cameraCoord = out_position_speed_particle.xy / vec2(width, height) * cameraWH;
         vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Camera_frame , vec2(cameraCoord.x , cameraWH.y - cameraCoord.y) );
-        out_color_radius_particle = vec4(target_color.rgb, part_size);
+        // particles are initialized unpulsed
+        out_color_radius_particle = vec4(target_color.rgb, part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */);
         if(partMove_target) { // reaches a target in several steps
           out_target_position_color_radius_particle.xy
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_col_rad , decalCoords ).xy;
@@ -496,7 +498,7 @@ void particle_out( void ) {
           out_target_position_color_radius_particle.z
             = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
 
-          out_target_position_color_radius_particle.w = part_size;
+          out_target_position_color_radius_particle.w = part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */;
           out_position_speed_particle.zw = vec2(0,0);
       }
       else { // instant positioning on the target
@@ -509,7 +511,8 @@ void particle_out( void ) {
     else if(part_initialization == PG_NB_PARTICLE_INITIAL_IMAGES + 1 ) {
       vec2 movieCoord = out_position_speed_particle.xy / vec2(width, height) * movieWH;
       vec4 target_color = texture( uniform_ParticleAnimation_texture_fs_Movie_frame , vec2(movieCoord.x, movieWH.y - movieCoord.y)  );
-      out_color_radius_particle = vec4(target_color.rgb, part_size);
+      // particles are initialized unpulsed
+      out_color_radius_particle = vec4(target_color.rgb, part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */);
       if(partMove_target) { // reaches a target in several steps
           out_target_position_color_radius_particle.xy
                 = texture( uniform_ParticleAnimation_texture_fs_Part_init_pos_speed , decalCoords ).xy;
@@ -517,7 +520,7 @@ void particle_out( void ) {
           out_target_position_color_radius_particle.z
             = target_color.r * 255. + target_color.g * 65025. + target_color.b * 16581375.;
 
-          out_target_position_color_radius_particle.w = part_size;
+          out_target_position_color_radius_particle.w = part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */;
           out_position_speed_particle.zw = vec2(0,0);
       }
       else { // instant positioning on the target
@@ -555,9 +558,10 @@ void particle_out( void ) {
           = mix(pen_curr, pen_prev, randomPart.z ); // linear position
         out_position_speed_particle.xy += orth * 2 * (randomPart.w - 0.5) * radius_random.x; // thickness
         out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
+        // particles are repoped unpulsed
         out_color_radius_particle 
             = vec4( uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo.xyz , 
-                    part_size);
+                    part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */);
       }
     }
   }
@@ -600,8 +604,9 @@ void particle_out( void ) {
     if( rand3D(vec3(decalCoordsPOT, radius_random.z), repop_density_weight) != 0) {
         out_position_speed_particle.xy = part_pos; // position
         out_position_speed_particle.zw = (randomValue.xy - vec2(0.5)) * vec2(0.1); // speed
-        out_color_radius_particle = vec4(part_color, part_size);
-        // out_color_radius_particle = vec4(textureDensityValue,part_size);
+        // particles are repoped unpulsed
+        out_color_radius_particle = vec4(part_color, /* part_size  */ uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w );
+        // out_color_radius_particle = vec4(textureDensityValue,part_size /* uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.w */);
     }
   }
 
@@ -626,7 +631,7 @@ void particle_out( void ) {
                        texture( uniform_ParticleAnimation_texture_fs_Trk3 , out_position_speed_particle.xy ).rgb;
 #endif
   // CA flash on particles
-  flashToPartCumul += uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.x
+  flashToPartCumul += uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.x
                     * texture( uniform_ParticleAnimation_texture_fs_CA , out_position_speed_particle.xy ).rgb;
 
   //////////////////////////////////////////////////////////////////
@@ -1047,7 +1052,7 @@ void main() {
   // noise for CA: random value
   randomPart = texture( uniform_ParticleAnimation_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesXY , 0.0 ) );
 
-  nbParticles = int(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.y);
+  nbParticles = int(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.y);
 
   
   
@@ -1060,7 +1065,7 @@ void main() {
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
 
-  if(frameNo <= 10 || uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit.z > 0) {
+  if(frameNo <= 10 || uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed.z > 0) {
     out_ParticleAnimation_FBO_fs_Part_pos_speed = vec4(-10000,-10000,0,0);  // particle position / speed
     out_ParticleAnimation_FBO_fs_Part_col_rad = vec4(1,1,1,1);  // particle color / radius
     out_ParticleAnimation_FBO_fs_Part_Target_pos_col_rad = vec4(-10000,-10000,16646655,1);  // particle target position / color / radius

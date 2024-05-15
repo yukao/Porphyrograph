@@ -529,6 +529,7 @@ void convertTextStringToClipartIndices(std::vector<int> *indClipArts, string dis
 			switch (curChar) {
 			case ' ':  indClipArt = 26; break;
 			case '\'':  indClipArt = 27; break;
+			case '#':  indClipArt = 28; break;
 			}
 		}
 #endif

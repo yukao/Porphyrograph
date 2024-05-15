@@ -1,0 +1,355 @@
+{
+  "modules": null,
+  "customVariables": [
+    {
+      "niceName": "Vars Track levels",
+      "type": "CVGroup",
+      "params": {
+        "parameters": [
+          {
+            "value": "Weights",
+            "controlAddress": "/controlMode"
+          }
+        ]
+      },
+      "variables": {
+        "items": [
+          {
+            "parameters": [
+              {
+                "value": 0.02066375315189362,
+                "controlAddress": "/cAMixingWeight",
+                "feedbackOnly": false,
+                "type": "Float",
+                "niceName": "CAMixingWeight",
+                "customizable": true,
+                "removable": false,
+                "description": "Custom control of type Float",
+                "hideInEditor": false
+              }
+            ],
+            "niceName": "CAMixingWeight",
+            "editorIsCollapsed": true,
+            "type": "Float Parameter"
+          },
+          {
+            "parameters": [
+              {
+                "value": 0.9793362468481064,
+                "controlAddress": "/cAMasterWeight",
+                "feedbackOnly": false,
+                "type": "Float",
+                "niceName": "CAMasterWeight",
+                "customizable": true,
+                "removable": false,
+                "description": "Custom control of type Float",
+                "hideInEditor": false
+              }
+            ],
+            "niceName": "CAMasterWeight",
+            "editorIsCollapsed": true,
+            "type": "Float Parameter"
+          },
+          {
+            "parameters": [
+              {
+                "value": 0.5103318765759468,
+                "controlAddress": "/partMixingWeight",
+                "feedbackOnly": false,
+                "type": "Float",
+                "niceName": "PartMixingWeight",
+                "customizable": true,
+                "removable": false,
+                "description": "Custom control of type Float",
+                "hideInEditor": false
+              }
+            ],
+            "niceName": "PartMixingWeight",
+            "editorIsCollapsed": true,
+            "type": "Float Parameter"
+          },
+          {
+            "parameters": [
+              {
+                "value": 0.2938008740544319,
+                "controlAddress": "/partMasterWeight",
+                "feedbackOnly": false,
+                "type": "Float",
+                "niceName": "PartMasterWeight",
+                "customizable": true,
+                "removable": false,
+                "description": "Custom control of type Float",
+                "hideInEditor": false
+              }
+            ],
+            "niceName": "PartMasterWeight",
+            "editorIsCollapsed": true,
+            "type": "Float Parameter"
+          }
+        ],
+        "viewOffset": [
+          0,
+          0
+        ],
+        "viewZoom": 1.0
+      },
+      "presets": {
+        "items": [
+          {
+            "parameters": [
+              {
+                "value": [
+                  0.8627451062202454,
+                  0.0,
+                  1.0,
+                  1.0
+                ],
+                "controlAddress": "/color"
+              }
+            ],
+            "niceName": "Preset",
+            "type": "MorphTarget",
+            "values": {
+              "containers": {
+                "cAMixingWeight": {
+                  "parameters": [
+                    {
+                      "value": 1.0,
+                      "controlAddress": "/cAMixingWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "CAMixingWeight"
+                },
+                "cAMasterWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.0,
+                      "controlAddress": "/cAMasterWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "CAMasterWeight"
+                },
+                "partMixingWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.5,
+                      "controlAddress": "/partMixingWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "PartMixingWeight"
+                },
+                "partMasterWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.2,
+                      "controlAddress": "/partMasterWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "PartMasterWeight"
+                }
+              }
+            }
+          },
+          {
+            "parameters": [
+              {
+                "value": [
+                  1.0,
+                  0.6313725709915161,
+                  0.0,
+                  1.0
+                ],
+                "controlAddress": "/color"
+              }
+            ],
+            "niceName": "Preset 1",
+            "type": "MorphTarget",
+            "values": {
+              "containers": {
+                "cAMixingWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.0,
+                      "controlAddress": "/cAMixingWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "CAMixingWeight"
+                },
+                "cAMasterWeight": {
+                  "parameters": [
+                    {
+                      "value": 1.0,
+                      "controlAddress": "/cAMasterWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "CAMasterWeight"
+                },
+                "partMixingWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.5,
+                      "controlAddress": "/partMixingWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "PartMixingWeight"
+                },
+                "partMasterWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.3,
+                      "controlAddress": "/partMasterWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "PartMasterWeight"
+                }
+              }
+            }
+          },
+          {
+            "parameters": [
+              {
+                "value": [
+                  1.0,
+                  0.0,
+                  0.1176470592617989,
+                  1.0
+                ],
+                "controlAddress": "/color"
+              }
+            ],
+            "niceName": "Preset 2",
+            "type": "MorphTarget",
+            "values": {
+              "containers": {
+                "cAMixingWeight": {
+                  "parameters": [
+                    {
+                      "value": 1.0,
+                      "controlAddress": "/cAMixingWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "CAMixingWeight"
+                },
+                "cAMasterWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.0,
+                      "controlAddress": "/cAMasterWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "CAMasterWeight"
+                },
+                "partMixingWeight": {
+                  "parameters": [
+                    {
+                      "value": 1.0,
+                      "controlAddress": "/partMixingWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "PartMixingWeight"
+                },
+                "partMasterWeight": {
+                  "parameters": [
+                    {
+                      "value": 0.0,
+                      "controlAddress": "/partMasterWeight"
+                    }
+                  ],
+                  "owned": true,
+                  "niceName": "PartMasterWeight"
+                }
+              }
+            }
+          }
+        ],
+        "viewOffset": [
+          0,
+          0
+        ],
+        "viewZoom": 1.0
+      }
+    }
+  ],
+  "states": null,
+  "sequences": null,
+  "routers": [
+    {
+      "niceName": "Router Track Levels",
+      "type": "BaseItem",
+      "sourceModule": "customVariables",
+      "sourceValues": {
+        "items": [
+          {
+            "niceName": "CAMixingWeight",
+            "type": "BaseItem",
+            "customName": "CAMixingWeight",
+            "routeParams": {
+              "parameters": [
+                {
+                  "value": "/CAMixingWeight",
+                  "controlAddress": "/address"
+                }
+              ]
+            }
+          },
+          {
+            "niceName": "CAMasterWeight",
+            "type": "BaseItem",
+            "customName": "CAMasterWeight",
+            "routeParams": {
+              "parameters": [
+                {
+                  "value": "/CAMasterWeight",
+                  "controlAddress": "/address"
+                }
+              ]
+            }
+          },
+          {
+            "niceName": "PartMixingWeight",
+            "type": "BaseItem",
+            "customName": "PartMixingWeight",
+            "routeParams": {
+              "parameters": [
+                {
+                  "value": "/PartMixingWeight",
+                  "controlAddress": "/address"
+                }
+              ]
+            }
+          },
+          {
+            "niceName": "PartMasterWeight",
+            "type": "BaseItem",
+            "customName": "PartMasterWeight",
+            "routeParams": {
+              "parameters": [
+                {
+                  "value": "/PartMasterWeight",
+                  "controlAddress": "/address"
+                }
+              ]
+            }
+          }
+        ],
+        "viewOffset": [
+          0,
+          0
+        ],
+        "viewZoom": 1.0
+      },
+      "destModule": "osc"
+    }
+  ]
+}

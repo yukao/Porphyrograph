@@ -446,6 +446,7 @@ double AbsoluteInitialScenarioTime;
 
 // +++++++++++++++++++++++ CLEAR AND INVERT +++++++++++++++++++++++++++++++++
 double lastClearTime = 0.;
+double lastPenTouchTime = 0.;
 int lastClearSceneIndex = -1;
 
 // +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
@@ -531,6 +532,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_minimal_display,
 	_paths_display,
 	_new_scene,
+	_pen_touch,
 	_pen_xy,
 	_pen2_xy,
 	_pen3_xy,
@@ -578,6 +580,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_repopCA_BW,
 	_repopPart_BW,
 	_pressure_onOff,
+	_diaporama_add_dirs,
 	_diaporama_random,
 	_diaporama_plus,
 	_diaporama_minus,
@@ -811,6 +814,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "minimal_display", _minimal_display },
 	{ "paths_display", _paths_display },
 	{ "new_scene", _new_scene },
+	{ "pen_touch", _pen_touch},
 	{ "pen_xy", _pen_xy },
 	{ "pen2_xy", _pen2_xy },
 	{ "pen3_xy", _pen3_xy },
@@ -858,6 +862,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "repopCA_BW", _repopCA_BW },
 	{ "repopPart_BW", _repopPart_BW },
 	{ "pressure_onOff", _pressure_onOff },
+	{ "diaporama_add_dirs", _diaporama_add_dirs },
 	{ "diaporama_random", _diaporama_random },
 	{ "diaporama_plus", _diaporama_plus },
 	{ "diaporama_minus", _diaporama_minus },
@@ -5084,13 +5089,13 @@ void pg_update_scenario(void) {
 						if (pg_CurrentScene->scene_change_when_ends == true) {
 							StartNewScene(ind_scene, 0);
 							elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
+							remainingTimeInScene = pg_CurrentScene->scene_duration;
 						}
 						// otherwise the current scene is prolonged, no interpolation takes place 
 						// the parameter values stay as they were 
 						else {
 							// for time display + colors when reaching the end of the scene
-							remainingTimeInScene
-								= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - elapsed_time_from_start;
+							remainingTimeInScene = pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - elapsed_time_from_start;
 							if (!pg_last_scene_update) {
 								pg_last_scene_update = true;
 							}
@@ -5106,8 +5111,7 @@ void pg_update_scenario(void) {
 					}
 
 					// for time display + colors when reaching the end of the scene
-					remainingTimeInScene
-						= pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time + pg_Scenario[pg_current_configuration_rank][ind_scene].scene_duration - elapsed_time_from_start;
+					remainingTimeInScene = pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time + pg_Scenario[pg_current_configuration_rank][ind_scene].scene_duration - elapsed_time_from_start;
 					//printf( "time %.2f remainingTimeInScene %.2f\n" , elapsed_time_from_start, remainingTimeInScene);
 
 					pg_update_scene_variables(&pg_Scenario[pg_current_configuration_rank][ind_scene], elapsed_time_from_start);
@@ -5143,8 +5147,7 @@ void pg_update_scenario(void) {
 				StartNewScene(pg_SceneIndexAfterInterpolation, 0);
 				// for time display + colors when reaching the end of the scene
 				double elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
-				remainingTimeInScene
-					= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - elapsed_time_from_start;
+				remainingTimeInScene = pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - elapsed_time_from_start;
 				//printf( "time %.2f remainingTimeInScene %.2f\n" , elapsed_time_from_start , remainingTimeInScene);
 
 				pg_update_scene_variables(pg_CurrentScene, elapsed_time_from_start);
@@ -5153,8 +5156,7 @@ void pg_update_scenario(void) {
 			// elapsed time is counted from scene beginning
 			else {
 				// for time display + colors when reaching the end of the scene
-				remainingTimeInScene
-					= pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - pg_CurrentClockTime;
+				remainingTimeInScene = pg_CurrentScene->scene_initial_time + pg_CurrentScene->scene_duration - pg_CurrentClockTime;
 				//printf( "remainingTimeInScene %.2f pg_CurrentClockTime %.2f\n" , remainingTimeInScene, pg_CurrentClockTime);
 
 				pg_update_scene_variables(pg_CurrentScene, pg_CurrentClockTime);
@@ -5812,6 +5814,26 @@ void pg_flash_control(bool (*control_function)(int)) {
 			flashPartCA_weight_duration = 1;
 			// printf( "flashPartCA_freq (%d)\n" , flashPartCA_freq );
 		}
+	}
+#endif
+
+#if defined(var_AT5_stop_motion) 
+	if (ScenarioVarConfigurations[_AT5_stop_motion][pg_current_configuration_rank]) {
+		BrokenInterpolationVar[_cameraWeight] = true;
+		if ((*control_function)(AT5_stop_motion)) {
+			//printf("stop motion\n");
+			if (*((float*)ScenarioVarPointers[_cameraWeight]) <= 0.) {
+				*((float*)ScenarioVarPointers[_cameraWeight]) = 1.f;
+				//*((float*)ScenarioVarPointers[_trackMixingWeight_2]) = 1.f;
+				*((float*)ScenarioVarPointers[_trackMasterWeight_2]) = 1.f;
+			}
+			else {
+				*((float*)ScenarioVarPointers[_cameraWeight]) = 0.f;
+					//*((float*)ScenarioVarPointers[_trackMixingWeight_2]) = 0.f;
+				*((float*)ScenarioVarPointers[_trackMasterWeight_2]) = 0.f;
+			}
+		}
+		//printf("cameraW %.2f\n", cameraWeight);
 	}
 #endif
 
@@ -7604,10 +7626,27 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ PEN POSITION ++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if !defined(LIGHT)
+	case _pen_touch: {
+		CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
+		CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
+		sprintf(AuxString, "/pen_touch %.2f", float_arguments[0]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		if (float_arguments[0] == 0) {
+			if (pg_CurrentClockTime - lastPenTouchTime < 0.5f) {
+				// pg_send_message_udp((char *)"s", (char *)"/message clear_all", (char *)"udp_TouchOSC_send");
+				isClearAllLayers = 1.f;
+				lastPenTouchTime = 0.0f;
+				//printf("****** _PG_GUI_COMMAND isClearAllLayers %d\n",isClearAllLayers);
+			}
+			else {
+				lastPenTouchTime = pg_CurrentClockTime;
+			}
+		}
+		break;
+	}
 	case _pen_xy: {
 		CurrentMousePos_x[0] = int(workingWindow_width * float_arguments[0]);
 		CurrentMousePos_y[0] = int(window_height * float_arguments[1]);
-		sprintf(AuxString, "/pen_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		//sprintf(AuxString, "/pen_xy %.2f %.2f", float_arguments[0], float_arguments[1]); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	}
 	case _pen2_xy: {
@@ -8137,12 +8176,18 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 #if defined(var_photo_diaporama)
-	case _diaporama_random: {
-			if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
-				diaporama_random();
-			}
+	case _diaporama_add_dirs: {
+		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+			pg_addNewDiaporamas(pg_current_configuration_rank);
 		}
 		break;
+	}
+	case _diaporama_random: {
+		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+			diaporama_random();
+		}
+		break;
+	}
 	case _diaporama_plus: {
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
@@ -8159,7 +8204,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-
 	case _diaporama_minus: {
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {

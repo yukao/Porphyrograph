@@ -78,7 +78,7 @@ GLint uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo[_NbConfigu
 GLint uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[_NbConfigurations] = {-1};
 GLint uniform_ParticleAnimation_path_data[_NbConfigurations] = {-1};
 GLint uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo[_NbConfigurations] = {-1};
-GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit[_NbConfigurations] = {-1};
+GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed[_NbConfigurations] = {-1};
 GLint uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH[_NbConfigurations] = {-1};
 
 // UPDATE SHADER TEXTURE IDS
@@ -650,7 +650,7 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts, "uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts", _pg_shader_ParticleAnimation);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_path_data, "uniform_ParticleAnimation_path_data", _pg_shader_ParticleAnimation);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo, "uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo", _pg_shader_ParticleAnimation);
-			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit, "uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_nbPartInit", _pg_shader_ParticleAnimation);
+			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed, "uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed", _pg_shader_ParticleAnimation);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH, "uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH", _pg_shader_ParticleAnimation);
 
 			// BG track FBO

@@ -39,7 +39,7 @@ extern unsigned char* imgPhotoCompressedBitmap[_NbConfigurations];
 extern cv::Mat imgPhotoBGRInit[_NbConfigurations];
 extern cv::Mat imgPhotoRGB[_NbConfigurations];
 
-class PhotoSwapDataStruct {
+class PhotoSwapData {
 public:
 	int indSwappedPhoto;
 	int indOldPhoto;
@@ -47,7 +47,7 @@ public:
 	float swapStart;
 	float blendStart;        // start of blending the current photo (<0 if not displayed)
 	float intervalDuration;  // duration between end of plateau and start of the other photo
-	PhotoSwapDataStruct(void) {
+	PhotoSwapData(void) {
 		indSwappedPhoto = -1;
 		indOldPhoto = -1;
 		swapping = false;
@@ -56,20 +56,20 @@ public:
 		intervalDuration = 0.01f;
 	}
 };
-class PhotoDataStruct {
+class PhotoData {
 public:
-	char PhotoName[256];
+	string PhotoName;
 	int w;
 	int h;
 	GLenum photoFormat;
 	bool invert;
 	bool IDallocated;
 	GLuint texBuffID;
-	PhotoDataStruct(void) {
+	PhotoData(void) {
 		w = -1;
 		h = -1;
 		photoFormat = 0;
-		*PhotoName = 0;
+		PhotoName = "";
 		IDallocated = false;
 		invert = false;
 		texBuffID = NULL_ID;
@@ -78,34 +78,33 @@ public:
 		w = -1;
 		h = -1;
 		photoFormat = 0;
-		*PhotoName = 0;
+		PhotoName = "";
 	}
-	~PhotoDataStruct(void) {
+	~PhotoData(void) {
 	}
 	// calls to pg_loadPhoto should be immediately followed by pg_toGPUPhoto
 	// due to global storage variables imgPhotoCompressedFormat[indConfiguration], imgPhotoCompressedBitmap[indConfiguration], imgPhotoBGRInit[indConfiguration], imgPhotoRGB[indConfiguration];
-	bool pg_loadPhoto(
-		bool invert, int width, int height, bool verbose, int indConfiguration);
+	bool pg_loadPhoto(bool invert, int width, int height, bool verbose, int indConfiguration);
 	bool pg_toGPUPhoto(bool is_rectangle,
 		GLint components,
 		GLenum datatype, GLenum texturefilter, int iindConfiguration);
 };
 
-class ClipFramesDataStruct {
+class ClipFramesData {
 public:
 	GLuint texBuffID;
 	GLenum clipImgFormat;
-	ClipFramesDataStruct(void) {
+	ClipFramesData(void) {
 		clipImgFormat = 0;
 		texBuffID = NULL_ID;
 	}
-	~ClipFramesDataStruct(void) {
+	~ClipFramesData(void) {
 		clipImgFormat = 0;
 		texBuffID = NULL_ID;
 	}
 	// calls to pg_loadClipFrames should be immediately followed by pg_toGPUClipFrames
 	// due to global storage variables imgPhotoCompressedFormat, imgPhotoCompressedBitmap, imgPhotoBGRInit, imgPhotoRGB;
-	bool pg_loadClipFrames(char* fileName, int width, int height, int indConfiguration);
+	bool pg_loadClipFrames(string *fileName, int width, int height, int indConfiguration);
 	bool pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indConfiguration);
 };
 
@@ -167,17 +166,17 @@ enum pg_TextureFormat { pg_byte_tex_format = 0, pg_float_tex_format, Emptypg_Tex
 #define PG_PHOTO_NB_TEXTURES_TVW                 (6)
 #endif
 
-extern PhotoDataStruct pg_CameraFrame_buffer_data;
-extern PhotoDataStruct pg_MovieFrame_buffer_data;
+extern PhotoData pg_CameraFrame_buffer_data;
+extern PhotoData pg_MovieFrame_buffer_data;
 
 extern float pg_Photo_weight[PG_PHOTO_NB_TEXTURES];
 
 #if defined(TVW)
-extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW];
+extern PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW];
 #else
-extern PhotoSwapDataStruct pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
+extern PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
 #endif
-extern PhotoDataStruct** pg_Photo_buffer_data[_NbConfigurations];
+extern vector<PhotoData*>pg_Photo_buffer_data[_NbConfigurations];
 
 /////////////////////////////////////////////////////////////////////
 // IMAGE FILES
@@ -201,14 +200,16 @@ extern int pg_CurrentDiaporamaFile;
 // they are doubled by swap images used to smoothly change between images
 extern int pg_nbCompressedImages[_NbConfigurations];
 extern int pg_nbCompressedImageDirs[_NbConfigurations];
-extern int* pg_nbCompressedImagesPerFolder[_NbConfigurations];
-extern int* pg_firstCompressedFileInFolder[_NbConfigurations];
+extern vector<int>pg_nbCompressedImagesPerFolder[_NbConfigurations];
+extern vector<int>pg_firstCompressedFileInFolder[_NbConfigurations];
+extern vector<string> pg_compressedImageDirsNames[_NbConfigurations];
+extern vector<vector<string>> pg_compressedImagesNames[_NbConfigurations];
 
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
 
 #if defined(TVW)
-extern PhotoDataStruct pg_Photo_mask_buffer_data[_NbConfigurations[PG_PHOTO_NB_TEXTURES_TVW / 3];
+extern PhotoData pg_Photo_mask_buffer_data[_NbConfigurations[PG_PHOTO_NB_TEXTURES_TVW / 3];
 
 // interpolation weight between image buffer swap buffer in each layer
 extern GLfloat pg_Photo_alphaSwap02[PG_PHOTO_NB_TEXTURES_TVW / 2];
@@ -249,7 +250,7 @@ extern bool ascendingDiaporama;
 ////////////////////////////////////////////////////////////////////
 // clips are made of sequences of images loaded in GPU
 extern std::string pg_ClipDirectory[_NbConfigurations];
-extern ClipFramesDataStruct** pg_ClipFrames_buffer_data[_NbConfigurations];
+extern ClipFramesData** pg_ClipFrames_buffer_data[_NbConfigurations];
 extern int pg_nbClips[_NbConfigurations];
 extern int* pg_nbCompressedClipFramesPerFolder[_NbConfigurations];
 extern int* pg_firstCompressedClipFramesInFolder[_NbConfigurations];
@@ -316,7 +317,7 @@ void writejpg(cv::String imageFileName);
 void writepng(cv::String imageFileName);
 
 // loading a dds format under its compressed form (contrary to other formats (png, jpg) which are decompressed)
-bool pg_load_compressed_photo(char* fileName, int width, int height, int indConfiguration);
+bool pg_load_compressed_photo(string *fileName, int width, int height, int indConfiguration);
 
 // TEXTURE LOADING
 bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
@@ -388,5 +389,8 @@ bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, in
 
 #endif
 
-bool  pg_loadAllDiaporamas(int nbImages, int nbFolders);
+void pg_AddDirectoryToDiaporamas(int* indCompressedImage, int* indCompressedImageDirs, bool* valRet, int indConfiguration, fs::directory_entry dir_entry);
+void  pg_initDiaporamas(void);
+bool pg_addNewDiaporamas(int current_config);
+bool  pg_loadAllDiaporamas(void);
 bool  pg_ReadInitalClipFramesTextures(void);
