@@ -46,14 +46,12 @@ public:
 	bool swapping;
 	float swapStart;
 	float blendStart;        // start of blending the current photo (<0 if not displayed)
-	float intervalDuration;  // duration between end of plateau and start of the other photo
 	PhotoSwapData(void) {
-		indSwappedPhoto = -1;
-		indOldPhoto = -1;
+		indSwappedPhoto = 0;
+		indOldPhoto = 0;
 		swapping = false;
 		swapStart = 0.0f;
 		blendStart = -1.0f; // convention blendStart < 0 == no blending
-		intervalDuration = 0.01f;
 	}
 };
 class PhotoData {
@@ -162,21 +160,12 @@ enum pg_TextureFormat { pg_byte_tex_format = 0, pg_float_tex_format, Emptypg_Tex
 // these images are used to make piled rendering 
 // they are doubled by blend images used to smoothly change between images
 #define PG_PHOTO_NB_TEXTURES                 (2)
-#if defined(TVW)
-#define PG_PHOTO_NB_TEXTURES_TVW                 (6)
-#endif
 
 extern PhotoData pg_CameraFrame_buffer_data;
 extern PhotoData pg_MovieFrame_buffer_data;
 
 extern float pg_Photo_weight[PG_PHOTO_NB_TEXTURES];
-
-#if defined(TVW)
-extern PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES_TVW];
-#else
 extern PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
-#endif
-extern vector<PhotoData*>pg_Photo_buffer_data[_NbConfigurations];
 
 /////////////////////////////////////////////////////////////////////
 // IMAGE FILES
@@ -186,7 +175,6 @@ extern vector<PhotoData*>pg_Photo_buffer_data[_NbConfigurations];
 // according to image swap frequency and duration
 // and according to directory size
 #if defined(var_photo_diaporama)
-extern int pg_CurrentDiaporamaDir;
 extern double pg_CurrentDiaporamaEnd;
 extern int pg_CurrentDiaporamaFile;
 #endif
@@ -201,48 +189,18 @@ extern int pg_CurrentDiaporamaFile;
 extern int pg_nbCompressedImages[_NbConfigurations];
 extern int pg_nbCompressedImageDirs[_NbConfigurations];
 extern vector<int>pg_nbCompressedImagesPerFolder[_NbConfigurations];
-extern vector<int>pg_firstCompressedFileInFolder[_NbConfigurations];
+// diaporama directories
 extern vector<string> pg_compressedImageDirsNames[_NbConfigurations];
-extern vector<vector<string>> pg_compressedImagesNames[_NbConfigurations];
+// files inside diaporama directories
+extern vector <vector<PhotoData*>> pg_compressedImageData[_NbConfigurations];
+extern vector<vector<string>> pg_compressedImageFilesNames[_NbConfigurations];
 
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
-
-#if defined(TVW)
-extern PhotoData pg_Photo_mask_buffer_data[_NbConfigurations[PG_PHOTO_NB_TEXTURES_TVW / 3];
-
-// interpolation weight between image buffer swap buffer in each layer
-extern GLfloat pg_Photo_alphaSwap02[PG_PHOTO_NB_TEXTURES_TVW / 2];
-extern GLfloat pg_Photo_alphaSwap35[PG_PHOTO_NB_TEXTURES_TVW / 2];
-// image buffer layer weights
-extern GLfloat pg_Photo_weightTVW[PG_PHOTO_NB_TEXTURES_TVW];
-
-extern GLfloat pg_Photo_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
-extern GLfloat pg_Photo_mask_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
-// GLfloat mask_inverse_buffer_position_noises[PG_PHOTO_NB_TEXTURES_TVW * 2];
-
-#endif
-
 extern std::string pg_ImageDirectory[_NbConfigurations];
-#if defined(TVW)
-extern std::string pg_MaskDirectory[_NbConfigurations];
-#endif
-#if defined(TVW) || defined(var_moving_messages)
+#if defined(var_moving_messages)
 extern std::string pg_MessageDirectory[_NbConfigurations];
 extern std::string pg_MessageFile[_NbConfigurations];
-#endif
-
-////////////////////////////////////////////////////////////////////
-// IMAGE FILES
-////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////
-// image index management for progessive image turnover
-// according to image blend frequency and duration
-// and according to directory size
-#if defined(var_photo_diaporama)
-extern int pg_CurrentDiaporamaFile;
-extern int pg_CurrentDiaporamaDir;
-extern bool ascendingDiaporama;
 #endif
 
 ////////////////////////////////////////////////////////////////////
@@ -277,17 +235,12 @@ extern float BG_b;
 void remove_files_in_dir(std::string *dirpath);
 
 // ONLY FOR TERRAINS VAGUES
-#if defined(TVW)
-std::string *nextFileIndexDiskLoop(std::string *dirpath, int *currentDirIndex, int *currentFileIndex);
-string * nextFileIndexDiskNoLoop(string *dirpath, int *currentDirIndex, int *currentFileIndex, 
-	int maxFilesPerFolder);
-#endif
 // FUNCTIONS FOR TESTING SUBDIR FILES (MADE FOR SAMPLES AND IMAGES)
 //bool is_substring_index(char * charstr, int ind);
 //bool is_subdir_index(struct dirent *dirp, std::string *dirpath, int inddir);
 //bool is_subfile_index(struct dirent *dirp, std::string *dirpath, int indfile);
 //string * is_subdir_subfile_index(std::string *dirpath, int *inddir, int *indfile);
-int nextFileIndexMemoryLoop(int currentDirIndex, int *currentFileIndex, bool ascending);
+void nextFileIndexMemoryLoop(bool ascending);
 
 // TEXTURE INITIALIZATION
 bool pg_loadAllTextures( void );
@@ -368,29 +321,20 @@ void* pg_movieLoop(void * lpParam);
 // TEXTURE BUFFER MANAGEMENT
 #if defined(var_photo_diaporama)
 void diaporama_random(void);
-void pg_launch_diaporama(void);
+void diaporama_slide(int slideNo);
+void pg_launch_diaporama(int slideNo);
 bool pg_update_diaporama(void);
 #endif
 
 #if defined(var_CATable)
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);
 #endif
-
-#if defined(TVW)
-// TEXTURE BUFFER MANAGEMENT
-bool update_image_buffer_swapping(void);
-int available_swap_image_buffer(int indInitialImage);
-int available_random_swap_image_buffer(int indOpposedCenter);
-bool pg_swap_image(int indcomprImage);
 #endif
 
-bool  pg_ReadInitalImageTexturesTVW(int ind_dir, int nbImages, int nbFolders, int maxFilesPerFolder);
-
-
-#endif
-
-void pg_AddDirectoryToDiaporamas(int* indCompressedImage, int* indCompressedImageDirs, bool* valRet, int indConfiguration, fs::directory_entry dir_entry);
-void  pg_initDiaporamas(void);
-bool pg_addNewDiaporamas(int current_config);
-bool  pg_loadAllDiaporamas(void);
-bool  pg_ReadInitalClipFramesTextures(void);
+void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_entry);
+void pg_AddFilesToDiaporamas(int indConfiguration, fs::directory_entry dir_entry);
+void pg_initDiaporamas(void);
+bool pg_addNewDiaporamas(int current_config, bool with_trace);
+bool pg_reloadAllDiaporamas(int currentConfig, bool with_trace);
+bool pg_loadAllDiaporamas(void);
+bool pg_ReadInitalClipFramesTextures(void);

@@ -1921,7 +1921,7 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	}
 
 #if defined(_PG_IMAGE_TEXT)
-	pg_CurrentDiaporamaDir = -1;
+	photo_diaporama = -1;
 	DisplayTextFirstInChapter[indChapter] = NbDisplayTexts;
 	NbTextChapters = indChapter;
 	std::cout << "Loaded texts #" << NbDisplayTexts << " in chapters #" << NbTextChapters << "\n";

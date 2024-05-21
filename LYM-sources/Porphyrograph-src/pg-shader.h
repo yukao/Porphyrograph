@@ -26,9 +26,6 @@
 #ifndef PG_SHADER_H
 #define PG_SHADER_H
 
-#ifdef TVW
-#include "pg_shader_header_TVW.h"
-#endif
 #ifdef CRITON
 #include "pg_shader_header_Criton.h"
 #endif
@@ -168,7 +165,7 @@ extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres[_
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 extern GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY[_NbConfigurations];
 #endif
-#if defined(var_photo_diaporama) || defined(TVW)
+#if defined(var_photo_diaporama)
 extern GLint uniform_Update_fs_4fv_photo01_wh[_NbConfigurations];
 #endif
 #if defined(var_photo_diaporama)
@@ -293,37 +290,9 @@ extern GLint uniform_Mixing_texture_fs_Trk2[_NbConfigurations];  // ping-pong tr
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Mixing_texture_fs_Trk3[_NbConfigurations];  // ping-pong track 3 (FBO)
 #endif
-#if defined(TVW)
-extern GLint uniform_Mixing_texture_fs_Display_Font[_NbConfigurations];  // message Font
-extern GLint uniform_Mixing_texture_fs_Display_Message1[_NbConfigurations]; // tweets at the bottom of the screen
-extern GLint uniform_Mixing_texture_fs_Display_Message2[_NbConfigurations]; // tweets at the bottom of the screen
-#endif
 extern GLint uniform_Mixing_texture_fs_Render_prec[_NbConfigurations];  // preceding snapshot
 extern GLint uniform_Mixing_texture_fs_Screen_Font[_NbConfigurations];  // message Font
 extern GLint uniform_Mixing_texture_fs_Screen_Message[_NbConfigurations];  // message string
-#if defined(TVW)
-extern GLint uniform_Update_fs_4fv_weights03[_NbConfigurations];
-extern GLint uniform_Update_fs_2fv_weights45[_NbConfigurations];
-extern GLint uniform_Update_fs_3fv_alphaSwap02[_NbConfigurations];
-extern GLint uniform_Update_fs_3fv_alphaSwap35[_NbConfigurations];
-extern GLint uniform_Update_fs_4fv_image_noisesxy[_NbConfigurations];
-extern GLint uniform_Update_fs_4fv_mask_noisesxy[_NbConfigurations];
-
-extern GLint uniform_Update_texture_fs_TVWPixels0[_NbConfigurations];  // image buffer #0
-extern GLint uniform_Update_texture_fs_TVWPixels1[_NbConfigurations];  // image buffer #1
-extern GLint uniform_Update_texture_fs_TVWPixels2[_NbConfigurations];  // image buffer #2
-extern GLint uniform_Update_texture_fs_TVWPixels3[_NbConfigurations];  // image buffer #3
-extern GLint uniform_Update_texture_fs_TVWPixels4[_NbConfigurations];  // image buffer #4
-extern GLint uniform_Update_texture_fs_TVWPixels5[_NbConfigurations];  // image buffer #5
-extern GLint uniform_Update_texture_fs_TVWMask02[_NbConfigurations];  // image mask #0
-extern GLint uniform_Update_texture_fs_TVWMask35[_NbConfigurations];  // image mask #1
-extern GLint uniform_Update_texture_fs_TVWPixelsSwap0[_NbConfigurations];  // buffer swap image #0
-extern GLint uniform_Update_texture_fs_TVWPixelsSwap1[_NbConfigurations];  // buffer swap image #1 
-extern GLint uniform_Update_texture_fs_TVWPixelsSwap2[_NbConfigurations];  // buffer swap image #2 
-extern GLint uniform_Update_texture_fs_TVWPixelsSwap3[_NbConfigurations];  // buffer swap image #3 
-extern GLint uniform_Update_texture_fs_TVWPixelsSwap4[_NbConfigurations];  // buffer swap image #4 
-extern GLint uniform_Update_texture_fs_TVWPixelsSwap5[_NbConfigurations];  // buffer swap image #5 
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // MASTER SHADER
@@ -332,9 +301,6 @@ extern GLint uniform_Master_vp_model[_NbConfigurations];
 extern GLint uniform_Master_vp_view[_NbConfigurations];
 extern GLint uniform_Master_vp_proj[_NbConfigurations];
 extern GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift[_NbConfigurations];
-#if defined(TVW)
-extern GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart[_NbConfigurations];
-#endif
 extern GLint uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen[_NbConfigurations];
 //extern GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey[_NbConfigurations];
 //extern GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene[_NbConfigurations];

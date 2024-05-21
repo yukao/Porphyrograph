@@ -397,9 +397,6 @@ void pg_logCurrentLineSceneVariables(string fileName);
 void pg_logFirstLineSceneVariables(void);
 void PlayTrack(int trackNo, double timeFromStart);
 void StopTrack(void);
-#if defined(TVW)
-float starting_time(float elapsed_time_from_start);
-#endif
 void pg_launch_performance(int ind_scene);
 void pg_update_scenario(void);
 void updateXYKeystonePad(void);

@@ -20,9 +20,6 @@
 
 #include "pg-all_include.h"
 
-#ifdef TVW
-#include "pg_script_body_TVW.cpp"
-#endif
 #ifdef CRITON
 #include "pg_script_body_Criton.cpp"
 #endif
@@ -581,7 +578,9 @@ enum pg_OSC_addresses_hashMap_IDs
 	_repopPart_BW,
 	_pressure_onOff,
 	_diaporama_add_dirs,
+	_reload_all_diaporamas,
 	_diaporama_random,
+	_diaporama_slide,
 	_diaporama_plus,
 	_diaporama_minus,
 	_flash_photo_diaporama,
@@ -863,7 +862,9 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "repopPart_BW", _repopPart_BW },
 	{ "pressure_onOff", _pressure_onOff },
 	{ "diaporama_add_dirs", _diaporama_add_dirs },
+	{ "reload_all_diaporamas", _reload_all_diaporamas },
 	{ "diaporama_random", _diaporama_random },
+	{ "diaporama_slide", _diaporama_slide },
 	{ "diaporama_plus", _diaporama_plus },
 	{ "diaporama_minus", _diaporama_minus },
 	{ "flash_photo_diaporama", _flash_photo_diaporama },
@@ -2972,19 +2973,19 @@ void extern_movieNo_callBack(pg_Parameter_Input_Type param_input_type, ScenarioV
 void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		//printf("photo_diaporama_callBack %d\n", scenario_or_gui_command_value);
-		if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0 && scenario_or_gui_command_value >= 0 && scenario_or_gui_command_value != pg_CurrentDiaporamaDir) {
-			pg_CurrentDiaporamaDir = int(scenario_or_gui_command_value) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-			//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+		if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0 && scenario_or_gui_command_value >= 0) {
+			photo_diaporama = int(scenario_or_gui_command_value) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+			//printf("new photo_diaporama %d\n", photo_diaporama);
+			sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-			pg_launch_diaporama();
+			pg_launch_diaporama(0);
 		}
 		else if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0 && scenario_or_gui_command_value < 0) {
-			pg_CurrentDiaporamaDir = -1;
-			//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+			photo_diaporama = -1;
+			//printf("photo_diaporama %d\n", photo_diaporama);
+			sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 			pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-			pg_launch_diaporama();
+			pg_launch_diaporama(0);
 		}
 		// do nothing / no images to display
 		else {
@@ -4450,125 +4451,6 @@ void updateXYKeystonePad(void) {
 #endif
 
 
-#if defined(TVW)
-int SubScenesDiaporamaDir(int currentScene) {
-	switch (currentScene) {
-	case 0:
-			return 0;
-			break;
-		case 1:
-			return 0;
-			break;
-		case 2://letsgo
-			return 0;
-			break;
-		case 3://phoneclear
-			return 7;
-			break;
-		case 4://phonedark
-			return 9;
-			break;
-		case 5://palestine_in
-			return 11;
-			break;
-		case 6://palestine
-			return 11;
-			break;
-		case 7://gbagbo_in
-			return 13;
-			break;
-		case 8://gbagbo
-			return 13;
-			break;
-		case 9://armee
-			return 17;
-			break;
-		case 10://armee_flash
-			return 22;
-			break;
-		case 11://SoE
-			return 23;
-			break;
-		case 12://Master
-			return 23;
-			break;
-		default:
-			return 23;
-			break;
-}}
-void pg_update_visual_and_text_chapters(bool new_scene) {
-	// all scenes except first and last
-	// the first scene is not special in case of relaunch
-	if ((pg_CurrentSceneIndex > 0 || pg_NbScenes[pg_current_configuration_rank] < 13) && (pg_CurrentSceneIndex < pg_NbScenes[pg_current_configuration_rank] - 1)) {
-		int old_pg_CurrentDiaporamaDir = pg_CurrentDiaporamaDir;
-		if (new_scene) {
-			pg_CurrentDiaporamaDir = SubScenesDiaporamaDir(pg_CurrentSceneIndex);
-		}
-		else if(pg_CurrentScene) {
-			// possible text and visual scene advance
-			float elapsed_time_from_start = pg_CurrentClockTime - InitialScenarioTime;
-
-			pg_CurrentDiaporamaDir
-				= (int(elapsed_time_from_start - pg_CurrentScene->scene_initial_time) / 60)
-				+ SubScenesDiaporamaDir(pg_CurrentSceneIndex);
-		}
-		if (pg_CurrentDiaporamaDir >= pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
-			pg_CurrentDiaporamaDir = pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1;
-		}
-		if (old_pg_CurrentDiaporamaDir != pg_CurrentDiaporamaDir) {
-			// IMAGE CHOICE AND SWAP INIT
-			// sets the directory for images
-			// the first scene starts with 6 preloaded images
-			if (pg_CurrentDiaporamaDir == 0)
-				pg_CurrentDiaporamaFile = 6;
-			else
-				pg_CurrentDiaporamaFile = 0;
-			// printf("scene / diaporama dir %d %d\n", pg_CurrentSceneIndex, pg_CurrentDiaporamaDir);
-
-			// TEXT CHOICE AND SWAP INIT
-			// sets the index for messages
-			// initialization (first message to be displayed)
-			if (DisplayText1Front) {
-				IndDisplayText2 = DisplayTextFirstInChapter[pg_CurrentDiaporamaDir];
-				LengthDisplayText2 = (float)pg_displayMessage_update(2);
-				IndDisplayText1 = DisplayTextFirstInChapter[pg_CurrentDiaporamaDir] + 1;
-				LengthDisplayText1 = (float)pg_displayMessage_update(1);
-				DisplayText1Front = false;
-				DisplayText1Alpha = 1.0f;
-				DisplayText2Alpha = 0.0f;
-			}
-			else {
-				IndDisplayText1 = DisplayTextFirstInChapter[pg_CurrentDiaporamaDir];
-				LengthDisplayText1 = (float)pg_displayMessage_update(1);
-				IndDisplayText2 = DisplayTextFirstInChapter[pg_CurrentDiaporamaDir] + 1;
-				LengthDisplayText2 = (float)pg_displayMessage_update(2);
-				DisplayText1Front = true;
-				DisplayText1Alpha = 0.0f;
-				DisplayText2Alpha = 1.0f;
-			}
-			DisplayTextSwapInitialTime = pg_CurrentClockTime;
-			//printf("New text DisplayText1Front %d index 1/2 %d/%d dir %d dir size %d\n", int(DisplayText1Front), IndDisplayText1, IndDisplayText2, pg_CurrentDiaporamaDir, DisplayTextFirstInChapter[pg_CurrentDiaporamaDir]);
-		}
-
-		// sets the start index for available image layer to the first layer
-		if (new_scene) {
-			pg_IndInitialSwapPhoto = 0;
-		}
-
-		if (pg_CurrentDiaporamaDir >= pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
-			pg_CurrentDiaporamaDir = pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1;
-		}
-	}
-	else {
-		// no visuals / no tweets
-		IndDisplayText1 = -1;
-		IndDisplayText1 = -1;
-		DisplayText1Alpha = 0.0f;
-		DisplayText2Alpha = 0.0f;
-	}
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////////
 // BEGINNING OF A NEW SCENE: INITIALIZATION OF TIMES AND DURATIONS, AND VARIABLE VALUES
 
@@ -4783,35 +4665,8 @@ void StartNewScene(int ind_scene, double delta_time) {
 		flashPhotoTrk_nbFrames = 0;
 	}
 #endif
-
-#if defined(TVW)
-	// updates image and text directories
-	pg_update_visual_and_text_chapters(true);
-#endif
 }
 
-#if defined(TVW)
-float starting_time(float elapsed_time_from_start) {
-	if (pg_NbScenes[pg_current_configuration_rank] == 13) {
-		if (elapsed_time_from_start > pg_Scenario[pg_current_configuration_rank][2].scene_initial_time ) {
-			return pg_Scenario[pg_current_configuration_rank][2].scene_initial_time;
-		}
-		else {
-			return 0.f;
-		}
-	}
-	else if (pg_NbScenes[pg_current_configuration_rank] == 11) { // relaunch 6mn
-		return -360.f;
-	}
-	else if (pg_NbScenes[pg_current_configuration_rank] == 7) { // relaunch 12
-		return -720.f;
-	}
-	else if (pg_NbScenes[pg_current_configuration_rank] == 4) { // relaunch 20
-		return -1200.f;
-	}
-	return 0.f;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 // UPDATE OF A CURRENT SCENE: UPDATE OF VARIABLE VALUES ACCORDING TO INTERPOLATIONS
@@ -5062,9 +4917,6 @@ void pg_run_callBacks(void) {
 void pg_update_scenario(void) {
 	// printf("VideoPb Update scenario \n");
 
-#if defined(TVW)
-	pg_update_visual_and_text_chapters(false);
-#endif
 	// the current scene is not the interpolation scene between two scenes
 	if (pg_CurrentScene) {
 		if (pg_CurrentScene != &pg_InterpolationScene) {
@@ -5495,14 +5347,9 @@ void setup_plus(int incay) {
 		pg_launch_performance(0);
 	}
 	else {
-		if (incay + pg_CurrentSceneIndex < pg_NbScenes[pg_current_configuration_rank]) {
-			//printf("new scene %d\n", incay + pg_CurrentSceneIndex);
-			StartNewScene(incay + pg_CurrentSceneIndex, 0);
-		}
-		else if (pg_CurrentSceneIndex != pg_NbScenes[pg_current_configuration_rank] - 1) {
-			//printf("last scene %d\n", pg_NbScenes[pg_current_configuration_rank] - 1);
-			StartNewScene(pg_NbScenes[pg_current_configuration_rank] - 1, 0);
-		}
+		int new_scene = (incay + pg_CurrentSceneIndex) % pg_NbScenes[pg_current_configuration_rank];
+		//printf("new scene %d\n", incay + pg_CurrentSceneIndex);
+		StartNewScene(new_scene, 0);
 	}
 }
 
@@ -5986,12 +5833,12 @@ void pg_flash_control(bool (*control_function)(int)) {
 				int new_dir = -1;
 				do {
 					new_dir = int(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-				} while (cnt++ < 10 && (new_dir == pg_CurrentDiaporamaDir || new_dir == 0)); // 0 is Fatima hand
-				pg_CurrentDiaporamaDir = new_dir;
-				//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-				sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+				} while (cnt++ < 10 && (new_dir == photo_diaporama || new_dir == 0)); // 0 is Fatima hand
+				photo_diaporama = new_dir;
+				//printf("photo_diaporama %d\n", photo_diaporama);
+				sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				pg_launch_diaporama();
+				pg_launch_diaporama(0);
 			}
 		}
 	}
@@ -6017,7 +5864,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 				}
 				// first n paths selects the next permutation
 				if (var_Argenteuil_flashchange_diaporama_pass < pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1) {
-					pg_CurrentDiaporamaDir = imageRanksPermutation[var_Argenteuil_flashchange_diaporama_pass];
+					photo_diaporama = imageRanksPermutation[var_Argenteuil_flashchange_diaporama_pass];
 				}
 				else {
 					// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -6028,14 +5875,14 @@ void pg_flash_control(bool (*control_function)(int)) {
 					int new_dir = -1;
 					do {
 						new_dir = int(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-					} while (cnt++ < 10 && (new_dir == pg_CurrentDiaporamaDir || new_dir == 0)); // 0 is Fatima hand
-					pg_CurrentDiaporamaDir = new_dir;
+					} while (cnt++ < 10 && (new_dir == photo_diaporama || new_dir == 0)); // 0 is Fatima hand
+					photo_diaporama = new_dir;
 				}
 
-				//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-				sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+				//printf("photo_diaporama %d\n", photo_diaporama);
+				sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				pg_launch_diaporama();
+				pg_launch_diaporama(0);
 
 				// next pass
 				var_Argenteuil_flashchange_diaporama_pass++;
@@ -6176,59 +6023,12 @@ void ReceiveBeat(void) {
 			}
 
 			// random selection and loopiing
-			pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir + int(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-			//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
+			photo_diaporama = (photo_diaporama + int(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+			//printf("photo_diaporama %d\n", photo_diaporama);
 
-			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+			sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			pg_launch_diaporama();
-		}
-	}
-#endif
-
-#if defined(TVW)
-	// updates display messages according to text_swap_freq (4)
-	// for a swap duration of message_swap_duration
-	if (AbsoluteInitialScenarioTime != InitialRealTime - 1000000.f
-		&& pg_CurrentDiaporamaDir != -1
-		&& (pg_BeatNo % PG_LOOP_SIZE / 2 == 0)) {
-		//printf("DisplayText1Front %d index 1/2 %d/%d dir %d dir size %d/%d\n", int(DisplayText1Front), IndDisplayText1, IndDisplayText2, pg_CurrentDiaporamaDir, DisplayTextFirstInChapter[pg_CurrentDiaporamaDir], DisplayTextFirstInChapter[pg_CurrentDiaporamaDir + 1]);
-		if (DisplayText1Front) {
-			IndDisplayText2 = (IndDisplayText2 + 2);
-			if (IndDisplayText2 > DisplayTextFirstInChapter[pg_CurrentDiaporamaDir + 1]) {
-				IndDisplayText2 -= (DisplayTextFirstInChapter[pg_CurrentDiaporamaDir + 1] - DisplayTextFirstInChapter[pg_CurrentDiaporamaDir]);
-			}
-			DisplayText1Front = false;
-			LengthDisplayText2 = (float)pg_displayMessage_update(2);
-			DisplayText1Alpha = 1.0f;
-			DisplayText2Alpha = 0.0f;
-		}
-		else {
-			IndDisplayText1 = (IndDisplayText1 + 2);
-			if (IndDisplayText1 > DisplayTextFirstInChapter[pg_CurrentDiaporamaDir + 1]) {
-				IndDisplayText1 -= (DisplayTextFirstInChapter[pg_CurrentDiaporamaDir + 1] - DisplayTextFirstInChapter[pg_CurrentDiaporamaDir]);
-			}
-			DisplayText1Front = true;
-			LengthDisplayText1 = (float)pg_displayMessage_update(1);
-			DisplayText1Alpha = 0.0f;
-			DisplayText2Alpha = 1.0f;
-		}
-		DisplayTextSwapInitialTime = pg_CurrentClockTime;
-	}
-
-	// updates display images according to image_swap_freq
-	// for a swap duration of image_swap_duration
-	// printf("image_swap_freq %d pg_BeatNo %d \n",image_swap_freq,pg_BeatNo);
-	if (AbsoluteInitialScenarioTime != InitialRealTime - 1000000.f
-		&& pg_CurrentDiaporamaDir != -1
-		// && image_swap_freq > 0
-		&& ((pg_CurrentClockTime - LastImageSwap) >= photo_diaporama_plateau)) {
-		int nextCompressedImage;
-		if ((nextCompressedImage
-			= nextFileIndexMemoryLoop(pg_CurrentDiaporamaDir,
-				&pg_CurrentDiaporamaFile, true)) != NULL_ID) {
-			if (pg_swap_image(nextCompressedImage)) {
-			}
+			pg_launch_diaporama(0);
 		}
 	}
 #endif
@@ -6316,9 +6116,9 @@ void pg_Make_flashPhoto(void) {
 	//photo_scale = rand_0_1 * 0.5f + 0.5f;
 	//photo_offsetX = rand_0_1 * 1.5f - 0.5f;
 	//photo_offsetY = rand_0_1 * 1.5f - 0.5f;
-	// pg_CurrentDiaporamaDir = int(floor(9 + rand_0_1 * 14.9));
-	pg_CurrentDiaporamaDir = int(floor(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-	pg_launch_diaporama();
+	// photo_diaporama = int(floor(9 + rand_0_1 * 14.9));
+	photo_diaporama = int(floor(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+	pg_launch_diaporama(0);
 	//printf("flashPhotoTrk_weight %.3f decay %.2f threshold %.3f\n",
 	//	flashPhotoTrk_weight, flashPhotoTrk_decay, flashPhotoTrk_threshold);
 }
@@ -6856,18 +6656,18 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			if (photo_diaporama < 0 && nb_photo_albums > 0) {
 				photo_diaporama = 0;
 			}
-			pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir + 1) % (pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1);
-			printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-			if (pg_CurrentDiaporamaDir == 2 || pg_CurrentDiaporamaDir == 9 || pg_CurrentDiaporamaDir == 11 || pg_CurrentDiaporamaDir == 16) {
+			photo_diaporama = (photo_diaporama + 1) % (pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1);
+			printf("photo_diaporama %d\n", photo_diaporama);
+			if (photo_diaporama == 2 || photo_diaporama == 9 || photo_diaporama == 11 || photo_diaporama == 16) {
 				master_scale_pulse = 0.15f;
 			}
 			else {
 				master_scale_pulse = 0.f;
 			}
 			*((float*)ScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
-			sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+			sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			pg_launch_diaporama();
+			pg_launch_diaporama(0);
 		}
 		break;
 #endif
@@ -8178,13 +7978,25 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #if defined(var_photo_diaporama)
 	case _diaporama_add_dirs: {
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
-			pg_addNewDiaporamas(pg_current_configuration_rank);
+			pg_addNewDiaporamas(pg_current_configuration_rank, true);
+		}
+		break;
+	}
+	case _reload_all_diaporamas: {
+		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+			pg_reloadAllDiaporamas(pg_current_configuration_rank, true);
 		}
 		break;
 	}
 	case _diaporama_random: {
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
 			diaporama_random();
+		}
+		break;
+	}
+	case _diaporama_slide: {
+		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+			diaporama_slide(int(float_arguments[0]));
 		}
 		break;
 	}
@@ -8195,11 +8007,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				if (photo_diaporama < 0 && nb_photo_albums[pg_current_configuration_rank] > 0) {
 					photo_diaporama = 0;
 				}
-				pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir + 1) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-				//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-				sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+				photo_diaporama = (photo_diaporama + 1) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+				printf("photo_diaporama %d\n", photo_diaporama);
+				sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				pg_launch_diaporama();
+				pg_launch_diaporama(0);
 			}
 		}
 		break;
@@ -8207,11 +8019,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _diaporama_minus: {
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
-				pg_CurrentDiaporamaDir = (pg_CurrentDiaporamaDir - 1 + pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-				//printf("pg_CurrentDiaporamaDir %d\n", pg_CurrentDiaporamaDir);
-				sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir);
+				photo_diaporama = (photo_diaporama - 1 + pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+				printf("photo_diaporama %d\n", photo_diaporama);
+				sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				pg_launch_diaporama();
+				pg_launch_diaporama(0);
 			}
 		}
 		break;
@@ -8219,12 +8031,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _flash_photo_diaporama: {
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0 && float_arguments[0] >= 0) {
-				pg_CurrentDiaporamaDir = int(float_arguments[0]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+				photo_diaporama = int(float_arguments[0]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
 				pg_CurrentDiaporamaEnd = float_arguments[1] + pg_CurrentClockTime;
 				photoWeight = 1.f;
 				printf("flash_photo_diaporama %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], pg_FrameNo);
-				sprintf(AuxString, "/diaporama_shortName %03d", pg_CurrentDiaporamaDir); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				pg_launch_diaporama();
+				sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+				pg_launch_diaporama(0);
 			}
 		}
 		break;

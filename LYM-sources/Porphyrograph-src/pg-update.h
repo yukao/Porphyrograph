@@ -48,9 +48,6 @@ extern GLuint pg_screenMessageBitmap_texID; // nb_attachments=1
 extern GLubyte *pg_screenMessageBitmap;
 
 extern GLuint Screen_Font_texture_Rectangle_texID;
-#if defined(TVW)
-extern GLuint Display_Font_texture_Rectangle_texID;
-#endif
 
 #ifdef PG_WITH_MASTER_MASK
 extern GLuint Master_Mask_texID[_NbConfigurations];
@@ -79,32 +76,6 @@ extern std::vector<GLuint> pg_pixel_acc_texID[_NbConfigurations];
 
 #if defined(var_sensor_layout)
 extern GLuint Sensor_texture_rectangle[_NbConfigurations];
-#endif
-
-#if defined(TVW)
-#define   PG_NB_DISPLAY_MESSAGES 3500
-
-////////////////////////////////////////////////////////////////
-// textures bitmaps and associated IDs
-extern GLuint pg_Display_Message1_Bitmap_texID;
-extern GLubyte *pg_displayMsg1Bitmap;
-extern GLuint pg_Display_Message2_Bitmap_texID;
-extern GLubyte *pg_displayMsg2Bitmap;
-
-////////////////////////////////////////
-// large messages displayed on the bottom of the screen
-extern string DisplayText1;
-extern float DisplayText1Alpha;
-extern float LengthDisplayText1;
-extern int IndDisplayText1;
-
-extern string DisplayText2;
-extern float DisplayText2Alpha;
-extern float LengthDisplayText2;
-extern int IndDisplayText2;
-
-extern bool DisplayText1Front;
-extern float DisplayTextSwapInitialTime;
 #endif
 
 extern std::string* DisplayTextList;
@@ -624,7 +595,6 @@ extern int nb_pen_brushes[_NbConfigurations];
 // textures with multiple layers
 extern int nb_layers_master_mask[_NbConfigurations];
 
-extern bool is_capture_diaporama;
 #if defined(var_cameraCaptFreq)
 extern VideoCapture pg_webCam_capture;
 extern VideoCapture* pg_IPCam_capture;

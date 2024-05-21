@@ -46,10 +46,6 @@ string					 snapshots_dir_path_prefix;
 string					 snapshots_dir_path_name;
 string					 screen_font_file_name;
 int                      screen_font_size;
-#if defined(TVW)
-string					 display_font_file_name;
-int                      display_font_size;
-#endif
 string                   font_file_encoding;
 TextureEncoding          font_texture_encoding;
 
@@ -1019,10 +1015,6 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	if (indConfiguration == 0) {
 		screen_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
 		screen_font_size = 15;
-#if defined(TVW)
-		display_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_25_usascii.png";
-		display_font_size = 25;
-#endif
 		font_file_encoding = "png";
 		font_texture_encoding = PNG;
 
@@ -1285,31 +1277,6 @@ void ParseScenarioClipsAndPhotos(std::ifstream& scenarioFin, int indConfiguratio
 		}
 		//std::cout << "Photo album directory: " << pg_ImageDirectory[indConfiguration] << std::endl;
 	}
-
-#if defined(TVW)
-	else {
-		pg_ImageDirectory[indConfiguration] = "captures";
-		std::cout << "Using capture images" << std::endl;
-	}
-	pg_MaskDirectory[indConfiguration] = "Data/" + project_name + "-data/";
-	if (nb_photo_albums > 1) {
-		pg_MaskDirectory[indConfiguration] += photoAlbumDirName[1];
-	}
-	else {
-		pg_MaskDirectory[indConfiguration] += "masks/";
-	}
-	std::cout << "Loading masks from " << pg_MaskDirectory << std::endl;
-	pg_MessageDirectory[indConfiguration] = "Data/" + project_name + "-data/";
-	if (nb_photo_albums > 2) {
-		pg_MessageDirectory[indConfiguration] += photoAlbumDirName[2];
-	}
-	else {
-		pg_MessageDirectory[indConfiguration] += "messages/";
-	}
-	std::cout << "Loading messages from " << pg_MessageDirectory[indConfiguration] << std::endl;
-#endif
-
-
 
 	// /photos
 	std::getline(scenarioFin, line);

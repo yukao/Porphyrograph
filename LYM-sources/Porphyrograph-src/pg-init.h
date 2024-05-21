@@ -78,11 +78,6 @@ enum pg_FBO_Mixing_samplers
 	pg_Render_prec_FBO_Mixing_sampler,
 	pg_Screen_Font_FBO_Mixing_sampler,
 	pg_Screen_Message_FBO_Mixing_sampler,
-#if defined(TVW)
-	pg_Display_Font_FBO_Mixing_sampler,
-	pg_Display_Message1_FBO_Mixing_sampler,
-	pg_Display_Message2_FBO_Mixing_sampler,
-#endif
 	pg_Trk0_FBO_Mixing_sampler,
 	pg_Trk1_FBO_Mixing_sampler,
 	pg_Trk2_FBO_Mixing_sampler,
@@ -372,7 +367,7 @@ bool pg_initFBOTextures(GLuint* textureID, int nb_attachments, bool with_stencil
 void pg_initRenderingMatrices(void);
 
 void pg_screenMessage_update(void);
-#if defined(TVW) || defined(var_moving_messages)
+#if defined(var_moving_messages)
 bool pg_ReadAllDisplayMessages(string dir, string basefilename);
 int pg_displayMessage_update(int indMesg);
 #endif

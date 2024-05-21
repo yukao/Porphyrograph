@@ -24,9 +24,6 @@
  */
 
 #include "pg-all_include.h"
-#ifdef TVW
-#include "pg_shader_body_decl_TVW.cpp"
-#endif
 #ifdef CRITON
 #include "pg_shader_body_decl_Criton.cpp"
 #endif
@@ -143,7 +140,7 @@ GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres[_NbConfi
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY[_NbConfigurations] = {-1};
 #endif
-#if defined(var_photo_diaporama) || defined(TVW)
+#if defined(var_photo_diaporama)
 GLint uniform_Update_fs_4fv_photo01_wh[_NbConfigurations] = {-1};
 #endif
 #if defined(var_photo_diaporama)
@@ -205,29 +202,6 @@ GLint uniform_Update_texture_fs_Clip0[_NbConfigurations] = {-1};  // clip[0]
 GLint uniform_Update_texture_fs_Clip1[_NbConfigurations] = {-1};  // clip[1]
 #if defined(var_part_initialization) 
 GLint uniform_Update_texture_fs_Part_render[_NbConfigurations] = {-1};  // FBO capture of particle rendering used for flashing layers with particles
-#endif
-#if defined(TVW)
-GLint uniform_Update_fs_4fv_weights03[_NbConfigurations] = {-1};
-GLint uniform_Update_fs_2fv_weights45[_NbConfigurations] = {-1};
-GLint uniform_Update_fs_3fv_alphaSwap02[_NbConfigurations] = {-1};
-GLint uniform_Update_fs_3fv_alphaSwap35[_NbConfigurations] = {-1};
-GLint uniform_Update_fs_4fv_image_noisesxy[_NbConfigurations] = {-1};
-GLint uniform_Update_fs_4fv_mask_noisesxy[_NbConfigurations] = {-1};
-
-GLint uniform_Update_texture_fs_TVWPixels0[_NbConfigurations] = {-1};  // image buffer #0
-GLint uniform_Update_texture_fs_TVWPixels1[_NbConfigurations] = {-1};  // image buffer #1
-GLint uniform_Update_texture_fs_TVWPixels2[_NbConfigurations] = {-1};  // image buffer #2
-GLint uniform_Update_texture_fs_TVWPixels3[_NbConfigurations] = {-1};  // image buffer #3
-GLint uniform_Update_texture_fs_TVWPixels4[_NbConfigurations] = {-1};  // image buffer #4
-GLint uniform_Update_texture_fs_TVWPixels5[_NbConfigurations] = {-1};  // image buffer #5
-GLint uniform_Update_texture_fs_TVWMask02[_NbConfigurations] = {-1};  // image mask #0
-GLint uniform_Update_texture_fs_TVWMask35[_NbConfigurations] = {-1};  // image mask #1
-GLint uniform_Update_texture_fs_TVWPixelsSwap0[_NbConfigurations] = {-1};  // buffer swap image #0
-GLint uniform_Update_texture_fs_TVWPixelsSwap1[_NbConfigurations] = {-1};  // buffer swap image #1 
-GLint uniform_Update_texture_fs_TVWPixelsSwap2[_NbConfigurations] = {-1};  // buffer swap image #2 
-GLint uniform_Update_texture_fs_TVWPixelsSwap3[_NbConfigurations] = {-1};  // buffer swap image #3 
-GLint uniform_Update_texture_fs_TVWPixelsSwap4[_NbConfigurations] = {-1};  // buffer swap image #4 
-GLint uniform_Update_texture_fs_TVWPixelsSwap5[_NbConfigurations] = {-1};  // buffer swap image #5 
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -292,11 +266,6 @@ GLint uniform_Mixing_texture_fs_Trk3[_NbConfigurations] = {-1};  // ping-pong tr
 GLint uniform_Mixing_texture_fs_Render_prec[_NbConfigurations] = {-1};  // preceding snapshot
 GLint uniform_Mixing_texture_fs_Screen_Font[_NbConfigurations] = {-1};  // message Font
 GLint uniform_Mixing_texture_fs_Screen_Message[_NbConfigurations] = {-1};  // message string
-#if defined(TVW)
-GLint uniform_Mixing_texture_fs_Display_Font[_NbConfigurations] = {-1};  // display Font
-GLint uniform_Mixing_texture_fs_Display_Message1[_NbConfigurations] = {-1}; // tweets at the bottom of the screen
-GLint uniform_Mixing_texture_fs_Display_Message2[_NbConfigurations] = {-1}; // tweets at the bottom of the screen
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // MASTER SHADER
@@ -305,9 +274,6 @@ GLint uniform_Master_vp_model[_NbConfigurations] = {-1};
 GLint uniform_Master_vp_view[_NbConfigurations] = {-1};
 GLint uniform_Master_vp_proj[_NbConfigurations] = {-1};
 GLint uniform_Master_fs_4fv_xy_frameno_pulsedShift[_NbConfigurations] = {-1};
-#if defined(TVW)
-GLint uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart[_NbConfigurations] = {-1};
-#endif
 GLint uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen[_NbConfigurations] = {-1};
 //GLint uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey[_NbConfigurations] = {-1};
 //GLint uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene[_NbConfigurations] = {-1};
@@ -603,9 +569,6 @@ void pg_loadAllShaders(void) {
 	////////////////////////////////////////
 	// binding and allocating tables in shaders
 
-#ifdef TVW
-#include "pg_shader_body_bind_TVW.cpp"
-#endif
 #ifdef CRITON
 #include "pg_shader_body_bind_Criton.cpp"
 #endif
@@ -733,7 +696,7 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY, "uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY", _pg_shader_Update);
 		}
 #endif
-#if defined(var_photo_diaporama) || defined(TVW)
+#if defined(var_photo_diaporama) 
 		if (ScenarioVarConfigurations[_photo_diaporama][indConfig]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01_wh, "uniform_Update_fs_4fv_photo01_wh", _pg_shader_Update);
 		}
@@ -825,31 +788,6 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Part_render, "uniform_Update_texture_fs_Part_render", _pg_shader_Update);  // particle rendering capture
 		}
 #endif
-#if defined(TVW)
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_weights03, "uniform_Update_fs_4fv_weights03", _pg_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_weights45, "uniform_Update_fs_2fv_weights45", _pg_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_alphaSwap02, "uniform_Update_fs_3fv_alphaSwap02", _pg_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_alphaSwap35, "uniform_Update_fs_3fv_alphaSwap35", _pg_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_image_noisesxy, "uniform_Update_fs_4fv_image_noisesxy", _pg_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_mask_noisesxy, "uniform_Update_fs_4fv_mask_noisesxy", _pg_shader_Update);
-
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixels0, "uniform_Update_texture_fs_TVWPixels0", _pg_shader_Update);  // image buffer #0
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixels1, "uniform_Update_texture_fs_TVWPixels1", _pg_shader_Update);  // image buffer #1
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixels2, "uniform_Update_texture_fs_TVWPixels2", _pg_shader_Update);  // image buffer #2
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixels3, "uniform_Update_texture_fs_TVWPixels3", _pg_shader_Update);  // image buffer #3
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixels4, "uniform_Update_texture_fs_TVWPixels4", _pg_shader_Update);  // image buffer #4
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixels5, "uniform_Update_texture_fs_TVWPixels5", _pg_shader_Update);  // image buffer #5
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWMask02, "uniform_Update_texture_fs_TVWMask02", _pg_shader_Update);  // image mask #0
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWMask35, "uniform_Update_texture_fs_TVWMask35", _pg_shader_Update);  // image mask #1
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixelsSwap0, "uniform_Update_texture_fs_TVWPixelsSwap0", _pg_shader_Update);  // buffer swap image #0
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixelsSwap1, "uniform_Update_texture_fs_TVWPixelsSwap1", _pg_shader_Update);  // buffer swap image #1
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixelsSwap2, "uniform_Update_texture_fs_TVWPixelsSwap2", _pg_shader_Update);  // buffer swap image #2
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixelsSwap3, "uniform_Update_texture_fs_TVWPixelsSwap3", _pg_shader_Update);  // buffer swap image #3
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixelsSwap4, "uniform_Update_texture_fs_TVWPixelsSwap4", _pg_shader_Update);  // buffer swap image #4
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_TVWPixelsSwap5, "uniform_Update_texture_fs_TVWPixelsSwap5", _pg_shader_Update);  // buffer swap image #5
-#endif
-
-
 
 		////////////////////////////////////////////////////////////////////////////////
 		// PARTICLE RENDERING SHADER parameters bindings
@@ -921,11 +859,6 @@ void pg_loadAllShaders(void) {
 #if PG_NB_TRACKS >= 4
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Trk3, "uniform_Mixing_texture_fs_Trk3", _pg_shader_Mixing);  // ping-pong track 3 (FBO)
 #endif
-#if defined(TVW)
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Display_Font, "uniform_Mixing_texture_fs_Display_Font", _pg_shader_Mixing);  // message Font
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Display_Message1, "uniform_Mixing_texture_fs_Display_Message1", _pg_shader_Mixing);  // tweets at the bottom of the screen
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Display_Message2, "uniform_Mixing_texture_fs_Display_Message2", _pg_shader_Mixing);  // tweets at the bottom of the screen
-#endif
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Render_prec, "uniform_Mixing_texture_fs_Render_prec", _pg_shader_Mixing);  // preceding snapshot for echo
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Screen_Font, "uniform_Mixing_texture_fs_Screen_Font", _pg_shader_Mixing);  // message Font
@@ -938,9 +871,6 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_vp_view, "vp_viewMatrix", _pg_shader_Master);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_vp_proj, "vp_projMatrix", _pg_shader_Master);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_4fv_xy_frameno_pulsedShift, "uniform_Master_fs_4fv_xy_frameno_pulsedShift", _pg_shader_Master);
-#if defined(TVW)
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart, "uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart", _pg_shader_Master);
-#endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen, "uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen", _pg_shader_Master);
 
 		//pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey, "uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey", _pg_shader_Master);

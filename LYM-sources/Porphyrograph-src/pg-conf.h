@@ -139,10 +139,6 @@ extern string					pg_csv_file_name;
 extern string					snapshots_dir_path_name;
 extern string					screen_font_file_name;
 extern int                      screen_font_size;
-#if defined(TVW)
-extern string					display_font_file_name;
-extern int                      display_font_size;
-#endif
 
 // nb configuration and scenario files
 extern string *pg_ConfigurationFileNames;

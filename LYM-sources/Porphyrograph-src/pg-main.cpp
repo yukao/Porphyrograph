@@ -326,15 +326,8 @@ int main(int argcMain, char **argvMain) {
 	pg_displaySceneVariables();
 
 	// LOADS DIAPORAMA
-#if defined(TVW)
-	// loads the texture buffer of the initial images and masks
-	// pg_ReadInitalImageTexturesTVW(0, 2130, 28, -1);
-	// pg_ReadInitalImageTexturesTVW(0, 200, 28, -1);
-	pg_ReadInitalImageTexturesTVW(0, -1, -1, 15);
-#else
 	pg_initDiaporamas();
 	pg_loadAllDiaporamas();
-#endif
 #if defined(var_clipCaptFreq)
 	pg_ReadInitalClipFramesTextures();
 #endif
@@ -534,15 +527,6 @@ void  pg_init_screen_message( void ) {
   LastScreenMessageDecayTime = pg_CurrentClockTime;
 }
 
-#if defined(TVW)
-void  pg_init_display_message(void) {
-	// screen message initialization
-	pg_CurrentDiaporamaDir = -1;
-	DisplayText1Alpha = 0.0f;
-	DisplayText2Alpha = 0.0f;
-}
-#endif
-
 void OpenGLInit( void ) {
   // background color
   glClearColor (OpenGLBGColor[0], OpenGLBGColor[1], OpenGLBGColor[2], OpenGLBGColor[3]);
@@ -615,13 +599,6 @@ void pg_init_scene(void) {
 #if defined(var_moving_messages)
 	// reads the text messages in the text file
 	pg_ReadAllDisplayMessages(pg_MessageDirectory[pg_current_configuration_rank], pg_MessageFile[pg_current_configuration_rank]);
-#endif
-
-#if defined(TVW)
-	// reads the text messages in the text file
-	pg_ReadAllDisplayMessages(pg_MessageDirectory, "message_list.txt");
-	// ------ display message initialization  ------------- //
-	pg_init_display_message();
 #endif
 	
 #if defined(var_Novak_flight_on)
@@ -1096,27 +1073,6 @@ void window_idle_browse(int step) {
 		// printf( "Window %s\n" , CurrentWindow->id );
 		pg_screenMessage_update();
 
-#if defined(TVW)
-		// updates message alpha
-		// only for the terrain vagues scenes
-		if (pg_CurrentSceneIndex > 0 && pg_CurrentSceneIndex < pg_NbScenes[pg_current_configuration_rank] - 1) {
-			if (DisplayText1Front) {
-				// increase text1 alpha up to 1 and text2 alpha down to 0 (cross fading text2 -> text1) according to text_swap_duration (1)
-				DisplayText1Alpha = std::min(1.0f, (pg_CurrentClockTime - DisplayTextSwapInitialTime));
-				DisplayText2Alpha = 1.0f - DisplayText1Alpha;
-			}
-			else {
-				// increase text2 alpha up to 1 and text1 alpha down to 0 (cross fading text1 -> text2)
-				DisplayText2Alpha = std::min(1.0f, (pg_CurrentClockTime - DisplayTextSwapInitialTime));
-				DisplayText1Alpha = 1.0f - DisplayText2Alpha;
-			}
-			// printf("display text alpha %.2f %.2f front1 (true/false) %d\n", DisplayText1Alpha, DisplayText2Alpha, int(DisplayText1Front));
-
-			// updates image swapping
-			update_image_buffer_swapping();
-		}
-#endif
-
 #ifdef CRITON
 		if (MAX_OSC_ARGUMENTS < 3 * 8) {
 			std::cout << "Error: unsufficient MAX_OSC_ARGUMENTS value for processing fftLevel8 command!" << std::endl;
@@ -1126,7 +1082,7 @@ void window_idle_browse(int step) {
 
 #if defined(var_photo_diaporama)
 		// updates diaporama
-		if (pg_CurrentDiaporamaDir >= 0 && pg_CurrentDiaporamaDir < pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
+		if (photo_diaporama >= 0 && photo_diaporama < pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
 			// printf("pg_update_diaporama\n");
 			pg_update_diaporama();
 		}

@@ -258,9 +258,6 @@ GLubyte *pg_CATable = NULL;
 #endif
 
 GLuint Screen_Font_texture_Rectangle_texID = { NULL_ID };
-#if defined(TVW)
-GLuint Display_Font_texture_Rectangle_texID[_NbConfigurations] = { NULL_ID };
-#endif
 
 #if !defined(PG_BEZIER_PATHS) || defined(CORE)
 GLuint Pen_texture_3D_texID[_NbConfigurations] = { NULL_ID };
@@ -273,34 +270,6 @@ std::vector<GLuint>  pg_RepopDensity_texture_texID[_NbConfigurations];
 #ifdef PG_WITH_MASTER_MASK
 GLuint Master_Mask_texID[_NbConfigurations] = { NULL_ID };
 GLuint Master_Multilayer_Mask_texID[_NbConfigurations] = { NULL_ID };
-#endif
-
-#if defined(TVW)
-/////////////////////////////////////////////////////////////////
-// Image distribution
-float centralPhoto = 0;
-#define PG_MASK_VARIANCE 291
-
-/////////////////////////////////////////////////////////////////
-// textures bitmaps and associated IDs
-GLuint pg_Display_Message1_Bitmap_texID = NULL_ID;
-GLubyte *pg_displayMsg1Bitmap = NULL;
-GLuint pg_Display_Message2_Bitmap_texID = NULL_ID;
-GLubyte *pg_displayMsg2Bitmap = NULL;
-
-// large messages displayed on the bottom of the screen
-string DisplayText1;
-float DisplayText1Alpha = 0.0f;
-float LengthDisplayText1 = 0.0f;
-int IndDisplayText1 = -1;
-
-string DisplayText2;
-float DisplayText2Alpha = 0.0f;
-float LengthDisplayText2 = 0.0f;
-int IndDisplayText2 = -1;
-
-bool DisplayText1Front = true;
-float DisplayTextSwapInitialTime = 0;
 #endif
 
 std::string* DisplayTextList;
@@ -417,7 +386,6 @@ string pen_brushes_fileName[_NbConfigurations];
 int nb_pen_brushes[_NbConfigurations] = {0};
 // textures with multiple layers
 int nb_layers_master_mask[_NbConfigurations] = {0};
-bool is_capture_diaporama = false;
 #if defined(var_cameraCaptFreq)
 VideoCapture  pg_webCam_capture;
 VideoCapture* pg_IPCam_capture;
@@ -1641,11 +1609,11 @@ void pg_automatic_var_reset_or_update(void) {
 
 #if defined(var_photo_diaporama)
 	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
-		if (pg_CurrentDiaporamaDir >= 0 && pg_CurrentDiaporamaEnd > 0) {
+		if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
 			if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
 				printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
 				pg_CurrentDiaporamaEnd = -1;
-				pg_CurrentDiaporamaDir = -1;
+				photo_diaporama = -1;
 				photoWeight = 0.f;
 				sprintf(AuxString, "/diaporama_shortName ---"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			}
@@ -1951,9 +1919,6 @@ void pg_update_shader_uniforms(void) {
 }
 
 void pg_update_shader_var_data(void) {
-#ifdef TVW
-#include "pg_update_body_TVW.cpp"
-#endif
 #ifdef CRITON
 #include "pg_update_body_Criton.cpp"
 #endif
@@ -2049,26 +2014,6 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	}
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo[pg_current_configuration_rank],
 		(GLfloat)workingWindow_width, (GLfloat)window_height, (GLfloat)selected_channel, GLfloat(pg_ParticleTargetFrameNo));
-#endif
-
-	// pen paths positions
-#if defined(TVW)
-	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
-	// the center of the screen is the default position for this track
-	if (part_path_repulse_1 || part_path_follow_1) {
-		paths_x[1] = float(workingWindow_width / 2);
-		paths_y[1] = float(window_height / 2);
-	}
-	// special case for army radar: track 2 is assigned as repop path but is not replayed
-	// the center of the top left screen is the default position for this track
-	else if (part_path_repop_2 || part_path_repulse_2) {
-		paths_x[2] = float(workingWindow_width / 4);
-		paths_y[2] = float(window_height / 4);
-		float randval = float(randomValue * 2 * PI);
-		float radius = randomValue;
-		paths_x_prev[2] = float(workingWindow_width / 4 + 2 * radius * cos(randval));
-		paths_y_prev[2] = float(window_height / 4 + 2 * radius * sin(randval));
-	}
 #endif
 
 	// pen paths positions
@@ -2422,17 +2367,10 @@ void pg_update_shader_Update_uniforms(void) {
 	// clear layer, flash pixel, flash CA -> Part
 	glUniform3f(uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres[pg_current_configuration_rank],
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
-	// photo size 
-#if defined(TVW)
-	glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_current_configuration_rank],
-		(GLfloat)pg_Photo_buffer_data[0]->w, (GLfloat)pg_Photo_buffer_data[0]->h,
-		(GLfloat)pg_Photo_buffer_data[1]->w, (GLfloat)pg_Photo_buffer_data[1]->h);
-#endif
-
 	// photo rendering
 #if defined(var_photo_diaporama)
 	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
-		if (pg_CurrentDiaporamaDir >= 0) {
+		if (photo_diaporama >= 0) {
 			glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_current_configuration_rank],
 				workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
 				workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
@@ -2444,8 +2382,9 @@ void pg_update_shader_Update_uniforms(void) {
 				pg_Photo_weight[0], pg_Photo_weight[1], rand_0_1, rand_0_1);
 			//glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
 			//	0.f, 1.f, rand_0_1, rand_0_1);
-			//printf("photo weight %.2f %.2f\n",
-			//	pg_Photo_weight[0], pg_Photo_weight[1]);
+			//printf("photo weight %.2f %.2f phot index %d %d\n", pg_Photo_weight[0], pg_Photo_weight[1],
+			//	pg_Photo_swap_buffer_data[0].indSwappedPhoto,
+			//	pg_Photo_swap_buffer_data[1].indSwappedPhoto);
 		}
 		else {
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
@@ -2456,7 +2395,8 @@ void pg_update_shader_Update_uniforms(void) {
 #endif
 	// clip rendering
 #if defined(var_clip_mix)
-	if (ScenarioVarConfigurations[_clip_mix][pg_current_configuration_rank]) {
+	if (ScenarioVarConfigurations[_clip_mix][pg_current_configuration_rank]
+		&& photo_diaporama < 0) {
 		// clip weights 
 #if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 		if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]) {
@@ -2559,62 +2499,6 @@ void pg_update_shader_Update_uniforms(void) {
 			(GLfloat)pg_camera_frame_width, (GLfloat)pg_camera_frame_height);
 		//printf("Update shader camera frame size %dx%d offset %dx%d\n", pg_camera_frame_width, pg_camera_frame_height, pg_camera_x_offset, pg_camera_y_offset);
 	}
-#endif
-
-#if defined(TVW)
-	// image buffer layer weights
-	centralPhoto += photoJitterAmpl * fabs(rand_0_1 - 0.5f);
-	while (centralPhoto < 0) centralPhoto += PG_PHOTO_NB_TEXTURES;
-	while (centralPhoto >= PG_PHOTO_NB_TEXTURES) centralPhoto -= PG_PHOTO_NB_TEXTURES;
-	// float images_weights_variance = 10.0;
-	float dist[PG_PHOTO_NB_TEXTURES];
-	for (int ind = 0; ind < PG_PHOTO_NB_TEXTURES; ind++) {
-		//// the new value obtained by a gaussian around the central standard value
-		dist[ind]
-			= std::min(std::min(fabs(ind - centralPhoto),
-				fabs(ind + PG_PHOTO_NB_TEXTURES - centralPhoto)),
-				fabs(ind - PG_PHOTO_NB_TEXTURES - centralPhoto));
-		pg_Photo_weightTVW[ind]
-			= std::max(0.f, 0.2f * (exp(-(dist[ind] * dist[ind]) / PG_MASK_VARIANCE) - 0.5f));
-		// std value variance 36.f
-		pg_Photo_weightTVW[ind] = .35f;
-	}
-	//printf("weights %.1f %.1f %.1f %.1f %.1f %.1f \n", pg_Photo_weightTVW[0], pg_Photo_weightTVW[1], pg_Photo_weightTVW[2], pg_Photo_weightTVW[3], pg_Photo_weightTVW[4], pg_Photo_weightTVW[5]);
-
-
-	glUniform4fv(uniform_Update_fs_4fv_weights03[pg_current_configuration_rank], 1, pg_Photo_weightTVW);
-	glUniform2fv(uniform_Update_fs_2fv_weights45[pg_current_configuration_rank], 1, pg_Photo_weightTVW + 4);
-
-	// interpolation weight between image buffer swap buffer in each la
-	glUniform3fv(uniform_Update_fs_3fv_alphaSwap02[pg_current_configuration_rank], 1, pg_Photo_alphaSwap02);
-	glUniform3fv(uniform_Update_fs_3fv_alphaSwap35[pg_current_configuration_rank], 1, pg_Photo_alphaSwap35);
-	//printf("swap coefs %.1f %.1f %.1f %.1f %.1f %.1f \n", pg_Photo_alphaSwap02[0], pg_Photo_alphaSwap02[1], pg_Photo_alphaSwap02[2], pg_Photo_alphaSwap35[0], pg_Photo_alphaSwap35[1], pg_Photo_alphaSwap35[2]);
-	//for (int ind = 0; ind < 3; ind++) {
-	// pg_Photo_alphaSwap02[ind] += 0.001f;
-	// pg_Photo_alphaSwap35[ind] += 0.001f;
-	//}
-	// printf("Jitter %.2f %.2f\n" ,maskJitterAmpl ,maskJitterPhase ); 
-	// image buffer layer and masks coordinate offsets
-	for (int ind = 0; ind < PG_PHOTO_NB_TEXTURES * 2; ind++) {
-		float imageCoordOffest = photoJitterAmpl * (rand_0_1 - 0.5f);
-		float maskCoordOffest = maskJitterAmpl * (rand_0_1 - 0.5f);
-		if (pg_Photo_position_noises[ind] + imageCoordOffest < 2.f
-			&& pg_Photo_position_noises[ind] + imageCoordOffest > -2.f) {
-			pg_Photo_position_noises[ind] += imageCoordOffest;
-		}
-		else {
-			pg_Photo_position_noises[ind] -= imageCoordOffest;
-		}
-		if (pg_Photo_mask_position_noises[ind] + maskCoordOffest < 2.f
-			&& pg_Photo_mask_position_noises[ind] + maskCoordOffest > -2.f) {
-			pg_Photo_mask_position_noises[ind] += maskCoordOffest;
-		}
-		else {
-			pg_Photo_mask_position_noises[ind] -= maskCoordOffest;
-		}
-	}
-	glUniform4fv(uniform_Update_fs_4fv_image_noisesxy[pg_current_configuration_rank], 3, pg_Photo_position_noises);
-	glUniform4fv(uniform_Update_fs_4fv_mask_noisesxy[pg_current_configuration_rank], 3, pg_Photo_mask_position_noises);
 #endif
 
 #if defined(var_slow_track_translation)
@@ -2815,19 +2699,6 @@ void pg_update_shader_ParticleRender_uniforms(void) {
 	}
 #endif
 #endif
-
-#if defined(TVW)
-	// special case for army explosion: track 1 is assigned as repulse or follow path but is not replayed
-	// the center of the screen is the default position for this track
-	if (part_path_repulse_1 || part_path_follow_1) {
-		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], float(workingWindow_width / 2), float(window_height / 2));
-	}
-	// special case for army radar: track 2 is assigned as repop path but is not replayed
-	// the center of the top left screen is the default position for this track
-	else if (part_path_repop_2 || part_path_repulse_2) {
-		glUniform2f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], float(workingWindow_width / 4), float(window_height / 4));
-	}
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2854,16 +2725,9 @@ void pg_update_shader_Mixing_uniforms(void) {
 #endif
 
 		// TEXT TRANSPARENCY
-#if defined(TVW)
 		glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha[pg_current_configuration_rank],
 			messageTransparency,
-			(GLfloat)DisplayText1Alpha, (GLfloat)DisplayText2Alpha);
-#else
-		glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha[pg_current_configuration_rank],
-			messageTransparency,
-			(GLfloat)1.f, (GLfloat)0.f);
-#endif
-	}
+			(GLfloat)1.f, (GLfloat)0.f);	}
 	// printOglError(512);
 	/*
 	if (pg_ConfigurationFrameNo % 1000 == 0) {
@@ -2894,22 +2758,12 @@ void pg_update_shader_Master_uniforms(void) {
 			//	(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
 
 
-#if defined(TVW)
-		int rightWindowVMargin = 0;
-		if (double_window && window_width > 1920) {
-			rightWindowVMargin = (window_width - 2 * workingWindow_width) / 2;
-		}
-		// screen size
-		glUniform4f(uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart[pg_current_configuration_rank],
-			(GLfloat)workingWindow_width, (GLfloat)window_height, GLfloat(rightWindowVMargin),
-			GLfloat(pg_CurrentClockTime - InitialScenarioTime));
-#else
 		// screen size
 		//printf("time from start %.2f\n", GLfloat(pg_CurrentClockTime - InitialScenarioTime));
 		glUniform4f(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen[pg_current_configuration_rank],
 			(GLfloat)workingWindow_width, (GLfloat)window_height, GLfloat(pg_CurrentClockTime - InitialScenarioTime),
 			(GLfloat)muteRightScreen);
-#endif
+
 		// printf("mobile cursor %d\n", (mobile_cursor ? 1 : 0));
 		glUniform2i(uniform_Master_fs_2iv_mobile_cursor_currentScene[pg_current_configuration_rank], (mobile_cursor ? 1 : 0), pg_CurrentSceneIndex);
 #if defined(var_Caverne_BackColor)
@@ -3281,23 +3135,6 @@ void pg_UpdatePass(void) {
 	}
 #endif
 
-#if defined(TVW)
-	glUniform1i(uniform_Update_texture_fs_TVWPixels0[pg_current_configuration_rank], pg_TVWPixels0);
-	glUniform1i(uniform_Update_texture_fs_TVWPixels1[pg_current_configuration_rank], pg_TVWPixels1);
-	glUniform1i(uniform_Update_texture_fs_TVWPixels2[pg_current_configuration_rank], pg_TVWPixels2);
-	glUniform1i(uniform_Update_texture_fs_TVWPixels3[pg_current_configuration_rank], pg_TVWPixels3);
-	glUniform1i(uniform_Update_texture_fs_TVWPixels4[pg_current_configuration_rank], pg_TVWPixels4);
-	glUniform1i(uniform_Update_texture_fs_TVWPixels5[pg_current_configuration_rank], pg_TVWPixels5);
-	glUniform1i(uniform_Update_texture_fs_TVWMask02[pg_current_configuration_rank], pg_TVWMask02);
-	glUniform1i(uniform_Update_texture_fs_TVWMask35[pg_current_configuration_rank], pg_TVWMask35);
-	glUniform1i(uniform_Update_texture_fs_TVWPixelsSwap0[pg_current_configuration_rank], pg_TVWPixelsSwap0);
-	glUniform1i(uniform_Update_texture_fs_TVWPixelsSwap1[pg_current_configuration_rank], pg_TVWPixelsSwap1);
-	glUniform1i(uniform_Update_texture_fs_TVWPixelsSwap2[pg_current_configuration_rank], pg_TVWPixelsSwap2);
-	glUniform1i(uniform_Update_texture_fs_TVWPixelsSwap3[pg_current_configuration_rank], pg_TVWPixelsSwap3);
-	glUniform1i(uniform_Update_texture_fs_TVWPixelsSwap4[pg_current_configuration_rank], pg_TVWPixelsSwap4);
-	glUniform1i(uniform_Update_texture_fs_TVWPixelsSwap5[pg_current_configuration_rank], pg_TVWPixelsSwap5);
-#endif
-
 	glUniform1i(uniform_Update_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Update_sampler);
@@ -3412,36 +3249,26 @@ void pg_UpdatePass(void) {
 	}
 	else 
 #endif
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
-		&& pg_Photo_buffer_data 
-		&& pg_nbCompressedImages[pg_current_configuration_rank] >= 2
-		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto >= 0
-		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto < pg_nbCompressedImages[pg_current_configuration_rank]) {
-		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[pg_current_configuration_rank][pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_2D, NULL_ID);
-	}
+		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
+			&& photo_diaporama >= 0
+			&& photo_diaporama < int(pg_compressedImageData[pg_current_configuration_rank].size())
+			&& pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size() > 0
+			&& pg_Photo_swap_buffer_data[0].indSwappedPhoto >= 0
+			&& pg_Photo_swap_buffer_data[0].indSwappedPhoto < int(pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size())) {
+			//printf("diapo %d tex buf1 ID %d\n", photo_diaporama, pg_compressedImageData[pg_current_configuration_rank][photo_diaporama][pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
+			glBindTexture(GL_TEXTURE_2D, pg_compressedImageData[pg_current_configuration_rank][photo_diaporama][pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_2D, NULL_ID);
+		}
 #endif
 
 #if defined(var_photo_diaporama)
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_Update_sampler);
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
-		&& pg_Photo_buffer_data 
-		&& pg_nbCompressedImages[pg_current_configuration_rank] >= 2
-		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto >= 0
-		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto < pg_nbCompressedImages[pg_current_configuration_rank]) {
-		glBindTexture(GL_TEXTURE_2D, pg_Photo_buffer_data[pg_current_configuration_rank][pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_2D, NULL_ID);
-	}
-#endif
 #if defined(var_clipCaptFreq)
-	// photo[1] texture
-	glActiveTexture(GL_TEXTURE0 + pg_Photo1_Update_sampler);
-	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
+	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
+		&& ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
 		&& playing_clipNoRight >= 0
 		&& playing_clipNoRight < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoRight]
@@ -3451,9 +3278,20 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_current_configuration_rank][pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoRight]
 			+ pg_clip_status[_clipRight].get_lastFrame(0)]->texBuffID);
 	}
-	else {
-		glBindTexture(GL_TEXTURE_2D, NULL_ID);
-	}
+	else
+#endif
+		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
+			&& photo_diaporama >= 0
+			&& photo_diaporama < int(pg_compressedImageData[pg_current_configuration_rank].size())
+			&& pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size() > 0
+			&& pg_Photo_swap_buffer_data[1].indSwappedPhoto >= 0
+			&& pg_Photo_swap_buffer_data[1].indSwappedPhoto < int(pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size())) {
+			//printf("diapo %d tex buf2 ID %d\n", photo_diaporama, pg_compressedImageData[pg_current_configuration_rank][photo_diaporama][pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
+			glBindTexture(GL_TEXTURE_2D, pg_compressedImageData[pg_current_configuration_rank][photo_diaporama][pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_2D, NULL_ID);
+		}
 #endif
 
 #if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
@@ -3501,76 +3339,6 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
 #endif
-
-#if defined(TVW)
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels0);
-	glBindTexture(GL_TEXTURE_2D, 
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID);
-	// image buffer texture #1
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels1);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indOldPhoto]->texBuffID);
-	// image buffer texture #2
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels2);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indOldPhoto]->texBuffID);
-	// image buffer texture #3
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels3);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indOldPhoto]->texBuffID);
-	// image buffer texture #4
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels4);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indOldPhoto]->texBuffID);
-	// image buffer texture #5
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixels5);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indOldPhoto]->texBuffID);
-	// image buffer mask #0
-	glActiveTexture(GL_TEXTURE0 + pg_TVWMask02);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Photo_mask_buffer_data[pg_current_configuration_rank][0].texBuffID);
-	// image buffer mask #1
-	glActiveTexture(GL_TEXTURE0 + pg_TVWMask35);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Photo_mask_buffer_data[pg_current_configuration_rank][1].texBuffID);
-	// buffer swap image #0
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap0);
-	glBindTexture(GL_TEXTURE_2D, 
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID);
-	// buffer swap image #1
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap1);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID);
-	// buffer swap image #2
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap2);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indSwappedPhoto]->texBuffID);
-	// buffer swap image #3
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap3);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indSwappedPhoto]->texBuffID);
-	// buffer swap image #4
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap4);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indSwappedPhoto]->texBuffID);
-	// buffer swap image #5
-	glActiveTexture(GL_TEXTURE0 + pg_TVWPixelsSwap5);
-	glBindTexture(GL_TEXTURE_2D,
-		pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indSwappedPhoto]->texBuffID);
-#endif
-
-	//printf("texID %02d/%02d %02d/%02d %02d/%02d %02d/%02d %02d/%02d %02d/%02d\n",
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[0].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[1].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[2].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[3].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[4].indSwappedPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indOldPhoto]->texBuffID,
-		//pg_Photo_buffer_data[pg_Photo_swap_buffer_data[5].indSwappedPhoto]->texBuffID);
 
 	// 2-cycle ping-pong BG track step n (FBO attachment 5) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Update_sampler);
@@ -3631,8 +3399,6 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
 #endif
-
-	// printf("photo IDs %d %d\n", pg_Photo_buffer_data[0].texBuffID, pg_Photo_buffer_data[1].texBuffID);
 
 	// draw points from the currently bound VAO with current in-use shader
 	// glDrawArrays (GL_TRIANGLES, 0, 3 * PG_SIZE_QUAD_ARRAY);
@@ -3886,11 +3652,6 @@ void pg_MixingPass(void) {
 
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Font[pg_current_configuration_rank], pg_Screen_Font_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Message[pg_current_configuration_rank], pg_Screen_Message_FBO_Mixing_sampler);
-#if defined(TVW)
-	glUniform1i(uniform_Mixing_texture_fs_Display_Font[pg_current_configuration_rank], pg_Display_Font_FBO_Mixing_sampler);
-	glUniform1i(uniform_Mixing_texture_fs_Display_Message1[pg_current_configuration_rank], pg_Display_Message1_FBO_Mixing_sampler);
-	glUniform1i(uniform_Mixing_texture_fs_Display_Message2[pg_current_configuration_rank], pg_Display_Message2_FBO_Mixing_sampler);
-#endif
 	glUniform1i(uniform_Mixing_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Mixing_sampler);
 #if PG_NB_TRACKS >= 2
 	glUniform1i(uniform_Mixing_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Mixing_sampler);
@@ -3933,21 +3694,6 @@ void pg_MixingPass(void) {
 	// message offsets texture
 	glActiveTexture(GL_TEXTURE0 + pg_Screen_Message_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_screenMessageBitmap_texID);
-
-#if defined(TVW)
-	// display font texture
-	glActiveTexture(GL_TEXTURE0 + pg_Display_Font_FBO_Mixing_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, Display_Font_texture_Rectangle_texID);
-
-	// tweets display message offsets texture
-	glActiveTexture(GL_TEXTURE0 + pg_Display_Message1_FBO_Mixing_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Display_Message1_Bitmap_texID);
-
-	// tweets display message offsets texture
-	glActiveTexture(GL_TEXTURE0 + pg_Display_Message2_FBO_Mixing_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_Display_Message2_Bitmap_texID);
-#endif
-
 
 	// 2-cycle ping-pong track 0 (FBO attachment 3) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Mixing_sampler);

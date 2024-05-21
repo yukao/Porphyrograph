@@ -224,7 +224,7 @@ using std::ifstream;
 #endif
 
 
-#if defined(TVW) || defined(CRITON) || defined(LIGHT)
+#if defined(CRITON) || defined(LIGHT)
 // NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
 #define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
 #elif defined(CORE)
@@ -290,7 +290,7 @@ using std::ifstream;
 #define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
-#if defined(TVW) || defined(CORE)
+#if defined(CORE)
 #define TEXTURED_QUAD_PARTICLES
 #elif defined(DASEIN)
 #define CURVE_PARTICLES
@@ -360,9 +360,6 @@ using std::ifstream;
 	#include <GLUT/glut.h>
 #endif // __APPLE_CC__
 
-#if defined(TVW)
-#include "pg_script_header_TVW.h"
-#endif
 #if defined(CRITON)
 #include "pg_script_header_Criton.h"
 #endif

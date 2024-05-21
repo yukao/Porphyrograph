@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>./Projects/configuration/YN_JOP-head-single.csv ./Projects/scenarios/YN_JOP-scenario-v1.csv</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>./Projects/configuration/YN_AteliersDu5-head-single.csv ./Projects/scenarios/YN_AteliersDu5-scenario-v1.csv</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>..\..\LYM-projects</LocalDebuggerWorkingDirectory>
   </PropertyGroup>

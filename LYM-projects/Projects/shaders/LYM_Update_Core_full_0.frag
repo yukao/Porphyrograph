@@ -395,6 +395,12 @@ vec4 randomCA2;
 float repop_density_weight = 1;
 vec3 textureDensityValue = vec3(0);
 
+///////////////////////////////////////
+// photo or clip images
+vec3 photoOriginal = vec3( 0.0 );
+vec3 clipOriginal = vec3( 0.0 );
+
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // VARYINGS
@@ -2007,6 +2013,69 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
   return 0.f;
 }
 
+
+#if defined(var_photoSobel)
+// Sobel on photo or clip
+void Sobel(int currentPhotoSource, int currentClipSource, vec2 coordsImageScaled) {
+  if( photoSobel > 0 && ((currentPhotoSource > 0) || (currentClipSource > 0))) {
+    vec3 samplerSobel;
+    // sobel
+    vec3 sobelX = vec3(0.0);
+    vec3 sobelY = vec3(0.0);
+    vec3 samplerClipSobel;
+    // sobel
+    vec3 sobelClipX = vec3(0.0);
+    vec3 sobelClipY = vec3(0.0);
+
+    // samples the center pixel and its Moore neighborhood
+    for( int i = 0 ; i < 9 ; i++ ) {
+      switch(currentPhotoSource) {
+        case 1:
+          samplerSobel = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        case 2:
+          samplerSobel = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        default:
+          break;
+      }
+      switch(currentClipSource) {
+        case 1:
+          samplerClipSobel = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        case 2:
+          samplerClipSobel = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        default:
+          break;
+      }
+      if(i < 8) {
+        sobelX += sobelMatrixX_0[i] * samplerSobel;
+        sobelY += sobelMatrixY_0[i] * samplerSobel;
+        sobelClipX += sobelMatrixX_0[i] * samplerClipSobel;
+        sobelClipY += sobelMatrixY_0[i] * samplerClipSobel;
+      }
+    }
+
+    samplerSobel = photoOriginal;
+    sobelX = mix( samplerSobel , sobelX , photoSobel );
+    sobelY = mix( samplerSobel , sobelY , photoSobel );
+    samplerClipSobel = clipOriginal;
+    sobelClipX = mix( samplerClipSobel , sobelClipX , photoSobel );
+    sobelClipY = mix( samplerClipSobel , sobelClipY , photoSobel );
+
+    vec3 photo_sobel_result = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+    vec3 clip_sobel_result = clamp( sqrt( sobelClipX * sobelClipX + sobelClipY * sobelClipY ) , 0.0 , 1.0 );
+    if(currentPhotoSource > 0) {
+        photoOriginal = photo_sobel_result;
+    }
+    if(currentClipSource > 0) {
+        clipOriginal = clip_sobel_result;
+    }
+  }
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // MAIN OF UPDATE PASS
@@ -2241,8 +2310,6 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  vec3 photoOriginal = vec3( 0.0 );
-  vec3 clipOriginal = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
   vec2 coordsImageScaled = vec2( 0.0 );
   int currentPhotoSource = 0;
@@ -2253,131 +2320,75 @@ void main() {
 #endif
 #if defined(var_photoWeight)
   if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy 
+      + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - vec2(1)) / photo_scale;
     // coordsImageScaled = coordsImage;
     photoOriginal = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled ).rgb;
     // color inversion
+#if defined(var_photoSobel)
+    Sobel(1,-1, coordsImageScaled);
+#endif
 #if defined(var_invertPhoto)
     if( invertPhoto) {
         photoOriginal = vec3(1) - photoOriginal;
     }
 #endif
     photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photoOriginal;
-    currentPhotoSource = 1;
   }
-  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 && decalCoords.x >= width) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
-    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
-    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
-    // coordsImageScaled = coordsImage;
-    photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
-    // color inversion
-#if defined(var_invertPhoto)
-    if( invertPhoto) {
-        photoOriginal = vec3(1) - photoOriginal;
-    }
-#endif
-    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
-    currentPhotoSource = 2;
-  }
-  if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0) {
+  else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - vec2(1)) / photo_scale;
     // coordsImageScaled = coordsImage;
     clipOriginal = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled ).rgb;
     // color inversion
+#if defined(var_photoSobel)
+    Sobel(-1,1, coordsImageScaled);
+#endif
 #if defined(var_invertPhoto)
    if( invertPhoto) {
         clipOriginal = vec3(1) - clipOriginal;
     }
 #endif
     photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clipOriginal;
-    currentClipSource = 1;
   }
-  if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0  && decalCoords.x >= width) {
+
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0) {
+    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw 
+      + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
+    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
+    // coordsImageScaled = coordsImage;
+    photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
+    // color inversion
+#if defined(var_photoSobel)
+    Sobel(2, -1, coordsImageScaled);
+#endif
+#if defined(var_invertPhoto)
+    if( invertPhoto) {
+        photoOriginal = vec3(1) - photoOriginal;
+    }
+#endif
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
+  }
+  else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
     // coordsImageScaled = coordsImage;
     clipOriginal = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled ).rgb;
     // color inversion
+#if defined(var_photoSobel)
+    Sobel(-1, 2, coordsImageScaled);
+#endif
 #if defined(var_invertPhoto)
     if( invertPhoto) {
         clipOriginal = vec3(1) - clipOriginal;
     }
 #endif
     photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clipOriginal;
-    currentClipSource = 2;
-  }
-#endif
-
-#if defined(var_photoSobel)
-  // Sobel on photo
-  if( photoSobel > 0 ) {
-      vec3 samplerSobel;
-      // sobel
-      vec3 sobelX = vec3(0.0);
-      vec3 sobelY = vec3(0.0);
-      vec3 samplerClipSobel;
-      // sobel
-      vec3 sobelClipX = vec3(0.0);
-      vec3 sobelClipY = vec3(0.0);
-
-      // samples the center pixel and its Moore neighborhood
-      for( int i = 0 ; i < 9 ; i++ ) {
-        switch(currentPhotoSource) {
-          case 1:
-            samplerSobel = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-          case 2:
-            samplerSobel = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-        }
-        switch(currentClipSource) {
-          case 1:
-            samplerClipSobel = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-          case 2:
-            samplerClipSobel = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-        }
-        if(i < 8) {
-          sobelX += sobelMatrixX_0[i] * samplerSobel;
-          sobelY += sobelMatrixY_0[i] * samplerSobel;
-          sobelClipX += sobelMatrixX_0[i] * samplerClipSobel;
-          sobelClipY += sobelMatrixY_0[i] * samplerClipSobel;
-        }
-      }
-
-      samplerSobel = photoOriginal;
-      sobelX = mix( samplerSobel , sobelX , photoSobel );
-      sobelY = mix( samplerSobel , sobelY , photoSobel );
-      samplerClipSobel = clipOriginal;
-      sobelClipX = mix( samplerClipSobel , sobelClipX , photoSobel );
-      sobelClipY = mix( samplerClipSobel , sobelClipY , photoSobel );
-
-      vec3 photo_sobel_result = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
-      vec3 clip_sobel_result = clamp( sqrt( sobelClipX * sobelClipX + sobelClipY * sobelClipY ) , 0.0 , 1.0 );
-      photocolor = vec3(0);
-      switch(currentPhotoSource) {
-        case 1:
-          photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photo_sobel_result;
-          break;
-        case 2:
-          photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photo_sobel_result;
-          break;
-      }
-      switch(currentClipSource) {
-        case 1:
-          photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clip_sobel_result;
-          break;
-        case 2:
-          photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clip_sobel_result;
-          break;
-      }
   }
 #endif
 
@@ -2441,6 +2452,7 @@ void main() {
     photocolor *= uniform_Update_fs_3fv_photo_rgb;
   }
 #endif
+  // photocolor = texture(uniform_Update_texture_fs_Photo1, vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * vec2(1920,1080)  ).rgb;
 
   vec3 videocolor = vec3( 0.0 );
 
