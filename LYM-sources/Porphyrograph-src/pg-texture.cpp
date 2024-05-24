@@ -195,77 +195,55 @@ bool pg_loadAllTextures(void) {
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (int indTextureFile = 0; indTextureFile < pg_nb_Texture_files[indConfiguration]; indTextureFile++) {
-			if (pg_Texture_usages[indConfiguration][indTextureFile] != Texture_part_init
-				&& pg_Texture_usages[indConfiguration][indTextureFile] != Texture_part_acc
-				&& pg_Texture_usages[indConfiguration][indTextureFile] != Texture_pixel_acc) {
-				if (pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-					pg_loadTexture2D((char*)(pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile]).c_str(),
-						&pg_Texture_texID[indConfiguration][indTextureFile],
-						pg_Texture_Is_Rectangle[indConfiguration][indTextureFile],
-						pg_Texture_Invert[indConfiguration][indTextureFile],
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage != Texture_part_init
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_usage != Texture_part_acc
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_usage != Texture_pixel_acc) {
+				if (pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+					pg_loadTexture2D(pg_Textures[indConfiguration][indTextureFile],
 						GL_RGBA8, GL_RGBA,
-						GL_UNSIGNED_BYTE, GL_LINEAR,
-						pg_Texture_Size_X[indConfiguration][indTextureFile],
-						pg_Texture_Size_Y[indConfiguration][indTextureFile]);
+						GL_UNSIGNED_BYTE, GL_LINEAR);
 					printOglError(8);
 				}
-				else if (pg_Texture_Dimension[indConfiguration][indTextureFile] == 3) {
-					pg_loadTexture3D(pg_Texture_fileNames[indConfiguration][indTextureFile],
-						pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile],
-						pg_Texture_Nb_Layers[indConfiguration][indTextureFile],
-						pg_Texture_Nb_Bytes_per_Pixel[indConfiguration][indTextureFile],
-						pg_Texture_Invert[indConfiguration][indTextureFile],
-						&pg_Texture_texID[indConfiguration][indTextureFile],
+				else if (pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 3) {
+					pg_loadTexture3D(pg_Textures[indConfiguration][indTextureFile],
 						GL_RGBA8, GL_RGBA,
-						GL_UNSIGNED_BYTE, GL_LINEAR,
-						pg_Texture_Size_X[indConfiguration][indTextureFile],
-						pg_Texture_Size_Y[indConfiguration][indTextureFile]);
+						GL_UNSIGNED_BYTE, GL_LINEAR);
 					printOglError(8);
 				}
 			}
 #if defined(var_part_initialization) 
-			else if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_part_init
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (particle init), ";
-				if (generateParticleInitialPosColorRadiusfromImage(pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile], 
+			else if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_part_init
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				std::cout << pg_Textures[indConfiguration][indTextureFile]->texture_fileName + pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix + " (particle init), ";
+				if (generateParticleInitialPosColorRadiusfromImage(pg_Textures[indConfiguration][indTextureFile]->texture_fileName + pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix, 
 					indConfiguration)) {
-					if (pg_Texture_Rank[indConfiguration][indTextureFile] != pg_particle_initial_pos_speed_texID[indConfiguration].size()
-						|| pg_Texture_Rank[indConfiguration][indTextureFile] != pg_particle_initial_color_radius_texID[indConfiguration].size()) {
-						sprintf(ErrorStr, "Error: particle initialization texture #%lu/%lu rank incorrect (%d rank expected)!\n", pg_particle_initial_pos_speed_texID[indConfiguration].size(), pg_particle_initial_color_radius_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
+					if (pg_Textures[indConfiguration][indTextureFile]->texture_Rank != pg_particle_initial_pos_speed_texID[indConfiguration].size()
+						|| pg_Textures[indConfiguration][indTextureFile]->texture_Rank != pg_particle_initial_color_radius_texID[indConfiguration].size()) {
+						sprintf(ErrorStr, "Error: particle initialization texture #%lu/%lu rank incorrect (%d rank expected)!\n", pg_particle_initial_pos_speed_texID[indConfiguration].size(), pg_particle_initial_color_radius_texID[indConfiguration].size(), pg_Textures[indConfiguration][indTextureFile]->texture_Rank); ReportError(ErrorStr); throw 336;
 					}
 				}
 			}
 #endif
 #if defined(var_part_image_acceleration) 
-			else if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_part_acc
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (particle acc), ";
+			else if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_part_acc
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				std::cout << pg_Textures[indConfiguration][indTextureFile]->texture_fileName + pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix + " (particle acc), ";
 				GLuint textureParticle_acc_ID = NULL_ID;
-				pg_loadTexture2D((char*)(pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile]).c_str(),
-					&textureParticle_acc_ID,
-					pg_Texture_Is_Rectangle[indConfiguration][indTextureFile],
-					pg_Texture_Invert[indConfiguration][indTextureFile],
+				pg_loadTexture2D(pg_Textures[indConfiguration][indTextureFile],
 					GL_RGBA8, GL_RGBA,
-					GL_UNSIGNED_BYTE, GL_LINEAR,
-					pg_Texture_Size_X[indConfiguration][indTextureFile],
-					pg_Texture_Size_Y[indConfiguration][indTextureFile]);
+					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_particle_acc_texID[indConfiguration].push_back(textureParticle_acc_ID);
 			}
 #endif
 #if defined(var_pixel_image_acceleration) 
 			else if (ScenarioVarConfigurations[_pixel_image_acceleration][indConfiguration]
-				&& pg_Texture_usages[indConfiguration][indTextureFile] == Texture_pixel_acc
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (pixel acc), ";
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_pixel_acc
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				std::cout << pg_Textures[indConfiguration][indTextureFile]->texture_fileName + pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix + " (pixel acc), ";
 				GLuint texturePixel_acc_ID = -1;
-				pg_loadTexture2D((char*)(pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile]).c_str(),
-					&texturePixel_acc_ID,
-					pg_Texture_Is_Rectangle[indConfiguration][indTextureFile],
-					pg_Texture_Invert[indConfiguration][indTextureFile],
+				pg_loadTexture2D(pg_Textures[indConfiguration][indTextureFile],
 					GL_RGBA8, GL_RGBA,
-					GL_UNSIGNED_BYTE, GL_LINEAR,
-					pg_Texture_Size_X[indConfiguration][indTextureFile],
-					pg_Texture_Size_Y[indConfiguration][indTextureFile]);
+					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_pixel_acc_texID[indConfiguration].push_back(texturePixel_acc_ID);
 			}
 #endif
@@ -275,39 +253,39 @@ bool pg_loadAllTextures(void) {
 		for (int indTextureFile = 0; indTextureFile < pg_nb_Texture_files[indConfiguration]; indTextureFile++) {
 #if defined(var_sensor_layout)
 			if (ScenarioVarConfigurations[_sensor_layout][indConfiguration]) {
-				if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_sensor
-					&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-					Sensor_texture_rectangle[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
+				if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_sensor
+					&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+					Sensor_texture_rectangle[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 				}
 			}
 #endif
 #ifdef PG_WITH_MASTER_MASK
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_master_mask
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				Master_Mask_texID[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_master_mask
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				Master_Mask_texID[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 			}
-			else if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_multilayer_master_mask
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 3) {
-				Master_Multilayer_Mask_texID[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
+			else if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_multilayer_master_mask
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 3) {
+				Master_Multilayer_Mask_texID[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 			}
 #endif
 #if !defined (PG_BEZIER_PATHS) || defined(CORE)
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_brush
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 3) {
-				Pen_texture_3D_texID[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_brush
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 3) {
+				Pen_texture_3D_texID[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 			}
 #endif
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_noise
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 3) {
-				Noise_texture_3D[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_noise
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 3) {
+				Noise_texture_3D[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 			}
 #if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density) 
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_repop_density
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				pg_RepopDensity_texture_texID[indConfiguration].push_back(pg_Texture_texID[indConfiguration][indTextureFile]);
-				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (repop density), ";
-				if (pg_Texture_Rank[indConfiguration][indTextureFile] != pg_RepopDensity_texture_texID[indConfiguration].size()) {
-					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_repop_density
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				pg_RepopDensity_texture_texID[indConfiguration].push_back(pg_Textures[indConfiguration][indTextureFile]->texture_texID);
+				std::cout << pg_Textures[indConfiguration][indTextureFile]->texture_fileName + pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix + " (repop density), ";
+				if (pg_Textures[indConfiguration][indTextureFile]->texture_Rank != pg_RepopDensity_texture_texID[indConfiguration].size()) {
+					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), pg_Textures[indConfiguration][indTextureFile]->texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
 #endif
@@ -321,29 +299,29 @@ bool pg_loadAllTextures(void) {
 			}
 #endif
 #if defined(var_activeMeshes)
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_mesh
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_mesh
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
 				// assigns this textures to the meshes which have the same texture rank
 				for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files[indConfiguration]; indMeshFile++) {
-					if (pg_Mesh_TextureRank[indConfiguration][indMeshFile] == pg_Texture_Rank[indConfiguration][indTextureFile]) {
-						Mesh_texture_rectangle[indConfiguration][indMeshFile] = pg_Texture_texID[indConfiguration][indTextureFile];
+					if (pg_Mesh_TextureRank[indConfiguration][indMeshFile] == pg_Textures[indConfiguration][indTextureFile]->texture_Rank) {
+						Mesh_texture_rectangle[indConfiguration][indMeshFile] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 					}
 				}
 			}
 #endif
 #ifdef CURVE_PARTICLES
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_curve_particle
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				comet_texture_2D_texID[indConfiguration] = pg_Texture_texID[indConfiguration][indTextureFile];
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_curve_particle
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				comet_texture_2D_texID[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_texID;
 			}
 #endif
 #if defined(TEXTURED_QUAD_PARTICLES)
-			if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_splat_particle
-				&& pg_Texture_Dimension[indConfiguration][indTextureFile] == 2) {
-				blurredDisk_texture_2D_texID[indConfiguration].push_back(pg_Texture_texID[indConfiguration][indTextureFile]);
-				std::cout << pg_Texture_fileNames[indConfiguration][indTextureFile] + pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile] + " (splat), ";
-				if (pg_Texture_Rank[indConfiguration][indTextureFile] != blurredDisk_texture_2D_texID[indConfiguration].size()) {
-					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), pg_Texture_Rank[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 336;
+			if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_splat_particle
+				&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension == 2) {
+				blurredDisk_texture_2D_texID[indConfiguration].push_back(pg_Textures[indConfiguration][indTextureFile]->texture_texID);
+				std::cout << pg_Textures[indConfiguration][indTextureFile]->texture_fileName + pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix + " (splat), ";
+				if (pg_Textures[indConfiguration][indTextureFile]->texture_Rank != blurredDisk_texture_2D_texID[indConfiguration].size()) {
+					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), pg_Textures[indConfiguration][indTextureFile]->texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
 #endif
@@ -402,10 +380,8 @@ bool pg_loadAllTextures(void) {
 			sprintf(ErrorStr, "Error: splat particles texture not provided for configuration %d scenario %s, check texture list with splat_particle usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
 #endif
-
-		pg_loadTexture2D(screen_font_file_name,
-			&Screen_Font_texture_Rectangle_texID, true, false, GL_RGB8, GL_LUMINANCE,
-			GL_UNSIGNED_BYTE, GL_LINEAR, 128, 70);
+		pg_loadTexture2D(&texDataScreenFont, GL_RGB8, GL_LUMINANCE,
+			GL_UNSIGNED_BYTE, GL_LINEAR);
 		printOglError(6);
 
 		//////////////////////////////////////////////////////////////
@@ -596,38 +572,44 @@ void writejpg(cv::String imageFileName) {
 /////////////////////////////////////////////////////////////////
 // NON THREADED TEXTURE LOADING
 /////////////////////////////////////////////////////////////////
+//pg_loadTexture3D(pg_Textures[indConfiguration][indTextureFile]->texture_fileName,
+//pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix,
+//pg_Textures[indConfiguration][indTextureFile]->texture_Nb_Layers,
+//pg_Textures[indConfiguration][indTextureFile]->texture_Nb_Bytes_per_Pixel,
+//pg_Textures[indConfiguration][indTextureFile]->texture_Invert,
+//& pg_Textures[indConfiguration][indTextureFile]->texture_texID,
+//GL_RGBA8, GL_RGBA,
+//GL_UNSIGNED_BYTE, GL_LINEAR,
+//pg_Textures[indConfiguration][indTextureFile]->texture_Size_X,
+//pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y);
 
 // 3D texture loading + transfer to GPU
-bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
-	unsigned int nbTextures, int bytesperpixel,
-	bool invert,
-	GLuint *textureID,
+bool pg_loadTexture3D(pg_TextureData *texData,
 	GLint components, GLenum format,
-	GLenum datatype, GLenum texturefilter,
-	int texture_width, int texture_height) {
+	GLenum datatype, GLenum texturefilter) {
 	// data type is assumed to be GL_UNSIGNED_BYTE
 
-	long size = texture_width * texture_height * bytesperpixel;
-	GLubyte * bitmap = new unsigned char[size * nbTextures];
+	long size = texData->texture_Size_X * texData->texture_Size_Y * texData->texture_Nb_Bytes_per_Pixel;
+	GLubyte * bitmap = new unsigned char[size * texData->texture_Nb_Layers];
 	bool is_image_tiff = false;
 	string fileName;
 
-	fileName = filePrefixName + fileSuffixName;
+	fileName = texData->texture_fileName + texData->texture_fileNameSuffix;
 
-	if (fileSuffixName.compare(0, 4, ".png") == 0) {
+	if (texData->texture_fileNameSuffix.compare(0, 4, ".png") == 0) {
 		is_image_tiff = false;
 	}
-	else if (fileSuffixName.compare(0, 4, ".tif") == 0) {
+	else if (texData->texture_fileNameSuffix.compare(0, 4, ".tif") == 0) {
 		is_image_tiff = true;
 	}
 	else {
-		sprintf(ErrorStr, "Unexpected 3D image extension %s!\n", fileSuffixName.c_str()); ReportError(ErrorStr); throw 425;
+		sprintf(ErrorStr, "Unexpected 3D image extension %s!\n", texData->texture_fileNameSuffix.c_str()); ReportError(ErrorStr); throw 425;
 		return false;
 	}
 
 	glEnable(GL_TEXTURE_3D);
-	if (!(*textureID)) {
-		glGenTextures(1, textureID);
+	if (!(texData->texture_texID)) {
+		glGenTextures(1, &(texData->texture_texID));
 	}
 
 	if (is_image_tiff) {
@@ -637,13 +619,13 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 #else
 		imreadmulti(fileName, pages, cv::IMREAD_UNCHANGED);   // Read the file
 #endif
-		if (pages.size() != nbTextures) {
-			sprintf(ErrorStr, "The number of layers does not match the value in the scenario file %s %lu vs %d!\n", fileName.c_str(), pages.size(), nbTextures); ReportError(ErrorStr); throw 425;
+		if (pages.size() != texData->texture_Nb_Layers) {
+			sprintf(ErrorStr, "The number of layers does not match the value in the scenario file %s %lu vs %d!\n", fileName.c_str(), pages.size(), texData->texture_Nb_Layers); ReportError(ErrorStr); throw 425;
 			return false;
 		}
 		std::cout << fileName + cv::format(" (3D tiff %d ch %lu layers), ", pages.at(0).channels(), pages.size());
 		long ind = 0;
-		for (unsigned int indTex = 0; indTex < nbTextures; indTex++) {
+		for (unsigned int indTex = 0; indTex < texData->texture_Nb_Layers; indTex++) {
 			// texture load through OpenCV
 			tiffLayerMatRGBInit = pages.at(indTex);
 #ifndef OPENCV_3
@@ -658,7 +640,7 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 			// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
 			cv::cvtColor(tiffLayerMatRGBInit, tiffLayerMatBGR, colorTransform);
 #endif
-			if (invert)
+			if (texData->texture_Invert)
 				cv::flip(tiffLayerMatBGR, tiffLayerMatBGRFlipped, 0); // vertical flip
 			else
 				tiffLayerMatBGRFlipped = tiffLayerMatBGR;
@@ -667,13 +649,14 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 				sprintf(ErrorStr, "Could not open or find the image %s!\n", fileName.c_str()); ReportError(ErrorStr); throw 425;
 				return false;
 			}
-			if (tiffLayerMatBGRFlipped.cols != texture_width
-				|| tiffLayerMatBGRFlipped.rows != texture_height) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected multilayer tiff image size %s %d/%d %d/%d!\n", fileName.c_str(), tiffLayerMatBGRFlipped.cols, texture_width, tiffLayerMatBGRFlipped.rows, texture_height); ReportError(ErrorStr); throw 425;
+			if (tiffLayerMatBGRFlipped.cols != texData->texture_Size_X
+				|| tiffLayerMatBGRFlipped.rows != texData->texture_Size_Y) {   // Check for invalid input
+				sprintf(ErrorStr, "Unexpected multilayer tiff image size %s %d/%d %d/%d!\n", fileName.c_str(), 
+					tiffLayerMatBGRFlipped.cols, texData->texture_Size_X, tiffLayerMatBGRFlipped.rows, texData->texture_Size_Y); ReportError(ErrorStr); throw 425;
 				return false;
 			}
-			if (tiffLayerMatBGRFlipped.elemSize() != bytesperpixel) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected multilayer tiff image bytes per pixel %s %lu/%d!\n", fileName.c_str(), tiffLayerMatBGRFlipped.elemSize(), bytesperpixel); ReportError(ErrorStr); throw 425;
+			if (tiffLayerMatBGRFlipped.elemSize() != texData->texture_Nb_Bytes_per_Pixel) {   // Check for invalid input
+				sprintf(ErrorStr, "Unexpected multilayer tiff image bytes per pixel %s %lu/%d!\n", fileName.c_str(), tiffLayerMatBGRFlipped.elemSize(), texData->texture_Nb_Bytes_per_Pixel); ReportError(ErrorStr); throw 425;
 				return false;
 			}
 			//printf("texture loading layer %d bytes per pixel %ld\n", indTex, result.elemSize());
@@ -684,9 +667,9 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	}
 	else {
 		long ind = 0;
-		for (unsigned int indTex = 0; indTex < nbTextures; indTex++) {
-			cv::String layerFilename = cv::format("%s_%03d%s", filePrefixName.c_str(),
-				(indTex + 1), fileSuffixName.c_str());
+		for (unsigned int indTex = 0; indTex < texData->texture_Nb_Layers; indTex++) {
+			cv::String layerFilename = cv::format("%s_%03d%s", texData->texture_fileName.c_str(),
+				(indTex + 1), texData->texture_fileNameSuffix.c_str());
 			std::cout << layerFilename + " (3D-layer), ";
 
 			// texture load through OpenCV
@@ -704,7 +687,7 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 			// int glColorType = (imgOpenCV.channels() == 4) ? GL_RGBA : GL_RGB;
 			cv::cvtColor(image3DLayerBGRInit, image3DLayerRGB, colorTransform);
 #endif
-			if (invert)
+			if (texData->texture_Invert)
 				cv::flip(image3DLayerRGB, image3DLayerRGBFlipped, 0); // vertical flip
 			else
 				image3DLayerRGBFlipped = image3DLayerRGB;
@@ -713,9 +696,10 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 				sprintf(ErrorStr, "Could not open or find the image %s!\n", fileName.c_str()); ReportError(ErrorStr); throw 425;
 				return false;
 			}
-			if (image3DLayerRGBFlipped.cols != texture_width
-				|| image3DLayerRGBFlipped.rows != texture_height) {   // Check for invalid input
-				sprintf(ErrorStr, "Unexpected 3D image size %s %d/%d %d/%d!\n", fileName.c_str(), image3DLayerRGBFlipped.cols, texture_width, image3DLayerRGBFlipped.rows, texture_height); ReportError(ErrorStr); throw 425;
+			if (image3DLayerRGBFlipped.cols != texData->texture_Size_X
+				|| image3DLayerRGBFlipped.rows != texData->texture_Size_Y) {   // Check for invalid input
+				sprintf(ErrorStr, "Unexpected 3D image size %s %d/%d %d/%d!\n", fileName.c_str(), 
+					image3DLayerRGBFlipped.cols, texData->texture_Size_X, image3DLayerRGBFlipped.rows, texData->texture_Size_Y); ReportError(ErrorStr); throw 425;
 				return false;
 			}
 
@@ -727,7 +711,7 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 
 	// printf("Master index %ld / %ld\n" , ind , size * nbTextures );
 	// glActiveTexture (GL_TEXTURE0 + index);
-	glBindTexture(GL_TEXTURE_3D, *textureID);
+	glBindTexture(GL_TEXTURE_3D, texData->texture_texID);
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, (float)texturefilter);
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, (float)texturefilter);
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -736,9 +720,9 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 	glTexImage3D(GL_TEXTURE_3D,     // Type of texture
 		0,                  // Pyramid level (for mip-mapping) - 0 is the top level
 		components,         // Components: Internal colour format to convert to
-		texture_width,              // Image width
-		texture_height,             // Image heigh
-		nbTextures,         // Image depth
+		texData->texture_Size_X,              // Image width
+		texData->texture_Size_Y,             // Image heigh
+		texData->texture_Nb_Layers,         // Image depth
 		0,                  // Border width in pixels (can either be 1 or 0)
 		format,             // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 		datatype,           // Image data type
@@ -758,18 +742,16 @@ bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
 
 // 2D texture loading + transfer to GPU
 
-bool pg_loadTexture2D(string fileName,
-	GLuint *textureID, bool is_rectangle,
-	bool invert,
+bool pg_loadTexture2D(pg_TextureData *texData,
 	GLint components, GLenum format,
-	GLenum datatype, GLenum texturefilter,
-	int width, int height) {
+	GLenum datatype, GLenum texturefilter) {
+	string fileName = texData->texture_fileName + texData->texture_fileNameSuffix;
 
 	std::cout << fileName + " (2D), ";
 
 	glEnable(GL_TEXTURE_2D);
-	if (!(*textureID)) {
-		glGenTextures(1, textureID);
+	if (!(texData->texture_texID)) {
+		glGenTextures(1, &(texData->texture_texID));
 	}
 
 	// texture load through OpenCV
@@ -805,7 +787,7 @@ bool pg_loadTexture2D(string fileName,
 	}
 #endif
 
-	if (invert)
+	if (texData->texture_Invert)
 		cv::flip(textureImgMatRGB, textureImgMatRGBFlipped, 0); // vertical flip
 	else
 		textureImgMatRGBFlipped = textureImgMatBGRInit;
@@ -814,15 +796,16 @@ bool pg_loadTexture2D(string fileName,
 		sprintf(ErrorStr, "Could not open or find the image %s!\n", fileName.c_str()); ReportError(ErrorStr); throw 425;
 		return false;
 	}
-	if (textureImgMatRGBFlipped.cols != width || textureImgMatRGBFlipped.rows != height) {                              // Check for invalid input
-		sprintf(ErrorStr, "Unexpected image size %s %d/%d %d/%d!\n", fileName.c_str(), textureImgMatRGBFlipped.cols, width, textureImgMatRGBFlipped.rows, height); ReportError(ErrorStr); throw 425;
+	if (textureImgMatRGBFlipped.cols != texData->texture_Size_X || textureImgMatRGBFlipped.rows != texData->texture_Size_Y) {                              // Check for invalid input
+		sprintf(ErrorStr, "Unexpected image size %s %d/%d %d/%d!\n", fileName.c_str(), textureImgMatRGBFlipped.cols, 
+			texData->texture_Size_X, textureImgMatRGBFlipped.rows, texData->texture_Size_Y); ReportError(ErrorStr); throw 425;
 		return false;
 	}
 
 	// glActiveTexture (GL_TEXTURE0 + index);
-	if (is_rectangle) {
+	if (texData->texture_Is_Rectangle) {
 		glEnable(GL_TEXTURE_RECTANGLE);
-		glBindTexture(GL_TEXTURE_RECTANGLE, *textureID);
+		glBindTexture(GL_TEXTURE_RECTANGLE, texData->texture_texID);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, (GLfloat)texturefilter);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, (GLfloat)texturefilter);
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -840,7 +823,7 @@ bool pg_loadTexture2D(string fileName,
 	}
 	else {
 		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, *textureID);
+		glBindTexture(GL_TEXTURE_2D, texData->texture_texID);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (float)texturefilter);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (float)texturefilter);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

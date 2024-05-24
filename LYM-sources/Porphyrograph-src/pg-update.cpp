@@ -257,8 +257,6 @@ GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
 #endif
 
-GLuint Screen_Font_texture_Rectangle_texID = { NULL_ID };
-
 #if !defined(PG_BEZIER_PATHS) || defined(CORE)
 GLuint Pen_texture_3D_texID[_NbConfigurations] = { NULL_ID };
 #endif

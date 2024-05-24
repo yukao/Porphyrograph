@@ -27,8 +27,9 @@
 #define PG_OUT_OF_SCREEN_CURSOR -1000
 
  // ClipArt PATHs from scenario
+// a path curve from scenario with its parameters
 extern int                      pg_nb_SVG_pathCurves[_NbConfigurations];
-class SVG_pathCurve {
+class SVG_scenarioPathCurve {
 public:
 	int path_no;    // the path number associated with the curve between 1 and PG_NB_PATHS
 	int rankInPath; // the rank of the curve in the path number
@@ -43,7 +44,7 @@ public:
 	string path_fileName;
 	bool with_color_radius_from_scenario;
 	double secondsforwidth;
-	SVG_pathCurve(void) {
+	SVG_scenarioPathCurve(void) {
 		path_no = 1;
 		rankInPath = 0;
 		path_group = 1;
@@ -58,7 +59,7 @@ public:
 		with_color_radius_from_scenario = false;
 		secondsforwidth = 10.;
 	}
-	void SVG_path_init(int p_indPath, int p_rankInPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color,
+	void SVG_scenarioPathCurve_init(int p_indPath, int p_rankInPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color,
 		float p_path_b_color, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group,
 		bool p_with_color__brush_radius_from_scenario, double p_secondsforwidth) {
 		path_no = p_indPath;
@@ -82,11 +83,11 @@ public:
 		with_color_radius_from_scenario = p_with_color__brush_radius_from_scenario;
 		secondsforwidth = p_secondsforwidth;
 	}
-	~SVG_pathCurve() {
+	~SVG_scenarioPathCurve() {
 		path_ID = "";
 	}
 };
-extern SVG_pathCurve* pg_SVG_pathCurves[_NbConfigurations];
+extern vector<SVG_scenarioPathCurve*> SVG_scenarioPathCurves[_NbConfigurations];
 extern int pg_current_SVG_path_group;
 extern int pg_nb_SVG_path_groups[_NbConfigurations];
 
@@ -213,17 +214,17 @@ public:
 	~PathCurveFrame() {
 	}
 };
-class PathCurve_Params {
+class PathCurve_Data {
 public:
 	// int pathCurve_nbRecordedFrames;
 	double pathCurve_readSpeedScale; // speed from the scenario file
 	double pathCurve_initialTimeRecording;
 	double pathCurve_finalTimeRecording;
 	vector<PathCurveFrame> path_CurveFrames;
-	PathCurve_Params(void) {
-		PathCurve_Params_init();
+	PathCurve_Data(void) {
+		PathCurve_Data_init();
 	}
-	void PathCurve_Params_init() {
+	void PathCurve_Data_init() {
 		emptyFrame();
 
 		// pathCurve_nbRecordedFrames = 0;
@@ -231,7 +232,7 @@ public:
 		pathCurve_initialTimeRecording = 0.0f;
 		pathCurve_finalTimeRecording = 0.0f;
 	}
-	int nbFrames() {
+	int PathCurve_nbFrames() {
 		return path_CurveFrames.size() - 1;
 	}
 	void pushFrame() {
@@ -251,7 +252,7 @@ public:
 		pathCurve_initialTimeRecording = initialTimeRecording;
 		pathCurve_finalTimeRecording = finalTimeRecording;
 	}
-	~PathCurve_Params() {
+	~PathCurve_Data() {
 	}
 };
 class Path_Status {
@@ -260,27 +261,32 @@ public:
 	bool path_isActiveRecording;
 	int path_indReading;
 	double path_initialTimeReading;
+	// time at which was displayed the last frame
 	double path_lastPlayedFrameTime;
+	// index of the last displayed frame
+	int path_lastPlayedindReading;
 	int path_indPreviousReading;
+	int pathNo;
 
 	// curves associated with each path
-	// int path_nb_pathCurves[_NbConfigurations];
 	int path_currentPathCurve[_NbConfigurations];
-	//PathCurve_Params* path_PathCurves[_NbConfigurations];
-	//PathCurveFrame** path_PathCurveFrame[_NbConfigurations];
-	vector<PathCurve_Params> path_PathCurves[_NbConfigurations];
+	// the curves and their data: each path can have several curves
+	vector<PathCurve_Data> path_PathCurve_Data[_NbConfigurations];
 	// time stamps temporary storage afer reading them from the time stamp list and before inserting them into frames
-	vector<double> path_TimeStamps_tmp;
+	vector<double> path_TmpTimeStamps;
+
 	Path_Status(void) {
-		Path_Status_init();
+		Path_Status_init(0);
 	}
-	void Path_Status_init() {
+	void Path_Status_init(int indPath) {
 		path_isFirstFrame = false;
 		path_isActiveRecording = false;
 		path_indReading = -1;
 		path_initialTimeReading = 0.0f;
 		path_lastPlayedFrameTime = 1.0F;
+		path_lastPlayedindReading = 0;
 		path_indPreviousReading = 0;
+		pathNo = indPath;
 
 		for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
 			// path_nb_pathCurves[indConfiguration] = 0;
@@ -288,47 +294,64 @@ public:
 		}
 
 	}
+	void readsvg(char* fileName, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+		float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration);
+	void load_svg_path(char* fileName,
+		float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale,
+		string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration); 
+	void LoadPathColorsFromXML(string pathString, int* nbRecordedFrames, int indConfiguration);
+	void LoadPathBrushesFromXML(string pathString, int* nbRecordedFrames, int indConfiguration);
+	void LoadPathTimeStampsFromXML(string pathString, int* nbRecordedFrames);
+	int LoadPathPointsFromXML(char* pathString,
+		glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+		float precedingCurrentPoint[2], float  currentPoint[2],
+		bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario,
+		float* path_length, double p_secondsforwidth, int* p_nbRecordedTimeStamps, int indConfiguration);
 	PathCurveFrame& getFrame(int indConfiguraton, int indCurve, int indFrame) {
-		PathCurve_Params& curve = getCurve(indConfiguraton, indCurve);
+		PathCurve_Data& curve = getCurve(indConfiguraton, indCurve);
 		return curve.path_CurveFrames[indFrame];
 	}
 	void pushFrame(int indConfiguration) {
-		PathCurve_Params& curve = getCurrentCurve(indConfiguration);
+		PathCurve_Data& curve = getCurrentCurve(indConfiguration);
 		curve.pushFrame();
 	}
-	void PathCurve_TimeStamps_init() {
-		path_TimeStamps_tmp.clear();
+	void path_TmpTimeStamps_init() {
+		path_TmpTimeStamps.clear();
 	}
-	void pushTimeStamp(double ts) {
-		path_TimeStamps_tmp.push_back(ts);
+	void pushTmpTimeStamps(double ts) {
+		path_TmpTimeStamps.push_back(ts);
 	}
-	double getTimeStamp(unsigned int indTimeStamp) {
-		if (indTimeStamp < path_TimeStamps_tmp.size()) {
-			return path_TimeStamps_tmp[indTimeStamp];
+	double getTmpTimeStamp(unsigned int indTimeStamp) {
+		if (indTimeStamp < path_TmpTimeStamps.size()) {
+			return path_TmpTimeStamps[indTimeStamp];
 		}
 		return 0.;
 	}
 	void emptyFrame(int indConfiguration) {
-		PathCurve_Params& curve = getCurrentCurve(indConfiguration);
+		PathCurve_Data& curve = getCurrentCurve(indConfiguration);
 		curve.emptyFrame();
 	}
-	PathCurve_Params& getCurve(int indConfiguraton, int indCurve) {
-		return path_PathCurves[indConfiguraton][indCurve];
+	PathCurve_Data& getCurve(int indConfiguraton, int indCurve) {
+		if (indCurve >= int(path_PathCurve_Data[indConfiguraton].size())) {
+			sprintf(ErrorStr, "Error: Access to non-existing curve %d for path %d max curve %d",
+				indCurve, pathNo, path_PathCurve_Data[indConfiguraton].size() - 1); ReportError(ErrorStr); throw 561;
+		}
+		return path_PathCurve_Data[indConfiguraton][indCurve];
 	}
-	PathCurve_Params& getCurrentCurve(int indConfiguration) {
-		return path_PathCurves[indConfiguration][path_currentPathCurve[indConfiguration]];
+	PathCurve_Data& getCurrentCurve(int indConfiguration) {
+		return path_PathCurve_Data[indConfiguration][path_currentPathCurve[indConfiguration]];
 	}
 	int nbCurves(int indConfiguraton) {
-		return path_PathCurves[indConfiguraton].size();
+		return path_PathCurve_Data[indConfiguraton].size();
 	}
-	int nbFrames(int indConfiguration) {
+	int PathStatus_nbFrames(int indConfiguration) {
 		if (nbCurves(indConfiguration) <= 0) {
 			return -1;
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
-			return curve.nbFrames();
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			return curve.PathCurve_nbFrames();
 		}
 		else {
 			return -1;
@@ -336,21 +359,21 @@ public:
 	}
 	void setFrameValues(int indConfiguration, int indFrame, float path_r_color, float path_g_color, float path_b_color, float path_a_color,
 		int brushID, float path_radiusX, float path_radiusY) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFrameValues(path_r_color, path_g_color, path_b_color, path_a_color,
 				brushID, path_radiusX, path_radiusY);
 		}
 	}
 	void copyFrameValues(int indConfiguration, int indFrameSource, int indFrameTarget) {
-		if (indFrameSource < nbFrames(indConfiguration) && indFrameTarget < nbFrames(indConfiguration)) {
+		if (indFrameSource < PathStatus_nbFrames(indConfiguration) && indFrameTarget < PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frameTarget = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrameTarget);
 			PathCurveFrame& frameSource = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrameSource);
 			frameTarget.copyFrameValues(&frameSource);
 		}
 	}
 	void copyFrameTimeStamp(int indConfiguration, int indFrameSource, int indFrameTarget) {
-		if (indFrameSource < nbFrames(indConfiguration) && indFrameTarget < nbFrames(indConfiguration)) {
+		if (indFrameSource < PathStatus_nbFrames(indConfiguration) && indFrameTarget < PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frameTarget = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrameTarget);
 			PathCurveFrame& frameSource = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrameSource);
 			frameTarget.copyFrameTimeStamp(&frameSource);
@@ -358,20 +381,20 @@ public:
 	}
 	void setFrameBrushRadius(int indConfiguration, int indFrame,
 		int brushID, float path_radiusX, float path_radiusY) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFrameBrushRadius(brushID, path_radiusX, path_radiusY);
 		}
 	}
 	void setFrameColor(int indConfiguration, int indFrame, float path_r_color, float path_g_color, float path_b_color, float path_a_color) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFrameColor(path_r_color, path_g_color, path_b_color, path_a_color);
 		}
 	}
 	void setFramePositionsTimeStamp(int indConfiguration, int indFrame, float new_Pos_x_prev, float new_Pos_y_prev, float new_path_Pos_xL, float new_path_Pos_yL,
 		float new_path_Pos_xR, float new_path_Pos_yR, float new_path_Pos_x, float new_path_Pos_y, double new_TimeStamp) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFramePositionsTimeStamp(new_Pos_x_prev, new_Pos_y_prev, new_path_Pos_xL, new_path_Pos_yL, 
 				new_path_Pos_xR, new_path_Pos_yR, new_path_Pos_x, new_path_Pos_y, new_TimeStamp);
@@ -379,137 +402,137 @@ public:
 	}
 	void setFramePositions(int indConfiguration, int indFrame, float new_Pos_x_prev, float new_Pos_y_prev, float new_path_Pos_xL, float new_path_Pos_yL,
 		float new_path_Pos_xR, float new_path_Pos_yR, float new_path_Pos_x, float new_path_Pos_y) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFramePositions(new_Pos_x_prev, new_Pos_y_prev, new_path_Pos_xL, new_path_Pos_yL, 
 				new_path_Pos_xR, new_path_Pos_yR, new_path_Pos_x, new_path_Pos_y);
 		}
 	}
 	void setFramePositionsLeftRightCopy(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFramePositionsLeftRightCopy();
 		}
 	}
 	float getFramePositionX(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Pos_x;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionY(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Pos_y;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionXL(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Pos_xL;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionYL(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Pos_yL;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionXR(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Pos_xR;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionYR(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Pos_yR;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionX_prev(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.Pos_x_prev;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFramePositionY_prev(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.Pos_y_prev;
 		}
 		return float(PG_OUT_OF_SCREEN_CURSOR);
 	}
 	float getFrameColor_r(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Color_r;
 		}
 		return float(0.f);
 	}
 	float getFrameColor_g(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Color_g;
 		}
 		return float(0.f);
 	}
 	float getFrameColor_b(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Color_b;
 		}
 		return float(0.f);
 	}
 	float getFrameColor_a(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_Color_a;
 		}
 		return float(0.f);
 	}
 	int getFrameBrush(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_BrushID;
 		}
 		return 0;
 	}
 	float getFrameRadiusX(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_RadiusX;
 		}
 		return float(0.f);
 	}
 	float getFrameRadiusY(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.path_RadiusY;
 		}
 		return float(0.f);
 	}
 	void setFramePositionsCurrentPrevious(int indConfiguration, int indFrame,  float new_Pos_x_prev, float new_Pos_y_prev, float new_path_Pos_x, float new_path_Pos_y) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFramePositionsCurrentPrevious(new_Pos_x_prev, new_Pos_y_prev, new_path_Pos_x, new_path_Pos_y);
 		}
 	}
 	void setFrameTimeStamp(int indConfiguration, int indFrame, double new_TimeStamp) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			frame.setFrameTimeStamp(new_TimeStamp);
 		}
 	}
 	double getFrameTimeStamp(int indConfiguration, int indFrame) {
-		if (indFrame <= nbFrames(indConfiguration)) {
+		if (indFrame <= PathStatus_nbFrames(indConfiguration)) {
 			PathCurveFrame& frame = getFrame(indConfiguration, path_currentPathCurve[indConfiguration], indFrame);
 			return frame.TimeStamp;
 		}
@@ -521,7 +544,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			curve.pathCurve_readSpeedScale = readSpeedScale;
 			curve.pathCurve_initialTimeRecording = initialTimeRecording;
 			curve.pathCurve_finalTimeRecording = finalTimeRecording;
@@ -536,7 +559,7 @@ public:
 	//	}
 	//	else if (path_currentPathCurve[indConfiguration] >= 0
 	//		&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-	//		PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+	//		PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 	//		return curve.pathCurve_nbRecordedFrames;
 	//	}
 	//	else {
@@ -550,7 +573,7 @@ public:
 	//	else if (path_currentPathCurve[indConfiguration] >= 0
 	//		&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)
 	//		&& length < max_mouse_recording_frames (obsolete with vectors)) {
-	//		PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+	//		PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 	//		curve.pathCurve_nbRecordedFrames = length;
 	//		return length;
 	//	}
@@ -564,7 +587,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			curve.pathCurve_readSpeedScale = readSpeedScale;
 			return readSpeedScale;
 		}
@@ -578,7 +601,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			return curve.pathCurve_readSpeedScale;
 		}
 		else {
@@ -591,7 +614,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			return curve.pathCurve_initialTimeRecording;
 		}
 		else {
@@ -604,7 +627,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			curve.pathCurve_initialTimeRecording = initialTime;
 			return initialTime;
 		}
@@ -618,7 +641,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			return curve.pathCurve_finalTimeRecording;
 		}
 		else {
@@ -631,7 +654,7 @@ public:
 		}
 		else if (path_currentPathCurve[indConfiguration] >= 0
 			&& path_currentPathCurve[indConfiguration] < nbCurves(indConfiguration)) {
-			PathCurve_Params& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
+			PathCurve_Data& curve = getCurve(indConfiguration, path_currentPathCurve[indConfiguration]);
 			curve.pathCurve_finalTimeRecording = finalTime;
 			return finalTime;
 		}
@@ -642,7 +665,7 @@ public:
 	~Path_Status() {
 	}
 };
-// extern struct PathCurve_Params* pg_PathCurve_Params[_NbConfigurations];
+// extern struct PathCurve_Data* pg_PathCurve_Params[_NbConfigurations];
 // extern struct PathCurveFrame** pg_PathCurveFrame_Data[_NbConfigurations];
 extern Path_Status* pg_Path_Status;
 
@@ -681,7 +704,6 @@ void CatmullRom_Evaluate(vec2* pOut_result, vec2* p0, vec2* p1, vec2* p2, vec2* 
 
 // initialization of the tables that contain the stroke parameters
 void pg_initPaths(void);
-void pg_initPathCurves(int indConfiguration);
 
 // char array to integer or float
 long     pg_ScanIntegerString(int* p_c,
@@ -690,24 +712,6 @@ long     pg_ScanIntegerString(int* p_c,
 float    pg_ScanFloatString(int* p_c,
 	int withTrailingSpaceChars,
 	char* charstring, int* ind);
-
-// loads a track from a path string
-int LoadPathPointsFromXML(char* pathString, int pathNo,
-	glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
-	float precedingCurrentPoint[2], float  currentPoint[2],
-	bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario,
-	float* path_length, double p_secondsforwidth, int *nb_timeStamps, int indConfiguration);
-void LoadPathColorsFromXML(string pathString, int pathNo, int* nbRecordedFrames, int indConfiguration);
-void LoadPathBrushesFromXML(string pathString, int pathNo, int* nbRecordedFrames, int indConfiguration);
-void LoadPathTimeStampsFromXML(string pathString, int pathNo, int* nbRecordedFrames);
-
-// loads a track from a svg file
-#if defined(var_path_replay_trackNo_1)
-void load_svg_path( char *fileName , int pathNo , float pathRadius, float path_r_color, float path_g_color, float path_b_color,
-	float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration);
-#endif
-void readsvg(int pathNo , char *fileName , float pathRadius, float path_r_color, float path_g_color, float path_b_color, 
-	float readSpeedScale, string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration);
 
 // CONVEX HULL 
 #ifdef PG_BEZIER_PATHS

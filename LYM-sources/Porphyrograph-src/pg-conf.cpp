@@ -44,7 +44,8 @@ double                   current_scene_percent = 0.f;
 string					 pg_csv_file_name;
 string					 snapshots_dir_path_prefix;
 string					 snapshots_dir_path_name;
-string					 screen_font_file_name;
+GLuint					 Screen_Font_texture_Rectangle_texID = { NULL_ID };
+pg_TextureData           screenFontTexData;
 int                      screen_font_size;
 string                   font_file_encoding;
 TextureEncoding          font_texture_encoding;
@@ -189,28 +190,8 @@ GLuint* Mesh_texture_rectangle[_NbConfigurations] = { NULL_ID };
 // TEXTURES
 // number of Texture files
 int pg_nb_Texture_files[_NbConfigurations] = { 0 };
-// file names
-string *pg_Texture_fileNames[_NbConfigurations] = {NULL};
-string *pg_Texture_fileNamesSuffix[_NbConfigurations] = {NULL};
-// usages
-pg_Texture_Usages *pg_Texture_usages[_NbConfigurations] = {NULL};
-// rank (if used several times for the same usage)
-unsigned int *pg_Texture_Rank[_NbConfigurations] = {NULL};
-// 2D or 3D
-int *pg_Texture_Dimension[_NbConfigurations] = {NULL};
-// number of piled 2D textures for a 3D texture
-unsigned int *pg_Texture_Nb_Layers[_NbConfigurations] = {NULL};
-// dimensions
-int *pg_Texture_Size_X[_NbConfigurations] = {NULL};
-int *pg_Texture_Size_Y[_NbConfigurations] = {NULL};
-// color depth
-int *pg_Texture_Nb_Bytes_per_Pixel[_NbConfigurations] = {NULL};
-// rectangle or PoT
-bool *pg_Texture_Is_Rectangle[_NbConfigurations] = {NULL};
-// texture inversion
-bool *pg_Texture_Invert[_NbConfigurations] = {NULL};
-// texture ID
-GLuint *pg_Texture_texID[_NbConfigurations] = {NULL};
+vector<pg_TextureData *> pg_Textures[_NbConfigurations];
+pg_TextureData texDataScreenFont;
 
 // window(s) size and location
 int my_window_x = 0;
@@ -1013,7 +994,12 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	// /head
 	std::getline(confFin, line);
 	if (indConfiguration == 0) {
-		screen_font_file_name = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
+		texDataScreenFont.texture_fileName = "Data/fonts/usascii/arial/stb_font_arial_15_usascii.png";
+		texDataScreenFont.texture_fileNameSuffix = "";
+		texDataScreenFont.texture_Is_Rectangle = true;
+		texDataScreenFont.texture_Invert = false;
+		texDataScreenFont.texture_Size_X = 128;
+		texDataScreenFont.texture_Size_Y = 70;
 		screen_font_size = 15;
 		font_file_encoding = "png";
 		font_texture_encoding = PNG;
@@ -1446,38 +1432,61 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 	////////////////////////////
 	////// SVG PATHS
 
-	// Number of SVG pathCurves
+	// Initial markup for SVG pathCurves
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string svg_paths
 	if (ID.compare("svg_paths") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-	pg_nb_SVG_pathCurves[indConfiguration] = 0;
-	pg_current_SVG_path_group = 1;
-	sstream >> pg_nb_SVG_pathCurves[indConfiguration];
-	//printf("nb svg paths %d\n", nb_paths[indConfiguration]);
 
-	// first parses the full list of paths to check which paths have associated curves and how many pathCurves are associated to each active path
-	vector<string> vec_path_fileName;
-	vector<int> vec_pathNo;
-	vector<int> vec_path_indTrack;
-	vector<float> vec_path_radius;
-	vector<float> vec_path_r_color;
-	vector<float> vec_path_g_color;
-	vector<float> vec_path_b_color;
-	vector<float> vec_path_readSpeedScale;
-	vector<string> vec_path_ID;
-	vector<int> vec_path_group;
-	vector<bool> vec_with_color_radius_from_scenario;
-	vector<double> vec_secondsforwidth;
-	for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
+	// initializes the tracks for recording the strokes
+	// has to be made before loading the scenario that may load predefined svg paths
+	// and has to be made after the configuration file loading that has 
+	// the value max_mouse_recording_frames (obsolete with vectors) for the max number of points to memorize
+
+	// mouse pointer tracks recording initialization
+	// printf("Path initialization size %d\n", max_mouse_recording_frames (obsolete with vectors));
+	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
+		synchr_start_recording_path[ind] = false;
+		synchr_start_path_replay_trackNo[ind] = -1;
+		recorded_path[ind] = false;
+		is_path_replay[ind] = false;
+	}
+
+	// each path should have minimally one curve which is used to record/replay live
+	for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
+		// a path without curves
+		if (pg_Path_Status[pathNo].path_PathCurve_Data[indConfiguration].size() == 0) {
+			PathCurve_Data curve;
+			curve.PathCurve_Data_init();
+			pg_Path_Status[pathNo].path_PathCurve_Data[indConfiguration].push_back(curve);
+		}
+	}
+
+	// parses the full list of paths 
+	// check which paths have associated curves and how many pathCurves are associated to each active path
+	pg_current_SVG_path_group = 1;
+	int nb_path_curves = 0;
+	while(true) {
 		string fileName = "";
 		string local_ID = "";
 		string path_ID = "";
+
+		// adds a new curve
+		SVG_scenarioPathCurves[indConfiguration].push_back(new SVG_scenarioPathCurve);
+
+		// new line
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
-		sstream >> local_ID; // string svg_path
+		sstream >> ID; // string /svg_paths or svg_path
+		if (ID.compare("/svg_paths") == 0) {
+			break;
+		}
+		else if (ID.compare("svg_path") != 0) {
+			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"svg_path\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+
 		sstream >> fileName; // file name
 		if (fileName.find(':') == std::string::npos) {
 			fileName = "Data/" + project_name + "-data/SVGs/" + fileName;
@@ -1488,10 +1497,9 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		// adds a new curve to the path, the curve is made of one empty frame 
 		// the addition of a new frame is made by filling the back frame and pushing a new one when another one is built
 		if (pathNo <= PG_NB_PATHS && pathNo >= 0) {
-			// pg_Path_Status[pathRank].path_nb_pathCurves[indConfiguration]++;	  // curves associated with each path
-			PathCurve_Params curve;
-			curve.PathCurve_Params_init();
-			pg_Path_Status[pathNo].path_PathCurves[indConfiguration].push_back(curve);
+			PathCurve_Data curve;
+			curve.PathCurve_Data_init();
+			pg_Path_Status[pathNo].path_PathCurve_Data[indConfiguration].push_back(curve);
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect scenario file SVG path %d number (\"%s\"), pathRank should be between 0 and %d",
@@ -1524,83 +1532,19 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		sstream >> temp2;
 		double secondsforwidth = my_stod(temp2);
 
-		vec_path_fileName.push_back(fileName);
-		vec_pathNo.push_back(pathNo);
-		vec_path_indTrack.push_back(path_track);
-		vec_path_radius.push_back(pathRadius);
-		vec_path_r_color.push_back(path_r_color);
-		vec_path_g_color.push_back(path_g_color);
-		vec_path_b_color.push_back(path_b_color);
-		vec_path_readSpeedScale.push_back(path_readSpeedScale);
-		vec_path_ID.push_back(path_ID);
-		vec_path_group.push_back(local_path_group);
-		vec_with_color_radius_from_scenario.push_back(with_color_radius_from_scenario);
-		vec_secondsforwidth.push_back(secondsforwidth);
-	}
-	// /svg_paths
-	std::getline(scenarioFin, line);
-	stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string /svg_paths
-	if (ID.compare("/svg_paths") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/svg_paths\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
-	}
-
-	// initializes the tracks for recording the strokes
-	// has to be made before loading the scenario that may load predefined svg paths
-	// and has to be made after the configuration file loading that has 
-	// the value max_mouse_recording_frames (obsolete with vectors) for the max number of points to memorize
-
-	// before calling pg_initPathCurves, initialize path_nb_pathCurves[indConfiguration] for each path
-	// each path should have minimally one curve which is used to record/replay live
-	for (int indPath = 1; indPath <= PG_NB_PATHS; indPath++) {
-		if (pg_Path_Status[indPath].path_PathCurves[indConfiguration].size() == 0) {
-			PathCurve_Params curve;
-			curve.PathCurve_Params_init();
-			pg_Path_Status[indPath].path_PathCurves[indConfiguration].push_back(curve);
-		}
-	}
-	pg_initPathCurves(indConfiguration);
-
-
-	for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
-		string fileName = vec_path_fileName.back();
-		vec_path_fileName.pop_back();
-		int pathNo = vec_pathNo.back();
-		vec_pathNo.pop_back();
-		int path_track = vec_path_indTrack.back();
-		vec_path_indTrack.pop_back();
-		float pathRadius = vec_path_radius.back();
-		vec_path_radius.pop_back();
-		float path_r_color = vec_path_r_color.back();
-		vec_path_r_color.pop_back();
-		float path_g_color = vec_path_g_color.back();
-		vec_path_g_color.pop_back();
-		float path_b_color = vec_path_b_color.back();
-		vec_path_b_color.pop_back();
-		float path_readSpeedScale = vec_path_readSpeedScale.back();
-		vec_path_readSpeedScale.pop_back();
-		string path_ID = vec_path_ID.back();
-		vec_path_ID.pop_back();
-		int local_path_group = vec_path_group.back();
-		vec_path_group.pop_back();
-		bool with_color_radius_from_scenario = vec_with_color_radius_from_scenario.back();
-		vec_with_color_radius_from_scenario.pop_back();
-		double secondsforwidth = vec_secondsforwidth.back();
-		vec_secondsforwidth.pop_back();
-
 		//printf("path no %d group %d\n", indPathCurve, local_path_group);
 		//printf("path ID %s radius %.3f\n", path_ID.c_str(), pathRadius);
 		//printf("path no %d group %d\n", paths[indConfiguration][indPathCurve].indPathCurve, paths[indConfiguration][indPathCurve].path_group);
 		// checks whether there are other curves in the same path
 		int rankInPath = 0;
-		for (int indAux = 0; indAux < indPathCurve; indAux++) {
-			if (pg_SVG_pathCurves[indConfiguration][indAux].path_no == pg_SVG_pathCurves[indConfiguration][indPathCurve].path_no) {
+		for (int indAux = 0; indAux < nb_path_curves; indAux++) {
+			if (SVG_scenarioPathCurves[indConfiguration][indAux]->path_no == SVG_scenarioPathCurves[indConfiguration][nb_path_curves]->path_no) {
 				rankInPath++;
 				//sprintf(ErrorStr, "Error: incorrect configuration file paths %d and %d have the same path index %d and same path group %d", 
-				//	indAux, indPathCurve, pg_SVG_pathCurves[indConfiguration][indAux].indPath, pg_SVG_pathCurves[indConfiguration][indAux].path_group); ReportError(ErrorStr); throw 100;
+				//	indAux, indPathCurve, SVG_scenarioPathCurves[indConfiguration][indAux]->indPath, SVG_scenarioPathCurves[indConfiguration][indAux]->path_group); ReportError(ErrorStr); throw 100;
 			}
 		}
-		pg_SVG_pathCurves[indConfiguration][indPathCurve].SVG_path_init(pathNo, rankInPath, path_track, pathRadius, 
+		SVG_scenarioPathCurves[indConfiguration][nb_path_curves]->SVG_scenarioPathCurve_init(pathNo, rankInPath, path_track, pathRadius,
 			path_r_color, path_g_color, path_b_color, path_readSpeedScale,
 			path_ID, fileName, local_path_group, with_color_radius_from_scenario, secondsforwidth);
 
@@ -1608,12 +1552,17 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		//	pathRank, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
 			if (local_path_group == pg_current_SVG_path_group) {
-				//printf("Loading ClipArt path %s track %d\n", (char*)("Data/" + project_name + "-data/ClipArt/" + temp).c_str(), path_track);
 #if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
-				if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
-					load_svg_path((char*)fileName.c_str(),
-						pathNo, pathRadius, path_r_color, path_g_color, path_b_color,
+				if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] 
+					&& ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
+					//printf("Load svg path No %d track %d\n", pathNo, path_track);
+					pg_Path_Status[pathNo].load_svg_path((char*)fileName.c_str(),
+						pathRadius, path_r_color, path_g_color, path_b_color,
 						path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth, indConfiguration);
+					//printf("time stamps %.2f %.2f %.2f %.2f %.2f\n",
+					//	pg_Path_Status[pathNo].path_TmpTimeStamps[0], pg_Path_Status[pathNo].path_TmpTimeStamps[1], 
+					//	pg_Path_Status[pathNo].path_TmpTimeStamps[2], pg_Path_Status[pathNo].path_TmpTimeStamps[3], 
+					//	pg_Path_Status[pathNo].path_TmpTimeStamps[4]);
 				}
 #endif
 			}
@@ -1623,7 +1572,10 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 				path_track, pathNo, fileName.c_str(), PG_NB_TRACKS, PG_NB_PATHS); ReportError(ErrorStr); throw 100;
 		}
 		//std::cout << "svg_path #" << pathNo << ": " << "Data/" + project_name + "-data/SVGs/" + temp << " track #" << path_track << "\n";
+
+		nb_path_curves++;
 	}
+	pg_nb_SVG_pathCurves[indConfiguration] = nb_path_curves;
 }
 
 void pg_listAllSVG_paths(void) {
@@ -1632,8 +1584,8 @@ void pg_listAllSVG_paths(void) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (int indPathCurve = 0; indPathCurve < pg_nb_SVG_pathCurves[indConfiguration]; indPathCurve++) {
 			if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
-				std::cout << pg_SVG_pathCurves[indConfiguration][indPathCurve].path_fileName << " (" << pg_SVG_pathCurves[indConfiguration][indPathCurve].path_no << ", "
-					<< pg_SVG_pathCurves[indConfiguration][indPathCurve].path_group << "), ";
+				std::cout << SVG_scenarioPathCurves[indConfiguration][indPathCurve]->path_fileName << " (" << SVG_scenarioPathCurves[indConfiguration][indPathCurve]->path_no << ", "
+					<< SVG_scenarioPathCurves[indConfiguration][indPathCurve]->path_group << "), ";
 			}
 		}
 		std::cout << std::endl;
@@ -2011,7 +1963,7 @@ void ParseScenarioTextures(std::ifstream& scenarioFin, int indConfiguration) {
 	////// TEXTURES
 	// the textures are loaded inside the GPU and diplayed path by path
 
-	// Number of textures
+	// initial markup
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string textures
@@ -2019,186 +1971,168 @@ void ParseScenarioTextures(std::ifstream& scenarioFin, int indConfiguration) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"textures\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
 
-	// number of obj files in the configuration file
-	sstream >> pg_nb_Texture_files[indConfiguration];
-
-	pg_Texture_fileNames[indConfiguration] = new string[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_fileNamesSuffix[indConfiguration] = new string[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_usages[indConfiguration] = new pg_Texture_Usages[pg_nb_Texture_files[indConfiguration]];
-	for (int indFile = 0; indFile < pg_nb_Texture_files[indConfiguration]; indFile++) {
-		pg_Texture_usages[indConfiguration][indFile] = Texture_brush;
-	}
-
-	pg_Texture_Size_X[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Size_Y[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Rank[indConfiguration] = new unsigned int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Dimension[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Nb_Layers[indConfiguration] = new unsigned int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Is_Rectangle[indConfiguration] = new bool[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Invert[indConfiguration] = new bool[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_Nb_Bytes_per_Pixel[indConfiguration] = new int[pg_nb_Texture_files[indConfiguration]];
-	pg_Texture_texID[indConfiguration] = new GLuint[pg_nb_Texture_files[indConfiguration]];
-	memset((char*)pg_Texture_Size_X[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
-	memset((char*)pg_Texture_Size_Y[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
-	memset((char*)pg_Texture_Rank[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(unsigned int));
-	memset((char*)pg_Texture_Dimension[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
-	memset((char*)pg_Texture_Nb_Layers[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(unsigned int));
-	memset((char*)pg_Texture_Is_Rectangle[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(bool));
-	memset((char*)pg_Texture_Invert[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(bool));
-	memset((char*)pg_Texture_Nb_Bytes_per_Pixel[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(int));
-	memset((char*)pg_Texture_texID[indConfiguration], 0, pg_nb_Texture_files[indConfiguration] * sizeof(GLuint));
-
-	for (int indTextureFile = 0; indTextureFile < pg_nb_Texture_files[indConfiguration]; indTextureFile++) {
+	// Number of textures
+	int indTextureFile = 0;
+	while(true) {
 		std::getline(scenarioFin, line);
 		stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // string texture
+		if (ID.compare("/textures") == 0) {
+			break;
+		}
+		else if (ID.compare("texture") != 0) {
+			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"texture\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+		}
+		pg_Textures->push_back(new pg_TextureData());
 		sstream >> ID; // file name
 		if (ID.find(':') == std::string::npos) {
-			pg_Texture_fileNames[indConfiguration][indTextureFile]
+			pg_Textures[indConfiguration][indTextureFile]->texture_fileName
 				= "Data/" + project_name + "-data/textures/" + ID;
 		}
 		else {
-			pg_Texture_fileNames[indConfiguration][indTextureFile] = ID;
+			pg_Textures[indConfiguration][indTextureFile]->texture_fileName = ID;
 		}
-		sstream >> pg_Texture_fileNamesSuffix[indConfiguration][indTextureFile]; // file suffix
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_fileNameSuffix; // file suffix
 
 		// usage
 		sstream >> ID;
-		//printf("Usage %s: (%s)\n", pg_Texture_fileNames[indConfiguration][indTextureFile].c_str(), ID.c_str());
+		//printf("Usage %s: (%s)\n", pg_Textures[indConfiguration][indTextureFile]->texture_fileName.c_str(), ID.c_str());
 		if (ID.compare("master_mask") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_master_mask;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_master_mask;
 		}
 		else if (ID.compare("mesh") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_mesh;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_mesh;
 		}
 		else if (ID.compare("sensor") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_sensor;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_sensor;
 		}
 		else if (ID.compare("logo") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_logo;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_logo;
 		}
 		else if (ID.compare("brush") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_brush;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_brush;
 		}
 		else if (ID.compare("noise") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_noise;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_noise;
 		}
 		else if (ID.compare("curve_particle") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_curve_particle;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_curve_particle;
 		}
 		else if (ID.compare("splat_particle") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_splat_particle;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_splat_particle;
 		}
 		else if (ID.compare("part_init") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_part_init;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_part_init;
 		}
 		else if (ID.compare("part_acc") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_part_acc;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_part_acc;
 		}
 		else if (ID.compare("pixel_acc") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_pixel_acc;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_pixel_acc;
 		}
 		else if (ID.compare("repop_density") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_repop_density;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_repop_density;
 		}
 		else if (ID.compare("multilayer_master_mask") == 0) {
-			pg_Texture_usages[indConfiguration][indTextureFile] = Texture_multilayer_master_mask;
+			pg_Textures[indConfiguration][indTextureFile]->texture_usage = Texture_multilayer_master_mask;
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect configuration file Texture usage \"%s\"\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		// rank of the texture (used in particular for meshes)
-		sstream >> pg_Texture_Rank[indConfiguration][indTextureFile];
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_Rank;
 		// dimension (2 or 3)
-		sstream >> pg_Texture_Dimension[indConfiguration][indTextureFile];
-		if (pg_Texture_Dimension[indConfiguration][indTextureFile] != 2
-			&& pg_Texture_Dimension[indConfiguration][indTextureFile] != 3) {
-			sprintf(ErrorStr, "Error: 2D or 3D texture dimension expected, not %d for texture %d (%s)\n", pg_Texture_Dimension[indConfiguration][indTextureFile], indTextureFile, pg_Texture_fileNames[indConfiguration][indTextureFile].c_str()); ReportError(ErrorStr); throw 100;
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_Dimension;
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_Dimension != 2
+			&& pg_Textures[indConfiguration][indTextureFile]->texture_Dimension != 3) {
+			sprintf(ErrorStr, "Error: 2D or 3D texture dimension expected, not %d for texture %d (%s)\n", pg_Textures[indConfiguration][indTextureFile]->texture_Dimension, indTextureFile, pg_Textures[indConfiguration][indTextureFile]->texture_fileName.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		// number of piled textures in case of 3D texture or tif format
-		sstream >> pg_Texture_Nb_Layers[indConfiguration][indTextureFile];
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_brush) {
-			nb_pen_brushes[indConfiguration] = pg_Texture_Nb_Layers[indConfiguration][indTextureFile];
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_Nb_Layers;
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_brush) {
+			nb_pen_brushes[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_Nb_Layers;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_multilayer_master_mask) {
-			nb_layers_master_mask[indConfiguration] = pg_Texture_Nb_Layers[indConfiguration][indTextureFile];
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_multilayer_master_mask) {
+			nb_layers_master_mask[indConfiguration] = pg_Textures[indConfiguration][indTextureFile]->texture_Nb_Layers;
 		}
 
 		// image initial geometry
-		sstream >> pg_Texture_Size_X[indConfiguration][indTextureFile];
-		sstream >> pg_Texture_Size_Y[indConfiguration][indTextureFile];
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_master_mask &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height)) {
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_Size_X;
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y;
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_master_mask &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height)) {
 			sprintf(ErrorStr, "Error: master mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_multilayer_master_mask &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height)) {
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_multilayer_master_mask &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height)) {
 			sprintf(ErrorStr, "Error: multilayer master mask texture should be minimlally %dx%d (%dx%d)\n", window_width, window_height,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_noise &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width_powerOf2 || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height_powerOf2)) {
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_noise &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width_powerOf2 || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height_powerOf2)) {
 			sprintf(ErrorStr, "Error: noise texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width_powerOf2, window_height_powerOf2,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_part_init &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height)) {
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_part_init &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height)) {
 			sprintf(ErrorStr, "Error: particle initialization texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_part_acc &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height)) {
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_part_acc &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height)) {
 			sprintf(ErrorStr, "Error: particle acceleration texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_pixel_acc &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height)) {
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_pixel_acc &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height)) {
 			sprintf(ErrorStr, "Error: pixel acceleration texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
-		if (pg_Texture_usages[indConfiguration][indTextureFile] == Texture_repop_density &&
-			(pg_Texture_Size_X[indConfiguration][indTextureFile] < workingWindow_width || pg_Texture_Size_Y[indConfiguration][indTextureFile] < window_height)) {
+		if (pg_Textures[indConfiguration][indTextureFile]->texture_usage == Texture_repop_density &&
+			(pg_Textures[indConfiguration][indTextureFile]->texture_Size_X < workingWindow_width || pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y < window_height)) {
 			sprintf(ErrorStr, "Error:  repopulation density texture should be minimlally %dx%d (%dx%d)\n", workingWindow_width, window_height,
-				pg_Texture_Size_X[indConfiguration][indTextureFile], pg_Texture_Size_Y[indConfiguration][indTextureFile]); ReportError(ErrorStr); throw 100;
+				pg_Textures[indConfiguration][indTextureFile]->texture_Size_X, pg_Textures[indConfiguration][indTextureFile]->texture_Size_Y); ReportError(ErrorStr); throw 100;
 		}
 
 		// image color depth
-		sstream >> pg_Texture_Nb_Bytes_per_Pixel[indConfiguration][indTextureFile];
+		sstream >> pg_Textures[indConfiguration][indTextureFile]->texture_Nb_Bytes_per_Pixel;
 
 		// booleans invert & is rectangle
 		sstream >> ID;
 		if (ID.compare("true") == 0 || ID.compare("TRUE") == 0) {
-			pg_Texture_Is_Rectangle[indConfiguration][indTextureFile] = true;
+			pg_Textures[indConfiguration][indTextureFile]->texture_Is_Rectangle = true;
 		}
 		else if (ID.compare("false") == 0 || ID.compare("FALSE") == 0) {
-			pg_Texture_Is_Rectangle[indConfiguration][indTextureFile] = false;
+			pg_Textures[indConfiguration][indTextureFile]->texture_Is_Rectangle = false;
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect boolean for Texture rectangle \"%s\" (true or false expected)\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
 		sstream >> ID;
 		if (ID.compare("true") == 0 || ID.compare("TRUE") == 0) {
-			pg_Texture_Invert[indConfiguration][indTextureFile] = true;
+			pg_Textures[indConfiguration][indTextureFile]->texture_Invert = true;
 		}
 		else if (ID.compare("false") == 0 || ID.compare("FALSE") == 0) {
-			pg_Texture_Invert[indConfiguration][indTextureFile] = false;
+			pg_Textures[indConfiguration][indTextureFile]->texture_Invert = false;
 		}
 		else {
 			sprintf(ErrorStr, "Error: incorrect boolean for Texture invert \"%s\" (true or false expected)\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
+
+		indTextureFile++;
 		//printf("Texture #%d size (%d,%d), rank %d, usage %s\n",
 		//	indTextureFile, pg_Texture_Size_X[indTextureFile], pg_Texture_Size_Y[indTextureFile],
 		//	pg_Texture_Rank[indTextureFile], pg_Texture_usages[indTextureFile].c_str());
 	}
-
+	pg_nb_Texture_files[indConfiguration] = indTextureFile;
 	// /textures
-	std::getline(scenarioFin, line);
-	stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string /textures
-	if (ID.compare("/textures") != 0) {
-		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/textures\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
-	}
+	//std::getline(scenarioFin, line);
+	//stringstreamStoreLine(&sstream, &line);
+	//sstream >> ID; // string /textures
+	//if (ID.compare("/textures") != 0) {
+	//	sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/textures\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+	//}
 }
 
 void ParseScenarioColorPalettes(std::ifstream& scenarioFin, int indConfiguration) {

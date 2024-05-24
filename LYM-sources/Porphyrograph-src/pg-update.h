@@ -47,8 +47,6 @@ extern _CrtMemState sDiff;
 extern GLuint pg_screenMessageBitmap_texID; // nb_attachments=1
 extern GLubyte *pg_screenMessageBitmap;
 
-extern GLuint Screen_Font_texture_Rectangle_texID;
-
 #ifdef PG_WITH_MASTER_MASK
 extern GLuint Master_Mask_texID[_NbConfigurations];
 extern GLuint Master_Multilayer_Mask_texID[_NbConfigurations];

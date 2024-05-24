@@ -3172,25 +3172,25 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 			bool was_path_replay[PG_NB_PATHS + 1];
 			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_pathCurves[pg_current_configuration_rank]; indPrerecPath++) {
 				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
-				if (pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no <= PG_NB_PATHS
-					&& pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_group == pg_current_SVG_path_group) {
-					was_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no]
-						= is_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no];
+				if (SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no <= PG_NB_PATHS
+					&& SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_group == pg_current_SVG_path_group) {
+					was_path_replay[SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no]
+						= is_path_replay[SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no];
 #if defined(var_path_replay_trackNo_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
-						if (is_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no]) {
+						if (is_path_replay[SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no]) {
 							//printf("Stops Replay path_no %d: %d\n", paths[indPrerecPath].path_no, is_path_replay[paths[indPrerecPath].indPath]);
 
-							(pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no);
+							(SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no);
 						}
 					}
 #endif
 #if defined(var_path_record_1)
 					if (ScenarioVarConfigurations[_path_record_1][pg_current_configuration_rank]) {
 						// is recording source -> has to stop recording source 
-						if (pg_Path_Status[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no].path_isActiveRecording) {
+						if (pg_Path_Status[SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no].path_isActiveRecording) {
 							//printf("Stops Recording indPath %d: %d\n", paths[indPrerecPath].path_no, pg_Path_Status[paths[indPrerecPath].path_no].path_isActiveRecording);
-							pg_path_recording_stop(pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no);
+							pg_path_recording_stop(SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no);
 						}
 					}
 #endif
@@ -3200,32 +3200,32 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 			pg_current_SVG_path_group = int(scenario_or_gui_command_value);
 			//printf("new current path %d\n", current_path_group);
 			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_pathCurves[pg_current_configuration_rank]; indPrerecPath++) {
+				int pathNo = SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no;
 				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
-				if (pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no <= PG_NB_PATHS
-					&& pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_group == pg_current_SVG_path_group) {
+				if (pathNo <= PG_NB_PATHS
+					&& SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_group == pg_current_SVG_path_group) {
 					//printf("load path for replay %s\n", paths[indPrerecPath].path_fileName.c_str());
 #if defined(var_path_replay_trackNo_1)&& defined(var_path_record_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]
 						&& ScenarioVarConfigurations[_path_record_1][pg_current_configuration_rank]) {
-						load_svg_path((char*)pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_fileName.c_str(),
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].pathRadius,
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_r_color, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_g_color, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_b_color,
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_readSpeedScale, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_ID, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].with_color_radius_from_scenario,
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].secondsforwidth,
+						pg_Path_Status[pathNo].load_svg_path((char*)SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_fileName.c_str(),
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->pathRadius,
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_r_color, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_g_color, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_b_color,
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_readSpeedScale, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_ID, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->with_color_radius_from_scenario,
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->secondsforwidth,
 							pg_current_configuration_rank);
 					}
 #endif
 #if defined(var_path_replay_trackNo_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
 						// start reading if it was already reading
-						if (was_path_replay[pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no]) {
+						if (was_path_replay[SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no]) {
 							//printf("Starts Replay indPath %d: %d\n", paths[indPrerecPath].path_no, was_path_replay[paths[indPrerecPath].path_no]);
-							pg_path_replay_trackNo_start(pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no, pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_track);
+							pg_path_replay_trackNo_start(SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no, SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_track);
 						}
 					}
 #endif
@@ -3379,20 +3379,20 @@ void reload_paths_callBack(pg_Parameter_Input_Type param_input_type, bool scenar
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value) {
 			for (int indPrerecPath = 0; indPrerecPath < pg_nb_SVG_pathCurves[pg_current_configuration_rank]; indPrerecPath++) {
-				if (pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no <= PG_NB_PATHS) {
+				int pathNo = SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_no;
+				if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
 #if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 					if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]
 						&& ScenarioVarConfigurations[_path_record_1][pg_current_configuration_rank]) {
-						load_svg_path((char*)pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_fileName.c_str(),
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_no, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].pathRadius,
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_r_color, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_g_color, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_b_color,
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_readSpeedScale, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].path_ID, 
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].with_color_radius_from_scenario,
-							pg_SVG_pathCurves[pg_current_configuration_rank][indPrerecPath].secondsforwidth,
+						pg_Path_Status[pathNo].load_svg_path((char*)SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_fileName.c_str(),
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->pathRadius,
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_r_color, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_g_color, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_b_color,
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_readSpeedScale, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->path_ID, 
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->with_color_radius_from_scenario,
+							SVG_scenarioPathCurves[pg_current_configuration_rank][indPrerecPath]->secondsforwidth,
 							pg_current_configuration_rank);
 					}
 #endif
@@ -9328,7 +9328,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
 			printf("play all tracks %.3f\n", pg_CurrentClockTime);
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
-				if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].nbFrames(pg_current_configuration_rank) > 0) {
+				if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
 					pg_path_replay_trackNo_onOff(pathNo, 1);
 					//sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
 					//pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -10555,10 +10555,8 @@ void pg_path_recording_start(int indPath) {
 	}
 	if (indPath >= 1 && indPath <= PG_NB_PATHS) {
 		pg_Path_Status[indPath].path_isActiveRecording = true;
-		//pg_Path_Status[indPath].set_path_curve_nbRecordedFrames(pg_current_configuration_rank, 0);
-		//pg_Path_Status[indPath].set_path_curve_readSpeedScale(pg_current_configuration_rank, 1.);
-		PathCurve_Params& curve = pg_Path_Status[indPath].getCurrentCurve(pg_current_configuration_rank);
-		curve.PathCurve_Params_init();
+		PathCurve_Data& curve = pg_Path_Status[indPath].getCurrentCurve(pg_current_configuration_rank);
+		curve.PathCurve_Data_init();
 		// printf("start recording track %d\n",indPath);
 	}
 }
@@ -10656,9 +10654,9 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, is_path_replay[indPath], pg_PathCurve_Params[pg_current_configuration_rank][indPath].nbRecordedFrames);
 	if (indPath >= 1 && indPath <= PG_NB_PATHS
 		&& !is_path_replay[indPath]
-		&& pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank) > 0) {
+		&& pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
 		is_path_replay[indPath] = true;
-		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
+		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
 		switch (indPath) {
 		case 1:
 			*((int *)ScenarioVarPointers[_path_replay_trackNo_1]) = trackNo;
@@ -10737,12 +10735,12 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 		// first time reading: starts from beginning
 		// otherwise starts from where it is
 		//if (pg_Path_Status[indPath].path_indReading < 0) {
-			// restarts from beginning, not from where it was
-			pg_Path_Status[indPath].path_indReading = 0;
+		// restarts from beginning, not from where it was
+		pg_Path_Status[indPath].path_indReading = 0;
 		//}
 		pg_Path_Status[indPath].path_isFirstFrame = true;
-		//printf("-> start_read_path %d\n", indPath);
-		//printf("ind reading %d\n", pg_Path_Status[indPath].path_indReading);
+
+		//printf("-> start_read_path %d ind reading %d\n", indPath, pg_Path_Status[indPath].path_indReading);
 	}
 }
 #endif

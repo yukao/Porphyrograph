@@ -138,6 +138,8 @@ extern int                      nb_IP_Clients;
 extern string					pg_csv_file_name;
 extern string					snapshots_dir_path_name;
 extern string					screen_font_file_name;
+extern GLuint					Screen_Font_texture_Rectangle_texID;
+extern pg_TextureData           screenFontTexData;
 extern int                      screen_font_size;
 
 // nb configuration and scenario files
@@ -240,33 +242,10 @@ int my_stoi(string str);
 double my_stod(string str);
 
 // TEXTURES
-enum pg_Texture_Usages { Texture_master_mask = 0, Texture_mesh, Texture_sensor, Texture_logo, 
-	Texture_brush, Texture_noise, Texture_curve_particle, Texture_splat_particle, Texture_part_init,
-	Texture_part_acc, Texture_pixel_acc, Texture_repop_density, Texture_multilayer_master_mask};
 // number of Texture files
 extern int pg_nb_Texture_files[_NbConfigurations];
 // file names
-extern string *pg_Texture_fileNames[_NbConfigurations];
-extern string *pg_Texture_fileNamesSuffix[_NbConfigurations];
-// usages
-extern pg_Texture_Usages *pg_Texture_usages[_NbConfigurations];
-// rank (if used several times for the same usage)
-extern unsigned int *pg_Texture_Rank[_NbConfigurations];
-// 2D or 3D
-extern int *pg_Texture_Dimension[_NbConfigurations];
-// number of piled 2D textures forisClearAllLayers 3D texture
-extern unsigned int *pg_Texture_Nb_Layers[_NbConfigurations];
-// dimensions
-extern int *pg_Texture_Size_X[_NbConfigurations];
-extern int *pg_Texture_Size_Y[_NbConfigurations];
-// color depth
-extern int *pg_Texture_Nb_Bytes_per_Pixel[_NbConfigurations];
-// rectangle or PoT
-extern bool *pg_Texture_Is_Rectangle[_NbConfigurations];
-// texture inversion
-extern bool *pg_Texture_Invert[_NbConfigurations];
-// texture ID
-extern GLuint *pg_Texture_texID[_NbConfigurations];
+extern vector<pg_TextureData *> pg_Textures[_NbConfigurations];
 
 /// the params of the font file
 extern string                    font_file_encoding;

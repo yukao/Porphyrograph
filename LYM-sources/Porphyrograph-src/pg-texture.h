@@ -139,7 +139,7 @@ extern cv::Mat particleAccImgMatRGBFlipped;
 extern Mat pg_FirstMovieFrame; // First frame in a video (opening or looping) 
 extern bool pg_FirstMovieFrameIsAvailable; // Available frist frame so as to avoid second reading  
 
-											////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
 ////////////////////////////////////////////////////////////////////
 // Images used for displaying or for blending
@@ -150,7 +150,64 @@ enum TextureEncoding { JPG = 0, PNG, PNGA, PNG_GRAY, PNGA_GRAY, RGB, RAW, EmptyT
 extern const char *TextureEncodingString[EmptyTextureEncoding + 1];
 
 enum pg_TextureFormat { pg_byte_tex_format = 0, pg_float_tex_format, Emptypg_TextureFormat };
+enum pg_Texture_Usages {
+	Texture_master_mask = 0, Texture_mesh, Texture_sensor, Texture_logo,
+	Texture_brush, Texture_noise, Texture_curve_particle, Texture_splat_particle, Texture_part_init,
+	Texture_part_acc, Texture_pixel_acc, Texture_repop_density, Texture_multilayer_master_mask
+};
 
+class pg_TextureData {
+	public:
+	// file names
+	string texture_fileName;
+	string texture_fileNameSuffix;// usages
+	// usages
+	pg_Texture_Usages texture_usage;
+	// rank (if used several times for the same usage)
+	unsigned int texture_Rank;
+	// 2D or 3D
+	int texture_Dimension;
+	// number of piled 2D textures for a 3D texture
+	unsigned int texture_Nb_Layers;
+	// dimensions
+	int texture_Size_X;
+	int texture_Size_Y;
+	// color depth
+	int texture_Nb_Bytes_per_Pixel;
+	// rectangle or PoT
+	bool texture_Is_Rectangle;
+	// texture inversion
+	bool texture_Invert;
+	// texture ID
+	GLuint texture_texID;
+	pg_TextureData(void) {
+		texture_fileName = "";
+		texture_fileNameSuffix = "";// usages
+		// usages
+		texture_usage = Texture_brush;
+		// rank (if used several times for the same usage)
+		texture_Rank = 0;
+		// 2D or 3D
+		texture_Dimension = 2;
+		// number of piled 2D textures for a 3D texture
+		texture_Nb_Layers = 1;
+		// dimensions
+		texture_Size_X = 0;
+		texture_Size_Y = 0;
+		// color depth
+		texture_Nb_Bytes_per_Pixel = 4;
+		// rectangle or PoT
+		texture_Is_Rectangle = true;
+		// texture inversion
+		texture_Invert = false;
+		// texture ID
+		texture_texID = 0;
+	}
+	~pg_TextureData(void) {
+	}
+};
+
+extern 	pg_TextureData texDataScreenFont;
 
 ////////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
@@ -273,19 +330,12 @@ void writepng(cv::String imageFileName);
 bool pg_load_compressed_photo(string *fileName, int width, int height, int indConfiguration);
 
 // TEXTURE LOADING
-bool pg_loadTexture3D(string filePrefixName, string fileSuffixName,
-	unsigned int nbTextures, int bytesperpixel,
-	bool invert,
-	GLuint *textureID,
+bool pg_loadTexture3D(pg_TextureData* texData,
 	GLint components, GLenum format,
-	GLenum datatype, GLenum texturefilter,
-	int width, int height);
-bool pg_loadTexture2D(string fileName,
-	GLuint *textureID, bool is_rectangle,
-	bool invert,
+	GLenum datatype, GLenum texturefilter);
+bool pg_loadTexture2D(pg_TextureData* texData,
 	GLint components, GLenum format,
-	GLenum datatype, GLenum texturefilter,
-	int width, int height);
+	GLenum datatype, GLenum texturefilter);
 
 /// NON THREADED LOAD CAMERA FRAME
 #if defined(var_cameraCaptFreq)
