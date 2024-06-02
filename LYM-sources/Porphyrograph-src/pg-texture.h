@@ -254,9 +254,7 @@ extern vector<vector<string>> pg_compressedImageFilesNames[_NbConfigurations];
 
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
-extern std::string pg_ImageDirectory[_NbConfigurations];
 #if defined(var_moving_messages)
-extern std::string pg_MessageDirectory[_NbConfigurations];
 extern std::string pg_MessageFile[_NbConfigurations];
 #endif
 
@@ -264,7 +262,6 @@ extern std::string pg_MessageFile[_NbConfigurations];
 // SHORT CLIP IMAGE FILES
 ////////////////////////////////////////////////////////////////////
 // clips are made of sequences of images loaded in GPU
-extern std::string pg_ClipDirectory[_NbConfigurations];
 extern ClipFramesData** pg_ClipFrames_buffer_data[_NbConfigurations];
 extern int pg_nbClips[_NbConfigurations];
 extern int* pg_nbCompressedClipFramesPerFolder[_NbConfigurations];

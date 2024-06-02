@@ -148,6 +148,9 @@ int main(int argcMain, char **argvMain) {
 	time_t now = time(0);
 	tm *ltm = localtime(&now);
 
+	// initialisation of cwd
+	cwd = GetCurrentWorkingDir();
+
 	// print various components of tm structure.
 	//std::cout << "Year: "<< 1900 + ltm->tm_year << std::endl;
 	//std::cout << "Month: "<< 1 + ltm->tm_mon<< std::endl;
@@ -220,7 +223,7 @@ int main(int argcMain, char **argvMain) {
 	pg_init_scene();
 
 	// Version number
-	string applicationName = "Porphyrograph  (" + project_name + ")";
+	string applicationName = "Porphyrograph  (" + string(project_name) + ")";
 	fprintf(pg_csv_log_file, "%s\n", applicationName.c_str());
 	pg_logFirstLineSceneVariables();
 	printf("%s\n", applicationName.c_str());
@@ -303,8 +306,6 @@ int main(int argcMain, char **argvMain) {
 #endif
 
 
-	// initialisation of cwd
-	cwd = GetCurrentWorkingDir();
 	// lights off the LED
 	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 
@@ -346,7 +347,8 @@ int main(int argcMain, char **argvMain) {
 	// video intialization: loads the movie of the intial configuration
 #if defined(var_movieCaptFreq)
 	if (ScenarioVarConfigurations[_movieCaptFreq][pg_current_configuration_rank]) {
-		if (playing_movieNo >= 0 && playing_movieNo < nb_movies[pg_current_configuration_rank] && playing_movieNo != currentlyPlaying_movieNo) {
+		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
+			&& playing_movieNo != currentlyPlaying_movieNo) {
 			pg_movie_frame.setTo(Scalar(0, 0, 0));
 
 			currentlyPlaying_movieNo = playing_movieNo;
@@ -357,18 +359,12 @@ int main(int argcMain, char **argvMain) {
 			}
 
 			is_movieLoading = true;
-			if (movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].find(':') == std::string::npos) {
-				printf("Loading movie %s\n",
-					(cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
-			}
-			else {
-				printf("Loading movie %s\n",
-					movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
-			}
-			sprintf(AuxString, "/movie_shortName %s", movieShortName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
+			printf("Loading movie %s\n",
+					pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
+			sprintf(AuxString, "/movie_shortName %s", pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoShortName.c_str());
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 
-			pg_initVideoMoviePlayback_nonThreaded(&movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]);
+			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName);
 		}
 	}
 #endif
@@ -598,7 +594,7 @@ void pg_init_scene(void) {
 
 #if defined(var_moving_messages)
 	// reads the text messages in the text file
-	pg_ReadAllDisplayMessages(pg_MessageDirectory[pg_current_configuration_rank], pg_MessageFile[pg_current_configuration_rank]);
+	pg_ReadAllDisplayMessages(pg_MessageFile[pg_current_configuration_rank]);
 #endif
 	
 #if defined(var_Novak_flight_on)
@@ -650,15 +646,15 @@ void pg_init_scene(void) {
 #endif
 
 	// server initialization
-	for (int ind = 0; ind < nb_IP_Servers; ind++) {
-		IP_Servers[ind]->InitServer();
+	for (pg_IPServer* server : IP_Servers) {
+		server->InitServer();
 	}
 	// client initialization
-	for (int ind = 0; ind < nb_IP_Clients; ind++) {
+	for (pg_IPClient* client : IP_Clients) {
 		// printf( "Client %d initialization\n" , ind );
-		  //std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_IP: " << ind << " " << IP_Clients[ind]->Remote_server_IP << "\n";
-		  //std::cout << "IP_Clients[ ind_IP_Client ]->Remote_server_port: " << IP_Clients[ind]->Remote_server_port << "\n";
-		IP_Clients[ind]->InitClient();
+		  //std::cout << "client->Remote_server_IP: " << ind << " " << client->Remote_server_IP << "\n";
+		  //std::cout << "client->Remote_server_port: " << client->Remote_server_port << "\n";
+		client->InitClient();
 		// printf( "Client name %s\n" , IP_Clients[ ind ]->id );
 	}
 	Input_Message_String = new char[max_network_message_length];
@@ -744,8 +740,8 @@ void pg_quit( void ) {
 #endif
 
 	// sends all the remaining messages
-	for (int ind = 0; ind < nb_IP_Clients; ind++) {
-		IP_Clients[ind]->sendIPmessages();
+	for (pg_IPClient* client : IP_Clients) {
+		client->sendIPmessages();
 	}
 
 	// stores the shutdown status 
@@ -773,7 +769,7 @@ void pg_quit( void ) {
 	  pg_webCam_capture.release();
   }
   // release IPCam
-  for (int ind_IPCam = 0; ind_IPCam < nb_IPCam; ind_IPCam++) {
+  for (unsigned int ind_IPCam = 0; ind_IPCam < pg_IPCam_capture.size(); ind_IPCam++) {
 	  if (pg_IPCam_capture[ind_IPCam].isOpened()) {
 		  pg_IPCam_capture[ind_IPCam].release();
 	  }
@@ -790,23 +786,15 @@ void pg_quit( void ) {
   CurrentWindow = NULL;
 
   // printf("releaseUDP\n");
-  if (nb_IP_Servers > 0) {
-    for (int ind = 0; ind < nb_IP_Servers; ind++) {
-      delete IP_Servers[ind];
-      IP_Servers[ind] = NULL;
-    }
-    IP_Servers.clear();
-	nb_IP_Servers = 0;
+  for (pg_IPServer* server : IP_Servers) {
+	  delete server;
   }
+  IP_Servers.clear();
   
-  if (nb_IP_Clients > 0) {
-    for (int ind = 0; ind < nb_IP_Clients; ind++) {
-      delete IP_Clients[ind];
-      IP_Clients[ind] = NULL;
-    }
-	IP_Clients.clear();
-	nb_IP_Clients = 0;
+  for (pg_IPClient* client : IP_Clients) {
+    delete client;
   }
+  IP_Clients.clear();
   
   if (ErrorStr) {
     delete [] ErrorStr;
@@ -1146,11 +1134,11 @@ void window_idle_browse(int step) {
 		pg_flash_control(flash_continuous_generation);
 
 		// UDP messages IN/OUT
-		for (int ind = 0; ind < nb_IP_Servers; ind++) {
-			IP_Servers[ind]->receiveIPMessages();
+		for (pg_IPServer* server : IP_Servers) {
+			server->receiveIPMessages();
 		}
-		for (int ind = 0; ind < nb_IP_Clients; ind++) {
-			IP_Clients[ind]->sendIPmessages();
+		for (pg_IPClient* client : IP_Clients) {
+			client->sendIPmessages();
 		}
 
 		// MIDI messages IN

@@ -174,6 +174,10 @@ def ReadConfigurationVariables(configurationFileName) :
 						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "true"))
 					else :
 						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "false"))
+				elif(config_type == "string") :
+					ScriptHeader.write("constexpr auto %-30s = \"%s\";\n" % (config_id, config_init))
+				elif(config_type == "const") :
+					ScriptHeader.write("#define %-30s %-10s\n" % (config_id, config_init))
 				else :
 					ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, config_init))
 			

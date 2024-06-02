@@ -148,10 +148,21 @@ extern PROCESS_INFORMATION pi_script_1;
 // WORKING VARIABLES
 /////////////////////////////////////////////////////////////////////////
 
+// ++++++++++++++++++++++ PATHS, IDs FROM CONFIGURATION FILE ++++++++++++++++++++ 
+extern string scripts_directory;
+extern string videos_directory;
+extern string soundtracks_directory;
+extern string cliparts_directory;
+extern string diaporamas_directory;
+extern string meshes_directory;
+extern string messages_directory;
+extern string SVGpaths_directory;
+extern string textures_directory;
+extern string clips_directory;
+extern string shaders_directory;
+
 // ++++++++++++++++++++++ GLUT MODIFIER ++++++++++++++++++++ 
 extern int pg_key_modifier;
-
-extern std::string project_name;
 
 // ++++++++++++++++++++++ SCENARIO +++++++++++++++++++++++++ 
 extern int pg_CurrentSceneIndex;

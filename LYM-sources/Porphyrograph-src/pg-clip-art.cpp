@@ -27,9 +27,6 @@
 
 bool has_NV_path_rendering = false;
 
-GLuint ClipArt_path_baseID[_NbConfigurations] = { 0 };
-GLuint *ClipArt_file_baseID[_NbConfigurations] = { NULL };
-unsigned int** ClipArt_path_fill_color[_NbConfigurations] = { NULL };
 void initializeNVPathRender(void) {
 	has_NV_path_rendering = (glutExtensionSupported("GL_NV_path_rendering") != 0);
 	if (!has_NV_path_rendering) {
@@ -41,7 +38,7 @@ void initializeNVPathRender(void) {
 void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile, int indConfiguration) {
 	string splitFileName = fileName;
 	splitFileName.replace(fileName.length() - 4, 0, "_split");
-	sprintf(ErrorStr,"python  C:\\home\\LYM-sources\\vv\\vv_python\\utils\\vv_one_SVG_tag_per_line.py -i ./%s -o ./%s",
+	sprintf(ErrorStr,"python  C:\\home\\LYM-sources\\vv\\vv_python\\utils\\vv_one_SVG_tag_per_line.py -i %s -o %s",
 		fileName.c_str(), splitFileName.c_str());
 	system(ErrorStr);
 
@@ -73,7 +70,7 @@ void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile
 	ind_gpu_path = 0;
 	while (std::getline(pathFin, line)) {
 		if (!line.empty() && ind_gpu_path < nb_gpu_paths) {
-			switch (pg_ClipArt_Colors[indConfiguration][indClipArtFile][ind_gpu_path]) {
+			switch (pg_ClipArts[indConfiguration][indClipArtFile]->pg_ClipArt_Colors[ind_gpu_path]) {
 			case ClipArt_nat:
 				ClipArt_path_fill_color[indConfiguration][indClipArtFile][ind_gpu_path]
 					= (unsigned int) (std::stoi(std::string("0x888888"), nullptr, 16));
@@ -161,7 +158,7 @@ void LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile
 						// const char *svg_str = "M-122.304 84.285C-122.304 84.285 -122.203 86.179 -123.027 86.16C-123.851 86.141 -140.305 38.066 -160.833 40.309C-160.833 40.309 -143.05 32.956 -122.304 84.285z";
 						size_t svg_len = line.size();
 						const char* svg_str = line.c_str();
-						glPathStringNV(ClipArt_file_baseID[indConfiguration][indClipArtFile] + ind_gpu_path - 1, GL_PATH_FORMAT_SVG_NV,
+						glPathStringNV(pg_ClipArts[indConfiguration][indClipArtFile]->ClipArt_file_baseID + ind_gpu_path - 1, GL_PATH_FORMAT_SVG_NV,
 							(GLsizei)svg_len, svg_str);
 					}
 				}
@@ -361,9 +358,10 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 #endif
 	// scenario-based clip art color for surface filling
 	if (low_palette >= 0) {
-		low_palette = low_palette % nb_pen_colorPresets[pg_current_configuration_rank];
-		int high_palette = (low_palette + 1) % nb_pen_colorPresets[pg_current_configuration_rank];
-		Color color_interp = (pg_colorPreset_values[pg_current_configuration_rank][low_palette] * (1.f - alpha)) + (pg_colorPreset_values[pg_current_configuration_rank][high_palette] * alpha);
+		low_palette = low_palette % pg_ColorPresets[pg_current_configuration_rank].size();
+		int high_palette = (low_palette + 1) % pg_ColorPresets[pg_current_configuration_rank].size();
+		Color color_interp = (pg_ColorPresets[pg_current_configuration_rank][low_palette]->pg_colorPreset_values * (1.f - alpha))
+			+ (pg_ColorPresets[pg_current_configuration_rank][high_palette]->pg_colorPreset_values * alpha);
 		//if (indLayer == 0) {
 		//	color_interp.print();
 		//}
@@ -371,12 +369,12 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 	else {
 		//printf("config %d active clipart display %d layer %d color %d\n", pg_current_configuration_rank, indClipArt, indLayer, 
-		//	ClipArt_path_fill_color[pg_current_configuration_rank][indClipArt][indLayer]);
+		//	pg_ClipArts[pg_current_configuration_rank][indClipArt]->ClipArt_path_fill_color[indLayer]);
 		// original clip art color for surface filling
 		OpenGLIntColors(ClipArt_path_fill_color[pg_current_configuration_rank][indClipArt][indLayer]);
 	}
-	glStencilFillPathNV(ClipArt_file_baseID[pg_current_configuration_rank][indClipArt] + indLayer, GL_COUNT_UP_NV, 0x1F);
-	glCoverFillPathNV(ClipArt_file_baseID[pg_current_configuration_rank][indClipArt] + indLayer, GL_BOUNDING_BOX_NV);
+	glStencilFillPathNV(pg_ClipArts[pg_current_configuration_rank][indClipArt]->ClipArt_file_baseID + indLayer, GL_COUNT_UP_NV, 0x1F);
+	glCoverFillPathNV(pg_ClipArts[pg_current_configuration_rank][indClipArt]->ClipArt_file_baseID + indLayer, GL_BOUNDING_BOX_NV);
 
 	float width = 0.f;
 #if defined(var_ClipArt_width)
@@ -407,9 +405,10 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 #endif
 		// scenario-based clip art color for stroke
 		if (low_palette >= 0) {
-			low_palette = low_palette % nb_pen_colorPresets[pg_current_configuration_rank];
-			int high_palette = (low_palette + 1) % nb_pen_colorPresets[pg_current_configuration_rank];
-			Color color_interp = (pg_colorPreset_values[pg_current_configuration_rank][low_palette] * (1.f - alpha)) + (pg_colorPreset_values[pg_current_configuration_rank][high_palette] * alpha);
+			low_palette = low_palette % pg_ColorPresets[pg_current_configuration_rank].size();
+			int high_palette = (low_palette + 1) % pg_ColorPresets[pg_current_configuration_rank].size();
+			Color color_interp = (pg_ColorPresets[pg_current_configuration_rank][low_palette]->pg_colorPreset_values * (1.f - alpha))
+				+ (pg_ColorPresets[pg_current_configuration_rank][high_palette]->pg_colorPreset_values * alpha);
 			//if (indLayer == 0) {
 			//	color_interp.print();
 			//}
@@ -419,9 +418,9 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 			// black
 			glColor3ub((unsigned char)0, (unsigned char)0, (unsigned char)0);
 		}
-		glPathParameterfNV(ClipArt_file_baseID[pg_current_configuration_rank][indClipArt] + indLayer, GL_PATH_STROKE_WIDTH_NV, width);
-		glStencilStrokePathNV(ClipArt_file_baseID[pg_current_configuration_rank][indClipArt] + indLayer, GL_COUNT_UP_NV, 0x1F);
-		glCoverStrokePathNV(ClipArt_file_baseID[pg_current_configuration_rank][indClipArt] + indLayer, GL_BOUNDING_BOX_NV);
+		glPathParameterfNV(pg_ClipArts[pg_current_configuration_rank][indClipArt]->ClipArt_file_baseID + indLayer, GL_PATH_STROKE_WIDTH_NV, width);
+		glStencilStrokePathNV(pg_ClipArts[pg_current_configuration_rank][indClipArt]->ClipArt_file_baseID + indLayer, GL_COUNT_UP_NV, 0x1F);
+		glCoverStrokePathNV(pg_ClipArts[pg_current_configuration_rank][indClipArt]->ClipArt_file_baseID + indLayer, GL_BOUNDING_BOX_NV);
 	}
 }
 
@@ -448,22 +447,22 @@ void pg_Display_All_ClipArt(int activeFiles) {
 				glMatrixLoadIdentityEXT(GL_PROJECTION);
 				glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
 
-				int maxNbDisplayedClipArt = std::min(pg_nb_ClipArt[pg_current_configuration_rank], 32);
+				int maxNbDisplayedClipArt = std::min(int(pg_ClipArts[pg_current_configuration_rank].size()), 32);
 				if (activeFiles == -1) { // if activeClipArt is equal to -1: all clip arts are visible
-					maxNbDisplayedClipArt = pg_nb_ClipArt[pg_current_configuration_rank];
+					maxNbDisplayedClipArt = pg_ClipArts[pg_current_configuration_rank].size();
 				}
 				for (int indClipArt = 0; indClipArt < maxNbDisplayedClipArt; indClipArt++) {
 					if ((activeFiles == -1) || (activeFiles & (1 << indClipArt))) {
 						glMatrixPushEXT(GL_MODELVIEW); {
 							glMatrixLoadIdentityEXT(GL_MODELVIEW);
-							glTranslatef(pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt], pg_ClipArt_Translation_Y[pg_current_configuration_rank][indClipArt], 0);
-							glRotatef(pg_ClipArt_Rotation[pg_current_configuration_rank][indClipArt], 0, 0, 1);
-							glScalef(pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], 1);
+							glTranslatef(pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Translation_X, pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Translation_Y, 0);
+							glRotatef(pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Rotation, 0, 0, 1);
+							glScalef(pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Scale, pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Scale, 1);
 							for (int indPath = 0;
-								indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt];
+								indPath < pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_nb_paths_in_ClipArt;
 								indPath++) {
-								if (indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt]
-									&& pg_ClipArt_SubPath[pg_current_configuration_rank][indClipArt][indPath] == true) {
+								if (indPath < pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_nb_paths_in_ClipArt
+									&& pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_SubPath[indPath] == true) {
 									//printf("config %d active clipart display %d layer %d\n", pg_current_configuration_rank, indClipArt, indPath);
 									pg_Display_One_ClipArt(indClipArt, indPath);
 								}
@@ -483,9 +482,9 @@ void pg_listAllClipArts(void) {
 	printf("Listing ClipArts:\n");
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
-		for (int indClipArt = 0; indClipArt < pg_nb_ClipArt[indConfiguration]; indClipArt++) {
+		for (ClipArt * aClipArt : pg_ClipArts[indConfiguration]) {
 			if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
-				std::cout << pg_ClipArt_fileNames[indConfiguration][indClipArt] << " (" << pg_nb_paths_in_ClipArt[indConfiguration][indClipArt] << " paths), ";
+				std::cout << aClipArt->pg_ClipArt_fileNames << " (" << aClipArt->pg_nb_paths_in_ClipArt << " paths), ";
 			}
 		}
 		std::cout << std::endl;
@@ -606,8 +605,8 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 			// decomposition of the string into characters and svg index lookup
 			for (unsigned int indChar = 0; indChar < displayed_text.size(); indChar++) {
 				// displays the character
-				int indClipArt = indClipArts[indChar];
-				if (indClipArt >= 0 && indClipArt < pg_nb_ClipArt[pg_current_configuration_rank]) {
+				unsigned int indClipArt = indClipArts[indChar];
+				if (indClipArt >= 0 && indClipArt < pg_ClipArts[pg_current_configuration_rank].size()) {
 					//printf("active clipart display %d\n", indClipArt);
 					glMatrixLoadIdentityEXT(GL_MODELVIEW);
 					float y_transl = 0.f;
@@ -618,7 +617,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					}
 					// the translation is given in the scenario file together with the clipart declaration at the bottom of the scenario
 					else {
-						y_transl = pg_ClipArt_Translation_Y[pg_current_configuration_rank][indClipArt];
+						y_transl = pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Translation_Y;
 					}
 #ifdef ETOILES
 					glTranslatef(100.f + 100.f * indChar, y_transl, 0);
@@ -635,21 +634,21 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					// XxY translation of the character
 					// Y translation is given by motion or by scenario
 					// X translation is the scenario translation + the horizontal shift due to position in the string
-					glTranslatef(pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt] * 1.5f
-						+ pg_ClipArt_Translation_X[pg_current_configuration_rank][indClipArt] * indChar + DisplayText_rand_translX[indChar],
+					glTranslatef(pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Translation_X * 1.5f
+						+ pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Translation_X * indChar + DisplayText_rand_translX[indChar],
 						y_transl + DisplayText_rand_translY[indChar], 0);
 #endif
-					//glRotatef(pg_ClipArt_Rotation[pg_current_configuration_rank][indClipArt], 0, 0, 1);
-					//glScalef(pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt], 1);
+					//glRotatef(pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Rotation, 0, 0, 1);
+					//glScalef(pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Scale, pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Scale, 1);
 					// the clipart can be made of several sub-paths, only display the ones that are not been set to off
 					for (int indPath = 0;
-						indPath < pg_nb_paths_in_ClipArt[pg_current_configuration_rank][indClipArt];
+						indPath < pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_nb_paths_in_ClipArt;
 						indPath++) {
-						//if (pg_ClipArt_SubPath[pg_current_configuration_rank][indClipArt][indPath] == true) {
-							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArt_Colors[pg_current_configuration_rank][indClipArt][indPath] 
+						//if (pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_SubPath[indPath] == true) {
+							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Colors[indPath] 
 							//	<< " ind PATH " << indPath << " ind CLIPART " << indClipArt << std::endl;
 #ifndef ETOILES
-						float scale = pg_ClipArt_Scale[pg_current_configuration_rank][indClipArt];
+						float scale = pg_ClipArts[pg_current_configuration_rank][indClipArt]->pg_ClipArt_Scale;
 						glScalef(scale, scale, scale);
 #endif
 						pg_Display_One_ClipArt(indClipArt, indPath);
@@ -686,20 +685,19 @@ void pg_loadAllClipArts(void) {
 		//std::cout << "    " << indConfiguration << ": ";
 		if (ScenarioVarConfigurations[_activeClipArts][indConfiguration]) {
 			const char* ClipArt_programName = "nvpr_ClipArt";
-			//std::cout << "Loading " << pg_nb_ClipArt[indConfiguration] << " ClipArt\n";
+			//std::cout << "Loading " << pg_ClipArts[indConfiguration].size() << " ClipArt\n";
 			initializeNVPathRender();
 			if (has_NV_path_rendering) {
 				ClipArt_path_baseID[indConfiguration] = glGenPathsNV(pg_nb_tot_SvgGpu_paths[indConfiguration]);
-				ClipArt_file_baseID[indConfiguration] = new GLuint[pg_nb_ClipArt[indConfiguration]];
-				ClipArt_path_fill_color[indConfiguration] = new unsigned int* [pg_nb_ClipArt[indConfiguration]];
+				ClipArt_path_fill_color[indConfiguration] = new unsigned int* [pg_ClipArts[indConfiguration].size()];
 				int nb_tot_paths = 0;
-				for (int indClipArtFile = 0; indClipArtFile < pg_nb_ClipArt[indConfiguration]; indClipArtFile++) {
-					//std::cout << "Data/" + project_name + "-data/ClipArts/" + pg_ClipArt_fileNames[indConfiguration][indClipArtFile] << " (" << pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile] << " paths), ";
+				for (unsigned int indClipArtFile = 0; indClipArtFile < pg_ClipArts[indConfiguration].size(); indClipArtFile++) {
+					//std::cout << pg_ClipArts[indConfiguration][indClipArtFile]->pg_ClipArt_fileNames << " (" << pg_ClipArts[indConfiguration][indClipArtFile]->pg_nb_paths_in_ClipArt << " paths), ";
 					ClipArt_path_fill_color[indConfiguration][indClipArtFile] = new unsigned int[pg_nb_tot_SvgGpu_paths[indConfiguration]];
-					ClipArt_file_baseID[indConfiguration][indClipArtFile] = ClipArt_path_baseID[indConfiguration] + nb_tot_paths;
-					LoadClipArtPathsToGPU("Data/" + project_name + "-data/ClipArts/" + pg_ClipArt_fileNames[indConfiguration][indClipArtFile],
-						pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile], indClipArtFile, indConfiguration);
-					nb_tot_paths += pg_nb_paths_in_ClipArt[indConfiguration][indClipArtFile];
+					pg_ClipArts[indConfiguration][indClipArtFile]->ClipArt_file_baseID = ClipArt_path_baseID[indConfiguration] + nb_tot_paths;
+					LoadClipArtPathsToGPU(pg_ClipArts[indConfiguration][indClipArtFile]->pg_ClipArt_fileNames,
+						pg_ClipArts[indConfiguration][indClipArtFile]->pg_nb_paths_in_ClipArt, indClipArtFile, indConfiguration);
+					nb_tot_paths += pg_ClipArts[indConfiguration][indClipArtFile]->pg_nb_paths_in_ClipArt;
 				}
 			}
 			else {

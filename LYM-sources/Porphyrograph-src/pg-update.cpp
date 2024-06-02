@@ -303,38 +303,35 @@ int pg_movie_frame_width = 0;
 int pg_movie_frame_height = 0;
 
 // video tracks
-vector<string> movieFileName[_NbConfigurations];
-vector<string> movieShortName[_NbConfigurations];
-vector<string> movieSoundtrackPeaksFileName[_NbConfigurations];
-vector<string> movieSoundtrackOnsetsFileName[_NbConfigurations];
-vector<vector<float>> movieSoundtrackPeaks[_NbConfigurations];
-vector<vector<float>> movieSoundtrackOnsets[_NbConfigurations];
-int nb_movies[_NbConfigurations] = {0};
+//vector<string> movieFileName[_NbConfigurations];
+//vector<string> movieShortName[_NbConfigurations];
+//vector<string> movieSoundtrackPeaksFileName[_NbConfigurations];
+//vector<string> movieSoundtrackOnsetsFileName[_NbConfigurations];
+//vector<vector<float>> videoSoundtrackPeaks[_NbConfigurations];
+//vector<vector<float>> videoSoundtrackOnsets[_NbConfigurations];
+vector<VideoTrack*> pg_VideoTracks[_NbConfigurations];
 
 // soundtracks
-vector<string> trackFileName[_NbConfigurations];
-vector<string> trackShortName[_NbConfigurations];
-vector<string> trackSoundtrackPeaksFileName[_NbConfigurations];
-vector<string> trackSoundtrackOnsetsFileName[_NbConfigurations];
-vector<vector<float>> trackSoundtrackPeaks[_NbConfigurations];
-vector<vector<float>> trackSoundtrackOnsets[_NbConfigurations];
-vector<float> trackSoundtrackOnsetsAndPeasksOffset[_NbConfigurations];
-int nb_soundtracks[_NbConfigurations] = {0};
+//vector<string> pg_SoundTracks[_NbConfigurations]->soundtrackFileName;
+//vector<string> pg_SoundTracks[_NbConfigurations]->trackShortName;
+//vector<string> pg_SoundTracks[_NbConfigurations]->trackSoundtrackPeaksFileName;
+//vector<string> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackOnsetsFileName;
+//vector<vector<float>> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackPeaks;
+//vector<vector<float>> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackOnsets;
+//vector<float> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackOnsetsAndPeasksOffset;
+vector<SoundTrack*> pg_SoundTracks[_NbConfigurations];
 int currentTrackSoundPeakIndex = 0;
 int nbTrackSoundPeakIndex[_NbConfigurations] = {0};
 int currentTrackSoundOnsetIndex = 0;
 int nbTrackSoundOnsetIndex[_NbConfigurations] = {0};
 
 // pen palettes presets
-int nb_pen_colorPresets[_NbConfigurations] = {0};
-vector<string> pen_colorPresets_names[_NbConfigurations];
-Color* pg_colorPreset_values[_NbConfigurations] = { NULL };
+vector<ColorPreset*> pg_ColorPresets[_NbConfigurations];
 
 // lights presets
-int pg_nb_lights[_NbConfigurations] = {0};
 int pg_nb_light_groups[_NbConfigurations] = {0};
-Light* pg_lights[_NbConfigurations] = { NULL };
-LightGroup* pg_light_groups[_NbConfigurations] = { NULL };
+vector<Light*> pg_Lights[_NbConfigurations];
+vector<LightGroup*> pg_light_groups[_NbConfigurations];
 // interface current light group
 int pg_interface_light_group = 0;
 
@@ -365,32 +362,27 @@ std::unordered_map<int, std::string> pg_light_loop_param_hashMap = {
 };
 
 // pen palettes colors
-int nb_pen_palette_colors[_NbConfigurations] = {0};
-vector<string> pen_palette_colors_names[_NbConfigurations];
-float** pen_palette_colors_values[_NbConfigurations] = { NULL };
+vector<Palette*> pg_Palettes[_NbConfigurations];
 // photo albums
-string photoAlbumDirName[_NbConfigurations];
-int nb_photo_albums[_NbConfigurations] = {0};
+std::string pg_ImageDirectory[_NbConfigurations] = { "" };
 // short video clip albums
-string clipAlbumDirName[_NbConfigurations];
-int nb_clip_albums[_NbConfigurations] = {0};
+string pg_ClipDirectory[_NbConfigurations] = { "" };
+int pg_NbClipAlbums[_NbConfigurations] = {0};
 int clip_image_width[_NbConfigurations] = {0};
 int clip_image_height[_NbConfigurations] = {0};
 int clip_crop_width[_NbConfigurations] = {0};
 int clip_crop_height[_NbConfigurations] = {0};
 int clip_max_length[_NbConfigurations] = {0};
 // pen brushes
-string pen_brushes_fileName[_NbConfigurations];
+string pen_brushes_fileName[_NbConfigurations] = { "" };
 int nb_pen_brushes[_NbConfigurations] = {0};
 // textures with multiple layers
 int nb_layers_master_mask[_NbConfigurations] = {0};
 #if defined(var_cameraCaptFreq)
 VideoCapture  pg_webCam_capture;
-VideoCapture* pg_IPCam_capture;
-String* pg_IPCam_capture_address;
-int nb_IPCam = 0;
-int nb_webCam = 0;
-webCam* pg_webCams = NULL;
+vector <VideoCapture> pg_IPCam_capture;
+vector<String> pg_IPCam_capture_address;
+vector<webCam*> pg_webCams;
 int pg_current_active_cameraNo = INT_MIN;
 bool pg_initializedWebcam = false;
 bool pg_cameraCaptureIsOn = false;
@@ -446,14 +438,14 @@ media_status::media_status() {
 	pg_movie_sound_peak = false;
 	currentMovieSoundPeakIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbMovieSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
+		nbMovieSoundPeakIndex = pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackPeaks.size();
 	}
 	else {
 		nbMovieSoundPeakIndex = 0;
 	}
 	currentMovieSoundOnsetIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbMovieSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
+		nbMovieSoundOnsetIndex = pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackOnsets.size();
 	}
 	else {
 		nbMovieSoundOnsetIndex = 0;
@@ -505,10 +497,9 @@ const void media_status::reset_initialTime(float new_captFreq) {
 
 const void media_status::updateMoviePeakOrOnset() {
 	double timeFromBeginning = pg_CurrentClockTime - initialTime;
-	if (int(movieSoundtrackPeaks[pg_current_configuration_rank].size()) > currentlyPlaying_movieNo 
-		&& int(movieSoundtrackOnsets[pg_current_configuration_rank].size()) > currentlyPlaying_movieNo
-		&& movieSoundtrackPeaksFileName[pg_current_configuration_rank][currentlyPlaying_movieNo] != "") {
-		updatePeakOrOnset(timeFromBeginning, &movieSoundtrackPeaks[pg_current_configuration_rank][currentlyPlaying_movieNo], &movieSoundtrackOnsets[pg_current_configuration_rank][currentlyPlaying_movieNo],
+	if (int(pg_VideoTracks[pg_current_configuration_rank].size()) > currentlyPlaying_movieNo
+		&& pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackPeaksFileName != "") {
+		updatePeakOrOnset(timeFromBeginning, &pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackPeaks, &pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackOnsets,
 			&pg_movie_sound_peak, &pg_movie_sound_onset, nbMovieSoundPeakIndex, nbMovieSoundOnsetIndex, &currentMovieSoundPeakIndex, &currentMovieSoundOnsetIndex);
 	}
 }
@@ -526,14 +517,14 @@ const void media_status::reset_movie(int nbTotFramesLeft) {
 
 	currentMovieSoundPeakIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbMovieSoundPeakIndex = movieSoundtrackPeaks[currentlyPlaying_movieNo].size();
+		nbMovieSoundPeakIndex = pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackPeaks.size();
 	}
 	else {
 		nbMovieSoundPeakIndex = 0;
 	}
 	currentMovieSoundOnsetIndex = 0;
 	if (currentlyPlaying_movieNo >= 0) {
-		nbMovieSoundOnsetIndex = movieSoundtrackOnsets[currentlyPlaying_movieNo].size();
+		nbMovieSoundOnsetIndex = pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoSoundtrackOnsets.size();
 	}
 	else {
 		nbMovieSoundOnsetIndex = 0;
@@ -542,34 +533,6 @@ const void media_status::reset_movie(int nbTotFramesLeft) {
 media_status::~media_status() {
 
 }
-//void pg_loadFirstVideo(void) {
-//	if (ScenarioVarConfigurations[_movieCaptFreq][pg_current_configuration_rank]) {
-//		if (playing_movieNo >= 0 && playing_movieNo < nb_movies[pg_current_configuration_rank] && playing_movieNo != currentlyPlaying_movieNo) {
-//			pg_movie_frame.setTo(Scalar(0, 0, 0));
-//
-//			currentlyPlaying_movieNo = playing_movieNo;
-//
-//			// texture ID initialization (should not be inside a thread)
-//			if (pg_movie_texture_texID == NULL_ID) {
-//				glGenTextures(1, &pg_movie_texture_texID);
-//			}
-//
-//			is_movieLoading = true;
-//			if (movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].find(':') == std::string::npos) {
-//				printf("Loading movie %s\n",
-//					(cwd + "/Data/" + project_name + "-data/videos/" + movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]).c_str());
-//			}
-//			else {
-//				printf("Loading movie %s\n",
-//					movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
-//			}
-//			sprintf(AuxString, "/movie_shortName %s", movieShortName[pg_current_configuration_rank][currentlyPlaying_movieNo].c_str());
-//			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-//
-//			pg_initVideoMoviePlayback_nonThreaded(&movieFileName[pg_current_configuration_rank][currentlyPlaying_movieNo]);
-//		}
-//	}
-//}
 #endif
 
 // checks whether a peak or an onset are passed or closer than one frame
@@ -962,15 +925,15 @@ void window_display(void) {
 #if defined(var_activeMeshes)
 	if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank]) {
 		// updates mesh animation
-		for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files[pg_current_configuration_rank]; indMeshFile++) {
+		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
 			// visibility
 			bool visible = false;
 #if defined(var_moving_messages)
 			visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
 #elif defined(var_Caverne_Mesh_Profusion)
-			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_CaverneActveMesh[indMeshFile]
-				&& (pg_CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile] > pg_CaverneMeshWakeupTime[indMeshFile])
-				&& (pg_CurrentClockTime < pg_CaverneMeshDeathTime[indMeshFile]));
+			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneActveMesh
+				&& (pg_CurrentClockTime - pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshBirthTime > pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshWakeupTime)
+				&& (pg_CurrentClockTime < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshDeathTime));
 #else
 			visible = (activeMeshes & (1 << indMeshFile));
 #endif
@@ -994,10 +957,13 @@ void window_display(void) {
 
 #if defined(PG_WITH_PORTAUDIO)
 	double timeFromBeginning = RealTime() - soundfile_data.sound_file_StartReadingTime;
-	if (currentlyPlaying_trackNo >= 0 && int(trackSoundtrackPeaks[pg_current_configuration_rank].size()) > currentlyPlaying_trackNo && int(trackSoundtrackOnsets[pg_current_configuration_rank][pg_current_configuration_rank].size()) > currentlyPlaying_trackNo) {
-		//printf("size %d %d\n", trackSoundtrackPeaks[currentlyPlaying_trackNo].size(), trackSoundtrackPeaks[currentlyPlaying_trackNo].size());
-		updatePeakOrOnset(timeFromBeginning, &trackSoundtrackPeaks[pg_current_configuration_rank][currentlyPlaying_trackNo], &trackSoundtrackOnsets[pg_current_configuration_rank][currentlyPlaying_trackNo],
-			&pg_track_sound_peak, &pg_track_sound_onset, nbTrackSoundPeakIndex[pg_current_configuration_rank], nbTrackSoundOnsetIndex[pg_current_configuration_rank], &currentTrackSoundPeakIndex, &currentTrackSoundOnsetIndex);
+	if (currentlyPlaying_trackNo >= 0 
+		&& int(pg_SoundTracks[pg_current_configuration_rank].size()) > currentlyPlaying_trackNo) {
+		//printf("size %d %d\n", pg_SoundTracks[currentlyPlaying_trackNo]->soundTrackSoundtrackPeaks.size(), pg_SoundTracks[currentlyPlaying_trackNo]->soundTrackSoundtrackPeaks.size());
+		updatePeakOrOnset(timeFromBeginning, &pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackPeaks, 
+			&pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackOnsets,
+			&pg_track_sound_peak, &pg_track_sound_onset, nbTrackSoundPeakIndex[pg_current_configuration_rank], 
+			nbTrackSoundOnsetIndex[pg_current_configuration_rank], &currentTrackSoundPeakIndex, &currentTrackSoundOnsetIndex);
 #if defined(var_photo_diaporama)
 		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
 			if (pg_track_sound_onset) {
@@ -1063,23 +1029,23 @@ void window_display(void) {
 	// ---------------- frame by frame output --------------------- //
 	// Svg screen shots
 	// printf("Draw Svg\n" );
-	if (take_snapshots && outputSvg) {
+	if (take_snapshots && pg_Svg_Capture_param.outputSvg) {
 		// frame count based output
-		if (stepSvgInFrames > 0) {
-			if (pg_FrameNo % stepSvgInFrames == 0
-				&& pg_FrameNo / stepSvgInFrames >= beginSvg &&
-				pg_FrameNo / stepSvgInFrames <= endSvg) {
+		if (pg_Svg_Capture_param.stepSvgInFrames > 0) {
+			if (pg_FrameNo % pg_Svg_Capture_param.stepSvgInFrames == 0
+				&& pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames >= pg_Svg_Capture_param.beginSvg &&
+				pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames <= pg_Svg_Capture_param.endSvg) {
 				pg_draw_scene( _Svg );
 			}
 		}
-		else if (stepSvgInSeconds > 0) {
-			if (nextSvgCapture < 0) {
-				nextSvgCapture = pg_CurrentClockTime;
+		else if (pg_Svg_Capture_param.stepSvgInSeconds > 0) {
+			if (pg_Svg_Capture_param.nextSvgCapture < 0) {
+				pg_Svg_Capture_param.nextSvgCapture = pg_CurrentClockTime;
 			}
-			if (pg_CurrentClockTime >= nextSvgCapture
-				&& pg_CurrentClockTime >= beginSvg &&
-				pg_CurrentClockTime <= endSvg) {
-				nextSvgCapture = max(nextSvgCapture + stepSvgInSeconds, pg_CurrentClockTime);
+			if (pg_CurrentClockTime >= pg_Svg_Capture_param.nextSvgCapture
+				&& pg_CurrentClockTime >= pg_Svg_Capture_param.beginSvg &&
+				pg_CurrentClockTime <= pg_Svg_Capture_param.endSvg) {
+				pg_Svg_Capture_param.nextSvgCapture = max(pg_Svg_Capture_param.nextSvgCapture + pg_Svg_Capture_param.stepSvgInSeconds, pg_CurrentClockTime);
 				pg_draw_scene( _Svg );
 			}
 		}
@@ -1088,23 +1054,23 @@ void window_display(void) {
 	// ---------------- frame by frame output --------------------- //
 	// Png screen shots
 	// printf("Draw Png\n" );
-	if (take_snapshots && outputPng ) {
+	if (take_snapshots && pg_Png_Capture_param.outputPng ) {
 		// frame count based output
-		if (stepPngInFrames > 0) {
-			if (pg_FrameNo % stepPngInFrames == 0
-				&& pg_FrameNo / stepPngInFrames >= beginPng &&
-				pg_FrameNo / stepPngInFrames <= endPng) {
+		if (pg_Png_Capture_param.stepPngInFrames > 0) {
+			if (pg_FrameNo % pg_Png_Capture_param.stepPngInFrames == 0
+				&& pg_FrameNo / pg_Png_Capture_param.stepPngInFrames >= pg_Png_Capture_param.beginPng &&
+				pg_FrameNo / pg_Png_Capture_param.stepPngInFrames <= pg_Png_Capture_param.endPng) {
 				pg_draw_scene( _Png );
 			}
 		}
-		else if (stepPngInSeconds > 0) {
-			if (nextPngCapture < 0) {
-				nextPngCapture = pg_CurrentClockTime;
+		else if (pg_Png_Capture_param.stepPngInSeconds > 0) {
+			if (pg_Png_Capture_param.nextPngCapture < 0) {
+				pg_Png_Capture_param.nextPngCapture = pg_CurrentClockTime;
 			}
-			if (pg_CurrentClockTime >= nextPngCapture
-				&& pg_CurrentClockTime >= beginPng &&
-				pg_CurrentClockTime <= endPng) {
-				nextPngCapture = max(nextPngCapture + stepPngInSeconds, pg_CurrentClockTime);
+			if (pg_CurrentClockTime >= pg_Png_Capture_param.nextPngCapture
+				&& pg_CurrentClockTime >= pg_Png_Capture_param.beginPng &&
+				pg_CurrentClockTime <= pg_Png_Capture_param.endPng) {
+				pg_Png_Capture_param.nextPngCapture = max(pg_Png_Capture_param.nextPngCapture + pg_Png_Capture_param.stepPngInSeconds, pg_CurrentClockTime);
 				pg_draw_scene( _Png );
 			}
 		}
@@ -1113,23 +1079,23 @@ void window_display(void) {
 	// ---------------- frame by frame output --------------------- //
 	// Jpg screen shots
 	// printf("Draw Jpg\n"  );
-	if (take_snapshots && outputJpg) {
+	if (take_snapshots && pg_Jpg_Capture_param.outputJpg) {
 		// frame count based output
-		if (stepJpgInFrames > 0) {
-			if (pg_FrameNo % stepJpgInFrames == 0
-				&& pg_FrameNo / stepJpgInFrames >= beginJpg &&
-				pg_FrameNo / stepJpgInFrames <= endJpg) {
+		if (pg_Jpg_Capture_param.stepJpgInFrames > 0) {
+			if (pg_FrameNo % pg_Jpg_Capture_param.stepJpgInFrames == 0
+				&& pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames >= pg_Jpg_Capture_param.beginJpg &&
+				pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames <= pg_Jpg_Capture_param.endJpg) {
 				pg_draw_scene( _Jpg );
 			}
 		}
-		else if (stepJpgInSeconds > 0) {
-			if (nextJpgCapture < 0) {
-				nextJpgCapture = pg_CurrentClockTime;
+		else if (pg_Jpg_Capture_param.stepJpgInSeconds > 0) {
+			if (pg_Jpg_Capture_param.nextJpgCapture < 0) {
+				pg_Jpg_Capture_param.nextJpgCapture = pg_CurrentClockTime;
 			}
-			if (pg_CurrentClockTime >= nextJpgCapture
-				&& pg_CurrentClockTime >= beginJpg &&
-				pg_CurrentClockTime <= endJpg) {
-				nextJpgCapture = max(nextJpgCapture + stepJpgInSeconds, pg_CurrentClockTime);
+			if (pg_CurrentClockTime >= pg_Jpg_Capture_param.nextJpgCapture
+				&& pg_CurrentClockTime >= pg_Jpg_Capture_param.beginJpg &&
+				pg_CurrentClockTime <= pg_Jpg_Capture_param.endJpg) {
+				pg_Jpg_Capture_param.nextJpgCapture = max(pg_Jpg_Capture_param.nextJpgCapture + pg_Jpg_Capture_param.stepJpgInSeconds, pg_CurrentClockTime);
 				pg_draw_scene( _Jpg );
 				//printf("nextJpgCapture %.2f pg_CurrentClockTime %.2f\n", nextJpgCapture, pg_CurrentClockTime);
 			}
@@ -1892,8 +1858,8 @@ void pg_update_clip_camera_and_movie_frame(void) {
 
 			// non threaded
 			// printf("*** non threaded camera frame capture %d\n", pg_FrameNo);
-			if ((pg_current_active_cameraNo < 0 && -pg_current_active_cameraNo - 1 < nb_webCam)
-				|| (pg_current_active_cameraNo >= 0 && pg_current_active_cameraNo < nb_IPCam)) {
+			if ((pg_current_active_cameraNo < 0 && -pg_current_active_cameraNo - 1 < int(pg_webCams.size()))
+				|| (pg_current_active_cameraNo >= 0 && pg_current_active_cameraNo < int(pg_IPCam_capture.size()))) {
 				loadCameraFrame(false, cameraNo);
 			}
 		}
@@ -2072,7 +2038,7 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 		flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], 0.f);
 	// printf("flashTrkPart_weights %.2f %.2f %.2f \n", flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2]);
 
-	#elf PG_NB_TRACKS >= 2
+#elif PG_NB_TRACKS >= 2
 		// flash Trk -> Part weights
 		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
 			flashTrkPart_weights[0], flashTrkPart_weights[1], 0.f, 0.f);
@@ -4245,21 +4211,21 @@ bool Etoiles_mesh_guided_by_strokes(int indMeshFile) {
 void Etoiles_ray_animation(int indMeshFile) {
 	// rotates and scales a ray so that it follows a pen
 	// vector from ray center to pen
-	vec_x = pen_x + pg_Mesh_Translation_X[indMeshFile];
-	vec_y = pen_y + pg_Mesh_Translation_Y[indMeshFile];
+	vec_x = pen_x + pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_X;
+	vec_y = pen_y + pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Y;
 	// angle from ray center to pen -> ray angle
 	if (vec_x != 0) {
-		pg_Mesh_Rotation_angle[indMeshFile] = atan(vec_y / vec_x);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle = atan(vec_y / vec_x);
 	}
 	else {
-		pg_Mesh_Rotation_angle[indMeshFile] = 0;
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle = 0;
 	}
 	if (vec_x > 0) {
-		pg_Mesh_Rotation_angle[indMeshFile] += float(M_PI);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle += float(M_PI);
 	}
 	// ray size so that the tip of the ray coincides with the pen
 	float norm_vec = sqrt(vec_x * vec_x + vec_y * vec_y);
-	pg_Mesh_Scale[indMeshFile] = norm_vec;
+	pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Scale = norm_vec;
 }
 
 #endif
@@ -4268,33 +4234,33 @@ void Etoiles_ray_animation(int indMeshFile) {
 void Caverne_profusion_automatic_rotation(int indMeshFile) {
 	// rotation update
 	if (indMeshFile < 7) {
-		pg_Mesh_Rotation_angle[indMeshFile] += 0.03f;
-		pg_Mesh_Rotation_X[indMeshFile] += 0.01f;
-		pg_Mesh_Rotation_Y[indMeshFile] += 0.01f;
-		pg_Mesh_Rotation_Z[indMeshFile] += 0.01f;
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle += 0.03f;
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_X += 0.01f;
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Y += 0.01f;
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Z += 0.01f;
 		// translation update
 		if (mobileMeshes & (1 << indMeshFile)) {
-			pg_Mesh_Translation_X[indMeshFile] += pg_Mesh_Motion_X[indMeshFile] * 2.f;
-			pg_Mesh_Translation_Y[indMeshFile] += pg_Mesh_Motion_Y[indMeshFile] * 2.f;
-			pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile] * 2.f;
+			pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_X += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Motion_X * 2.f;
+			pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Y += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Motion_Y * 2.f;
+			pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Z += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Motion_Z * 2.f;
 		}
 	}
 	else {
-		pg_Mesh_Rotation_angle[indMeshFile] += 0.06f * rand_0_1;
-		pg_Mesh_Rotation_X[indMeshFile] += (0.2f * rand_0_1 - 0.1f);
-		pg_Mesh_Rotation_Y[indMeshFile] += (0.2f * rand_0_1 - 0.1f);
-		pg_Mesh_Rotation_Z[indMeshFile] += (0.2f * rand_0_1 - 0.1f);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle += 0.06f * rand_0_1;
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_X += (0.2f * rand_0_1 - 0.1f);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Y += (0.2f * rand_0_1 - 0.1f);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Z += (0.2f * rand_0_1 - 0.1f);
 		// translation update
-		pg_Mesh_Translation_X[indMeshFile] += pg_Mesh_Motion_X[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
-		pg_Mesh_Translation_Y[indMeshFile] += pg_Mesh_Motion_Y[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
-		pg_Mesh_Translation_Z[indMeshFile] += pg_Mesh_Motion_Z[indMeshFile] * 4.f * (rand_0_1 - 0.5f);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_X += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Motion_X * 4.f * (rand_0_1 - 0.5f);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Y += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Motion_Y * 4.f * (rand_0_1 - 0.5f);
+		pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Z += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Motion_Z * 4.f * (rand_0_1 - 0.5f);
 	}
 }
 #elif defined(var_MmeShanghai_brokenGlass)
 void MmeShanghai_automatic_brokenGlass_animation(int indMeshFile, int indObjectInMesh) {
-	float animationTime = float(pg_CurrentClockTime - pg_MmeShanghaiMeshObjectWakeupTime[indMeshFile][indObjectInMesh]);
-	pg_MmeShanghai_Object_Translation_Y[indMeshFile][indObjectInMesh] = -0.0065f * animationTime * animationTime;
-	pg_MmeShanghai_Object_Rotation_angle[indMeshFile][indObjectInMesh] += pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshFile][indObjectInMesh];
+	float animationTime = float(pg_CurrentClockTime - pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh]);
+	pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Translation_Y[indObjectInMesh] = -0.0065f * animationTime * animationTime;
+	pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_angle[indObjectInMesh] += pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_Ini_angle[indObjectInMesh];
 }
 #endif
 
@@ -4305,9 +4271,9 @@ void pg_drawOneMesh(int indMeshFile) {
 #if defined(var_moving_messages)
 	visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
 #elif defined(var_Caverne_Mesh_Profusion)
-	visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_CaverneActveMesh[indMeshFile]
-		&& (pg_CurrentClockTime - pg_CaverneMeshBirthTime[pg_current_configuration_rank][indMeshFile] > pg_CaverneMeshWakeupTime[pg_current_configuration_rank][indMeshFile])
-		&& (pg_CurrentClockTime < pg_CaverneMeshDeathTime[pg_current_configuration_rank][indMeshFile]));
+	visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneActveMesh
+		&& (pg_CurrentClockTime - pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshBirthTime > pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshWakeupTime)
+		&& (pg_CurrentClockTime < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshDeathTime));
 #else
 	visible = (activeMeshes & (1 << indMeshFile));
 #endif
@@ -4324,9 +4290,9 @@ void pg_drawOneMesh(int indMeshFile) {
 #if defined(var_Contact_mesh_anime)
 		if (ScenarioVarConfigurations[_Contact_mesh_anime][pg_current_configuration_rank]) {
 			glm::f32* valMats = new glm::f32[16 * pg_nb_bones[indMeshFile]];
-			for (int indBone = 0; indBone < pg_nb_bones[pg_current_configuration_rank][indMeshFile]; indBone++) {
+			for (int indBone = 0; indBone < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nb_bones; indBone++) {
 				memcpy(&valMats[16 * indBone],
-					glm::value_ptr(TabBones[pg_current_configuration_rank][indMeshFile][indBone].pointAnimationMatrix),
+					glm::value_ptr(pg_Meshes[pg_current_configuration_rank][indMeshFile]->TabBones[indBone].pointAnimationMatrix),
 					16 * sizeof(glm::f32));
 			}
 			glUniformMatrix4fv(uniform_Mesh_bones_matrices[pg_current_configuration_rank], 20, GL_FALSE, valMats);
@@ -4338,18 +4304,18 @@ void pg_drawOneMesh(int indMeshFile) {
 		// transformed mesh according to scenario file
 		// 1. a varying translation matrix
 		MeshPosModelMatrix = glm::translate(glm::mat4(1.0f),
-			glm::vec3(pg_Mesh_Translation_X[pg_current_configuration_rank][indMeshFile], pg_Mesh_Translation_Y[pg_current_configuration_rank][indMeshFile], pg_Mesh_Translation_Z[pg_current_configuration_rank][indMeshFile]));
+			glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_X, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Y, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Z));
 		//printf("Mesh translation ind Mesh %d tr %.2f %.2f %.2f \n",indMeshFile, 
-			//pg_Mesh_Translation_X[pg_current_configuration_rank][indMeshFile], pg_Mesh_Translation_Y[pg_current_configuration_rank][indMeshFile], pg_Mesh_Translation_Z[pg_current_configuration_rank][indMeshFile]);
+			//pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_X, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Y, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Z);
 		// 2. a varying rotation matrix 
-		glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[pg_current_configuration_rank][indMeshFile],
-			pg_Mesh_Rotation_Y[pg_current_configuration_rank][indMeshFile], pg_Mesh_Rotation_Z[pg_current_configuration_rank][indMeshFile]);
+		glm::vec3 myRotationAxis(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_X,
+			pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Y, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Z);
 #if defined(var_Contact_mesh_rotation)
 		if (ScenarioVarConfigurations[_Contact_mesh_rotation][pg_current_configuration_rank]) {
 			MeshPosModelMatrix = glm::translate(MeshPosModelMatrix, glm::vec3(0.f, -15.f, 0.f));
 		}
 #endif
-		MeshPosModelMatrix = glm::rotate(MeshPosModelMatrix, pg_Mesh_Rotation_angle[pg_current_configuration_rank][indMeshFile], myRotationAxis);
+		MeshPosModelMatrix = glm::rotate(MeshPosModelMatrix, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle, myRotationAxis);
 #if defined(var_Contact_mesh_rotation)
 		if (ScenarioVarConfigurations[_Contact_mesh_rotation][pg_current_configuration_rank]) {
 			MeshPosModelMatrix = glm::translate(MeshPosModelMatrix, glm::vec3(0.f, 15.f, 0.f));
@@ -4357,16 +4323,16 @@ void pg_drawOneMesh(int indMeshFile) {
 #endif
 		// 3. a varying scaling matrix 
 #if defined(var_moving_messages)
-		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[pg_current_configuration_rank][indMeshFile]));
+		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Scale));
 #elif defined(var_Caverne_Mesh_Profusion)
 		if (indMeshFile < 7) {
-			MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[pg_current_configuration_rank][indMeshFile]));
+			MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Scale));
 		}
 		else {
-			MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[pg_current_configuration_rank][indMeshFile] * min(2.0f, (pg_CurrentClockTime - pg_CaverneMeshBirthTime[indMeshFile]) / 20.f)));
+			MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Scale * min(2.0f, (pg_CurrentClockTime - pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_CaverneMeshBirthTime) / 20.f)));
 		}
 #else
-		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[pg_current_configuration_rank][indMeshFile]));
+		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Scale));
 #endif
 		// model matrix transfered to GPU (if it is not object by object made)
 		glUniformMatrix4fv(uniform_Mesh_vp_model[pg_current_configuration_rank], 1, GL_FALSE,
@@ -4393,57 +4359,57 @@ void pg_drawOneMesh(int indMeshFile) {
 		}
 #endif
 
-		for (int indObjectInMesh = 0; indObjectInMesh < pg_nbObjectsPerMeshFile[pg_current_configuration_rank][indMeshFile]; indObjectInMesh++) {
+		for (int indObjectInMesh = 0; indObjectInMesh < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbObjectsPerMeshFile; indObjectInMesh++) {
 			bool visibleObject = true;
 #if defined(var_MmeShanghai_brokenGlass)
 			if (ScenarioVarConfigurations[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
 				if (indMeshFile == 0) {
-					if (MmeShanghai_brokenGlass > 0 && MmeShanghai_brokenGlass <= pg_MmeShanghai_NbMeshSubParts[pg_current_configuration_rank][indMeshFile]) {
-						visibleObject = pg_MmeShanghai_MeshSubParts[pg_current_configuration_rank][indMeshFile][MmeShanghai_brokenGlass - 1][indObjectInMesh];
+					if (MmeShanghai_brokenGlass > 0 && MmeShanghai_brokenGlass <= pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts) {
+						visibleObject = pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_MeshSubParts[MmeShanghai_brokenGlass - 1][indObjectInMesh];
 						// new visible object, defines the wake up time for falling
-						if (visibleObject && pg_MmeShanghaiMeshObjectWakeupTime[pg_current_configuration_rank][indMeshFile][indObjectInMesh] == 0.f
+						if (visibleObject && pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh] == 0.f
 							// animation starts when all the meshes are displayed
-							&& MmeShanghai_brokenGlass >= pg_MmeShanghai_NbMeshSubParts[pg_current_configuration_rank][indMeshFile]) {
-							pg_MmeShanghaiMeshObjectWakeupTime[pg_current_configuration_rank][indMeshFile][indObjectInMesh] = pg_CurrentClockTime + rand_0_1 * 10.0;
-							pg_MmeShanghai_Object_Rotation_Ini_angle[pg_current_configuration_rank][indMeshFile][indObjectInMesh] = float(rand_0_1 * M_PI * 0.004);
-							pg_MmeShanghai_Object_Rotation_X[pg_current_configuration_rank][indMeshFile][indObjectInMesh] = rand_0_1;
-							pg_MmeShanghai_Object_Rotation_Y[pg_current_configuration_rank][indMeshFile][indObjectInMesh] = rand_0_1;
-							pg_MmeShanghai_Object_Rotation_Z[pg_current_configuration_rank][indMeshFile][indObjectInMesh] = rand_0_1;
+							&& MmeShanghai_brokenGlass >= pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts) {
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh] = pg_CurrentClockTime + rand_0_1 * 10.0;
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_Ini_angle[indObjectInMesh] = float(rand_0_1 * M_PI * 0.004);
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_X[indObjectInMesh] = rand_0_1;
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_Y[indObjectInMesh] = rand_0_1;
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_Z[indObjectInMesh] = rand_0_1;
 						}
 					}
-					else if (MmeShanghai_brokenGlass > pg_MmeShanghai_NbMeshSubParts[pg_current_configuration_rank][indMeshFile]) {
-						visibleObject = pg_MmeShanghai_MeshSubParts[pg_current_configuration_rank][indMeshFile][pg_MmeShanghai_NbMeshSubParts[indMeshFile] - 1][indObjectInMesh];
+					else if (MmeShanghai_brokenGlass > pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts) {
+						visibleObject = pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_MeshSubParts[pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts - 1][indObjectInMesh];
 					}
 					else {
 						visibleObject = false;
 					}
 					if (visibleObject
-						&& pg_MmeShanghaiMeshObjectWakeupTime[pg_current_configuration_rank][indMeshFile][indObjectInMesh] < pg_CurrentClockTime
+						&& pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh] < pg_CurrentClockTime
 						// animation starts when all the meshes are displayed
-						&& MmeShanghai_brokenGlass >= pg_MmeShanghai_NbMeshSubParts[pg_current_configuration_rank][indMeshFile]) {
+						&& MmeShanghai_brokenGlass >= pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts) {
 						MmeShanghai_automatic_brokenGlass_animation(indMeshFile, indObjectInMesh);
 						// Model matrix 
 						// transformed mesh according to scenario file
 						// 1. a varying translation matrix
 						ObjectPosModelMatrix = glm::translate(MeshPosModelMatrix,
-							glm::vec3(pg_MmeShanghai_Object_Translation_X[pg_current_configuration_rank][indMeshFile][indObjectInMesh],
-								pg_MmeShanghai_Object_Translation_Y[pg_current_configuration_rank][indMeshFile][indObjectInMesh],
-								pg_MmeShanghai_Object_Translation_Z[pg_current_configuration_rank][indMeshFile][indObjectInMesh]));
+							glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Translation_X[indObjectInMesh],
+								pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Translation_Y[indObjectInMesh],
+								pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Translation_Z[indObjectInMesh]));
 						// 2. a varying rotation matrix (with bakc and forth translation to barycenter so that the object rotates on itself
 						ObjectPosModelMatrix = glm::translate(ObjectPosModelMatrix,
-							glm::vec3(mesh_barycenter[pg_current_configuration_rank][indMeshFile][3 * indObjectInMesh + 0],
-								mesh_barycenter[pg_current_configuration_rank][indMeshFile][3 * indObjectInMesh + 1],
-								mesh_barycenter[pg_current_configuration_rank][indMeshFile][3 * indObjectInMesh + 2]));
-						glm::vec3 myObjectRotationAxis(pg_MmeShanghai_Object_Rotation_X[pg_current_configuration_rank][indMeshFile][indObjectInMesh],
-							pg_MmeShanghai_Object_Rotation_Y[pg_current_configuration_rank][indMeshFile][indObjectInMesh],
-							pg_MmeShanghai_Object_Rotation_Z[pg_current_configuration_rank][indMeshFile][indObjectInMesh]);
+							glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_barycenter[3 * indObjectInMesh + 0],
+								pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_barycenter[3 * indObjectInMesh + 1],
+								pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_barycenter[3 * indObjectInMesh + 2]));
+						glm::vec3 myObjectRotationAxis(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_X[indObjectInMesh],
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_Y[indObjectInMesh],
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_Z[indObjectInMesh]);
 						ObjectPosModelMatrix = glm::rotate(ObjectPosModelMatrix,
-							pg_MmeShanghai_Object_Rotation_angle[pg_current_configuration_rank][indMeshFile][indObjectInMesh],
+							pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_Object_Rotation_angle[indObjectInMesh],
 							myObjectRotationAxis);
 						ObjectPosModelMatrix = glm::translate(ObjectPosModelMatrix,
-							glm::vec3(-mesh_barycenter[pg_current_configuration_rank][indMeshFile][3 * indObjectInMesh + 0],
-								-mesh_barycenter[pg_current_configuration_rank][indMeshFile][3 * indObjectInMesh + 1],
-								-mesh_barycenter[pg_current_configuration_rank][indMeshFile][3 * indObjectInMesh + 2]));
+							glm::vec3(-pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_barycenter[3 * indObjectInMesh + 0],
+								-pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_barycenter[3 * indObjectInMesh + 1],
+								-pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_barycenter[3 * indObjectInMesh + 2]));
 
 						// model matrix transfered to GPU (if it is not object by object made)
 						glUniformMatrix4fv(uniform_Mesh_vp_model[pg_current_configuration_rank], 1, GL_FALSE,
@@ -4460,7 +4426,7 @@ void pg_drawOneMesh(int indMeshFile) {
 				//printf("mesh pass mesh %d obj %d\n", indMeshFile, indObjectInMesh);
 
 				// binds VAO
-				glBindVertexArray(mesh_vao[pg_current_configuration_rank][indMeshFile][indObjectInMesh]);
+				glBindVertexArray(pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_vao[indObjectInMesh]);
 
 				// activate shaders and sets uniform variable values    
 				glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
@@ -4471,9 +4437,9 @@ void pg_drawOneMesh(int indMeshFile) {
 				glUniform1i(uniform_Mesh_texture_fs_decal[pg_current_configuration_rank], 0);
 				glActiveTexture(GL_TEXTURE0 + 0);
 
-				if (pg_Mesh_TextureRank[pg_current_configuration_rank][indMeshFile] != -1) {
+				if (pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_TextureRank != -1) {
 					// specific texture
-					glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle[pg_current_configuration_rank][indMeshFile]);
+					glBindTexture(GL_TEXTURE_RECTANGLE, pg_Meshes[pg_current_configuration_rank][indMeshFile]->Mesh_texture_rectangle);
 				}
 				else {
 					// previous pass output
@@ -4501,7 +4467,7 @@ void pg_drawOneMesh(int indMeshFile) {
 #endif
 				// standard filled mesh drawing
 // draw triangles from the currently bound VAO with current in-use shader
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[pg_current_configuration_rank][indMeshFile][indObjectInMesh]);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_index_vbo[indObjectInMesh]);
 				glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
 
 				// updates this variable according whether triangles or lines are shown
@@ -4509,7 +4475,7 @@ void pg_drawOneMesh(int indMeshFile) {
 					isDisplayLookAt, -1, float(indMeshFile), (GLfloat)pg_CurrentSceneIndex);
 				glUniform3f(uniform_Mesh_fs_3fv_light[pg_current_configuration_rank], mesh_light_x, mesh_light_y, mesh_light_z);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[pg_current_configuration_rank][indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+				glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 				printOglError(698);
 
 #if defined(var_with_edges)
@@ -4523,9 +4489,9 @@ void pg_drawOneMesh(int indMeshFile) {
 						) {
 						glDisable(GL_DEPTH_TEST);
 						glLineWidth(1);
-						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank], isDisplayLookAt, 1, pg_Mesh_TextureRank[indMeshFile] != -1, (GLfloat)pg_CurrentSceneIndex);
+						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank], isDisplayLookAt, 1, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_TextureRank != -1, (GLfloat)pg_CurrentSceneIndex);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+						glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 						glEnable(GL_DEPTH_TEST);
 					}
@@ -4541,15 +4507,15 @@ void pg_drawOneMesh(int indMeshFile) {
 						glLineWidth(3);
 						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank], isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[pg_current_configuration_rank][indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+						glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 						// no z-Buffer
 						glEnable(GL_DEPTH_TEST);
 					}
 				}
 #endif
-				//printf("Display mesh VP1 %d/%d size (nb faces) %d\n\n", indMeshFile + 1, pg_nbObjectsPerMeshFile[indMeshFile],
-				//	pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]);
+				//printf("Display mesh VP1 %d/%d size (nb faces) %d\n\n", indMeshFile + 1, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Meshes->pg_nbObjectsPerMeshFile,
+				//	pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh]);
 			} // visible submesh object
 		} // submeshes
 
@@ -4579,21 +4545,21 @@ void pg_drawOneMesh2(int indMeshFile) {
 		// transformed mesh according to scenario file
 		// 1. a varying translation matrix
 		MeshPosModelMatrix = glm::translate(glm::mat4(1.0f),
-			glm::vec3(pg_Mesh_Translation_X[pg_current_configuration_rank][indMeshFile], pg_Mesh_Translation_Y[pg_current_configuration_rank][indMeshFile], pg_Mesh_Translation_Z[pg_current_configuration_rank][indMeshFile]));
+			glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_X, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Y, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Translation_Z));
 		// 2. a varying rotation matrix 
-		glm::vec3 myRotationAxis(pg_Mesh_Rotation_X[pg_current_configuration_rank][indMeshFile],
-			pg_Mesh_Rotation_Y[pg_current_configuration_rank][indMeshFile], pg_Mesh_Rotation_Z[pg_current_configuration_rank][indMeshFile]);
-		MeshPosModelMatrix = glm::rotate(MeshPosModelMatrix, pg_Mesh_Rotation_angle[pg_current_configuration_rank][indMeshFile], myRotationAxis);
+		glm::vec3 myRotationAxis(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_X,
+			pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Y, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Z);
+		MeshPosModelMatrix = glm::rotate(MeshPosModelMatrix, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle, myRotationAxis);
 		// 3. a varying scaling matrix 
-		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Mesh_Scale[pg_current_configuration_rank][indMeshFile]));
+		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Scale));
 
 		// model matrix transfered to GPU
 		glUniformMatrix4fv(uniform_Mesh_vp_model[pg_current_configuration_rank], 1, GL_FALSE,
 			glm::value_ptr(MeshPosModelMatrix));
 
-		for (int indObjectInMesh = 0; indObjectInMesh < pg_nbObjectsPerMeshFile[pg_current_configuration_rank][indMeshFile]; indObjectInMesh++) {
+		for (int indObjectInMesh = 0; indObjectInMesh < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbObjectsPerMeshFile; indObjectInMesh++) {
 			// binds VAO
-			glBindVertexArray(mesh_vao[pg_current_configuration_rank][indMeshFile][indObjectInMesh]);
+			glBindVertexArray(pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_vao[indObjectInMesh]);
 
 			// activate shaders and sets uniform variable values    
 			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
@@ -4603,9 +4569,9 @@ void pg_drawOneMesh2(int indMeshFile) {
 			// texture unit location
 			glUniform1i(uniform_Mesh_texture_fs_decal[pg_current_configuration_rank], 0);
 			glActiveTexture(GL_TEXTURE0 + 0);
-			if (pg_Mesh_TextureRank[pg_current_configuration_rank][indMeshFile] != -1) {
+			if (pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_TextureRank != -1) {
 				// specific texture
-				glBindTexture(GL_TEXTURE_RECTANGLE, Mesh_texture_rectangle[pg_current_configuration_rank][indMeshFile]);
+				glBindTexture(GL_TEXTURE_RECTANGLE, pg_Meshes[pg_current_configuration_rank][indMeshFile]->Mesh_texture_rectangle);
 			}
 			else {
 				// previous pass output
@@ -4620,14 +4586,14 @@ void pg_drawOneMesh2(int indMeshFile) {
 
 			// standard filled mesh drawing
 			// draw triangles from the currently bound VAO with current in-use shader
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_index_vbo[pg_current_configuration_rank][indMeshFile][indObjectInMesh]);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_index_vbo[indObjectInMesh]);
 			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
 
 			// updates this variable according whether triangles or lines are shown
 			glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank], isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[pg_current_configuration_rank][indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+			glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 
 			// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) && defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
@@ -4639,7 +4605,7 @@ void pg_drawOneMesh2(int indMeshFile) {
 					glLineWidth(3);
 					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank], isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[pg_current_configuration_rank][indMeshFile][indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
+					glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					// no z-Buffer
 					glEnable(GL_DEPTH_TEST);
@@ -4647,7 +4613,7 @@ void pg_drawOneMesh2(int indMeshFile) {
 			}
 #endif
 			//printf("Display mesh VP2 %d/%d size (nb faces) %d\n", indMeshFile, indObjectInMesh,
-			//	pg_nbFacesPerMeshFile[indMeshFile][indObjectInMesh]);
+			//	pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh]);
 
 
 		} // submeshes
@@ -4769,7 +4735,7 @@ void pg_MeshPass(void) {
 			glm::value_ptr(VP1viewMatrix));
 
 		// all the meshes
-		for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files[pg_current_configuration_rank]; indMeshFile++) {
+		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
 			pg_drawOneMesh(indMeshFile);
 		} // all the meshes
 		printOglError(697);
@@ -4845,13 +4811,13 @@ void pg_draw_scene(DrawingMode mode) {
 	// ******************** Svg output ********************
 	if (mode == _Svg) {
 		cv::String imageFileName;
-		indSvgSnapshot++;
+		pg_Svg_Capture_param.indSvgSnapshot++;
 
 		imageFileName = format("%s%s-%s-%04d.svg",
 			snapshots_dir_path_name.c_str(),
-			Svg_file_name.c_str(),
+			pg_Svg_Capture_param.Svg_file_name.c_str(),
 			date_stringStream.str().c_str(),
-			indSvgSnapshot);
+			pg_Svg_Capture_param.indSvgSnapshot);
 		pg_logCurrentLineSceneVariables(imageFileName);
 
 		writesvg(imageFileName);
@@ -4896,21 +4862,21 @@ void pg_draw_scene(DrawingMode mode) {
 		//pDataWritePng.h = window_height;
 		cv::String imageFileName;
 
-		indPngSnapshot++;
+		pg_Png_Capture_param.indPngSnapshot++;
 
 		imageFileName = format("%s%s-%s-%04d.png",
 			snapshots_dir_path_name.c_str(),
-			Png_file_name.c_str(),
+			pg_Png_Capture_param.Png_file_name.c_str(),
 			date_stringStream.str().c_str(),
-			indPngSnapshot);
+			pg_Png_Capture_param.indPngSnapshot);
 		struct stat buffer;
 		int count = 0;
 		while (stat(imageFileName.c_str(), &buffer) == 0) {
 			imageFileName = format("%s%s-%s-%04d-%03d.png",
 				snapshots_dir_path_name.c_str(),
-				Png_file_name.c_str(),
+				pg_Png_Capture_param.Png_file_name.c_str(),
 				date_stringStream.str().c_str(),
-				indPngSnapshot, count);
+				pg_Png_Capture_param.indPngSnapshot, count);
 			count++;
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);
@@ -4969,26 +4935,26 @@ void pg_draw_scene(DrawingMode mode) {
 		//pDataWriteJpg.h = window_height;
 		cv::String imageFileName;
 	
-		indJpgSnapshot++;
+		pg_Jpg_Capture_param.indJpgSnapshot++;
 
 		imageFileName = format("%s%s-%s-%04d.jpg",
 			snapshots_dir_path_name.c_str(),
-			Jpg_file_name.c_str(),
+			pg_Jpg_Capture_param.Jpg_file_name.c_str(),
 			date_stringStream.str().c_str(),
-			indJpgSnapshot);
+			pg_Jpg_Capture_param.indJpgSnapshot);
 		struct stat buffer;
 		int count = 0;
 		while (stat(imageFileName.c_str(), &buffer) == 0) {
 			imageFileName = format("%s%s-%s-%04d-%03d.jpg",
 				snapshots_dir_path_name.c_str(),
-				Jpg_file_name.c_str(),
+				pg_Jpg_Capture_param.Jpg_file_name.c_str(),
 				date_stringStream.str().c_str(),
-				indJpgSnapshot, count);
+				pg_Jpg_Capture_param.indJpgSnapshot, count);
 			count++;
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);
 		printf("Snapshot jpg step %d (%s)\n",
-			indJpgSnapshot,
+			pg_Jpg_Capture_param.indJpgSnapshot,
 			imageFileName.c_str());
 
 		glReadBuffer(GL_BACK);

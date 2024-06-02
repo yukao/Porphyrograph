@@ -28,7 +28,6 @@
 
  // ClipArt PATHs from scenario
 // a path curve from scenario with its parameters
-extern int                      pg_nb_SVG_pathCurves[_NbConfigurations];
 class SVG_scenarioPathCurve {
 public:
 	int path_no;    // the path number associated with the curve between 1 and PG_NB_PATHS

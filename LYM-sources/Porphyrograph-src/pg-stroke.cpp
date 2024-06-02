@@ -51,7 +51,6 @@
 //float **pg_Path_TimeStamp = NULL;
 
 // SVG paths from scenario
-int                      pg_nb_SVG_pathCurves[_NbConfigurations] = { 0 };
 vector<SVG_scenarioPathCurve*>	 SVG_scenarioPathCurves[_NbConfigurations];
 int						 pg_nb_SVG_path_groups[_NbConfigurations] = { 0 };
 int						 pg_current_SVG_path_group = 1;
@@ -1495,6 +1494,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 #if defined(var_path_replay_speed)
 	if (ScenarioVarConfigurations[_path_replay_speed][pg_current_configuration_rank]) {
 		readingSpeed *= path_replay_speed;
+		// printf("reading speed of path %d is replay speed %.2f readingSpeed %.2f\n", pathNo, path_replay_speed, readingSpeed);
 	}
 #endif
 	if (readingSpeed <= 0) {
@@ -1507,22 +1507,25 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	bool isCurveBreakEnd = false;
 	pg_Path_Status[pathNo].path_lastPlayedindReading = pg_Path_Status[pathNo].path_indReading;
 #ifdef PG_SYNC_REPLAY
+	double playingTimeSinceLastPlayedFrame = (theTime - pg_Path_Status[pathNo].path_lastPlayedFrameTime);
+	double lastPlayedFrameRecordingTime = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_lastPlayedindReading);
+	bool newFrame = false;
 	// if minimally one frame has elapsed
 	do {
-		double timeLapseSinceLastFrame = (theTime - pg_Path_Status[pathNo].path_lastPlayedFrameTime) * readingSpeed;
-		double recordingTimeSinceLastFrame;
+		//printf("reading speed %.2f\n", readingSpeed);
+		double recordingTimeSinceLastPlayedFrame;
 		if (pg_Path_Status[pathNo].path_indReading > 0) {
-			recordingTimeSinceLastFrame = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading)
-				- pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_lastPlayedindReading);
-			//printf("* current recordingTimeSinceLastFrame %.2f cur frame %.2f prece frame %.2f ind reading cur %d prec %d\n",
-			//	recordingTimeSinceLastFrame, pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, 
+			recordingTimeSinceLastPlayedFrame = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading)
+				- lastPlayedFrameRecordingTime;
+			//printf("* current recordingTimeSinceLastPlayedFrame %.2f cur frame %.2f prece frame %.2f ind reading cur %d prec %d\n",
+			//	recordingTimeSinceLastPlayedFrame, pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, 
 			//		pg_Path_Status[pathNo].path_indReading), pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, 
 			//			pg_Path_Status[pathNo].path_lastPlayedindReading), pg_Path_Status[pathNo].path_indReading, pg_Path_Status[pathNo].path_lastPlayedindReading);
 		}
 		else if (pg_Path_Status[pathNo].path_indReading == 0) {
-			recordingTimeSinceLastFrame = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading)
+			recordingTimeSinceLastPlayedFrame = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading)
 				- pg_Path_Status[pathNo].get_path_curve_initialTimeRecording(pg_current_configuration_rank);
-			//printf("Initial recording time since last frame %.2f timeLapseSinceLastFrame %.2f\n", recordingTimeSinceLastFrame, timeLapseSinceLastFrame);
+			//printf("Initial recording time since last frame %.2f playingTimeSinceLastPlayedFrame %.2f\n", recordingTimeSinceLastPlayedFrame, playingTimeSinceLastPlayedFrame);
 		}
 		else { // if (pg_PathCurve_Params[pg_current_configuration_rank][pathNo].path_indReading < 0)
 			//printf("empty path\n");
@@ -1530,8 +1533,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		}
 
 		//if (pathNo == 1) {
-		//	printf("Ind %d frame no %d speedscale %.4f readingSpeed %.4f rec time %.4f read time %.4f\n", pathNo, pg_Path_Status[pathNo].path_indReading,
-		//		pg_PathCurve_Params[pg_current_configuration_rank][pathNo].pathCurve_readSpeedScale, readingSpeed, recordingTimeSinceLastFrame, timeLapseSinceLastFrame);
+		//	printf("Ind %d frame no %d rec time %.4f read time %.4f speed %.2f\n", pathNo, pg_Path_Status[pathNo].path_indReading,
+		//		recordingTimeSinceLastPlayedFrame, playingTimeSinceLastPlayedFrame, readingSpeed);
 		//}
 		// the negtive values correspond to a curve break. If they are jumped over the first 
 		// following point should be negative
@@ -1543,20 +1546,27 @@ void pg_replay_one_path(int pathNo, double theTime) {
 			|| pg_Path_Status[pathNo].getFramePositionY_prev(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indReading) < 0) {
 			isCurveBreakBegin = true;
 		}
-		if (recordingTimeSinceLastFrame < timeLapseSinceLastFrame) {
+
+		recordingTimeSinceLastPlayedFrame /= readingSpeed;
+
+		if (recordingTimeSinceLastPlayedFrame < playingTimeSinceLastPlayedFrame) {
 			pg_Path_Status[pathNo].path_indReading++;
-			pg_Path_Status[pathNo].path_lastPlayedFrameTime = pg_Path_Status[pathNo].path_lastPlayedFrameTime + recordingTimeSinceLastFrame / readingSpeed;
+			newFrame = true;
 			//if (pathNo == 1) {
-			//	printf("current time %.4f path_lastPlayedFrameTime %.4f\n", theTime, pg_Path_Status[pathNo].path_lastPlayedFrameTime);
+			//	printf("increment frame %d\n", pg_Path_Status[pathNo].path_indReading);
 			//}
 		}
-		else {
+		else { // recordingTimeSinceLastPlayedFrame >= playingTimeSinceLastPlayedFrame
+			// the next frame is played slightly ahead because the recording time since last played frame is  lightly longer than the effective playing time
+			if (newFrame) {
+				pg_Path_Status[pathNo].path_lastPlayedFrameTime = theTime + (recordingTimeSinceLastPlayedFrame - playingTimeSinceLastPlayedFrame) / readingSpeed;
+			}
+			pg_Path_Status[pathNo].path_lastPlayedindReading = pg_Path_Status[pathNo].path_indReading;
+			//if (pathNo == 1) {
+			//	printf("exit frame %d\n", pg_Path_Status[pathNo].path_indReading);
+			//}
 			break;
 		}
-
-		//if (fabs(recordingTimeSinceLastFrame) > 10 || fabs(timeLapseSinceLastFrame) > 10) {
-		//	exit(0);
-		//}
 
 		// loopiing or stopping in the end when last frame is reached
 		if (path_replay_loop == true) {
@@ -1578,8 +1588,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 				return;
 			}
 		}
-		//printf("recordingTimeSinceLastFrame %.2f timeLapseSinceLastFrame %.2f ind reading %d\n",
-		//	recordingTimeSinceLastFrame, timeLapseSinceLastFrame, pg_Path_Status[pathNo].path_indReading);
+		//printf("recordingTimeSinceLastPlayedFrame %.2f playingTimeSinceLastPlayedFrame %.2f ind reading %d\n",
+		//	recordingTimeSinceLastPlayedFrame, playingTimeSinceLastPlayedFrame, pg_Path_Status[pathNo].path_indReading);
 	} while (true);
 #else
 	// the negtive values correspond to a curve break. If they are jumped over the first 
@@ -2715,7 +2725,7 @@ void Path_Status::readsvg(char *fileName, float pathRadius, float path_r_color, 
 	// uniform reading speed
 	double interFrameDuration = 1.f / 60.f;
 	if (!timeStamps_loaded) {
-		printf("Load uniformspeed time stamps\n");
+		//printf("Load uniformspeed time stamps\n");
 		if (PathStatus_nbFrames(indConfiguration) > 0 &&
 			get_path_curve_finalTimeRecording(indConfiguration) > get_path_curve_initialTimeRecording(indConfiguration)) {
 			interFrameDuration = (get_path_curve_finalTimeRecording(indConfiguration) - get_path_curve_initialTimeRecording(indConfiguration))

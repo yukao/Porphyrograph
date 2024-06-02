@@ -31,7 +31,7 @@ https://github.com/fcaruso/GLSLParametricCurve
 
 #define PG_SIZE_QUAD_ARRAY 4  // quads made of a 4-point triangle strip
 
-#define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
+// #define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
 
 enum pg_FBO_Update_samplers
 {
@@ -181,14 +181,6 @@ extern GLuint pg_vaoID[pg_VAOCount];
 extern GLuint pg_vboID[pg_VBOCount];
 #if defined(var_sensor_layout)
 extern unsigned int quadSensor_vao;
-#endif
-#if defined(var_activeMeshes)
-extern unsigned int **mesh_vao[_NbConfigurations];
-extern vector <vector <string>> mesh_IDs[_NbConfigurations];
-extern float** mesh_barycenter[_NbConfigurations];
-extern int *pg_nbObjectsPerMeshFile[_NbConfigurations];
-extern int **pg_nbFacesPerMeshFile[_NbConfigurations];
-extern unsigned int **mesh_index_vbo[_NbConfigurations];
 #endif
 
 // geometrical data
@@ -368,7 +360,7 @@ void pg_initRenderingMatrices(void);
 
 void pg_screenMessage_update(void);
 #if defined(var_moving_messages)
-bool pg_ReadAllDisplayMessages(string dir, string basefilename);
+bool pg_ReadAllDisplayMessages(string basefilename);
 int pg_displayMessage_update(int indMesg);
 #endif
 

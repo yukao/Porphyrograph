@@ -4,6 +4,6 @@
 	pg_allocateBindAndCheckUniform(0,  uniform_Mixing_scenario_var_data, "uniform_Mixing_scenario_var_data", _pg_shader_Mixing);
 	pg_allocateBindAndCheckUniform(0,  uniform_ParticleAnimation_scenario_var_data, "uniform_ParticleAnimation_scenario_var_data", _pg_shader_ParticleAnimation);
 	ParticleAnimation_scenario_var_data[0]  = new float[47];
-	Update_scenario_var_data[0]  = new float[82];
-	Mixing_scenario_var_data[0]  = new float[8];
-	Master_scenario_var_data[0]  = new float[33];
+	Update_scenario_var_data[0]  = new float[83];
+	Mixing_scenario_var_data[0]  = new float[9];
+	Master_scenario_var_data[0]  = new float[32];

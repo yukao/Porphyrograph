@@ -403,13 +403,6 @@ extern "C" {
 }
 #endif
 
-// base ID of the GPU paths
-extern GLuint ClipArt_path_baseID[_NbConfigurations];
-// base ID of the GPU files
-extern GLuint* ClipArt_file_baseID[_NbConfigurations];
-// fill color table
-extern unsigned int** ClipArt_path_fill_color[_NbConfigurations];
-
 extern bool has_NV_path_rendering;
 
 extern bool ClipArt_stroke_onOff;

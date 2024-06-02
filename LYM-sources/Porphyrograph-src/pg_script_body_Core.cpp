@@ -14,6 +14,8 @@ float auto_beat_duration  ;
 float master              ;
 float CAMixingWeight      ;
 float CAMixingWeight_pulse;
+float ClipArtMixingWeight ;
+float ClipArtMixingWeight_pulse;
 float PartMixingWeight    ;
 float PartMixingWeight_pulse;
 float trackMixingWeight_0 ;
@@ -26,6 +28,8 @@ float trackMixingWeight_3 ;
 float trackMixingWeight_3_pulse;
 float CAMasterWeight      ;
 float CAMasterWeight_pulse;
+float ClipArtMasterWeight ;
+float ClipArtMasterWeight_pulse;
 float PartMasterWeight    ;
 float PartMasterWeight_pulse;
 float trackMasterWeight_0 ;
@@ -83,6 +87,7 @@ int   currentDrawingTrack ;
 int   currentVideoTrack   ;
 int   currentPhotoTrack   ;
 int   currentMaskTrack    ;
+bool  slow_track_translation;
 float track_x_transl_0    ;
 float track_x_transl_0_pulse;
 float track_y_transl_0    ;
@@ -92,8 +97,8 @@ float track_x_transl_1_pulse;
 float track_y_transl_1    ;
 float track_y_transl_1_pulse;
 int   part_initialization ;
-int   pixel_image_acceleration;
 int   part_image_acceleration;
+int   pixel_image_acceleration;
 bool  part_path_repop_0   ;
 bool  part_path_repop_1   ;
 bool  part_path_repop_2   ;
@@ -167,6 +172,11 @@ float noiseUpdateScale    ;
 float noiseUpdateScale_pulse;
 float noiseParticleScale  ;
 float noiseParticleScale_pulse;
+int   noiseType           ;
+float noiseLineScale      ;
+float noiseAngleScale     ;
+float noiseCenterX        ;
+float noiseCenterY        ;
 float part_field_weight   ;
 float part_field_weight_pulse;
 float part_damp_targtRad  ;
@@ -196,9 +206,9 @@ float repop_path          ;
 float repop_path_pulse    ;
 int   BG_CA_repop_density ;
 int   Part_repop_density  ;
+float repop_colorBG       ;
 int   BG_CA_repop_color_mode;
 int   Part_repop_color_mode;
-float repop_colorBG       ;
 float repop_colorBG_pulse ;
 float repop_greyBG        ;
 float repop_greyBG_pulse  ;
@@ -372,6 +382,8 @@ bool  path_replay_loop    ;
 float path_replay_speed   ;
 float path_scaleX         ;
 float path_scaleY         ;
+float path_translX        ;
+float path_translY        ;
 float master_crop_x       ;
 float master_crop_y       ;
 float master_crop_width   ;
@@ -391,9 +403,21 @@ float photo_hue           ;
 float photo_hue_pulse     ;
 bool  penStrokeAtBeat     ;
 int   path_group          ;
-float AT5_shutter         ;
-int   AT5_stop_motion     ;
+string script_1            ;
+float moving_messages     ;
 bool  ScenarioVarConfigurations[_MaxInterpVarIDs][1] = {
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
+  {true, },
   {true, },
   {true, },
   {true, },
@@ -848,6 +872,18 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -856,14 +892,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -874,6 +902,7 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_int,
+	_pg_bool,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -958,6 +987,11 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -987,9 +1021,9 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_int,
 	_pg_int,
-	_pg_int,
-	_pg_int,
 	_pg_float,
+	_pg_int,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -1166,6 +1200,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_int,
 	_pg_float,
@@ -1182,8 +1218,8 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_bool,
 	_pg_int,
+	_pg_string,
 	_pg_float,
-	_pg_int,
 };
 void * ScenarioVarPointers[_MaxInterpVarIDs] = { 
 	(void *)&auto_beat,
@@ -1201,6 +1237,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&master,
 	(void *)&CAMixingWeight,
 	(void *)&CAMixingWeight_pulse,
+	(void *)&ClipArtMixingWeight,
+	(void *)&ClipArtMixingWeight_pulse,
 	(void *)&PartMixingWeight,
 	(void *)&PartMixingWeight_pulse,
 	(void *)&trackMixingWeight_0,
@@ -1213,6 +1251,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&trackMixingWeight_3_pulse,
 	(void *)&CAMasterWeight,
 	(void *)&CAMasterWeight_pulse,
+	(void *)&ClipArtMasterWeight,
+	(void *)&ClipArtMasterWeight_pulse,
 	(void *)&PartMasterWeight,
 	(void *)&PartMasterWeight_pulse,
 	(void *)&trackMasterWeight_0,
@@ -1270,6 +1310,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&currentVideoTrack,
 	(void *)&currentPhotoTrack,
 	(void *)&currentMaskTrack,
+	(void *)&slow_track_translation,
 	(void *)&track_x_transl_0,
 	(void *)&track_x_transl_0_pulse,
 	(void *)&track_y_transl_0,
@@ -1279,8 +1320,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&track_y_transl_1,
 	(void *)&track_y_transl_1_pulse,
 	(void *)&part_initialization,
-	(void *)&pixel_image_acceleration,
 	(void *)&part_image_acceleration,
+	(void *)&pixel_image_acceleration,
 	(void *)&part_path_repop_0,
 	(void *)&part_path_repop_1,
 	(void *)&part_path_repop_2,
@@ -1354,6 +1395,11 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&noiseUpdateScale_pulse,
 	(void *)&noiseParticleScale,
 	(void *)&noiseParticleScale_pulse,
+	(void *)&noiseType,
+	(void *)&noiseLineScale,
+	(void *)&noiseAngleScale,
+	(void *)&noiseCenterX,
+	(void *)&noiseCenterY,
 	(void *)&part_field_weight,
 	(void *)&part_field_weight_pulse,
 	(void *)&part_damp_targtRad,
@@ -1383,9 +1429,9 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&repop_path_pulse,
 	(void *)&BG_CA_repop_density,
 	(void *)&Part_repop_density,
+	(void *)&repop_colorBG,
 	(void *)&BG_CA_repop_color_mode,
 	(void *)&Part_repop_color_mode,
-	(void *)&repop_colorBG,
 	(void *)&repop_colorBG_pulse,
 	(void *)&repop_greyBG,
 	(void *)&repop_greyBG_pulse,
@@ -1559,6 +1605,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&path_replay_speed,
 	(void *)&path_scaleX,
 	(void *)&path_scaleY,
+	(void *)&path_translX,
+	(void *)&path_translY,
 	(void *)&master_crop_x,
 	(void *)&master_crop_y,
 	(void *)&master_crop_width,
@@ -1578,8 +1626,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&photo_hue_pulse,
 	(void *)&penStrokeAtBeat,
 	(void *)&path_group,
-	(void *)&AT5_shutter,
-	(void *)&AT5_stop_motion,
+	(void *)&script_1,
+	(void *)&moving_messages,
 };
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void auto_beat_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1845,6 +1893,10 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scen
 void playing_movieNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	playing_movieNo_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
 }
+void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void movieCaptFreq_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	movieCaptFreq_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
 void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
 void playing_clipNameLeft_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	playing_clipNameLeft_callBack(param_input_type, scenario_or_gui_command_value.val_string);
@@ -1921,12 +1973,20 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 void path_group_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	path_group_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
 }
+void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
+void script_1_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	script_1_callBack(param_input_type, scenario_or_gui_command_value.val_string);
+}
 void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { 
 	&auto_beat_callBack_generic,
 	&auto_pulse_callBack_generic,
 	&clearAllLayers_callBack_generic,
 	&clearCA_callBack_generic,
 	&clearLayer_callBack_generic,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1989,6 +2049,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	&pen_brush_callBack_generic,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2095,6 +2156,11 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	&partMove_target_callBack_generic,
 	&partMove_rand_callBack_generic,
 	NULL,
@@ -2146,7 +2212,7 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	&cameraNo_callBack_generic,
 	&playing_movieNo_callBack_generic,
-	NULL,
+	&movieCaptFreq_callBack_generic,
 	&playing_clipNameLeft_callBack_generic,
 	&playing_clipNameRight_callBack_generic,
 	&playing_secondClipNameLeft_callBack_generic,
@@ -2313,8 +2379,10 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	NULL,
-	&path_group_callBack_generic,
 	NULL,
+	NULL,
+	&path_group_callBack_generic,
+	&script_1_callBack_generic,
 	NULL,
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
@@ -2333,6 +2401,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"master",
   (char *)"CAMixingWeight",
   (char *)"CAMixingWeight_pulse",
+  (char *)"ClipArtMixingWeight",
+  (char *)"ClipArtMixingWeight_pulse",
   (char *)"PartMixingWeight",
   (char *)"PartMixingWeight_pulse",
   (char *)"trackMixingWeight_0",
@@ -2345,6 +2415,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"trackMixingWeight_3_pulse",
   (char *)"CAMasterWeight",
   (char *)"CAMasterWeight_pulse",
+  (char *)"ClipArtMasterWeight",
+  (char *)"ClipArtMasterWeight_pulse",
   (char *)"PartMasterWeight",
   (char *)"PartMasterWeight_pulse",
   (char *)"trackMasterWeight_0",
@@ -2402,6 +2474,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
   (char *)"currentMaskTrack",
+  (char *)"slow_track_translation",
   (char *)"track_x_transl_0",
   (char *)"track_x_transl_0_pulse",
   (char *)"track_y_transl_0",
@@ -2411,8 +2484,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"track_y_transl_1",
   (char *)"track_y_transl_1_pulse",
   (char *)"part_initialization",
-  (char *)"pixel_image_acceleration",
   (char *)"part_image_acceleration",
+  (char *)"pixel_image_acceleration",
   (char *)"part_path_repop_0",
   (char *)"part_path_repop_1",
   (char *)"part_path_repop_2",
@@ -2486,6 +2559,11 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"noiseUpdateScale_pulse",
   (char *)"noiseParticleScale",
   (char *)"noiseParticleScale_pulse",
+  (char *)"noiseType",
+  (char *)"noiseLineScale",
+  (char *)"noiseAngleScale",
+  (char *)"noiseCenterX",
+  (char *)"noiseCenterY",
   (char *)"part_field_weight",
   (char *)"part_field_weight_pulse",
   (char *)"part_damp_targtRad",
@@ -2515,9 +2593,9 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"repop_path_pulse",
   (char *)"BG_CA_repop_density",
   (char *)"Part_repop_density",
+  (char *)"repop_colorBG",
   (char *)"BG_CA_repop_color_mode",
   (char *)"Part_repop_color_mode",
-  (char *)"repop_colorBG",
   (char *)"repop_colorBG_pulse",
   (char *)"repop_greyBG",
   (char *)"repop_greyBG_pulse",
@@ -2691,6 +2769,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"path_replay_speed",
   (char *)"path_scaleX",
   (char *)"path_scaleY",
+  (char *)"path_translX",
+  (char *)"path_translY",
   (char *)"master_crop_x",
   (char *)"master_crop_y",
   (char *)"master_crop_width",
@@ -2710,8 +2790,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"photo_hue_pulse",
   (char *)"penStrokeAtBeat",
   (char *)"path_group",
-  (char *)"AT5_shutter",
-  (char *)"AT5_stop_motion",
+  (char *)"script_1",
+  (char *)"moving_messages",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2750,6 +2830,10 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_uniform,
   _pg_pulsed_none,
+  _pg_pulsed_uniform,
+  _pg_pulsed_none,
+  _pg_pulsed_uniform,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -2797,7 +2881,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_differential,
   _pg_pulsed_none,
   _pg_pulsed_differential,
   _pg_pulsed_none,
@@ -2805,6 +2888,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_differential,
   _pg_pulsed_none,
+  _pg_pulsed_differential,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2857,6 +2941,37 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2868,31 +2983,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
@@ -2909,6 +2999,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_special,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2922,8 +3014,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
-  _pg_pulsed_special,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3049,6 +3139,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3124,6 +3216,8 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"master",
   (char *)"CAMixingWeight",
   (char *)"CAMixingWeight_pulse",
+  (char *)"ClipArtMixingWeight",
+  (char *)"ClipArtMixingWeight_pulse",
   (char *)"PartMixingWeight",
   (char *)"PartMixingWeight_pulse",
   (char *)"trackMixingWeight_0",
@@ -3136,6 +3230,8 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"trackMixingWeight_3_pulse",
   (char *)"CAMasterWeight",
   (char *)"CAMasterWeight_pulse",
+  (char *)"ClipArtMasterWeight",
+  (char *)"ClipArtMasterWeight_pulse",
   (char *)"PartMasterWeight",
   (char *)"PartMasterWeight_pulse",
   (char *)"trackMasterWeight_0",
@@ -3193,6 +3289,7 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"currentVideoTrack",
   (char *)"currentPhotoTrack",
   (char *)"currentMaskTrack",
+  (char *)"slow_track_translation",
   (char *)"track_x_transl_0",
   (char *)"track_x_transl_0_pulse",
   (char *)"track_y_transl_0",
@@ -3202,8 +3299,8 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"track_y_transl_1",
   (char *)"track_y_transl_1_pulse",
   (char *)"part_initialization",
-  (char *)"pixel_image_acceleration",
   (char *)"part_image_acceleration",
+  (char *)"pixel_image_acceleration",
   (char *)"part_path_repop_0",
   (char *)"part_path_repop_1",
   (char *)"part_path_repop_2",
@@ -3277,6 +3374,11 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"noiseUpdateScale_pulse",
   (char *)"noiseParticleScale",
   (char *)"noiseParticleScale_pulse",
+  (char *)"noiseType",
+  (char *)"noiseLineScale",
+  (char *)"noiseAngleScale",
+  (char *)"noiseCenterX",
+  (char *)"noiseCenterY",
   (char *)"part_field_weight",
   (char *)"part_field_weight_pulse",
   (char *)"part_damp_targtRad",
@@ -3306,9 +3408,9 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"repop_path_pulse",
   (char *)"BG_CA_repop_density",
   (char *)"Part_repop_density",
+  (char *)"repop_colorBG",
   (char *)"BG_CA_repop_color_mode",
   (char *)"Part_repop_color_mode",
-  (char *)"repop_colorBG",
   (char *)"repop_colorBG_pulse",
   (char *)"repop_greyBG",
   (char *)"repop_greyBG_pulse",
@@ -3482,6 +3584,8 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"path_replay_speed",
   (char *)"path_scaleX",
   (char *)"path_scaleY",
+  (char *)"path_translX",
+  (char *)"path_translY",
   (char *)"master_crop_x",
   (char *)"master_crop_y",
   (char *)"master_crop_width",
@@ -3501,6 +3605,6 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"photo_hue_pulse",
   (char *)"penStrokeAtBeat",
   (char *)"path_group",
-  (char *)"AT5_shutter",
-  (char *)"AT5_stop_motion",
+  (char *)"script_1",
+  (char *)"moving_messages",
 };

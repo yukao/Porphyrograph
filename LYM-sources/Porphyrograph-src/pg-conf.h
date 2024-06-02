@@ -88,52 +88,65 @@ public:
 	}
 };
 
-extern int                      pg_NbScenes[_NbConfigurations];
 extern bool					    pg_last_scene_update;
-extern Scene*                   pg_Scenario[_NbConfigurations];
+extern vector<Scene*>           pg_Scenario[_NbConfigurations];
 extern double                   current_scene_percent;
 
 // PNG capture
-extern string                   Png_file_name;
-extern int                      beginPng;
-extern int                      endPng;
-extern int                      stepPngInFrames;
-extern double                   stepPngInSeconds;
-extern double                   nextPngCapture;
-extern bool                     outputPng;
-extern int					    indPngSnapshot;
+class pg_Png_Capture {
+public:
+	string                   Png_file_name;
+	int                      beginPng;
+	int                      endPng;
+	int                      stepPngInFrames;
+	double                   stepPngInSeconds;
+	double                   nextPngCapture;
+	bool                     outputPng;
+	int					    indPngSnapshot;
+};
+extern pg_Png_Capture pg_Png_Capture_param;
 
 // JPG capture
-extern string                   Jpg_file_name;
-extern int                      beginJpg;
-extern int                      endJpg;
-extern int                      stepJpgInFrames;
-extern double                   stepJpgInSeconds;
-extern double                   nextJpgCapture;
-extern bool                     outputJpg;
-extern int						indJpgSnapshot;
+class pg_Jpg_Capture {
+public:
+	string                   Jpg_file_name;
+	int                      beginJpg;
+	int                      endJpg;
+	int                      stepJpgInFrames;
+	double                   stepJpgInSeconds;
+	double                   nextJpgCapture;
+	bool                     outputJpg;
+	int						indJpgSnapshot;
+};
+extern pg_Jpg_Capture pg_Jpg_Capture_param;
 
-// ClipArt capture
-extern string                   Svg_file_name;
-extern int                      beginSvg;
-extern int                      endSvg;
-extern int                      stepSvgInFrames;
-extern double                   stepSvgInSeconds;
-extern double                   nextSvgCapture;
-extern bool                     outputSvg;
-extern int						indSvgSnapshot;
+// Svg capture
+class pg_Svg_Capture {
+public:
+	string                   Svg_file_name;
+	int                      beginSvg;
+	int                      endSvg;
+	int                      stepSvgInFrames;
+	double                   stepSvgInSeconds;
+	double                   nextSvgCapture;
+	bool                     outputSvg;
+	int						indSvgSnapshot;
+};
+extern pg_Svg_Capture pg_Svg_Capture_param;
 
 // VIDEO capture
-extern string                   Video_file_name;
-extern int                      beginVideo_file;
-extern int                      endVideo_file;
-extern bool                     outputVideo_file;
+class pg_Video_Capture {
+public:
+	string                   Video_file_name;
+	int                      beginVideo_file;
+	int                      endVideo_file;
+	bool                     outputVideo_file;
+};
+extern pg_Video_Capture pg_Video_Capture_param;
 
 // UDP serversisClearAllLayersnd clients
 extern vector<pg_IPServer*>		IP_Servers;
-extern int                      nb_IP_Servers;
 extern vector<pg_IPClient*>		IP_Clients;
-extern int                      nb_IP_Clients;
 
 extern string					pg_csv_file_name;
 extern string					snapshots_dir_path_name;
@@ -152,89 +165,196 @@ extern GLenum *** pg_Shader_Stages;
 extern int ** pg_Shader_nbStages;
 
 // ClipArt GPU
-// number of files
-extern int pg_nb_ClipArt[_NbConfigurations];
-// number of paths for each file
-extern int *pg_nb_paths_in_ClipArt[_NbConfigurations];
+// color
+enum pg_ClipArt_Colors_Types { ClipArt_nat = 0, ClipArt_white, ClipArt_red, ClipArt_green, ClipArt_blue, ClipArt_yellow, ClipArt_cyan, ClipArt_magenta, ClipArt_black };
+class ClipArt {
+public:
+	// number of paths for each file
+	int pg_nb_paths_in_ClipArt;
+	// file names
+	string pg_ClipArt_fileNames;
+	// geometrical transformations
+	float pg_ClipArt_Scale;
+	float pg_ClipArt_Rotation;
+	float pg_ClipArt_Translation_X;
+	float pg_ClipArt_Translation_Y;
+	// color
+	pg_ClipArt_Colors_Types* pg_ClipArt_Colors;
+	// subpath display
+	bool* pg_ClipArt_SubPath;
+	// base ID of the GPU files
+	GLuint ClipArt_file_baseID;
+	ClipArt(void) {
+		// number of paths for each file
+		pg_nb_paths_in_ClipArt = 0;
+		// file names
+		pg_ClipArt_fileNames = "";
+		// geometrical transformations
+		pg_ClipArt_Scale = 1.f;
+		pg_ClipArt_Rotation = 0.f;
+		pg_ClipArt_Translation_X = 0.f;
+		pg_ClipArt_Translation_Y = 0.f;
+		// color
+		pg_ClipArt_Colors = NULL;
+		// subpath display
+		pg_ClipArt_SubPath = NULL;
+		// base ID of the GPU files
+		ClipArt_file_baseID = NULL_ID;
+	}
+	~ClipArt(void) {
+	}
+};
+extern vector<ClipArt*>pg_ClipArts[_NbConfigurations];
 // total number of paths
 extern int pg_nb_tot_SvgGpu_paths[_NbConfigurations];
-// file names
-extern string *pg_ClipArt_fileNames[_NbConfigurations];
-// geometrical transformations
-extern float *pg_ClipArt_Scale[_NbConfigurations];
-extern float *pg_ClipArt_Rotation[_NbConfigurations];
-extern float *pg_ClipArt_Translation_X[_NbConfigurations];
-extern float *pg_ClipArt_Translation_Y[_NbConfigurations];
 // lastisClearAllLayersctivated SvgGpu
 extern int pg_last_activated_ClipArt;
-// lastisClearAllLayersctivated Mesh
-extern int pg_last_activated_Mesh;
-// color
-enum pg_ClipArt_Colors_Types { ClipArt_nat = 0, ClipArt_white, ClipArt_red, ClipArt_green, ClipArt_blue, ClipArt_yellow, ClipArt_cyan, ClipArt_magenta, ClipArt_black};
-extern pg_ClipArt_Colors_Types** pg_ClipArt_Colors[_NbConfigurations];
-// subpath display
-extern bool** pg_ClipArt_SubPath[_NbConfigurations];
+// base ID of the GPU paths
+extern GLuint ClipArt_path_baseID[_NbConfigurations];
+// fill color table
+extern unsigned int** ClipArt_path_fill_color[_NbConfigurations];
 
 #if defined(var_activeMeshes)
-// MESHES
-// number of meshe files
-extern int pg_nb_Mesh_files[_NbConfigurations];
-extern int pg_nb_Mesh_objects[_NbConfigurations];
-// file names
-extern string *pg_Mesh_fileNames[_NbConfigurations];
-// geometrical transformations
-extern float *pg_Mesh_Scale[_NbConfigurations];
-extern float *pg_Mesh_Rotation_angle[_NbConfigurations];
-extern float* pg_Mesh_Rotation_X[_NbConfigurations];
-extern float* pg_Mesh_Rotation_Y[_NbConfigurations];
-extern float* pg_Mesh_Rotation_Z[_NbConfigurations];
-extern float* pg_Mesh_Translation_X[_NbConfigurations];
-extern float* pg_Mesh_Translation_Y[_NbConfigurations];
-extern float* pg_Mesh_Translation_Z[_NbConfigurations];
-extern float* pg_Mesh_Rotation_Ini_X[_NbConfigurations];
-extern float* pg_Mesh_Rotation_Ini_Y[_NbConfigurations];
-extern float* pg_Mesh_Rotation_Ini_Z[_NbConfigurations];
-extern float* pg_Mesh_Translation_Ini_X[_NbConfigurations];
-extern float* pg_Mesh_Translation_Ini_Y[_NbConfigurations];
-extern float* pg_Mesh_Translation_Ini_Z[_NbConfigurations];
-extern float *pg_Mesh_Motion_X[_NbConfigurations];
-extern float *pg_Mesh_Motion_Y[_NbConfigurations];
-extern float *pg_Mesh_Motion_Z[_NbConfigurations];
-extern int *pg_Mesh_TextureRank[_NbConfigurations];
+class MeshData {
+public:
+	string pg_Mesh_fileNames;
+	// geometrical transformations
+	float pg_Mesh_Scale;
+	float pg_Mesh_Rotation_angle;
+	float pg_Mesh_Rotation_X;
+	float pg_Mesh_Rotation_Y;
+	float pg_Mesh_Rotation_Z;
+	float pg_Mesh_Translation_X;
+	float pg_Mesh_Translation_Y;
+	float pg_Mesh_Translation_Z;
+	float pg_Mesh_Rotation_Ini_X;
+	float pg_Mesh_Rotation_Ini_Y;
+	float pg_Mesh_Rotation_Ini_Z;
+	float pg_Mesh_Translation_Ini_X;
+	float pg_Mesh_Translation_Ini_Y;
+	float pg_Mesh_Translation_Ini_Z;
+	float pg_Mesh_Motion_X;
+	float pg_Mesh_Motion_Y;
+	float pg_Mesh_Motion_Z;
+	int pg_Mesh_TextureRank;
+	int pg_nbObjectsPerMeshFile;
+	int* pg_nbFacesPerMeshFile;
 #if defined(var_MmeShanghai_brokenGlass)
-extern bool** pg_MmeShanghaiActveMeshObjects[_NbConfigurations];
-extern double** pg_MmeShanghaiMeshObjectWakeupTime[_NbConfigurations];
-extern bool*** pg_MmeShanghai_MeshSubParts[_NbConfigurations];
-extern string** pg_MmeShanghai_MeshSubPart_FileNames[_NbConfigurations];
-extern int* pg_MmeShanghai_NbMeshSubParts[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Rotation_angle[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Rotation_X[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Rotation_Y[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Rotation_Z[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Translation_X[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Translation_Y[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Translation_Z[_NbConfigurations];
-extern float** pg_MmeShanghai_Object_Rotation_Ini_angle[_NbConfigurations];
+	bool* pg_MmeShanghaiActveMeshObjects;
+	double* pg_MmeShanghaiMeshObjectWakeupTime;
+	bool** pg_MmeShanghai_MeshSubParts;
+	string* pg_MmeShanghai_MeshSubPart_FileNames;
+	int pg_MmeShanghai_NbMeshSubParts;
+	float* pg_MmeShanghai_Object_Rotation_angle;
+	float* pg_MmeShanghai_Object_Rotation_X;
+	float* pg_MmeShanghai_Object_Rotation_Y;
+	float* pg_MmeShanghai_Object_Rotation_Z;
+	float* pg_MmeShanghai_Object_Translation_X;
+	float* pg_MmeShanghai_Object_Translation_Y;
+	float* pg_MmeShanghai_Object_Translation_Z;
+	float* pg_MmeShanghai_Object_Rotation_Ini_angle;
 #endif
 #if defined(var_Caverne_Mesh_Profusion)
-extern bool* pg_CaverneActveMesh[_NbConfigurations];
-extern float* pg_CaverneMeshWakeupTime[_NbConfigurations];
-extern float* pg_CaverneMeshBirthTime[_NbConfigurations];
-extern float* pg_CaverneMeshDeathTime[_NbConfigurations];
-extern bool Caverne_BackColor[_NbConfigurations];
-extern float Caverne_BackColorRed[_NbConfigurations];
-extern float Caverne_BackColorGreen[_NbConfigurations];
-extern float Caverne_BackColorBlue[_NbConfigurations];
-extern float Caverne_BackColorRed_prec[_NbConfigurations];
-extern float Caverne_BackColorGreen_prec[_NbConfigurations];
-extern float Caverne_BackColorBlue_prec[_NbConfigurations];
-extern bool Caverne_BackColorFlash[_NbConfigurations];
-extern bool Caverne_BackColorFlash_prec[_NbConfigurations];
+	bool pg_CaverneActveMesh;
+	float pg_CaverneMeshWakeupTime;
+	float pg_CaverneMeshBirthTime;
+	float pg_CaverneMeshDeathTime;
 #endif
-// color
-extern float **pg_Mesh_Colors[_NbConfigurations];
-// textures
-extern GLuint *Mesh_texture_rectangle[_NbConfigurations];
+	// color
+	array<float, 4> pg_Mesh_Colors;
+	// textures
+	GLuint Mesh_texture_rectangle;
+	vector<unsigned int> mesh_vao;
+	vector<array<float, 3>> mesh_barycenter;
+	vector<unsigned int> mesh_index_vbo;
+	MeshData(int indConfiguration) {
+		pg_Mesh_fileNames = "";
+		// geometrical transformations
+		pg_Mesh_Scale = 1.f;
+		pg_Mesh_Rotation_angle = 0.f;
+		pg_Mesh_Rotation_X = 0.f;
+		pg_Mesh_Rotation_Y = 0.f;
+		pg_Mesh_Rotation_Z = 0.f;
+		pg_Mesh_Translation_X = 0.f;
+		pg_Mesh_Translation_Y = 0.f;
+		pg_Mesh_Translation_Z = 0.f;
+		pg_Mesh_Rotation_Ini_X = 0.f;
+		pg_Mesh_Rotation_Ini_Y = 0.f;
+		pg_Mesh_Rotation_Ini_Z = 0.f;
+		pg_Mesh_Translation_Ini_X = 0.f;
+		pg_Mesh_Translation_Ini_Y = 0.f;
+		pg_Mesh_Translation_Ini_Z = 0.f;
+		pg_Mesh_Motion_X = 0.f;
+		pg_Mesh_Motion_Y = 0.f;
+		pg_Mesh_Motion_Z = 0.f;
+		pg_Mesh_TextureRank = 0;
+		pg_Mesh_Colors[0] = 1.f;
+		pg_Mesh_Colors[1] = 1.f;
+		pg_Mesh_Colors[2] = 1.f;
+		pg_Mesh_Colors[3] = 1.f;
+		pg_nbObjectsPerMeshFile = 0;
+		pg_nbFacesPerMeshFile = NULL;
+		Mesh_texture_rectangle = NULL_ID;
+		mesh_vao = {};
+		mesh_barycenter = {};
+		mesh_index_vbo = {};
+#if defined(var_Caverne_Mesh_Profusion)
+		if (ScenarioVarConfigurations[_Caverne_Mesh_Profusion][indConfiguration]) {
+			pg_CaverneActveMesh = false;
+			if (indFile < 7) {
+				pg_CaverneMeshWakeupTime = float(rand_0_1 * 10.);
+			}
+			else {
+				pg_CaverneMeshWakeupTime = float(rand_0_1 * 30.);
+			}
+			pg_CaverneMeshBirthTime = 0.f;
+			pg_CaverneMeshDeathTime = 0.f;
+		}
+#endif
+#if defined(var_MmeShanghai_brokenGlass)
+		if (ScenarioVarConfigurations[_MmeShanghai_brokenGlass][indConfiguration]) {
+			pg_MmeShanghai_MeshSubParts = NULL;
+			pg_MmeShanghai_NbMeshSubParts = 0;
+			pg_MmeShanghai_MeshSubPart_FileNames = NULL;
+		}
+		pg_MmeShanghaiActveMeshObjects = NULL;
+		pg_MmeShanghaiMeshObjectWakeupTime = NULL;
+		pg_MmeShanghai_MeshSubParts = NULL;
+		pg_MmeShanghai_MeshSubPart_FileNames = NULL;
+		pg_MmeShanghai_NbMeshSubParts = NULL;
+		pg_MmeShanghai_Object_Rotation_angle = NULL;
+		pg_MmeShanghai_Object_Rotation_X = NULL;
+		pg_MmeShanghai_Object_Rotation_Y = NULL;
+		pg_MmeShanghai_Object_Rotation_Z = NULL;
+		pg_MmeShanghai_Object_Translation_X = NULL;
+		pg_MmeShanghai_Object_Translation_Y = NULL;
+		pg_MmeShanghai_Object_Translation_Z = NULL;
+		pg_MmeShanghai_Object_Rotation_Ini_angle = NULL;
+#endif
+#if defined(var_Caverne_Mesh_Profusion)
+		pg_CaverneActveMesh = false;
+		pg_CaverneMeshWakeupTime = 0.f;
+		pg_CaverneMeshBirthTime = 0.f;
+		pg_CaverneMeshDeathTime = 0.f;
+#endif
+	}
+	~MeshData(void) {
+	}
+};
+class CaverneBackColor {
+	bool Caverne_BackColor;
+	float Caverne_BackColorRed;
+	float Caverne_BackColorGreen;
+	float Caverne_BackColorBlue;
+	float Caverne_BackColorRed_prec;
+	float Caverne_BackColorGreen_prec;
+	float Caverne_BackColorBlue_prec;
+	bool Caverne_BackColorFlash;
+	bool Caverne_BackColorFlash_prec;
+};
+// MESHES
+extern vector<MeshData*> pg_Meshes[_NbConfigurations];
+extern int pg_last_activated_Mesh;
 #endif
 
 float my_stof(string str);
@@ -242,8 +362,6 @@ int my_stoi(string str);
 double my_stod(string str);
 
 // TEXTURES
-// number of Texture files
-extern int pg_nb_Texture_files[_NbConfigurations];
 // file names
 extern vector<pg_TextureData *> pg_Textures[_NbConfigurations];
 
@@ -262,6 +380,9 @@ void pg_update_scene_variables(Scene* cur_scene, float elapsed_time_from_start);
 
 void setWindowDimensions(void);
 
+bool isFullPath(string dir_or_filename);
+void completeToFullPath(string& dir_or_filename);
+	
 void parseConfigurationFile(std::ifstream& confFin, int fileRank);
 int pg_varID_to_rank(string var_ID, int indConfig);
 void parseScenarioFile(std::ifstream& scenarioFin, int fileRank);

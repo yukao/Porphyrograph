@@ -165,10 +165,12 @@ using namespace cv;
 
 #include <list>
 #include <vector>
+#include <array>
 #include <map>
 #include <unordered_map>
 using std::list;
 using std::vector;
+using std::array;
 using std::map;
 using std::string;
 using std::ios;
@@ -224,16 +226,16 @@ using std::ifstream;
 #endif
 
 
-#if defined(CRITON) || defined(LIGHT)
-// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
-#define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
-#elif defined(CORE)
-// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 11 WITH THE CURRENT VARIABLES) 
-#define PG_NB_PATHS 11   // **** ALSO TO BE CHANGED IN UPDATE AND PARTICLE ANIMATION FRAGMENT SHADER ****
-#else
-// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 7 WITH THE CURRENT VARIABLES) 
-#define PG_NB_PATHS 7   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
-#endif
+//#if defined(CRITON) || defined(LIGHT)
+//// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
+//#define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
+//#elif defined(CORE)
+//// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 11 WITH THE CURRENT VARIABLES) 
+//#define PG_NB_PATHS 11   // **** ALSO TO BE CHANGED IN UPDATE AND PARTICLE ANIMATION FRAGMENT SHADER ****
+//#else
+//// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 7 WITH THE CURRENT VARIABLES) 
+//#define PG_NB_PATHS 7   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
+//#endif
 
 // for a tactile entry, there is no mouseover and the path has to be broken if the distance between two consecutive points is too big
 #if defined(var_fingers)

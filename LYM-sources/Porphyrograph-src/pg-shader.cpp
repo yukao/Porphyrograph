@@ -539,7 +539,7 @@ void pg_loadAllShaders(void) {
 					}
 
 					pg_shader[shader_stage] = glCreateShader(pg_Shader_Stages[indConfig][shader_type][shader_stage]);
-					pg_loadshader((char*)("Projects/shaders/" + fileShaderName).c_str(), pg_shader[shader_stage]);
+					pg_loadshader((char*)(shaders_directory + fileShaderName).c_str(), pg_shader[shader_stage]);
 					glCompileShader(pg_shader[shader_stage]);
 					pg_printShaderCompileLog(pg_shader[shader_stage]);
 

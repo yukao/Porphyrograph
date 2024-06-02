@@ -1,0 +1,46 @@
+0-START-Tempete,60,prolong_when_ends,FIN_coup_drapeau,FIN_donner_top_Pauline
+,Lancer la vidéo par setup+ quand Ariel donne un coup de drapeau et laisser se dérouler (ne pas oublier de remettre les vidéos sur la carte SSD),,,
+1-Chenal_fadein,60,change_when_ends,,
+,,,,
+2-Chenal_lumineux,90,change_when_ends,,
+,,,,
+3-Chenal_selargit,120,change_when_ends,,
+,,,,
+4-Mer_agitee_sol,180,prolong_when_ends,FIN_coup_drapeau,FIN_attendre_strobo_pour_fade_out_video
+,"Lorsque Prospero donne un coup de drapeau, faire un fade-out de la vidéo pendant que les lumières strobo montent, puis setup+
+Monter le projecteur pour le mettre en position murale
+Signaler à la lumière lorsque le position est en place",,,
+5-Noir_chgt_pos_proj,500,prolong_when_ends,FIN_informer_Pauline_OK,FIN_attendre_baisse_strobo_pour_fade_in
+,Lancer la vidéo par setup+ lorsque la lumière strobo commence à diminuer,,,
+6-Rocher_ascend,240,change_when_ends,,
+,,,,
+7-Vers_Ile,120,prolong_when_ends,FIN_PROSPERO_Our_rivals_are_not_ended,FIN_PROSPERO_life_asleep
+,Passer à la disparition de l'île par setup+ à la fin de la tirade « Our revels now are ended » à « and our little life Is rounded with a sleep »,,,
+8-Flash_disparition,30,change_when_ends,FIN_Informer_Pauline_OK,FIN_Chgt_autom_pour_maintien_pixels
+,,,,
+9-Effacement_pixel,90,prolong_when_ends,,
+,"Faire progressivement disparaître les pixels lorsque la lumière monte en augmentant BG Decay (Tab Decay) 
+Lorsque les pixels ont disparu, passer à la scène suivante par setup+
+Eteindre le VP par shutter quand la lumière est montée",,,
+0-START-Dessin,500,prolong_when_ends,FIN_ESPRITS_Tableau_au_sol_a_genoux,Mettre_curseur_hors_ecran
+,"Mettre le curseur hors écran puis lancer le dessin pendant la danse
+Allumer le VP par shutter pendant la danse",,,
+1-Tableau,500,prolong_when_ends,X1poseTab_X2BatonSol_pont_riv_coln_fem_hom,FIN_lie_there_my_art
+,"Faire une première branche / de la croix quand le tableau est posé au sol et qu'ils sont à genoux
+Faire une deuxième branche \ de la croix quand le baton est posé au sol
+Dessiner dans l'ordre : pont, rivière pendant leur déplacement, colonnes, femme, homme, deux petits bâtiments de gauche (église avec coupole
+Et bâtiment avec toit en zig zag), ligne de fuite et bâtiment de droite, arbre lune à gauche, arbre soleil à droite, nuages et finir par éclair quand prospero
+Est prêt à dire Lie there, my art. 
+Lorsque Prospero prononce « Lie there my art », faire effacer le dessin avec setup+",,,
+2-Efface_tableau,120,prolong_when_ends,FIN_quand_plus_de_pixels,Mettre_curseur_hors_ecran
+,Mettre le curseur hors écran puis passer à la scène suivante quand le dernier pixel a disparu,,,
+3-Cercle,500,prolong_when_ends,DEB_PROSP_2e_Dream_or_reality_Comence_trace,FIN_PROSPERO_Grand_geste
+,"Surveiller que des pixels ne se réveillent pas (faire eventuellement un clear screen)
+Quand Prospero prononce « Dream or reality » et commence à faire le tracé du cercle, le faire en même temps et si possible au même rythme sur l'écran
+Passer à l'apparition de la vidéo dans le cercle par setup+ lorsque Prospero fait un grand geste",,,
+4-Efface_cercle,5,change_when_ends,FAIRE_DES_RATURES,
+,Dès le début faire des tracés en cercle et continuer jusqu'à ce que l'écran se remplisse et que les esprits commencent à entrer,,,
+5-Tempete_raturee,180,prolong_when_ends,FAIRE_DES_RATURES,FIN_Entree_des_esprits_son_aspiration
+,"Lorsque le son d'aspiration est fait au dessus de la musique de danse, lancer la disparition des cercles par setup+",,,
+6-Fin_ratures,75,prolong_when_ends,,
+,Arrêter le VP par shutter lorsque la lumière est plus forte,,,

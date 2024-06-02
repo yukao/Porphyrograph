@@ -31,6 +31,8 @@ float	 trackMasterWeight_1;
 float	 trackMasterWeight_2;
 #define var_trackMasterWeight_3
 float	 trackMasterWeight_3;
+#define var_SecondMasterMixingWeight
+float	 SecondMasterMixingWeight;
 #define var_currentMaskTrack
 int		currentMaskTrack;
 #define var_master_scale
@@ -53,6 +55,8 @@ float	 master_mask_opacity_3;
 float	 master_mask_opacity_4;
 #define var_master_mask_opacity_5
 float	 master_mask_opacity_5;
+#define var_master_mask_opacity_6
+float	 master_mask_opacity_6;
 #define var_master_crop_x
 float	 master_crop_x;
 #define var_master_crop_y
@@ -69,7 +73,7 @@ float	 master_mask_scale_ratio;
 float	 master_mask_offsetX;
 #define var_master_mask_offsetY
 float	 master_mask_offsetY;
-uniform float uniform_Master_scenario_var_data[30];
+uniform float uniform_Master_scenario_var_data[32];
 
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
 
@@ -134,25 +138,27 @@ void main() {
   trackMasterWeight_1 = uniform_Master_scenario_var_data[8];
   trackMasterWeight_2 = uniform_Master_scenario_var_data[9];
   trackMasterWeight_3 = uniform_Master_scenario_var_data[10];
-  currentMaskTrack = int(uniform_Master_scenario_var_data[11]);
-  master_scale = uniform_Master_scenario_var_data[12];
-  master_scale_pulse = uniform_Master_scenario_var_data[13];
-  master_scale_ratio = uniform_Master_scenario_var_data[14];
-  master_offsetX = uniform_Master_scenario_var_data[15];
-  master_offsetY = uniform_Master_scenario_var_data[16];
-  master_mask_opacity_1 = uniform_Master_scenario_var_data[17];
-  master_mask_opacity_2 = uniform_Master_scenario_var_data[18];
-  master_mask_opacity_3 = uniform_Master_scenario_var_data[19];
-  master_mask_opacity_4 = uniform_Master_scenario_var_data[20];
-  master_mask_opacity_5 = uniform_Master_scenario_var_data[21];
-  master_crop_x = uniform_Master_scenario_var_data[22];
-  master_crop_y = uniform_Master_scenario_var_data[23];
-  master_crop_width = uniform_Master_scenario_var_data[24];
-  master_mask = uniform_Master_scenario_var_data[25];
-  master_mask_scale = uniform_Master_scenario_var_data[26];
-  master_mask_scale_ratio = uniform_Master_scenario_var_data[27];
-  master_mask_offsetX = uniform_Master_scenario_var_data[28];
-  master_mask_offsetY = uniform_Master_scenario_var_data[29];
+  SecondMasterMixingWeight = uniform_Master_scenario_var_data[11];
+  currentMaskTrack = int(uniform_Master_scenario_var_data[12]);
+  master_scale = uniform_Master_scenario_var_data[13];
+  master_scale_pulse = uniform_Master_scenario_var_data[14];
+  master_scale_ratio = uniform_Master_scenario_var_data[15];
+  master_offsetX = uniform_Master_scenario_var_data[16];
+  master_offsetY = uniform_Master_scenario_var_data[17];
+  master_mask_opacity_1 = uniform_Master_scenario_var_data[18];
+  master_mask_opacity_2 = uniform_Master_scenario_var_data[19];
+  master_mask_opacity_3 = uniform_Master_scenario_var_data[20];
+  master_mask_opacity_4 = uniform_Master_scenario_var_data[21];
+  master_mask_opacity_5 = uniform_Master_scenario_var_data[22];
+  master_mask_opacity_6 = uniform_Master_scenario_var_data[23];
+  master_crop_x = uniform_Master_scenario_var_data[24];
+  master_crop_y = uniform_Master_scenario_var_data[25];
+  master_crop_width = uniform_Master_scenario_var_data[26];
+  master_mask = uniform_Master_scenario_var_data[27];
+  master_mask_scale = uniform_Master_scenario_var_data[28];
+  master_mask_scale_ratio = uniform_Master_scenario_var_data[29];
+  master_mask_offsetX = uniform_Master_scenario_var_data[30];
+  master_mask_offsetY = uniform_Master_scenario_var_data[31];
 
   float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
   float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;

@@ -107,12 +107,6 @@ struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
 #endif
 
 #if defined(var_activeMeshes)
-unsigned int** mesh_vao[_NbConfigurations] = { NULL };
-vector <vector <string>> mesh_IDs[_NbConfigurations];
-float** mesh_barycenter[_NbConfigurations] = { NULL };
-int* pg_nbObjectsPerMeshFile[_NbConfigurations] = { NULL };
-int **pg_nbFacesPerMeshFile[_NbConfigurations] = { NULL };
-unsigned int **mesh_index_vbo[_NbConfigurations] = { NULL };
 int *pg_nb_bones[_NbConfigurations] = { NULL };
 Bone** TabBones[_NbConfigurations] = { NULL };
 int* pg_nb_LibraryPoses[_NbConfigurations] = { NULL };
@@ -613,9 +607,11 @@ int stb__arial_50_usascii_a[95] = { 199,199,254,398,398,637,478,137,
 void InterfaceInitializations(void) {
 #if !defined(LIGHT)
 	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
-	for (int ind = 0; ind < nb_pen_colorPresets[pg_current_configuration_rank]; ind++) {
+	int indPreset = 0;
+	for(ColorPreset *preset: pg_ColorPresets[pg_current_configuration_rank]) {
 		sprintf(AuxString, "/pen_colorPreset_name%d %s",
-			ind, pen_colorPresets_names[pg_current_configuration_rank][ind].c_str()); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			indPreset, preset->pen_colorPresets_names.c_str()); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		indPreset++;
 	}
 	// interpolation duration initial value (0.f)
 	sprintf(AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
@@ -625,7 +621,7 @@ void InterfaceInitializations(void) {
 #if defined(var_activeClipArts)
 	// ClipArt GPU INTERFACE VARIABLE INITIALIZATION
 	if (has_NV_path_rendering) {
-		for (int indImage = 0; indImage < pg_nb_ClipArt[pg_current_configuration_rank]; indImage++) {
+		for (unsigned int indImage = 0; indImage < pg_ClipArts[pg_current_configuration_rank].size(); indImage++) {
 			sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, ((activeClipArts == -1) || (activeClipArts & (1 << (indImage - 1))))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
@@ -633,10 +629,10 @@ void InterfaceInitializations(void) {
 
 #if defined(var_activeMeshes) && defined(var_mobileMeshes)
 	// MESH INTERFACE VARIABLE INITIALIZATION
-	for (int indImage = 0; indImage < pg_nb_Mesh_files[pg_current_configuration_rank]; indImage++) {
+	for (unsigned int indImage = 0; indImage < pg_Meshes[pg_current_configuration_rank].size(); indImage++) {
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
-	for (int indImage = 0; indImage < pg_nb_Mesh_files[pg_current_configuration_rank]; indImage++) {
+	for (unsigned int indImage = 0; indImage < pg_Meshes[pg_current_configuration_rank].size(); indImage++) {
 		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage + 1, (mobileMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 #endif
@@ -1366,21 +1362,12 @@ void sensor_sample_setUp_interpolation(void) {
 #if defined(var_activeMeshes)
 void MeshInitialization(void) {
 	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
-		mesh_vao[indConfiguration] = new unsigned int* [pg_nb_Mesh_files[indConfiguration]];
-		mesh_index_vbo[indConfiguration] = new unsigned int* [pg_nb_Mesh_files[indConfiguration]];
-		mesh_barycenter[indConfiguration] = new float* [pg_nb_Mesh_files[indConfiguration]];
-		pg_nbObjectsPerMeshFile[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		pg_nbFacesPerMeshFile[indConfiguration] = new int* [pg_nb_Mesh_files[indConfiguration]];
-		pg_nb_bones[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		TabBones[indConfiguration] = new Bone * [pg_nb_Mesh_files[indConfiguration]];
-		pg_nb_AnimationPoses[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		pg_nb_LibraryPoses[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		pg_interpolation_weight_AnimationPose[indConfiguration] = new float* [pg_nb_Mesh_files[indConfiguration]];
-		for (int ind = 0; ind < pg_nb_Mesh_files[indConfiguration]; ind++) {
-			mesh_vao[indConfiguration][ind] = NULL;
-			mesh_index_vbo[indConfiguration][ind] = NULL;
-			mesh_barycenter[indConfiguration][ind] = NULL;
-			pg_nbFacesPerMeshFile[indConfiguration][ind] = NULL;
+		pg_nb_bones[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+		TabBones[indConfiguration] = new Bone * [pg_Meshes[indConfiguration].size()];
+		pg_nb_AnimationPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+		pg_nb_LibraryPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+		pg_interpolation_weight_AnimationPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
+		for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
 			TabBones[indConfiguration][ind] = NULL;
 			pg_nb_AnimationPoses[indConfiguration][ind] = 0;
 			pg_nb_LibraryPoses[indConfiguration][ind] = 0;
@@ -1390,43 +1377,43 @@ void MeshInitialization(void) {
 			}
 		}
 
-		pg_nb_MotionPoses[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		pg_interpolation_weight_MotionPose[indConfiguration] = new float* [pg_nb_Mesh_files[indConfiguration]];
-		for (int ind = 0; ind < pg_nb_Mesh_files[indConfiguration]; ind++) {
+		pg_nb_MotionPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+		pg_interpolation_weight_MotionPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
+		for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
 			pg_nb_MotionPoses[indConfiguration][ind] = 0;
 			pg_interpolation_weight_MotionPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
 			for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
 				pg_interpolation_weight_MotionPose[indConfiguration][ind][indPose] = 0.f;
 			}
 		}
-		pg_motionPoses[indConfiguration] = new MotionPose * [pg_nb_Mesh_files[indConfiguration]];
-		for (int ind = 0; ind < pg_nb_Mesh_files[indConfiguration]; ind++) {
+		pg_motionPoses[indConfiguration] = new MotionPose * [pg_Meshes[indConfiguration].size()];
+		for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
 			pg_motionPoses[indConfiguration][ind] = new MotionPose[PG_MAX_ANIMATION_POSES]();
 		}
 
 		// shader variable pointers
-		uniform_mesh_model[indConfiguration] = new GLint[pg_nb_Mesh_files[indConfiguration]];
-		uniform_mesh_view[indConfiguration] = new GLint[pg_nb_Mesh_files[indConfiguration]];
-		uniform_mesh_proj[indConfiguration] = new GLint[pg_nb_Mesh_files[indConfiguration]];
-		uniform_mesh_light[indConfiguration] = new GLint[pg_nb_Mesh_files[indConfiguration]];
+		uniform_mesh_model[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+		uniform_mesh_view[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+		uniform_mesh_proj[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+		uniform_mesh_light[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
 
 		// animation variable pointers
-		mesh_startAnime[indConfiguration] = new double[pg_nb_Mesh_files[indConfiguration]];
-		mesh_anime_precTime[indConfiguration] = new double[pg_nb_Mesh_files[indConfiguration]];
-		mesh_precedingAnime[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		mesh_positiveChange[indConfiguration] = new bool[pg_nb_Mesh_files[indConfiguration]];
-		mesh_negativeChange[indConfiguration] = new bool[pg_nb_Mesh_files[indConfiguration]];
-		for (int indMesh = 0; indMesh < pg_nb_Mesh_files[indConfiguration]; indMesh++) {
+		mesh_startAnime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+		mesh_anime_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+		mesh_precedingAnime[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+		mesh_positiveChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
+		mesh_negativeChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
+		for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
 			mesh_startAnime[indConfiguration][indMesh] = -1;
 			mesh_anime_precTime[indConfiguration][indMesh] = -1;
 			mesh_positiveChange[indConfiguration][indMesh] = false;
 			mesh_precedingAnime[indConfiguration][indMesh] = false;
 		}
 		// motion variable pointers
-		mesh_startMotion[indConfiguration] = new double[pg_nb_Mesh_files[indConfiguration]];
-		mesh_motion_precTime[indConfiguration] = new double[pg_nb_Mesh_files[indConfiguration]];
-		mesh_precedingMotion[indConfiguration] = new int[pg_nb_Mesh_files[indConfiguration]];
-		for (int indMesh = 0; indMesh < pg_nb_Mesh_files[indConfiguration]; indMesh++) {
+		mesh_startMotion[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+		mesh_motion_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+		mesh_precedingMotion[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+		for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
 			mesh_startMotion[indConfiguration][indMesh] = -1;
 			mesh_motion_precTime[indConfiguration][indMesh] = -1;
 		}
@@ -1850,7 +1837,7 @@ void pg_screenMessage_update(void) {
 ///////////////////////////////////////////////////////
 // Message Uploads
 
-bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
+bool pg_ReadAllDisplayMessages(string basefilename) {
 	bool valRet = true;
 	NbDisplayTexts = 0;
 #if defined(_PG_IMAGE_TEXT)
@@ -1858,7 +1845,7 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 #else
 	// line count
 	ifstream myReadFile;
-	myReadFile.open(dir + basefilename);
+	myReadFile.open(basefilename);
 	std::string line;
 	DisplayText_maxLen = 0;
 	if (myReadFile.is_open()) {
@@ -1869,7 +1856,7 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 		}
 	}
 	else {
-		strcpy(ErrorStr, ("File " + dir + basefilename + " not opened!").c_str()); ReportError(ErrorStr); throw 152;
+		strcpy(ErrorStr, ("File " + basefilename + " not opened!").c_str()); ReportError(ErrorStr); throw 152;
 	}
 	myReadFile.close();
 #endif
@@ -1890,7 +1877,7 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 	}
 
 	// line read
-	myReadFile.open(dir + basefilename);
+	myReadFile.open(basefilename);
 	int indChapter = 0;
 	int indtext = 0;
 	if (myReadFile.is_open()) {
@@ -1910,12 +1897,12 @@ bool pg_ReadAllDisplayMessages(string dir, string basefilename) {
 		}
 	}
 	else {
-		strcpy(ErrorStr, ("File " + dir + basefilename + " not opened!").c_str()); ReportError(ErrorStr); throw 152;
+		strcpy(ErrorStr, ("File " + basefilename + " not opened!").c_str()); ReportError(ErrorStr); throw 152;
 	}
 	myReadFile.close();
 
 	if (indtext >= NbDisplayTexts) {
-		strcpy(ErrorStr, ("Only part of the messages read from " + dir + basefilename + "!").c_str()); ReportError(ErrorStr);
+		strcpy(ErrorStr, ("Only part of the messages read from " + basefilename + "!").c_str()); ReportError(ErrorStr);
 		NbDisplayTexts = indtext;
 		valRet = false;
 	}

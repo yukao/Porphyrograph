@@ -1,2 +1,15 @@
-﻿  pg-script.cpp
+﻿  pg-audio.cpp
+  pg-clip-art.cpp
+  pg-conf.cpp
+  pg-init.cpp
+  pg-light.cpp
+  pg-main.cpp
+  pg-mesh.cpp
+  pg-script.cpp
+  pg-shader.cpp
+  pg-stroke.cpp
+  pg-texture.cpp
+  pg-udp.cpp
+  pg-update.cpp
+  Generating Code...
   Porphyrograph_core_Core.vcxproj -> C:\home\LYM-sources\Porphyrograph-VC17\Release\core_Core\Porphyrograph_core_Core.exe

@@ -136,30 +136,54 @@ extern int pg_movie_frame_height;
 extern Mat pg_movie_frame;
 
 // video tracks
-extern vector<string> movieFileName[_NbConfigurations];
-extern vector<string> movieShortName[_NbConfigurations];
-extern vector<string> movieSoundtrackPeaksFileName[_NbConfigurations];
-extern vector<string> movieSoundtrackOnsetsFileName[_NbConfigurations];
-extern vector<vector<float>> movieSoundtrackPeaks[_NbConfigurations];
-extern vector<vector<float>> movieSoundtrackOnsets[_NbConfigurations];
-extern int nb_movies[_NbConfigurations];
+class VideoTrack {
+public:
+	string videoFileName;
+	string videoShortName;
+	string videoSoundtrackPeaksFileName;
+	string videoSoundtrackOnsetsFileName;
+	vector<float> videoSoundtrackPeaks;
+	vector<float> videoSoundtrackOnsets;
+	VideoTrack(void) {
+		videoFileName = "";
+		videoShortName = "";
+		videoSoundtrackPeaksFileName = "";
+		videoSoundtrackOnsetsFileName = "";
+	}
+	~VideoTrack(void) {
+	}
+};
+extern vector<VideoTrack*> pg_VideoTracks[_NbConfigurations];
 // soundtracks
-extern vector<string> trackFileName[_NbConfigurations];
-extern vector<string> trackShortName[_NbConfigurations];
-extern vector<string> trackSoundtrackPeaksFileName[_NbConfigurations];
-extern vector<string> trackSoundtrackOnsetsFileName[_NbConfigurations];
-extern vector<float> trackSoundtrackOnsetsAndPeasksOffset[_NbConfigurations];
-extern vector<vector<float>> trackSoundtrackPeaks[_NbConfigurations];
-extern vector<vector<float>> trackSoundtrackOnsets[_NbConfigurations];
+class SoundTrack {
+public:
+	string soundtrackFileName;
+	string soundtrackShortName;
+	string soundtrackPeaksFileName;
+	string soundtrackOnsetsFileName;
+	float soundtrackOnsetsAndPeasksOffset;
+	vector<float> soundtrackPeaks;
+	vector<float> soundtrackOnsets;
+	SoundTrack(void) {
+		soundtrackFileName = "";
+		soundtrackShortName = "";
+		soundtrackPeaksFileName = "";
+		soundtrackOnsetsFileName = "";
+		soundtrackOnsetsAndPeasksOffset = 0.f;
+	}
+	~SoundTrack(void) {
+	}
+};
+extern vector<SoundTrack*> pg_SoundTracks[_NbConfigurations];
 extern int currentlyPlaying_trackNo;
-extern int nb_soundtracks[_NbConfigurations];
 extern int currentTrackSoundPeakIndex;
 extern int nbTrackSoundPeakIndex[_NbConfigurations];
 extern int currentTrackSoundOnsetIndex;
 extern int nbTrackSoundOnsetIndex[_NbConfigurations];
+
+////////////////////////////////////////////
+// COLOR PRESETS
 // pen palettes presets
-extern int nb_pen_colorPresets[_NbConfigurations];
-extern vector<string> pen_colorPresets_names[_NbConfigurations];
 class Color {
 public:
 	float color;
@@ -189,9 +213,38 @@ public:
 		printf("Color %.2f, Color %.2f, Color %.2f\n", color, grey, alpha);
 	}
 };
-extern Color *pg_colorPreset_values[_NbConfigurations];
+class ColorPreset {
+public:
+	string pen_colorPresets_names;
+	Color pg_colorPreset_values;
+	ColorPreset(string &id, Color &color) {
+		pen_colorPresets_names = id;
+		pg_colorPreset_values = color;
+	}
+	~ColorPreset(void) {
+	}
+};
+extern vector<ColorPreset*> pg_ColorPresets[_NbConfigurations];
+
+////////////////////////////////////////////
+// COLOR PALETTES
+// pen palettes colors
+class Palette {
+public:
+	string pen_palette_colors_names;
+	array<float, 9> pen_palette_colors_values;
+	Palette(string &id, array<float, 9> &colors) {
+		pen_palette_colors_names = id;
+		pen_palette_colors_values = colors;
+	}
+	~Palette(void) {
+	}
+};
+extern vector<Palette*> pg_Palettes[_NbConfigurations];
+
+////////////////////////////////
+// LIGHTS
 // lights presets
-extern int pg_nb_lights[_NbConfigurations];
 extern int pg_nb_light_groups[_NbConfigurations];
 // interface current light group
 extern int pg_interface_light_group;
@@ -207,11 +260,16 @@ void light_channel_string_to_channel_no(string a_light_channel_string, int* ligh
 class Light {
 public:
 	string light_name;
+	// group of lights with the same values
 	int light_group;
+	// rank of the light inside its group
 	int index_in_group;
+	// DMX address
 	int light_port;
 	int light_address;
+	// number of channels
 	int light_channels;
+	// colors
 	int light_red;
 	int light_red_fine;
 	int light_green;
@@ -220,12 +278,16 @@ public:
 	int light_blue_fine;
 	int light_grey;
 	int light_grey_fine;
+	// dimmer
 	int light_dimmer;
 	int light_dimmer_fine;
+	// strobe
 	int light_strobe;
 	int light_strobe_fine;
+	// zoom
 	int light_zoom;
 	int light_zoom_fine;
+	// orientation
 	int light_pan;
 	int light_pan_fine;
 	int light_tilt;
@@ -260,7 +322,7 @@ public:
 		light_hue = 0;
 		light_hue_fine = 0;
 	}
-	void set_light_values(string a_light_name, int a_light_group, int an_index_in_group, int a_light_port, int a_light_address, int a_light_channels,
+	Light(string a_light_name, int a_light_group, int an_index_in_group, int a_light_port, int a_light_address, int a_light_channels,
 		string a_light_red, string a_light_green, string a_light_blue, string a_light_grey, string a_light_dimmer, string a_light_strobe, 
 		string a_light_zoom, string a_light_pan, string a_light_tilt, string a_light_hue) {
 		light_name = a_light_name;
@@ -308,7 +370,8 @@ extern std::unordered_map<int, std::string> pg_light_param_hashMap;
 extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
 // submap of the parameters which can be looped
 extern std::unordered_map<int, std::string> pg_light_loop_param_hashMap;
-extern Light* pg_lights[_NbConfigurations];
+// lights
+extern vector<Light*> pg_Lights[_NbConfigurations];
 #define _loop_speed_factor 3.f
 class LightGroup {
 private:
@@ -332,8 +395,8 @@ private:
 	bool group_hasBeatCommand;
 
 public:
-	LightGroup() {
-		group_no = 0;
+	LightGroup(int indgroup) {
+		group_no = indgroup;
 		group_id = "";
 		for (int light_param = 0; light_param < _nb_light_params; light_param++) {
 			group_val[light_param] = 0.f;
@@ -568,20 +631,17 @@ public:
 	~LightGroup() {
 	}
 };
-extern LightGroup* pg_light_groups[_NbConfigurations];
+extern vector<LightGroup*> pg_light_groups[_NbConfigurations];
 // Create an unordered_map of three strings (that map to strings)
 extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
 extern std::unordered_map<int, std::string> pg_light_param_hashMap;
-// pen palettes colors
-extern int nb_pen_palette_colors[_NbConfigurations];
-extern vector<string> pen_palette_colors_names[_NbConfigurations];
-extern float **pen_palette_colors_values[_NbConfigurations];
+
+
 // photo albums
-extern string photoAlbumDirName[_NbConfigurations];
-extern int nb_photo_albums[_NbConfigurations];
+extern std::string pg_ImageDirectory[_NbConfigurations];
 // short video clip albums
-extern string clipAlbumDirName[_NbConfigurations];
-extern int nb_clip_albums[_NbConfigurations];
+extern string pg_ClipDirectory[_NbConfigurations];
+extern int pg_NbClipAlbums[_NbConfigurations];
 extern int clip_image_width[_NbConfigurations];
 extern int clip_image_height[_NbConfigurations];
 extern int clip_crop_width[_NbConfigurations];
@@ -595,10 +655,8 @@ extern int nb_layers_master_mask[_NbConfigurations];
 
 #if defined(var_cameraCaptFreq)
 extern VideoCapture pg_webCam_capture;
-extern VideoCapture* pg_IPCam_capture;
-extern String* pg_IPCam_capture_address;
-extern int nb_IPCam;
-extern int nb_webCam;
+extern vector <VideoCapture> pg_IPCam_capture;
+extern vector<String> pg_IPCam_capture_address;
 class webCam {
 public:
 	string cameraString;
@@ -618,7 +676,7 @@ public:
 		cameraHeight = 0;
 	}
 };
-extern webCam* pg_webCams;
+extern vector<webCam*> pg_webCams;
 extern int pg_current_active_cameraNo;
 extern bool pg_initializedWebcam;
 extern bool pg_cameraCaptureIsOn;
