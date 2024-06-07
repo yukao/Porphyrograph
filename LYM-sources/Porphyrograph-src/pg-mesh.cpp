@@ -39,10 +39,10 @@ GLint* boneIndexBuffer = NULL;
 GLfloat* boneWeightBuffer = NULL;
 
 // shader variable pointers
-GLint* uniform_mesh_model[_NbConfigurations] = { NULL };
-GLint* uniform_mesh_view[_NbConfigurations] = { NULL };
-GLint* uniform_mesh_proj[_NbConfigurations] = { NULL };
-GLint* uniform_mesh_light[_NbConfigurations] = { NULL };
+GLint* uniform_mesh_model[PG_MAX_CONFIGURATIONS] = { NULL };
+GLint* uniform_mesh_view[PG_MAX_CONFIGURATIONS] = { NULL };
+GLint* uniform_mesh_proj[PG_MAX_CONFIGURATIONS] = { NULL };
+GLint* uniform_mesh_light[PG_MAX_CONFIGURATIONS] = { NULL };
 
 // mesh lighting
 GLfloat mesh_light_x = 0.56f;
@@ -50,14 +50,14 @@ GLfloat mesh_light_y = 0.35f;
 GLfloat mesh_light_z = 3.f;
 
 // mesh anim data
-double *mesh_startAnime[_NbConfigurations] = { NULL };
-double *mesh_anime_precTime[_NbConfigurations] = { NULL };
-int *mesh_precedingAnime[_NbConfigurations] = { NULL };
-double* mesh_startMotion[_NbConfigurations] = { NULL };
-double* mesh_motion_precTime[_NbConfigurations] = { NULL };
-int* mesh_precedingMotion[_NbConfigurations] = { NULL };
-bool* mesh_positiveChange[_NbConfigurations] = { NULL };
-bool* mesh_negativeChange[_NbConfigurations] = { NULL };
+double *mesh_startAnime[PG_MAX_CONFIGURATIONS] = { NULL };
+double *mesh_anime_precTime[PG_MAX_CONFIGURATIONS] = { NULL };
+int *mesh_precedingAnime[PG_MAX_CONFIGURATIONS] = { NULL };
+double* mesh_startMotion[PG_MAX_CONFIGURATIONS] = { NULL };
+double* mesh_motion_precTime[PG_MAX_CONFIGURATIONS] = { NULL };
+int* mesh_precedingMotion[PG_MAX_CONFIGURATIONS] = { NULL };
+bool* mesh_positiveChange[PG_MAX_CONFIGURATIONS] = { NULL };
+bool* mesh_negativeChange[PG_MAX_CONFIGURATIONS] = { NULL };
 int chosen_mesh_LibraryPose1 = 0;
 int chosen_mesh_LibraryPose2 = 0;
 int chosen_mesh_LibraryPose3 = 0;
@@ -1134,7 +1134,7 @@ void load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigurat
 // point positions and texture coordinates
 void pg_loadAllMeshes(void) {
 	std::cout << "Loading meshes: " << std::endl;
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		int nbMeshObjects = 0;
 		int indMeshFile = 0;
@@ -1284,7 +1284,7 @@ void copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose
 
 void update_anim(int indMeshFile) {
 #if defined(var_Contact_mesh_anime)
-	if (ScenarioVarConfigurations[_Contact_mesh_anime][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_Contact_mesh_anime][pg_current_configuration_rank]) {
 		if (Contact_mesh_anime < 0) {
 			mesh_anime_precTime[pg_current_configuration_rank][indMeshFile] = pg_CurrentClockTime;
 		}

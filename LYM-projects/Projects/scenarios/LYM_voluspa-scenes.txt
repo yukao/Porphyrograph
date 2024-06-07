@@ -1,9 +1,0 @@
-1_HS_BLUE	120	TABLET_digital_swirls		MINUS 10 SEC: STOP DRAWING
-1_HS_WHITE	360	TABLET_characters	GROUND_blue_swirls_start_1mn_left	
-1_HS_RAIN	120	TABLET_small_characters_on_paint		MINUS 10 SEC: COLLECT BRANCH
-2_YR_BRANCHS	360	GROUND_bring_tree___TABLET_branches	PAPER_branches_____PAPER_stones_leaves	
-2_YR_ICE_SWIRL	62	GROUND_remove_tree	PAPER_remove_all	
-2_YR_FROZ_CLR	108	TABLET_turquoise_lines	GROUND_silver_paper	
-2_YR_FROZ_DRK	70	TABLET_blue_lines	GROUND_remove_silver_paper	
-3_BLACK_SUN	240	PAPER_sun_____PAPER_pastel	GROUND_darkblue_lines__+__silver_paper	
-3_RAGNAROK	360	GROUND_ink____GROUND_tear_to_volcano	TABLET_red_paths	

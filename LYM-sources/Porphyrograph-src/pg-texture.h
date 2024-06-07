@@ -34,10 +34,10 @@
 // This is passed by void pointer so it can be any data type
 // that can be passed using a single void pointer (LPVOID).
 
-extern unsigned int imgPhotoCompressedFormat[_NbConfigurations];
-extern unsigned char* imgPhotoCompressedBitmap[_NbConfigurations];
-extern cv::Mat imgPhotoBGRInit[_NbConfigurations];
-extern cv::Mat imgPhotoRGB[_NbConfigurations];
+extern unsigned int imgPhotoCompressedFormat[PG_MAX_CONFIGURATIONS];
+extern unsigned char* imgPhotoCompressedBitmap[PG_MAX_CONFIGURATIONS];
+extern cv::Mat imgPhotoBGRInit[PG_MAX_CONFIGURATIONS];
+extern cv::Mat imgPhotoRGB[PG_MAX_CONFIGURATIONS];
 
 class PhotoSwapData {
 public:
@@ -243,30 +243,30 @@ extern int pg_CurrentDiaporamaFile;
 // PhotoBufferDataStructOld describing a buffer of images stored in the GPU
 // these images are used to make piled rendering 
 // they are doubled by swap images used to smoothly change between images
-extern int pg_nbCompressedImages[_NbConfigurations];
-extern int pg_nbCompressedImageDirs[_NbConfigurations];
-extern vector<int>pg_nbCompressedImagesPerFolder[_NbConfigurations];
+extern int pg_nbCompressedImages[PG_MAX_CONFIGURATIONS];
+extern int pg_nbCompressedImageDirs[PG_MAX_CONFIGURATIONS];
+extern vector<int>pg_nbCompressedImagesPerFolder[PG_MAX_CONFIGURATIONS];
 // diaporama directories
-extern vector<string> pg_compressedImageDirsNames[_NbConfigurations];
+extern vector<string> pg_compressedImageDirsNames[PG_MAX_CONFIGURATIONS];
 // files inside diaporama directories
-extern vector <vector<PhotoData*>> pg_compressedImageData[_NbConfigurations];
-extern vector<vector<string>> pg_compressedImageFilesNames[_NbConfigurations];
+extern vector <vector<PhotoData*>> pg_compressedImageData[PG_MAX_CONFIGURATIONS];
+extern vector<vector<string>> pg_compressedImageFilesNames[PG_MAX_CONFIGURATIONS];
 
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
 #if defined(var_moving_messages)
-extern std::string pg_MessageFile[_NbConfigurations];
+extern std::string pg_MessageFile[PG_MAX_CONFIGURATIONS];
 #endif
 
 ////////////////////////////////////////////////////////////////////
 // SHORT CLIP IMAGE FILES
 ////////////////////////////////////////////////////////////////////
 // clips are made of sequences of images loaded in GPU
-extern ClipFramesData** pg_ClipFrames_buffer_data[_NbConfigurations];
-extern int pg_nbClips[_NbConfigurations];
-extern int* pg_nbCompressedClipFramesPerFolder[_NbConfigurations];
-extern int* pg_firstCompressedClipFramesInFolder[_NbConfigurations];
-extern int pg_nbCompressedClipFrames[_NbConfigurations];
+extern ClipFramesData** pg_ClipFrames_buffer_data[PG_MAX_CONFIGURATIONS];
+extern int pg_nbClips[PG_MAX_CONFIGURATIONS];
+extern int* pg_nbCompressedClipFramesPerFolder[PG_MAX_CONFIGURATIONS];
+extern int* pg_firstCompressedClipFramesInFolder[PG_MAX_CONFIGURATIONS];
+extern int pg_nbCompressedClipFrames[PG_MAX_CONFIGURATIONS];
 
 
 ////////////////////////////////////////////////////////////////////

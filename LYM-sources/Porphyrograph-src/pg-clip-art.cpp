@@ -237,13 +237,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	float alpha = 0;
 	float palette_pulse = 0.f;
 #if defined(var_ClipArt_layer_1_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_1_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_1_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 0) {
 			if (ClipArt_layer_1_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_1_color_preset));
 				alpha = ClipArt_layer_1_color_preset - low_palette;
 #if defined(var_ClipArt_layer_1_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_1_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_1_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_1_color_preset_pulse;
 				}
 #endif
@@ -252,13 +252,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_2_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_2_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_2_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 1) {
 			if (ClipArt_layer_2_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_2_color_preset));
 				alpha = ClipArt_layer_2_color_preset - low_palette;
 #if defined(var_ClipArt_layer_2_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_2_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_2_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_2_color_preset_pulse;
 				}
 #endif
@@ -267,13 +267,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_3_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_3_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_3_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 2) {
 			if (ClipArt_layer_3_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_3_color_preset));
 				alpha = ClipArt_layer_3_color_preset - low_palette;
 #if defined(var_ClipArt_layer_3_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_3_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_3_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_3_color_preset_pulse;
 				}
 #endif
@@ -282,13 +282,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_4_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_4_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_4_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 3) {
 			if (ClipArt_layer_4_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_4_color_preset));
 				alpha = ClipArt_layer_4_color_preset - low_palette;
 #if defined(var_ClipArt_layer_4_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_4_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_4_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_4_color_preset_pulse;
 				}
 #endif
@@ -297,13 +297,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_5_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_5_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_5_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 4) {
 			if (ClipArt_layer_5_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_5_color_preset));
 				alpha = ClipArt_layer_5_color_preset - low_palette;
 #if defined(var_ClipArt_layer_5_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_5_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_5_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_5_color_preset_pulse;
 				}
 #endif
@@ -312,13 +312,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_6_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_6_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_6_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 5) {
 			if (ClipArt_layer_6_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_6_color_preset));
 				alpha = ClipArt_layer_6_color_preset - low_palette;
 #if defined(var_ClipArt_layer_6_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_6_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_6_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_6_color_preset_pulse;
 				}
 #endif
@@ -327,13 +327,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_7_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_7_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_7_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 6) {
 			if (ClipArt_layer_7_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_7_color_preset));
 				alpha = ClipArt_layer_7_color_preset - low_palette;
 #if defined(var_ClipArt_layer_7_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_7_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_7_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_7_color_preset_pulse;
 				}
 #endif
@@ -342,13 +342,13 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 #endif
 #if defined(var_ClipArt_layer_8_color_preset)
-	if (ScenarioVarConfigurations[_ClipArt_layer_8_color_preset][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_layer_8_color_preset][pg_current_configuration_rank]) {
 		if (indLayer == 7) {
 			if (ClipArt_layer_8_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_layer_8_color_preset));
 				alpha = ClipArt_layer_8_color_preset - low_palette;
 #if defined(var_ClipArt_layer_8_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_layer_8_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_layer_8_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_layer_8_color_preset_pulse;
 				}
 #endif
@@ -378,7 +378,7 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 
 	float width = 0.f;
 #if defined(var_ClipArt_width)
-	if (ScenarioVarConfigurations[_ClipArt_width][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_ClipArt_width][pg_current_configuration_rank]) {
 		width = ClipArt_width;
 	}
 	else
@@ -391,12 +391,12 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 		// clip art surface contouring
 		low_palette = -1;
 #if defined(var_ClipArt_stroke_color_preset)
-		if (ScenarioVarConfigurations[_ClipArt_stroke_color_preset][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_ClipArt_stroke_color_preset][pg_current_configuration_rank]) {
 			if (ClipArt_stroke_color_preset >= 0) {
 				low_palette = int(floor(ClipArt_stroke_color_preset));
 				alpha = ClipArt_stroke_color_preset - low_palette;
 #if defined(var_ClipArt_stroke_color_preset_pulse)
-				if (ScenarioVarConfigurations[_ClipArt_stroke_color_preset_pulse][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_ClipArt_stroke_color_preset_pulse][pg_current_configuration_rank]) {
 					palette_pulse = ClipArt_stroke_color_preset_pulse;
 				}
 #endif
@@ -480,10 +480,10 @@ void pg_Display_All_ClipArt(int activeFiles) {
 
 void pg_listAllClipArts(void) {
 	printf("Listing ClipArts:\n");
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (ClipArt * aClipArt : pg_ClipArts[indConfiguration]) {
-			if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo][indConfiguration] && pg_ScenarioActiveVars[_path_record][indConfiguration]) {
 				std::cout << aClipArt->pg_ClipArt_fileNames << " (" << aClipArt->pg_nb_paths_in_ClipArt << " paths), ";
 			}
 		}
@@ -681,9 +681,9 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 // LOAD ALL CLIPARTS
 void pg_loadAllClipArts(void) {
 	//std::cout << "Loading ClipArts\n";
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		//std::cout << "    " << indConfiguration << ": ";
-		if (ScenarioVarConfigurations[_activeClipArts][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_activeClipArts][indConfiguration]) {
 			const char* ClipArt_programName = "nvpr_ClipArt";
 			//std::cout << "Loading " << pg_ClipArts[indConfiguration].size() << " ClipArt\n";
 			initializeNVPathRender();

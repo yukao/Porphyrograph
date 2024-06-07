@@ -7,140 +7,8 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 460
 
-#define var_camera_BG_subtr
-bool	  camera_BG_subtr;
-#define var_CAdecay
-float	 CAdecay;
-#define var_trkDecay_0
-float	 trkDecay_0;
-#define var_trkDecay_1
-float	 trkDecay_1;
-#define var_trkDecay_2
-float	 trkDecay_2;
-#define var_trkDecay_3
-float	 trkDecay_3;
-#define var_currentDrawingTrack
-int		currentDrawingTrack;
-#define var_currentVideoTrack
-int		currentVideoTrack;
-#define var_currentPhotoTrack
-int		currentPhotoTrack;
-#define var_pixel_image_acceleration
-int		pixel_image_acceleration;
-#define var_path_replay_trackNo_1
-int		path_replay_trackNo_1;
-#define var_path_replay_trackNo_2
-int		path_replay_trackNo_2;
-#define var_path_replay_trackNo_3
-int		path_replay_trackNo_3;
-#define var_path_replay_trackNo_4
-int		path_replay_trackNo_4;
-#define var_path_replay_trackNo_5
-int		path_replay_trackNo_5;
-#define var_path_replay_trackNo_6
-int		path_replay_trackNo_6;
-#define var_path_replay_trackNo_7
-int		path_replay_trackNo_7;
-#define var_path_replay_trackNo_8
-int		path_replay_trackNo_8;
-#define var_path_replay_trackNo_9
-int		path_replay_trackNo_9;
-#define var_path_replay_trackNo_10
-int		path_replay_trackNo_10;
-#define var_path_replay_trackNo_11
-int		path_replay_trackNo_11;
-#define var_noiseUpdateScale
-float	 noiseUpdateScale;
-#define var_noiseType
-int		noiseType;
-#define var_noiseLineScale
-float	 noiseLineScale;
-#define var_noiseAngleScale
-float	 noiseAngleScale;
-#define var_noiseCenterX
-float	 noiseCenterX;
-#define var_noiseCenterY
-float	 noiseCenterY;
-#define var_pixel_acc
-float	 pixel_acc;
-#define var_pixel_acc_shiftX
-float	 pixel_acc_shiftX;
-#define var_pixel_acc_shiftY
-float	 pixel_acc_shiftY;
-#define var_pixel_radius
-float	 pixel_radius;
-#define var_pixel_mode
-int		pixel_mode;
-#define var_repop_CA
-float	 repop_CA;
-#define var_repop_BG
-float	 repop_BG;
-#define var_BG_CA_repop_density
-int		BG_CA_repop_density;
-#define var_BG_CA_repop_color_mode
-int		BG_CA_repop_color_mode;
-#define var_cameraGamma
-float	 cameraGamma;
-#define var_camera_gamma
-float	 camera_gamma;
-#define var_cameraThreshold
-float	 cameraThreshold;
-#define var_cameraWeight
-float	 cameraWeight;
-#define var_cameraSobel
-float	 cameraSobel;
-#define var_movieWeight
-float	 movieWeight;
-#define var_movieSobel
-float	 movieSobel;
-#define var_invertMovie
-bool	  invertMovie;
-#define var_invertCamera
-bool	  invertCamera;
-#define var_invertPhoto
-bool	  invertPhoto;
-#define var_video_satur
-float	 video_satur;
-#define var_video_value
-float	 video_value;
-#define var_movie_gamma
-float	 movie_gamma;
-#define var_movie_threshold
-float	 movie_threshold;
-#define var_video_gamma
-float	 video_gamma;
-#define var_video_threshold
-float	 video_threshold;
-#define var_video_contrast
-float	 video_contrast;
-#define var_photoWeight
-float	 photoWeight;
-#define var_photo_satur
-float	 photo_satur;
-#define var_photo_value
-float	 photo_value;
-#define var_photo_gamma
-float	 photo_gamma;
-#define var_photo_threshold
-float	 photo_threshold;
-#define var_photoSobel
-float	 photoSobel;
-#define var_photo_scaleX
-float	 photo_scaleX;
-#define var_photo_scaleY
-float	 photo_scaleY;
-#define var_photo_rot
-float	 photo_rot;
-#define var_photo_transl_x
-float	 photo_transl_x;
-#define var_photo_transl_y
-float	 photo_transl_y;
-#define var_mask_scale
-float	 mask_scale;
-#define var_photo_contrast
-float	 photo_contrast;
-#define var_mask_contrast
-float	 mask_contrast;
+#define var_CAcolorSpread
+bool	  CAcolorSpread;
 #define var_CAParams1
 float	 CAParams1;
 #define var_CAParams2
@@ -157,23 +25,121 @@ float	 CAParams6;
 float	 CAParams7;
 #define var_CAParams8
 float	 CAParams8;
-#define var_cameraCumul
-int		cameraCumul;
 #define var_CAstep
 int		CAstep;
-#define var_Pixelstep
-int		Pixelstep;
-#define var_CAcolorSpread
-bool	  CAcolorSpread;
-#define var_freeze
-bool	  freeze;
-#define var_video_white
-float	 video_white;
-#define var_video_hue
-float	 video_hue;
+#define var_repop_CA
+float	 repop_CA;
+#define var_camera_gamma
+float	 camera_gamma;
+#define var_cameraCumul
+int		cameraCumul;
+#define var_cameraGamma
+float	 cameraGamma;
+#define var_cameraSobel
+float	 cameraSobel;
+#define var_cameraThreshold
+float	 cameraThreshold;
+#define var_cameraWeight
+float	 cameraWeight;
+#define var_invertCamera
+bool	  invertCamera;
+#define var_invertMovie
+bool	  invertMovie;
+#define var_movie_gamma
+float	 movie_gamma;
+#define var_movie_threshold
+float	 movie_threshold;
+#define var_movieSobel
+float	 movieSobel;
+#define var_movieWeight
+float	 movieWeight;
+#define var_invertPhoto
+bool	  invertPhoto;
+#define var_photo_contrast
+float	 photo_contrast;
+#define var_photo_gamma
+float	 photo_gamma;
 #define var_photo_hue
 float	 photo_hue;
-uniform float uniform_Update_scenario_var_data[83];
+#define var_photo_rot
+float	 photo_rot;
+#define var_photo_satur
+float	 photo_satur;
+#define var_photo_scaleX
+float	 photo_scaleX;
+#define var_photo_scaleY
+float	 photo_scaleY;
+#define var_photo_threshold
+float	 photo_threshold;
+#define var_photo_transl_x
+float	 photo_transl_x;
+#define var_photo_transl_y
+float	 photo_transl_y;
+#define var_photo_value
+float	 photo_value;
+#define var_photoSobel
+float	 photoSobel;
+#define var_photoWeight
+float	 photoWeight;
+#define var_video_contrast
+float	 video_contrast;
+#define var_video_gamma
+float	 video_gamma;
+#define var_video_hue
+float	 video_hue;
+#define var_video_satur
+float	 video_satur;
+#define var_video_threshold
+float	 video_threshold;
+#define var_video_value
+float	 video_value;
+#define var_video_white
+float	 video_white;
+#define var_path_replay_trackNo
+int		path_replay_trackNo[12];
+#define var_Pixelstep
+int		Pixelstep;
+#define var_noiseUpdateScale
+float	 noiseUpdateScale;
+#define var_pixel_acc
+float	 pixel_acc;
+#define var_pixel_acc_shiftX
+float	 pixel_acc_shiftX;
+#define var_pixel_acc_shiftY
+float	 pixel_acc_shiftY;
+#define var_pixel_image_acceleration
+int		pixel_image_acceleration;
+#define var_pixel_mode
+int		pixel_mode;
+#define var_pixel_radius
+float	 pixel_radius;
+#define var_BG_CA_repop_color_mode
+int		BG_CA_repop_color_mode;
+#define var_BG_CA_repop_density
+int		BG_CA_repop_density;
+#define var_repop_BG
+float	 repop_BG;
+#define var_camera_BG_subtr
+bool	  camera_BG_subtr;
+#define var_freeze
+bool	  freeze;
+#define var_CAdecay
+float	 CAdecay;
+#define var_trkDecay_0
+float	 trkDecay_0;
+#define var_trkDecay_1
+float	 trkDecay_1;
+#define var_trkDecay_2
+float	 trkDecay_2;
+#define var_trkDecay_3
+float	 trkDecay_3;
+#define var_currentDrawingTrack
+int		currentDrawingTrack;
+#define var_currentPhotoTrack
+int		currentPhotoTrack;
+#define var_currentVideoTrack
+int		currentVideoTrack;
+uniform float uniform_Update_scenario_var_data[76];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -2085,89 +2051,82 @@ void Sobel(int currentPhotoSource, int currentClipSource, vec2 coordsImageScaled
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  camera_BG_subtr = (uniform_Update_scenario_var_data[0] > 0 ? true : false);
-  CAdecay = uniform_Update_scenario_var_data[1];
-  trkDecay_0 = uniform_Update_scenario_var_data[2];
-  trkDecay_1 = uniform_Update_scenario_var_data[3];
-  trkDecay_2 = uniform_Update_scenario_var_data[4];
-  trkDecay_3 = uniform_Update_scenario_var_data[5];
-  currentDrawingTrack = int(uniform_Update_scenario_var_data[6]);
-  currentVideoTrack = int(uniform_Update_scenario_var_data[7]);
-  currentPhotoTrack = int(uniform_Update_scenario_var_data[8]);
-  pixel_image_acceleration = int(uniform_Update_scenario_var_data[9]);
-  path_replay_trackNo_1 = int(uniform_Update_scenario_var_data[10]);
-  path_replay_trackNo_2 = int(uniform_Update_scenario_var_data[11]);
-  path_replay_trackNo_3 = int(uniform_Update_scenario_var_data[12]);
-  path_replay_trackNo_4 = int(uniform_Update_scenario_var_data[13]);
-  path_replay_trackNo_5 = int(uniform_Update_scenario_var_data[14]);
-  path_replay_trackNo_6 = int(uniform_Update_scenario_var_data[15]);
-  path_replay_trackNo_7 = int(uniform_Update_scenario_var_data[16]);
-  path_replay_trackNo_8 = int(uniform_Update_scenario_var_data[17]);
-  path_replay_trackNo_9 = int(uniform_Update_scenario_var_data[18]);
-  path_replay_trackNo_10 = int(uniform_Update_scenario_var_data[19]);
-  path_replay_trackNo_11 = int(uniform_Update_scenario_var_data[20]);
-  noiseUpdateScale = uniform_Update_scenario_var_data[21];
-  noiseType = int(uniform_Update_scenario_var_data[22]);
-  noiseLineScale = uniform_Update_scenario_var_data[23];
-  noiseAngleScale = uniform_Update_scenario_var_data[24];
-  noiseCenterX = uniform_Update_scenario_var_data[25];
-  noiseCenterY = uniform_Update_scenario_var_data[26];
-  pixel_acc = uniform_Update_scenario_var_data[27];
-  pixel_acc_shiftX = uniform_Update_scenario_var_data[28];
-  pixel_acc_shiftY = uniform_Update_scenario_var_data[29];
-  pixel_radius = uniform_Update_scenario_var_data[30];
-  pixel_mode = int(uniform_Update_scenario_var_data[31]);
-  repop_CA = uniform_Update_scenario_var_data[32];
-  repop_BG = uniform_Update_scenario_var_data[33];
-  BG_CA_repop_density = int(uniform_Update_scenario_var_data[34]);
-  BG_CA_repop_color_mode = int(uniform_Update_scenario_var_data[35]);
-  cameraGamma = uniform_Update_scenario_var_data[36];
-  camera_gamma = uniform_Update_scenario_var_data[37];
-  cameraThreshold = uniform_Update_scenario_var_data[38];
-  cameraWeight = uniform_Update_scenario_var_data[39];
-  cameraSobel = uniform_Update_scenario_var_data[40];
-  movieWeight = uniform_Update_scenario_var_data[41];
-  movieSobel = uniform_Update_scenario_var_data[42];
-  invertMovie = (uniform_Update_scenario_var_data[43] > 0 ? true : false);
-  invertCamera = (uniform_Update_scenario_var_data[44] > 0 ? true : false);
-  invertPhoto = (uniform_Update_scenario_var_data[45] > 0 ? true : false);
-  video_satur = uniform_Update_scenario_var_data[46];
-  video_value = uniform_Update_scenario_var_data[47];
-  movie_gamma = uniform_Update_scenario_var_data[48];
-  movie_threshold = uniform_Update_scenario_var_data[49];
-  video_gamma = uniform_Update_scenario_var_data[50];
-  video_threshold = uniform_Update_scenario_var_data[51];
-  video_contrast = uniform_Update_scenario_var_data[52];
-  photoWeight = uniform_Update_scenario_var_data[53];
-  photo_satur = uniform_Update_scenario_var_data[54];
-  photo_value = uniform_Update_scenario_var_data[55];
-  photo_gamma = uniform_Update_scenario_var_data[56];
-  photo_threshold = uniform_Update_scenario_var_data[57];
-  photoSobel = uniform_Update_scenario_var_data[58];
-  photo_scaleX = uniform_Update_scenario_var_data[59];
-  photo_scaleY = uniform_Update_scenario_var_data[60];
-  photo_rot = uniform_Update_scenario_var_data[61];
-  photo_transl_x = uniform_Update_scenario_var_data[62];
-  photo_transl_y = uniform_Update_scenario_var_data[63];
-  mask_scale = uniform_Update_scenario_var_data[64];
-  photo_contrast = uniform_Update_scenario_var_data[65];
-  mask_contrast = uniform_Update_scenario_var_data[66];
-  CAParams1 = uniform_Update_scenario_var_data[67];
-  CAParams2 = uniform_Update_scenario_var_data[68];
-  CAParams3 = uniform_Update_scenario_var_data[69];
-  CAParams4 = uniform_Update_scenario_var_data[70];
-  CAParams5 = uniform_Update_scenario_var_data[71];
-  CAParams6 = uniform_Update_scenario_var_data[72];
-  CAParams7 = uniform_Update_scenario_var_data[73];
-  CAParams8 = uniform_Update_scenario_var_data[74];
-  cameraCumul = int(uniform_Update_scenario_var_data[75]);
-  CAstep = int(uniform_Update_scenario_var_data[76]);
-  Pixelstep = int(uniform_Update_scenario_var_data[77]);
-  CAcolorSpread = (uniform_Update_scenario_var_data[78] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[79] > 0 ? true : false);
-  video_white = uniform_Update_scenario_var_data[80];
-  video_hue = uniform_Update_scenario_var_data[81];
-  photo_hue = uniform_Update_scenario_var_data[82];
+  CAcolorSpread = (uniform_Update_scenario_var_data[0] > 0 ? true : false);
+  CAParams1 = uniform_Update_scenario_var_data[1];
+  CAParams2 = uniform_Update_scenario_var_data[2];
+  CAParams3 = uniform_Update_scenario_var_data[3];
+  CAParams4 = uniform_Update_scenario_var_data[4];
+  CAParams5 = uniform_Update_scenario_var_data[5];
+  CAParams6 = uniform_Update_scenario_var_data[6];
+  CAParams7 = uniform_Update_scenario_var_data[7];
+  CAParams8 = uniform_Update_scenario_var_data[8];
+  CAstep = int(uniform_Update_scenario_var_data[9]);
+  repop_CA = uniform_Update_scenario_var_data[10];
+  camera_gamma = uniform_Update_scenario_var_data[11];
+  cameraCumul = int(uniform_Update_scenario_var_data[12]);
+  cameraGamma = uniform_Update_scenario_var_data[13];
+  cameraSobel = uniform_Update_scenario_var_data[14];
+  cameraThreshold = uniform_Update_scenario_var_data[15];
+  cameraWeight = uniform_Update_scenario_var_data[16];
+  invertCamera = (uniform_Update_scenario_var_data[17] > 0 ? true : false);
+  invertMovie = (uniform_Update_scenario_var_data[18] > 0 ? true : false);
+  movie_gamma = uniform_Update_scenario_var_data[19];
+  movie_threshold = uniform_Update_scenario_var_data[20];
+  movieSobel = uniform_Update_scenario_var_data[21];
+  movieWeight = uniform_Update_scenario_var_data[22];
+  invertPhoto = (uniform_Update_scenario_var_data[23] > 0 ? true : false);
+  photo_contrast = uniform_Update_scenario_var_data[24];
+  photo_gamma = uniform_Update_scenario_var_data[25];
+  photo_hue = uniform_Update_scenario_var_data[26];
+  photo_rot = uniform_Update_scenario_var_data[27];
+  photo_satur = uniform_Update_scenario_var_data[28];
+  photo_scaleX = uniform_Update_scenario_var_data[29];
+  photo_scaleY = uniform_Update_scenario_var_data[30];
+  photo_threshold = uniform_Update_scenario_var_data[31];
+  photo_transl_x = uniform_Update_scenario_var_data[32];
+  photo_transl_y = uniform_Update_scenario_var_data[33];
+  photo_value = uniform_Update_scenario_var_data[34];
+  photoSobel = uniform_Update_scenario_var_data[35];
+  photoWeight = uniform_Update_scenario_var_data[36];
+  video_contrast = uniform_Update_scenario_var_data[37];
+  video_gamma = uniform_Update_scenario_var_data[38];
+  video_hue = uniform_Update_scenario_var_data[39];
+  video_satur = uniform_Update_scenario_var_data[40];
+  video_threshold = uniform_Update_scenario_var_data[41];
+  video_value = uniform_Update_scenario_var_data[42];
+  video_white = uniform_Update_scenario_var_data[43];
+  path_replay_trackNo[1] = int(uniform_Update_scenario_var_data[44]);
+  path_replay_trackNo[2] = int(uniform_Update_scenario_var_data[45]);
+  path_replay_trackNo[3] = int(uniform_Update_scenario_var_data[46]);
+  path_replay_trackNo[4] = int(uniform_Update_scenario_var_data[47]);
+  path_replay_trackNo[5] = int(uniform_Update_scenario_var_data[48]);
+  path_replay_trackNo[6] = int(uniform_Update_scenario_var_data[49]);
+  path_replay_trackNo[7] = int(uniform_Update_scenario_var_data[50]);
+  path_replay_trackNo[8] = int(uniform_Update_scenario_var_data[51]);
+  path_replay_trackNo[9] = int(uniform_Update_scenario_var_data[52]);
+  path_replay_trackNo[10] = int(uniform_Update_scenario_var_data[53]);
+  path_replay_trackNo[11] = int(uniform_Update_scenario_var_data[54]);
+  Pixelstep = int(uniform_Update_scenario_var_data[55]);
+  noiseUpdateScale = uniform_Update_scenario_var_data[56];
+  pixel_acc = uniform_Update_scenario_var_data[57];
+  pixel_acc_shiftX = uniform_Update_scenario_var_data[58];
+  pixel_acc_shiftY = uniform_Update_scenario_var_data[59];
+  pixel_image_acceleration = int(uniform_Update_scenario_var_data[60]);
+  pixel_mode = int(uniform_Update_scenario_var_data[61]);
+  pixel_radius = uniform_Update_scenario_var_data[62];
+  BG_CA_repop_color_mode = int(uniform_Update_scenario_var_data[63]);
+  BG_CA_repop_density = int(uniform_Update_scenario_var_data[64]);
+  repop_BG = uniform_Update_scenario_var_data[65];
+  camera_BG_subtr = (uniform_Update_scenario_var_data[66] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[67] > 0 ? true : false);
+  CAdecay = uniform_Update_scenario_var_data[68];
+  trkDecay_0 = uniform_Update_scenario_var_data[69];
+  trkDecay_1 = uniform_Update_scenario_var_data[70];
+  trkDecay_2 = uniform_Update_scenario_var_data[71];
+  trkDecay_3 = uniform_Update_scenario_var_data[72];
+  currentDrawingTrack = int(uniform_Update_scenario_var_data[73]);
+  currentPhotoTrack = int(uniform_Update_scenario_var_data[74]);
+  currentVideoTrack = int(uniform_Update_scenario_var_data[75]);
 
   //////////////////////////
   // TRACK DECAY

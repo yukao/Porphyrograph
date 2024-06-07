@@ -48,32 +48,32 @@ extern GLuint pg_screenMessageBitmap_texID; // nb_attachments=1
 extern GLubyte *pg_screenMessageBitmap;
 
 #ifdef PG_WITH_MASTER_MASK
-extern GLuint Master_Mask_texID[_NbConfigurations];
-extern GLuint Master_Multilayer_Mask_texID[_NbConfigurations];
+extern GLuint Master_Mask_texID[PG_MAX_CONFIGURATIONS];
+extern GLuint Master_Multilayer_Mask_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 #if !defined(PG_BEZIER_PATHS) || defined(CORE)
-extern GLuint Pen_texture_3D_texID[_NbConfigurations];
+extern GLuint Pen_texture_3D_texID[PG_MAX_CONFIGURATIONS];
 #endif
-extern GLuint Noise_texture_3D[_NbConfigurations];
+extern GLuint Noise_texture_3D[PG_MAX_CONFIGURATIONS];
 #if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density)
-extern std::vector<GLuint>  pg_RepopDensity_texture_texID[_NbConfigurations];
+extern std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 #if defined(var_part_initialization) 
-extern std::vector<GLuint> pg_particle_initial_pos_speed_texID[_NbConfigurations];
-extern std::vector<GLuint> pg_particle_initial_color_radius_texID[_NbConfigurations];
+extern std::vector<GLuint> pg_particle_initial_pos_speed_texID[PG_MAX_CONFIGURATIONS];
+extern std::vector<GLuint> pg_particle_initial_color_radius_texID[PG_MAX_CONFIGURATIONS];
 #endif
 #if defined(var_part_image_acceleration) 
-extern std::vector<GLuint> pg_particle_acc_texID[_NbConfigurations];
+extern std::vector<GLuint> pg_particle_acc_texID[PG_MAX_CONFIGURATIONS];
 #endif
 #if defined(var_pixel_image_acceleration) 
-extern std::vector<GLuint> pg_pixel_acc_texID[_NbConfigurations];
+extern std::vector<GLuint> pg_pixel_acc_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 
 #if defined(var_sensor_layout)
-extern GLuint Sensor_texture_rectangle[_NbConfigurations];
+extern GLuint Sensor_texture_rectangle[PG_MAX_CONFIGURATIONS];
 #endif
 
 extern std::string* DisplayTextList;
@@ -153,7 +153,7 @@ public:
 	~VideoTrack(void) {
 	}
 };
-extern vector<VideoTrack*> pg_VideoTracks[_NbConfigurations];
+extern vector<VideoTrack*> pg_VideoTracks[PG_MAX_CONFIGURATIONS];
 // soundtracks
 class SoundTrack {
 public:
@@ -174,12 +174,12 @@ public:
 	~SoundTrack(void) {
 	}
 };
-extern vector<SoundTrack*> pg_SoundTracks[_NbConfigurations];
+extern vector<SoundTrack*> pg_SoundTracks[PG_MAX_CONFIGURATIONS];
 extern int currentlyPlaying_trackNo;
 extern int currentTrackSoundPeakIndex;
-extern int nbTrackSoundPeakIndex[_NbConfigurations];
+extern int nbTrackSoundPeakIndex[PG_MAX_CONFIGURATIONS];
 extern int currentTrackSoundOnsetIndex;
-extern int nbTrackSoundOnsetIndex[_NbConfigurations];
+extern int nbTrackSoundOnsetIndex[PG_MAX_CONFIGURATIONS];
 
 ////////////////////////////////////////////
 // COLOR PRESETS
@@ -224,7 +224,7 @@ public:
 	~ColorPreset(void) {
 	}
 };
-extern vector<ColorPreset*> pg_ColorPresets[_NbConfigurations];
+extern vector<ColorPreset*> pg_ColorPresets[PG_MAX_CONFIGURATIONS];
 
 ////////////////////////////////////////////
 // COLOR PALETTES
@@ -240,12 +240,12 @@ public:
 	~Palette(void) {
 	}
 };
-extern vector<Palette*> pg_Palettes[_NbConfigurations];
+extern vector<Palette*> pg_Palettes[PG_MAX_CONFIGURATIONS];
 
 ////////////////////////////////
 // LIGHTS
 // lights presets
-extern int pg_nb_light_groups[_NbConfigurations];
+extern int pg_nb_light_groups[PG_MAX_CONFIGURATIONS];
 // interface current light group
 extern int pg_interface_light_group;
 /// Error string
@@ -371,7 +371,7 @@ extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
 // submap of the parameters which can be looped
 extern std::unordered_map<int, std::string> pg_light_loop_param_hashMap;
 // lights
-extern vector<Light*> pg_Lights[_NbConfigurations];
+extern vector<Light*> pg_Lights[PG_MAX_CONFIGURATIONS];
 #define _loop_speed_factor 3.f
 class LightGroup {
 private:
@@ -631,27 +631,27 @@ public:
 	~LightGroup() {
 	}
 };
-extern vector<LightGroup*> pg_light_groups[_NbConfigurations];
+extern vector<LightGroup*> pg_light_groups[PG_MAX_CONFIGURATIONS];
 // Create an unordered_map of three strings (that map to strings)
 extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
 extern std::unordered_map<int, std::string> pg_light_param_hashMap;
 
 
 // photo albums
-extern std::string pg_ImageDirectory[_NbConfigurations];
+extern std::string pg_ImageDirectory[PG_MAX_CONFIGURATIONS];
 // short video clip albums
-extern string pg_ClipDirectory[_NbConfigurations];
-extern int pg_NbClipAlbums[_NbConfigurations];
-extern int clip_image_width[_NbConfigurations];
-extern int clip_image_height[_NbConfigurations];
-extern int clip_crop_width[_NbConfigurations];
-extern int clip_crop_height[_NbConfigurations];
-extern int clip_max_length[_NbConfigurations];
+extern string pg_ClipDirectory[PG_MAX_CONFIGURATIONS];
+extern int pg_NbClipAlbums[PG_MAX_CONFIGURATIONS];
+extern int clip_image_width[PG_MAX_CONFIGURATIONS];
+extern int clip_image_height[PG_MAX_CONFIGURATIONS];
+extern int clip_crop_width[PG_MAX_CONFIGURATIONS];
+extern int clip_crop_height[PG_MAX_CONFIGURATIONS];
+extern int clip_max_length[PG_MAX_CONFIGURATIONS];
 // pen brushes
-extern string pen_brushes_fileName[_NbConfigurations];
-extern int nb_pen_brushes[_NbConfigurations];
+extern string pen_brushes_fileName[PG_MAX_CONFIGURATIONS];
+extern int nb_pen_brushes[PG_MAX_CONFIGURATIONS];
 // textures with multiple layers
-extern int nb_layers_master_mask[_NbConfigurations];
+extern int nb_layers_master_mask[PG_MAX_CONFIGURATIONS];
 
 #if defined(var_cameraCaptFreq)
 extern VideoCapture pg_webCam_capture;
@@ -753,7 +753,7 @@ public:
 };
 
 // clip track
-extern std::vector<clip_track> pg_clip_tracks[_NbConfigurations];
+extern std::vector<clip_track> pg_clip_tracks[PG_MAX_CONFIGURATIONS];
 
 class clip_status {
 private:

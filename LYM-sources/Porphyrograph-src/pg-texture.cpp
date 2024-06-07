@@ -62,15 +62,11 @@ PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES] = { PhotoSwapData(
 // image index management for progessive image turnover
 // according to image blend frequency and duration
 // and according to directory size
-#if defined(var_photo_diaporama)
 int pg_CurrentDiaporamaFile = 0;
 double pg_CurrentDiaporamaEnd = -1;
 bool ascendingDiaporama = true;
-#endif
 
-#if defined(var_moving_messages)
-std::string pg_MessageFile[_NbConfigurations];
-#endif
+std::string pg_MessageFile[PG_MAX_CONFIGURATIONS];
 
 ////////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
@@ -79,14 +75,14 @@ std::string pg_MessageFile[_NbConfigurations];
 // PhotoData describing a buffer of images stored in the GPU
 // these images are used to make piled rendering 
 // they are doubled by swap images used to smoothly change between images
-vector<int> pg_nbCompressedImagesPerFolder[_NbConfigurations];
-int pg_nbCompressedImageDirs[_NbConfigurations] = { 0 };
-int pg_nbCompressedImages[_NbConfigurations] = { 0 };
+vector<int> pg_nbCompressedImagesPerFolder[PG_MAX_CONFIGURATIONS];
+int pg_nbCompressedImageDirs[PG_MAX_CONFIGURATIONS] = { 0 };
+int pg_nbCompressedImages[PG_MAX_CONFIGURATIONS] = { 0 };
 // diaporama directories
-vector<string> pg_compressedImageDirsNames[_NbConfigurations];
+vector<string> pg_compressedImageDirsNames[PG_MAX_CONFIGURATIONS];
 // files inside diaporama directories
-vector <vector<PhotoData*>> pg_compressedImageData[_NbConfigurations];
-vector<vector<string>> pg_compressedImageFilesNames[_NbConfigurations];
+vector <vector<PhotoData*>> pg_compressedImageData[PG_MAX_CONFIGURATIONS];
+vector<vector<string>> pg_compressedImageFilesNames[PG_MAX_CONFIGURATIONS];
 // the index from which an image available for swapping is looked for
 int pg_IndInitialSwapPhoto = 0;
 
@@ -114,25 +110,25 @@ cv::Mat particleAccImgMatBGRInit;
 cv::Mat particleAccImgMatRGB;
 cv::Mat particleAccImgMatRGBFlipped;
 
-unsigned int imgPhotoCompressedFormat[_NbConfigurations];
-unsigned char* imgPhotoCompressedBitmap[_NbConfigurations] = { NULL };
-cv::Mat imgPhotoBGRInit[_NbConfigurations];
-cv::Mat imgPhotoRGB[_NbConfigurations];
+unsigned int imgPhotoCompressedFormat[PG_MAX_CONFIGURATIONS];
+unsigned char* imgPhotoCompressedBitmap[PG_MAX_CONFIGURATIONS] = { NULL };
+cv::Mat imgPhotoBGRInit[PG_MAX_CONFIGURATIONS];
+cv::Mat imgPhotoRGB[PG_MAX_CONFIGURATIONS];
 
 
 ////////////////////////////////////////////////////////////////////
 // SHORT CLIP IMAGE FILES
 ////////////////////////////////////////////////////////////////////
-ClipFramesData** pg_ClipFrames_buffer_data[_NbConfigurations] = { NULL };
+ClipFramesData** pg_ClipFrames_buffer_data[PG_MAX_CONFIGURATIONS] = { NULL };
 
 
 ////////////////////////////////////////////////////////////////////
 // CLIP TEXTURES
 ////////////////////////////////////////////////////////////////////
-int pg_nbClips[_NbConfigurations] = { 0 };
-int pg_nbCompressedClipFrames[_NbConfigurations] = { 0 };
-int* pg_nbCompressedClipFramesPerFolder[_NbConfigurations] = { NULL };
-int* pg_firstCompressedClipFramesInFolder[_NbConfigurations] = { NULL };
+int pg_nbClips[PG_MAX_CONFIGURATIONS] = { 0 };
+int pg_nbCompressedClipFrames[PG_MAX_CONFIGURATIONS] = { 0 };
+int* pg_nbCompressedClipFramesPerFolder[PG_MAX_CONFIGURATIONS] = { NULL };
+int* pg_firstCompressedClipFramesInFolder[PG_MAX_CONFIGURATIONS] = { NULL };
 //int pg_CurrentClipFramesFile = 0;
 //int pg_CurrentClipFramesDir = -1;
 
@@ -189,7 +185,7 @@ bool pg_loadAllTextures(void) {
 	// loaded textures
 	// loads all the textures from the configuration file
 	// unless the image itself is used to generate other textures
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (pg_TextureData* texture : pg_Textures[indConfiguration]) {
 			if (texture->texture_usage != Texture_part_init
@@ -233,7 +229,7 @@ bool pg_loadAllTextures(void) {
 			}
 #endif
 #if defined(var_pixel_image_acceleration) 
-			else if (ScenarioVarConfigurations[_pixel_image_acceleration][indConfiguration]
+			else if (pg_ScenarioActiveVars[_pixel_image_acceleration][indConfiguration]
 				&& texture->texture_usage == Texture_pixel_acc
 				&& texture->texture_Dimension == 2) {
 				std::cout << texture->texture_fileName + texture->texture_fileNameSuffix + " (pixel acc), ";
@@ -249,7 +245,7 @@ bool pg_loadAllTextures(void) {
 		// assigns the textures to their destination according to their usage field
 		for (pg_TextureData* texture : pg_Textures[indConfiguration]) {
 #if defined(var_sensor_layout)
-			if (ScenarioVarConfigurations[_sensor_layout][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_sensor_layout][indConfiguration]) {
 				if (texture->texture_usage == Texture_sensor
 					&& texture->texture_Dimension == 2) {
 					Sensor_texture_rectangle[indConfiguration] = texture->texture_texID;
@@ -286,15 +282,13 @@ bool pg_loadAllTextures(void) {
 				}
 			}
 #endif
-#if defined(var_part_initialization) 
-			if (ScenarioVarConfigurations[_part_initialization][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_part_initialization][indConfiguration]) {
 				// printf("Loading particles initial images %s\n", fileName.c_str()); 
 				if (!pg_particle_initial_pos_speed_texID[indConfiguration].size()
 					|| !pg_particle_initial_color_radius_texID[indConfiguration].size()) {
 					sprintf(ErrorStr, "Error: particle initialization texture not provided for configuration %d scenario %s, check texture list with part_init usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 				}
 			}
-#endif
 #if defined(var_activeMeshes)
 			if (texture->texture_usage == Texture_mesh
 				&& texture->texture_Dimension == 2) {
@@ -324,13 +318,11 @@ bool pg_loadAllTextures(void) {
 #endif
 		}
 		// and checks that the textures were provided
-#if defined(var_sensor_layout)
-		if (ScenarioVarConfigurations[_sensor_layout][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_sensor_layout][indConfiguration]) {
 			if (Sensor_texture_rectangle[indConfiguration] == NULL_ID) {
 				sprintf(ErrorStr, "Error: sensor texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
-#endif
 #ifdef PG_WITH_MASTER_MASK
 		if (Master_Mask_texID[indConfiguration] == NULL_ID || Master_Multilayer_Mask_texID[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: master mask texture (usage: master_mask) and multilayer master mask texture (usage: multilayer_master_mask) not provided for configuration %d scenario %s, check texture list with master mask usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
@@ -345,14 +337,14 @@ bool pg_loadAllTextures(void) {
 			sprintf(ErrorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
 #if defined(var_Part_repop_density)
-		if (ScenarioVarConfigurations[_Part_repop_density][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_Part_repop_density][indConfiguration]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: particle repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
 #endif
 #if defined(var_BG_CA_repop_density) 
-		if (ScenarioVarConfigurations[_BG_CA_repop_density][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_BG_CA_repop_density][indConfiguration]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: BG/CA repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
@@ -954,7 +946,6 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName, int indConf
 		}
 	}
 
-#if defined(var_part_initialization) 
 	GLuint textureParticleInitialization_pos_speed_ID;
 	GLuint textureParticleInitialization_color_radius_ID;
 	glGenTextures(1, &textureParticleInitialization_pos_speed_ID);
@@ -974,7 +965,6 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName, int indConf
 	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, workingWindow_width, window_height, 0,
 		GL_RGBA, GL_FLOAT, color_radius);
 	pg_particle_initial_color_radius_texID[indConfiguration].push_back(textureParticleInitialization_color_radius_ID);
-#endif
 
 	//printf("Init image loaded %s Real size %dx%d\nParticle size %d=%dx%d (of %d particles)\nRadius %.2f\n",
 	//	fileName.c_str(),
@@ -1070,7 +1060,6 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 		}
 	}
 
-#if defined(var_part_initialization) 
 	GLuint textureParticleInitialization_acc_ID;
 	glGenTextures(1, &textureParticleInitialization_acc_ID);
 	glEnable(GL_TEXTURE_RECTANGLE);
@@ -1083,7 +1072,6 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 	glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, workingWindow_width, window_height, 0,
 		GL_RGBA, GL_FLOAT, acceleration_shift);
 	pg_particle_acc_texID.push_back(textureParticleInitialization_acc_ID[indConfiguration]);
-#endif
 
 	//printf("Init image loaded %s Real size %dx%d\nParticle size %d=%dx%d (of %d particles)\nRadius %.2f\n",
 	//	fileName.c_str(),
@@ -1549,7 +1537,6 @@ void pg_initWebcamParameters(void) {
 }
 #endif
 
-#if defined(var_movieCaptFreq)
 void pg_initMovieFrameTexture(Mat *movie_frame) {
 	glEnable(GL_TEXTURE_RECTANGLE);
 
@@ -1655,7 +1642,6 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 	//printf("Movie nb frames %d\n", pg_movie_status.get_nbFramesLeft());
 	return NULL;
 }
-#endif
 
 /////////////////////////////////////////////////////////////////
 // TEXTURE BUFFER MANAGEMENT
@@ -1664,7 +1650,6 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 //////////////////////////////////////////////////////////////////
 // PROCESSES PHOTO DIAPORAMA
 
-#if defined(var_photo_diaporama)
 void diaporama_random() {
 	if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 		// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -1834,7 +1819,6 @@ void nextFileIndexMemoryLoop(bool ascending) {
 		}
 	}
 }
-#endif
 
 /////////////////////////////////////////////
 // 2D image loading
@@ -2156,7 +2140,7 @@ bool ClipFramesData::pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int 
 void  pg_initDiaporamas(void) {
 	///////////////////////////////////////////////
 	// NULL INITIALIZATIONS
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		pg_nbCompressedImagesPerFolder[indConfiguration].clear();
 		pg_compressedImageData[indConfiguration].clear();
 		pg_nbCompressedImages[indConfiguration] = 0;
@@ -2169,7 +2153,7 @@ bool  pg_loadAllDiaporamas(void) {
 	bool valret = true;
 
 	printf("Load Diaporamas:\n");
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 
 		////////////////////////////////////////////
@@ -2388,12 +2372,10 @@ bool  pg_addNewDiaporamas(int curent_config, bool with_trace) {
 	return valret;
 }
 
-#if defined(var_clipCaptFreq)
-
 std::string get_stem(const fs::path& p) { return (p.stem().string()); }
 bool  pg_ReadInitalClipFramesTextures(void) {
 	bool valret = true;
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		///////////////////////////////////////////////
 		// NULL INITIALIZATIONS
 		pg_nbCompressedClipFramesPerFolder[indConfiguration] = NULL;
@@ -2572,4 +2554,3 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 
 	return valret;
 }
-#endif

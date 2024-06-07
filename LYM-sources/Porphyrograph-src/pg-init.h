@@ -96,7 +96,6 @@ enum pg_FBO_Master_samplers
 	pg_Mask_FBO_Master_sampler,
 };
 
-#if defined(var_part_initialization) 
 enum pg_FBO_ParticleAnimation_samplers
 {
 	pg_Part_init_pos_speed_ParticleAnimation_sampler = 0,
@@ -115,9 +114,8 @@ enum pg_FBO_ParticleAnimation_samplers
 	pg_Trk2_FBO_ParticleAnimation_sampler,
 	pg_Trk3_FBO_ParticleAnimation_sampler,
 };
-#endif
 
-#if defined(var_part_initialization) 
+
 enum pg_FBO_ParticleAnimation_attachments
 {
 	pg_Part_pos_speed_FBO_ParticleAnimation_attcht = 0,
@@ -129,9 +127,7 @@ enum pg_FBO_ParticleAnimation_attachments
 
 enum eVertexArrayObject
 {
-#if defined(var_part_initialization) 
 	pg_VAOParticle,
-#endif
 	pg_VAOQuad,
 	pg_VAOQuadMaster,
 	pg_VAOCount
@@ -139,22 +135,17 @@ enum eVertexArrayObject
 
 enum eVertexBufferObject
 {
-#if defined(var_part_initialization) 
 	pg_VBOParticle,
-#endif
-#if defined(var_part_initialization)
 	pg_VBOParticleTexCoords,
 	pg_VBOpartRadius,
 	pg_VBOParticleColors,
-#endif
+
 #if definedCURVE_PARTICLES
 	pg_VBOParticleTexCoords,
 	pg_VBOpartRadius,
 	pg_VBOParticleColors,
 #endif
-#if defined(var_part_initialization) 
 	pg_EAOParticle,
-#endif
 	pg_EABQuad,
 	pg_EABQuadMaster,
 	pg_VBOCount
@@ -170,18 +161,14 @@ extern GLfloat pg_identityModelMatrix[16];
 #if defined(PIERRES)
 extern GLfloat pg_homographyForTexture[9];
 #endif
-#if defined(var_sensor_layout)
 extern GLfloat modelMatrixSensor[16];
-#endif
 
 /////////////////////////////////////////////////////////////////
 // GEOMETRY
 //////////////////////////////////////////////////////////////////////
 extern GLuint pg_vaoID[pg_VAOCount];
 extern GLuint pg_vboID[pg_VBOCount];
-#if defined(var_sensor_layout)
 extern unsigned int quadSensor_vao;
-#endif
 
 // geometrical data
 extern float quadDraw_points[];
@@ -196,13 +183,13 @@ extern unsigned int quadMaster_indices[PG_SIZE_QUAD_ARRAY];
 #if defined(var_activeMeshes)
 #define PG_MAX_ANIMATION_POSES 7
 class Bone;
-extern int* pg_nb_bones[_NbConfigurations];
-extern Bone** TabBones[_NbConfigurations];
-extern int* pg_nb_AnimationPoses[_NbConfigurations];
-extern int* pg_nb_LibraryPoses[_NbConfigurations];
-extern float** pg_interpolation_weight_AnimationPose[_NbConfigurations];
-extern float** pg_interpolation_weight_MotionPose[_NbConfigurations];
-extern int* pg_nb_MotionPoses[_NbConfigurations];
+extern int* pg_nb_bones[PG_MAX_CONFIGURATIONS];
+extern Bone** TabBones[PG_MAX_CONFIGURATIONS];
+extern int* pg_nb_AnimationPoses[PG_MAX_CONFIGURATIONS];
+extern int* pg_nb_LibraryPoses[PG_MAX_CONFIGURATIONS];
+extern float** pg_interpolation_weight_AnimationPose[PG_MAX_CONFIGURATIONS];
+extern float** pg_interpolation_weight_MotionPose[PG_MAX_CONFIGURATIONS];
+extern int* pg_nb_MotionPoses[PG_MAX_CONFIGURATIONS];
 class MotionPose {
 public:
 	float pose_Mesh_Translation_X;
@@ -224,7 +211,7 @@ public:
 	~MotionPose() {
 	}
 };
-extern MotionPose** pg_motionPoses[_NbConfigurations];
+extern MotionPose** pg_motionPoses[PG_MAX_CONFIGURATIONS];
 #endif
 
 // particle curves
@@ -233,15 +220,10 @@ extern GLfloat *pg_Particle_control_points;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
 #endif
-#if defined(var_part_initialization)
 extern GLfloat *pg_Particle_vertices;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
-#endif
-#if defined(var_part_initialization) 
-
 extern unsigned int *pg_Particle_indices;
-#endif
 
 #if defined(var_sensor_layout)
 //////////////////////////////////////////////////////////////////////
@@ -321,11 +303,11 @@ extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for m
 
 #ifdef CURVE_PARTICLES
 // comet texture
-extern GLuint comet_texture_2D_texID[_NbConfigurations];
+extern GLuint comet_texture_2D_texID[PG_MAX_CONFIGURATIONS];
 #endif
 #if defined(TEXTURED_QUAD_PARTICLES)
 // blurred disk texture
-extern std::vector<GLuint> blurredDisk_texture_2D_texID[_NbConfigurations];
+extern std::vector<GLuint> blurredDisk_texture_2D_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 
@@ -359,19 +341,15 @@ bool pg_initFBOTextures(GLuint* textureID, int nb_attachments, bool with_stencil
 void pg_initRenderingMatrices(void);
 
 void pg_screenMessage_update(void);
-#if defined(var_moving_messages)
 bool pg_ReadAllDisplayMessages(string basefilename);
 int pg_displayMessage_update(int indMesg);
-#endif
 
 void pg_initParticlePosition_Texture(void);
 
-#if defined(var_sensor_layout)
 void SensorInitialization(void);
 void assignSensorPositions(void);
 void assignSensorActivations(void);
 void sensor_sample_setUp_interpolation(void);
-#endif
 
 #ifdef PG_METAWEAR
 void MetawearSensorInitialization();
@@ -379,6 +357,4 @@ void MetawearSensorInitialization();
 
 #if defined(var_activeMeshes)
 void MeshInitialization(void);
-#endif
-
 #endif

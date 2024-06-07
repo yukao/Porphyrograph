@@ -36,9 +36,13 @@ const char *pg_UDPMessageFormatString[Emptypg_UDPMessageFormat + 1] = { "Plain" 
 
 bool					 pg_last_scene_update = false;
 
+int						 pg_NbConfigurations = 1;
 
-vector<Scene*>			 pg_Scenario[_NbConfigurations];
+vector<Scene*>			 pg_Scenario[PG_MAX_CONFIGURATIONS];
 double                   current_scene_percent = 0.f;
+						// table of PG_MAX_CONFIGURATIONS booleans tables indicating whether a var (from the full scenario) 
+						// is active for the current configuration and scenario
+bool					 pg_ScenarioActiveVars[_MaxInterpVarIDs][PG_MAX_CONFIGURATIONS] = { {false} };
 
 string					 pg_csv_file_name;
 string					 snapshots_dir_path_prefix;
@@ -78,27 +82,27 @@ int     ** pg_Shader_nbStages;
 
 // ClipArt GPU
 // number of files
-vector<ClipArt*>pg_ClipArts[_NbConfigurations];
+vector<ClipArt*>pg_ClipArts[PG_MAX_CONFIGURATIONS];
 
 // last activated SvgGpu
 int pg_last_activated_ClipArt;
 // total number of paths
-int pg_nb_tot_SvgGpu_paths[_NbConfigurations];
+int pg_nb_tot_SvgGpu_paths[PG_MAX_CONFIGURATIONS];
 // base ID of the GPU paths
-GLuint ClipArt_path_baseID[_NbConfigurations];
+GLuint ClipArt_path_baseID[PG_MAX_CONFIGURATIONS];
 // fill color table
-unsigned int** ClipArt_path_fill_color[_NbConfigurations];
+unsigned int** ClipArt_path_fill_color[PG_MAX_CONFIGURATIONS];
 
 #if defined(var_activeMeshes)
 // MESHES
-vector<MeshData*> pg_Meshes[_NbConfigurations];
+vector<MeshData*> pg_Meshes[PG_MAX_CONFIGURATIONS];
 // last activated Mesh
 int pg_last_activated_Mesh = 0;
 #endif
 
 // TEXTURES
 // number of Texture files
-vector<pg_TextureData *> pg_Textures[_NbConfigurations];
+vector<pg_TextureData *> pg_Textures[PG_MAX_CONFIGURATIONS];
 pg_TextureData texDataScreenFont;
 
 // window(s) size and location
@@ -585,7 +589,6 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	// ID
 	std::getline(confFin, line);
 
-#if defined(var_cameraCaptFreq)
 	if (indConfiguration == 0) {
 		while (true) {
 			std::getline(confFin, line);
@@ -640,19 +643,6 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 			}
 		}
 	}
-#else
-	while (true) {
-		std::getline(confFin, line);
-		stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string "client" or end with "/udp_remote_client"
-		if (ID.compare("/webCam") == 0) {
-			break;
-		}
-		else if (ID.compare("camera") != 0) {
-			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"camera\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
-		}
-	}
-#endif
 
 	// remote_IPCam Number of cameras
 	std::getline(confFin, line);
@@ -669,7 +659,6 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	// ID
 	std::getline(confFin, line);
 
-#if defined(var_cameraCaptFreq)
 	if (indConfiguration == 0) {
 		while (true) {
 			std::getline(confFin, line);
@@ -716,20 +705,6 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 			}
 		}
 	}
-#else
-	while (true) {
-		std::getline(confFin, line);
-		stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string "client" or end with "/udp_remote_client"
-		if (ID.compare("/remote_IPCam") == 0) {
-			break;
-		}
-		else if (ID.compare("IPCam") != 0) {
-			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"IPCam\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
-		}
-	}
-#endif
-
 
 	////////////////////////////////////
 	////// SHADERS
@@ -805,8 +780,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				}
 			}
 		}
-#if defined(var_part_initialization) 
-		if (ScenarioVarConfigurations[_part_initialization][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_part_initialization][indConfiguration]) {
 			if (ind_shader_type == _pg_shader_ParticleAnimation
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -824,9 +798,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-#endif
-#if defined(var_sensor_layout) 
-		if (ScenarioVarConfigurations[_sensor_layout][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_sensor_layout][indConfiguration]) {
 			if (ind_shader_type == _pg_shader_Sensor
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -836,9 +808,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-#endif
-#if defined(var_activeClipArts) 
-		if (ScenarioVarConfigurations[_activeClipArts][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_activeClipArts][indConfiguration]) {
 			if (ind_shader_type == _pg_shader_ClipArt
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -846,9 +816,8 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-#endif
 #if defined(var_activeMeshes) 
-		if (ScenarioVarConfigurations[_activeMeshes][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_activeMeshes][indConfiguration]) {
 			if (ind_shader_type == _pg_shader_Mesh
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -1274,7 +1243,6 @@ void ParseScenarioClipsAndPhotos(std::ifstream& scenarioFin, int indConfiguratio
 		pg_ImageDirectory[indConfiguration] = "";
 	}
 
-#if defined(var_moving_messages)
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string messages
@@ -1298,7 +1266,6 @@ void ParseScenarioClipsAndPhotos(std::ifstream& scenarioFin, int indConfiguratio
 	if (ID.compare("/messages") != 0) {
 		sprintf(ErrorStr, "Error: incorrect configuration file expected string \"/messages\" not found! (instead \"%s\")", ID.c_str()); ReportError(ErrorStr); throw 100;
 	}
-#endif
 }
 
 void ParseScenarioSoundtracks(std::ifstream& scenarioFin, int indConfiguration) {
@@ -1556,8 +1523,8 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
 			if (local_path_group == pg_current_SVG_path_group) {
 #if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
-				if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] 
-					&& ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
+				if (pg_ScenarioActiveVars[_path_replay_trackNo_1][indConfiguration] 
+					&& pg_ScenarioActiveVars[_path_record_1][indConfiguration]) {
 					//printf("Load svg path No %d track %d\n", pathNo, path_track);
 					pg_Path_Status[pathNo].load_svg_path((char*)fileName.c_str(),
 						pathRadius, path_r_color, path_g_color, path_b_color,
@@ -1582,10 +1549,10 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 
 void pg_listAllSVG_paths(void) {
 	printf("Listing SVG paths:\n");
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (SVG_scenarioPathCurve* curve : SVG_scenarioPathCurves[indConfiguration]) {
-			if (ScenarioVarConfigurations[_path_replay_trackNo_1][indConfiguration] && ScenarioVarConfigurations[_path_record_1][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo][indConfiguration] && pg_ScenarioActiveVars[_path_record][indConfiguration]) {
 				std::cout << curve->path_fileName << " (" << curve->path_no << ", "
 					<< curve->path_group << "), ";
 			}
@@ -1597,7 +1564,7 @@ void pg_listAllSVG_paths(void) {
 
 void pg_listAllSoundtracks(void) {
 	printf("Listing Soundtracks:\n");
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for(SoundTrack * soundtrack : pg_SoundTracks[indConfiguration]) {
 			std::cout << soundtrack->soundtrackFileName << " (" << soundtrack->soundtrackShortName << "), ";
@@ -1708,7 +1675,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 	string temp;
 
 #if defined(var_activeMeshes)
-	if (ScenarioVarConfigurations[_activeMeshes][indConfiguration]) {
+	if (pg_ScenarioActiveVars[_activeMeshes][indConfiguration]) {
 		////////////////////////////
 		////// MESHES
 		// the meshes are loaded inside the GPU and diplayed depending on their activity
@@ -1827,7 +1794,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 			//	aMesh->pg_Mesh_Rotation_angle);
 			// the rank of the mesh textures applied to this mesh
 #if defined(var_MmeShanghai_brokenGlass)
-			if (ScenarioVarConfigurations[_MmeShanghai_brokenGlass][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_MmeShanghai_brokenGlass][indConfiguration]) {
 				sstream >> aMesh->pg_MmeShanghai_NbMeshSubParts;
 				aMesh->pg_MmeShanghai_MeshSubPart_FileNames = new string[aMesh->pg_MmeShanghai_NbMeshSubParts];
 				aMesh->pg_MmeShanghai_MeshSubParts = new bool* [aMesh->pg_MmeShanghai_NbMeshSubParts];
@@ -1843,7 +1810,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 		}
 		// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_textureFrontier_wmin)&& defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
-		if (ScenarioVarConfigurations[_textureFrontier_wmin][indConfiguration]) {
+		if (pg_ScenarioActiveVars[_textureFrontier_wmin][indConfiguration]) {
 			if (pg_Meshes[indConfiguration].empty()) {
 				sprintf(ErrorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); ReportError(ErrorStr); throw 100;
 			}
@@ -2269,9 +2236,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 			if (indVar == -1) {
 				sprintf(ErrorStr, "Error: scenario variable %s (index %d) of configuration %d not found in the variable list generated by python generator\n", temp.c_str(), indP, indConfiguration); ReportError(ErrorStr); throw 50;
 			}
-			if (!ScenarioVarConfigurations[indVar][indConfiguration]) {
-				sprintf(ErrorStr, "Error: scenario variable %s (index %d) considered as not belonging to the scenario of configuration %d by python generator\n", temp.c_str(), indP, indConfiguration); ReportError(ErrorStr); throw 50;
-			}
+			pg_ScenarioActiveVars[indVar][indConfiguration] = true;
 			nb_vars++;
 		}
 	}
@@ -2297,7 +2262,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	stringstreamStoreLine(&sstream, &line);
 	for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 		indVar = ConfigScenarioVarRank[indP][indConfiguration];
-		if (ScenarioVarConfigurations[indVar][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indVar][indConfiguration]) {
 			ConfigScenarioVarRank[indVar][indConfiguration];
 			if (sstream.eof()) {
 				sprintf(ErrorStr, "Error: missing initial value %s %d\n", temp.c_str(), indVar); ReportError(ErrorStr); throw 50;
@@ -2334,7 +2299,6 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	std::getline(scenarioFin, line);
 	stringstreamStoreLine(&sstream, &line);
 	sstream >> ID; // string scenario
-	// sstream >> pg_Scenario[indConfiguration].size();
 
 	pg_InterpolationScene.init_scene();
 	pg_variable_updated = new bool[_MaxInterpVarIDs];
@@ -2342,14 +2306,14 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	pg_variable_scenario_or_gui_command_value = new ScenarioValue[_MaxInterpVarIDs];
 	for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 		indVar = ConfigScenarioVarRank[indP][indConfiguration];
-		if (ScenarioVarConfigurations[indVar][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indVar][indConfiguration]) {
 			pg_variable_updated[indVar] = false;
 			pg_variable_param_input_type[indVar] = _PG_SCENARIO;
 			pg_variable_scenario_or_gui_command_value[indVar] = ScenarioValue();
 		}
 	}
 
-	printf("Loading scenario %s: %d scenes with %d variables\n", pg_ScenarioFileNames[indConfiguration].c_str(), pg_Scenario[indConfiguration].size(), ScenarioVarNb[indConfiguration]);
+	printf("Loading scenario %s with %d variables\n", pg_ScenarioFileNames[indConfiguration].c_str(), ScenarioVarNb[indConfiguration]);
 	int nbScenesInScenario = 0;
 	while(true) {
 		std::getline(scenarioFin, line);
@@ -2359,15 +2323,15 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 			break;
 		}
 		else if (ID.compare("scene") != 0) {
-			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"texture\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
+			sprintf(ErrorStr, "Error: incorrect configuration file expected string \"scene\" not found! (instead \"%s\")\n", ID.c_str()); ReportError(ErrorStr); throw 100;
 		}
-		// std::cout << "scene: " << line << "\n";
 		
 		Scene* newScene = new Scene();
 
 		newScene->init_scene();
 
 		sstream >> newScene->scene_IDs;
+		std::cout << "scene: " << newScene->scene_IDs << "\n";
 		sstream >> newScene->scene_duration;
 		sstream >> temp;  // change_when_ends or prolong_when_ends
 		if (temp.compare("change_when_ends") == 0) {
@@ -2422,7 +2386,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 		//std::cout << "\ninitial values :\n";
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			indVar = ConfigScenarioVarRank[indP][indConfiguration];
-			if (ScenarioVarConfigurations[indVar][indConfiguration]) {
+			if (pg_ScenarioActiveVars[indVar][indConfiguration]) {
 				if (sstream.eof()) {
 					sprintf(ErrorStr, "Error: missing initial value in scene %d var %d (%s)\n",
 						nbScenesInScenario + 1, indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 50;
@@ -2457,7 +2421,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			indVar = ConfigScenarioVarRank[indP][indConfiguration];
-			if (ScenarioVarConfigurations[indVar][indConfiguration]) {
+			if (pg_ScenarioActiveVars[indVar][indConfiguration]) {
 				if (sstream.eof()) {
 					sprintf(ErrorStr, "Error: missing final value in scene %d var %d (%s)\n", nbScenesInScenario + 1, indVar, temp.c_str()); ReportError(ErrorStr); throw 50;
 				}
@@ -2491,7 +2455,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 		// storing the interpolation mode
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			indVar = ConfigScenarioVarRank[indP][indConfiguration];
-			if (ScenarioVarConfigurations[indVar][indConfiguration]) {
+			if (pg_ScenarioActiveVars[indVar][indConfiguration]) {
 				char valCh = 0;
 				char valCh2 = 0;
 				string vals, val2s;

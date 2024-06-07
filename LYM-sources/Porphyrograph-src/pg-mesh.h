@@ -111,18 +111,18 @@ public:
 };
 
 // mesh anim data
-extern double *mesh_startAnime[_NbConfigurations];
-extern double *mesh_anime_precTime[_NbConfigurations];
-extern int *mesh_precedingAnime[_NbConfigurations];
-extern bool* mesh_positiveChange[_NbConfigurations];
-extern bool* mesh_negativeChange[_NbConfigurations];
+extern double *mesh_startAnime[PG_MAX_CONFIGURATIONS];
+extern double *mesh_anime_precTime[PG_MAX_CONFIGURATIONS];
+extern int *mesh_precedingAnime[PG_MAX_CONFIGURATIONS];
+extern bool* mesh_positiveChange[PG_MAX_CONFIGURATIONS];
+extern bool* mesh_negativeChange[PG_MAX_CONFIGURATIONS];
 #define _lastMesh_Anime 6
 #define _lastMesh_Motion 6
 
 // mesh motion data
-extern double* mesh_startMotion[_NbConfigurations];
-extern double* mesh_motion_precTime[_NbConfigurations];
-extern int* mesh_precedingMotion[_NbConfigurations];
+extern double* mesh_startMotion[PG_MAX_CONFIGURATIONS];
+extern double* mesh_motion_precTime[PG_MAX_CONFIGURATIONS];
+extern int* mesh_precedingMotion[PG_MAX_CONFIGURATIONS];
 
 // mesh data
 extern GLfloat *vertexBuffer;
@@ -133,10 +133,10 @@ extern GLint* boneIndexBuffer;
 extern GLfloat* boneWeightBuffer;
 
 // shader variable pointers
-extern GLint *uniform_mesh_model[_NbConfigurations];
-extern GLint *uniform_mesh_view[_NbConfigurations];
-extern GLint *uniform_mesh_proj[_NbConfigurations];
-extern GLint *uniform_mesh_light[_NbConfigurations];
+extern GLint *uniform_mesh_model[PG_MAX_CONFIGURATIONS];
+extern GLint *uniform_mesh_view[PG_MAX_CONFIGURATIONS];
+extern GLint *uniform_mesh_proj[PG_MAX_CONFIGURATIONS];
+extern GLint *uniform_mesh_light[PG_MAX_CONFIGURATIONS];
 
 // mesh lighting
 extern GLfloat mesh_light_x;

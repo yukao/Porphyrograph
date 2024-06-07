@@ -181,15 +181,19 @@ int main(int argcMain, char **argvMain) {
 	// the configuration file name must be terminated by ".csv" or ".txt"
 	// possibly the first argument with such an extension
 	if (argc % 2 == 1) {
-		if ((argc - 1) / 2 != _NbConfigurations) {
-			sprintf(ErrorStr, "Porphyrograph: should have %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", _NbConfigurations, (argc - 1) / 2); ReportError(ErrorStr); throw(6678);
+		pg_NbConfigurations = int((argc - 1) / 2);
+		if (pg_NbConfigurations > PG_MAX_CONFIGURATIONS) {
+			sprintf(ErrorStr, "Porphyrograph: should have maximally %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", PG_MAX_CONFIGURATIONS, (argc - 1) / 2); ReportError(ErrorStr); throw(6678);
 		}
-		pg_Shader_File_Names = new string * [_NbConfigurations];
-		pg_Shader_Stages = new GLenum **[_NbConfigurations];
-		pg_Shader_nbStages = new int* [_NbConfigurations];
-		pg_shader_programme = new unsigned int* [_NbConfigurations];
-		pg_ConfigurationFileNames = new string[_NbConfigurations];
-		pg_ScenarioFileNames = new string[_NbConfigurations];
+		else {
+			printf("Porphyrograph: % d associated configuration and scenario file(s) (<conf.csv> <scenario.csv>) + ", (argc - 1) / 2); 
+		}
+		pg_Shader_File_Names = new string * [pg_NbConfigurations];
+		pg_Shader_Stages = new GLenum **[pg_NbConfigurations];
+		pg_Shader_nbStages = new int* [pg_NbConfigurations];
+		pg_shader_programme = new unsigned int* [pg_NbConfigurations];
+		pg_ConfigurationFileNames = new string[pg_NbConfigurations];
+		pg_ScenarioFileNames = new string[pg_NbConfigurations];
 
 		pg_initPaths();
 
@@ -252,7 +256,7 @@ int main(int argcMain, char **argvMain) {
 
 	// sensor initialization
 #if defined(var_sensor_layout)
-	if (ScenarioVarConfigurations[_sensor_layout][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
 		SensorInitialization();
 	}
 #endif
@@ -338,15 +342,12 @@ int main(int argcMain, char **argvMain) {
 	printOglError(467);
 
 	// camera frame capture initialization
-#if defined(var_cameraCaptFreq)
-	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
 		pg_openCameraCaptureAndLoadFrame();
 	}
-#endif
 
 	// video intialization: loads the movie of the intial configuration
-#if defined(var_movieCaptFreq)
-	if (ScenarioVarConfigurations[_movieCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
 		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
 			&& playing_movieNo != currentlyPlaying_movieNo) {
 			pg_movie_frame.setTo(Scalar(0, 0, 0));
@@ -367,10 +368,8 @@ int main(int argcMain, char **argvMain) {
 			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName);
 		}
 	}
-#endif
 
-#if defined(var_clipCaptFreq)
-		// clip intialization for Left Clip
+	// clip intialization for Left Clip
 	if (playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank] && playing_clipNoLeft != pg_clip_status[_clipLeft].getCurrentlyPlaying_clipNo(0)) {
 		pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(0, playing_clipNoLeft);
 		sprintf(AuxString, "/clip_shortName_0 %03d", playing_clipNoLeft);
@@ -395,7 +394,6 @@ int main(int argcMain, char **argvMain) {
 		sprintf(AuxString, "/clip2_shortName_1 %03d", playing_secondClipNoRight);
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
-#endif
 #endif
 
 #ifdef PG_WITH_PUREDATA
@@ -592,10 +590,8 @@ void pg_init_scene(void) {
 	// ------ screen message initialization  ------------- //
 	pg_init_screen_message();
 
-#if defined(var_moving_messages)
 	// reads the text messages in the text file
 	pg_ReadAllDisplayMessages(pg_MessageFile[pg_current_configuration_rank]);
-#endif
 	
 #if defined(var_Novak_flight_on)
 	// ------ flight initialization  ------------- //
@@ -620,8 +616,7 @@ void pg_init_scene(void) {
 	open_IO_MIDI(string("TouchOSC Bridge"), string("TouchOSC Bridge"));
 #endif
 
-#if defined(var_sensor_layout)
-	if (ScenarioVarConfigurations[_sensor_layout][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
 		/////////////////////////////////////////////////////////////////////////
 		// SENSORS INITIALIZATION
 		// copies the grid layout
@@ -630,7 +625,6 @@ void pg_init_scene(void) {
 		// copies the single central activation
 		assignSensorActivations();
 	}
-#endif
 
 	/////////////////////////////////////////////////////////////////////////
 	// UDP INITIALIZATION
@@ -688,7 +682,7 @@ void pg_quit( void ) {
 #endif
 
 	// script
-#ifdef var_script_1
+#if defined(var_script_1)
 	if (pi_script_1.hProcess != NULL) {
 		TerminateProcess(pi_script_1.hProcess, 0);
 	}
@@ -763,7 +757,6 @@ void pg_quit( void ) {
   if (pg_movie_capture.isOpened()) {
 	  pg_movie_capture.release();
   }
-#if defined(var_cameraCaptFreq)
   // release webCam
   if (pg_webCam_capture.isOpened()) {
 	  pg_webCam_capture.release();
@@ -774,7 +767,7 @@ void pg_quit( void ) {
 		  pg_IPCam_capture[ind_IPCam].release();
 	  }
   }
-#endif
+
 
   //// realse USB
   //pg_release_USB();
@@ -847,7 +840,8 @@ void MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
 	// source 350x0 350x1080      1550x0  1550x1080
 	// target 265x15  290x1080       1425x15  1425x1051
 	float sx = float(1425 - 290) / (1650 - 250);
-	float sy = float(1051 - 15) / (1050 - 0);
+	float sy = float(1051 - 15) / (1050 - 0)
+
 	float tx = 265.f - sx * 250;
 	float ty = 15.f - sy * 0;
 	*mappedX = int(x * sx + tx);
@@ -855,17 +849,6 @@ void MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
 	//* mappedX = int(x);
 	//* mappedY = int(y);
 	//printf("%d x, %d y, %.2f press, %.2f az, %.2f incl, %.2f twist, %d cursor", x, y, press, az, incl, twist, cursor);
-#elif defined(ARAKNIT)
-	*mappedX = int(x);
-	*mappedY = int(y);
-	if (screen_drawing_no == 0) {
-		*mappedY += 1080;
-	}
-	else if (screen_drawing_no == 2) {
-		*mappedX = int(1920.f - y / 1080.f * 1920.f);
-		*mappedY = int(x / 1920.f * 1080.f);
-		*mappedY *= 2;
-	}
 #elif defined(DOUBLE_WIDTH_SCREEN)
 	*mappedX = int((x) * 2);
 	*mappedY = int(y);

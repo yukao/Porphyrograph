@@ -80,7 +80,6 @@ float quadMaster_texCoords[] = {
 };
 unsigned int quadMaster_indices[PG_SIZE_QUAD_ARRAY] = { 2, 1, 0, 3 };
 
-#if defined(var_sensor_layout)
 unsigned int quadSensor_vao = 0;
 // quad for sensors
 float quadSensor_points[] = {
@@ -99,7 +98,6 @@ float quadSensor_texCoords[] = {
 	0.0f,         0.0f,
 	0.0f,         0.0f
 };
-#endif
 
 // +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
 #ifdef PG_METAWEAR
@@ -107,14 +105,14 @@ struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
 #endif
 
 #if defined(var_activeMeshes)
-int *pg_nb_bones[_NbConfigurations] = { NULL };
-Bone** TabBones[_NbConfigurations] = { NULL };
-int* pg_nb_LibraryPoses[_NbConfigurations] = { NULL };
-int* pg_nb_AnimationPoses[_NbConfigurations] = { NULL };
-float** pg_interpolation_weight_AnimationPose[_NbConfigurations] = { NULL };
-int* pg_nb_MotionPoses[_NbConfigurations] = { NULL };
-MotionPose** pg_motionPoses[_NbConfigurations] = { NULL };
-float** pg_interpolation_weight_MotionPose[_NbConfigurations] = { NULL };
+int *pg_nb_bones[PG_MAX_CONFIGURATIONS] = { NULL };
+Bone** TabBones[PG_MAX_CONFIGURATIONS] = { NULL };
+int* pg_nb_LibraryPoses[PG_MAX_CONFIGURATIONS] = { NULL };
+int* pg_nb_AnimationPoses[PG_MAX_CONFIGURATIONS] = { NULL };
+float** pg_interpolation_weight_AnimationPose[PG_MAX_CONFIGURATIONS] = { NULL };
+int* pg_nb_MotionPoses[PG_MAX_CONFIGURATIONS] = { NULL };
+MotionPose** pg_motionPoses[PG_MAX_CONFIGURATIONS] = { NULL };
+float** pg_interpolation_weight_MotionPose[PG_MAX_CONFIGURATIONS] = { NULL };
 #endif
 
 // particle curves
@@ -123,11 +121,9 @@ GLfloat *pg_Particle_control_points;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
 #endif
-#if defined(var_part_initialization)
 GLfloat *pg_Particle_vertices;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
-#endif
 unsigned int *pg_Particle_indices;
 
 //////////////////////////////////////////////////////////////////////
@@ -138,11 +134,11 @@ unsigned int *pg_Particle_indices;
 
 #ifdef CURVE_PARTICLES
 // comet texture
-GLuint comet_texture_2D_texID[_NbConfigurations] = { NULL_ID };
+GLuint comet_texture_2D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
 #if defined(TEXTURED_QUAD_PARTICLES)
 // blurred disk texture
-std::vector<GLuint>  blurredDisk_texture_2D_texID[_NbConfigurations];
+std::vector<GLuint>  blurredDisk_texture_2D_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 /////////////////////////////////////////////////////////////////
@@ -162,15 +158,9 @@ GLuint enumDrawBuffersEntries[16] = {
 /////////////////////////////////////////////
 // FBO 
 GLuint pg_FBO_Update = 0; // PG_FBO_UPDATE_NBATTACHTS
-#if  defined(var_part_initialization)
 GLuint pg_FBO_ParticleRendering = 0; // particle rendering
-#endif
-#if defined(var_activeClipArts)
 GLuint pg_FBO_ClipArtRendering = 0; // ClipArt rendering
-#endif
-#if defined(var_part_initialization) 
 GLuint pg_FBO_ParticleAnimation = 0; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
-#endif
 GLuint pg_FBO_Mixing_capturedFB_prec = 0; //  drawing memory on odd and even frames for echo
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
@@ -178,9 +168,7 @@ GLuint pg_FBO_Master_capturedFB_prec = 0; // master output memory for mapping on
 #endif
 
 // FBO texture
-#if defined(var_part_initialization) 
 GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS] = { 0 }; // particle animation
-#endif
 GLuint pg_FBO_Particle_render_texID = 0; // particle rendering + stencil
 GLuint FBO_ParticleRendering_depthAndStencilBuffer = 0;
 GLuint pg_FBO_ClipArt_render_texID = 0; // particle rendering + stencil
@@ -918,8 +906,7 @@ void pg_initGeometry_quads(void) {
 		quadMaster_indices, GL_STATIC_DRAW);
 	printOglError(23);
 
-#if defined(var_sensor_layout)
-	if (ScenarioVarConfigurations[_sensor_layout][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
 		/////////////////////////////////////////////////////////////////////
 	// QUADS FOR SENSORS
 	// point positions and texture coordinates
@@ -1145,10 +1132,8 @@ void pg_initGeometry_quads(void) {
 		// sample choice
 		sensor_sample_setUp_interpolation();
 	}
-#endif
 
 
-#if defined(var_part_initialization) 
 	/////////////////////////////////////////////////////////////////////
 	// PARTICLES TO BE TESSELATED
 	// initializes the arrays that contains the positions and the indices of the particles
@@ -1167,7 +1152,6 @@ void pg_initGeometry_quads(void) {
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
 #endif
-#if defined(var_part_initialization)
 	// vertex buffer objects and vertex array
 	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
 	// vertices
@@ -1179,14 +1163,12 @@ void pg_initGeometry_quads(void) {
 	// color
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
-#endif
 
 	// vertex positions are location 0
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticle]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 	glEnableVertexAttribArray(0);
 
-#if defined(var_part_initialization)
 	// radius is location 1
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
 	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
@@ -1195,7 +1177,6 @@ void pg_initGeometry_quads(void) {
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 	glEnableVertexAttribArray(2);
-#endif
 #if definedCURVE_PARTICLES
 								  // radius is location 1
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
@@ -1213,13 +1194,11 @@ void pg_initGeometry_quads(void) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
 		pg_Particle_indices, GL_STATIC_DRAW);
 #endif
-#if defined(var_part_initialization)
 	// vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * sizeof(unsigned int),
 		pg_Particle_indices, GL_STATIC_DRAW);
-#endif
-#endif
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	printOglError(32);
@@ -1232,7 +1211,6 @@ void pg_initGeometry_quads(void) {
 // SENSOR INITIALIZATION
 /////////////////////////////////////////////////////////////////
 
-#if defined(var_sensor_layout)
 void SensorInitialization(void) {
 #ifdef PG_RENOISE
 		sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char*)"", AuxString, (char*)"udp_RN_send");
@@ -1334,34 +1312,13 @@ void sensor_sample_setUp_interpolation(void) {
 			}
 		}
 	}
-
-#ifdef PG_SUPERCOLLIDER
-	std::string message = "/sensor_sample_setUp";
-	std::string format = "";
-	for (int indSensor = 0; indSensor < PG_NB_SENSORS - 1; indSensor++) {
-		format += "i ";
-	}
-	format += "i";
-
-	// sensor readback
-	for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
-		std::string float_str = std::to_string((long long)sample_choice[indSensor]);
-		// float_str.resize(4);
-		message += " " + float_str;
-	}
-
-	pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_SC_send");
-#endif
-
-	// std::cout << "format: " << format << "\n";
-	// std::cout << "msg: " << message << "\n";
 }
-#endif
+
 
 
 #if defined(var_activeMeshes)
 void MeshInitialization(void) {
-	for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		pg_nb_bones[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
 		TabBones[indConfiguration] = new Bone * [pg_Meshes[indConfiguration].size()];
 		pg_nb_AnimationPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
@@ -1513,7 +1470,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 		pg_FBO_Update_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(2 * PG_FBO_UPDATE_NBATTACHTS, pg_FBO_Update_texID);
-	printf("FBO Update size %d %d attachments %d (configs %d)\n", workingWindow_width, window_height, PG_FBO_UPDATE_NBATTACHTS, _NbConfigurations);
+	printf("FBO Update size %d %d attachments %d (configs %d)\n", workingWindow_width, window_height, PG_FBO_UPDATE_NBATTACHTS, pg_NbConfigurations);
 	pg_initFBOTextures(pg_FBO_Update_texID, 2 * PG_FBO_UPDATE_NBATTACHTS, false, NULL);
 
 	glGenFramebuffers(1, &pg_FBO_Update);
@@ -1521,7 +1478,6 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 
 	printOglError(341);
 
-#if defined(var_part_initialization) 
 	// FBO: multi-attachment for particle animation 
 	// 2 = FBO ping-pong size for ParticleAnimation shader FBOs
 	// initializations to NULL
@@ -1536,9 +1492,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	// ping-pong FBO texture binding, changes each frame
 
 	printOglError(341);
-#endif
 
-#if defined(var_activeClipArts) 
 	// FBO: ClipArt GPU drawing output 
 	glGenTextures(1, &pg_FBO_ClipArt_render_texID);
 	glGenRenderbuffers(1, &FBO_ClipArt_depthAndStencilBuffer);
@@ -1551,9 +1505,8 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	printOglError(344);
-#endif
 
-#if defined(var_part_initialization)
+
 	// FBO: particle drawing output 
 	glGenTextures(1, &pg_FBO_Particle_render_texID);
 	glGenRenderbuffers(1, &FBO_ParticleRendering_depthAndStencilBuffer);
@@ -1566,7 +1519,6 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 
 	printOglError(344);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 
 	// FBO: composition output for echo
 	// 2 = FBO ping-pong size for echo FBOs
@@ -1609,9 +1561,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 void pg_initRenderingMatrices(void) {
 	memset((char *)pg_identityViewMatrix, 0, 16 * sizeof(float));
 	memset((char *)pg_identityModelMatrix, 0, 16 * sizeof(float));
-#if defined(var_sensor_layout)
 	memset((char *)modelMatrixSensor, 0, 16 * sizeof(float));
-#endif
 	pg_identityViewMatrix[0] = 1.0f;
 	pg_identityViewMatrix[5] = 1.0f;
 	pg_identityViewMatrix[10] = 1.0f;
@@ -1620,12 +1570,10 @@ void pg_initRenderingMatrices(void) {
 	pg_identityModelMatrix[5] = 1.0f;
 	pg_identityModelMatrix[10] = 1.0f;
 	pg_identityModelMatrix[15] = 1.0f;
-#if defined(var_sensor_layout)
 	modelMatrixSensor[0] = 1.0f;
 	modelMatrixSensor[5] = 1.0f;
 	modelMatrixSensor[10] = 1.0f;
 	modelMatrixSensor[15] = 1.0f;
-#endif
 
 	// ORTHO
 	float l = 0.0f;
@@ -1917,9 +1865,7 @@ bool pg_ReadAllDisplayMessages(string basefilename) {
 	DisplayText1 = "";
 	DisplayText2 = "";
 #endif
-#if defined(var_moving_messages)
 	std::cout << "Loaded texts #" << NbDisplayTexts << " from " << basefilename << "\n";
-#endif 
 
 	return valRet;
 }
@@ -2127,7 +2073,6 @@ void pg_initParticlePosition_Texture( void ) {
 		}
 	}
 #endif
-#if defined(var_part_initialization)
 	// the vertices position contain column and row of the vertices coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader
@@ -2159,7 +2104,6 @@ void pg_initParticlePosition_Texture( void ) {
 		// indices
 		pg_Particle_indices[ind_index] = ind_index;
 	}
-#endif
 }
 
 

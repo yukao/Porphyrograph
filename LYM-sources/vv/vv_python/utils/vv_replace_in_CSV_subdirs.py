@@ -78,8 +78,8 @@ def main(main_args):
 				line = line.rstrip()
 				while(line):
 					line = line.rstrip()
-					if(re.search(r'3,11,Ada', line) != None) :
-						line = re.sub(r'3,11,Ada', '4,11,Ada',line)
+					if(re.search(r'4,11,Ada,10', line) != None) :
+						line = re.sub(r'4,11,Ada,10', '4,12,Ada,10',line)
 					
 					FILEout.write(line)
 					FILEout.write("\n")

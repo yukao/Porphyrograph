@@ -239,14 +239,14 @@ int precedingVideoTrack = -1;
 /////////////////////////////////////////////////////////////////
 // textures bitmaps and associated IDs
 #if defined(var_part_initialization) 
-std::vector<GLuint> pg_particle_initial_pos_speed_texID[_NbConfigurations];
-std::vector<GLuint> pg_particle_initial_color_radius_texID[_NbConfigurations];
+std::vector<GLuint> pg_particle_initial_pos_speed_texID[PG_MAX_CONFIGURATIONS];
+std::vector<GLuint> pg_particle_initial_color_radius_texID[PG_MAX_CONFIGURATIONS];
 #endif
 #if defined(var_part_image_acceleration) 
-std::vector<GLuint> pg_particle_acc_texID[_NbConfigurations];
+std::vector<GLuint> pg_particle_acc_texID[PG_MAX_CONFIGURATIONS];
 #endif
 #if defined(var_pixel_image_acceleration) 
-std::vector<GLuint> pg_pixel_acc_texID[_NbConfigurations];
+std::vector<GLuint> pg_pixel_acc_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 GLuint pg_screenMessageBitmap_texID = 0; // nb_attachments=1
@@ -258,16 +258,16 @@ GLubyte *pg_CATable = NULL;
 #endif
 
 #if !defined(PG_BEZIER_PATHS) || defined(CORE)
-GLuint Pen_texture_3D_texID[_NbConfigurations] = { NULL_ID };
+GLuint Pen_texture_3D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
-GLuint Noise_texture_3D[_NbConfigurations] = { NULL_ID };
+GLuint Noise_texture_3D[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #if defined(var_BG_CA_repop_density) || defined(var_Part_repop_density)
-std::vector<GLuint>  pg_RepopDensity_texture_texID[_NbConfigurations];
+std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
 #ifdef PG_WITH_MASTER_MASK
-GLuint Master_Mask_texID[_NbConfigurations] = { NULL_ID };
-GLuint Master_Multilayer_Mask_texID[_NbConfigurations] = { NULL_ID };
+GLuint Master_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
+GLuint Master_Multilayer_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
 
 std::string* DisplayTextList;
@@ -283,7 +283,7 @@ float * DisplayText_rand_translY = NULL;
 int NbTextChapters = 0;
 
 #if defined(var_sensor_layout)
-GLuint Sensor_texture_rectangle[_NbConfigurations] = { NULL_ID };
+GLuint Sensor_texture_rectangle[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
 
 // video texture ID, image and camera
@@ -303,35 +303,35 @@ int pg_movie_frame_width = 0;
 int pg_movie_frame_height = 0;
 
 // video tracks
-//vector<string> movieFileName[_NbConfigurations];
-//vector<string> movieShortName[_NbConfigurations];
-//vector<string> movieSoundtrackPeaksFileName[_NbConfigurations];
-//vector<string> movieSoundtrackOnsetsFileName[_NbConfigurations];
-//vector<vector<float>> videoSoundtrackPeaks[_NbConfigurations];
-//vector<vector<float>> videoSoundtrackOnsets[_NbConfigurations];
-vector<VideoTrack*> pg_VideoTracks[_NbConfigurations];
+//vector<string> movieFileName[PG_MAX_CONFIGURATIONS];
+//vector<string> movieShortName[PG_MAX_CONFIGURATIONS];
+//vector<string> movieSoundtrackPeaksFileName[PG_MAX_CONFIGURATIONS];
+//vector<string> movieSoundtrackOnsetsFileName[PG_MAX_CONFIGURATIONS];
+//vector<vector<float>> videoSoundtrackPeaks[PG_MAX_CONFIGURATIONS];
+//vector<vector<float>> videoSoundtrackOnsets[PG_MAX_CONFIGURATIONS];
+vector<VideoTrack*> pg_VideoTracks[PG_MAX_CONFIGURATIONS];
 
 // soundtracks
-//vector<string> pg_SoundTracks[_NbConfigurations]->soundtrackFileName;
-//vector<string> pg_SoundTracks[_NbConfigurations]->trackShortName;
-//vector<string> pg_SoundTracks[_NbConfigurations]->trackSoundtrackPeaksFileName;
-//vector<string> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackOnsetsFileName;
-//vector<vector<float>> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackPeaks;
-//vector<vector<float>> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackOnsets;
-//vector<float> pg_SoundTracks[_NbConfigurations]->soundTrackSoundtrackOnsetsAndPeasksOffset;
-vector<SoundTrack*> pg_SoundTracks[_NbConfigurations];
+//vector<string> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->soundtrackFileName;
+//vector<string> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->trackShortName;
+//vector<string> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->trackSoundtrackPeaksFileName;
+//vector<string> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->soundTrackSoundtrackOnsetsFileName;
+//vector<vector<float>> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->soundTrackSoundtrackPeaks;
+//vector<vector<float>> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->soundTrackSoundtrackOnsets;
+//vector<float> pg_SoundTracks[PG_MAX_CONFIGURATIONS]->soundTrackSoundtrackOnsetsAndPeasksOffset;
+vector<SoundTrack*> pg_SoundTracks[PG_MAX_CONFIGURATIONS];
 int currentTrackSoundPeakIndex = 0;
-int nbTrackSoundPeakIndex[_NbConfigurations] = {0};
+int nbTrackSoundPeakIndex[PG_MAX_CONFIGURATIONS] = {0};
 int currentTrackSoundOnsetIndex = 0;
-int nbTrackSoundOnsetIndex[_NbConfigurations] = {0};
+int nbTrackSoundOnsetIndex[PG_MAX_CONFIGURATIONS] = {0};
 
 // pen palettes presets
-vector<ColorPreset*> pg_ColorPresets[_NbConfigurations];
+vector<ColorPreset*> pg_ColorPresets[PG_MAX_CONFIGURATIONS];
 
 // lights presets
-int pg_nb_light_groups[_NbConfigurations] = {0};
-vector<Light*> pg_Lights[_NbConfigurations];
-vector<LightGroup*> pg_light_groups[_NbConfigurations];
+int pg_nb_light_groups[PG_MAX_CONFIGURATIONS] = {0};
+vector<Light*> pg_Lights[PG_MAX_CONFIGURATIONS];
+vector<LightGroup*> pg_light_groups[PG_MAX_CONFIGURATIONS];
 // interface current light group
 int pg_interface_light_group = 0;
 
@@ -362,22 +362,22 @@ std::unordered_map<int, std::string> pg_light_loop_param_hashMap = {
 };
 
 // pen palettes colors
-vector<Palette*> pg_Palettes[_NbConfigurations];
+vector<Palette*> pg_Palettes[PG_MAX_CONFIGURATIONS];
 // photo albums
-std::string pg_ImageDirectory[_NbConfigurations] = { "" };
+std::string pg_ImageDirectory[PG_MAX_CONFIGURATIONS] = { "" };
 // short video clip albums
-string pg_ClipDirectory[_NbConfigurations] = { "" };
-int pg_NbClipAlbums[_NbConfigurations] = {0};
-int clip_image_width[_NbConfigurations] = {0};
-int clip_image_height[_NbConfigurations] = {0};
-int clip_crop_width[_NbConfigurations] = {0};
-int clip_crop_height[_NbConfigurations] = {0};
-int clip_max_length[_NbConfigurations] = {0};
+string pg_ClipDirectory[PG_MAX_CONFIGURATIONS] = { "" };
+int pg_NbClipAlbums[PG_MAX_CONFIGURATIONS] = {0};
+int clip_image_width[PG_MAX_CONFIGURATIONS] = {0};
+int clip_image_height[PG_MAX_CONFIGURATIONS] = {0};
+int clip_crop_width[PG_MAX_CONFIGURATIONS] = {0};
+int clip_crop_height[PG_MAX_CONFIGURATIONS] = {0};
+int clip_max_length[PG_MAX_CONFIGURATIONS] = {0};
 // pen brushes
-string pen_brushes_fileName[_NbConfigurations] = { "" };
-int nb_pen_brushes[_NbConfigurations] = {0};
+string pen_brushes_fileName[PG_MAX_CONFIGURATIONS] = { "" };
+int nb_pen_brushes[PG_MAX_CONFIGURATIONS] = {0};
 // textures with multiple layers
-int nb_layers_master_mask[_NbConfigurations] = {0};
+int nb_layers_master_mask[PG_MAX_CONFIGURATIONS] = {0};
 #if defined(var_cameraCaptFreq)
 VideoCapture  pg_webCam_capture;
 vector <VideoCapture> pg_IPCam_capture;
@@ -399,7 +399,7 @@ int initialSecondBGCapture = 0;
 
 #if defined(var_clipCaptFreq)
 // clip track
-std::vector<clip_track> pg_clip_tracks[_NbConfigurations];
+std::vector<clip_track> pg_clip_tracks[PG_MAX_CONFIGURATIONS];
 // clip status (left and right)
 clip_status pg_clip_status[_clipLR] = { clip_status(_clipLeft), clip_status(_clipRight)};
 // index of top clip 
@@ -923,7 +923,7 @@ void window_display(void) {
 
 
 #if defined(var_activeMeshes)
-	if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank]) {
 		// updates mesh animation
 		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
 			// visibility
@@ -946,7 +946,7 @@ void window_display(void) {
 					update_bones(indMeshFile);
 				}
 #if defined(var_Contact_mesh_rotation) && defined(var_Contact_mesh_translation_X) && defined(var_Contact_mesh_translation_Y) && defined(var_Contact_mesh_motion)
-				if (ScenarioVarConfigurations[_Contact_mesh_rotation][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_Contact_mesh_rotation][pg_current_configuration_rank]) {
 					Contact_update_motion(indMeshFile);
 				}
 #endif
@@ -965,7 +965,7 @@ void window_display(void) {
 			&pg_track_sound_peak, &pg_track_sound_onset, nbTrackSoundPeakIndex[pg_current_configuration_rank], 
 			nbTrackSoundOnsetIndex[pg_current_configuration_rank], &currentTrackSoundPeakIndex, &currentTrackSoundOnsetIndex);
 #if defined(var_photo_diaporama)
-		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
 			if (pg_track_sound_onset) {
 				diaporama_random();
 			}
@@ -1506,11 +1506,11 @@ void pg_automatic_var_reset_or_update(void) {
 	}
 
 #if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_photo_gamma) && defined(var_photo_satur) && defined(var_photo_threshold)
-	if (ScenarioVarConfigurations[_master_scale][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_master_offsetX][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_photo_gamma][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_photo_satur][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_photo_threshold][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_master_scale][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_master_offsetX][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_photo_gamma][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_photo_satur][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_photo_threshold][pg_current_configuration_rank]) {
 		if (flashMaster > 0) {
 			flashMaster--;
 			// end of flash return to dark
@@ -1549,10 +1549,10 @@ void pg_automatic_var_reset_or_update(void) {
 		}
 	}
 #if defined(var_flashPhotoTrkBeat)  && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-	if (ScenarioVarConfigurations[_flashPhotoTrkBeat][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_flashPhotoTrkBright][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_flashPhotoTrkLength][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_flashPhotoTrkBeat][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_flashPhotoTrkLength][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
 		// flash photo reset
 		if (flashPhotoTrk_weight > 0.0f) {
 			if (flashPhotoTrk_weight > 0) {
@@ -1572,7 +1572,7 @@ void pg_automatic_var_reset_or_update(void) {
 #endif
 
 #if defined(var_photo_diaporama)
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
 		if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
 			if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
 				printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
@@ -1589,8 +1589,8 @@ void pg_automatic_var_reset_or_update(void) {
 	// clear layer reset
 	// does not reset if camera capture is still ongoing
 #if defined(var_cameraCaptFreq) && defined(var_camera_BG_subtr)
-	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_camera_BG_subtr][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_camera_BG_subtr][pg_current_configuration_rank]) {
 		if ((reset_camera || (initialSecondBGCapture == 1)) && (initialBGCapture || secondInitialBGCapture)) {
 			isClearAllLayers = 0.f;
 		}
@@ -1612,7 +1612,7 @@ void pg_automatic_var_reset_or_update(void) {
 	copyToNextTrack = 0;
 
 #if defined(var_cameraCaptFreq)
-	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
 		// DELAYED CAMERA WEIGHT COUNTDOWN
 		if (delayedCameraWeight > 1) {
 			delayedCameraWeight--;
@@ -1648,7 +1648,7 @@ void pg_automatic_var_reset_or_update(void) {
 #endif
 
 #if defined(var_part_initialization)
-	if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 		// /////////////////////////
 		// particle initialization reset
 		part_initialization = -1;
@@ -1726,7 +1726,7 @@ void pg_update_clip_camera_and_movie_frame(void) {
 	// CLIP, CAMERA AND MOVIE FRAME UPDATES BEFORE RENDERING
 	// /////////////////////////
 #if defined(var_clipCaptFreq)
-	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
 		// reads next clip frame
 		for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 			for (int clipSide = 0; clipSide < _clipLR; clipSide++) {
@@ -1747,7 +1747,7 @@ void pg_update_clip_camera_and_movie_frame(void) {
 #endif
 
 #if defined(var_movieCaptFreq)
-	if (ScenarioVarConfigurations[_movieCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
 		// /////////////////////////
 		// reads next movie frame
 		if (currentVideoTrack >= 0 && movieCaptFreq > 0
@@ -1840,7 +1840,7 @@ void pg_update_clip_camera_and_movie_frame(void) {
 	// /////////////////////////
 	// reads next camera frame
 #if defined(var_cameraCaptFreq)
-	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
 		if ((currentVideoTrack >= 0
 			&& pg_cameraCaptureIsOn
 			&& (// grabs according to camera capture frequence
@@ -1913,7 +1913,7 @@ void pg_update_shader_var_data(void) {
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
 void pg_update_shader_ParticleAnimation_uniforms(void) {
 #if defined(var_part_initialization)
-	if (!ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]
+	if (!pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
 		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]) {
 		return;
 	}
@@ -1930,10 +1930,10 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	bool repop_channels[PG_NB_PATHS + 1] = {0};
 	int nb_repop_channels = 0;
 #if defined(var_part_path_repop_0) && defined(var_part_path_repop_1) && defined(var_part_path_repop_2) && defined(var_part_path_repop_3)
-	if (ScenarioVarConfigurations[_part_path_repop_0][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_1][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_2][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_3][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_path_repop_0][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_1][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_2][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_3][pg_current_configuration_rank]) {
 		nb_repop_channels += int(part_path_repop_0) + int(part_path_repop_1) + int(part_path_repop_2) + int(part_path_repop_3);
 		repop_channels[0] = part_path_repop_0;
 		repop_channels[1] = part_path_repop_1;
@@ -1942,10 +1942,10 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	}
 #endif
 #if defined(var_part_path_repop_4) && defined(var_part_path_repop_5) && defined(var_part_path_repop_6) && defined(var_part_path_repop_7)
-	if (ScenarioVarConfigurations[_part_path_repop_4][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_5][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_6][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_7][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_path_repop_4][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_5][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_6][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_7][pg_current_configuration_rank]) {
 		nb_repop_channels += int(part_path_repop_4) + int(part_path_repop_5) + int(part_path_repop_6) + int(part_path_repop_7);
 		repop_channels[4] = part_path_repop_4;
 		repop_channels[5] = part_path_repop_5;
@@ -1954,10 +1954,10 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	}
 #endif
 #if defined(var_part_path_repop_8) && defined(var_part_path_repop_9) && defined(var_part_path_repop_10) && defined(var_part_path_repop_11)
-	if (ScenarioVarConfigurations[_part_path_repop_8][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_9][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_10][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_part_path_repop_11][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_path_repop_8][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_9][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_10][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_part_path_repop_11][pg_current_configuration_rank]) {
 		nb_repop_channels += int(part_path_repop_8) + int(part_path_repop_9) + int(part_path_repop_10) + int(part_path_repop_11);
 		repop_channels[8] = part_path_repop_8;
 		repop_channels[9] = part_path_repop_9;
@@ -1983,7 +1983,7 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	// pen paths positions
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 #if defined(var_Novak_flight_on)
-		if (ScenarioVarConfigurations[_Novak_flight_on][indConfiguration]
+		if (pg_ScenarioActiveVars[_Novak_flight_on][indConfiguration]
 			&& indPath > 0) {
 			paths_x_prev_memory[indPath] = paths_x_memory[indPath];
 			paths_x_memory[indPath] = cur_Novak_flight_2D_points[indPath].x;
@@ -2086,7 +2086,7 @@ void pg_update_shader_Update_uniforms(void) {
 
 	// pixels acceleration
 #if defined(var_part_initialization)
-	if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 		glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_current_configuration_rank],
 			(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
 			fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
@@ -2215,7 +2215,7 @@ void pg_update_shader_Update_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
 		flashTrkBG_weights[1], flashTrkBG_weights[2], flashTrkBG_weights[3], flashPartBG_weight);
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		// flash Trk -> CA weights
 		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
 			flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
@@ -2229,7 +2229,7 @@ void pg_update_shader_Update_uniforms(void) {
 		flashTrkBG_weights[1], flashTrkBG_weights[2], 0.f, flashPartBG_weight);
 	//printf("flashTrkBG_weights %.2f %.2f \n", flashTrkBG_weights[1], flashTrkBG_weights[2]);
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		// flash Trk -> CA weights
 		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
 			flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], 0.f);
@@ -2242,7 +2242,7 @@ void pg_update_shader_Update_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
 		flashTrkBG_weights[1], 0.f, 0.f, flashPartBG_weight);
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		// flash Trk -> CA weights
 		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
 			flashTrkCA_weights[0], flashTrkCA_weights[1], 0.f, 0.f);
@@ -2252,14 +2252,14 @@ void pg_update_shader_Update_uniforms(void) {
 #else
 #if PG_NB_TRACKS >= 1
 #if defined(var_part_initialization)
-	if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 		// flash Trk -> BG weights
 		glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
 			0.f, 0.f, 0.f, flashPartBG_weight);
 	}
 #endif
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		// flash Trk -> CA weights
 		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
 			flashTrkCA_weights[0], 0.f, 0.f, 0.f);
@@ -2298,9 +2298,9 @@ void pg_update_shader_Update_uniforms(void) {
 	}
 #endif
 #if defined(var_photoJitterAmpl) && defined(var_photo_offsetX) && defined(var_photo_offsetY) && defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-	if (ScenarioVarConfigurations[_photoJitterAmpl][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_photo_offsetX][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_photo_offsetY][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_photoJitterAmpl][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_photo_offsetX][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_photo_offsetY][pg_current_configuration_rank]) {
 		float angle = photoJitterAmpl * (pulse[0] - 0.5f) * float(M_PI);
 		float radius = photoJitterAmpl * (pulse[2] - 0.5f);
 		// offset for POT coordinates
@@ -2315,12 +2315,12 @@ void pg_update_shader_Update_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[pg_current_configuration_rank],
 		repop_ColorBG_r, repop_ColorBG_g, repop_ColorBG_b, flashCABG_weight);
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 #if !defined(var_alKemi)
 		glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_current_configuration_rank],
 			repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
 #else
-		if (ScenarioVarConfigurations[_alKemi][pg_current_configuration_rank] == false) {
+		if (pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank] == false) {
 			glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_current_configuration_rank],
 				repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
 		}
@@ -2333,7 +2333,7 @@ void pg_update_shader_Update_uniforms(void) {
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
 	// photo rendering
 #if defined(var_photo_diaporama)
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
 		if (photo_diaporama >= 0) {
 			glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_current_configuration_rank],
 				workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
@@ -2359,11 +2359,11 @@ void pg_update_shader_Update_uniforms(void) {
 #endif
 	// clip rendering
 #if defined(var_clip_mix)
-	if (ScenarioVarConfigurations[_clip_mix][pg_current_configuration_rank]
+	if (pg_ScenarioActiveVars[_clip_mix][pg_current_configuration_rank]
 		&& photo_diaporama < 0) {
 		// clip weights 
 #if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
-		if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
 			// 4 clips play
 			if ((playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank])
 				|| (playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips[pg_current_configuration_rank])
@@ -2428,7 +2428,7 @@ void pg_update_shader_Update_uniforms(void) {
 			}
 		}
 #else
-		if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
 			// 2 clips play
 			if ((playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank])
 				|| (playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips[pg_current_configuration_rank])) {
@@ -2456,7 +2456,7 @@ void pg_update_shader_Update_uniforms(void) {
 	//	*((float *)ScenarioVarPointers[_cameraWeight]), *((float *)ScenarioVarPointers[_movieWeight]));
 
 #if defined(var_cameraCaptFreq)
-	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
 		// camera texture offset 
 		glUniform4f(uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H[pg_current_configuration_rank],
 			(GLfloat)pg_camera_x_offset, (GLfloat)pg_camera_y_offset,
@@ -2466,7 +2466,7 @@ void pg_update_shader_Update_uniforms(void) {
 #endif
 
 #if defined(var_slow_track_translation)
-	if (ScenarioVarConfigurations[_slow_track_translation][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_slow_track_translation][pg_current_configuration_rank]) {
 		if (slow_track_translation) {
 			// track x & y translations
 			float translation_x[2] = { 0.f, 0.f };
@@ -2484,7 +2484,7 @@ void pg_update_shader_Update_uniforms(void) {
 		}
 	}
 #elif defined(var_Argenteuil_flash_move_track1_freq)
-	if (ScenarioVarConfigurations[_Argenteuil_flash_move_track1_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_Argenteuil_flash_move_track1_freq][pg_current_configuration_rank]) {
 		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
 			Argenteuil_track_x_transl_0, Argenteuil_track_y_transl_0, Argenteuil_track_x_transl_1, Argenteuil_track_y_transl_1);
 		Argenteuil_track_x_transl_0 = 0.f;
@@ -2498,7 +2498,7 @@ void pg_update_shader_Update_uniforms(void) {
 #endif
 
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		// acceleration center and CA subtype
 		// in case of interpolation between CA1 and CA2 
 		if (!BrokenInterpolationVar[_CA1_CA2_weight]) {
@@ -2527,7 +2527,7 @@ void pg_update_shader_Update_uniforms(void) {
 #endif
 
 #if defined(var_nb_CATypes) && defined(PG_WITH_BLUR)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
 			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 			(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
@@ -2540,7 +2540,7 @@ void pg_update_shader_Update_uniforms(void) {
 #endif
 	printOglError(51905);
 #if defined(var_nb_CATypes) && !defined(PG_WITH_BLUR)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
 			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 			0.f, 0.f);
@@ -2564,7 +2564,7 @@ void pg_update_shader_Update_uniforms(void) {
 	// printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 
 #if defined(var_clipCaptFreq)
-	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
 		glUniform3f(uniform_Update_fs_3fv_photo_rgb[pg_current_configuration_rank], pg_clip_status[_clipLeft].clip_r_channel_level[0],
 			pg_clip_status[_clipLeft].clip_g_channel_level[0],
 			pg_clip_status[_clipLeft].clip_b_channel_level[0]);
@@ -2576,7 +2576,7 @@ void pg_update_shader_Update_uniforms(void) {
 
 	// sets the time of the 1st plane launch 
 #if defined(var_GenerativeNights_planes)
-	if (ScenarioVarConfigurations[_GenerativeNights_planes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_GenerativeNights_planes][pg_current_configuration_rank]) {
 		if (CAInterpolatedType == CA_NEUMANN_BINARY && firstPlaneFrameNo < 0) {
 			// printf("First plane frame no %d\n", firstPlaneFrameNo);
 			firstPlaneFrameNo = pg_FrameNo - 2300;
@@ -2605,7 +2605,7 @@ void pg_update_shader_Update_uniforms(void) {
 // PARTICLE RENDERING SHADER UNIFORM VARIABLES
 void pg_update_shader_ParticleRender_uniforms(void) {
 #if defined(var_part_initialization)
-	if (!ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]
+	if (!pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
 		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]) {
 		return;
 	}
@@ -2673,10 +2673,10 @@ void pg_update_shader_Mixing_uniforms(void) {
 
 		// CA weight
 #if defined(var_flashPhotoTrkBeat)  && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-		if (ScenarioVarConfigurations[_flashPhotoTrkBeat][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_flashPhotoTrkBright][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_flashPhotoTrkLength][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_flashPhotoTrkBeat][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_flashPhotoTrkLength][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
 			glUniform3f(uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght[pg_current_configuration_rank],
 				(GLfloat)window_height, flashCameraTrk_weight, flashPhotoTrk_weight);
 		}
@@ -2731,14 +2731,14 @@ void pg_update_shader_Master_uniforms(void) {
 		// printf("mobile cursor %d\n", (mobile_cursor ? 1 : 0));
 		glUniform2i(uniform_Master_fs_2iv_mobile_cursor_currentScene[pg_current_configuration_rank], (mobile_cursor ? 1 : 0), pg_CurrentSceneIndex);
 #if defined(var_Caverne_BackColor)
-		if (ScenarioVarConfigurations[_Caverne_BackColor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_Caverne_BackColor][pg_current_configuration_rank]) {
 			// high bandpass color
 			glUniform3f(uniform_Master_fs_3fv_Caverne_BackColor_rgb[pg_current_configuration_rank],
 				Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
 		}
 #endif
 #if defined(var_flashchange_BGcolor_freq)
-		if (ScenarioVarConfigurations[_flashchange_BGcolor_freq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_flashchange_BGcolor_freq][pg_current_configuration_rank]) {
 			glUniform3f(uniform_Master_fs_3fv_BG_color_rgb[pg_current_configuration_rank],
 				BG_r, BG_g, BG_b);
 		}
@@ -2767,7 +2767,7 @@ void pg_update_shader_Master_uniforms(void) {
 // MASTER SHADER UNIFORM VARIABLES
 void pg_update_shader_Mesh_uniforms(void) {
 #if defined(var_activeMeshes)
-	if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank]) {
 		if (pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
 			/////////////////////////////////////////////////////////////////////////
 			// MESH SHADER UNIFORM VARIABLES
@@ -2775,20 +2775,20 @@ void pg_update_shader_Mesh_uniforms(void) {
 			// the variable of the mesh shader is updated before each rendering mode (lines of facets)
 			glUniform3f(uniform_Mesh_fs_3fv_light[pg_current_configuration_rank], mesh_light_x, mesh_light_y, mesh_light_z);
 #if defined(var_Contact_mesh_expand)
-			if (ScenarioVarConfigurations[_Contact_mesh_expand][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_Contact_mesh_expand][pg_current_configuration_rank]) {
 				glUniform2f(uniform_Mesh_vp_2fv_dilate_explode[pg_current_configuration_rank], Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
 			}
 			//printf("mesh %.2f %.2f\n", Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
 #endif
 #if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
-			if (ScenarioVarConfigurations[_textureFrontier_wmin][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_textureFrontier_wmin][pg_current_configuration_rank]) {
 				glUniform4f(uniform_Mesh_fs_4fv_textureFrontier[pg_current_configuration_rank], textureFrontier_wmin, textureFrontier_wmax, textureFrontier_hmin, textureFrontier_hmax);
 				glUniform4f(uniform_Mesh_fs_4fv_textureFrontier_width[pg_current_configuration_rank], textureFrontier_wmin_width, textureFrontier_wmax_width, textureFrontier_hmin_width, textureFrontier_hmax_width);
 				glUniform4f(uniform_Mesh_fs_4fv_textureScaleTransl[pg_current_configuration_rank], textureScale_w, textureScale_h, textureTranslate_w, textureTranslate_h);
 			}
 #endif
 #if defined(var_Contact_mesh_palette)
-			if (ScenarioVarConfigurations[_Contact_mesh_palette][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_Contact_mesh_palette][pg_current_configuration_rank]) {
 				float pulsed_color[3];
 				compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, _PG_PEN);
 				glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_current_configuration_rank], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(Contact_mesh_palette));
@@ -2811,7 +2811,7 @@ void pg_update_shader_Mesh_uniforms(void) {
 
 void pg_ParticleAnimationPass(void) {
 #if defined(var_part_initialization)
-	if (!ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]
+	if (!pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
 		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]) {
 		return;
 	}
@@ -2838,7 +2838,7 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad[pg_current_configuration_rank], pg_Part_init_col_rad_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_acc[pg_current_configuration_rank], pg_Part_image_acc_ParticleAnimation_sampler);
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glUniform1i(uniform_ParticleAnimation_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_ParticleAnimation_sampler);
 	}
 #endif
@@ -2910,7 +2910,7 @@ void pg_ParticleAnimationPass(void) {
 #if defined(var_nb_CATypes)
 	// 2-cycle ping-pong CA step n step n (FBO attachment 0)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_ParticleAnimation_sampler);
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -2937,7 +2937,7 @@ void pg_ParticleAnimationPass(void) {
 #if defined(var_Part_repop_density)
 	// noise texture (noise is also generated procedurally in the update shader)
 	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_ParticleAnimation_sampler);
-	if (ScenarioVarConfigurations[_Part_repop_density][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_Part_repop_density][pg_current_configuration_rank]) {
 		if (Part_repop_density >= 0
 			&& int(Part_repop_density) < int(pg_RepopDensity_texture_texID[pg_current_configuration_rank].size())) {
 			glBindTexture(GL_TEXTURE_RECTANGLE, pg_RepopDensity_texture_texID[pg_current_configuration_rank].at(Part_repop_density));
@@ -2958,7 +2958,7 @@ void pg_ParticleAnimationPass(void) {
 	// current camera texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_frame_ParticleAnimation_sampler);
 #if defined(var_cameraCaptFreq)
-	if (ScenarioVarConfigurations[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_texture_texID);
 	}
 	else {
@@ -3065,7 +3065,7 @@ void pg_UpdatePass(void) {
 	////////////////////////////////////////////////////////
 	// texture unit location
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Update_sampler);
 		glUniform1i(uniform_Update_texture_fs_PreviousCA[pg_current_configuration_rank], pg_PreviousCA_FBO_Update_sampler);
 	}
@@ -3077,24 +3077,24 @@ void pg_UpdatePass(void) {
 	glUniform1i(uniform_Update_texture_fs_Movie_frame[pg_current_configuration_rank], pg_Movie_frame_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Noise[pg_current_configuration_rank], pg_Noise_Update_sampler);
 #if defined(var_BG_CA_repop_density)
-	if (ScenarioVarConfigurations[_BG_CA_repop_density][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_BG_CA_repop_density][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_RepopDensity[pg_current_configuration_rank], pg_RepopDensity_Update_sampler);
 	}
 #endif
 #if defined(var_photo_diaporama)
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_Photo0[pg_current_configuration_rank], pg_Photo0_Update_sampler);
 		glUniform1i(uniform_Update_texture_fs_Photo1[pg_current_configuration_rank], pg_Photo1_Update_sampler);
 	}
 #endif
 #if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
-	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_Clip0[pg_current_configuration_rank], pg_SecondClipLeft_Update_sampler);
 		glUniform1i(uniform_Update_texture_fs_Clip1[pg_current_configuration_rank], pg_SecondClipRight_Update_sampler);
 	}
 #endif
 #if defined(var_part_initialization) 
-	if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_Part_render[pg_current_configuration_rank], pg_Particle_render_FBO_Update_sampler);
 	}
 #endif
@@ -3104,17 +3104,17 @@ void pg_UpdatePass(void) {
 	glUniform1i(uniform_Update_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Update_sampler);
 #if defined(var_CATable)
-	if (ScenarioVarConfigurations[_CATable][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_CATable][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_CATable[pg_current_configuration_rank], pg_CATable_Update_sampler);
 	}
 #endif
 #if defined(var_camera_BG_subtr)
-	if (ScenarioVarConfigurations[_camera_BG_subtr][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_camera_BG_subtr][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_Camera_BGIni[pg_current_configuration_rank], pg_Camera_BGIni_FBO_Update_sampler);
 	}
 #endif
 #if defined(var_pixel_image_acceleration)
-	if (ScenarioVarConfigurations[_pixel_image_acceleration][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_pixel_image_acceleration][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Update_texture_fs_pixel_acc[pg_current_configuration_rank], pg_pixel_image_acc_Update_sampler);
 	}
 #endif
@@ -3129,7 +3129,7 @@ void pg_UpdatePass(void) {
 #if defined(var_nb_CATypes)
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Update_sampler);
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -3137,7 +3137,7 @@ void pg_UpdatePass(void) {
 	}
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- previous Frame
 	glActiveTexture(GL_TEXTURE0 + pg_PreviousCA_FBO_Update_sampler);
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 		//printf("pg_FBO_Update_texID\n");
 	} else {
@@ -3186,7 +3186,7 @@ void pg_UpdatePass(void) {
 #if defined(var_BG_CA_repop_density)
 	// repop density texture
 	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_Update_sampler);
-	if (ScenarioVarConfigurations[_BG_CA_repop_density][pg_current_configuration_rank]
+	if (pg_ScenarioActiveVars[_BG_CA_repop_density][pg_current_configuration_rank]
 		&& BG_CA_repop_density >= 0
 		&& unsigned int(BG_CA_repop_density) < int(pg_RepopDensity_texture_texID[pg_current_configuration_rank].size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_RepopDensity_texture_texID[pg_current_configuration_rank].at(BG_CA_repop_density));
@@ -3200,8 +3200,8 @@ void pg_UpdatePass(void) {
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_Update_sampler);
 #if defined(var_clipCaptFreq)
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
+	if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
 		&& playing_clipNoLeft >= 0
 		&& playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoLeft]
@@ -3213,7 +3213,7 @@ void pg_UpdatePass(void) {
 	}
 	else 
 #endif
-		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]
 			&& photo_diaporama >= 0
 			&& photo_diaporama < int(pg_compressedImageData[pg_current_configuration_rank].size())
 			&& pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size() > 0
@@ -3231,8 +3231,8 @@ void pg_UpdatePass(void) {
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_Update_sampler);
 #if defined(var_clipCaptFreq)
-	if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
-		&& ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
+	if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]
+		&& pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
 		&& playing_clipNoRight >= 0
 		&& playing_clipNoRight < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoRight]
@@ -3244,7 +3244,7 @@ void pg_UpdatePass(void) {
 	}
 	else
 #endif
-		if (ScenarioVarConfigurations[_photo_diaporama][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]
 			&& photo_diaporama >= 0
 			&& photo_diaporama < int(pg_compressedImageData[pg_current_configuration_rank].size())
 			&& pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size() > 0
@@ -3262,7 +3262,7 @@ void pg_UpdatePass(void) {
 	// clip[0] texture
 	// second clips on left and right
 	glActiveTexture(GL_TEXTURE0 + pg_SecondClipLeft_Update_sampler);
-	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
+	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
 		&& playing_secondClipNoLeft >= 0
 		&& playing_secondClipNoLeft < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_secondClipNoLeft]
@@ -3278,7 +3278,7 @@ void pg_UpdatePass(void) {
 
 	// clip[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_SecondClipRight_Update_sampler);
-	if (ScenarioVarConfigurations[_clipCaptFreq][pg_current_configuration_rank]
+	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
 		&& playing_secondClipNoRight >= 0
 		&& playing_secondClipNoRight < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_secondClipNoRight]
@@ -3296,7 +3296,7 @@ void pg_UpdatePass(void) {
 #if defined(var_part_initialization) 
 	// FBO capture of particle rendering used for flashing layers with particles
 	glActiveTexture(GL_TEXTURE0 + pg_Particle_render_FBO_Update_sampler);
-	if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
 	}
 	else {
@@ -3329,7 +3329,7 @@ void pg_UpdatePass(void) {
 #if defined(var_CATable)
 	// CA Data table (FBO attachment 11)
 	glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
-	if (ScenarioVarConfigurations[_CATable][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_CATable][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
 	}
 	else {
@@ -3340,7 +3340,7 @@ void pg_UpdatePass(void) {
 #if defined(var_camera_BG_subtr)
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BGIni_FBO_Update_sampler);
-	if (ScenarioVarConfigurations[_camera_BG_subtr][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_camera_BG_subtr][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_camera_BGIni_texture_texID);
 	}
 	else {
@@ -3353,7 +3353,7 @@ void pg_UpdatePass(void) {
 	//printf("pixel image acceleration (image based acceleration) %d size %d\n", pixel_image_acceleration, pg_pixel_acc_texID.size());
 	glActiveTexture(GL_TEXTURE0 + pg_pixel_image_acc_Update_sampler);
 	// acceleration is taken from photo 
-	if (ScenarioVarConfigurations[_pixel_image_acceleration][pg_current_configuration_rank] 
+	if (pg_ScenarioActiveVars[_pixel_image_acceleration][pg_current_configuration_rank] 
 		&& pixel_image_acceleration >= 0
 		&& pixel_image_acceleration < int(pg_pixel_acc_texID[pg_current_configuration_rank].size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_pixel_acc_texID[pg_current_configuration_rank].at(pixel_image_acceleration)); // color RGB - rad 
@@ -3383,7 +3383,7 @@ void pg_UpdatePass(void) {
 // PASS #2: TEXT, ClipArt CLIP ART RENDERING PASS
 void pg_ClipArtRenderingPass(void) {
 #if defined(var_activeClipArts)
-	if (!ScenarioVarConfigurations[_activeClipArts][pg_current_configuration_rank]
+	if (!pg_ScenarioActiveVars[_activeClipArts][pg_current_configuration_rank]
 		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ClipArt]) {
 		return;
 	}
@@ -3430,7 +3430,7 @@ void pg_ClipArtRenderingPass(void) {
 // PASS #3: PARTICLE RENDERING PASS
 void pg_ParticleRenderingPass(void) {
 #if defined(var_part_initialization)
-	if (!ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]
+	if (!pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
 		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]) {
 		return;
 	}
@@ -3502,7 +3502,7 @@ void pg_ParticleRenderingPass(void) {
 	// blurred disk texture
 	glActiveTexture(GL_TEXTURE0 + 2);
 #if defined(var_partSplat_texture)
-	if (ScenarioVarConfigurations[_partSplat_texture][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_partSplat_texture][pg_current_configuration_rank]) {
 		if (partSplat_texture >= 0 
 			&& partSplat_texture < int(blurredDisk_texture_2D_texID[pg_current_configuration_rank].size())) {
 			glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture));
@@ -3606,7 +3606,7 @@ void pg_MixingPass(void) {
 
 	// texture unit location
 #if defined(var_nb_CATypes)
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Mixing_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Mixing_sampler);
 	}
 #endif
@@ -3632,7 +3632,7 @@ void pg_MixingPass(void) {
 #if defined(var_nb_CATypes)
 	// 2-cycle ping-pong CA step n + 1 (FBO attachment 0) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Mixing_sampler);
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -3716,7 +3716,7 @@ void pg_MasterPass(void) {
 	}
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-	if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 		if (pg_FrameNo > 0) {
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
 		}
@@ -3731,7 +3731,7 @@ void pg_MasterPass(void) {
 
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-	if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 		// TO BE CHECKED
 		// glDrawBuffer(GL_BACK);
 	}
@@ -3755,7 +3755,7 @@ void pg_MasterPass(void) {
 #if defined(var_nb_CATypes)
 	// texture unit locations
 	glUniform1i(uniform_Master_texture_fs_Render_curr[pg_current_configuration_rank], pg_Render_curr_FBO_Master_sampler);
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glUniform1i(uniform_Master_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Master_sampler);
 	}
 	else {
@@ -3786,7 +3786,7 @@ void pg_MasterPass(void) {
 #if defined(var_nb_CATypes)
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
-	if (ScenarioVarConfigurations[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -3797,7 +3797,7 @@ void pg_MasterPass(void) {
 #if defined(var_activeClipArts)
 	// ClipArt GPU step n 
 	glActiveTexture(GL_TEXTURE0 + pg_ClipArt_render_FBO_Master_sampler);
-	if (ScenarioVarConfigurations[_activeClipArts][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_activeClipArts][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ClipArt_render_texID);
 	}
 	else {
@@ -3807,7 +3807,7 @@ void pg_MasterPass(void) {
 #if defined(var_part_initialization)
 	// Particles step n 
 	glActiveTexture(GL_TEXTURE0 + pg_Particle_render_FBO_Master_sampler);
-	if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
 	}
 	else {
@@ -4288,7 +4288,7 @@ void pg_drawOneMesh(int indMeshFile) {
 #endif
 
 #if defined(var_Contact_mesh_anime)
-		if (ScenarioVarConfigurations[_Contact_mesh_anime][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_Contact_mesh_anime][pg_current_configuration_rank]) {
 			glm::f32* valMats = new glm::f32[16 * pg_nb_bones[indMeshFile]];
 			for (int indBone = 0; indBone < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nb_bones; indBone++) {
 				memcpy(&valMats[16 * indBone],
@@ -4311,13 +4311,13 @@ void pg_drawOneMesh(int indMeshFile) {
 		glm::vec3 myRotationAxis(pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_X,
 			pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Y, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_Z);
 #if defined(var_Contact_mesh_rotation)
-		if (ScenarioVarConfigurations[_Contact_mesh_rotation][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_Contact_mesh_rotation][pg_current_configuration_rank]) {
 			MeshPosModelMatrix = glm::translate(MeshPosModelMatrix, glm::vec3(0.f, -15.f, 0.f));
 		}
 #endif
 		MeshPosModelMatrix = glm::rotate(MeshPosModelMatrix, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_Mesh_Rotation_angle, myRotationAxis);
 #if defined(var_Contact_mesh_rotation)
-		if (ScenarioVarConfigurations[_Contact_mesh_rotation][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_Contact_mesh_rotation][pg_current_configuration_rank]) {
 			MeshPosModelMatrix = glm::translate(MeshPosModelMatrix, glm::vec3(0.f, 15.f, 0.f));
 		}
 #endif
@@ -4339,7 +4339,7 @@ void pg_drawOneMesh(int indMeshFile) {
 			glm::value_ptr(MeshPosModelMatrix));
 
 #if defined(var_MmeShanghai_brokenGlass)
-		if (ScenarioVarConfigurations[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
 			if (indMeshFile == 0 /* wall (broken glass on the right panel) */) {
 				glUniform4f(uniform_Mesh_fs_4fv_color[pg_current_configuration_rank], 0, 0, 0, 1.0f);
 				glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg[pg_current_configuration_rank], 0, 0, 1.f, MS_BLACK);
@@ -4362,7 +4362,7 @@ void pg_drawOneMesh(int indMeshFile) {
 		for (int indObjectInMesh = 0; indObjectInMesh < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbObjectsPerMeshFile; indObjectInMesh++) {
 			bool visibleObject = true;
 #if defined(var_MmeShanghai_brokenGlass)
-			if (ScenarioVarConfigurations[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
 				if (indMeshFile == 0) {
 					if (MmeShanghai_brokenGlass > 0 && MmeShanghai_brokenGlass <= pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts) {
 						visibleObject = pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_MeshSubParts[MmeShanghai_brokenGlass - 1][indObjectInMesh];
@@ -4446,7 +4446,7 @@ void pg_drawOneMesh(int indMeshFile) {
 					// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-					if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+					if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 						glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
 					}
 					else {
@@ -4458,7 +4458,7 @@ void pg_drawOneMesh(int indMeshFile) {
 				}
 
 #if defined(var_MmeShanghai_brokenGlass)
-				if (ScenarioVarConfigurations[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_MmeShanghai_brokenGlass][pg_current_configuration_rank]) {
 					// second texture is the BG rendering
 					glUniform1i(uniform_Mesh_texture_fs_BG[pg_current_configuration_rank], 1);
 					glActiveTexture(GL_TEXTURE0 + 1);
@@ -4479,7 +4479,7 @@ void pg_drawOneMesh(int indMeshFile) {
 				printOglError(698);
 
 #if defined(var_with_edges)
-				if (ScenarioVarConfigurations[_with_edges][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_with_edges][pg_current_configuration_rank]) {
 					// draws the polygon contours
 					// updates this variable according whether triangles or lines are shown
 					if (with_edges == 1
@@ -4499,7 +4499,7 @@ void pg_drawOneMesh(int indMeshFile) {
 #endif
 				// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-				if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 					// optional additional drawing of the polygon contours for checking calibration in augmented reality
 					if (with_mesh) {
 						// no z-Buffer
@@ -4578,7 +4578,7 @@ void pg_drawOneMesh2(int indMeshFile) {
 				// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
 				// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-				if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
 				}
 #endif
@@ -4598,7 +4598,7 @@ void pg_drawOneMesh2(int indMeshFile) {
 			// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) && defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 					// optional additional drawing of the polygon contours for checking calibration in augmented reality
-			if (ScenarioVarConfigurations[_textureFrontier_wmin][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_textureFrontier_wmin][pg_current_configuration_rank]) {
 				if (with_mesh) {
 					// no z-Buffer
 					glDisable(GL_DEPTH_TEST);
@@ -4633,7 +4633,7 @@ void pg_MeshPass(void) {
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
 	if (!directRenderingwithoutMeshScreen1) {
-		if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 
 			// draws the meshes alone
 			// unbind output FBO 
@@ -4647,7 +4647,7 @@ void pg_MeshPass(void) {
 		}
 #else
 #if defined(var_activeClipArts)
-		if (ScenarioVarConfigurations[_activeClipArts][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_activeClipArts][pg_current_configuration_rank]) {
 			// draws the meshes on top of particles
 			if (pg_FrameNo > 0) {
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ClipArtRendering);
@@ -4655,7 +4655,7 @@ void pg_MeshPass(void) {
 		}
 #endif
 #if defined(var_part_initialization)
-		if (ScenarioVarConfigurations[_part_initialization][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
 			// draws the meshes on top of particles
 			if (pg_FrameNo > 0) {
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
@@ -5044,7 +5044,7 @@ void pg_draw_scene(DrawingMode mode) {
 		// the meshes are displayed together with the particles except for augmented reality
 		// where they are displayed last
 #if defined(var_activeMeshes) && !defined(var_directRenderingwithoutMeshScreen1)
-		if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank]) {
 			if (activeMeshes > 0) {
 				pg_MeshPass();
 			}
@@ -5064,7 +5064,7 @@ void pg_draw_scene(DrawingMode mode) {
 		//////////////////////////////////////
 		// additional sensor pass on top of final rendering
 #if defined(var_sensor_layout)
-		if (ScenarioVarConfigurations[_sensor_layout][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
 			bool oneSensorActiveMin = false;
 			for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 				int reindexed_Sensor = Sensor_order[indSens];
@@ -5113,7 +5113,7 @@ void pg_draw_scene(DrawingMode mode) {
 		// for augmented reality
 		// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-		if (ScenarioVarConfigurations[_activeMeshes][pg_current_configuration_rank] && ScenarioVarConfigurations[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_activeMeshes][pg_current_configuration_rank] && pg_ScenarioActiveVars[_directRenderingwithoutMeshScreen1][pg_current_configuration_rank]) {
 			if (activeMeshes > 0) {
 				pg_MeshPass();
 			}

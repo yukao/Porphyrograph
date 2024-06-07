@@ -1,9 +1,9 @@
-RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
-VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,camera ID,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name
-TYPE,bool,bool,int,int,int,int,float,float,float,int,int,bool,bool,int,int,int,int,int,int,const,const,string
-ID,double_window,wide_screen,window_width,window_height,window_x,window_y,minimal_interframe_latency,time_scale,initial_time,camID,message_pixel_length,trace_output_frame_number,trace_time,first_frame_number,last_frame_number,max_mouse_recording_frames,max_network_message_length,nb_particles,nb_CATypes,PG_NB_TRACKS,PG_NB_PATHS,project_name
+RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
+VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,camera ID,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs
+TYPE,bool,bool,int,int,int,int,float,float,float,int,int,bool,bool,int,int,int,int,int,int,const,const,string,const
+ID,double_window,wide_screen,window_width,window_height,window_x,window_y,minimal_interframe_latency,time_scale,initial_time,camID,message_pixel_length,trace_output_frame_number,trace_time,first_frame_number,last_frame_number,max_mouse_recording_frames,max_network_message_length,nb_particles,nb_CATypes,PG_NB_TRACKS,PG_NB_PATHS,project_name,PG_MAX_CONFIGURATIONS
 initial_values,,,,,,,,,,,,,,,,,,,,,,
-,0,0,1920,1080,0,0,0.01,1,0,0,128,0,0,0,4000000,16384,65535,100000,7,4,11,Ada
+,0,0,1920,1080,0,0,0.01,1,0,0,128,0,0,0,4000000,16384,65535,100000,7,4,12,Ada,10
 /initial_values,,,,,,,,,,,,,,,,,,,,,,
 rendering_files,,,,,,,,,,,,,,,,,,,,,,
 TYPE,int,int,int,string,string,,,,,,,,,,,,,,,,,

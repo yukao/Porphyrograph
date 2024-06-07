@@ -384,11 +384,8 @@ using std::ifstream;
 #include "pg_script_header_CAaudio.h"
 #endif
 
-// #include "./pg_scripts/pg_script_header.h"
-
 #include "pg-init.h"
 #include "pg-udp.h"
-//#include "pg-USB.h"
 #if defined(var_activeMeshes)
 #include "pg-mesh.h"
 #endif
@@ -398,9 +395,7 @@ using std::ifstream;
 
 #include "pg-shader.h"
 #include "pg-stroke.h"
-#if defined(var_activeClipArts)
 #include "pg-clip-art.h"
-#endif
 #include "pg-main.h"
 #include "pg-conf.h"
 

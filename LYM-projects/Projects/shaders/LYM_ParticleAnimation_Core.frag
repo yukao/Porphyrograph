@@ -16,7 +16,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 ////////////////////////////////////////////////////////////////////
 #define PG_WITH_CAMERA_CAPTURE
 #define PG_NB_TRACKS 4
-#define PG_NB_PATHS 11
+#define PG_NB_PATHS 12
 
 #define PG_PATH_ANIM_POS              0
 #define PG_PATH_ANIM_RAD              1
@@ -160,7 +160,7 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // passed by the C program
-uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_PATHS + 1)];
+uniform vec4 uniform_ParticleAnimation_path_data[PG_MAX_PATH_ANIM_DATA * (PG_NB_PATHS)];
 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo; // 
 uniform vec4 uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo; // 
@@ -595,89 +595,30 @@ void particle_out( void ) {
   // OR THE TARGET CAN BE INDIVIDUAL (EG AN INDIVIDUAL LOCATION ON A SCREEN GRID)
   // THE TIME TO REACH THE TARGET IS COUNTED DOWN
 
-  ///////////////////////////////////////////////////////////////////
-  // builds a path_follow or repulse vector so that it can be used in the for loop
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  bvec4 path_follow03 = bvec4(part_path_follow_0,part_path_follow_1,part_path_follow_2,part_path_follow_3);
-  bvec4 path_repulse03 = bvec4(part_path_repulse_0,part_path_repulse_1,part_path_repulse_2,part_path_repulse_3);
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  bvec4 path_follow47 = bvec4(part_path_follow_4,part_path_follow_5,part_path_follow_6,part_path_follow_7);
-  bvec4 path_repulse47 = bvec4(part_path_repulse_4,part_path_repulse_5,part_path_repulse_6,part_path_repulse_7);
-#endif
-#if PG_NB_PATHS == 11
-  bvec4 path_follow811 = bvec4(part_path_follow_8,part_path_follow_9,part_path_follow_10,part_path_follow_11);
-  bvec4 path_repulse811 = bvec4(part_path_repulse_8,part_path_repulse_9,part_path_repulse_10,part_path_repulse_11);
-#endif
-
   dvec2 part_acceleration = dvec2(0);
   double dist_to_target = 1000;
 
   ///////////////////////////////////////////////////////////////////
   // PARTICLE: PATH FOLLOW OR REPULSE
-  for( int indPath = 0 ; indPath <= PG_NB_PATHS ; indPath++ ) {
+  for( int indPath = 0 ; indPath < PG_NB_PATHS ; indPath++ ) {
     vec4 pen_pos_prev_cur 
       = uniform_ParticleAnimation_path_data[indPath * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
     dvec2 curPos = dvec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w );
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-    if( indPath < 4 && path_follow03[indPath] ) {
+    if(path_follow[indPath]) {
       // reaches for pen position
-      part_acceleration 
-        = dvec2(curPos - out_position_speed_particle.xy);
+      part_acceleration = dvec2(curPos - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+      break;
     }
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-    else if( indPath >= 4 && path_follow47[indPath - 4] ) {
-      // reaches for pen position
-      part_acceleration 
-        = dvec2(curPos - out_position_speed_particle.xy);
-      dist_to_target = length(part_acceleration);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
-   }
-#endif
-#if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_follow811[indPath - 8] ) {
-      // reaches for pen position
-      part_acceleration 
-        = dvec2(curPos - out_position_speed_particle.xy);
-      dist_to_target = length(part_acceleration);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
-   }
-#endif
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-    if( indPath < 4 && path_repulse03[indPath] ) {
+    else if(path_repulse[indPath]) {
       // escapes from pen position
-      part_acceleration 
-        = dvec2(out_position_speed_particle.xy - curPos);
+      part_acceleration = dvec2(out_position_speed_particle.xy - curPos);
       // adds some field disturbance
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
+      break;
     }
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-    else if( indPath >= 4 && path_repulse47[indPath - 4] ) {
-      // reaches for pen position
-      // escapes from pen position
-      part_acceleration 
-        = dvec2(out_position_speed_particle.xy - curPos);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
-    }
-#endif
-#if PG_NB_PATHS == 11
-    else if( indPath >= 8 && path_repulse811[indPath - 8] ) {
-      // reaches for pen position
-      // escapes from pen position
-      part_acceleration 
-        = dvec2(out_position_speed_particle.xy - curPos);
-      // adds some field disturbance
-      part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
-    }
-#endif
   }
 
   ///////////////////////////////////////////////////////////////////

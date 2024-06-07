@@ -9,10 +9,12 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 4
 
+#define var_echo
+float	 echo;
+#define var_echoNeg
+float	 echoNeg;
 #define var_CAMixingWeight
 float	 CAMixingWeight;
-#define var_ClipArtMixingWeight
-float	 ClipArtMixingWeight;
 #define var_PartMixingWeight
 float	 PartMixingWeight;
 #define var_trackMixingWeight_0
@@ -23,11 +25,7 @@ float	 trackMixingWeight_1;
 float	 trackMixingWeight_2;
 #define var_trackMixingWeight_3
 float	 trackMixingWeight_3;
-#define var_echo
-float	 echo;
-#define var_echoNeg
-float	 echoNeg;
-uniform float uniform_Mixing_scenario_var_data[9];
+uniform float uniform_Mixing_scenario_var_data[8];
 
 // Main shader.
 
@@ -73,15 +71,14 @@ layout (binding = 9) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  CAMixingWeight = uniform_Mixing_scenario_var_data[0];
-  ClipArtMixingWeight = uniform_Mixing_scenario_var_data[1];
-  PartMixingWeight = uniform_Mixing_scenario_var_data[2];
-  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[3];
-  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[4];
-  trackMixingWeight_2 = uniform_Mixing_scenario_var_data[5];
-  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[6];
-  echo = uniform_Mixing_scenario_var_data[7];
-  echoNeg = uniform_Mixing_scenario_var_data[8];
+  echo = uniform_Mixing_scenario_var_data[0];
+  echoNeg = uniform_Mixing_scenario_var_data[1];
+  CAMixingWeight = uniform_Mixing_scenario_var_data[2];
+  PartMixingWeight = uniform_Mixing_scenario_var_data[3];
+  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[4];
+  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[5];
+  trackMixingWeight_2 = uniform_Mixing_scenario_var_data[6];
+  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[7];
 
   float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 

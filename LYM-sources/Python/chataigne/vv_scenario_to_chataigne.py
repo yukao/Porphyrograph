@@ -99,10 +99,25 @@ def main(main_args) :
 
 	# print( 'Input scenario file is ', scenario_file_name)
 
+	# in scenario file
 	try:
 		FILEin = open(scenario_file_name, "rt")
 	except IOError:
 			print("File not found :", scenario_file_name, " or path is incorrect")
+	# counts the scene number
+	readCSV = csv.reader(FILEin, delimiter=',')
+	line = next(readCSV) 
+	nb_scenes = 0
+	while (True) :
+		if(line[0] == "scene") :
+			nb_scenes += 1
+		elif(line[0] == "/scenario") :
+			break
+	print( "nb scenes ", nb_scenes)
+	# restarts from beginning
+	FILEin.seek(0)
+
+	# out chataigne file
 	try:
 		FILEout = open(lilnut_file_name, "wt")
 	except IOError:
@@ -191,8 +206,7 @@ def main(main_args) :
 		print("incorrect number of var initial", indVar, "vs nb of vars", nb_vars)
 		sys.exit(0)
 	
-	nb_scenes = to_num(values_line[1])
-	# print( "nb scenes ", nb_scenes)
+	# nb_scenes = to_num(values_line[1])
 
 	outout_string = f'''{{
   "modules": [

@@ -26,6 +26,14 @@ PG_merge_scenarios_standardForm_Projects-v1.py: A program for merging different 
 
 '''
 
+shop_MainCategory_arrayvariable_full_scenario_header_IDs
+variable_full_scenario_verbatims
+shop_MainCategory_arrayvariable_full_scenario_types
+shop_MainCategory_arrayvariable_full_scenario_callBacks
+shop_MainCategory_arrayvariable_full_scenario_shaders
+shop_MainCategory_arrayvariable_full_scenario_pulses
+shop_MainCategory_arrayvariable_full_scenario_initial_values
+
 def expect_tag(line_scenario, tag_string) :
 		if(line_scenario[0] != tag_string) :
 			print(tag_string, "first column string expected not [",line_scenario[0],"]!")
@@ -94,9 +102,6 @@ def read_scenario_header(scenarioCSV) :
 	lineScenario = next(scenarioCSV)
 	expect_tag(lineScenario, "scenario")
 
-	nb_scenes = lineScenario[1]
-	print("scenes:", nb_scenes)
-
 	return [loc_variable_IDs, loc_variable_verbatims, loc_variable_types, loc_variable_callBacks, loc_variable_shaders, loc_variable_pulses, loc_variable_initial_values]
 
 
@@ -105,6 +110,13 @@ def read_scenario_header(scenarioCSV) :
 ##################################################################
 def main(main_args) :
 	global full_trace
+	global variable_full_scenario_header_IDs
+	global variable_full_scenario_verbatims
+	global variable_full_scenario_types
+	global variable_full_scenario_callBacks
+	global variable_full_scenario_shaders
+	global variable_full_scenario_pulses
+	global variable_full_scenario_initial_values
 
 	##################################################################
 	# ARGUMENTS

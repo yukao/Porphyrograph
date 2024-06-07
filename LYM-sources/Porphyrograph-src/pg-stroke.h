@@ -86,9 +86,9 @@ public:
 		path_ID = "";
 	}
 };
-extern vector<SVG_scenarioPathCurve*> SVG_scenarioPathCurves[_NbConfigurations];
+extern vector<SVG_scenarioPathCurve*> SVG_scenarioPathCurves[PG_MAX_CONFIGURATIONS];
 extern int pg_current_SVG_path_group;
-extern int pg_nb_SVG_path_groups[_NbConfigurations];
+extern int pg_nb_SVG_path_groups[PG_MAX_CONFIGURATIONS];
 
 /// mouse recording tracks management
 //extern float **pg_Path_Pos_x_prev;
@@ -268,9 +268,9 @@ public:
 	int pathNo;
 
 	// curves associated with each path
-	int path_currentPathCurve[_NbConfigurations];
+	int path_currentPathCurve[PG_MAX_CONFIGURATIONS];
 	// the curves and their data: each path can have several curves
-	vector<PathCurve_Data> path_PathCurve_Data[_NbConfigurations];
+	vector<PathCurve_Data> path_PathCurve_Data[PG_MAX_CONFIGURATIONS];
 	// time stamps temporary storage afer reading them from the time stamp list and before inserting them into frames
 	vector<double> path_TmpTimeStamps;
 
@@ -287,7 +287,7 @@ public:
 		path_indPreviousReading = 0;
 		pathNo = indPath;
 
-		for (int indConfiguration = 0; indConfiguration < _NbConfigurations; indConfiguration++) {
+		for (int indConfiguration = 0; indConfiguration < PG_MAX_CONFIGURATIONS; indConfiguration++) {
 			// path_nb_pathCurves[indConfiguration] = 0;
 			path_currentPathCurve[indConfiguration] = 0;
 		}
@@ -664,8 +664,8 @@ public:
 	~Path_Status() {
 	}
 };
-// extern struct PathCurve_Data* pg_PathCurve_Params[_NbConfigurations];
-// extern struct PathCurveFrame** pg_PathCurveFrame_Data[_NbConfigurations];
+// extern struct PathCurve_Data* pg_PathCurve_Params[PG_MAX_CONFIGURATIONS];
+// extern struct PathCurveFrame** pg_PathCurveFrame_Data[PG_MAX_CONFIGURATIONS];
 extern Path_Status* pg_Path_Status;
 
 #ifdef PG_BEZIER_PATHS

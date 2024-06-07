@@ -51,8 +51,8 @@
 //float **pg_Path_TimeStamp = NULL;
 
 // SVG paths from scenario
-vector<SVG_scenarioPathCurve*>	 SVG_scenarioPathCurves[_NbConfigurations];
-int						 pg_nb_SVG_path_groups[_NbConfigurations] = { 0 };
+vector<SVG_scenarioPathCurve*>	 SVG_scenarioPathCurves[PG_MAX_CONFIGURATIONS];
+int						 pg_nb_SVG_path_groups[PG_MAX_CONFIGURATIONS] = { 0 };
 int						 pg_current_SVG_path_group = 1;
 
 Path_Status* pg_Path_Status = NULL;
@@ -1379,7 +1379,7 @@ void stroke_geometry_calculation(int pathNo, int curr_position_x, int curr_posit
 
 	// random angle for cristal effect used in PIERRES
 #if defined(var_pen_angle_pulse)
-	if (ScenarioVarConfigurations[_pen_angle_pulse][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_pen_angle_pulse][pg_current_configuration_rank]) {
 		if (pen_angle_pulse > 0) {
 			paths_x_prev[pathNo] += rand_0_1 * pen_angle_pulse * 10;
 			paths_y_prev[pathNo] += rand_0_1 * pen_angle_pulse * 10;
@@ -1492,7 +1492,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	// does not advance the path if the speed is null or negative
 	double readingSpeed = pg_Path_Status[pathNo].get_path_curve_readSpeedScale(pg_current_configuration_rank);
 #if defined(var_path_replay_speed)
-	if (ScenarioVarConfigurations[_path_replay_speed][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[_path_replay_speed][pg_current_configuration_rank]) {
 		readingSpeed *= path_replay_speed;
 		// printf("reading speed of path %d is replay speed %.2f readingSpeed %.2f\n", pathNo, path_replay_speed, readingSpeed);
 	}
@@ -1642,15 +1642,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_x_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_y_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (ScenarioVarConfigurations[_path_translX][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_path_translY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_path_translX][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_path_translY][pg_current_configuration_rank]) {
 			path_transl(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_translX, path_translY);
 	}
 #endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (ScenarioVarConfigurations[_path_scaleX][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_path_scaleY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_path_scaleX][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_path_scaleY][pg_current_configuration_rank]) {
 			path_scale_wrtScreenCenter(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_scaleX, path_scaleY);
 		}
@@ -1659,15 +1659,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_xL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_yL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (ScenarioVarConfigurations[_path_translX][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_path_translY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_path_translX][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_path_translY][pg_current_configuration_rank]) {
 			path_transl(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_translX, path_translY);
 		}
 #endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (ScenarioVarConfigurations[_path_scaleX][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_path_scaleY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_path_scaleX][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_path_scaleY][pg_current_configuration_rank]) {
 			path_scale_wrtScreenCenter(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_scaleX, path_scaleY);
 		}
@@ -1697,8 +1697,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//printf("Path %d Point ini %.2f %.2f %.2f %.2f\n",
 		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (ScenarioVarConfigurations[_path_translX][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_path_translY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_path_translX][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_path_translY][pg_current_configuration_rank]) {
 			path_transl(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_translX, path_translY);
 			path_transl(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
@@ -1708,8 +1708,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//printf("Path %d Point transl %.2f %.2f %.2f %.2f\n",
 		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (ScenarioVarConfigurations[_path_scaleX][pg_current_configuration_rank]
-			&& ScenarioVarConfigurations[_path_scaleY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_path_scaleX][pg_current_configuration_rank]
+			&& pg_ScenarioActiveVars[_path_scaleY][pg_current_configuration_rank]) {
 			path_scale_wrtScreenCenter(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_scaleX, path_scaleY);
 			path_scale_wrtScreenCenter(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
@@ -1882,7 +1882,7 @@ void pg_replay_paths(double theTime) {
 		// active reading
 #if defined(var_Novak_flight_on)
 		//printf("pathNo %d replay %d \n", pathNo, is_path_replay[pathNo]);
-		if (ScenarioVarConfigurations[_Novak_flight_on][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[_Novak_flight_on][pg_current_configuration_rank]
 			&& is_path_replay[pathNo] && Novak_flight_on) {
 			//printf("pathNo %d flight clock %.2f %.2f\n", pathNo, pg_CurrentClockTime, prev_Novak_flightCurrentCLockTime[pathNo]);
 			if (pg_CurrentClockTime != prev_Novak_flightCurrentCLockTime[pathNo]) {
@@ -2040,7 +2040,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 
 // pen position variation from pulse used in PIERRES
 #if defined(var_pen_position_pulse)
-		if (ScenarioVarConfigurations[_pen_position_pulse][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[_pen_position_pulse][pg_current_configuration_rank]) {
 			if (pathNo == 0) {
 				// pen position update from noise
 				float random_angle = rand_0_1 * 2.f * float(PI);
@@ -2080,8 +2080,8 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 #ifndef var_alKemi
 		if (distanceFromPrecedingPoint < std::max(2.f, (paths_RadiusX[pathNo] / 5.f))
 #else
-		if (((ScenarioVarConfigurations[_alKemi][pg_current_configuration_rank] == true && distanceFromPrecedingPoint < 2.f)
-			|| (ScenarioVarConfigurations[_alKemi][pg_current_configuration_rank] == false 
+		if (((pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank] == true && distanceFromPrecedingPoint < 2.f)
+			|| (pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank] == false 
 				&& distanceFromPrecedingPoint < std::max(2.f, (paths_RadiusX[pathNo] / 5.f))))
 #endif
 			&& Pulsed_CurrentMousePos_x[pathNo] != PG_OUT_OF_SCREEN_CURSOR
@@ -2164,7 +2164,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 			}
 
 #if defined(var_path_replay_trackNo_1)
-			if (ScenarioVarConfigurations[_path_replay_trackNo_1][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_1][pg_current_configuration_rank]) {
 				// tactile drawing above first track
 				if (pathNo > 0) {
 					// tells the shader that it should be drawn on the current drawing track
@@ -2285,8 +2285,8 @@ void Path_Status::load_svg_path(char *fileName,
 			break;
 #if defined(var_path_replay_trackNo_2) && defined(var_path_record_2)
 		case 2:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_2][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_2][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_2][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_2][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_2]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_2]) = false;
 			}
@@ -2294,8 +2294,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_3) && defined(var_path_record_3)
 		case 3:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_3][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_3][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_3][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_3][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_3]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_3]) = false;
 			}
@@ -2303,8 +2303,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_4) && defined(var_path_record_4)
 		case 4:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_4][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_4][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_4][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_4][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_4]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_4]) = false;
 			}
@@ -2312,8 +2312,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_5) && defined(var_path_record_5)
 		case 5:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_5][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_5][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_5][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_5][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_5]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_5]) = false;
 			}
@@ -2321,8 +2321,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_6) && defined(var_path_record_6)
 		case 6:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_6][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_6][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_6][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_6][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_6]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_6]) = false;
 			}
@@ -2330,8 +2330,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_7) && defined(var_path_record_7)
 		case 7:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_7][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_7][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_7][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_7][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_7]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_7]) = false;
 			}
@@ -2339,8 +2339,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_8) && defined(var_path_record_8)
 		case 8:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_8][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_8][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_8][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_8][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_8]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_8]) = false;
 			}
@@ -2348,8 +2348,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_9) && defined(var_path_record_9)
 		case 9:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_9][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_9][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_9][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_9][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_9]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_9]) = false;
 			}
@@ -2357,8 +2357,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_10) && defined(var_path_record_10)
 		case 10:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_10][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_10][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_10][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_10][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_10]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_10]) = false;
 			}
@@ -2366,8 +2366,8 @@ void Path_Status::load_svg_path(char *fileName,
 #endif
 #if defined(var_path_replay_trackNo_11) && defined(var_path_record_11)
 		case 11:
-			if (ScenarioVarConfigurations[_path_replay_trackNo_11][indConfiguration]
-				&& ScenarioVarConfigurations[_path_record_11][indConfiguration]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo_11][indConfiguration]
+				&& pg_ScenarioActiveVars[_path_record_11][indConfiguration]) {
 				*((int*)ScenarioVarPointers[_path_replay_trackNo_11]) = -1;
 				*((bool*)ScenarioVarPointers[_path_record_11]) = false;
 			}
