@@ -21,18 +21,8 @@ float	 master_mask;
 float	 master_mask_offsetX;
 #define var_master_mask_offsetY
 float	 master_mask_offsetY;
-#define var_master_mask_opacity_1
-float	 master_mask_opacity_1;
-#define var_master_mask_opacity_2
-float	 master_mask_opacity_2;
-#define var_master_mask_opacity_3
-float	 master_mask_opacity_3;
-#define var_master_mask_opacity_4
-float	 master_mask_opacity_4;
-#define var_master_mask_opacity_5
-float	 master_mask_opacity_5;
-#define var_master_mask_opacity_6
-float	 master_mask_opacity_6;
+#define var_master_mask_opacity
+float	 master_mask_opacity[7];
 #define var_master_mask_scale
 float	 master_mask_scale;
 #define var_master_mask_scale_ratio
@@ -57,18 +47,12 @@ float	 master;
 bool	  mute_second_screen;
 #define var_CAMasterWeight
 float	 CAMasterWeight;
+#define var_ClipArtMasterWeight
+float	 ClipArtMasterWeight;
 #define var_PartMasterWeight
 float	 PartMasterWeight;
-#define var_SecondMasterMixingWeight
-float	 SecondMasterMixingWeight;
-#define var_trackMasterWeight_0
-float	 trackMasterWeight_0;
-#define var_trackMasterWeight_1
-float	 trackMasterWeight_1;
-#define var_trackMasterWeight_2
-float	 trackMasterWeight_2;
-#define var_trackMasterWeight_3
-float	 trackMasterWeight_3;
+#define var_trackMasterWeight
+float	 trackMasterWeight[4];
 #define var_currentMaskTrack
 int		currentMaskTrack;
 uniform float uniform_Master_scenario_var_data[31];
@@ -131,12 +115,12 @@ void main() {
   master_mask = uniform_Master_scenario_var_data[3];
   master_mask_offsetX = uniform_Master_scenario_var_data[4];
   master_mask_offsetY = uniform_Master_scenario_var_data[5];
-  master_mask_opacity_1 = uniform_Master_scenario_var_data[6];
-  master_mask_opacity_2 = uniform_Master_scenario_var_data[7];
-  master_mask_opacity_3 = uniform_Master_scenario_var_data[8];
-  master_mask_opacity_4 = uniform_Master_scenario_var_data[9];
-  master_mask_opacity_5 = uniform_Master_scenario_var_data[10];
-  master_mask_opacity_6 = uniform_Master_scenario_var_data[11];
+  master_mask_opacity[1] = (uniform_Master_scenario_var_data[6]);
+  master_mask_opacity[2] = (uniform_Master_scenario_var_data[7]);
+  master_mask_opacity[3] = (uniform_Master_scenario_var_data[8]);
+  master_mask_opacity[4] = (uniform_Master_scenario_var_data[9]);
+  master_mask_opacity[5] = (uniform_Master_scenario_var_data[10]);
+  master_mask_opacity[6] = (uniform_Master_scenario_var_data[11]);
   master_mask_scale = uniform_Master_scenario_var_data[12];
   master_mask_scale_ratio = uniform_Master_scenario_var_data[13];
   master_offsetX = uniform_Master_scenario_var_data[14];
@@ -149,12 +133,12 @@ void main() {
   master = uniform_Master_scenario_var_data[21];
   mute_second_screen = (uniform_Master_scenario_var_data[22] > 0 ? true : false);
   CAMasterWeight = uniform_Master_scenario_var_data[23];
-  PartMasterWeight = uniform_Master_scenario_var_data[24];
-  SecondMasterMixingWeight = uniform_Master_scenario_var_data[25];
-  trackMasterWeight_0 = uniform_Master_scenario_var_data[26];
-  trackMasterWeight_1 = uniform_Master_scenario_var_data[27];
-  trackMasterWeight_2 = uniform_Master_scenario_var_data[28];
-  trackMasterWeight_3 = uniform_Master_scenario_var_data[29];
+  ClipArtMasterWeight = uniform_Master_scenario_var_data[24];
+  PartMasterWeight = uniform_Master_scenario_var_data[25];
+  trackMasterWeight[0] = (uniform_Master_scenario_var_data[26]);
+  trackMasterWeight[1] = (uniform_Master_scenario_var_data[27]);
+  trackMasterWeight[2] = (uniform_Master_scenario_var_data[28]);
+  trackMasterWeight[3] = (uniform_Master_scenario_var_data[29]);
   currentMaskTrack = int(uniform_Master_scenario_var_data[30]);
 
   float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
@@ -213,35 +197,35 @@ void main() {
   float maskGrey = 1.0;
 #ifdef var_currentMaskTrack
   if (currentMaskTrack == 0) {
-    trackMasterWeight_0 = 0; maskGrey = graylevel(track0_color.rgb); 
+    trackMasterWeight[0] = 0; maskGrey = graylevel(track0_color.rgb); 
   }
 #if PG_NB_TRACKS >= 2
   else if (currentMaskTrack == 1) {
-    trackMasterWeight_1 = 0; maskGrey = graylevel(track1_color.rgb);
+    trackMasterWeight[1] = 0; maskGrey = graylevel(track1_color.rgb);
   }
 #endif
 #if PG_NB_TRACKS >= 3
   else if (currentMaskTrack == 2) {
-    trackMasterWeight_2 = 0; maskGrey = graylevel(track2_color.rgb);
+    trackMasterWeight[2] = 0; maskGrey = graylevel(track2_color.rgb);
   }
 #endif
 #if PG_NB_TRACKS >= 4
   else if (currentMaskTrack == 3) {
-    trackMasterWeight_3 = 0; maskGrey = graylevel(track3_color.rgb);
+    trackMasterWeight[3] = 0; maskGrey = graylevel(track3_color.rgb);
   }
 #endif
 #endif
 
   vec3 NonEchoedColor
-    = vec3(track0_color.rgb) * trackMasterWeight_0
+    = vec3(track0_color.rgb) * trackMasterWeight[0]
 #if PG_NB_TRACKS >= 2 && defined(var_trackMasterWeight_1) && defined(var_trackMasterWeight_1)
-    + vec3(track1_color.rgb) * trackMasterWeight_1
+    + vec3(track1_color.rgb) * trackMasterWeight[1]
 #endif
 #if PG_NB_TRACKS >= 3 && defined(var_trackMasterWeight_2)
-    + vec3(track2_color.rgb) * trackMasterWeight_2
+    + vec3(track2_color.rgb) * trackMasterWeight[2]
 #endif
 #if PG_NB_TRACKS >= 4 && defined(var_trackMasterWeight_3)
-    + vec3(track3_color.rgb) * trackMasterWeight_3
+    + vec3(track3_color.rgb) * trackMasterWeight[3]
 #endif
     + CA_color.rgb * CAMasterWeight
 #if defined(var_ClipArtMasterWeight)
@@ -323,6 +307,7 @@ void main() {
   outColor0.rgb *= maskColor;
 #endif
 
+
   ////////////////////////////////////////////////////////////////////
   // blinking cursor 1 pixel wide under the mouse (except for hide)
   float mouse_x = uniform_Master_fs_4fv_xy_frameno_pulsedShift.x;
@@ -336,7 +321,7 @@ void main() {
   //   coords.x = width - coords.x;
 
   // master level
-  outColor0.rgb *= master;
+  outColor0.rgb *= master; 
 
   // blinking cursor
   if( uniform_Master_fs_2iv_mobile_cursor_currentScene.x != 0 

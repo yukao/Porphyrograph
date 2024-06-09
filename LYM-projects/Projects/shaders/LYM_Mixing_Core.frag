@@ -105,15 +105,15 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // mix of current layers according to composition weights
   vec3 localColor
-    = vec3(track0_color.rgb) * trackMixingWeight_0
+    = vec3(track0_color.rgb) * trackMixingWeight[0]
 #if PG_NB_TRACKS >= 2 && defined(var_trackMixingWeight_1)
-    + vec3(track1_color.rgb) * trackMixingWeight_1
+    + vec3(track1_color.rgb) * trackMixingWeight[1]
 #endif
 #if PG_NB_TRACKS >= 3 && defined(var_trackMixingWeight_2)
-    + vec3(track2_color.rgb) * trackMixingWeight_2
+    + vec3(track2_color.rgb) * trackMixingWeight[2]
 #endif
 #if PG_NB_TRACKS >= 4 && defined(var_trackMixingWeight_3)
-    + vec3(track3_color.rgb) * trackMixingWeight_3
+    + vec3(track3_color.rgb) * trackMixingWeight[3]
 #endif
     + CA_color.rgb * CAMixingWeight
 #if defined(var_ClipArtMixingWeight)

@@ -121,35 +121,35 @@ void main() {
   float maskGrey = 1.0;
 #ifdef var_currentMaskTrack
   if (currentMaskTrack == 0) {
-    trackMasterWeight_0 = 0; maskGrey = graylevel(track0_color.rgb); 
+    trackMasterWeight[0] = 0; maskGrey = graylevel(track0_color.rgb); 
   }
 #if PG_NB_TRACKS >= 2
   else if (currentMaskTrack == 1) {
-    trackMasterWeight_1 = 0; maskGrey = graylevel(track1_color.rgb);
+    trackMasterWeight[1] = 0; maskGrey = graylevel(track1_color.rgb);
   }
 #endif
 #if PG_NB_TRACKS >= 3
   else if (currentMaskTrack == 2) {
-    trackMasterWeight_2 = 0; maskGrey = graylevel(track2_color.rgb);
+    trackMasterWeight[2] = 0; maskGrey = graylevel(track2_color.rgb);
   }
 #endif
 #if PG_NB_TRACKS >= 4
   else if (currentMaskTrack == 3) {
-    trackMasterWeight_3 = 0; maskGrey = graylevel(track3_color.rgb);
+    trackMasterWeight[3] = 0; maskGrey = graylevel(track3_color.rgb);
   }
 #endif
 #endif
 
   vec3 NonEchoedColor
-    = vec3(track0_color.rgb) * trackMasterWeight_0
+    = vec3(track0_color.rgb) * trackMasterWeight[0]
 #if PG_NB_TRACKS >= 2 && defined(var_trackMasterWeight_1) && defined(var_trackMasterWeight_1)
-    + vec3(track1_color.rgb) * trackMasterWeight_1
+    + vec3(track1_color.rgb) * trackMasterWeight[1]
 #endif
 #if PG_NB_TRACKS >= 3 && defined(var_trackMasterWeight_2)
-    + vec3(track2_color.rgb) * trackMasterWeight_2
+    + vec3(track2_color.rgb) * trackMasterWeight[2]
 #endif
 #if PG_NB_TRACKS >= 4 && defined(var_trackMasterWeight_3)
-    + vec3(track3_color.rgb) * trackMasterWeight_3
+    + vec3(track3_color.rgb) * trackMasterWeight[3]
 #endif
     + CA_color.rgb * CAMasterWeight
 #if defined(var_ClipArtMasterWeight)

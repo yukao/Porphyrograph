@@ -486,18 +486,18 @@ float Line( float x1 , float y1 ,
 float payoffCalc( float state1 , float state2) {
   if(state1==1.0) {
     if (state2==1.0) {
-      return CAParams1;
+      return CAParams[1];
     }
     else {
-      return CAParams3;
+      return CAParams[3];
     }
   }
   else {
     if (state2==1.0) {
-      return CAParams2;
+      return CAParams[2];
     }
     else {
-      return CAParams4;
+      return CAParams[4];
     }
   }
 }
@@ -801,11 +801,11 @@ void CA_out( vec4 currentCA ) {
     uint newState = 0;
 
     // CAParams optimal values from Composites/soundinitiative²
-/*     float CAParams1 = 0.480315;
-    float CAParams2 = 0.511811;
-    float CAParams3 = 0.637795;
-    float CAParams4 = 0.472441;
-    float CAParams5 = 0.244094;
+/*     float CAParams[1] = 0.480315;
+    float CAParams[2] = 0.511811;
+    float CAParams[3] = 0.637795;
+    float CAParams[4] = 0.472441;
+    float CAParams[5] = 0.244094;
  */
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
@@ -821,9 +821,9 @@ void CA_out( vec4 currentCA ) {
       uint state = int(clamp(currentCA.a,0,nbStates));
       newState = state;
       // parameters CA thresholds
-      // CAParams1: px - X duplication from X+Y (randomCA.x)
-      // CAParams2: py - Y duplication from Y+Z (randomCA.y)
-      // CAParams3: pz - Z duplication from Z+X (randomCA.z)
+      // CAParams[1]: px - X duplication from X+Y (randomCA.x)
+      // CAParams[2]: py - Y duplication from Y+Z (randomCA.y)
+      // CAParams[3]: pz - Z duplication from Z+X (randomCA.z)
 
       // empty cell: replication or migration from neighboring cells
       if( state ==  0 ) { // empty
@@ -832,7 +832,7 @@ void CA_out( vec4 currentCA ) {
         // has a neighboring X and a neighboring Y slot
         for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
           if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 2 
-              && randomCA.y < CAParams1) {
+              && randomCA.y < CAParams[1]) {
             newState = 1; // new X
           }
         }
@@ -843,7 +843,7 @@ void CA_out( vec4 currentCA ) {
           int firstindex = clamp(int(randomCA.z * 8),0,8);
           for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
             if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 6 
-                && randomCA.w < CAParams2) {
+                && randomCA.w < CAParams[2]) {
               newState = 2; // new Y
             }
           }
@@ -855,7 +855,7 @@ void CA_out( vec4 currentCA ) {
           int firstindex = clamp(int(randomCA2.x * 8),0,8);
           for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
             if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 3 
-                && randomCA2.y < CAParams3) {
+                && randomCA2.y < CAParams[3]) {
               newState = 3; // new Z
             }
           }
@@ -874,11 +874,11 @@ void CA_out( vec4 currentCA ) {
           }
         }
       }
-      // CAParams5: px - X/Y/Z degradation (randomCA.w)
+      // CAParams[5]: px - X/Y/Z degradation (randomCA.w)
       // randomCA2.x choice of a first neighbor
       // degradation or migration of X
-      else if( randomCA.x < CAParams4 
-        || nbNeighbors < 8 * CAParams5 ) { 
+      else if( randomCA.x < CAParams[4] 
+        || nbNeighbors < 8 * CAParams[5] ) { 
         newState = 0; 
       }
 
@@ -906,12 +906,12 @@ void CA_out( vec4 currentCA ) {
   // parameter values: 0.314  0.606 0.354 0.409
   else if( CAType == CA_DISLOCATION ) {
     // CAParams optimal values from effe
-/*     float CAParams1 = 0.393673;
-    float CAParams2 = 0.102449;
-    float CAParams3 = 0.53551;
-    float CAParams4 = 0.165306;
-    float CAParams5 = 0.196939;
-    float CAParams6 = 0.322857;
+/*     float CAParams[1] = 0.393673;
+    float CAParams[2] = 0.102449;
+    float CAParams[3] = 0.53551;
+    float CAParams[4] = 0.165306;
+    float CAParams[5] = 0.196939;
+    float CAParams[6] = 0.322857;
  */
     int nbSurroundingNewBorders =
       (neighborValues[0].a == 1? 1:0) +
@@ -1022,11 +1022,11 @@ void CA_out( vec4 currentCA ) {
           newState = 1; // new border
         }
         else if( nbSurroundingOldBorders == 1 
-                && randomCA.y < CAParams2 ) {
+                && randomCA.y < CAParams[2] ) {
           // prolongs the border
           newState = 2; // old border
         }
-        else if( nbSurroundingNewBorders >= CAParams1 * 8.0  ) {
+        else if( nbSurroundingNewBorders >= CAParams[1] * 8.0  ) {
           // creates a nucleus
           newState = 3; // nucleus
         }
@@ -1034,7 +1034,7 @@ void CA_out( vec4 currentCA ) {
       // new border growth: new border pushed by old border
       else if( state ==  1 ) {
         newState = 1; // stays a border
-        if( nbSurroundingNewBorders >= CAParams5 * 10.0 ) {
+        if( nbSurroundingNewBorders >= CAParams[5] * 10.0 ) {
           newState = 3; //makes a nucleus
         }
         // found an old border at indexOld
@@ -1046,7 +1046,7 @@ void CA_out( vec4 currentCA ) {
       // border growth: old border pulled by new border
       else if( state ==  2 ) {
         newState = 2; // stays old border
-        if( nbSurroundingOldBorders >= CAParams6 * 10.0 ) {
+        if( nbSurroundingOldBorders >= CAParams[6] * 10.0 ) {
           newState = 0; //makes a hole
         }
         else if( indexNew >= 0 ) {
@@ -1057,11 +1057,11 @@ void CA_out( vec4 currentCA ) {
       else if( state ==  3 ) {
         newState = 3; // stays a nucleus
         if( nbSurroundingOldBorders + nbSurroundingNewBorders 
-             >= CAParams4 * 16.0 ) {
+             >= CAParams[4] * 16.0 ) {
           newState = 0; //makes a hole
         }
         else 
-          if( randomCA.y < CAParams3 ) {
+          if( randomCA.y < CAParams[3] ) {
           newState = 1; // becomes a border
         }
       }
@@ -1176,7 +1176,7 @@ void CA_out( vec4 currentCA ) {
         // prey birth probability if preys are in neighborhood
         if( nbSurroundingPreys > 0
             && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams1 ) {
+               < CAParams[1] ) {
           newState = 2; // becomes a prey
         }
         // else {
@@ -1188,7 +1188,7 @@ void CA_out( vec4 currentCA ) {
         // predator birth probability if full predators are in neighborhood
         if( nbSurroundingFullPredators > 0
             && pow( randomCA.x , nbSurroundingFullPredators ) 
-               < CAParams2 ) {
+               < CAParams[2] ) {
           newState = 3; // becomes a hungry predator
         }
         // else {
@@ -1200,7 +1200,7 @@ void CA_out( vec4 currentCA ) {
         // death probability if hungry predators are in neighborhood
         if( nbSurroundingHungryPredators > 0
             && pow( randomCA.x , nbSurroundingHungryPredators ) 
-               < CAParams3 ) {
+               < CAParams[3] ) {
           newState = 1; // dead prey
         }
         // else {
@@ -1212,11 +1212,11 @@ void CA_out( vec4 currentCA ) {
         // probability of eating if preys are in the neighborhood
         if( nbSurroundingPreys > 0
             && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams3 ) {
+               < CAParams[3] ) {
           newState = 4; // survives in state full
         }
         else { // dies with a certain probability
-          if( randomCA.x < CAParams4 ) {
+          if( randomCA.x < CAParams[4] ) {
             newState = 0;  // dead predator
           }
           // else {
@@ -1227,7 +1227,7 @@ void CA_out( vec4 currentCA ) {
       // full predator 
       else if( state == 4 ) {
         // probability of becoming hungry
-        if( randomCA.x < CAParams5 ) {
+        if( randomCA.x < CAParams[5] ) {
           newState = 3; // becomes hungry
         }
         // else { 
@@ -1262,10 +1262,10 @@ void CA_out( vec4 currentCA ) {
     // NE has N E & Center...
     // the payoff for each neighbor is calculated for these 3 neighbors
     // 3 payoffs: 
-    //     . CAParams1 Cooperation
-    //     . CAParams2 Defect (with Coop)
-    //     . CAParams3 Coop (with Defect)
-    //     . CAParams4 double defect
+    //     . CAParams[1] Cooperation
+    //     . CAParams[2] Defect (with Coop)
+    //     . CAParams[3] Coop (with Defect)
+    //     . CAParams[4] double defect
     // 2 states 1: coop - 2: defect
 // first state is state of player, second state is state of partner
 
@@ -1358,11 +1358,11 @@ void CA_out( vec4 currentCA ) {
       // otherwise dies or adopts opposite behavior with a certain probability
       // ****** payoffCalc uses parameters 1 to 4
       else if( CASubType == 2 ) {
-        if( sumPayoff > 24 * CAParams5 ) { // ****** payoffCalc uses parameters 1 to 4
+        if( sumPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
           newState = int(neighborValues[indMax].a);
         }
         else {
-          if( randomCA.z > CAParams6 ) { // ****** payoffCalc uses parameters 1 to 4
+          if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
             newState = 3 - int(neighborValues[indMax].a);
           }
           else {
@@ -1374,20 +1374,20 @@ void CA_out( vec4 currentCA ) {
       // otherwise if alive dies or stays as it is with a certain probability
       // if dead copies most succesful neighbor with a certain probability
       else if( CASubType == 3 ) {
-        if( maxPayoff > 24 * CAParams5 ) { // ****** payoffCalc uses parameters 1 to 4
+        if( maxPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
           newState = int(neighborValues[indMax].a);
         }
         else {
           // alive and adopts opposite behavior
           if( neighborValues[indMax].a > 0 ) {
-              if( randomCA.z > CAParams6 ) { // ****** payoffCalc uses parameters 1 to 4
+              if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
                 newState = 3 - int(neighborValues[indMax].a);
               }
               // or stays in its current state
           }
           //dead
           else {
-              if( randomCA.z > CAParams7 ) {
+              if( randomCA.z > CAParams[7] ) {
                 newState = int(neighborValues[indMax].a);
               }
               // or stays dead
@@ -1397,8 +1397,8 @@ void CA_out( vec4 currentCA ) {
       // VARIANT 4 : adopts behavior of most successful neighbor if it is above a certain minimal value
       // or the opposite behavior with a given probability
       else if( CASubType == 4 ) {
-        if( sumPayoff > 24 * CAParams5 ) {
-          if( randomCA.z > CAParams6 ) {
+        if( sumPayoff > 24 * CAParams[5] ) {
+          if( randomCA.z > CAParams[6] ) {
              newState = int(neighborValues[indMax].a);
           }
           else {
@@ -1406,7 +1406,7 @@ void CA_out( vec4 currentCA ) {
           }
         }
         else {
-          if( randomCA.z > 1 - CAParams7 ) {
+          if( randomCA.z > 1 - CAParams[7] ) {
              newState = int(neighborValues[indMax].a);
           }
           else {
@@ -2442,16 +2442,16 @@ void main() {
   /////////////////////////////////////
   // builds a path_replay_trackNo vector so that it can be used in the for loop
   #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo_1,path_replay_trackNo_2,
-                                      path_replay_trackNo_3);
+  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo[1],path_replay_trackNo[2],
+                                      path_replay_trackNo[3]);
   #endif
   #if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo_4,path_replay_trackNo_5,
-                                      path_replay_trackNo_6,path_replay_trackNo_7);
+  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo[4],path_replay_trackNo[5],
+                                      path_replay_trackNo[6],path_replay_trackNo[7]);
   #endif
   #if PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo_8,path_replay_trackNo_9,
-                                      path_replay_trackNo_10,path_replay_trackNo_11);
+  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo[8],path_replay_trackNo[9],
+                                      path_replay_trackNo[10],path_replay_trackNo[11]);
   #endif
 
   /////////////////////////////////////

@@ -9,96 +9,16 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #define var_CAcolorSpread
 bool	  CAcolorSpread;
-#define var_CAParams1
-float	 CAParams1;
-#define var_CAParams2
-float	 CAParams2;
-#define var_CAParams3
-float	 CAParams3;
-#define var_CAParams4
-float	 CAParams4;
-#define var_CAParams5
-float	 CAParams5;
-#define var_CAParams6
-float	 CAParams6;
-#define var_CAParams7
-float	 CAParams7;
-#define var_CAParams8
-float	 CAParams8;
+#define var_CAParams
+float	 CAParams[9];
 #define var_CAstep
 int		CAstep;
 #define var_repop_CA
 float	 repop_CA;
-#define var_camera_gamma
-float	 camera_gamma;
-#define var_cameraCumul
-int		cameraCumul;
-#define var_cameraGamma
-float	 cameraGamma;
-#define var_cameraSobel
-float	 cameraSobel;
-#define var_cameraThreshold
-float	 cameraThreshold;
-#define var_cameraWeight
-float	 cameraWeight;
-#define var_invertCamera
-bool	  invertCamera;
-#define var_invertMovie
-bool	  invertMovie;
-#define var_movie_gamma
-float	 movie_gamma;
-#define var_movie_threshold
-float	 movie_threshold;
-#define var_movieSobel
-float	 movieSobel;
-#define var_movieWeight
-float	 movieWeight;
-#define var_invertPhoto
-bool	  invertPhoto;
-#define var_photo_contrast
-float	 photo_contrast;
-#define var_photo_gamma
-float	 photo_gamma;
-#define var_photo_hue
-float	 photo_hue;
-#define var_photo_rot
-float	 photo_rot;
-#define var_photo_satur
-float	 photo_satur;
-#define var_photo_scaleX
-float	 photo_scaleX;
-#define var_photo_scaleY
-float	 photo_scaleY;
-#define var_photo_threshold
-float	 photo_threshold;
-#define var_photo_transl_x
-float	 photo_transl_x;
-#define var_photo_transl_y
-float	 photo_transl_y;
-#define var_photo_value
-float	 photo_value;
-#define var_photoSobel
-float	 photoSobel;
-#define var_photoWeight
-float	 photoWeight;
-#define var_video_contrast
-float	 video_contrast;
-#define var_video_gamma
-float	 video_gamma;
-#define var_video_hue
-float	 video_hue;
-#define var_video_satur
-float	 video_satur;
-#define var_video_threshold
-float	 video_threshold;
-#define var_video_value
-float	 video_value;
 #define var_video_white
 float	 video_white;
 #define var_path_replay_trackNo
 int		path_replay_trackNo[12];
-#define var_Pixelstep
-int		Pixelstep;
 #define var_noiseUpdateScale
 float	 noiseUpdateScale;
 #define var_pixel_acc
@@ -107,8 +27,6 @@ float	 pixel_acc;
 float	 pixel_acc_shiftX;
 #define var_pixel_acc_shiftY
 float	 pixel_acc_shiftY;
-#define var_pixel_image_acceleration
-int		pixel_image_acceleration;
 #define var_pixel_mode
 int		pixel_mode;
 #define var_pixel_radius
@@ -139,7 +57,7 @@ int		currentDrawingTrack;
 int		currentPhotoTrack;
 #define var_currentVideoTrack
 int		currentVideoTrack;
-uniform float uniform_Update_scenario_var_data[76];
+uniform float uniform_Update_scenario_var_data[42];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -618,18 +536,18 @@ float Line( float x1 , float y1 ,
 float payoffCalc( float state1 , float state2) {
   if(state1==1.0) {
     if (state2==1.0) {
-      return CAParams1;
+      return CAParams[1];
     }
     else {
-      return CAParams3;
+      return CAParams[3];
     }
   }
   else {
     if (state2==1.0) {
-      return CAParams2;
+      return CAParams[2];
     }
     else {
-      return CAParams4;
+      return CAParams[4];
     }
   }
 }
@@ -933,11 +851,11 @@ void CA_out( vec4 currentCA ) {
     uint newState = 0;
 
     // CAParams optimal values from Composites/soundinitiative²
-/*     float CAParams1 = 0.480315;
-    float CAParams2 = 0.511811;
-    float CAParams3 = 0.637795;
-    float CAParams4 = 0.472441;
-    float CAParams5 = 0.244094;
+/*     float CAParams[1] = 0.480315;
+    float CAParams[2] = 0.511811;
+    float CAParams[3] = 0.637795;
+    float CAParams[4] = 0.472441;
+    float CAParams[5] = 0.244094;
  */
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
@@ -953,9 +871,9 @@ void CA_out( vec4 currentCA ) {
       uint state = int(clamp(currentCA.a,0,nbStates));
       newState = state;
       // parameters CA thresholds
-      // CAParams1: px - X duplication from X+Y (randomCA.x)
-      // CAParams2: py - Y duplication from Y+Z (randomCA.y)
-      // CAParams3: pz - Z duplication from Z+X (randomCA.z)
+      // CAParams[1]: px - X duplication from X+Y (randomCA.x)
+      // CAParams[2]: py - Y duplication from Y+Z (randomCA.y)
+      // CAParams[3]: pz - Z duplication from Z+X (randomCA.z)
 
       // empty cell: replication or migration from neighboring cells
       if( state ==  0 ) { // empty
@@ -964,7 +882,7 @@ void CA_out( vec4 currentCA ) {
         // has a neighboring X and a neighboring Y slot
         for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
           if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 2 
-              && randomCA.y < CAParams1) {
+              && randomCA.y < CAParams[1]) {
             newState = 1; // new X
           }
         }
@@ -975,7 +893,7 @@ void CA_out( vec4 currentCA ) {
           int firstindex = clamp(int(randomCA.z * 8),0,8);
           for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
             if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 6 
-                && randomCA.w < CAParams2) {
+                && randomCA.w < CAParams[2]) {
               newState = 2; // new Y
             }
           }
@@ -987,7 +905,7 @@ void CA_out( vec4 currentCA ) {
           int firstindex = clamp(int(randomCA2.x * 8),0,8);
           for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
             if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 3 
-                && randomCA2.y < CAParams3) {
+                && randomCA2.y < CAParams[3]) {
               newState = 3; // new Z
             }
           }
@@ -1006,11 +924,11 @@ void CA_out( vec4 currentCA ) {
           }
         }
       }
-      // CAParams5: px - X/Y/Z degradation (randomCA.w)
+      // CAParams[5]: px - X/Y/Z degradation (randomCA.w)
       // randomCA2.x choice of a first neighbor
       // degradation or migration of X
-      else if( randomCA.x < CAParams4 
-        || nbNeighbors < 8 * CAParams5 ) { 
+      else if( randomCA.x < CAParams[4] 
+        || nbNeighbors < 8 * CAParams[5] ) { 
         newState = 0; 
       }
 
@@ -1038,12 +956,12 @@ void CA_out( vec4 currentCA ) {
   // parameter values: 0.314  0.606 0.354 0.409
   else if( CAType == CA_DISLOCATION ) {
     // CAParams optimal values from effe
-/*     float CAParams1 = 0.393673;
-    float CAParams2 = 0.102449;
-    float CAParams3 = 0.53551;
-    float CAParams4 = 0.165306;
-    float CAParams5 = 0.196939;
-    float CAParams6 = 0.322857;
+/*     float CAParams[1] = 0.393673;
+    float CAParams[2] = 0.102449;
+    float CAParams[3] = 0.53551;
+    float CAParams[4] = 0.165306;
+    float CAParams[5] = 0.196939;
+    float CAParams[6] = 0.322857;
  */
     int nbSurroundingNewBorders =
       (neighborValues[0].a == 1? 1:0) +
@@ -1154,11 +1072,11 @@ void CA_out( vec4 currentCA ) {
           newState = 1; // new border
         }
         else if( nbSurroundingOldBorders == 1 
-                && randomCA.y < CAParams2 ) {
+                && randomCA.y < CAParams[2] ) {
           // prolongs the border
           newState = 2; // old border
         }
-        else if( nbSurroundingNewBorders >= CAParams1 * 8.0  ) {
+        else if( nbSurroundingNewBorders >= CAParams[1] * 8.0  ) {
           // creates a nucleus
           newState = 3; // nucleus
         }
@@ -1166,7 +1084,7 @@ void CA_out( vec4 currentCA ) {
       // new border growth: new border pushed by old border
       else if( state ==  1 ) {
         newState = 1; // stays a border
-        if( nbSurroundingNewBorders >= CAParams5 * 10.0 ) {
+        if( nbSurroundingNewBorders >= CAParams[5] * 10.0 ) {
           newState = 3; //makes a nucleus
         }
         // found an old border at indexOld
@@ -1178,7 +1096,7 @@ void CA_out( vec4 currentCA ) {
       // border growth: old border pulled by new border
       else if( state ==  2 ) {
         newState = 2; // stays old border
-        if( nbSurroundingOldBorders >= CAParams6 * 10.0 ) {
+        if( nbSurroundingOldBorders >= CAParams[6] * 10.0 ) {
           newState = 0; //makes a hole
         }
         else if( indexNew >= 0 ) {
@@ -1189,11 +1107,11 @@ void CA_out( vec4 currentCA ) {
       else if( state ==  3 ) {
         newState = 3; // stays a nucleus
         if( nbSurroundingOldBorders + nbSurroundingNewBorders 
-             >= CAParams4 * 16.0 ) {
+             >= CAParams[4] * 16.0 ) {
           newState = 0; //makes a hole
         }
         else 
-          if( randomCA.y < CAParams3 ) {
+          if( randomCA.y < CAParams[3] ) {
           newState = 1; // becomes a border
         }
       }
@@ -1308,7 +1226,7 @@ void CA_out( vec4 currentCA ) {
         // prey birth probability if preys are in neighborhood
         if( nbSurroundingPreys > 0
             && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams1 ) {
+               < CAParams[1] ) {
           newState = 2; // becomes a prey
         }
         // else {
@@ -1320,7 +1238,7 @@ void CA_out( vec4 currentCA ) {
         // predator birth probability if full predators are in neighborhood
         if( nbSurroundingFullPredators > 0
             && pow( randomCA.x , nbSurroundingFullPredators ) 
-               < CAParams2 ) {
+               < CAParams[2] ) {
           newState = 3; // becomes a hungry predator
         }
         // else {
@@ -1332,7 +1250,7 @@ void CA_out( vec4 currentCA ) {
         // death probability if hungry predators are in neighborhood
         if( nbSurroundingHungryPredators > 0
             && pow( randomCA.x , nbSurroundingHungryPredators ) 
-               < CAParams3 ) {
+               < CAParams[3] ) {
           newState = 1; // dead prey
         }
         // else {
@@ -1344,11 +1262,11 @@ void CA_out( vec4 currentCA ) {
         // probability of eating if preys are in the neighborhood
         if( nbSurroundingPreys > 0
             && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams3 ) {
+               < CAParams[3] ) {
           newState = 4; // survives in state full
         }
         else { // dies with a certain probability
-          if( randomCA.x < CAParams4 ) {
+          if( randomCA.x < CAParams[4] ) {
             newState = 0;  // dead predator
           }
           // else {
@@ -1359,7 +1277,7 @@ void CA_out( vec4 currentCA ) {
       // full predator 
       else if( state == 4 ) {
         // probability of becoming hungry
-        if( randomCA.x < CAParams5 ) {
+        if( randomCA.x < CAParams[5] ) {
           newState = 3; // becomes hungry
         }
         // else { 
@@ -1394,10 +1312,10 @@ void CA_out( vec4 currentCA ) {
     // NE has N E & Center...
     // the payoff for each neighbor is calculated for these 3 neighbors
     // 3 payoffs: 
-    //     . CAParams1 Cooperation
-    //     . CAParams2 Defect (with Coop)
-    //     . CAParams3 Coop (with Defect)
-    //     . CAParams4 double defect
+    //     . CAParams[1] Cooperation
+    //     . CAParams[2] Defect (with Coop)
+    //     . CAParams[3] Coop (with Defect)
+    //     . CAParams[4] double defect
     // 2 states 1: coop - 2: defect
 // first state is state of player, second state is state of partner
 
@@ -1490,11 +1408,11 @@ void CA_out( vec4 currentCA ) {
       // otherwise dies or adopts opposite behavior with a certain probability
       // ****** payoffCalc uses parameters 1 to 4
       else if( CASubType == 2 ) {
-        if( sumPayoff > 24 * CAParams5 ) { // ****** payoffCalc uses parameters 1 to 4
+        if( sumPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
           newState = int(neighborValues[indMax].a);
         }
         else {
-          if( randomCA.z > CAParams6 ) { // ****** payoffCalc uses parameters 1 to 4
+          if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
             newState = 3 - int(neighborValues[indMax].a);
           }
           else {
@@ -1506,20 +1424,20 @@ void CA_out( vec4 currentCA ) {
       // otherwise if alive dies or stays as it is with a certain probability
       // if dead copies most succesful neighbor with a certain probability
       else if( CASubType == 3 ) {
-        if( maxPayoff > 24 * CAParams5 ) { // ****** payoffCalc uses parameters 1 to 4
+        if( maxPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
           newState = int(neighborValues[indMax].a);
         }
         else {
           // alive and adopts opposite behavior
           if( neighborValues[indMax].a > 0 ) {
-              if( randomCA.z > CAParams6 ) { // ****** payoffCalc uses parameters 1 to 4
+              if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
                 newState = 3 - int(neighborValues[indMax].a);
               }
               // or stays in its current state
           }
           //dead
           else {
-              if( randomCA.z > CAParams7 ) {
+              if( randomCA.z > CAParams[7] ) {
                 newState = int(neighborValues[indMax].a);
               }
               // or stays dead
@@ -1529,8 +1447,8 @@ void CA_out( vec4 currentCA ) {
       // VARIANT 4 : adopts behavior of most successful neighbor if it is above a certain minimal value
       // or the opposite behavior with a given probability
       else if( CASubType == 4 ) {
-        if( sumPayoff > 24 * CAParams5 ) {
-          if( randomCA.z > CAParams6 ) {
+        if( sumPayoff > 24 * CAParams[5] ) {
+          if( randomCA.z > CAParams[6] ) {
              newState = int(neighborValues[indMax].a);
           }
           else {
@@ -1538,7 +1456,7 @@ void CA_out( vec4 currentCA ) {
           }
         }
         else {
-          if( randomCA.z > 1 - CAParams7 ) {
+          if( randomCA.z > 1 - CAParams[7] ) {
              newState = int(neighborValues[indMax].a);
           }
           else {
@@ -2052,81 +1970,47 @@ void Sobel(int currentPhotoSource, int currentClipSource, vec2 coordsImageScaled
 
 void main() {
   CAcolorSpread = (uniform_Update_scenario_var_data[0] > 0 ? true : false);
-  CAParams1 = uniform_Update_scenario_var_data[1];
-  CAParams2 = uniform_Update_scenario_var_data[2];
-  CAParams3 = uniform_Update_scenario_var_data[3];
-  CAParams4 = uniform_Update_scenario_var_data[4];
-  CAParams5 = uniform_Update_scenario_var_data[5];
-  CAParams6 = uniform_Update_scenario_var_data[6];
-  CAParams7 = uniform_Update_scenario_var_data[7];
-  CAParams8 = uniform_Update_scenario_var_data[8];
+  CAParams[1] = (uniform_Update_scenario_var_data[1]);
+  CAParams[2] = (uniform_Update_scenario_var_data[2]);
+  CAParams[3] = (uniform_Update_scenario_var_data[3]);
+  CAParams[4] = (uniform_Update_scenario_var_data[4]);
+  CAParams[5] = (uniform_Update_scenario_var_data[5]);
+  CAParams[6] = (uniform_Update_scenario_var_data[6]);
+  CAParams[7] = (uniform_Update_scenario_var_data[7]);
+  CAParams[8] = (uniform_Update_scenario_var_data[8]);
   CAstep = int(uniform_Update_scenario_var_data[9]);
   repop_CA = uniform_Update_scenario_var_data[10];
-  camera_gamma = uniform_Update_scenario_var_data[11];
-  cameraCumul = int(uniform_Update_scenario_var_data[12]);
-  cameraGamma = uniform_Update_scenario_var_data[13];
-  cameraSobel = uniform_Update_scenario_var_data[14];
-  cameraThreshold = uniform_Update_scenario_var_data[15];
-  cameraWeight = uniform_Update_scenario_var_data[16];
-  invertCamera = (uniform_Update_scenario_var_data[17] > 0 ? true : false);
-  invertMovie = (uniform_Update_scenario_var_data[18] > 0 ? true : false);
-  movie_gamma = uniform_Update_scenario_var_data[19];
-  movie_threshold = uniform_Update_scenario_var_data[20];
-  movieSobel = uniform_Update_scenario_var_data[21];
-  movieWeight = uniform_Update_scenario_var_data[22];
-  invertPhoto = (uniform_Update_scenario_var_data[23] > 0 ? true : false);
-  photo_contrast = uniform_Update_scenario_var_data[24];
-  photo_gamma = uniform_Update_scenario_var_data[25];
-  photo_hue = uniform_Update_scenario_var_data[26];
-  photo_rot = uniform_Update_scenario_var_data[27];
-  photo_satur = uniform_Update_scenario_var_data[28];
-  photo_scaleX = uniform_Update_scenario_var_data[29];
-  photo_scaleY = uniform_Update_scenario_var_data[30];
-  photo_threshold = uniform_Update_scenario_var_data[31];
-  photo_transl_x = uniform_Update_scenario_var_data[32];
-  photo_transl_y = uniform_Update_scenario_var_data[33];
-  photo_value = uniform_Update_scenario_var_data[34];
-  photoSobel = uniform_Update_scenario_var_data[35];
-  photoWeight = uniform_Update_scenario_var_data[36];
-  video_contrast = uniform_Update_scenario_var_data[37];
-  video_gamma = uniform_Update_scenario_var_data[38];
-  video_hue = uniform_Update_scenario_var_data[39];
-  video_satur = uniform_Update_scenario_var_data[40];
-  video_threshold = uniform_Update_scenario_var_data[41];
-  video_value = uniform_Update_scenario_var_data[42];
-  video_white = uniform_Update_scenario_var_data[43];
-  path_replay_trackNo[1] = int(uniform_Update_scenario_var_data[44]);
-  path_replay_trackNo[2] = int(uniform_Update_scenario_var_data[45]);
-  path_replay_trackNo[3] = int(uniform_Update_scenario_var_data[46]);
-  path_replay_trackNo[4] = int(uniform_Update_scenario_var_data[47]);
-  path_replay_trackNo[5] = int(uniform_Update_scenario_var_data[48]);
-  path_replay_trackNo[6] = int(uniform_Update_scenario_var_data[49]);
-  path_replay_trackNo[7] = int(uniform_Update_scenario_var_data[50]);
-  path_replay_trackNo[8] = int(uniform_Update_scenario_var_data[51]);
-  path_replay_trackNo[9] = int(uniform_Update_scenario_var_data[52]);
-  path_replay_trackNo[10] = int(uniform_Update_scenario_var_data[53]);
-  path_replay_trackNo[11] = int(uniform_Update_scenario_var_data[54]);
-  Pixelstep = int(uniform_Update_scenario_var_data[55]);
-  noiseUpdateScale = uniform_Update_scenario_var_data[56];
-  pixel_acc = uniform_Update_scenario_var_data[57];
-  pixel_acc_shiftX = uniform_Update_scenario_var_data[58];
-  pixel_acc_shiftY = uniform_Update_scenario_var_data[59];
-  pixel_image_acceleration = int(uniform_Update_scenario_var_data[60]);
-  pixel_mode = int(uniform_Update_scenario_var_data[61]);
-  pixel_radius = uniform_Update_scenario_var_data[62];
-  BG_CA_repop_color_mode = int(uniform_Update_scenario_var_data[63]);
-  BG_CA_repop_density = int(uniform_Update_scenario_var_data[64]);
-  repop_BG = uniform_Update_scenario_var_data[65];
-  camera_BG_subtr = (uniform_Update_scenario_var_data[66] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[67] > 0 ? true : false);
-  CAdecay = uniform_Update_scenario_var_data[68];
-  trkDecay_0 = uniform_Update_scenario_var_data[69];
-  trkDecay_1 = uniform_Update_scenario_var_data[70];
-  trkDecay_2 = uniform_Update_scenario_var_data[71];
-  trkDecay_3 = uniform_Update_scenario_var_data[72];
-  currentDrawingTrack = int(uniform_Update_scenario_var_data[73]);
-  currentPhotoTrack = int(uniform_Update_scenario_var_data[74]);
-  currentVideoTrack = int(uniform_Update_scenario_var_data[75]);
+  video_white = uniform_Update_scenario_var_data[11];
+  path_replay_trackNo[1] = int(uniform_Update_scenario_var_data[12]);
+  path_replay_trackNo[2] = int(uniform_Update_scenario_var_data[13]);
+  path_replay_trackNo[3] = int(uniform_Update_scenario_var_data[14]);
+  path_replay_trackNo[4] = int(uniform_Update_scenario_var_data[15]);
+  path_replay_trackNo[5] = int(uniform_Update_scenario_var_data[16]);
+  path_replay_trackNo[6] = int(uniform_Update_scenario_var_data[17]);
+  path_replay_trackNo[7] = int(uniform_Update_scenario_var_data[18]);
+  path_replay_trackNo[8] = int(uniform_Update_scenario_var_data[19]);
+  path_replay_trackNo[9] = int(uniform_Update_scenario_var_data[20]);
+  path_replay_trackNo[10] = int(uniform_Update_scenario_var_data[21]);
+  path_replay_trackNo[11] = int(uniform_Update_scenario_var_data[22]);
+  noiseUpdateScale = uniform_Update_scenario_var_data[23];
+  pixel_acc = uniform_Update_scenario_var_data[24];
+  pixel_acc_shiftX = uniform_Update_scenario_var_data[25];
+  pixel_acc_shiftY = uniform_Update_scenario_var_data[26];
+  pixel_mode = int(uniform_Update_scenario_var_data[27]);
+  pixel_radius = uniform_Update_scenario_var_data[28];
+  BG_CA_repop_color_mode = int(uniform_Update_scenario_var_data[29]);
+  BG_CA_repop_density = int(uniform_Update_scenario_var_data[30]);
+  repop_BG = uniform_Update_scenario_var_data[31];
+  camera_BG_subtr = (uniform_Update_scenario_var_data[32] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[33] > 0 ? true : false);
+  CAdecay = uniform_Update_scenario_var_data[34];
+  trkDecay_0 = uniform_Update_scenario_var_data[35];
+  trkDecay_1 = uniform_Update_scenario_var_data[36];
+  trkDecay_2 = uniform_Update_scenario_var_data[37];
+  trkDecay_3 = uniform_Update_scenario_var_data[38];
+  currentDrawingTrack = int(uniform_Update_scenario_var_data[39]);
+  currentPhotoTrack = int(uniform_Update_scenario_var_data[40]);
+  currentVideoTrack = int(uniform_Update_scenario_var_data[41]);
 
   //////////////////////////
   // TRACK DECAY
@@ -2649,16 +2533,16 @@ void main() {
   /////////////////////////////////////
   // builds a path_replay_trackNo vector so that it can be used in the for loop
   #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo_1,path_replay_trackNo_2,
-                                      path_replay_trackNo_3);
+  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo[1],path_replay_trackNo[2],
+                                      path_replay_trackNo[3]);
   #endif
   #if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo_4,path_replay_trackNo_5,
-                                      path_replay_trackNo_6,path_replay_trackNo_7);
+  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo[4],path_replay_trackNo[5],
+                                      path_replay_trackNo[6],path_replay_trackNo[7]);
   #endif
   #if PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo_8,path_replay_trackNo_9,
-                                      path_replay_trackNo_10,path_replay_trackNo_11);
+  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo[8],path_replay_trackNo[9],
+                                      path_replay_trackNo[10],path_replay_trackNo[11]);
   #endif
 
   /////////////////////////////////////

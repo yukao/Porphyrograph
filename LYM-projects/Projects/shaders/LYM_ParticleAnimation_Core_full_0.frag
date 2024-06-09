@@ -654,7 +654,7 @@ void particle_out( void ) {
     vec4 pen_pos_prev_cur 
       = uniform_ParticleAnimation_path_data[indPath * PG_MAX_PATH_ANIM_DATA + PG_PATH_ANIM_POS];
     dvec2 curPos = dvec2( pen_pos_prev_cur.z, height - pen_pos_prev_cur.w );
-    if(path_follow[indPath]) {
+    if(part_path_follow[indPath]) {
       // reaches for pen position
       part_acceleration = dvec2(curPos - out_position_speed_particle.xy);
       dist_to_target = length(part_acceleration);
@@ -662,7 +662,7 @@ void particle_out( void ) {
       part_acceleration += dvec2(generativeNoise(pixelTextureCoordinatesXY) - pixel_acc_center);
       break;
     }
-    else if(path_repulse[indPath]) {
+    else if(part_path_repulse[indPath]) {
       // escapes from pen position
       part_acceleration = dvec2(out_position_speed_particle.xy - curPos);
       // adds some field disturbance
