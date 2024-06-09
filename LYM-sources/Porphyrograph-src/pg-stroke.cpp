@@ -1462,7 +1462,6 @@ void path_transl(float* translated_Xcoord, float* translated_Ycoord, float orig_
 	*translated_Ycoord = orig_Ycoord + translY;
 }
 
-#if defined(var_path_replay_trackNo_1)
 // replays a path that has been loaded or previously recorded
 void pg_replay_one_path(int pathNo, double theTime) {
 	//printf("replay path %d ind reading %d nb Frames %d\n" , pathNo, 
@@ -1838,7 +1837,6 @@ void pg_replay_one_path(int pathNo, double theTime) {
 
 	pg_Path_Status[pathNo].path_indPreviousReading = indFrameReading;
 }
-#endif
 
 // outputs the trace of a metawear sensor
 #ifdef PG_METAWEAR
@@ -1847,8 +1845,8 @@ void pg_play_metawear_trajectory(int pathNo, int sensorNo) {
 		is_path_replay[pathNo] = true;
 		// path 1 (senosr 1 sensorNo 0) and 2 (sensor 2 sensorNo 1) replays on currentDrawingTrack + 1
 		pg_path_replay_trackNo_start(pathNo, currentDrawingTrack + 1);
-		*((int*)ScenarioVarPointers[_path_replay_trackNo_1 + (pathNo - 1)]) = currentDrawingTrack + 1;
-		//printf("start replay path %d (sensor %d) on track %d\n", pathNo, pathNo, *((int*)ScenarioVarPointers[_path_replay_trackNo_1 + (pathNo - 1)]));
+		path_replay_trackNo[pathNo] = currentDrawingTrack + 1;
+		//printf("start replay path %d (sensor %d) on track %d\n", pathNo, pathNo, path_replay_trackNo[pathNo]);
 	}
 	stroke_geometry_calculation(pathNo, int(pg_mw_sensors[sensorNo].mw_mss_pos[0]), int(pg_mw_sensors[sensorNo].mw_mss_pos[1]));
 	//printf("new sensor position %d path %d: %.1f %.1f replay %d\n", sensorNo, pathNo, 
@@ -1865,7 +1863,6 @@ void pg_play_metawear_trajectory(int pathNo, int sensorNo) {
 		* (1.f + pulse_average * pen_radius_replay_pulse);}
 #endif
 
-#if defined(var_path_replay_trackNo_1)
 // PATHS REPLAY
 void pg_replay_paths(double theTime) {
 	for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
@@ -1904,8 +1901,8 @@ void pg_replay_paths(double theTime) {
 
 				stroke_geometry_calculation(pathNo, int(cur_Novak_flight_2D_points[pathNo].x), int(cur_Novak_flight_2D_points[pathNo].y));
 				// tells the shader that it should be drawn on the current drawing track
-				if (*((int*)ScenarioVarPointers[_path_replay_trackNo_1 + (pathNo - 1)]) < 0) {
-					*((int*)ScenarioVarPointers[_path_replay_trackNo_1 + (pathNo - 1)]) = currentDrawingTrack;
+				if (path_replay_trackNo[pathNo] < 0) {
+					path_replay_trackNo[pathNo] = currentDrawingTrack;
 				}
 				// management of brush radius (w/wo possible interpolation)
 				paths_RadiusX[pathNo]
@@ -1928,7 +1925,7 @@ void pg_replay_paths(double theTime) {
 #endif
 	}
 }
-#endif
+
 
 //////////////////////////////////////////////////////////////////
 // PEN STROKE AND PATH REPLAY  
@@ -1937,10 +1934,9 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 	// change colors according to music pulse
 	pg_update_pulsed_colors();
 
-#if defined(var_path_replay_trackNo_1)
 	// replays recoded paths
 	pg_replay_paths(theTime);
-#endif
+
 
 	///////////////////////////////////////////////////////////////////////
 	// PARTICLE COLOR UPDATING INDEPENDENTLY OF TRACK READING OR WRITING
@@ -2163,13 +2159,12 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 				}
 			}
 
-#if defined(var_path_replay_trackNo_1)
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_1][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
 				// tactile drawing above first track
 				if (pathNo > 0) {
 					// tells the shader that it should be drawn on the current drawing track
-					if (*((int*)ScenarioVarPointers[_path_replay_trackNo_1 + (pathNo - 1)]) < 0) {
-						*((int*)ScenarioVarPointers[_path_replay_trackNo_1 + (pathNo - 1)]) = currentDrawingTrack;
+					if (path_replay_trackNo[pathNo] < 0) {
+						path_replay_trackNo[pathNo] = currentDrawingTrack;
 					}
 
 					//stroke_geometry_calculation(pathNo, CurrentMousePos_x[cursorNo], CurrentMousePos_y[cursorNo]);
@@ -2186,7 +2181,6 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 					paths_Color_a[pathNo] = min(1.f, pen_color_a);
 				}
 			}
-#endif
 		}
 
 
@@ -2272,107 +2266,15 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 //////////////////////////////////////////////////////////////////
 // LOADS A TRACK FROM A ClipArt FILE
 //////////////////////////////////////////////////////////////////
-#if defined(var_path_replay_trackNo_1) && defined(var_path_record_1)
 void Path_Status::load_svg_path(char *fileName,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, 
 	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
 	if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-		is_path_replay[pathNo] = false;
-		switch (pathNo) {
-		case 1:
-			*((int *)ScenarioVarPointers[_path_replay_trackNo_1]) = -1;
-			*((bool *)ScenarioVarPointers[_path_record_1]) = false;
-			break;
-#if defined(var_path_replay_trackNo_2) && defined(var_path_record_2)
-		case 2:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_2][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_2][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_2]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_2]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_3) && defined(var_path_record_3)
-		case 3:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_3][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_3][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_3]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_3]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_4) && defined(var_path_record_4)
-		case 4:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_4][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_4][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_4]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_4]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_5) && defined(var_path_record_5)
-		case 5:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_5][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_5][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_5]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_5]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_6) && defined(var_path_record_6)
-		case 6:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_6][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_6][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_6]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_6]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_7) && defined(var_path_record_7)
-		case 7:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_7][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_7][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_7]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_7]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_8) && defined(var_path_record_8)
-		case 8:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_8][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_8][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_8]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_8]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_9) && defined(var_path_record_9)
-		case 9:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_9][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_9][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_9]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_9]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_10) && defined(var_path_record_10)
-		case 10:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_10][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_10][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_10]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_10]) = false;
-			}
-			break;
-#endif
-#if defined(var_path_replay_trackNo_11) && defined(var_path_record_11)
-		case 11:
-			if (pg_ScenarioActiveVars[_path_replay_trackNo_11][indConfiguration]
-				&& pg_ScenarioActiveVars[_path_record_11][indConfiguration]) {
-				*((int*)ScenarioVarPointers[_path_replay_trackNo_11]) = -1;
-				*((bool*)ScenarioVarPointers[_path_record_11]) = false;
-			}
-			break;
-#endif
+		if (pg_ScenarioActiveVars[_path_replay_trackNo][indConfiguration]
+			&& pg_ScenarioActiveVars[_path_record][indConfiguration]) {
+			is_path_replay[pathNo] = false;
+			((int *)ScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
+			((bool *)ScenarioVarPointers[_path_record])[pathNo] = false;
 		}
 		recorded_path[pathNo] = true;
 		paths_x[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
@@ -2400,7 +2302,6 @@ void Path_Status::load_svg_path(char *fileName,
 			readSpeedScale, path_ID, p_with_color__brush_radius_from_scenario, secondsforwidth, indConfiguration);
 	}
 }
-#endif
 
 void Path_Status::readsvg(char *fileName, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
 	float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {

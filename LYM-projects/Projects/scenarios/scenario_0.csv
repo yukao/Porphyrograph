@@ -1,8 +1,8 @@
-RANK,0
-VERBATIM,
-TYPE,
-ID,
-FUNCTION,
-GUI,
-SHADER,
-PULSE,
+RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
+VERBATIM,ClipArt stroke width,ClipArt stroke width pulse,ClipArt stroke _stroke_color_preset,ClipArt stroke _stroke_color_preset_pulse pulse,ClipArt_layer_1_color_preset,ClipArt_layer_1_color_preset_pulse,ClipArt_layer_2_color_preset,ClipArt_layer_2_color_preset_pulse,ClipArt_layer_3_color_preset,ClipArt_layer_3_color_preset_pulse,ClipArt_layer_4_color_preset,ClipArt_layer_4_color_preset_pulse,ClipArt_layer_5_color_preset,ClipArt_layer_5_color_preset_pulse,ClipArt_layer_6_color_preset,ClipArt_layer_6_color_preset_pulse,ClipArt_layer_7_color_preset,ClipArt_layer_7_color_preset_pulse,ClipArt_layer_8_color_preset,ClipArt_layer_8_color_preset_pulse,screen_drawing_no,current light scene in Python,Song_CA_color_mode
+TYPE,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,int,int,bool
+ID,ClipArt_width,ClipArt_width_pulse,ClipArt_stroke_color_preset,ClipArt_stroke_color_preset_pulse,ClipArt_layer_1_color_preset,ClipArt_layer_1_color_preset_pulse,ClipArt_layer_2_color_preset,ClipArt_layer_2_color_preset_pulse,ClipArt_layer_3_color_preset,ClipArt_layer_3_color_preset_pulse,ClipArt_layer_4_color_preset,ClipArt_layer_4_color_preset_pulse,ClipArt_layer_5_color_preset,ClipArt_layer_5_color_preset_pulse,ClipArt_layer_6_color_preset,ClipArt_layer_6_color_preset_pulse,ClipArt_layer_7_color_preset,ClipArt_layer_7_color_preset_pulse,ClipArt_layer_8_color_preset,ClipArt_layer_8_color_preset_pulse,screen_drawing_no,currentLightScene,Song_CA_color_mode
+FUNCTION,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,currentLightScene_callBack,NULL
+GUI,ClipArt_width,ClipArt_width_pulse,ClipArt_stroke_color_preset,ClipArt_stroke_color_preset_pulse,ClipArt_layer_1_color_preset,ClipArt_layer_1_color_preset_pulse,ClipArt_layer_2_color_preset,ClipArt_layer_2_color_preset_pulse,ClipArt_layer_3_color_preset,ClipArt_layer_3_color_preset_pulse,ClipArt_layer_4_color_preset,ClipArt_layer_4_color_preset_pulse,ClipArt_layer_5_color_preset,ClipArt_layer_5_color_preset_pulse,ClipArt_layer_6_color_preset,ClipArt_layer_6_color_preset_pulse,ClipArt_layer_7_color_preset,ClipArt_layer_7_color_preset_pulse,ClipArt_layer_8_color_preset,ClipArt_layer_8_color_preset_pulse,screen_drawing_no,currentLightScene,Song_CA_color_mode
+SHADER,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,Update_fs
+PULSE,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,pulsed_absolute,*,*,*,*

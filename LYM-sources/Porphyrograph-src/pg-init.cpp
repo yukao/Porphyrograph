@@ -1788,6 +1788,9 @@ void pg_screenMessage_update(void) {
 bool pg_ReadAllDisplayMessages(string basefilename) {
 	bool valRet = true;
 	NbDisplayTexts = 0;
+	if (basefilename == "") {
+		return false;
+	}
 #if defined(_PG_IMAGE_TEXT)
 	NbDisplayTexts = PG_NB_DISPLAY_MESSAGES;
 #else

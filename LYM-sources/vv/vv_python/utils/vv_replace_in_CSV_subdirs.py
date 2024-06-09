@@ -78,8 +78,8 @@ def main(main_args):
 				line = line.rstrip()
 				while(line):
 					line = line.rstrip()
-					if(re.search(r'4,11,Ada,10', line) != None) :
-						line = re.sub(r'4,11,Ada,10', '4,12,Ada,10',line)
+					if(re.search(r'int\[0\.\.PG_NB_TRACKS\]', line) != None) :
+						line = re.sub(r'int\[0\.\.PG_NB_TRACKS\]', 'float[0..PG_NB_TRACKS]',line)
 					
 					FILEout.write(line)
 					FILEout.write("\n")
@@ -90,6 +90,7 @@ def main(main_args):
 				
 				FILEin.close()
 				FILEout.close()
+		break
 	
 	return 1
 

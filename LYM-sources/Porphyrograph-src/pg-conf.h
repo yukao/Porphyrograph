@@ -36,6 +36,7 @@ struct pg_Interpolation
 	double exponent;
 	double duration;
 	double midTermValue;
+	double *midTermValueArray = NULL;
 };
 
 class pg_Window {
@@ -75,8 +76,14 @@ public:
 		scene_initial_parameters = new ScenarioValue[_MaxInterpVarIDs];
 		scene_final_parameters = new ScenarioValue[_MaxInterpVarIDs];
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			scene_initial_parameters[indP] = ScenarioValue();
-			scene_final_parameters[indP] = ScenarioValue();
+			if (ScenarioVarIndiceRanges[indP][0] == -1) {
+				scene_initial_parameters[indP].init_ScenarioValue(0., "", NULL, 0);
+				scene_final_parameters[indP].init_ScenarioValue(0., "", NULL, 0);
+			}
+			else {
+				scene_initial_parameters[indP].init_ScenarioValue(0., "", NULL, ScenarioVarIndiceRanges[indP][1]);
+				scene_final_parameters[indP].init_ScenarioValue(0., "", NULL, ScenarioVarIndiceRanges[indP][1]);
+			}
 		}
 		scene_interpolations = new pg_Interpolation[_MaxInterpVarIDs];
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
@@ -84,6 +91,9 @@ public:
 			scene_interpolations[indP].initialization_mode = pg_scenario_initial;
 			scene_interpolations[indP].offSet = 0.0;
 			scene_interpolations[indP].duration = 1.0;
+			if (ScenarioVarIndiceRanges[indP][0] != -1) {
+				scene_interpolations[indP].midTermValueArray = new double[ScenarioVarIndiceRanges[indP][1]];
+			}
 		}
 	}
 };

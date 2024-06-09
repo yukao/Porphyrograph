@@ -5,22 +5,8 @@ int   CA1Type             ;
 int   CA2SubType          ;
 int   CA2Type             ;
 bool  CAcolorSpread       ;
-float CAParams1           ;
-float CAParams1_pulse     ;
-float CAParams2           ;
-float CAParams2_pulse     ;
-float CAParams3           ;
-float CAParams3_pulse     ;
-float CAParams4           ;
-float CAParams4_pulse     ;
-float CAParams5           ;
-float CAParams5_pulse     ;
-float CAParams6           ;
-float CAParams6_pulse     ;
-float CAParams7           ;
-float CAParams7_pulse     ;
-float CAParams8           ;
-float CAParams8_pulse     ;
+float CAParams            [(PG_NB_CA_PARAMS+1)];
+float CAParams_pulse      [(PG_NB_CA_PARAMS+1)];
 int   CAstep              ;
 float repop_CA            ;
 int   flashCABG_freq      ;
@@ -54,12 +40,7 @@ float master_crop_y       ;
 float master_mask         ;
 float master_mask_offsetX ;
 float master_mask_offsetY ;
-float master_mask_opacity_1;
-float master_mask_opacity_2;
-float master_mask_opacity_3;
-float master_mask_opacity_4;
-float master_mask_opacity_5;
-float master_mask_opacity_6;
+float master_mask_opacity [(PG_NB_MASTER_MASKS+1)];
 float master_mask_scale   ;
 float master_mask_scale_ratio;
 float master_offsetX      ;
@@ -106,6 +87,26 @@ string playing_clipNameRight;
 string playing_secondClipNameLeft;
 string playing_secondClipNameRight;
 int   activeClipArts      ;
+float ClipArt_width       ;
+float ClipArt_width_pulse ;
+float ClipArt_stroke_color_preset;
+float ClipArt_stroke_color_preset_pulse;
+float ClipArt_layer_1_color_preset;
+float ClipArt_layer_1_color_preset_pulse;
+float ClipArt_layer_2_color_preset;
+float ClipArt_layer_2_color_preset_pulse;
+float ClipArt_layer_3_color_preset;
+float ClipArt_layer_3_color_preset_pulse;
+float ClipArt_layer_4_color_preset;
+float ClipArt_layer_4_color_preset_pulse;
+float ClipArt_layer_5_color_preset;
+float ClipArt_layer_5_color_preset_pulse;
+float ClipArt_layer_6_color_preset;
+float ClipArt_layer_6_color_preset_pulse;
+float ClipArt_layer_7_color_preset;
+float ClipArt_layer_7_color_preset_pulse;
+float ClipArt_layer_8_color_preset;
+float ClipArt_layer_8_color_preset_pulse;
 float moving_messages     ;
 bool  invertMovie         ;
 float movie_gamma         ;
@@ -318,22 +319,10 @@ float PartMasterWeight_pulse;
 float PartMixingWeight    ;
 float PartMixingWeight_pulse;
 float SecondMasterMixingWeight;
-float trackMasterWeight_0 ;
-float trackMasterWeight_0_pulse;
-float trackMasterWeight_1 ;
-float trackMasterWeight_1_pulse;
-float trackMasterWeight_2 ;
-float trackMasterWeight_2_pulse;
-float trackMasterWeight_3 ;
-float trackMasterWeight_3_pulse;
-float trackMixingWeight_0 ;
-float trackMixingWeight_0_pulse;
-float trackMixingWeight_1 ;
-float trackMixingWeight_1_pulse;
-float trackMixingWeight_2 ;
-float trackMixingWeight_2_pulse;
-float trackMixingWeight_3 ;
-float trackMixingWeight_3_pulse;
+float trackMasterWeight   [PG_NB_TRACKS];
+float trackMasterWeight_pulse[PG_NB_TRACKS];
+float trackMixingWeight   [PG_NB_TRACKS];
+float trackMixingWeight_pulse[PG_NB_TRACKS];
 int   blurRadius_1        ;
 int   blurRadius_2        ;
 int   currentDrawingTrack ;
@@ -358,20 +347,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_bool,
 	_pg_float,
 	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_int,
@@ -399,11 +374,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -458,6 +428,26 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_string,
 	_pg_int,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_bool,
 	_pg_float,
 	_pg_float,
@@ -640,18 +630,6 @@ VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_bool,
 	_pg_bool,
 	_pg_bool,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -708,6 +686,8 @@ int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{1, (PG_NB_CA_PARAMS+1)},
+	{1, (PG_NB_CA_PARAMS+1)},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -741,8 +721,7 @@ int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
-	{-1, -1},
-	{-1, -1},
+	{1, (PG_NB_MASTER_MASKS+1)},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1021,22 +1000,10 @@ int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1060,22 +1027,8 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&CA2SubType,
 	(void *)&CA2Type,
 	(void *)&CAcolorSpread,
-	(void *)&CAParams1,
-	(void *)&CAParams1_pulse,
-	(void *)&CAParams2,
-	(void *)&CAParams2_pulse,
-	(void *)&CAParams3,
-	(void *)&CAParams3_pulse,
-	(void *)&CAParams4,
-	(void *)&CAParams4_pulse,
-	(void *)&CAParams5,
-	(void *)&CAParams5_pulse,
-	(void *)&CAParams6,
-	(void *)&CAParams6_pulse,
-	(void *)&CAParams7,
-	(void *)&CAParams7_pulse,
-	(void *)&CAParams8,
-	(void *)&CAParams8_pulse,
+	(void *)&CAParams,
+	(void *)&CAParams_pulse,
 	(void *)&CAstep,
 	(void *)&repop_CA,
 	(void *)&flashCABG_freq,
@@ -1109,12 +1062,7 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&master_mask,
 	(void *)&master_mask_offsetX,
 	(void *)&master_mask_offsetY,
-	(void *)&master_mask_opacity_1,
-	(void *)&master_mask_opacity_2,
-	(void *)&master_mask_opacity_3,
-	(void *)&master_mask_opacity_4,
-	(void *)&master_mask_opacity_5,
-	(void *)&master_mask_opacity_6,
+	(void *)&master_mask_opacity,
 	(void *)&master_mask_scale,
 	(void *)&master_mask_scale_ratio,
 	(void *)&master_offsetX,
@@ -1161,6 +1109,26 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&playing_secondClipNameLeft,
 	(void *)&playing_secondClipNameRight,
 	(void *)&activeClipArts,
+	(void *)&ClipArt_width,
+	(void *)&ClipArt_width_pulse,
+	(void *)&ClipArt_stroke_color_preset,
+	(void *)&ClipArt_stroke_color_preset_pulse,
+	(void *)&ClipArt_layer_1_color_preset,
+	(void *)&ClipArt_layer_1_color_preset_pulse,
+	(void *)&ClipArt_layer_2_color_preset,
+	(void *)&ClipArt_layer_2_color_preset_pulse,
+	(void *)&ClipArt_layer_3_color_preset,
+	(void *)&ClipArt_layer_3_color_preset_pulse,
+	(void *)&ClipArt_layer_4_color_preset,
+	(void *)&ClipArt_layer_4_color_preset_pulse,
+	(void *)&ClipArt_layer_5_color_preset,
+	(void *)&ClipArt_layer_5_color_preset_pulse,
+	(void *)&ClipArt_layer_6_color_preset,
+	(void *)&ClipArt_layer_6_color_preset_pulse,
+	(void *)&ClipArt_layer_7_color_preset,
+	(void *)&ClipArt_layer_7_color_preset_pulse,
+	(void *)&ClipArt_layer_8_color_preset,
+	(void *)&ClipArt_layer_8_color_preset_pulse,
 	(void *)&moving_messages,
 	(void *)&invertMovie,
 	(void *)&movie_gamma,
@@ -1373,22 +1341,10 @@ void * ScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&PartMixingWeight,
 	(void *)&PartMixingWeight_pulse,
 	(void *)&SecondMasterMixingWeight,
-	(void *)&trackMasterWeight_0,
-	(void *)&trackMasterWeight_0_pulse,
-	(void *)&trackMasterWeight_1,
-	(void *)&trackMasterWeight_1_pulse,
-	(void *)&trackMasterWeight_2,
-	(void *)&trackMasterWeight_2_pulse,
-	(void *)&trackMasterWeight_3,
-	(void *)&trackMasterWeight_3_pulse,
-	(void *)&trackMixingWeight_0,
-	(void *)&trackMixingWeight_0_pulse,
-	(void *)&trackMixingWeight_1,
-	(void *)&trackMixingWeight_1_pulse,
-	(void *)&trackMixingWeight_2,
-	(void *)&trackMixingWeight_2_pulse,
-	(void *)&trackMixingWeight_3,
-	(void *)&trackMixingWeight_3_pulse,
+	(void *)&trackMasterWeight,
+	(void *)&trackMasterWeight_pulse,
+	(void *)&trackMixingWeight,
+	(void *)&trackMixingWeight_pulse,
 	(void *)&blurRadius_1,
 	(void *)&blurRadius_2,
 	(void *)&currentDrawingTrack,
@@ -1521,25 +1477,33 @@ void partMove_target_callBack(pg_Parameter_Input_Type param_input_type, bool sce
 void partMove_target_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	partMove_target_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
 }
-void part_path_follow_callBack(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);
+void part_path_follow_callBack(int ind_path, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void part_path_follow_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	part_path_follow_callBack(param_input_type, scenario_or_gui_command_value.val_array);
+	for (int index = 0; index < PG_NB_PATHS; index++) {;
+		part_path_follow_callBack(index, param_input_type, bool(scenario_or_gui_command_value.val_array[index]));
+	}
 }
-void part_path_repulse_callBack(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);
+void part_path_repulse_callBack(int ind_path, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void part_path_repulse_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	part_path_repulse_callBack(param_input_type, scenario_or_gui_command_value.val_array);
+	for (int index = 0; index < PG_NB_PATHS; index++) {;
+		part_path_repulse_callBack(index, param_input_type, bool(scenario_or_gui_command_value.val_array[index]));
+	}
 }
 void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 void path_group_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	path_group_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
 }
-void path_record_callBack(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);
+void path_record_callBack(int ind_path, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void path_record_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	path_record_callBack(param_input_type, scenario_or_gui_command_value.val_array);
+	for (int index = 1; index < PG_NB_PATHS; index++) {;
+		path_record_callBack(index, param_input_type, bool(scenario_or_gui_command_value.val_array[index]));
+	}
 }
-void path_replay_trackNo_callBack(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);
+void path_replay_trackNo_callBack(int ind_path, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 void path_replay_trackNo_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	path_replay_trackNo_callBack(param_input_type, scenario_or_gui_command_value.val_array);
+	for (int index = 1; index < PG_NB_PATHS; index++) {;
+		path_replay_trackNo_callBack(index, param_input_type, int(scenario_or_gui_command_value.val_array[index]));
+	}
 }
 void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 void pen_brush_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1599,20 +1563,6 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
 	&flashCameraTrkLength_callBack_generic,
 	NULL,
 	NULL,
@@ -1622,11 +1572,6 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	&flashPhotoTrkLength_callBack_generic,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1692,6 +1637,26 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	&playing_clipNameRight_callBack_generic,
 	&playing_secondClipNameLeft_callBack_generic,
 	&playing_secondClipNameRight_callBack_generic,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1924,18 +1889,6 @@ void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, Scenario
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
 };
 char *ScenarioVarMessages[_MaxInterpVarIDs] = { 
   (char *)"CA1_CA2_weight",
@@ -1944,22 +1897,8 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"CA2SubType",
   (char *)"CA2Type",
   (char *)"CAcolorSpread",
-  (char *)"CAParams1",
-  (char *)"CAParams1_pulse",
-  (char *)"CAParams2",
-  (char *)"CAParams2_pulse",
-  (char *)"CAParams3",
-  (char *)"CAParams3_pulse",
-  (char *)"CAParams4",
-  (char *)"CAParams4_pulse",
-  (char *)"CAParams5",
-  (char *)"CAParams5_pulse",
-  (char *)"CAParams6",
-  (char *)"CAParams6_pulse",
-  (char *)"CAParams7",
-  (char *)"CAParams7_pulse",
-  (char *)"CAParams8",
-  (char *)"CAParams8_pulse",
+  (char *)"CAParams",
+  (char *)"CAParams_pulse",
   (char *)"CAstep",
   (char *)"repop_CA",
   (char *)"flashCABG_freq",
@@ -1993,12 +1932,7 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"master_mask",
   (char *)"master_mask_offsetX",
   (char *)"master_mask_offsetY",
-  (char *)"master_mask_opacity_1",
-  (char *)"master_mask_opacity_2",
-  (char *)"master_mask_opacity_3",
-  (char *)"master_mask_opacity_4",
-  (char *)"master_mask_opacity_5",
-  (char *)"master_mask_opacity_6",
+  (char *)"master_mask_opacity",
   (char *)"master_mask_scale",
   (char *)"master_mask_scale_ratio",
   (char *)"master_offsetX",
@@ -2045,6 +1979,26 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"playing_secondClipNameLeft",
   (char *)"playing_secondClipNameRight",
   (char *)"activeClipArts",
+  (char *)"ClipArt_width",
+  (char *)"ClipArt_width_pulse",
+  (char *)"ClipArt_stroke_color_preset",
+  (char *)"ClipArt_stroke_color_preset_pulse",
+  (char *)"ClipArt_layer_1_color_preset",
+  (char *)"ClipArt_layer_1_color_preset_pulse",
+  (char *)"ClipArt_layer_2_color_preset",
+  (char *)"ClipArt_layer_2_color_preset_pulse",
+  (char *)"ClipArt_layer_3_color_preset",
+  (char *)"ClipArt_layer_3_color_preset_pulse",
+  (char *)"ClipArt_layer_4_color_preset",
+  (char *)"ClipArt_layer_4_color_preset_pulse",
+  (char *)"ClipArt_layer_5_color_preset",
+  (char *)"ClipArt_layer_5_color_preset_pulse",
+  (char *)"ClipArt_layer_6_color_preset",
+  (char *)"ClipArt_layer_6_color_preset_pulse",
+  (char *)"ClipArt_layer_7_color_preset",
+  (char *)"ClipArt_layer_7_color_preset_pulse",
+  (char *)"ClipArt_layer_8_color_preset",
+  (char *)"ClipArt_layer_8_color_preset_pulse",
   (char *)"moving_messages",
   (char *)"invertMovie",
   (char *)"movie_gamma",
@@ -2257,22 +2211,10 @@ char *ScenarioVarMessages[_MaxInterpVarIDs] = {
   (char *)"PartMixingWeight",
   (char *)"PartMixingWeight_pulse",
   (char *)"SecondMasterMixingWeight",
-  (char *)"trackMasterWeight_0",
-  (char *)"trackMasterWeight_0_pulse",
-  (char *)"trackMasterWeight_1",
-  (char *)"trackMasterWeight_1_pulse",
-  (char *)"trackMasterWeight_2",
-  (char *)"trackMasterWeight_2_pulse",
-  (char *)"trackMasterWeight_3",
-  (char *)"trackMasterWeight_3_pulse",
-  (char *)"trackMixingWeight_0",
-  (char *)"trackMixingWeight_0_pulse",
-  (char *)"trackMixingWeight_1",
-  (char *)"trackMixingWeight_1_pulse",
-  (char *)"trackMixingWeight_2",
-  (char *)"trackMixingWeight_2_pulse",
-  (char *)"trackMixingWeight_3",
-  (char *)"trackMixingWeight_3_pulse",
+  (char *)"trackMasterWeight",
+  (char *)"trackMasterWeight_pulse",
+  (char *)"trackMixingWeight",
+  (char *)"trackMixingWeight_pulse",
   (char *)"blurRadius_1",
   (char *)"blurRadius_2",
   (char *)"currentDrawingTrack",
@@ -2297,27 +2239,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2395,6 +2318,26 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -2607,18 +2550,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_uniform,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_uniform,
-  _pg_pulsed_none,
-  _pg_pulsed_uniform,
-  _pg_pulsed_none,
-  _pg_pulsed_uniform,
-  _pg_pulsed_none,
-  _pg_pulsed_uniform,
-  _pg_pulsed_none,
-  _pg_pulsed_uniform,
-  _pg_pulsed_none,
-  _pg_pulsed_uniform,
   _pg_pulsed_none,
   _pg_pulsed_uniform,
   _pg_pulsed_none,
@@ -2647,22 +2578,8 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"CA2SubType",
   (char *)"CA2Type",
   (char *)"CAcolorSpread",
-  (char *)"CAParams1",
-  (char *)"CAParams1_pulse",
-  (char *)"CAParams2",
-  (char *)"CAParams2_pulse",
-  (char *)"CAParams3",
-  (char *)"CAParams3_pulse",
-  (char *)"CAParams4",
-  (char *)"CAParams4_pulse",
-  (char *)"CAParams5",
-  (char *)"CAParams5_pulse",
-  (char *)"CAParams6",
-  (char *)"CAParams6_pulse",
-  (char *)"CAParams7",
-  (char *)"CAParams7_pulse",
-  (char *)"CAParams8",
-  (char *)"CAParams8_pulse",
+  (char *)"CAParams",
+  (char *)"CAParams_pulse",
   (char *)"CAstep",
   (char *)"repop_CA",
   (char *)"flashCABG_freq",
@@ -2696,12 +2613,7 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"master_mask",
   (char *)"master_mask_offsetX",
   (char *)"master_mask_offsetY",
-  (char *)"master_mask_opacity_1",
-  (char *)"master_mask_opacity_2",
-  (char *)"master_mask_opacity_3",
-  (char *)"master_mask_opacity_4",
-  (char *)"master_mask_opacity_5",
-  (char *)"master_mask_opacity_6",
+  (char *)"master_mask_opacity",
   (char *)"master_mask_scale",
   (char *)"master_mask_scale_ratio",
   (char *)"master_offsetX",
@@ -2748,6 +2660,26 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"playing_secondClipNameLeft",
   (char *)"playing_secondClipNameRight",
   (char *)"activeClipArts",
+  (char *)"ClipArt_width",
+  (char *)"ClipArt_width_pulse",
+  (char *)"ClipArt_stroke_color_preset",
+  (char *)"ClipArt_stroke_color_preset_pulse",
+  (char *)"ClipArt_layer_1_color_preset",
+  (char *)"ClipArt_layer_1_color_preset_pulse",
+  (char *)"ClipArt_layer_2_color_preset",
+  (char *)"ClipArt_layer_2_color_preset_pulse",
+  (char *)"ClipArt_layer_3_color_preset",
+  (char *)"ClipArt_layer_3_color_preset_pulse",
+  (char *)"ClipArt_layer_4_color_preset",
+  (char *)"ClipArt_layer_4_color_preset_pulse",
+  (char *)"ClipArt_layer_5_color_preset",
+  (char *)"ClipArt_layer_5_color_preset_pulse",
+  (char *)"ClipArt_layer_6_color_preset",
+  (char *)"ClipArt_layer_6_color_preset_pulse",
+  (char *)"ClipArt_layer_7_color_preset",
+  (char *)"ClipArt_layer_7_color_preset_pulse",
+  (char *)"ClipArt_layer_8_color_preset",
+  (char *)"ClipArt_layer_8_color_preset_pulse",
   (char *)"moving_messages",
   (char *)"invertMovie",
   (char *)"movie_gamma",
@@ -2960,22 +2892,10 @@ char *ScenarioVarStrings[_MaxInterpVarIDs] = {
   (char *)"PartMixingWeight",
   (char *)"PartMixingWeight_pulse",
   (char *)"SecondMasterMixingWeight",
-  (char *)"trackMasterWeight_0",
-  (char *)"trackMasterWeight_0_pulse",
-  (char *)"trackMasterWeight_1",
-  (char *)"trackMasterWeight_1_pulse",
-  (char *)"trackMasterWeight_2",
-  (char *)"trackMasterWeight_2_pulse",
-  (char *)"trackMasterWeight_3",
-  (char *)"trackMasterWeight_3_pulse",
-  (char *)"trackMixingWeight_0",
-  (char *)"trackMixingWeight_0_pulse",
-  (char *)"trackMixingWeight_1",
-  (char *)"trackMixingWeight_1_pulse",
-  (char *)"trackMixingWeight_2",
-  (char *)"trackMixingWeight_2_pulse",
-  (char *)"trackMixingWeight_3",
-  (char *)"trackMixingWeight_3_pulse",
+  (char *)"trackMasterWeight",
+  (char *)"trackMasterWeight_pulse",
+  (char *)"trackMixingWeight",
+  (char *)"trackMixingWeight_pulse",
   (char *)"blurRadius_1",
   (char *)"blurRadius_2",
   (char *)"currentDrawingTrack",

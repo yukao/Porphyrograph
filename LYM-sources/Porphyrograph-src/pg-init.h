@@ -53,7 +53,9 @@ enum pg_FBO_Update_samplers
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
 	pg_Trk3_FBO_Update_sampler,
+#if defined(var_CATable)
 	pg_CATable_Update_sampler,
+#endif
 	pg_Camera_BGIni_FBO_Update_sampler,
 	pg_pixel_image_acc_Update_sampler,
 #ifdef WITH_BURST_MASK

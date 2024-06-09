@@ -747,10 +747,8 @@ void             cur_Novak_flight_2D_coordinates(void);
 // calculation of tangents from successive locations of the pen
 void stroke_geometry_calculation(int indPath, int curr_position_x, int curr_position_y);
 
-#if defined(var_path_replay_trackNo_1)
 // REPLAY PATHS  
 void pg_replay_paths(double theTime);
-#endif
 
 // update of the tables that contain the stroke parameters
 void pg_update_pulsed_colors_and_replay_paths( double theTime );

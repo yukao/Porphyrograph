@@ -270,8 +270,8 @@ GLuint Master_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 GLuint Master_Multilayer_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
 
-std::string* DisplayTextList;
-int* DisplayTextFirstInChapter;
+std::string* DisplayTextList = NULL;
+int* DisplayTextFirstInChapter = NULL;
 int NbDisplayTexts = 0;
 int DisplayText_maxLen = 0;
 int pg_Ind_Current_DisplayText = 0;
@@ -902,8 +902,6 @@ void window_display(void) {
 	//////////////////////////////////////////////////
 	// scenario update 
 	pg_update_scenario();
-	// runs callbacks
-	pg_run_callBacks();
 	// recalculates pulsed colors and reads current paths
 	pg_update_pulsed_colors_and_replay_paths(pg_CurrentClockTime);
 
@@ -911,6 +909,7 @@ void window_display(void) {
 	printOglError(50);
 	pg_update_shader_uniforms();
 	printOglError(51);
+
 	// loads movie andor camera frames
 	pg_update_clip_camera_and_movie_frame();
 
@@ -1927,57 +1926,28 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 
 	// scren size and repop channel
 	// at each frame a random repop channel is chosen among the available ones
-	bool repop_channels[PG_NB_PATHS + 1] = {0};
-	int nb_repop_channels = 0;
-#if defined(var_part_path_repop_0) && defined(var_part_path_repop_1) && defined(var_part_path_repop_2) && defined(var_part_path_repop_3)
-	if (pg_ScenarioActiveVars[_part_path_repop_0][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_1][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_2][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_3][pg_current_configuration_rank]) {
-		nb_repop_channels += int(part_path_repop_0) + int(part_path_repop_1) + int(part_path_repop_2) + int(part_path_repop_3);
-		repop_channels[0] = part_path_repop_0;
-		repop_channels[1] = part_path_repop_1;
-		repop_channels[2] = part_path_repop_2;
-		repop_channels[3] = part_path_repop_3;
+	int nb_avail_paths = 0;
+	for (int pathNo = 0; pathNo < PG_NB_PATHS; pathNo++) {
+		if (part_path_repop[pathNo]) {
+			nb_avail_paths++;
+		}
 	}
-#endif
-#if defined(var_part_path_repop_4) && defined(var_part_path_repop_5) && defined(var_part_path_repop_6) && defined(var_part_path_repop_7)
-	if (pg_ScenarioActiveVars[_part_path_repop_4][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_5][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_6][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_7][pg_current_configuration_rank]) {
-		nb_repop_channels += int(part_path_repop_4) + int(part_path_repop_5) + int(part_path_repop_6) + int(part_path_repop_7);
-		repop_channels[4] = part_path_repop_4;
-		repop_channels[5] = part_path_repop_5;
-		repop_channels[6] = part_path_repop_6;
-		repop_channels[7] = part_path_repop_7;
-	}
-#endif
-#if defined(var_part_path_repop_8) && defined(var_part_path_repop_9) && defined(var_part_path_repop_10) && defined(var_part_path_repop_11)
-	if (pg_ScenarioActiveVars[_part_path_repop_8][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_9][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_10][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repop_11][pg_current_configuration_rank]) {
-		nb_repop_channels += int(part_path_repop_8) + int(part_path_repop_9) + int(part_path_repop_10) + int(part_path_repop_11);
-		repop_channels[8] = part_path_repop_8;
-		repop_channels[9] = part_path_repop_9;
-		repop_channels[10] = part_path_repop_10;
-		repop_channels[11] = part_path_repop_11;
-	}
-#endif
-	int selected_channel = int(floor(rand_0_1 * (nb_repop_channels - 0.00001)));
-	int nbActChannels = 0;
-	for (int indCh = 0; indCh <= PG_NB_PATHS; indCh++) {
-		if (repop_channels[indCh]) {
-			if (nbActChannels == selected_channel) {
-				selected_channel = indCh;
-				break;
+	int selected_path = 0;
+	if (nb_avail_paths > 0) {
+		selected_path = int(floor(rand_0_1 * (nb_avail_paths + 1 - 0.00001))) % nb_avail_paths;
+		int nb_activ_paths = 0;
+		for (int pathNo = 0; pathNo < PG_NB_PATHS; pathNo++) {
+			if (part_path_repop[pathNo]) {
+				if (nb_activ_paths == selected_path) {
+					selected_path = pathNo;
+					break;
+				}
+				nb_activ_paths++;
 			}
-			nbActChannels++;
 		}
 	}
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_W_H_repopChannel_targetFrameNo[pg_current_configuration_rank],
-		(GLfloat)workingWindow_width, (GLfloat)window_height, (GLfloat)selected_channel, GLfloat(pg_ParticleTargetFrameNo));
+		(GLfloat)workingWindow_width, (GLfloat)window_height, (GLfloat)selected_path, GLfloat(pg_ParticleTargetFrameNo));
 #endif
 
 	// pen paths positions
@@ -4154,49 +4124,7 @@ bool Etoiles_mesh_guided_by_strokes(int indMeshFile) {
 			pen_y = (paths_y[path_no] / window_height) * 2.f - 1.f;
 		}
 		else {
-			bool isTrackRecord = false;
-			switch (path_no) {
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-			case 1:
-				isTrackRecord = path_record_1;
-				break;
-			case 2:
-				isTrackRecord = path_record_2;
-				break;
-			case 3:
-				isTrackRecord = path_record_3;
-				break;
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-			case 4:
-				isTrackRecord = path_record_4;
-				break;
-			case 5:
-				isTrackRecord = path_record_5;
-				break;
-			case 6:
-				isTrackRecord = path_record_6;
-				break;
-			case 7:
-				isTrackRecord = path_record_7;
-				break;
-#endif
-#if PG_NB_PATHS == 11
-			case 8:
-				isTrackRecord = path_record_8;
-				break;
-			case 9:
-				isTrackRecord = path_record_9;
-				break;
-			case 10:
-				isTrackRecord = path_record_10;
-				break;
-			case 11:
-				isTrackRecord = path_record_11;
-				break;
-#endif
-			}
-			visible = isTrackRecord && paths_x[0] > 0 && paths_y[0] > 0;
+			visible = path_record[pathNo] && paths_x[0] > 0 && paths_y[0] > 0;
 			if (visible) {
 				// normal pen coordinates
 				pen_x = (paths_x[0] / workingWindow_width) * 2.f - 1.f;

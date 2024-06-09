@@ -130,6 +130,13 @@ def main(main_args):
 				part_path_repulse_indices = []
 				path_record_indices = []
 				path_replay_trackNo_indices = []
+				trackMasterWeight_indices = []
+				trackMasterWeight_pulse_indices = []
+				trackMixingWeight_indices = []
+				trackMixingWeight_pulse_indices = []
+				CAParams_indices = []
+				CAParams_pulse_indices = []
+				master_mask_opacity_indices = []
 				for index, var_rank, var_verbatim, var_type, var_ID, var_callBack, var_GUI, \
 					var_shader, var_pulse, var_initial, var_val, var_end_initial \
 					in zip(range(len(loc_variable_IDs)), loc_rank, loc_variable_verbatims, \
@@ -137,6 +144,7 @@ def main(main_args):
 						loc_variable_shaders, loc_variable_pulses, loc_initial_values, loc_variable_initial_values, loc_end_initial_values) :
 
 					merged = False
+					pulse_merged = False
 
 					if var_ID.startswith("part_path_follow") and part_path_follow_indices == [] :
 						part_path_follow_indices.append(index)
@@ -193,7 +201,98 @@ def main(main_args):
 						path_replay_trackNo_indices.append(index)
 						merged = True
 
-					if(not merged) :
+					z = re.match("^trackMasterWeight_([0-9]+)$",var_ID)
+					if z:
+						if var_ID and trackMasterWeight_indices == [] :
+							trackMasterWeight_indices.append(index)
+							var_verbatim = "track_levels"
+							var_type = "int[0..PG_NB_TRACKS]"
+							var_ID = "trackMasterWeight"
+							var_callBack = "NULL"
+							var_GUI = "trackMasterWeight"
+						elif var_ID :
+							trackMasterWeight_indices.append(index)
+							pulse_merged = True
+
+					z = re.match("^trackMasterWeight_([0-9]+)_pulse$",var_ID)
+					if z:
+						if var_ID and trackMasterWeight_pulse_indices == [] :
+							trackMasterWeight_pulse_indices.append(index)
+							var_verbatim = "track_levels"
+							var_type = "int[0..PG_NB_TRACKS]"
+							var_ID = "trackMasterWeight_pulse"
+							var_callBack = "NULL"
+							var_GUI = "trackMasterWeight_pulse"
+						elif var_ID :
+							trackMasterWeight_pulse_indices.append(index)
+							merged = True
+
+					z = re.match("^trackMixingWeight_([0-9]+)$",var_ID)
+					if z:
+						if var_ID and trackMixingWeight_indices == [] :
+							trackMixingWeight_indices.append(index)
+							var_verbatim = "track_levels"
+							var_type = "int[0..PG_NB_TRACKS]"
+							var_ID = "trackMixingWeight"
+							var_callBack = "NULL"
+							var_GUI = "trackMixingWeight"
+						elif var_ID :
+							trackMixingWeight_indices.append(index)
+							pulse_merged = True
+
+					z = re.match("^trackMixingWeight_([0-9]+)_pulse$",var_ID)
+					if z:
+						if var_ID and trackMixingWeight_pulse_indices == [] :
+							trackMixingWeight_pulse_indices.append(index)
+							var_verbatim = "track_levels"
+							var_type = "int[0..PG_NB_TRACKS]"
+							var_ID = "trackMixingWeight_pulse"
+							var_callBack = "NULL"
+							var_GUI = "trackMixingWeight_pulse"
+						elif var_ID :
+							trackMixingWeight_pulse_indices.append(index)
+							merged = True
+
+					z = re.match("^CAParams([0-9]+)$",var_ID)
+					if z:
+						if var_ID and CAParams_indices == [] :
+							CAParams_indices.append(index)
+							var_verbatim = "CA"
+							var_type = "float[1..(PG_NB_CA_PARAMS+1)]"
+							var_ID = "CAParams"
+							var_callBack = "NULL"
+							var_GUI = "CAParams"
+						elif var_ID :
+							CAParams_indices.append(index)
+							pulse_merged = True
+
+					z = re.match("^CAParams([0-9]+)_pulse$",var_ID)
+					if z:
+						if var_ID and CAParams_pulse_indices == [] :
+							CAParams_pulse_indices.append(index)
+							var_verbatim = "CA"
+							var_type = "float[1..(PG_NB_CA_PARAMS+1)]"
+							var_ID = "CAParams_pulse"
+							var_callBack = "NULL"
+							var_GUI = "CAParams_pulse"
+						elif var_ID :
+							CAParams_pulse_indices.append(index)
+							merged = True
+
+					z = re.match("^master_mask_opacity_([0-9]+)$",var_ID)
+					if z:
+						if var_ID and master_mask_opacity_indices == [] :
+							master_mask_opacity_indices.append(index)
+							var_verbatim = "CA"
+							var_type = "float[1..(PG_NB_MASTER_MASKS+1)]"
+							var_ID = "master_mask_opacity"
+							var_callBack = "NULL"
+							var_GUI = "master_mask_opacity"
+						elif var_ID :
+							master_mask_opacity_indices.append(index)
+							merged = True
+
+					if(not merged and not pulse_merged) :
 						# VERBATIM
 						new_variable_verbatims.append(var_verbatim)
 						# TYPE
@@ -210,8 +309,10 @@ def main(main_args):
 						new_variable_pulses.append(var_pulse)
 						# list of initial values
 						new_variable_initial_values.append(var_val)
-					else :
+					elif(merged) :
 						new_variable_initial_values[-1] = new_variable_initial_values[-1]+"/"+var_val
+					elif(pulse_merged) :
+						new_variable_initial_values[-2] = new_variable_initial_values[-2]+"/"+var_val
 
 				# RANK
 				new_rank = ["RANK"] + list(range(1,len(new_variable_IDs)))
@@ -243,7 +344,10 @@ def main(main_args):
 				# /initial_values
 				writerCSV.writerow(new_end_initial_values)
 
-				lineScenario = next(scenarioCSV)
+				try:
+					lineScenario = next(scenarioCSV)
+				except StopIteration:
+					continue
 				writerCSV.writerow(lineScenario)
 
 				while (True) :
@@ -274,7 +378,10 @@ def main(main_args):
 						new_line_interpolations = []
 
 						for idx, comm1, comm2, val_init, val_fin, interp in zip(range(len(loc_variable_IDs)), line_comments1, line_comments2, line_initial_values, line_final_values, line_interpolations) :
-							if(not(idx in part_path_follow_indices[1:] or idx in part_path_repop_indices[1:] or idx in part_path_repulse_indices[1:] or idx in path_record_indices[1:] or idx in path_replay_trackNo_indices[1:])) :
+							if(not(idx in part_path_follow_indices[1:] or idx in part_path_repop_indices[1:] or idx in part_path_repulse_indices[1:] or idx in path_record_indices[1:] \
+								or idx in path_replay_trackNo_indices[1:] or idx in trackMasterWeight_indices[1:] or idx in trackMasterWeight_pulse_indices[1:] \
+								or idx in trackMixingWeight_indices[1:] or idx in trackMixingWeight_pulse_indices[1:] \
+								or idx in CAParams_indices[1:] or idx in CAParams_pulse_indices[1:] or idx in master_mask_opacity_indices[1:])) :
 								# scene comments
 								new_line_comments1.append(comm1)
 								# scene comments
@@ -285,9 +392,12 @@ def main(main_args):
 								new_line_final_values.append(val_fin)
 								# interpolation commands
 								new_line_interpolations.append(interp)
-							else : # merge successive values
+							elif(not(idx in trackMasterWeight_indices[1:] or idx in trackMixingWeight_indices[1:] or idx in CAParams_indices[1:])): # merge successive values
 								new_line_initial_values[-1] = new_line_initial_values[-1]+"/"+val_init
 								new_line_final_values[-1] = new_line_final_values[-1]+"/"+val_fin
+							else : # merge before last successive values
+								new_line_initial_values[-2] = new_line_initial_values[-2]+"/"+val_init
+								new_line_final_values[-2] = new_line_final_values[-2]+"/"+val_fin
 
 						# scene comments
 						writerCSV.writerow(new_line_comments1)
@@ -321,7 +431,8 @@ def main(main_args):
 
 				FILEin.close()
 				FILEout.close()
-	
+		break   #prevent descending into subfolders
+
 	return 1
 
 

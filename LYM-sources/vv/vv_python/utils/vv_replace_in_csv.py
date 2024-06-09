@@ -14,8 +14,8 @@ def handler(signal_received, frame):
 	sys.exit(0)
 
 def main():
-	if( vv_replace_in_CSV_subdirs.main(["-i", "/mnt/c/home/LYM-projects/Projects/configuration/",\
-		"-t", "/mnt/c/home/LYM-projects/Projects/configuration/tmp.txt"]) == 0):
+	if( vv_replace_in_CSV_subdirs.main(["-i", "/mnt/c/home/LYM-projects/Projects/scenarios/",\
+		"-t", "/mnt/c/home/LYM-projects/Projects/scenarios/tmp.txt"]) == 0):
 		return 0
 	return 1
 

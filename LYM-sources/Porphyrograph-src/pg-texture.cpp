@@ -2195,6 +2195,7 @@ void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_e
 	vector<PhotoData*>dir_photoData;
 	// scans image files inside a diaporama
 	int nbImagesInDir = 0;
+	//printf("Dir photo %s\n", dir_entry.path().string().c_str());
 	for (auto& subdir_entry : subDirIter) {
 		if (subdir_entry.is_regular_file()) {
 			++pg_nbCompressedImages[indConfiguration];
@@ -2206,13 +2207,13 @@ void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_e
 
 			// stores the photo file name
 			dir_photoData[nbImagesInDir]->PhotoName = subdir_entry.path().string();
+			//printf("Subdir photo %s\n", subdir_entry.path().string().c_str());
 
 			// loads the images with a size that corresponds to the screen size
 			dir_photoData[nbImagesInDir]->pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
 
 			// loads the compressed image into GPU
 			dir_photoData[nbImagesInDir]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
-			// printf("texture ID indCompressedImage %d\n", dir_photoData[indCompressedImage]->texBuffID);
 
 			printOglError(8);
 

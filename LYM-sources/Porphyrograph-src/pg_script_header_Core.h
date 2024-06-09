@@ -1,6 +1,6 @@
 // CONFIGURATION CONSTANTS
-// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22
-// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs
+// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24
+// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks
 constexpr auto double_window                  = false     ;
 constexpr auto wide_screen                    = false     ;
 constexpr auto window_width                   = 1920      ;
@@ -21,8 +21,10 @@ constexpr auto nb_particles                   = 200000    ;
 constexpr auto nb_CATypes                     = 7         ;
 #define PG_NB_TRACKS                   4         
 #define PG_NB_PATHS                    12        
-constexpr auto project_name                   = "Ada";
+constexpr auto project_name                   = "Song";
 #define PG_MAX_CONFIGURATIONS          10        
+#define PG_NB_CA_PARAMS                8         
+#define PG_NB_MASTER_MASKS             6         
 #define var_double_window
 #define var_wide_screen
 #define var_window_width
@@ -45,6 +47,8 @@ constexpr auto project_name                   = "Ada";
 #define var_PG_NB_PATHS
 #define var_project_name
 #define var_PG_MAX_CONFIGURATIONS
+#define var_PG_NB_CA_PARAMS
+#define var_PG_NB_MASTER_MASKS
 enum ConfigurationVarIDs {
   _double_window = 0,
   _wide_screen,
@@ -68,6 +72,8 @@ enum ConfigurationVarIDs {
   _PG_NB_PATHS,
   _project_name,
   _PG_MAX_CONFIGURATIONS,
+  _PG_NB_CA_PARAMS,
+  _PG_NB_MASTER_MASKS,
   _MaxConfigurationVarIDs};
 // SCENARIO VARIABLES # FULL SCENARIO
 #define var_CA1_CA2_weight
@@ -76,22 +82,8 @@ enum ConfigurationVarIDs {
 #define var_CA2SubType
 #define var_CA2Type
 #define var_CAcolorSpread
-#define var_CAParams1
-#define var_CAParams1_pulse
-#define var_CAParams2
-#define var_CAParams2_pulse
-#define var_CAParams3
-#define var_CAParams3_pulse
-#define var_CAParams4
-#define var_CAParams4_pulse
-#define var_CAParams5
-#define var_CAParams5_pulse
-#define var_CAParams6
-#define var_CAParams6_pulse
-#define var_CAParams7
-#define var_CAParams7_pulse
-#define var_CAParams8
-#define var_CAParams8_pulse
+#define var_CAParams
+#define var_CAParams_pulse
 #define var_CAstep
 #define var_repop_CA
 #define var_flashCABG_freq
@@ -125,12 +117,7 @@ enum ConfigurationVarIDs {
 #define var_master_mask
 #define var_master_mask_offsetX
 #define var_master_mask_offsetY
-#define var_master_mask_opacity_1
-#define var_master_mask_opacity_2
-#define var_master_mask_opacity_3
-#define var_master_mask_opacity_4
-#define var_master_mask_opacity_5
-#define var_master_mask_opacity_6
+#define var_master_mask_opacity
 #define var_master_mask_scale
 #define var_master_mask_scale_ratio
 #define var_master_offsetX
@@ -177,6 +164,26 @@ enum ConfigurationVarIDs {
 #define var_playing_secondClipNameLeft
 #define var_playing_secondClipNameRight
 #define var_activeClipArts
+#define var_ClipArt_width
+#define var_ClipArt_width_pulse
+#define var_ClipArt_stroke_color_preset
+#define var_ClipArt_stroke_color_preset_pulse
+#define var_ClipArt_layer_1_color_preset
+#define var_ClipArt_layer_1_color_preset_pulse
+#define var_ClipArt_layer_2_color_preset
+#define var_ClipArt_layer_2_color_preset_pulse
+#define var_ClipArt_layer_3_color_preset
+#define var_ClipArt_layer_3_color_preset_pulse
+#define var_ClipArt_layer_4_color_preset
+#define var_ClipArt_layer_4_color_preset_pulse
+#define var_ClipArt_layer_5_color_preset
+#define var_ClipArt_layer_5_color_preset_pulse
+#define var_ClipArt_layer_6_color_preset
+#define var_ClipArt_layer_6_color_preset_pulse
+#define var_ClipArt_layer_7_color_preset
+#define var_ClipArt_layer_7_color_preset_pulse
+#define var_ClipArt_layer_8_color_preset
+#define var_ClipArt_layer_8_color_preset_pulse
 #define var_moving_messages
 #define var_invertMovie
 #define var_movie_gamma
@@ -389,22 +396,10 @@ enum ConfigurationVarIDs {
 #define var_PartMixingWeight
 #define var_PartMixingWeight_pulse
 #define var_SecondMasterMixingWeight
-#define var_trackMasterWeight_0
-#define var_trackMasterWeight_0_pulse
-#define var_trackMasterWeight_1
-#define var_trackMasterWeight_1_pulse
-#define var_trackMasterWeight_2
-#define var_trackMasterWeight_2_pulse
-#define var_trackMasterWeight_3
-#define var_trackMasterWeight_3_pulse
-#define var_trackMixingWeight_0
-#define var_trackMixingWeight_0_pulse
-#define var_trackMixingWeight_1
-#define var_trackMixingWeight_1_pulse
-#define var_trackMixingWeight_2
-#define var_trackMixingWeight_2_pulse
-#define var_trackMixingWeight_3
-#define var_trackMixingWeight_3_pulse
+#define var_trackMasterWeight
+#define var_trackMasterWeight_pulse
+#define var_trackMixingWeight
+#define var_trackMixingWeight_pulse
 #define var_blurRadius_1
 #define var_blurRadius_2
 #define var_currentDrawingTrack
@@ -427,22 +422,8 @@ enum InterpVarIDs{
   _CA2SubType,
   _CA2Type,
   _CAcolorSpread,
-  _CAParams1,
-  _CAParams1_pulse,
-  _CAParams2,
-  _CAParams2_pulse,
-  _CAParams3,
-  _CAParams3_pulse,
-  _CAParams4,
-  _CAParams4_pulse,
-  _CAParams5,
-  _CAParams5_pulse,
-  _CAParams6,
-  _CAParams6_pulse,
-  _CAParams7,
-  _CAParams7_pulse,
-  _CAParams8,
-  _CAParams8_pulse,
+  _CAParams,
+  _CAParams_pulse,
   _CAstep,
   _repop_CA,
   _flashCABG_freq,
@@ -476,12 +457,7 @@ enum InterpVarIDs{
   _master_mask,
   _master_mask_offsetX,
   _master_mask_offsetY,
-  _master_mask_opacity_1,
-  _master_mask_opacity_2,
-  _master_mask_opacity_3,
-  _master_mask_opacity_4,
-  _master_mask_opacity_5,
-  _master_mask_opacity_6,
+  _master_mask_opacity,
   _master_mask_scale,
   _master_mask_scale_ratio,
   _master_offsetX,
@@ -528,6 +504,26 @@ enum InterpVarIDs{
   _playing_secondClipNameLeft,
   _playing_secondClipNameRight,
   _activeClipArts,
+  _ClipArt_width,
+  _ClipArt_width_pulse,
+  _ClipArt_stroke_color_preset,
+  _ClipArt_stroke_color_preset_pulse,
+  _ClipArt_layer_1_color_preset,
+  _ClipArt_layer_1_color_preset_pulse,
+  _ClipArt_layer_2_color_preset,
+  _ClipArt_layer_2_color_preset_pulse,
+  _ClipArt_layer_3_color_preset,
+  _ClipArt_layer_3_color_preset_pulse,
+  _ClipArt_layer_4_color_preset,
+  _ClipArt_layer_4_color_preset_pulse,
+  _ClipArt_layer_5_color_preset,
+  _ClipArt_layer_5_color_preset_pulse,
+  _ClipArt_layer_6_color_preset,
+  _ClipArt_layer_6_color_preset_pulse,
+  _ClipArt_layer_7_color_preset,
+  _ClipArt_layer_7_color_preset_pulse,
+  _ClipArt_layer_8_color_preset,
+  _ClipArt_layer_8_color_preset_pulse,
   _moving_messages,
   _invertMovie,
   _movie_gamma,
@@ -740,22 +736,10 @@ enum InterpVarIDs{
   _PartMixingWeight,
   _PartMixingWeight_pulse,
   _SecondMasterMixingWeight,
-  _trackMasterWeight_0,
-  _trackMasterWeight_0_pulse,
-  _trackMasterWeight_1,
-  _trackMasterWeight_1_pulse,
-  _trackMasterWeight_2,
-  _trackMasterWeight_2_pulse,
-  _trackMasterWeight_3,
-  _trackMasterWeight_3_pulse,
-  _trackMixingWeight_0,
-  _trackMixingWeight_0_pulse,
-  _trackMixingWeight_1,
-  _trackMixingWeight_1_pulse,
-  _trackMixingWeight_2,
-  _trackMixingWeight_2_pulse,
-  _trackMixingWeight_3,
-  _trackMixingWeight_3_pulse,
+  _trackMasterWeight,
+  _trackMasterWeight_pulse,
+  _trackMixingWeight,
+  _trackMixingWeight_pulse,
   _blurRadius_1,
   _blurRadius_2,
   _currentDrawingTrack,
@@ -778,22 +762,8 @@ extern int   CA1Type             ;
 extern int   CA2SubType          ;
 extern int   CA2Type             ;
 extern bool  CAcolorSpread       ;
-extern float CAParams1           ;
-extern float CAParams1_pulse     ;
-extern float CAParams2           ;
-extern float CAParams2_pulse     ;
-extern float CAParams3           ;
-extern float CAParams3_pulse     ;
-extern float CAParams4           ;
-extern float CAParams4_pulse     ;
-extern float CAParams5           ;
-extern float CAParams5_pulse     ;
-extern float CAParams6           ;
-extern float CAParams6_pulse     ;
-extern float CAParams7           ;
-extern float CAParams7_pulse     ;
-extern float CAParams8           ;
-extern float CAParams8_pulse     ;
+extern float CAParams            [(PG_NB_CA_PARAMS+1)];
+extern float CAParams_pulse      [(PG_NB_CA_PARAMS+1)];
 extern int   CAstep              ;
 extern float repop_CA            ;
 extern int   flashCABG_freq      ;
@@ -827,12 +797,7 @@ extern float master_crop_y       ;
 extern float master_mask         ;
 extern float master_mask_offsetX ;
 extern float master_mask_offsetY ;
-extern float master_mask_opacity_1;
-extern float master_mask_opacity_2;
-extern float master_mask_opacity_3;
-extern float master_mask_opacity_4;
-extern float master_mask_opacity_5;
-extern float master_mask_opacity_6;
+extern float master_mask_opacity [(PG_NB_MASTER_MASKS+1)];
 extern float master_mask_scale   ;
 extern float master_mask_scale_ratio;
 extern float master_offsetX      ;
@@ -879,6 +844,26 @@ extern string playing_clipNameRight;
 extern string playing_secondClipNameLeft;
 extern string playing_secondClipNameRight;
 extern int   activeClipArts      ;
+extern float ClipArt_width       ;
+extern float ClipArt_width_pulse ;
+extern float ClipArt_stroke_color_preset;
+extern float ClipArt_stroke_color_preset_pulse;
+extern float ClipArt_layer_1_color_preset;
+extern float ClipArt_layer_1_color_preset_pulse;
+extern float ClipArt_layer_2_color_preset;
+extern float ClipArt_layer_2_color_preset_pulse;
+extern float ClipArt_layer_3_color_preset;
+extern float ClipArt_layer_3_color_preset_pulse;
+extern float ClipArt_layer_4_color_preset;
+extern float ClipArt_layer_4_color_preset_pulse;
+extern float ClipArt_layer_5_color_preset;
+extern float ClipArt_layer_5_color_preset_pulse;
+extern float ClipArt_layer_6_color_preset;
+extern float ClipArt_layer_6_color_preset_pulse;
+extern float ClipArt_layer_7_color_preset;
+extern float ClipArt_layer_7_color_preset_pulse;
+extern float ClipArt_layer_8_color_preset;
+extern float ClipArt_layer_8_color_preset_pulse;
 extern float moving_messages     ;
 extern bool  invertMovie         ;
 extern float movie_gamma         ;
@@ -1091,22 +1076,10 @@ extern float PartMasterWeight_pulse;
 extern float PartMixingWeight    ;
 extern float PartMixingWeight_pulse;
 extern float SecondMasterMixingWeight;
-extern float trackMasterWeight_0 ;
-extern float trackMasterWeight_0_pulse;
-extern float trackMasterWeight_1 ;
-extern float trackMasterWeight_1_pulse;
-extern float trackMasterWeight_2 ;
-extern float trackMasterWeight_2_pulse;
-extern float trackMasterWeight_3 ;
-extern float trackMasterWeight_3_pulse;
-extern float trackMixingWeight_0 ;
-extern float trackMixingWeight_0_pulse;
-extern float trackMixingWeight_1 ;
-extern float trackMixingWeight_1_pulse;
-extern float trackMixingWeight_2 ;
-extern float trackMixingWeight_2_pulse;
-extern float trackMixingWeight_3 ;
-extern float trackMixingWeight_3_pulse;
+extern float trackMasterWeight   [PG_NB_TRACKS];
+extern float trackMasterWeight_pulse[PG_NB_TRACKS];
+extern float trackMixingWeight   [PG_NB_TRACKS];
+extern float trackMixingWeight_pulse[PG_NB_TRACKS];
 extern int   blurRadius_1        ;
 extern int   blurRadius_2        ;
 extern int   currentDrawingTrack ;

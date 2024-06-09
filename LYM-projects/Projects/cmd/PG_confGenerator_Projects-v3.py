@@ -42,6 +42,7 @@ scene_names = [[]]
 Configuration_InputCsv_names = []
 Scenario_InputCsv_names = []
 FullScenario_InputCsv_name = ""
+OutputScenario_OutputCsv_name = ""
 
 # shader input file names (as many of each type as pairs of configuration/scenario files)
 ParticleAnimation_InputShader_name = []
@@ -236,7 +237,7 @@ def configurationVarValue(var_ID) :
 	global config_initial_values
 
 	for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
-		if(config_id == var_ID) :
+		if(var_ID == config_id) :
 			if(config_type == "const") :
 				return( int(config_init) )
 			elif(config_type == "int") :
@@ -245,6 +246,16 @@ def configurationVarValue(var_ID) :
 				return( float(config_init) )
 			else :
 				return( config_init )
+		elif(var_ID == "("+config_id+"+1)") :
+			if(config_type == "const") :
+				return( int(config_init) + 1)
+			elif(config_type == "int") :
+				return( int(config_init) + 1)
+			elif(config_type == "float") :
+				return( float(config_init) + 1)
+			else :
+				return( config_init )
+	print("Unknown variable range value:", var_ID)
 	return(0)
 
 ##################################################################
@@ -549,6 +560,7 @@ def post_reading_scenarios() :
 
 	global Scenario_InputCsv_names
 	global FullScenario_InputCsv_name
+	global OutputScenario_OutputCsv_name
 
 	global scenario_vars_columns_list
 	global out_scenario_footer
@@ -651,18 +663,19 @@ def post_reading_scenarios() :
 	# generates new scenarios in which the variables are ranked in the same order as in the full scenario
 	# these scenarios are the ones which will be loaded by pg
 	for indConfiguration in range(Nb_Configurations):
-		new_scenario_name = Scenario_InputCsv_names[indConfiguration]
-		path = re.findall(r'^(.*[/\\])[^/\\\.]+\.csv$', new_scenario_name)
+		new_scenario_name = OutputScenario_OutputCsv_name
+		path = re.findall(r'^(.*[/\\])([^/\\\.]+)\.csv$', new_scenario_name)
 		file_rank = indConfiguration + 1
 		if(path != []) :
-			new_scenario_name = path[0] + f'''scenario_{file_rank}.csv'''
+			new_scenario_name = path[0][0] + f'''{path[0][1]}_{file_rank}.csv'''
 		else :
-			new_scenario_name = f'''scenario_{file_rank}.csv'''
+			new_scenario_name = f'''{OutputScenario_OutputCsv_name}_{file_rank}.csv'''
 
 		try:
 			output_scenario_fileCsv = open(new_scenario_name, "wt", newline='')
 		except IOError:
 			print("Configuration generator: New Scenario File not opened:", new_scenario_name, " or path is incorrect")
+		print("Configuration generator: New Scenario File opened:", new_scenario_name)
 
 		varVerbatim = []
 		varType = []
@@ -687,7 +700,8 @@ def post_reading_scenarios() :
 				varID.append(var_ID)
 
 		CSVwriter = csv.writer(output_scenario_fileCsv, delimiter=',')
-		CSVwriter.writerow(["RANK"] + list(range(1, len(full_scenario_vars_specs_dict.keys()) + 1)))
+		print("rank",len(full_scenario_vars_specs_dict.keys()),"varID",len(varID))
+		CSVwriter.writerow(["RANK"] + list(range(1, len(varID) + 1)))
 		# variable_full_scenario_header_dictionary[current_scenario_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 		CSVwriter.writerow(["VERBATIM"] + varVerbatim)
 		CSVwriter.writerow(["TYPE"] +  varType)
@@ -919,44 +933,51 @@ def write_script_header_and_body() :
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		callBack_id_string = full_specs[3]
 		type_string = full_specs[2]
+		index_range = scenario_to_cpp_range(type_string)
 		if(callBack_id_string != "NULL") :
 			callBack_generic_id_string = callBack_id_string + "_generic"
 			if(type_string == "bool") :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));\n".format(callBack_id_string))
 			elif(type_string == "sign") :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, double_to_sign(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(param_input_type, double_to_sign(scenario_or_gui_command_value.val_num));\n".format(callBack_id_string))
 			elif(type_string == "path") :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(param_input_type, double_to_path(scenario_or_gui_command_value.val_num));\n".format(callBack_id_string))
 			elif(type_string == "float") :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, float(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(param_input_type, float(scenario_or_gui_command_value.val_num));\n".format(callBack_id_string))
 			elif(type_string == "int") :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, int(scenario_or_gui_command_value.val_num));\n" % callBack_id_string)
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(param_input_type, int(scenario_or_gui_command_value.val_num));\n".format(callBack_id_string))
 			elif(type_string == "string") :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, scenario_or_gui_command_value.val_string);\n" % callBack_id_string)
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(param_input_type, scenario_or_gui_command_value.val_string);\n".format(callBack_id_string))
 			elif(type_string.startswith("int")) :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, scenario_or_gui_command_value.val_array);\n" % callBack_id_string)
+				ScriptBody.write("void {}(int ind_path, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	for (int index = {}; index < {}; index++) {{;\n".format(index_range[0], index_range[1]));
+				ScriptBody.write("		{}(index, param_input_type, int(scenario_or_gui_command_value.val_array[index]));\n".format(callBack_id_string))
+				ScriptBody.write("	}\n")
 			elif(type_string.startswith("bool")) :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, scenario_or_gui_command_value.val_array);\n" % callBack_id_string)
+				ScriptBody.write("void {}(int ind_path, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	for (int index = {}; index < {}; index++) {{;\n".format(index_range[0], index_range[1]));
+				ScriptBody.write("		{}(index, param_input_type, bool(scenario_or_gui_command_value.val_array[index]));\n".format(callBack_id_string))
+				ScriptBody.write("	}\n")
 			elif(type_string.startswith("float")) :
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, double *scenario_or_gui_command_value);\n" % callBack_id_string)
-				ScriptBody.write("void %s(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {\n" % callBack_generic_id_string)
-				ScriptBody.write("	%s(param_input_type, scenario_or_gui_command_value.val_array);\n" % callBack_id_string)
+				ScriptBody.write("void {}(int ind_path, pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	for (int index = {}; index < {}; index++) {{;\n".format(index_range[0], index_range[1]));
+				ScriptBody.write("		{}(index, param_input_type, scenario_or_gui_command_value.val_array[index]);\n".format(callBack_id_string))
+				ScriptBody.write("	}\n")
 			else :
 				print("Configuration generator: Unknown callback ",callBack_id_string," parameter type [",type_string,"]")
 				sys.exit(0)
@@ -1225,9 +1246,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							elif(pulsing_mode == "pulsed_absolute") :
 								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 							elif(pulsing_mode == "pulsed_uniform") :
-								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
+								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 							elif(pulsing_mode == "pulsed_differential") :
-								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
+								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 							else :
 								print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 								sys.exit(0)
@@ -1306,9 +1327,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						elif(pulsing_mode == "pulsed_absolute") :
 							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 						elif(pulsing_mode == "pulsed_uniform") :
-							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
+							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_differential") :
-							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
+							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 							sys.exit(0)
@@ -1387,9 +1408,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						elif(pulsing_mode == "pulsed_absolute") :
 							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 						elif(pulsing_mode == "pulsed_uniform") :
-							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
+							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_differential") :
-							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
+							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 							sys.exit(0)
@@ -1470,9 +1491,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							elif(pulsing_mode == "pulsed_absolute") :
 								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 							elif(pulsing_mode == "pulsed_uniform") :
-								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
+								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 							elif(pulsing_mode == "pulsed_differential") :
-								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
+								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 							else :
 								print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 								sys.exit(0)
@@ -1516,13 +1537,11 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						Master_fs_index  += 1
 					Master_fs_index  -= 1
 				elif(type_string.startswith("int")) :
-					Master_body_glsl = Master_body_glsl + "  " + var_ID + " = int(uniform_Master_scenario_var_data[" + str(Master_fs_index) + "]);\n"
 					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
 						Master_body_glsl = Master_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "]);\n";
 						Master_fs_index  += 1
 					Master_fs_index  -= 1
 				elif(type_string.startswith("float")) :
-					Master_body_glsl = Master_body_glsl + "  " + var_ID + " = uniform_Master_scenario_var_data[" + str(Master_fs_index) + "];\n"
 					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
 						Master_body_glsl = Master_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "]);\n";
 						Master_fs_index  += 1
@@ -1553,9 +1572,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						elif(pulsing_mode == "pulsed_absolute") :
 							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 						elif(pulsing_mode == "pulsed_uniform") :
-							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
+							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_differential") :
-							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
+							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 							sys.exit(0)
@@ -1678,6 +1697,7 @@ def main(main_args) :
 	global Configuration_InputCsv_names
 	global Scenario_InputCsv_names
 	global FullScenario_InputCsv_name
+	global OutputScenario_OutputCsv_name
 
 	global scenario_vars_columns_list
 
@@ -1712,7 +1732,7 @@ def main(main_args) :
 	# ARGUMENTS
 	##################################################################
 	try:
-		opts, args = getopt.getopt(main_args,"n:c:f:s:",["nb_configurations=","configuration=", "full_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "update_body_out="])
+		opts, args = getopt.getopt(main_args,"n:c:f:o:s:",["nb_configurations=","configuration=", "full_scenario=", "output_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "update_body_out="])
 	except getopt.GetoptError:
 		print(USAGE)
 		sys.exit(2)
@@ -1725,6 +1745,8 @@ def main(main_args) :
 			Configuration_InputCsv_names = re.split(r",", arg)
 		elif opt in ("-f", "--full_scenario"):
 			FullScenario_InputCsv_name = arg
+		elif opt in ("-o", "--output_scenario"):
+			OutputScenario_OutputCsv_name = arg
 		elif opt in ("-s", "--scenario"):
 			Scenario_InputCsv_names  = re.split(r",", arg)
 		# C++ OUTPUT INCLUDED FILES
@@ -1840,7 +1862,7 @@ def main(main_args) :
 
 	##################################################################
 	# READS THE CSV SCENARIO FILE
-	##################################################################line_scene_header
+	##################################################################
 	scenario_vars_columns_list = []
 	for scenarioFileName, indConfig in zip(Scenario_InputCsv_names, range(Nb_Configurations)) :
 		try:
