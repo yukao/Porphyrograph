@@ -206,7 +206,7 @@ def main(main_args):
 						if var_ID and trackMasterWeight_indices == [] :
 							trackMasterWeight_indices.append(index)
 							var_verbatim = "track_levels"
-							var_type = "int[0..PG_NB_TRACKS]"
+							var_type = "float[0..PG_NB_TRACKS]"
 							var_ID = "trackMasterWeight"
 							var_callBack = "NULL"
 							var_GUI = "trackMasterWeight"
@@ -219,7 +219,7 @@ def main(main_args):
 						if var_ID and trackMasterWeight_pulse_indices == [] :
 							trackMasterWeight_pulse_indices.append(index)
 							var_verbatim = "track_levels"
-							var_type = "int[0..PG_NB_TRACKS]"
+							var_type = "float[0..PG_NB_TRACKS]"
 							var_ID = "trackMasterWeight_pulse"
 							var_callBack = "NULL"
 							var_GUI = "trackMasterWeight_pulse"
@@ -232,7 +232,7 @@ def main(main_args):
 						if var_ID and trackMixingWeight_indices == [] :
 							trackMixingWeight_indices.append(index)
 							var_verbatim = "track_levels"
-							var_type = "int[0..PG_NB_TRACKS]"
+							var_type = "float[0..PG_NB_TRACKS]"
 							var_ID = "trackMixingWeight"
 							var_callBack = "NULL"
 							var_GUI = "trackMixingWeight"
@@ -245,7 +245,7 @@ def main(main_args):
 						if var_ID and trackMixingWeight_pulse_indices == [] :
 							trackMixingWeight_pulse_indices.append(index)
 							var_verbatim = "track_levels"
-							var_type = "int[0..PG_NB_TRACKS]"
+							var_type = "float[0..PG_NB_TRACKS]"
 							var_ID = "trackMixingWeight_pulse"
 							var_callBack = "NULL"
 							var_GUI = "trackMixingWeight_pulse"

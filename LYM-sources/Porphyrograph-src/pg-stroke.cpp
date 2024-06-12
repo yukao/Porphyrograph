@@ -51,7 +51,7 @@
 //float **pg_Path_TimeStamp = NULL;
 
 // SVG paths from scenario
-vector<SVG_scenarioPathCurve*>	 SVG_scenarioPathCurves[PG_MAX_CONFIGURATIONS];
+vector<SVG_scenarioPathCurve>	 SVG_scenarioPathCurves[PG_MAX_CONFIGURATIONS];
 int						 pg_nb_SVG_path_groups[PG_MAX_CONFIGURATIONS] = { 0 };
 int						 pg_current_SVG_path_group = 1;
 
@@ -1294,12 +1294,9 @@ void stroke_geometry_calculation(int pathNo, int curr_position_x, int curr_posit
 	//printf("stroke_geometry_calculation for path %d (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f)\n", pathNo, paths_x_prev_prev[pathNo], paths_y_prev_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo], paths_x[pathNo], paths_y[pathNo], paths_x_next[pathNo], paths_y_next[pathNo]);
 
 #ifdef KOMPARTSD
-		// sends the position of the cursor to the recorder for later replay
-	pg_IPClient * client;
+	// sends the position of the cursor to the recorder for later replay
 	sprintf(AuxString, "/abs_pen_xy %.0f %.0f", float(CurrentMousePos_x[0]), float(CurrentMousePos_y[0]));
-	if ((client = pg_UDP_client((char *)"udp_Record_send"))) {
-		pg_send_message_udp((char *)"ff", (char *)AuxString, client);
-	}
+	pg_send_message_udp((char *)"ff", (char *)AuxString, (char*)"udp_Record_send");
 #endif
 
 	// define the tangents
@@ -1379,7 +1376,7 @@ void stroke_geometry_calculation(int pathNo, int curr_position_x, int curr_posit
 
 	// random angle for cristal effect used in PIERRES
 #if defined(var_pen_angle_pulse)
-	if (pg_ScenarioActiveVars[_pen_angle_pulse][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_angle_pulse]) {
 		if (pen_angle_pulse > 0) {
 			paths_x_prev[pathNo] += rand_0_1 * pen_angle_pulse * 10;
 			paths_y_prev[pathNo] += rand_0_1 * pen_angle_pulse * 10;
@@ -1491,7 +1488,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	// does not advance the path if the speed is null or negative
 	double readingSpeed = pg_Path_Status[pathNo].get_path_curve_readSpeedScale(pg_current_configuration_rank);
 #if defined(var_path_replay_speed)
-	if (pg_ScenarioActiveVars[_path_replay_speed][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_speed]) {
 		readingSpeed *= path_replay_speed;
 		// printf("reading speed of path %d is replay speed %.2f readingSpeed %.2f\n", pathNo, path_replay_speed, readingSpeed);
 	}
@@ -1641,15 +1638,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_x_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_y_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (pg_ScenarioActiveVars[_path_translX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_translY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
 			path_transl(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_translX, path_translY);
 	}
 #endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (pg_ScenarioActiveVars[_path_scaleX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_scaleY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
 			path_scale_wrtScreenCenter(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_scaleX, path_scaleY);
 		}
@@ -1658,15 +1655,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_xL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_yL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (pg_ScenarioActiveVars[_path_translX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_translY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
 			path_transl(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_translX, path_translY);
 		}
 #endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (pg_ScenarioActiveVars[_path_scaleX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_scaleY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
 			path_scale_wrtScreenCenter(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_scaleX, path_scaleY);
 		}
@@ -1696,8 +1693,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//printf("Path %d Point ini %.2f %.2f %.2f %.2f\n",
 		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (pg_ScenarioActiveVars[_path_translX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_translY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
 			path_transl(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_translX, path_translY);
 			path_transl(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
@@ -1707,8 +1704,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//printf("Path %d Point transl %.2f %.2f %.2f %.2f\n",
 		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (pg_ScenarioActiveVars[_path_scaleX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_scaleY][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
 			path_scale_wrtScreenCenter(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_scaleX, path_scaleY);
 			path_scale_wrtScreenCenter(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
@@ -1879,7 +1876,7 @@ void pg_replay_paths(double theTime) {
 		// active reading
 #if defined(var_Novak_flight_on)
 		//printf("pathNo %d replay %d \n", pathNo, is_path_replay[pathNo]);
-		if (pg_ScenarioActiveVars[_Novak_flight_on][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Novak_flight_on]
 			&& is_path_replay[pathNo] && Novak_flight_on) {
 			//printf("pathNo %d flight clock %.2f %.2f\n", pathNo, pg_CurrentClockTime, prev_Novak_flightCurrentCLockTime[pathNo]);
 			if (pg_CurrentClockTime != prev_Novak_flightCurrentCLockTime[pathNo]) {
@@ -2036,7 +2033,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 
 // pen position variation from pulse used in PIERRES
 #if defined(var_pen_position_pulse)
-		if (pg_ScenarioActiveVars[_pen_position_pulse][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_position_pulse]) {
 			if (pathNo == 0) {
 				// pen position update from noise
 				float random_angle = rand_0_1 * 2.f * float(PI);
@@ -2076,8 +2073,8 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 #ifndef var_alKemi
 		if (distanceFromPrecedingPoint < std::max(2.f, (paths_RadiusX[pathNo] / 5.f))
 #else
-		if (((pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank] == true && distanceFromPrecedingPoint < 2.f)
-			|| (pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank] == false 
+		if (((pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi] == true && distanceFromPrecedingPoint < 2.f)
+			|| (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi] == false 
 				&& distanceFromPrecedingPoint < std::max(2.f, (paths_RadiusX[pathNo] / 5.f))))
 #endif
 			&& Pulsed_CurrentMousePos_x[pathNo] != PG_OUT_OF_SCREEN_CURSOR
@@ -2092,7 +2089,6 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 			// uses the pen's motion on the tablet to compensate for the metawear sensors, in case they do not work
 			// sends the acceleration of the cursor to the sensor's web model for animation
 			if (pathNo == 0) {
-				pg_IPClient* client;
 				float delta_t_prev = float(paths_time_prev_prev[0] - paths_time_prev[0]);
 				float delta_t = float(paths_time_prev[0] - paths_time[0]);
 				float delta_t2 = delta_t_prev + delta_t;
@@ -2108,22 +2104,20 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 					linAcc_x = 0.f;
 					linAcc_y = 0.f;
 				}
-				if ((client = pg_UDP_client((char*)"udp_Live_send"))) {
-					//sprintf(AuxString, "/mss_mass_sensor_acc mw1 %.4f %.4f", linAcc_x, linAcc_y);
-					if (pg_FrameNo % 3 == 0) {
-						sprintf(AuxString, "/penPosX %.4f", fabs(float(Pulsed_CurrentMousePos_x[0] / 1920.f)));
-						pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_Live_send");
-					}
-					else if (pg_FrameNo % 3 == 1) {
-						sprintf(AuxString, "/penPosY %.4f", fabs(float(Pulsed_CurrentMousePos_y[0] / 2160.f)));
-						pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_Live_send");
-					}
-					else {
-						sprintf(AuxString, "/penAcc %.4f", min(1.f, float(sqrt(fabs(linAcc_x * linAcc_x + linAcc_y * linAcc_y)) * 10.f + 0.1)));
-						pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_Live_send");
-					}
-					//printf("/mss_mass_sensor_acc mw1 %.4f %.4f\n", linAcc_x, linAcc_y);
+				//sprintf(AuxString, "/mss_mass_sensor_acc mw1 %.4f %.4f", linAcc_x, linAcc_y);
+				if (pg_FrameNo % 3 == 0) {
+					sprintf(AuxString, "/penPosX %.4f", fabs(float(Pulsed_CurrentMousePos_x[0] / 1920.f)));
+					pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_Live_send");
 				}
+				else if (pg_FrameNo % 3 == 1) {
+					sprintf(AuxString, "/penPosY %.4f", fabs(float(Pulsed_CurrentMousePos_y[0] / 2160.f)));
+					pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_Live_send");
+				}
+				else {
+					sprintf(AuxString, "/penAcc %.4f", min(1.f, float(sqrt(fabs(linAcc_x * linAcc_x + linAcc_y * linAcc_y)) * 10.f + 0.1)));
+					pg_send_message_udp((char*)"f", (char*)AuxString, (char*)"udp_Live_send");
+				}
+				//printf("/mss_mass_sensor_acc mw1 %.4f %.4f\n", linAcc_x, linAcc_y);
 			}
 #endif
 
@@ -2159,7 +2153,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 				}
 			}
 
-			if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 				// tactile drawing above first track
 				if (pathNo > 0) {
 					// tells the shader that it should be drawn on the current drawing track
@@ -2270,8 +2264,8 @@ void Path_Status::load_svg_path(char *fileName,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, 
 	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
 	if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-		if (pg_ScenarioActiveVars[_path_replay_trackNo][indConfiguration]
-			&& pg_ScenarioActiveVars[_path_record][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indConfiguration][_path_replay_trackNo]
+			&& pg_ScenarioActiveVars[indConfiguration][_path_record]) {
 			is_path_replay[pathNo] = false;
 			((int *)ScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
 			((bool *)ScenarioVarPointers[_path_record])[pathNo] = false;

@@ -21,7 +21,7 @@ constexpr auto nb_particles                   = 200000    ;
 constexpr auto nb_CATypes                     = 7         ;
 #define PG_NB_TRACKS                   4         
 #define PG_NB_PATHS                    12        
-constexpr auto project_name                   = "Song";
+constexpr auto project_name                   = "Ada";
 #define PG_MAX_CONFIGURATIONS          10        
 #define PG_NB_CA_PARAMS                8         
 #define PG_NB_MASTER_MASKS             6         
@@ -1102,3 +1102,4 @@ extern int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2];
 extern void * ScenarioVarPointers[_MaxInterpVarIDs];
 extern char *ScenarioVarMessages[_MaxInterpVarIDs];
 extern char *ScenarioVarStrings[_MaxInterpVarIDs];
+void FullScenarioArrayVarInit();

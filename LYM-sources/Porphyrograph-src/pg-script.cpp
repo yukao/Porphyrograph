@@ -1207,7 +1207,7 @@ void pg_initializeScenearioVariables(void) {
 		//glUseProgram(pg_shader_programme[indConfiguration][pg_shader_Camera]);
 		//glUniform2f(uniform_Camera_vp_2fv_width_height[indConfiguration],
 		//	(GLfloat)workingWindow_width, (GLfloat)window_height);
-		if (pg_ScenarioActiveVars[_part_initialization][indConfiguration]
+		if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]
 			&& pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]) {
 			// only assigned at initialization, does not change during the set
 			glUseProgram(pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]);
@@ -1232,7 +1232,7 @@ void pg_initializeScenearioVariables(void) {
 		// INItiAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			int indVar = ConfigScenarioVarRank[indConfiguration][indP];
-			if (pg_ScenarioActiveVars[indVar][indConfiguration]) {
+			if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
 				if (ScenarioVarIndiceRanges[indVar][0] == -1) {
 					if (ScenarioVarTypes[indVar] == _pg_float) {
 						*((float*)ScenarioVarPointers[indVar]) = float(InitialValuesInterpVar[indConfiguration][indVar].val_num);
@@ -1289,7 +1289,7 @@ void pg_initializeScenearioVariables(void) {
 		// track replay 
 		// source track recording
 		// is recording source -> has to stop recording source 
-		if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			for (int indPath = 1; indPath < PG_NB_PATHS; indPath++) {
 				if (path_replay_trackNo[indPath] >= 0) {
 					if (tracksSync) {
@@ -1305,7 +1305,7 @@ void pg_initializeScenearioVariables(void) {
 		// track recording 
 		// source track recording
 		// is recording source -> has to stop recording source 
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			for (int indPath = 1; indPath < PG_NB_PATHS; indPath++) {
 				if (!path_record[indPath]) {
 					pg_path_recording_stop(indPath);
@@ -1356,11 +1356,11 @@ void pg_initializeScenearioVariables(void) {
 	// SCENARIO VARIABLES INITIALIZATION FOR THE CURRENT CONFIGURATION
 	if (pg_current_configuration_rank >= 0 && pg_current_configuration_rank < unsigned int(pg_NbConfigurations)) {
 		// background subraction
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
 		}
 
-		if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 			// particle initialization reset
 			part_initialization = -1;
 		}
@@ -1537,9 +1537,9 @@ void pg_initializeScenearioVariables(void) {
 	if (pg_current_configuration_rank >= 0 && pg_current_configuration_rank < unsigned int(pg_NbConfigurations)) {
 		// color interface initialization
 #if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
-		if (pg_ScenarioActiveVars[_pen_hue][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_pen_sat][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_pen_value][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
 			float control_color[3];
 			HSVtoRGB(pen_hue, pen_sat, pen_value, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1548,9 +1548,9 @@ void pg_initializeScenearioVariables(void) {
 #endif
 
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-		if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_repop_satPart][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_repop_valuePart][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 			float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1559,7 +1559,7 @@ void pg_initializeScenearioVariables(void) {
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(DessinButtonsPaths, DessinButtonLabelsPaths, DessinButtonValues, true, trkDecay_1);
 
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			// photo diaporama initialization
 			ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, photo_diaporama);
 		}
@@ -1598,7 +1598,7 @@ void pg_displaySceneVariables(void) {
 			sprintf(AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			if (pg_CurrentSceneIndex < int(pg_Scenario[pg_current_configuration_rank].size()) - 1) {
-				sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_current_configuration_rank][pg_CurrentSceneIndex + 1]->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_current_configuration_rank][pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			}
 			else {
 				sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), (char*)"END"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
@@ -1610,14 +1610,14 @@ void pg_displaySceneVariables(void) {
 			sprintf(AuxString, "/setup_1 ***"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(AuxString, "/setup_2 ***"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			if (pg_Scenario[pg_current_configuration_rank].size() > 0) {
-				sprintf(AuxString, "/setup_next next_manual:_%s", pg_Scenario[pg_current_configuration_rank][0]->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(AuxString, "/setup_next next_manual:_%s", pg_Scenario[pg_current_configuration_rank][0].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			}
 		}
 		else if (pg_CurrentScene == &pg_InterpolationScene) {
 			sprintf(AuxString, "/setupNo -1"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(AuxString, "/setup interpolation scene"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_1 next_scene_%s", pg_Scenario[pg_current_configuration_rank][pg_SceneIndexAfterInterpolation]->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/setup_2 previous_scene_%s", pg_Scenario[pg_current_configuration_rank][pg_SceneIndexBeforeInterpolation]->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_1 next_scene_%s", pg_Scenario[pg_current_configuration_rank][pg_SceneIndexAfterInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_2 previous_scene_%s", pg_Scenario[pg_current_configuration_rank][pg_SceneIndexBeforeInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
 		sprintf(AuxString, "/configurationNo %d", pg_current_configuration_rank); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1632,9 +1632,9 @@ void pg_displaySceneVariables(void) {
 #endif
 
 #if defined(var_partColor_mode) || defined(var_partStroke_mode) || defined(var_partExit_mode) 
-		if (pg_ScenarioActiveVars[_partColor_mode][pg_current_configuration_rank]
-			|| pg_ScenarioActiveVars[_partStroke_mode][pg_current_configuration_rank]
-			|| pg_ScenarioActiveVars[_partExit_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]
+			|| pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]
+			|| pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			for (int ind = 0; ind < 3; ind++) {
 				if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
 					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1658,7 +1658,7 @@ void pg_displaySceneVariables(void) {
 		}
 #endif
 
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			// clip intialization for First Clip
 			sprintf(AuxString, "/clip_autoplay_left %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(0)));
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
@@ -1681,8 +1681,8 @@ void pg_displaySceneVariables(void) {
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 		}
-		if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			for (int pathNo = 1; pathNo < PG_NB_PATHS; pathNo++) {
 				sprintf(AuxString, "/path_replay_trackNo_%d %d", pathNo, path_replay_trackNo[pathNo]);
 				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -1744,7 +1744,7 @@ void pg_displaySceneVariables(void) {
 	//for (int indVar = rank * 45; indVar < min((rank + 1) * 45, int(_MaxInterpVarIDs)); indVar++) {
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			// the variable has a registered GUI ID in the scenario
 			// and its values has changed since it was sent to the GUI last time
 			if (*(ScenarioVarMessages[indVar])) {
@@ -1925,12 +1925,11 @@ void pg_displaySceneVariables(void) {
 
 void pg_send_message_udp(char *pattern, char * message, char *targetHostid) {
 	pg_IPClient* targetHost = NULL;
-	for (pg_IPClient* client : IP_Clients) {
-		if (strcmp(targetHostid, client->id.c_str()) == 0) {
-			targetHost = client;
+	for (pg_IPClient &client : IP_Clients) {
+		if (strcmp(targetHostid, client.id.c_str()) == 0) {
 			// char msg[512];
 			// sprintf(msg, "send_message_udp %s %s %d size (curr %d tot %d)\n", message, pattern, targetHost, targetHost->current_depth_output_stack, targetHost->max_depth_output_stack);
-			targetHost->storeIP_output_message(message, pattern);
+			client.storeIP_output_message(message, pattern);
 		}
 	}
 	if (!targetHost) {
@@ -1946,15 +1945,6 @@ void pg_send_message_udp(char *pattern, char * message, pg_IPClient *targetHost)
 	}
 }
 
-pg_IPClient *pg_UDP_client(char *targetHostid) {
-	for (pg_IPClient* client : IP_Clients) {
-		if (strcmp(targetHostid, client->id.c_str()) == 0) {
-			return client;
-		}
-	}
-	return NULL;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////
 // LOG FILE
 // makes a line of a CSV file to be used as a starting point for a repetition of the
@@ -1965,7 +1955,7 @@ void pg_logCurrentLineSceneVariables(string fileName) {
 	// SCENARIO-CONTROLLED UNIFORM VARIABLES
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			// dimension 1 variable: number
 			if (ScenarioVarIndiceRanges[indVar][0] == -1) {
 				if (ScenarioVarTypes[indVar] == _pg_float) {
@@ -2031,7 +2021,7 @@ void pg_logFirstLineSceneVariables(void) {
 	fprintf(pg_csv_log_file, "ID");
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			fprintf(pg_csv_log_file, ",%s", ScenarioVarStrings[indVar]);
 		}
 	}
@@ -2103,8 +2093,7 @@ void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, bool scena
 #endif
 #if defined(var_MIDIwithCameraFlash)
 void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
-#if defined(var_cameraCaptFreq)
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #ifdef PG_WITH_PUREDATA
 			// sends a message to PD to stop sending music Flashs
@@ -2114,19 +2103,18 @@ void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool
 #endif
 		}
 	}
-#endif
 }
 #endif
 #if defined(var_Contact_clip_in_range)
 void Contact_clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			ContAct_clip_ranges_min.clear();
 			ContAct_clip_ranges_max.clear();
 			if (scenario_or_gui_command_value != "NULL") {
 				std::vector<std::string> ContAct_clip_ranges;
 				ContAct_clip_ranges = split_string(scenario_or_gui_command_value, '/');
-				for (string range : ContAct_clip_ranges) {
+				for (string &range : ContAct_clip_ranges) {
 					std::vector<std::string> clip_min_max;
 					clip_min_max = split_string(range, '-');
 					ContAct_clip_ranges_min.push_back(stoi(clip_min_max[0]));
@@ -2259,7 +2247,7 @@ void pen_value_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 void repop_huePart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(var_repop_huePart)
-		if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
 			&& defined(var_repop_satPart) && defined(var_repop_valuePart)
 				float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
@@ -2274,7 +2262,7 @@ void repop_huePart_callBack(pg_Parameter_Input_Type param_input_type, float scen
 void repop_satPart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(var_repop_huePart)
-		if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
 			&& defined(var_repop_satPart) && defined(var_repop_valuePart)
 				float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
@@ -2290,9 +2278,9 @@ void repop_valuePart_callBack(pg_Parameter_Input_Type param_input_type, float sc
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-	if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_repop_satPart][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_repop_valuePart][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 		HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 		sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
@@ -2336,8 +2324,7 @@ void Contact_motion_speed_callBack(pg_Parameter_Input_Type param_input_type, flo
 #endif
 
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-#if defined(var_cameraCaptFreq)
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// sprintf(AuxString, "/message Exposure_%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			if (scenario_or_gui_command_value != CameraCurrent_exposure) {
@@ -2349,8 +2336,8 @@ void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float sce
 			}
 		}
 	}
-#endif
 }
+
 #if defined(var_Caverne_Mesh_Profusion)
 void Caverne_Mesh_Profusion_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -2369,7 +2356,7 @@ void Caverne_Mesh_Profusion_callBack(pg_Parameter_Input_Type param_input_type, f
 }
 #endif
 void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// sprintf(AuxString, "/message Gamma%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			if (scenario_or_gui_command_value != CameraCurrent_gamma) {
@@ -2383,7 +2370,7 @@ void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenar
 	}
 }
 void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_gain) {
 				printf("Cam gain %.2f\n", scenario_or_gui_command_value);
@@ -2396,7 +2383,7 @@ void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 }
 void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_brightness) {
 				//printf("Cam brightness %.2f\n", scenario_or_gui_command_value);
@@ -2409,7 +2396,7 @@ void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float s
 	}
 }
 void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_saturation) {
 				//printf("Cam saturation %.2f\n", scenario_or_gui_command_value);
@@ -2422,7 +2409,7 @@ void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float s
 	}
 }
 void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_contrast) {
 				//printf("Cam contrast %.2f\n", scenario_or_gui_command_value);
@@ -2435,7 +2422,7 @@ void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float sce
 	}
 }
 void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_WB_B) {
 				//printf("Cam WB B %.2f\n", scenario_or_gui_command_value);
@@ -2448,7 +2435,7 @@ void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 }
 void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_WB_R) {
 				//printf("Cam WB R %.2f\n", scenario_or_gui_command_value);
@@ -2480,33 +2467,37 @@ void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int
 }
 #endif
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		// starts playing another video
-		pg_play_movie_no();
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+			// starts playing another video
+			pg_play_movie_no();
 
-		// if the video no is outside the range of available videos: stops the playing video
-		if (playing_movieNo != currentlyPlaying_movieNo
-			&& (playing_movieNo < 0 || playing_movieNo >= int(pg_VideoTracks[pg_current_configuration_rank].size()))) {
-			printf("video no is outside the range of available videos: stops the playing video \n");
+			// if the video no is outside the range of available videos: stops the playing video
+			if (playing_movieNo != currentlyPlaying_movieNo
+				&& (playing_movieNo < 0 || playing_movieNo >= int(pg_VideoTracks[pg_current_configuration_rank].size()))) {
+				printf("video no is outside the range of available videos: stops the playing video \n");
 
-			currentlyPlaying_movieNo = -1;
-			pg_movie_frame.setTo(Scalar(0, 0, 0));
-			sprintf(AuxString, "/movie_shortName %s", "---");
-			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+				currentlyPlaying_movieNo = -1;
+				pg_movie_frame.setTo(Scalar(0, 0, 0));
+				sprintf(AuxString, "/movie_shortName %s", "---");
+				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			}
 		}
 	}
 }
 void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		//printf("Movie No %d\n", playing_movieNo);
-		// if the video no is outside the range of available videos: stops the playing video
-		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())) {
-			pg_movie_status.reset_initialTime(scenario_or_gui_command_value);
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+			//printf("Movie No %d\n", playing_movieNo);
+			// if the video no is outside the range of available videos: stops the playing video
+			if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())) {
+				pg_movie_status.reset_initialTime(scenario_or_gui_command_value);
+			}
 		}
 	}
 }
 void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			//printf("camera current %d new %d param type %d\n", pg_current_active_cameraNo, cameraNo, param_input_type);
 			if (cameraNo != pg_current_active_cameraNo) {
@@ -2519,7 +2510,7 @@ void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or
 
 #if defined(var_script_1)
 void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_script_1][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_script_1]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// stops the current script #1 if one is active
 			if (currently_runnings_script_1 != "NULL") {
@@ -2536,16 +2527,16 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 				currently_runnings_script_1 = scenario_or_gui_command_value;
 				string  full_script_name = scripts_directory + currently_runnings_script_1;
 				unsigned int serverPort = 7000;
-				for (pg_IPClient* client : IP_Clients) {
-					if (strcmp("udp_script_1_send", client->id.c_str()) == 0) {
-						serverPort = client->Remote_server_port;
+				for (pg_IPClient &client : IP_Clients) {
+					if (strcmp("udp_script_1_send", client.id.c_str()) == 0) {
+						serverPort = client.Remote_server_port;
 						break;
 					}
 				}
 				unsigned int clientPort = 9000;
-				for (pg_IPServer *server: IP_Servers) {
-					if (strcmp("udp_TouchOSC_receive", server->id.c_str()) == 0) {
-						clientPort = server->Local_server_port;
+				for (pg_IPServer &server: IP_Servers) {
+					if (strcmp("udp_TouchOSC_receive", server.id.c_str()) == 0) {
+						clientPort = server.Local_server_port;
 						break;
 					}
 				}
@@ -2581,7 +2572,7 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 #endif
 
 void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
@@ -2608,7 +2599,7 @@ void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, str
 	}
 }
 void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
@@ -2635,78 +2626,84 @@ void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, st
 }
 #if PG_NB_PARALLEL_CLIPS >= 2
 void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		if (scenario_or_gui_command_value != "NULL") {
-			for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
-				if (pg_clip_tracks[pg_current_configuration_rank][ind_clip].get_name() == scenario_or_gui_command_value) {
-					// starts playing another clip
-					//printf("Start playing clip \n");
-					playing_secondClipNoLeft = ind_clip;
-					printf("playing second left clip name %s\n", scenario_or_gui_command_value.c_str());
-					pg_play_clip_no(1, _clipLeft, playing_secondClipNoLeft);
-					return;
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+			if (scenario_or_gui_command_value != "NULL") {
+				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
+					if (pg_clip_tracks[pg_current_configuration_rank][ind_clip].get_name() == scenario_or_gui_command_value) {
+						// starts playing another clip
+						//printf("Start playing clip \n");
+						playing_secondClipNoLeft = ind_clip;
+						printf("playing second left clip name %s\n", scenario_or_gui_command_value.c_str());
+						pg_play_clip_no(1, _clipLeft, playing_secondClipNoLeft);
+						return;
+					}
 				}
+				printf("Second left cLip not found [%s]\n", scenario_or_gui_command_value.c_str());
 			}
-			printf("Scecond left cLip not found [%s]\n", scenario_or_gui_command_value.c_str());
+			else {
+				//printf("Stop playing second left cLip [NULL]\n");
+			}
+			playing_secondClipNoLeft = -1;
+			pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(1, playing_secondClipNoLeft);
+			sprintf(AuxString, "/clip2_shortName_0 %s", "---");
+			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
-		else {
-			//printf("Stop playing second left cLip [NULL]\n");
-		}
-		playing_secondClipNoLeft = -1;
-		pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(1, playing_secondClipNoLeft);
-		sprintf(AuxString, "/clip2_shortName_0 %s", "---");
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
 
 void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-		if (scenario_or_gui_command_value != "NULL") {
-			for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
-				if (pg_clip_tracks[pg_current_configuration_rank][ind_clip].get_name() == scenario_or_gui_command_value) {
-					// starts playing another clip
-					//printf("Start playing clip \n");
-					playing_secondClipNoRight = ind_clip;
-					printf("playing second right clip name %s\n", scenario_or_gui_command_value.c_str());
-					pg_play_clip_no(1, _clipRight, playing_secondClipNoRight);
-					return;
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+			if (scenario_or_gui_command_value != "NULL" && scenario_or_gui_command_value != "") {
+				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
+					if (pg_clip_tracks[pg_current_configuration_rank][ind_clip].get_name() == scenario_or_gui_command_value) {
+						// starts playing another clip
+						//printf("Start playing clip \n");
+						playing_secondClipNoRight = ind_clip;
+						printf("playing second right clip name %s\n", scenario_or_gui_command_value.c_str());
+						pg_play_clip_no(1, _clipRight, playing_secondClipNoRight);
+						return;
+					}
 				}
+				printf("Second left cLip not found [%s]\n", scenario_or_gui_command_value.c_str());
 			}
-			printf("Scecond left cLip not found [%s]\n", scenario_or_gui_command_value.c_str());
+			else {
+				//printf("Stop playing second left cLip [NULL]\n");
+			}
+			playing_secondClipNoRight = -1;
+			pg_clip_status[_clipRight].setCurrentlyPlaying_clipNo(1, playing_secondClipNoRight);
+			sprintf(AuxString, "/clip2_shortName_1 %s", "---");
+			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
-		else {
-			//printf("Stop playing second left cLip [NULL]\n");
-		}
-		playing_secondClipNoRight = -1;
-		pg_clip_status[_clipRight].setCurrentlyPlaying_clipNo(1, playing_secondClipNoRight);
-		sprintf(AuxString, "/clip2_shortName_1 %s", "---");
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
 #endif
 
 void pg_play_movie_no(void) {
-	if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
-		&& playing_movieNo != currentlyPlaying_movieNo) {
-		pg_movie_frame.setTo(Scalar(0, 0, 0));
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
+			&& playing_movieNo != currentlyPlaying_movieNo) {
+			pg_movie_frame.setTo(Scalar(0, 0, 0));
 
-		// printf("VideoPb Video initialization inside command movie+ (thread) \n");
+			// printf("VideoPb Video initialization inside command movie+ (thread) \n");
 
-		BrokenInterpolationVar[_playing_movieNo] = true;
-		currentlyPlaying_movieNo = playing_movieNo;
-		pg_movie_frame.setTo(Scalar(0, 0, 0));
-		sprintf(AuxString, "/movie_shortName %s", pg_VideoTracks[pg_current_configuration_rank][playing_movieNo]->videoShortName.c_str());
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			BrokenInterpolationVar[_playing_movieNo] = true;
+			currentlyPlaying_movieNo = playing_movieNo;
+			pg_movie_frame.setTo(Scalar(0, 0, 0));
+			sprintf(AuxString, "/movie_shortName %s", pg_VideoTracks[pg_current_configuration_rank][playing_movieNo].videoShortName.c_str());
+			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 
-		// texture ID initialization (should not be inside a thread)
-		if (pg_movie_texture_texID == NULL_ID) {
-			glGenTextures(1, &pg_movie_texture_texID);
+			// texture ID initialization (should not be inside a thread)
+			if (pg_movie_texture_texID == NULL_ID) {
+				glGenTextures(1, &pg_movie_texture_texID);
+			}
+
+			is_movieLoading = true;
+			printf("Loading %s\n", pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
+			// sprintf(AuxString, "/message %s", movieFileName[currentlyPlaying_movieNo].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
+			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName);
 		}
-
-		is_movieLoading = true;
-		printf("Loading %s\n", pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
-		// sprintf(AuxString, "/message %s", movieFileName[currentlyPlaying_movieNo].c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
-		pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName);
 	}
 }
 
@@ -2951,8 +2948,8 @@ void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scen
 void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		// MESH INTERFACE VARIABLE INITIALIZATION
-		for (unsigned int indImage = 0; indImage < pg_Meshes[pg_current_configuration_rank].size(); indImage++) {
-			sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_current_configuration_rank].size(); indMesh++) {
+			sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh + 1, (activeMeshes & (1 << (indMesh)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		}
 	}
 }
@@ -2961,8 +2958,8 @@ void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenari
 void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		// MESH INTERFACE VARIABLE INITIALIZATION
-		for (unsigned int indImage = 0; indImage < pg_Meshes[pg_current_configuration_rank].size(); indImage++) {
-			sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage + 1, (mobileMeshes & (1 << (indImage)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
+		for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_current_configuration_rank].size(); indMesh++) {
+			sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh + 1, (mobileMeshes & (1 << (indMesh)))); pg_send_message_udp((char *)"i", (char *)AuxString, (char *)"udp_TouchOSC_send");
 		}
 	}
 }
@@ -3017,24 +3014,24 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 			&& int(scenario_or_gui_command_value) != pg_current_SVG_path_group) {
 			//printf("old current path %d\n", current_path_group);
 			bool was_path_replay[PG_NB_PATHS + 1];
-			for (SVG_scenarioPathCurve* curve : SVG_scenarioPathCurves[pg_current_configuration_rank]) {
+			for (SVG_scenarioPathCurve &curve : SVG_scenarioPathCurves[pg_current_configuration_rank]) {
 				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
-				if (curve->path_no <= PG_NB_PATHS
-					&& curve->path_group == pg_current_SVG_path_group) {
-					was_path_replay[curve->path_no]
-						= is_path_replay[curve->path_no];
-					if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
-						if (is_path_replay[curve->path_no]) {
+				if (curve.path_no <= PG_NB_PATHS
+					&& curve.path_group == pg_current_SVG_path_group) {
+					was_path_replay[curve.path_no]
+						= is_path_replay[curve.path_no];
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+						if (is_path_replay[curve.path_no]) {
 							//printf("Stops Replay path_no %d: %d\n", paths[indPrerecPath].path_no, is_path_replay[paths[indPrerecPath].indPath]);
 
-							(curve->path_no);
+							(curve.path_no);
 						}
 					}
-					if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 						// is recording source -> has to stop recording source 
-						if (pg_Path_Status[curve->path_no].path_isActiveRecording) {
+						if (pg_Path_Status[curve.path_no].path_isActiveRecording) {
 							//printf("Stops Recording indPath %d: %d\n", paths[indPrerecPath].path_no, pg_Path_Status[paths[indPrerecPath].path_no].path_isActiveRecording);
-							pg_path_recording_stop(curve->path_no);
+							pg_path_recording_stop(curve.path_no);
 						}
 					}
 				}
@@ -3042,30 +3039,30 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 			clear_path_group();
 			pg_current_SVG_path_group = int(scenario_or_gui_command_value);
 			//printf("new current path %d\n", current_path_group);
-			for (SVG_scenarioPathCurve* curve : SVG_scenarioPathCurves[pg_current_configuration_rank]) {
-				int pathNo = curve->path_no;
+			for (SVG_scenarioPathCurve &curve : SVG_scenarioPathCurves[pg_current_configuration_rank]) {
+				int pathNo = curve.path_no;
 				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
 				if (pathNo <= PG_NB_PATHS
-					&& curve->path_group == pg_current_SVG_path_group) {
+					&& curve.path_group == pg_current_SVG_path_group) {
 					//printf("load path for replay %s\n", paths[indPrerecPath].path_fileName.c_str());
-					if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]
-						&& pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
-						pg_Path_Status[pathNo].load_svg_path((char*)curve->path_fileName.c_str(),
-							curve->pathRadius,
-							curve->path_r_color, 
-							curve->path_g_color, 
-							curve->path_b_color,
-							curve->path_readSpeedScale, 
-							curve->path_ID, 
-							curve->with_color_radius_from_scenario,
-							curve->secondsforwidth,
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+						&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+						pg_Path_Status[pathNo].load_svg_path((char*)curve.path_fileName.c_str(),
+							curve.pathRadius,
+							curve.path_r_color, 
+							curve.path_g_color, 
+							curve.path_b_color,
+							curve.path_readSpeedScale, 
+							curve.path_ID, 
+							curve.with_color_radius_from_scenario,
+							curve.secondsforwidth,
 							pg_current_configuration_rank);
 					}
-					if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 						// start reading if it was already reading
-						if (was_path_replay[curve->path_no]) {
+						if (was_path_replay[curve.path_no]) {
 							//printf("Starts Replay indPath %d: %d\n", paths[indPrerecPath].path_no, was_path_replay[paths[indPrerecPath].path_no]);
-							pg_path_replay_trackNo_start(curve->path_no, curve->path_track);
+							pg_path_replay_trackNo_start(curve.path_no, curve.path_track);
 						}
 					}
 				}
@@ -3095,7 +3092,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		}
 		// stops recording if recording is on
 		bool isTrackRecord = false;
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			isTrackRecord = path_record[pathNo];
 		}
 
@@ -3144,20 +3141,20 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 void reload_paths_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value) {
-			for(SVG_scenarioPathCurve *curve: SVG_scenarioPathCurves[pg_current_configuration_rank]) {
-				int pathNo = curve->path_no;
+			for(SVG_scenarioPathCurve &curve: SVG_scenarioPathCurves[pg_current_configuration_rank]) {
+				int pathNo = curve.path_no;
 				if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-					if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]
-						&& pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
-						pg_Path_Status[pathNo].load_svg_path((char*)curve->path_fileName.c_str(),
-							curve->pathRadius,
-							curve->path_r_color, 
-							curve->path_g_color, 
-							curve->path_b_color,
-							curve->path_readSpeedScale, 
-							curve->path_ID, 
-							curve->with_color_radius_from_scenario,
-							curve->secondsforwidth,
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+						&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+						pg_Path_Status[pathNo].load_svg_path((char*)curve.path_fileName.c_str(),
+							curve.pathRadius,
+							curve.path_r_color, 
+							curve.path_g_color, 
+							curve.path_b_color,
+							curve.path_readSpeedScale, 
+							curve.path_ID, 
+							curve.with_color_radius_from_scenario,
+							curve.secondsforwidth,
 							pg_current_configuration_rank);
 					}
 				}
@@ -3213,10 +3210,9 @@ void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, 
 	//printf("end callback path record for path 1 recording %d active recording %d (recorded %d)\n", path_record[1], int(pg_Path_Status[1].path_isActiveRecording), recorded_path[1]);
 	//printf("end callback path record for path 2 recording %d active recording %d (recorded %d)\n", path_record[2], int(pg_Path_Status[2].path_isActiveRecording), recorded_path[2]);
 }
-#if defined(var_part_initialization) 
 void part_move_init(void) {
-	if (pg_ScenarioActiveVars[_part_path_follow][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repulse][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_follow]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_repulse]) {
 		for (int pathNo = 0; pathNo < PG_NB_PATHS; pathNo++) {
 			((bool*)ScenarioVarPointers[_part_path_follow])[pathNo] = false;
 			((bool*)ScenarioVarPointers[_part_path_repulse])[pathNo] = false;
@@ -3225,8 +3221,8 @@ void part_move_init(void) {
 }
 void part_path_follow_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	bool state = false;
-	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_follow][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_follow]) {
 		state = part_path_follow[pathNo];
 		if (!state) {
 			return; // nothing to do for false values (does not follow)
@@ -3237,8 +3233,8 @@ void part_path_follow_callBack(int pathNo, pg_Parameter_Input_Type param_input_t
 }
 void part_path_repulse_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	bool state = false;
-	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_path_repulse][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_repulse]) {
 		state = part_path_repulse[pathNo];
 		if (!state) {
 			return; // nothing to do for false values (does not reoulse)
@@ -3247,7 +3243,6 @@ void part_path_repulse_callBack(int pathNo, pg_Parameter_Input_Type param_input_
 		((bool*)ScenarioVarPointers[_part_path_repulse])[pathNo] = state;
 	}
 }
-#if defined(var_partMove_target) && defined(var_partMove_rand) && defined(var_part_timeToTargt)
 void partMove_target_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (partMove_target) {
 		partMove_rand = false;
@@ -3266,28 +3261,30 @@ void part_initialization_callBack(pg_Parameter_Input_Type param_input_type, int 
 	pg_ParticleTargetFrameNo = pg_FrameNo + int(part_timeToTargt);
 	//printf("part initialization call back %d %d\n", part_initialization, scenario_or_gui_command_value);
 }
-#endif
-#endif
 
-#if defined(var_sensor_layout)
 void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	// copies the grid layout
-	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
-		assignSensorPositions();
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+		// copies the grid layout
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			assignSensorPositions();
+		}
 	}
 }
 void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	// copies the grid layout
-	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
-		assignSensorActivations();
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_activation]) {
+		// copies the grid layout
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			assignSensorActivations();
+		}
 	}
 }
 void sensor_sample_setUp_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
-		sensor_sample_setUp_interpolation();
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_sample_setUp]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			sensor_sample_setUp_interpolation();
+		}
 	}
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////
 // SCENARIO BASED COMMANDS
@@ -3302,8 +3299,8 @@ void pg_NextRecordReplayPath(void) {
 	bool new_record = false;
 	for (int pathNo = PG_NB_PATHS - 1; pathNo >= 1; pathNo--) {
 		if (path_record[pathNo]) {
-			if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]
-				&& pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 				path_replay_trackNo_callBack(pathNo, _PG_GUI_COMMAND, -1);
 				if (pathNo < PG_NB_PATHS - 1) {
 					path_record_callBack(pathNo + 1, _PG_GUI_COMMAND, true);
@@ -3354,8 +3351,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		}
 		else if (ScenarioVarTypes[indVar] == _pg_int) {
 			if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(var_nb_CATypes)
-				if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
 					&& (indVar == _CA1Type || indVar == _CA2Type ||
 						indVar == _CA1SubType || indVar == _CA2SubType)) {
 					// for CAType we choose to alternate randomly between both types, according
@@ -3371,7 +3367,6 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 					}
 				}
 				else
-#endif
 				{
 					*((int*)ScenarioVarPointers[indVar]) = int(round(scenario_or_gui_command_value.val_num));
 				}
@@ -3426,8 +3421,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		else if (ScenarioVarTypes[indVar] == _pg_int) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(var_nb_CATypes)
-					if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
 						&& (indVar == _CA1Type || indVar == _CA2Type ||
 							indVar == _CA1SubType || indVar == _CA2SubType)) {
 						// for CAType we choose to alternate randomly between both types, according
@@ -3458,7 +3452,6 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 						}
 					}
 					else
-#endif
 					{
 						if (array_index < 0) {
 							for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
@@ -3504,7 +3497,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		}
 
 		// runs the callBack on the updated variables which have one
-		if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank] && ScenarioVarCallbacks[indVar]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar] && ScenarioVarCallbacks[indVar]) {
 			//printf("Run callback of var \"%s\"\n", ScenarioVarMessages[indVar]);
 			(*ScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value);
 		}
@@ -3622,45 +3615,40 @@ void StartNewScene(int ind_scene, double delta_time) {
 		restoreInitialTimesAndDurations();
 
 		// we place the beginning of the current scene at this time
-		pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time -= delta_time;
-		pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_duration += delta_time;
+		pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time -= delta_time;
+		pg_Scenario[pg_current_configuration_rank][ind_scene].scene_duration += delta_time;
 		if (ind_scene > 0) {
-			pg_Scenario[pg_current_configuration_rank][ind_scene - 1]->scene_final_time -= delta_time;
-			pg_Scenario[pg_current_configuration_rank][ind_scene - 1]->scene_duration -= delta_time;
+			pg_Scenario[pg_current_configuration_rank][ind_scene - 1].scene_final_time -= delta_time;
+			pg_Scenario[pg_current_configuration_rank][ind_scene - 1].scene_duration -= delta_time;
 		}
-		// unuseful because is already made through pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time -= delta_time;
-		//InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time;
+		// unuseful because is already made through pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time -= delta_time;
+		//InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time;
 
-		InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time;
+		InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time;
 		if (ind_scene == 0) {
 			// restarts scenarios
-			AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][0]->scene_initial_time;
+			AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][0].scene_initial_time;
 		}
 
 		// UPDATES THE SCENE POINTERS AND INDICES
 		pg_CurrentSceneIndex = ind_scene;
-		pg_CurrentScene = pg_Scenario[pg_current_configuration_rank][pg_CurrentSceneIndex];
+		pg_CurrentScene = &pg_Scenario[pg_current_configuration_rank][pg_CurrentSceneIndex];
 		pg_SceneIndexBeforeInterpolation = -1;
 		pg_SceneIndexAfterInterpolation = -1;
 
 #ifdef KOMPARTSD
-		pg_IPClient* client;
-		if ((client = pg_UDP_client((char*)"udp_Record_send"))) {
-			// sends the new scene to recording for later replay
-			sprintf(AuxString, "/new_scene %d", ind_scene);
-			pg_send_message_udp((char*)"i", (char*)AuxString, client);
-		}
-		if ((client = pg_UDP_client((char*)"udp_Usine_send"))) {
-			// sends the new scene to Usine for sample selection
-			for (int ind = 0; ind < 4; ind++) {
-				if (ind == ind_scene) {
-					sprintf(AuxString, "/new_scene_%d 1", ind);
-				}
-				else {
-					sprintf(AuxString, "/new_scene_%d 0", ind);
-				}
-				pg_send_message_udp((char*)"i", (char*)AuxString, client);
+		// sends the new scene to recording for later replay
+		sprintf(AuxString, "/new_scene %d", ind_scene);
+		pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_Record_send");
+		// sends the new scene to Usine for sample selection
+		for (int ind = 0; ind < 4; ind++) {
+			if (ind == ind_scene) {
+				sprintf(AuxString, "/new_scene_%d 1", ind);
 			}
+			else {
+				sprintf(AuxString, "/new_scene_%d 0", ind);
+			}
+			pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_Usine_send");
 		}
 #endif
 #if defined(var_moving_messages)
@@ -3694,13 +3682,13 @@ void StartNewScene(int ind_scene, double delta_time) {
 
 			for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 				int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-				if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 					// copies the current value in the initial value
 					pg_keep_value_copy(indVar, pg_CurrentScene->scene_initial_parameters);
 					// if the next interpolation keeps the value, copies the current value in the final value
 					// otherwise copies the initial value of the target scene as final value of the interpolaiton scene
-					if (pg_Scenario[pg_current_configuration_rank][pg_SceneIndexAfterInterpolation]->scene_interpolations[indVar].interpolation_mode != pg_keep_value) {
-						pg_CurrentScene->scene_final_parameters[indVar] = pg_Scenario[pg_current_configuration_rank][pg_SceneIndexAfterInterpolation]->scene_initial_parameters[indVar]; // next scene initial value
+					if (pg_Scenario[pg_current_configuration_rank][pg_SceneIndexAfterInterpolation].scene_interpolations[indVar].interpolation_mode != pg_keep_value) {
+						pg_CurrentScene->scene_final_parameters[indVar] = pg_Scenario[pg_current_configuration_rank][pg_SceneIndexAfterInterpolation].scene_initial_parameters[indVar]; // next scene initial value
 					}
 					else {
 						pg_keep_value_copy(indVar, pg_CurrentScene->scene_final_parameters);
@@ -3709,7 +3697,7 @@ void StartNewScene(int ind_scene, double delta_time) {
 			}
 			for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 				int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-				if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 					pg_CurrentScene->scene_interpolations[indVar].interpolation_mode = pg_linear_interpolation;
 					pg_CurrentScene->scene_interpolations[indVar].offSet = 0.0;
 					pg_CurrentScene->scene_interpolations[indVar].duration = 1.0;
@@ -3741,7 +3729,7 @@ void StartNewScene(int ind_scene, double delta_time) {
 			next_string = "next_manual:";
 		}
 		if (pg_CurrentSceneIndex < int(pg_Scenario[pg_current_configuration_rank].size()) - 1) {
-			sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_current_configuration_rank][pg_CurrentSceneIndex + 1]->scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_current_configuration_rank][pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
 		else {
 			sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), (char*)"END"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
@@ -3755,7 +3743,7 @@ void StartNewScene(int ind_scene, double delta_time) {
 		// reinitialization of the interpolation control variables at the beginning of a new scene
 		for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 			int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-			if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 				BrokenInterpolationVar[indVar] = false;
 				StepwiseInterpolationEffective[indVar] = false;
 				if (pg_CurrentScene->scene_interpolations[indVar].interpolation_mode == pg_keep_value
@@ -3768,10 +3756,10 @@ void StartNewScene(int ind_scene, double delta_time) {
 	// stops ongoing flashes if there is one
 	flashCameraTrk_weight = 0.0f;
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-	if (pg_ScenarioActiveVars[_flashPhotoTrkBeat][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_flashPhotoTrkLength][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		flashPhotoTrk_weight = 0.0f;
 		flashPhotoTrk_nbFrames = 0;
 	}
@@ -3789,9 +3777,9 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 		//printf("Scene %d indP %d indVar %d\n", pg_CurrentSceneIndex, indP, indVar);
 		//if (indVar == _auto_beat) {
 		//	printf("Scene %d belongs to config %d\n",
-		//		pg_CurrentSceneIndex, pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]);
+		//		pg_CurrentSceneIndex, pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]);
 		//}
-		if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			//if (indVar == _cameraNo) {
 			//	printf("Scene %d interpolation %d pg_keep_value %d\n",
 			//		pg_CurrentSceneIndex, cur_scene->scene_interpolations[indVar].interpolation_mode, pg_keep_value);
@@ -4065,15 +4053,15 @@ void pg_update_scenario(void) {
 
 			// scans all scenes to find the current one and applies the corresponding interpolations
 			for (int ind_scene = 0; ind_scene < int(pg_Scenario[pg_current_configuration_rank].size()); ind_scene++) {
-				 //printf( "time %.2f beg %.2f end %.2f\n" , elapsed_time_from_start ,  pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time ,  pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_final_time );
+				 //printf( "time %.2f beg %.2f end %.2f\n" , elapsed_time_from_start ,  pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time ,  pg_Scenario[pg_current_configuration_rank][ind_scene].scene_final_time );
 				// current scene found
-				if ((elapsed_time_from_start >= pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time
-					&& elapsed_time_from_start < pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_final_time)
+				if ((elapsed_time_from_start >= pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time
+					&& elapsed_time_from_start < pg_Scenario[pg_current_configuration_rank][ind_scene].scene_final_time)
 					|| (pg_CurrentSceneIndex == pg_Scenario[pg_current_configuration_rank].size() - 1 && ind_scene == pg_Scenario[pg_current_configuration_rank].size() - 1
-						&& elapsed_time_from_start > pg_Scenario[pg_current_configuration_rank][pg_Scenario[pg_current_configuration_rank].size() - 1]->scene_final_time)) {
+						&& elapsed_time_from_start > pg_Scenario[pg_current_configuration_rank][pg_Scenario[pg_current_configuration_rank].size() - 1].scene_final_time)) {
 					// loop at the end of the scenario
 					if (pg_CurrentSceneIndex == pg_Scenario[pg_current_configuration_rank].size() - 1 && ind_scene == pg_Scenario[pg_current_configuration_rank].size() - 1
-						&& elapsed_time_from_start > pg_Scenario[pg_current_configuration_rank][pg_Scenario[pg_current_configuration_rank].size() - 1]->scene_final_time) {
+						&& elapsed_time_from_start > pg_Scenario[pg_current_configuration_rank][pg_Scenario[pg_current_configuration_rank].size() - 1].scene_final_time) {
 						ind_scene = 0;
 					}
 					// the current scene is finished 
@@ -4104,13 +4092,13 @@ void pg_update_scenario(void) {
 					}
 
 					// for time display + colors when reaching the end of the scene
-					remainingTimeInScene = pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_initial_time + pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_duration - elapsed_time_from_start;
+					remainingTimeInScene = pg_Scenario[pg_current_configuration_rank][ind_scene].scene_initial_time + pg_Scenario[pg_current_configuration_rank][ind_scene].scene_duration - elapsed_time_from_start;
 					//printf( "time %.2f remainingTimeInScene %.2f\n" , elapsed_time_from_start, remainingTimeInScene);
 
-					pg_update_scene_variables(pg_Scenario[pg_current_configuration_rank][ind_scene], elapsed_time_from_start);
+					pg_update_scene_variables(&pg_Scenario[pg_current_configuration_rank][ind_scene], elapsed_time_from_start);
 
-					if (pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_duration != 0) {
-						current_scene_percent = 1. - remainingTimeInScene / pg_Scenario[pg_current_configuration_rank][ind_scene]->scene_duration;
+					if (pg_Scenario[pg_current_configuration_rank][ind_scene].scene_duration != 0) {
+						current_scene_percent = 1. - remainingTimeInScene / pg_Scenario[pg_current_configuration_rank][ind_scene].scene_duration;
 						current_scene_percent = max(0., min(1., current_scene_percent));
 					}
 					else {
@@ -4224,14 +4212,12 @@ void pg_process_key(int key) {
 		pg_draw_scene( _Svg );
 		break;
 
-#if defined(var_cameraCaptFreq)
 		/* ------------------------------- current video background capture */
 	case 'v':
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
 		}
 		break;
-#endif
 
 	default:
 		printf("Alt key %d is not active.\n", key);
@@ -4301,8 +4287,8 @@ void PlayTrack(int indTrack, double timeFromStart) {
 			// std::cout << "cwd: " << cwd << std::endl;
 			int previouslyPlayingSoundtrackNo = currentlyPlaying_trackNo;
 			currentlyPlaying_trackNo = indTrack % pg_SoundTracks[pg_current_configuration_rank].size();
-			std::cout << "Playing soundtrack name: " << pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackFileName << std::endl;
-			sprintf(AuxString, "/soundtrack_fileName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackFileName.c_str());
+			std::cout << "Playing soundtrack name: " << pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName << std::endl;
+			sprintf(AuxString, "/soundtrack_fileName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName.c_str());
 
 #ifdef PG_WITH_PUREDATA
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_PD_send");
@@ -4311,17 +4297,17 @@ void PlayTrack(int indTrack, double timeFromStart) {
 #if defined(PG_WITH_PORTAUDIO)
 			if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < int(pg_SoundTracks[pg_current_configuration_rank].size()))
 				|| pa_sound_data.pa_is_streaming()) {
-				printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_current_configuration_rank][previouslyPlayingSoundtrackNo]->soundtrackFileName).c_str());
+				printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_current_configuration_rank][previouslyPlayingSoundtrackNo].soundtrackFileName).c_str());
 				pa_sound_data.pa_stopMyStream();
 				pa_sound_data.pa_closeMyStream();
 			}
-			printf("Opening Wav file (%s)\n", (char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackFileName).c_str());
+			printf("Opening Wav file (%s)\n", (char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName).c_str());
 			/* Open the soundfile */
-			soundfile_data.sound_file = sf_open((char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackFileName).c_str(),
+			soundfile_data.sound_file = sf_open((char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName).c_str(),
 				SFM_READ, &soundfile_data.sound_file_info);
 			if (sf_error(soundfile_data.sound_file) != SF_ERR_NO_ERROR) {
 				fprintf(stderr, "%s\n", sf_strerror(soundfile_data.sound_file));
-				sprintf(ErrorStr, "Wav file not opened (%s)!", (char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackFileName).c_str()); ReportError(ErrorStr);
+				sprintf(ErrorStr, "Wav file not opened (%s)!", (char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName).c_str()); ReportError(ErrorStr);
 				return;
 			}
 
@@ -4355,7 +4341,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
 			if (currentlyPlaying_trackNo >= 0 
 				&& int(pg_SoundTracks[pg_current_configuration_rank].size()) > currentlyPlaying_trackNo) {
 				nbTrackSoundPeakIndex[pg_current_configuration_rank]
-					= pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackPeaks.size();
+					= pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackPeaks.size();
 			}
 			else {
 				nbTrackSoundPeakIndex[pg_current_configuration_rank] = 0;
@@ -4363,7 +4349,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
 			if (currentlyPlaying_trackNo >= 0 
 				&& int(pg_SoundTracks[pg_current_configuration_rank].size()) > currentlyPlaying_trackNo) {
 				nbTrackSoundOnsetIndex[pg_current_configuration_rank] 
-					= pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackOnsets.size();
+					= pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackOnsets.size();
 			}
 			else {
 				nbTrackSoundOnsetIndex[pg_current_configuration_rank] = 0;
@@ -4378,14 +4364,14 @@ void PlayTrack(int indTrack, double timeFromStart) {
 		// start position seeking
 		if (timeFromStart > 0) {
 			if (sf_seek(soundfile_data.sound_file, sf_count_t(timeFromStart * soundfile_data.sound_file_info.samplerate), SEEK_SET) == -1) {
-				sprintf(ErrorStr, "Seek error in file (%s)!", (char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackFileName).c_str()); ReportError(ErrorStr);
+				sprintf(ErrorStr, "Seek error in file (%s)!", (char*)(pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName).c_str()); ReportError(ErrorStr);
 			}
 			soundfile_data.sound_file_StartReadingTime
-				= RealTime() - pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackOnsetsAndPeasksOffset - timeFromStart;
+				= RealTime() - pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackOnsetsAndPeasksOffset - timeFromStart;
 		}
 		else {
 			soundfile_data.sound_file_StartReadingTime 
-				= RealTime() - pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackOnsetsAndPeasksOffset;
+				= RealTime() - pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackOnsetsAndPeasksOffset;
 		}
 #endif
 
@@ -4396,12 +4382,12 @@ void PlayTrack(int indTrack, double timeFromStart) {
 		pg_send_message_udp((char *)"", (char *)"/JUCE_play_track", (char *)"udp_SoundJUCE_send");
 #endif
 
-		//sprintf(AuxString, "/soundtrack_shortName %s", pg_SoundTracks[currentlyPlaying_trackNo]->trackShortName.c_str());
+		//sprintf(AuxString, "/soundtrack_shortName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].trackShortName.c_str());
 		//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-		sprintf(AuxString, "/track_shortName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo]->soundtrackShortName.c_str());
+		sprintf(AuxString, "/track_shortName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackShortName.c_str());
 		pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 
-		//printf("soundtrack #%d %s\n", currentlyPlaying_trackNo, pg_SoundTracks[currentlyPlaying_trackNo]->soundtrackFileName.c_str());
+		//printf("soundtrack #%d %s\n", currentlyPlaying_trackNo, pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName.c_str());
 		//BrokenInterpolationVar[_playing_soundtrackNo][pg_current_configuration_rank] = true;
 		currentlyPlaying_trackNo = indTrack;
 	}
@@ -4425,7 +4411,7 @@ void StopTrack(void) {
 	pg_send_message_udp((char *)"", (char *)"/JUCE_play_track", (char *)"udp_SoundJUCE_send");
 #endif
 
-	//sprintf(AuxString, "/soundtrack_shortName %s", pg_SoundTracks[currentlyPlaying_trackNo]->trackShortName.c_str());
+	//sprintf(AuxString, "/soundtrack_shortName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].trackShortName.c_str());
 	//pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 	sprintf(AuxString, "/track_shortName %s", "void");
 	pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
@@ -4441,13 +4427,13 @@ void pg_launch_performance(int ind_scene) {
 	
 	// restarts scenarios
 	restoreInitialTimesAndDurations();
-	InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][0]->scene_initial_time;
-	AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][0]->scene_initial_time;
+	InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][0].scene_initial_time;
+	AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][0].scene_initial_time;
 
 	// reinitialization of the interpolation control variables at the beginning of a new scene
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[indVar][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			BrokenInterpolationVar[indVar] = false;
 			StepwiseInterpolationEffective[indVar] = false;
 		}
@@ -4457,7 +4443,7 @@ void pg_launch_performance(int ind_scene) {
 	// remove_files_in_dir(&snapshots_dir_path_name); // removes snapshots before pg_launch_performance
 
 #if defined(var_GenerativeNights_planes)
-	if (pg_ScenarioActiveVars[_GenerativeNights_planes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
 		initCA = 1.2f;
 		printf("initCA %.2f\n", initCA);
 	}
@@ -4512,7 +4498,7 @@ void pg_keyStrokeScripts(int key) {
 		setup_plus(1);
 		break;
 	case 'b':
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			pg_NextRecordReplayPath();
 		}
 		break;
@@ -4528,19 +4514,19 @@ void pg_keyStrokeScripts(int key) {
 		// advances to next scene and keeps the global timing
 	case's': {
 		restoreInitialTimesAndDurations();
-		double deltaTime = pg_Scenario[pg_current_configuration_rank][1 + pg_CurrentSceneIndex]->scene_initial_time - (pg_CurrentClockTime - InitialScenarioTime);
+		double deltaTime = pg_Scenario[pg_current_configuration_rank][1 + pg_CurrentSceneIndex].scene_initial_time - (pg_CurrentClockTime - InitialScenarioTime);
 		// if the scene has not yet begun
 		if (deltaTime > 0) {
 			int new_scene = ((1 + pg_CurrentSceneIndex) % pg_Scenario[pg_current_configuration_rank].size());
 			// we place the beginning of the current scene at this time
-			pg_Scenario[pg_current_configuration_rank][new_scene]->scene_initial_time -= deltaTime;
+			pg_Scenario[pg_current_configuration_rank][new_scene].scene_initial_time -= deltaTime;
 			if (new_scene > 0) {
-				pg_Scenario[pg_current_configuration_rank][new_scene - 1]->scene_final_time -= deltaTime;
-				pg_Scenario[pg_current_configuration_rank][new_scene - 1]->scene_duration -= deltaTime;
+				pg_Scenario[pg_current_configuration_rank][new_scene - 1].scene_final_time -= deltaTime;
+				pg_Scenario[pg_current_configuration_rank][new_scene - 1].scene_duration -= deltaTime;
 			}
-			pg_Scenario[pg_current_configuration_rank][new_scene]->scene_duration += deltaTime;
-			// unuseful because is already made through pg_Scenario[pg_current_configuration_rank][new_scene]->scene_initial_time -= deltaTime;
-			//InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][new_scene]->scene_initial_time;
+			pg_Scenario[pg_current_configuration_rank][new_scene].scene_duration += deltaTime;
+			// unuseful because is already made through pg_Scenario[pg_current_configuration_rank][new_scene].scene_initial_time -= deltaTime;
+			//InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_current_configuration_rank][new_scene].scene_initial_time;
 			StartNewScene(new_scene, 0);
 		}
 	}
@@ -4552,12 +4538,8 @@ void pg_keyStrokeScripts(int key) {
 		   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case'T':
 		pg_writeMessageOnScreen("******");
-		pg_IPClient* client;
 		// message to supercollider
-		client = pg_UDP_client((char*)"udp_SC");
-		if (client != NULL) {
-			pg_send_message_udp((char*)"f", (char*)"/testUDP 0", client);
-		}
+		pg_send_message_udp((char*)"f", (char*)"/testUDP 0", (char*)"udp_SC");
 		// message to touch OSC
 		sprintf(AuxString, "/setup_1 TEST_UDP"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		//sprintf(AuxString, "/return_message returnUPD_%f", pg_CurrentClockTime); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
@@ -4639,9 +4621,9 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 
 #if defined(var_flashParticleInit_freq) && defined(var_part_initialization) && defined(var_part_timeToTargt)
-	if (pg_ScenarioActiveVars[_flashParticleInit_freq][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_part_timeToTargt][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashParticleInit_freq]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_timeToTargt]) {
 		if ((*control_function)(flashParticleInit_freq)) {
 			part_initialization = (unsigned int) (floor(rand_0_1 * pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size())) % pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size();
 			pg_ParticleTargetFrameNo = pg_FrameNo + int(part_timeToTargt);
@@ -4649,10 +4631,9 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 
-#if defined(var_nb_CATypes)
-	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 #if defined(var_flashTrkCA_freq_0)
-		if (pg_ScenarioActiveVars[_flashTrkCA_freq_0][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_0]) {
 			if ((*control_function)(flashTrkCA_freq_0)) {
 				flashTrkCA_weights[0] = 1.0;
 				flashTrkCA_weights_duration[0] = 1;
@@ -4661,7 +4642,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 #endif
 #if defined(var_flashTrkCA_freq_1)
-		if (pg_ScenarioActiveVars[_flashTrkCA_freq_1][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_1]) {
 			if ((*control_function)(flashTrkCA_freq_1)) {
 				flashTrkCA_weights[1] = 1.0;
 				flashTrkCA_weights_duration[1] = 1;
@@ -4670,7 +4651,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 #endif
 #if defined(var_flashTrkCA_freq_2)
-		if (pg_ScenarioActiveVars[_flashTrkCA_freq_2][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_2]) {
 			if ((*control_function)(flashTrkCA_freq_2)) {
 				flashTrkCA_weights[2] = 1.0;
 				flashTrkCA_weights_duration[2] = 1;
@@ -4679,7 +4660,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 #endif
 #if defined(var_flashTrkCA_freq_3)
-		if (pg_ScenarioActiveVars[_flashTrkCA_freq_3][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_3]) {
 			if ((*control_function)(flashTrkCA_freq_3)) {
 				flashTrkCA_weights[3] = 1.0;
 				flashTrkCA_weights_duration[3] = 1;
@@ -4688,10 +4669,10 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 #endif
 	}
-#endif
+
 
 #if defined(var_flashTrkPart_freq_0)
-	if (pg_ScenarioActiveVars[_flashTrkPart_freq_0][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_0]) {
 		if ((*control_function)(flashTrkPart_freq_0)) {
 			flashTrkPart_weights[0] = 1.0;
 			flashTrkPart_weights_duration[0] = 1;
@@ -4700,7 +4681,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 #if defined(var_flashTrkPart_freq_1)
-	if (pg_ScenarioActiveVars[_flashTrkPart_freq_1][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_1]) {
 		if ((*control_function)(flashTrkPart_freq_1)) {
 			flashTrkPart_weights[1] = 1.0;
 			flashTrkPart_weights_duration[1] = 1;
@@ -4709,7 +4690,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 #if defined(var_flashTrkPart_freq_2)
-	if (pg_ScenarioActiveVars[_flashTrkPart_freq_2][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_2]) {
 		if ((*control_function)(flashTrkPart_freq_2)) {
 			flashTrkPart_weights[2] = 1.0;
 			flashTrkPart_weights_duration[2] = 1;
@@ -4718,7 +4699,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 #if defined(var_flashTrkPart_freq_3)
-	if (pg_ScenarioActiveVars[_flashTrkPart_freq_3][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_3]) {
 		if ((*control_function)(flashTrkPart_freq_3)) {
 			flashTrkPart_weights[3] = 1.0;
 			flashTrkPart_weights_duration[3] = 1;
@@ -4728,7 +4709,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashTrkBG_freq_1)
-	if (pg_ScenarioActiveVars[_flashTrkBG_freq_1][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkBG_freq_1]) {
 		if ((*control_function)(flashTrkBG_freq_1)) {
 			// should only be flashed every second frame because of the way the pixels are spreaded
 			// otherwise the pixels are not emitted
@@ -4741,7 +4722,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 #if defined(var_flashTrkBG_freq_2)
-	if (pg_ScenarioActiveVars[_flashTrkBG_freq_2][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkBG_freq_2]) {
 		if ((*control_function)(flashTrkBG_freq_2)) {
 			// should only be flashed every second frame because of the way the pixels are spreaded
 			// otherwise the pixels are not emitted
@@ -4754,7 +4735,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 #if defined(var_flashTrkBG_freq_3)
-	if (pg_ScenarioActiveVars[_flashTrkBG_freq_3][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkBG_freq_3]) {
 		if ((*control_function)(flashTrkBG_freq_3)) {
 			// should only be flashed every second frame because of the way the pixels are spreaded
 			// otherwise the pixels are not emitted
@@ -4767,46 +4748,40 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 
-#if defined(var_nb_CATypes)
-	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCABG_freq]) {
 		if ((*control_function)(flashCABG_freq)) {
 			flashCABG_weight = 1.0;
 			flashCABG_weight_duration = 1;
 			// printf( "flashCABG_freq (%d)\n" , flashCABG_freq );
 		}
 	}
-#endif
 
-#if defined(var_flashCAPart_freq)
-	if (pg_ScenarioActiveVars[_flashCAPart_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCAPart_freq]) {
 		if ((*control_function)(flashCAPart_freq)) {
 			flashCAPart_weight = 1.0;
 			flashCAPart_weight_duration = 1;
 			// printf( "flashCAPart_freq (%d)\n" , flashCAPart_freq );
 		}
 	}
-#endif
-#if defined(var_flashPartBG_freq)
-	if (pg_ScenarioActiveVars[_flashPartBG_freq][pg_current_configuration_rank]) {
+
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPartBG_freq]) {
 		if ((*control_function)(flashPartBG_freq)) {
 			flashPartBG_weight = 1.0;
 			flashPartBG_weight_duration = 1;
 			// printf( "flashPartBG_freq (%d)\n" , flashPartBG_freq );
 		}
 	}
-#endif
-#if defined(var_flashPartCA_freq) 
-	if (pg_ScenarioActiveVars[_flashPartCA_freq][pg_current_configuration_rank]) {
+
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPartCA_freq]) {
 		if ((*control_function)(flashPartCA_freq)) {
 			flashPartCA_weight = 1.0;
 			flashPartCA_weight_duration = 1;
 			// printf( "flashPartCA_freq (%d)\n" , flashPartCA_freq );
 		}
 	}
-#endif
 
 #if defined(var_AT5_stop_motion) 
-	if (pg_ScenarioActiveVars[_AT5_stop_motion][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_AT5_stop_motion]) {
 		BrokenInterpolationVar[_cameraWeight] = true;
 		if ((*control_function)(AT5_stop_motion)) {
 			//printf("stop motion\n");
@@ -4834,10 +4809,10 @@ void pg_flash_control(bool (*control_function)(int)) {
 	int clip_no_low = 0;
 	int clip_no_high = pg_nbClips[pg_current_configuration_rank] - 1;
 
-	if (pg_ScenarioActiveVars[_Contact_flashchangeClipLeft_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_flashchangeClipLeft_freq]) {
 
 #if defined(var_Contact_clip_in_range)
-		if (pg_ScenarioActiveVars[_Contact_clip_in_range][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_clip_in_range]) {
 			if (ContAct_clip_ranges_min.size() > 0 && ContAct_clip_ranges_min.size() == ContAct_clip_ranges_max.size()) {
 				// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
 				int range_selected = int(rand_0_1 * ContAct_clip_ranges_min.size()) % ContAct_clip_ranges_min.size();
@@ -4954,7 +4929,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashchange_invertAllLayers_freq)
-	if (pg_ScenarioActiveVars[_flashchange_invertAllLayers_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_invertAllLayers_freq]) {
 		if ((*control_function)(flashchange_invertAllLayers_freq)) {
 			invertAllLayers = !invertAllLayers;
 			*((bool*)ScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
@@ -4963,7 +4938,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 	// random selection of an image in the list of available ones
 #if defined(var_flashchange_diaporama_freq)
-	if (pg_ScenarioActiveVars[_flashchange_diaporama_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_diaporama_freq]) {
 		if ((*control_function)(flashchange_diaporama_freq)) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -4988,7 +4963,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	// first selects all the available ones in a random order
 	// second selects randomly one among the possible ones
 #if defined(var_Argenteuil_flashchange_diaporama_freq)
-	if (pg_ScenarioActiveVars[_Argenteuil_flashchange_diaporama_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flashchange_diaporama_freq]) {
 		if ((*control_function)(Argenteuil_flashchange_diaporama_freq)) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				// first pass generates a permuation of the n images
@@ -5033,7 +5008,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashchange_BGcolor_freq)
-	if (pg_ScenarioActiveVars[_flashchange_BGcolor_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
 		if ((*control_function)(flashchange_BGcolor_freq)) {
 			float BG_hue = rand_0_1;
 			HSVtoRGB(BG_hue, 1.f, 1.f, &BG_r, &BG_g, &BG_b);
@@ -5048,7 +5023,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashchange_freeze_freq)
-	if (pg_ScenarioActiveVars[_flashchange_freeze_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_freeze_freq]) {
 		if ((*control_function)(flashchange_freeze_freq)) {
 			freeze = !freeze;
 			*((bool*)ScenarioVarPointers[_freeze]) = freeze;
@@ -5097,8 +5072,8 @@ void ReceiveBeat(void) {
 	sprintf(AuxString, "/loop_beat %d", pg_BeatNo % PG_LOOP_SIZE); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 
-	if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 		// loop start 
 		if ((pg_BeatNo % PG_LOOP_SIZE) == 0) {
 			for (int ind = 1; ind <= PG_NB_PATHS; ind++) {
@@ -5120,7 +5095,7 @@ void ReceiveBeat(void) {
 	}
 
 #if defined(var_flashCameraTrkBeat)
-	if (pg_ScenarioActiveVars[_flashCameraTrkBeat][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBeat]) {
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		// camera flash
 		if (is_flashCameraTrk
@@ -5136,10 +5111,10 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-	if (pg_ScenarioActiveVars[_flashPhotoTrkBeat][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_flashPhotoTrkLength][pg_current_configuration_rank]
-		&& pg_ScenarioActiveVars[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
+		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		// photo flash
 		// weight is the current brightness of the lighting at each frame  until it reaches the threshold value and is then stopped 
 		if (is_flashPhotoTrk
@@ -5153,7 +5128,7 @@ void ReceiveBeat(void) {
 	pg_flash_control(flash_beat_generation);
 
 #if defined(var_flashPhotoChangeBeat)
-	if (pg_ScenarioActiveVars[_flashPhotoChangeBeat][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		// photo change flash
 		if (flashPhotoChangeBeat > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == flashPhotoChangeBeat)) {
 			// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -5173,7 +5148,7 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_Caverne_BackColor)
-	if (pg_ScenarioActiveVars[_Caverne_BackColor][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 		if (Caverne_BackColor) {
 			Caverne_BackColorRed = rand_0_1;
 			Caverne_BackColorGreen = rand_0_1;
@@ -5218,14 +5193,14 @@ void ReceiveBeat(void) {
 
 #ifdef PG_LIGHTS_DMX_IN_PG
 	for (int ind = 0; ind < pg_nb_light_groups[pg_current_configuration_rank]; ind++) {
-		if (pg_light_groups[pg_current_configuration_rank][ind]->get_group_hasBeatCommand()) {
-			pg_light_groups[pg_current_configuration_rank][ind]->update_beatCommand();
+		if (pg_light_groups[pg_current_configuration_rank][ind].get_group_hasBeatCommand()) {
+			pg_light_groups[pg_current_configuration_rank][ind].update_beatCommand();
 		}
 	}
 #endif
 
 #if defined(var_penStrokeAtBeat)
-	if (pg_ScenarioActiveVars[_penStrokeAtBeat][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_penStrokeAtBeat]) {
 		if (penStrokeAtBeat) {
 			FourFrameStrokeNb = 5;
 			FourFrameStroke_x = int(640 + 2 * rand_0_1);
@@ -5235,7 +5210,7 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_Argenteuil_flash_move_track1_freq)
-	if (pg_ScenarioActiveVars[_Argenteuil_flash_move_track1_freq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flash_move_track1_freq]) {
 		if (Argenteuil_flash_move_track1_freq > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == Argenteuil_flash_move_track1_freq)) {
 			Argenteuil_track_x_transl_1 = 200.f + (rand_0_1 - 0.5f) * 300.f;
 			Argenteuil_track_y_transl_1 = 100.f + (rand_0_1 - 0.5f) * 150.f;
@@ -5274,7 +5249,7 @@ void pg_Make_flashCamera(void) {
 // UDP BASED COMMANDS
 ///////////////////////////////////////////////////////////////////////////////////
 void pg_aliasScript(string address_string, string string_argument_0,
-	float float_arguments[MAX_OSC_ARGUMENTS], int nb_arguments) {
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments) {
 #if (defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)) || (defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart))
 	float control_color[3] = { 0 };
 #endif
@@ -5340,354 +5315,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		else if (address_string.length() > DMX_command_beginning_length
 			&& (0 == address_string.compare(0, DMX_command_beginning_length, DMX_command_beginning))
 			&& pg_nb_light_groups[pg_current_configuration_rank] > 0) {
-			// this is a light change command that has to be turned into a DMX command according to the address and the value
-			// addresses are /light/[0-9]+/(dimmer|color|strobe|grey)
-			// splits the argument separated by /
-			std::vector<std::string> address_tags;
-			address_tags = split_string(address_string, '/');
-			//printf("light command %s %s\n", address_tags[0].c_str(), address_tags[1].c_str());
-				// light group parameters control
-			if (address_tags.size() == 3 && address_tags[0].compare("light") == 0
-				&& std::all_of(address_tags[1].begin(), address_tags[1].end(), ::isdigit)) {
-				int light_group = stoi(address_tags[1]);
-				if (light_group > int(pg_Lights[pg_current_configuration_rank].size()) || light_group <= 0) {
-					sprintf(ErrorStr, "Unregistered light group %s/%d in light command (max: %d)!", address_tags[1].c_str(), light_group, pg_nb_light_groups[pg_current_configuration_rank]); ReportError(ErrorStr);
-				}
-				else if(pg_nb_light_groups[pg_current_configuration_rank] > 0) {
-					if (pg_inverse_light_param_hashMap.find(address_tags[2]) == pg_inverse_light_param_hashMap.end()) {
-						sprintf(ErrorStr, "Unknown light command (%s)!", address_tags[2].c_str()); ReportError(ErrorStr);
-					}
-					else {
-						if (nb_arguments != 1) {
-							sprintf(ErrorStr, "light set command (%s) expects %d arguments not %d!", address_string.c_str(), 1, nb_arguments); ReportError(ErrorStr);
-						}
-						else {
-							//printf("sets %s for light group %d %.2f\n", address_tags[2].c_str(), light_group, float_arguments[0]);
-							pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val(pg_inverse_light_param_hashMap[address_tags[2]], float_arguments[0]);
-							sprintf(AuxString, "/%s %.5f", address_string.c_str(), float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-							//printf("TouchOSX % s\n", AuxString);
-						}
-					}
-				}
-#ifdef PG_LIGHTS_DMX_IN_PYTHON
-				// all light value commands are forwarded to python for light DMX commands in Python
-				sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
-#endif
-			}
-			// light group parameters control
-			else if (address_tags.size() == 3 && address_tags[0].compare("light_pulse") == 0
-				&& std::all_of(address_tags[1].begin(), address_tags[1].end(), ::isdigit)) {
-				int light_group = stoi(address_tags[1]);
-				//printf("light pulse %d %.2f\n", light_group, float_arguments[0]);
-				if (light_group > pg_nb_light_groups[pg_current_configuration_rank] || light_group <= 0) {
-					sprintf(ErrorStr, "Unregistered light group %s/%d in light command (max: %d)!", address_tags[1].c_str(), light_group, pg_nb_light_groups[pg_current_configuration_rank]); ReportError(ErrorStr);
-				}
-				else if(pg_nb_light_groups[pg_current_configuration_rank] > 0) {
-					if (pg_inverse_light_param_hashMap.find(address_tags[2]) == pg_inverse_light_param_hashMap.end()) {
-						sprintf(ErrorStr, "Unknown light command (%s)!", address_tags[2].c_str()); ReportError(ErrorStr);
-					}
-					else {
-						if (nb_arguments != 1) {
-							sprintf(ErrorStr, "light pulse command (%s) expects %d arguments not %d!", address_string.c_str(), 1, nb_arguments); ReportError(ErrorStr);
-						}
-						else {
-							switch (pg_inverse_light_param_hashMap[address_tags[2]]) {
-							case _dimmer:
-								//printf("sets dimmer pulse for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_dimmer, float_arguments[0]);
-								break;
-							case _strobe:
-								//printf("sets strobe for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_strobe, float_arguments[0]);
-								break;
-							case _zoom:
-								//printf("sets zoom for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_zoom, float_arguments[0]);
-								break;
-							case _pan:
-								//printf("sets pan for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_pan, float_arguments[0]);
-								break;
-							case _tilt:
-								//printf("sets tilt for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_tilt, float_arguments[0]);
-								break;
-							case _hue:
-								//printf("sets hue for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_hue, float_arguments[0]);
-								break;
-							case _red:
-								//printf("sets red for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_red, float_arguments[0]);
-								break;
-							case _green:
-								//printf("sets green for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_green, float_arguments[0]);
-								break;
-							case _blue:
-								//printf("sets blue for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_blue, float_arguments[0]);
-								break;
-							case _grey:
-								//printf("sets grey for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_grey, float_arguments[0]);
-								break;
-							case _palette_color:
-								//printf("sets palette for light group %d %.2f\n", light_group, float_arguments[0]);
-								pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val_pulse(_palette_color, float_arguments[0]);
-								break;
-							}
-							sprintf(AuxString, "/%s %.5f", address_string.c_str(), float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-							//printf("TouchOSX % s\n", AuxString);
-						}
-					}
-				}
-#ifdef PG_LIGHTS_DMX_IN_PYTHON
-				// all light value commands are forwarded to python for light DMX commands in Python
-				sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
-#endif
-			}
-			// light control command
-			else if (address_tags.size() == 2 && address_tags[0].compare("light_control") == 0) {
-			//printf("address tag %s %s\n", address_tags[0].c_str(), address_tags[1].c_str());
-#if defined(PG_LIGHTS_DMX_IN_PG)
-				// switching off all lights
-				if (address_tags[1].compare("zero_light") == 0) {
-					pg_SendDMXZeros();
-					if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
-						for (const auto& myPair : pg_light_param_hashMap) {
-							int light_param = myPair.first;
-							string light_param_string = myPair.second;
-							sprintf(AuxString, "/light/%s %.4f", light_param_string.c_str(),
-								pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_val(pg_light_command_hashMap_IDs(light_param), 0));
-							pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-						}
-					}
-#if defined(var_light1_grey) && defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light1_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light1_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light1_grey]) = 0.;
-					BrokenInterpolationVar[_light1_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light1_color]) = 0.;
-					BrokenInterpolationVar[_light1_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light1_dimmer]) = 0.;
-					BrokenInterpolationVar[_light1_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light1_strobe]) = 0.;
-#endif
-#if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light2_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light2_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light2_grey]) = 0.;
-					BrokenInterpolationVar[_light2_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light2_color]) = 0.;
-					BrokenInterpolationVar[_light2_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light2_dimmer]) = 0.;
-					BrokenInterpolationVar[_light2_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light2_strobe]) = 0.;
-#endif
-#if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light3_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light3_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light3_grey]) = 0.;
-					BrokenInterpolationVar[_light3_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light3_color]) = 0.;
-					BrokenInterpolationVar[_light3_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light3_dimmer]) = 0.;
-					BrokenInterpolationVar[_light3_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light3_strobe]) = 0.;
-#endif
-#if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light4_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light4_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light4_grey]) = 0.;
-					BrokenInterpolationVar[_light4_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light4_color]) = 0.;
-					BrokenInterpolationVar[_light4_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light4_dimmer]) = 0.;
-					BrokenInterpolationVar[_light4_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light4_strobe]) = 0.;
-#endif
-#if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
-					BrokenInterpolationVar[_light5_grey][pg_current_configuration_rank] = true;
-	if (pg_ScenarioActiveVars[_light5_grey][pg_current_configuration_rank]) {
-					*((float*)ScenarioVarPointers[_light5_grey]) = 0.;
-					BrokenInterpolationVar[_light5_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light5_color]) = 0.;
-					BrokenInterpolationVar[_light5_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light5_dimmer]) = 0.;
-					BrokenInterpolationVar[_light5_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light5_strobe]) = 0.;
-#endif
-#if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light6_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light6_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light6_grey]) = 0.;
-					BrokenInterpolationVar[_light6_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light6_color]) = 0.;
-					BrokenInterpolationVar[_light6_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light6_dimmer]) = 0.;
-					BrokenInterpolationVar[_light6_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light6_strobe]) = 0.;
-#endif
-#if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light7_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light7_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light7_grey]) = 0.;
-					BrokenInterpolationVar[_light7_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light7_color]) = 0.;
-					BrokenInterpolationVar[_light7_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light7_dimmer]) = 0.;
-					BrokenInterpolationVar[_light7_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light7_strobe]) = 0.;
-#endif
-#if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light8_grey][pg_current_configuration_rank]) {
-					BrokenInterpolationVar[_light8_grey][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light8_grey]) = 0.;
-					BrokenInterpolationVar[_light8_color][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light8_color]) = 0.;
-					BrokenInterpolationVar[_light8_dimmer][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light8_dimmer]) = 0.;
-					BrokenInterpolationVar[_light8_strobe][pg_current_configuration_rank] = true;
-					*((float*)ScenarioVarPointers[_light8_strobe]) = 0.;
-#endif
-				}
-				// light group change in the interface, reships the parameter values
-				else if (address_tags[1].compare("light_group") == 0) {
-					if (nb_arguments != 1) {
-						sprintf(ErrorStr, "light light_group command (%s) expects %d arguments not %d!", address_string.c_str(), 1, nb_arguments); ReportError(ErrorStr);
-					}
-					else if(pg_nb_light_groups[pg_current_configuration_rank] > 0) {
-						if (int(float_arguments[0]) < pg_nb_light_groups[pg_current_configuration_rank]) {
-							pg_interface_light_group = int(float_arguments[0]);
-							//printf("light_group command (%s) %d!", address_string.c_str(), pg_interface_light_group); 
-							// interface control values updating according to the current light group focus
-							// update for all the parameters
-							pg_lightGUI_all_values_and_pulse_update();
-							// update for the looped parameters
-							pg_lightGUI_all_loop_update();
-						}
-						//else {
-						//	sprintf(AuxString, "/light_control/light_group %d", pg_interface_light_group);
-						//	pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-						//}
-					}
-				}
-				// single channel value change single precision
-				else if (address_tags[1].compare("channel_value") == 0) {
-					if (nb_arguments != 3) {
-						sprintf(ErrorStr, "light channel_value command (%s) expects %d arguments not %d!", address_string.c_str(), 3, nb_arguments); ReportError(ErrorStr);
-					}
-					else {
-						//printf("Store DMX channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
-						pg_StoreDMX(int(float_arguments[0]), float_arguments[1], int(float_arguments[2]), false);
-						pg_SendDMX();
-					}
-				}
-				// single channel value change double precision
-				else if (address_tags[1].compare("channel_fine_value") == 0) {
-					if (nb_arguments != 3) {
-						sprintf(ErrorStr, "light channel_fine_value command (%s) expects %d arguments not %d!", address_string.c_str(), 3, nb_arguments); ReportError(ErrorStr);
-					}
-					else {
-						//printf("Store DMX *fine* channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
-						pg_StoreDMX(int(float_arguments[0]), float_arguments[1], int(float_arguments[2]), true);
-						pg_SendDMX();
-					}
-				}
-				// random value assignment to a light parameter
-				else if (address_tags[1].compare(0, string("random_").size(), "random_") == 0) {
-					string command = address_tags[1].substr(string("random_").size());
-					int light_group = int(float_arguments[0]);
-					if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
-						float val = rand_0_1;
-						//printf("sets random value %s for light group %d %.2f\n", command.c_str(), light_group, val);
-						pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_val(pg_inverse_light_param_hashMap[command], val);
-						sprintf(AuxString, "/light/%d/%s %.4f", light_group, command.c_str(), val); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-					}
-				}
-				// onOff assignment to a light parameter
-				else if (address_tags[1].compare(0, string("onOff_").size(), "onOff_") == 0) {
-					string command = address_tags[1].substr(string("onOff_").size());
-					int light_group = int(float_arguments[0]);
-					bool is_on = (float_arguments[1] == 1.f);
-					if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
-						//printf("sets onOff value %s for light group %d %d\n", command.c_str(), light_group, int(is_on));
-						pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_onOff(pg_inverse_light_param_hashMap[command], is_on);
-						sprintf(AuxString, "/light-control/onOff_%s %.2f %.2f", command.c_str(), float(light_group), float(is_on)); pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
-					}
-				}
-				// beat based onOff change assignment to a light parameter
-				else if (address_tags[1].compare(0, string("beatOnOff_").size(), "beatOnOff_") == 0) {
-					string command = address_tags[1].substr(string("beatOnOff_").size());
-					int light_group = int(float_arguments[0]);
-					bool is_on = (float_arguments[1] == 1.f);
-					if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
-						//printf("sets beat on/off %s for light group %d %d\n", command.c_str(), light_group, int(is_on));
-						pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_beatOnOff(pg_inverse_light_param_hashMap[command], is_on);
-					}
-				}
-				// beat based random value assignment to a light parameter
-				else if (address_tags[1].compare(0, string("beatRandom_").size(), "beatRandom_") == 0) {
-					string command = address_tags[1].substr(string("beatRandom_").size());
-					int light_group = int(float_arguments[0]);
-					bool is_on = (float_arguments[1] == 1.f);
-					if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
-						//printf("sets beat random %s for light group %d %d\n", command.c_str(), light_group, int(is_on));
-						pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_beatRandom(pg_inverse_light_param_hashMap[command], is_on);
-					}
-				}
-				// loop assignment to a light parameter
-				else if (address_tags[1].compare(0, string("loop_").size(), "loop_") == 0) {
-					if (nb_arguments != 7) {
-						sprintf(ErrorStr, "light loop command (%s) expects %d arguments not %d!", address_string.c_str(), 7, nb_arguments); ReportError(ErrorStr);
-					}
-					else {
-						string command = address_tags[1].substr(string("loop_").size());
-						//sendOSC('/light_control/loop_tilt', self.values.x, light_group, curve, parallel, min, max, speed, { true })
-						bool on_off = (float_arguments[0] == 1.f);
-						int light_group = int(float_arguments[1]);
-						int curve_type = int(float_arguments[2]);
-						int parallel_vs_alternate = int(float_arguments[3]);
-						float min_val = float_arguments[4];
-						float max_val = float_arguments[5];
-						double speed_val = double(float_arguments[6]);
-						if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
-							printf("%s loop for light group %d oOff %d curve %d // %d  vals min max speed %.3f %.3f %.3f\n", command.c_str(), light_group, on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
-							pg_light_groups[pg_current_configuration_rank][light_group - 1]->set_group_loop(pg_inverse_light_param_hashMap[command], on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
-						}
-					}
-				}
-				else {
-					switch (nb_arguments) {
-					case 0:
-						sprintf(AuxString, "/%s", address_string.c_str());
-						pg_send_message_udp((char*)"", AuxString, (char*)"udp_Python_send");
-						break;
-					case 1:
-						sprintf(AuxString, "/%s %.6f", address_string.c_str(), float_arguments[0]);
-						pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
-						break;
-					case 2:
-						sprintf(AuxString, "/%s %.6f %.6f", address_string.c_str(), float_arguments[0], float_arguments[1]);
-						pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_Python_send");
-						break;
-					case 3:
-						sprintf(AuxString, "/%s %.6f %.6f %.6f", address_string.c_str(), float_arguments[0], float_arguments[1], float_arguments[2]);
-						pg_send_message_udp((char*)"fff", AuxString, (char*)"udp_Python_send");
-						break;
-					default:
-						sprintf(AuxString, "/%s %.6f %.6f %.6f %.6f", address_string.c_str(), float_arguments[0], float_arguments[1], float_arguments[2], float_arguments[3]);
-						pg_send_message_udp((char*)"ffff", AuxString, (char*)"udp_Python_send");
-						break;
-					}
-				}
-			}
-#endif 
-#ifdef PG_LIGHTS_DMX_IN_PYTHON
-				// all light control commands are forwarded to python for light_scene management
-			sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
-#endif
+			pg_osc_light_command(address_string, float_arguments, nb_arguments);
 		}
 #endif
 		// OSC message for sensors
@@ -5724,26 +5352,20 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		valArray[indexChangedValue] = float_arguments[0];
 		//printf("index %d value %.2f\n", indexChangedValue, valArray[indexChangedValue]);
 		ScenarioValue interpolated_scene_value(0.f, "", valArray, ScenarioVarIndiceRanges[indVar][1]);
-		pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, indexChangedValue);
+		pg_update_variable(_PG_GUI_COMMAND, indVar, interpolated_scene_value, indexChangedValue);
 		free(valArray);
 		return;
 	}
 	// change of scalar variable
 	else if (indVar < _MaxInterpVarIDs) {
-		if (pg_ScenarioActiveVars[pg_OSC_addresses_hashMap[address_string]][pg_current_configuration_rank]) {
-			int indVar = pg_OSC_addresses_hashMap[address_string];
-			if (ScenarioVarIndiceRanges[indVar][0] == -1) {
-				ScenarioValue arg_val(float_arguments[0], "", NULL, 0);
-				pg_update_variable(_PG_GUI_COMMAND, indVar, arg_val, -1);
-			}
-			else {
-				sprintf(ErrorStr, "Non indexed OSC command %s for multidimensional var %d (%s)!", address_string.c_str(), indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr);
-			}
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+			ScenarioValue arg_val(float_arguments[0], "", NULL, 0);
+			pg_update_variable(_PG_GUI_COMMAND, indVar, arg_val, -1);
+		}
+		else {
+			sprintf(ErrorStr, "OSC command %s for inactive var %d (%s)!", address_string.c_str(), indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr);
 		}
 		return;
-	}
-	else if(indVar == -1) {
-		printf("no match %s\n", address_string.c_str());
 	}
 
 	// special command not in the scenario file
@@ -5757,22 +5379,19 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pg_writeMessageOnScreen("*** OK ***");
 		sprintf(AuxString, "/setup UDP_test_received"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 #ifdef KOMPARTSD
-		pg_IPClient * client;
-		if ((client = pg_UDP_client((char *)"udp_Usine_send"))) {
-			// sends a message to Usine for confirming UDP connection between porphyrograph and Usine
-			if (testUDP_KOMPARTSD) {
-				sprintf(AuxString, "/testUDP 1");
-			}
-			else {
-				sprintf(AuxString, "/testUDP 0");
-			}
-			testUDP_KOMPARTSD = !testUDP_KOMPARTSD;
-			pg_send_message_udp((char *)"i", (char *)AuxString, client);
-			// sends the new scene to Usine for sample selection
-			for (int ind = 0; ind < 4; ind++) {
-				sprintf(AuxString, "/new_scene_%d 0", ind);
-				pg_send_message_udp((char *)"i", (char *)AuxString, client);
-			}
+		// sends a message to Usine for confirming UDP connection between porphyrograph and Usine
+		if (testUDP_KOMPARTSD) {
+			sprintf(AuxString, "/testUDP 1");
+		}
+		else {
+			sprintf(AuxString, "/testUDP 0");
+		}
+		testUDP_KOMPARTSD = !testUDP_KOMPARTSD;
+		pg_send_message_udp((char *)"i", (char *)AuxString, (char*)"udp_Usine_send");
+		// sends the new scene to Usine for sample selection
+		for (int ind = 0; ind < 4; ind++) {
+			sprintf(AuxString, "/new_scene_%d 0", ind);
+			pg_send_message_udp((char *)"i", (char *)AuxString, (char*)"udp_Usine_send");
 		}
 #endif
 		break;
@@ -5874,7 +5493,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 #endif
 #if defined(var_MIDIwithBrush)
-		if (pg_ScenarioActiveVars[_MIDIwithBrush][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
 			if (MIDIwithBrush) {
 				pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
 				BrokenInterpolationVar[_pen_brush] = true;
@@ -5883,15 +5502,15 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithColor)
-		if (pg_ScenarioActiveVars[_MIDIwithColor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
 			if (MIDIwithColor) {
 				if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
 					printf("new palette %d\n", current_pen_colorPreset);
 #if defined(var_pen_color)
-					if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]) {
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 						BrokenInterpolationVar[_pen_color] = true;
-						*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.color;
+						*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 					}
 #endif
 					// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
@@ -5903,7 +5522,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithCameraFlash)
-		if (pg_ScenarioActiveVars[_MIDIwithCameraFlash][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
 			if (MIDIwithCameraFlash) {
 				printf("Flash camera\n");
 				pg_Make_flashCamera();
@@ -5911,8 +5530,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
-		if (pg_ScenarioActiveVars[_MIDIwithPhotoFlash][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 			if (MIDIwithPhotoFlash) {
 				printf("Flash photo\n");
 				pg_Make_flashPhoto();
@@ -5920,7 +5539,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithBeat)
-		if (pg_ScenarioActiveVars[_MIDIwithBeat][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
 			if (MIDIwithBeat) {
 				pg_BeatNo++;
 				printf("beat %d\n", pg_BeatNo);
@@ -5929,7 +5548,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithStroke)
-		if (pg_ScenarioActiveVars[_MIDIwithStroke][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
 			if (MIDIwithStroke) {
 				FourFrameStrokeNb = 5;
 				FourFrameStroke_x = int(workingWindow_width * rand_0_1);
@@ -5937,9 +5556,9 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			}
 		}
 #endif
-#if defined(var_cameraCaptFreq) && defined(var_flashCameraTrkBright)
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_flashCameraTrkBright][pg_current_configuration_rank]) {
+#if defined(var_flashCameraTrkBright)
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBright]) {
 			if (flashCameraTrkBright > 0) {
 				is_flashCameraTrk = false;
 				flashCameraTrk_weight = flashCameraTrkBright;
@@ -5957,7 +5576,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _Velocity1:
 	{
 #if defined(var_alKemi)
-		if (pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
 			int argt0 = int(round(float_arguments[0]));
 			if (argt0 > 0) {
 				pg_BeatNo++;
@@ -5970,10 +5589,10 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 #if defined(var_flashPhotoTrkBeat)
 	case _flashPhoto: {
-		if (pg_ScenarioActiveVars[_flashPhotoTrkBeat][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]) {
 			if (flashPhotoTrkBeat == 0) {
 #if defined(var_flashPhotoTrkBright)
-				if (pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 					pg_Make_flashPhoto();
 				}
 #endif
@@ -6017,17 +5636,17 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 
 #if defined(var_pen_color) && defined(var_pen_grey)
-		if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_pen_grey][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
 			//printf("pulse %.2f %.2f %.2f avg %.2f\n", pulse[0], pulse[1], pulse[2], pulse_average);
 			//printf("pen_color %.2f pen_color_pulse %.2f pen_grey %.2f pen_grey_pulse %.2f pulsed_pen_color  %.2f %.2f %.2f %.2f\n", pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pulsed_pen_color[3]);
 			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, _PG_PEN);
 		}
 #endif
 #if defined(var_pen_hue) & defined(var_pen_sat) && defined(var_pen_value)
-		if (pg_ScenarioActiveVars[_pen_hue][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_pen_sat][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_pen_value][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_value]
 				compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pulsed_pen_color, true);
 		}
 #endif
@@ -6043,17 +5662,17 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
 #if defined(var_part_initialization) 
-		if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 #if defined(var_repop_colorPart) && defined(var_repop_greyPart)
-			if (pg_ScenarioActiveVars[_repop_colorPart][pg_current_configuration_rank]
-				&& pg_ScenarioActiveVars[_repop_greyPart][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
+				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
 			}
 #endif
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-			if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]
-				&& pg_ScenarioActiveVars[_repop_satPart][pg_current_configuration_rank]
-				&& pg_ScenarioActiveVars[_repop_valuePart][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 				compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
 			}
 #endif
@@ -6094,7 +5713,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			pg_MIDINote = 0;
 		}
 #if defined(var_MIDIwithBrush)
-		if (pg_ScenarioActiveVars[_MIDIwithBrush][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
 			if (MIDIwithBrush) {
 				if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
 					pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
@@ -6105,7 +5724,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithColor)
-		if (pg_ScenarioActiveVars[_MIDIwithColor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
 			if (MIDIwithColor) {
 #if !defined(LIGHT)
 				//if (nb_pen_colorPresets > 0) {
@@ -6122,9 +5741,9 @@ void pg_aliasScript(string address_string, string string_argument_0,
 					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
 					printf("new palette %d\n", current_pen_colorPreset);
 #if defined(var_pen_color)
-					if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]) {
+					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 						BrokenInterpolationVar[_pen_color] = true;
-						*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.color;
+						*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 					}
 #endif
 					sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -6135,7 +5754,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithCameraFlash)
-		if (pg_ScenarioActiveVars[_MIDIwithCameraFlash][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
 			if (MIDIwithCameraFlash) {
 				printf("Flash camera\n");
 				pg_Make_flashCamera();
@@ -6143,8 +5762,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
-		if (pg_ScenarioActiveVars[_MIDIwithPhotoFlash][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_flashPhotoTrkBright][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 			if (MIDIwithPhotoFlash) {
 				printf("Flash photo\n");
 				pg_Make_flashPhoto();
@@ -6152,7 +5771,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithBeat)
-		if (pg_ScenarioActiveVars[_MIDIwithBeat][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
 			if (MIDIwithBeat) {
 				pg_BeatNo++;
 				printf("beat %d\n", pg_BeatNo);
@@ -6161,7 +5780,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithStroke)
-		if (pg_ScenarioActiveVars[_MIDIwithStroke][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
 			if (MIDIwithStroke) {
 				FourFrameStrokeNb = 5;
 				FourFrameStroke_x = int(window_width * rand_0_1);
@@ -6177,7 +5796,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// ======================================== 
 #if defined(var_nb_CATypes)
 	case _flashTrkCA_onOff: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			switch (currentDrawingTrack) {
 			case 0:
 				if (flashTrkCA_freq_0 > 0) {
@@ -6190,7 +5809,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				break;
 #if defined(var_flashTrkCA_freq_1)
 			case 1:
-				if (pg_ScenarioActiveVars[_flashTrkCA_freq_1][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_1]) {
 					if (flashTrkCA_freq_1 > 0) {
 						flashTrkCA_freq_1_saved = flashTrkCA_freq_1;
 						flashTrkCA_freq_1 = 0;
@@ -6203,7 +5822,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_flashTrkCA_freq_2)
 			case 2:
-				if (pg_ScenarioActiveVars[_flashTrkCA_freq_2][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_2]) {
 					if (flashTrkCA_freq_2 > 0) {
 						flashTrkCA_freq_2_saved = flashTrkCA_freq_2;
 						flashTrkCA_freq_2 = 0;
@@ -6216,7 +5835,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_flashTrkCA_freq_3)
 			case 3:
-				if (pg_ScenarioActiveVars[_flashTrkCA_freq_3][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq_3]) {
 					if (flashTrkCA_freq_3 > 0) {
 						flashTrkCA_freq_3_saved = flashTrkCA_freq_3;
 						flashTrkCA_freq_3 = 0;
@@ -6235,7 +5854,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 #if defined(var_flashTrkPart_freq_0)
 	case _flashTrkPart_onOff: {
-		if (pg_ScenarioActiveVars[_flashTrkPart_freq_0][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_0]) {
 			switch (currentDrawingTrack) {
 			case 0:
 				if (flashTrkPart_freq_0 > 0) {
@@ -6248,7 +5867,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				break;
 #if defined(var_flashTrkPart_freq_1)
 			case 1:
-				if (pg_ScenarioActiveVars[_flashTrkPart_freq_1][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_1]) {
 					if (flashTrkPart_freq_1 > 0) {
 						flashTrkPart_freq_1_saved = flashTrkPart_freq_1;
 						flashTrkPart_freq_1 = 0;
@@ -6261,7 +5880,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_flashTrkPart_freq_2)
 			case 2:
-				if (pg_ScenarioActiveVars[_flashTrkPart_freq_2][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_2]) {
 					if (flashTrkPart_freq_2 > 0) {
 						flashTrkPart_freq_2_saved = flashTrkPart_freq_2;
 						flashTrkPart_freq_2 = 0;
@@ -6274,7 +5893,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_flashTrkPart_freq_3)
 			case 3:
-				if (pg_ScenarioActiveVars[_flashTrkPart_freq_3][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq_3]) {
 					if (flashTrkPart_freq_3 > 0) {
 						flashTrkPart_freq_3_saved = flashTrkPart_freq_3;
 						flashTrkPart_freq_3 = 0;
@@ -6307,7 +5926,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// relaunches CA initialization, in case it does not work                  
 		// ====================================== 
 	case _initialBGCapture: {
-		if (pg_ScenarioActiveVars[_GenerativeNights_planes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
 			initialBGCapture = true;
 		}
 
@@ -6318,7 +5937,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 	// CA initialization for Generative Nights
 	case _initCA: {
-		if (pg_ScenarioActiveVars[_GenerativeNights_planes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
 			initCA = 1.2f;
 		}
 		break;
@@ -6337,12 +5956,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 
-#if defined(var_cameraCaptFreq)
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CAMERA PARAMETERS +++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraWB_R_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraWB_R]) += 100.f;
 			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_R]);
@@ -6350,7 +5968,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraWB_R_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraWB_R]) -= 100.f;
 			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_R]);
@@ -6358,7 +5976,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraWB_B_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraWB_B]) += 100.f;
 			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_B]);
@@ -6366,7 +5984,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraWB_B_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraWB_B]) -= 100.f;
 			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_B]);
@@ -6374,7 +5992,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraExposure_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraExposure]) += 1.f;
 			pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraExposure]);
@@ -6382,7 +6000,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraExposure_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraExposure]) -= 1.f;
 			pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraExposure]);
@@ -6390,7 +6008,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraGain_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraGain]) += 1.f;
 			pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGain]);
@@ -6398,7 +6016,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraGain_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraGain]) -= 1.f;
 			pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGain]);
@@ -6406,7 +6024,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraBrightness_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraBrightness]) += 10.f;
 			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraBrightness]);
@@ -6414,7 +6032,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraBrightness_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraBrightness]) -= 10.f;
 			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraBrightness]);
@@ -6422,7 +6040,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraSaturation_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraSaturation]) += 10.f;
 			pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraSaturation]);
@@ -6430,7 +6048,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraSaturation_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraSaturation]) -= 10.f;
 			pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraSaturation]);
@@ -6438,7 +6056,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraContrast_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraContrast]) += 10.f;
 			pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraContrast]);
@@ -6446,7 +6064,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraContrast_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraContrast]) -= 10.f;
 			pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraContrast]);
@@ -6454,7 +6072,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraGamma_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraGamma]) += 10.f;
 			pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGamma]);
@@ -6462,7 +6080,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _cameraGamma_minus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			*((float*)ScenarioVarPointers[_cameraGamma]) -= 10.f;
 			pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
 			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGamma]);
@@ -6471,7 +6089,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _reset_on_camera: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
 			// the camera weight is set to 1 in 10 frames
 			delayedCameraWeight = 11;
@@ -6480,12 +6098,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _reset_camera_params: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			pg_initWebcamParameters();
 		}
 		break;
 	}
-#endif
 
 	case _processing_video: {
 		int argt0 = int(round(float_arguments[0]));
@@ -6563,10 +6180,10 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 #if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_master_offsetY) && defined(var_photo_diaporama)
 	case _flashMaster:
-		if (pg_ScenarioActiveVars[_master_scale][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_master_offsetX][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_master_offsetY][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_master_scale]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_master_offsetX]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_master_offsetY]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			master = 1.f;
 			*((float*)ScenarioVarPointers[_master]) = master;
 			master_scale = rand_0_1 * float_arguments[1] + 1;
@@ -6590,7 +6207,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 
 	case _NextRecordReplayPath:
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			if (float_arguments[0] > 0) {
 				pg_NextRecordReplayPath();
 			}
@@ -6706,7 +6323,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if defined(var_partStroke_mode)
 	case _partStroke_mode_0: {
-		if (pg_ScenarioActiveVars[_partStroke_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			*((int*)ScenarioVarPointers[_partStroke_mode]) = 0;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6721,7 +6338,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partStroke_mode_1: {
-		if (pg_ScenarioActiveVars[_partStroke_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			*((int*)ScenarioVarPointers[_partStroke_mode]) = 1;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6736,7 +6353,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partStroke_mode_2: {
-		if (pg_ScenarioActiveVars[_partStroke_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			*((int*)ScenarioVarPointers[_partStroke_mode]) = 2;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6753,7 +6370,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partColor_mode)
 	case _partColor_mode_0: {
-		if (pg_ScenarioActiveVars[_partColor_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			*((int*)ScenarioVarPointers[_partColor_mode]) = 0;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6768,7 +6385,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partColor_mode_1: {
-		if (pg_ScenarioActiveVars[_partColor_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			*((int*)ScenarioVarPointers[_partColor_mode]) = 1;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6783,7 +6400,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partColor_mode_2: {
-		if (pg_ScenarioActiveVars[_partColor_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			*((int*)ScenarioVarPointers[_partColor_mode]) = 2;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6800,7 +6417,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partExit_mode)
 	case _partExit_mode_0: {
-		if (pg_ScenarioActiveVars[_partExit_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			*((int*)ScenarioVarPointers[_partExit_mode]) = 0;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6815,7 +6432,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partExit_mode_1: {
-		if (pg_ScenarioActiveVars[_partExit_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			*((int*)ScenarioVarPointers[_partExit_mode]) = 1;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6830,7 +6447,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partExit_mode_2: {
-		if (pg_ScenarioActiveVars[_partExit_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			*((int*)ScenarioVarPointers[_partExit_mode]) = 2;
 
 			for (int ind = 0; ind < 3; ind++) {
@@ -6872,19 +6489,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #endif
 
-
-#if defined(var_cameraCaptFreq)
-				   // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraCumul_plus: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			cameraCumul = (cameraCumul + 1) % PG_NB_CAMERA_CUMUL_MODES;
 			BrokenInterpolationVar[_cameraCumul] = true;
 		}
 		break;
 	}
-#endif 
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ BRUSH ID SHIFT ++++++++++++++++++++++++ 
@@ -6947,7 +6561,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if defined(var_nb_CATypes)
 	case _CA1Type_plus: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1Type = (CA1Type + 1) % nb_CATypes;
 			BrokenInterpolationVar[_CA1Type] = true;
 			// printf("CA1Type %d\n", CA1Type);
@@ -6956,7 +6570,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1Type_minus: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1Type = (CA1Type - 1 + nb_CATypes) % nb_CATypes;
 			BrokenInterpolationVar[_CA1Type] = true;
 			// printf("CA1Type %d\n", CA1Type);
@@ -6965,7 +6579,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1SubType_plus: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
 			BrokenInterpolationVar[_CA1SubType] = true;
 			*((int*)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
@@ -6973,7 +6587,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1SubType_minus: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
 			BrokenInterpolationVar[_CA1SubType] = true;
 			*((int*)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
@@ -6981,7 +6595,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CAonOff: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			if (CA1SubType != 0) {
 				CASubTypeMem = CA1SubType;
 				CA1SubType = 0;
@@ -7000,10 +6614,9 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if defined(var_sensor_layout)
 	case _sensor_layout_plus: {
-		if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
-			if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 				sensor_layout = (sensor_layout + 1) % PG_NB_MAX_SENSOR_LAYOUTS;
 				BrokenInterpolationVar[_sensor_layout] = true;
 				assignSensorPositions();
@@ -7012,8 +6625,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _sensor_sample_setUp_plus: {
-		if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
-			if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 				sensor_sample_setUp = (sensor_sample_setUp + 1);
 				if (sensor_sample_setUp >= PG_NB_MAX_SAMPLE_SETUPS) {
 					sensor_sample_setUp -= PG_NB_MAX_SAMPLE_SETUPS;
@@ -7025,8 +6638,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _sensor_activation_plus: {
-		if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
-			if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 				sensor_activation = (sensor_activation + 1) % PG_NB_MAX_SENSOR_ACTIVATIONS;
 				BrokenInterpolationVar[_sensor_activation] = true;
 				assignSensorActivations();
@@ -7034,14 +6647,13 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PARTICLE MODES ++++++++++++++++++++++++
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if defined(var_partExit_mode)
 	case _partExit_mode_plus: {
-		if (pg_ScenarioActiveVars[_partExit_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			partExit_mode = (partExit_mode + 1) % PG_NB_PARTEXIT_MODES;
 			BrokenInterpolationVar[_partExit_mode] = true;
 		}
@@ -7050,7 +6662,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partStroke_mode)
 	case _partStroke_mode_plus: {
-		if (pg_ScenarioActiveVars[_partStroke_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			partStroke_mode = (partStroke_mode + 1) % PG_NB_PARTSTROKE_MODES;
 			BrokenInterpolationVar[_partStroke_mode] = true;
 		}
@@ -7059,7 +6671,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partColor_mode)
 	case _partColor_mode_plus: {
-		if (pg_ScenarioActiveVars[_partColor_mode][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			partColor_mode = (partColor_mode + 1) % PG_NB_PARTCOLOR_MODES;
 			BrokenInterpolationVar[_partColor_mode] = true;
 		}
@@ -7073,7 +6685,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// ====================================== 
 	case _pen_BW: {
 #if defined(var_pen_grey)
-		if (pg_ScenarioActiveVars[_pen_grey][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
 			if (pen_grey > 0) {
 					pen_grey = 0.0f;
 			}								
@@ -7084,7 +6696,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_pen_value)
-		if (pg_ScenarioActiveVars[_pen_value][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
 
 			if (pen_value > 0) {
 				pen_value = 0.0f;
@@ -7109,7 +6721,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _repopCA_BW: {
-		if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			if (repop_greyCA > 0) {
 				repop_greyCA = 0.0f;
 			}
@@ -7122,9 +6734,9 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _repopPart_BW: {
-		if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 #if defined(var_repop_greyPart)
-			if (pg_ScenarioActiveVars[_repop_greyPart][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 				if (repop_greyPart > 0) {
 					repop_greyPart = 0.0f;
 				}
@@ -7135,7 +6747,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			}
 #endif
 #if defined(var_repop_valuePart)
-			if (pg_ScenarioActiveVars[_repop_valuePart][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 				if (repop_valuePart > 0) {
 					repop_valuePart = 0.0f;
 				}
@@ -7172,31 +6784,31 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _diaporama_add_dirs: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			pg_addNewDiaporamas(pg_current_configuration_rank, true);
 		}
 		break;
 	}
 	case _reload_all_diaporamas: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			pg_reloadAllDiaporamas(pg_current_configuration_rank, true);
 		}
 		break;
 	}
 	case _diaporama_random: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			diaporama_random();
 		}
 		break;
 	}
 	case _diaporama_slide: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			diaporama_slide(int(float_arguments[0]));
 		}
 		break;
 	}
 	case _diaporama_plus: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				// goes to the first photo diaporama if it is not already selected and if there is one 
 				if (photo_diaporama < 0 && pg_ImageDirectory[pg_current_configuration_rank] != "") {
@@ -7212,7 +6824,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _diaporama_minus: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				photo_diaporama = (photo_diaporama - 1 + pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
 				printf("photo_diaporama %d\n", photo_diaporama);
@@ -7224,7 +6836,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _flash_photo_diaporama: {
-		if (pg_ScenarioActiveVars[_photo_diaporama][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0 && float_arguments[0] >= 0) {
 				photo_diaporama = int(float_arguments[0]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
 				pg_CurrentDiaporamaEnd = float_arguments[1] + pg_CurrentClockTime;
@@ -7310,7 +6922,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #endif
 	case _movie_loop_onOff: {
-		if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			movie_loop = !movie_loop;
 			sprintf(AuxString, "/movie_loop_onOff %d", int(movie_loop));
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -7324,16 +6936,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _pen_colorPreset_minus: {
-		if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 			if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 				current_pen_colorPreset = (current_pen_colorPreset - 1 + pg_ColorPresets[pg_current_configuration_rank].size()) % pg_ColorPresets[pg_current_configuration_rank].size();
 				// printf( "/new palette %d\n", current_pen_colorPreset);
 				BrokenInterpolationVar[_pen_color] = true;
-				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.color;
+				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 				BrokenInterpolationVar[_pen_grey] = true;
-				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.grey;
+				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
 				BrokenInterpolationVar[_pen_color_a] = true;
-				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.alpha;
+				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
 				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -7344,15 +6956,15 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _pen_colorPreset_plus: {
-		if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 			if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 				current_pen_colorPreset = (current_pen_colorPreset + 1) % pg_ColorPresets[pg_current_configuration_rank].size();
 				BrokenInterpolationVar[_pen_color] = true;
-				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.color;
+				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 				BrokenInterpolationVar[_pen_grey] = true;
-				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.grey;
+				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
 				BrokenInterpolationVar[_pen_color_a] = true;
-				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.alpha;
+				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
 				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -7362,16 +6974,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _pen_colorPreset: {
-		if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 			int presetValue = int(float_arguments[0]);
 			if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 				current_pen_colorPreset = presetValue % pg_ColorPresets[pg_current_configuration_rank].size();
 				BrokenInterpolationVar[_pen_color] = true;
-				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.color;
+				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 				BrokenInterpolationVar[_pen_grey] = true;
-				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.grey;
+				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
 				BrokenInterpolationVar[_pen_color_a] = true;
-				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset]->pg_colorPreset_values.alpha;
+				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
 				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -7533,9 +7145,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ MOVIE NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#if defined(var_movieCaptFreq)
 	case _movie_plus: {
-		if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (!pg_VideoTracks[pg_current_configuration_rank].empty()) {
 				playing_movieNo = (playing_movieNo + 1) % pg_VideoTracks[pg_current_configuration_rank].size();
 				pg_play_movie_no();
@@ -7545,7 +7156,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _movie_minus: {
-		if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (!pg_VideoTracks[pg_current_configuration_rank].empty()) {
 				playing_movieNo = (playing_movieNo - 1 + pg_VideoTracks[pg_current_configuration_rank].size()) % pg_VideoTracks[pg_current_configuration_rank].size();
 				pg_play_movie_no();
@@ -7556,7 +7167,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// +++++++++++++++++ MOVIE FWD ++++++++++++++++++++++++++++++ 
 	case _movie_forward: {
-		if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (currentlyPlaying_movieNo >= 0) {
 				pg_movie_forward(int(movieCaptFreq * 10));
 			}
@@ -7564,14 +7175,13 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _movie_backward: {
-		if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (currentlyPlaying_movieNo >= 0) {
 				pg_movie_backward(int(movieCaptFreq * 10));
 			}
 		}
 		break;
 	}
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
@@ -7579,7 +7189,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _camera_close: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			// release webCam
 			if (pg_webCam_capture.isOpened()) {
 				pg_webCam_capture.release();
@@ -7588,7 +7198,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _camera_open: {
-		if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			// release webCam
 			if (!pg_webCam_capture.isOpened() && cameraNo < 0 && -cameraNo - 1 < int(pg_webCams.size())) {
 				pg_openCameraCaptureAndLoadFrame();
@@ -7597,7 +7207,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_plus: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0) {
 				for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
@@ -7609,7 +7219,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _clip_minus: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0) {
 				for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
@@ -7622,7 +7232,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// +++++++++++++++++ CLIP FWD ++++++++++++++++++++++++++++++ 
 	case _clip_forward: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 				if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7633,7 +7243,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_backward: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 				if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7652,7 +7262,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// SCRATCHING
 #if defined(var_clip_scratch_factor3)
 	case _clip_scratch: {
-		if (pg_ScenarioActiveVars[_clip_scratch_factor3][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
 			float angle_pos = 0.f;
 			float prec_angle_pos = 0.f;
 			double prec_angle_time = 0.;
@@ -7691,7 +7301,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_scratch_touch_press: {
-		if (pg_ScenarioActiveVars[_clip_scratch_factor3][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_scratch_angle(-1., pg_CurrentClockTime);
@@ -7701,7 +7311,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_scratch_touch_release: {
-		if (pg_ScenarioActiveVars[_clip_scratch_factor3][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_scratch_angle(-1., pg_CurrentClockTime);
@@ -7714,8 +7324,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// TEMPO BENDING
 #if defined(var_clipCaptFreq) and defined(var_clip_nudge_factor)
 	case _clip_nudge: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_clip_nudge_factor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
 			int clipSide = int(float_arguments[0]);
 			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 				if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7737,8 +7347,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}	 
 	case _clip_nudge_touch_press: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_clip_nudge_factor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_nudge_angle(-1., pg_CurrentClockTime);
@@ -7747,8 +7357,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_nudge_touch_release: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_clip_nudge_factor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_nudge_angle(-1., pg_CurrentClockTime);
@@ -7760,7 +7370,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// CUE MANAGEMENT
 	case _clip_cue_onOff: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
@@ -7790,7 +7400,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 						// goto cue: makes a difference whether or not the clip is playing (jump vs call)
 	case _clip_cue_jump: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				int indClip = pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(0);
@@ -7808,7 +7418,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_cue_jump: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				int indClip = pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(1);
@@ -7827,7 +7437,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// goto cue: makes a difference whether or not the clip is playing (jump vs call)
 	case _clip_cue_call: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clipCueNo = int(float_arguments[1]);
 			bool onOff = (float_arguments[2] == 1.f);
@@ -7856,7 +7466,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	
 					   // FX
 	case _clip_fx: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int fxNo = int(float_arguments[1]);
 			if (clipSide == _clipLeft) {
@@ -7947,7 +7557,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 				 // FX
 	case _clip_fx_std: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int fxNo = int(float_arguments[0]);
 			switch (fxNo) {
 			case 0:
@@ -7976,7 +7586,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 				 // EQ
 	case _clip_equalizer: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (nb_arguments == 3) {
 				int eqNo = int(float_arguments[1]);
@@ -8020,7 +7630,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #if PG_NB_PARALLEL_CLIPS >= 2
 	// EQ
 	case _clip2_equalizer: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (nb_arguments == 3) {
 				int eqNo = int(float_arguments[1]);
@@ -8064,7 +7674,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// NEW RANDOM CLIP
 	case _clip_new: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			clip_new(0, clipSide, nb_arguments, float_arguments);
 		}
@@ -8072,7 +7682,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_new: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			clip_new(1, clipSide, nb_arguments, float_arguments);
 		}
@@ -8082,7 +7692,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// NEW SELECTED CLIP
 	case _clip_sample: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clip_no = int(float_arguments[1]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0 && clip_no >= 0) {
@@ -8095,7 +7705,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 	// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
 	case _clip_sample_range: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clipRank = int(float_arguments[1]);
 			int clip_no_low = int(float_arguments[2]);
@@ -8112,7 +7722,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #if PG_NB_PARALLEL_CLIPS >= 2
    // NEW SELECTED CLIP IN CASE OF TWO DECKS ON EACH SIDE
 	case _clip2_sample: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clip_no = int(float_arguments[1]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0 && clip_no >= 0) {
@@ -8126,7 +7736,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// LEFT OR RIGHT CLIP FADE IN/OUT
 	case _clip_fader: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				// pg_clip_status[clipSide].clip_level[0] = float_arguments[1];
@@ -8136,7 +7746,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_fader: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				// pg_clip_status[clipSide].clip_level[1] = float_arguments[1];
@@ -8147,19 +7757,19 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// CLIP PLAY STOP
 	case _clip_autoplay_left: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_autoplay[0] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip_autoplay_right: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_autoplay[0] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip_play_left: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_play[0] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipLeft].clip_play[0]) {
 				pg_clip_status[_clipLeft].set_lastPlayedFrameTime(0, pg_CurrentClockTime);
@@ -8168,7 +7778,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_play_right: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_play[0] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipRight].clip_play[0]) {
 				pg_clip_status[_clipRight].set_lastPlayedFrameTime(0, pg_CurrentClockTime);
@@ -8178,19 +7788,19 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_autoplay_left: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_autoplay[1] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip2_autoplay_right: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_autoplay[1] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip2_play_left: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_play[1] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipLeft].clip_play[1]) {
 				pg_clip_status[_clipLeft].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
@@ -8199,7 +7809,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip2_play_right: {
-		if (pg_ScenarioActiveVars[_clipCaptFreq][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_play[1] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipRight].clip_play[1]) {
 				pg_clip_status[_clipRight].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
@@ -8293,7 +7903,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _setup_plus_keep_total_dur: {
 		if (pg_CurrentScene) {
 			double elapsedTime = (pg_CurrentClockTime - InitialScenarioTime) - pg_CurrentScene->scene_initial_time;
-			double deltaTime = pg_Scenario[pg_current_configuration_rank][1 + pg_CurrentSceneIndex]->scene_initial_time - (pg_CurrentClockTime - InitialScenarioTime);
+			double deltaTime = pg_Scenario[pg_current_configuration_rank][1 + pg_CurrentSceneIndex].scene_initial_time - (pg_CurrentClockTime - InitialScenarioTime);
 			// only accepted if the current scene has been on for a while
 			if (elapsedTime > 15
 				// if the scene has not begun since a short while
@@ -8344,75 +7954,75 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _ClipArt_SubPath_4_onOff: ClipArt_SubPathOnOff(4); break;
 
 	case _ClipArt_scale: 
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Scale = float_arguments[0]; 
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Scale = float_arguments[0]; 
 		printf("ClipArt GPU scale %.2f\n", float_arguments[0]);
 		break;
 	case _ClipArt_rotate: 
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Rotation = float_arguments[0]; 
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Rotation = float_arguments[0]; 
 		printf("ClipArt GPU rotate %.2f\n", float_arguments[0]);
 		break;
 	case _ClipArt_xy:
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_X = float_arguments[0] * workingWindow_width;
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_Y = float_arguments[1] * window_height;
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_X = float_arguments[0] * workingWindow_width;
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_Y = float_arguments[1] * window_height;
 		printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * workingWindow_width, float_arguments[1] * window_height);
 		break;
 	case _ClipArt_x:
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_X = float_arguments[0] * workingWindow_width;
-		printf("ClipArt GPU translate %.2fx%.2f\n", pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_X, pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_Y);
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_X = float_arguments[0] * workingWindow_width;
+		printf("ClipArt GPU translate %.2fx%.2f\n", pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_X, pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_Y);
 		break;
 	case _ClipArt_y:
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_Y = float_arguments[0] * window_height;
-		printf("ClipArt GPU translate %.2fx%.2f\n", pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_X, pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Translation_Y);
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_Y = float_arguments[0] * window_height;
+		printf("ClipArt GPU translate %.2fx%.2f\n", pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_X, pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Translation_Y);
 		break;
 	case _ClipArt_nat_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_nat;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_nat;
 		}
 		break;
 	case _ClipArt_white_color: 
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_white;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_white;
 		}
 		break;
 	case _ClipArt_red_color: 
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_red;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_red;
 		}
 		break;
 	case _ClipArt_green_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_green;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_green;
 		}
 		break;
 	case _ClipArt_blue_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_blue;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_blue;
 		}
 		break;
 	case _ClipArt_yellow_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_yellow;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_yellow;
 		}
 		break;
 	case _ClipArt_cyan_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_cyan;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_cyan;
 		}
 		break;
 	case _ClipArt_magenta_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_magenta;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_magenta;
 		}
 			break;
 	case _ClipArt_black_color:
-		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_Colors[indPath] = ClipArt_black;
+		for (int indPath = 0; indPath < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt; indPath++) {
+			pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_Colors[indPath] = ClipArt_black;
 		}
 		break;
 	case _ClipArt_translations:
-		for(unsigned int indImage = 0; indImage < pg_ClipArts[pg_current_configuration_rank].size() && (2 * indImage + 1) < unsigned int(nb_arguments); indImage++) {
-			pg_ClipArts[pg_current_configuration_rank][indImage]->pg_ClipArt_Translation_X = float_arguments[2 * indImage] * workingWindow_width;
-			pg_ClipArts[pg_current_configuration_rank][indImage]->pg_ClipArt_Translation_Y = float_arguments[2 * indImage + 1] * window_height;
+		for(unsigned int indClipArt = 0; indClipArt < pg_ClipArts[pg_current_configuration_rank].size() && (2 * indClipArt + 1) < unsigned int(nb_arguments); indClipArt++) {
+			pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_X = float_arguments[2 * indClipArt] * workingWindow_width;
+			pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_Y = float_arguments[2 * indClipArt + 1] * window_height;
 		}
 		// printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * workingWindow_width, float_arguments[1] * window_height);
 		break;
@@ -8458,7 +8068,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 #if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	case _pen_hue_sat_value:
-		if (pg_ScenarioActiveVars[_pen_hue][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
 			pen_hue = float_arguments[0];
 			BrokenInterpolationVar[_pen_hue][pg_current_configuration_rank] = true;
 			*((float*)ScenarioVarPointers[_pen_hue]) = pen_hue;
@@ -8476,7 +8086,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	case _repop_hue_sat_valuePart:
-		if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
 			repop_huePart = float_arguments[0];
 			BrokenInterpolationVar[_repop_huePart] = true;
 			*((float*)ScenarioVarPointers[_repop_huePart]) = repop_huePart;
@@ -8493,7 +8103,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 #endif
 	case _path_replay_stopAll:
-		if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
 				if (is_path_replay[pathNo]) {
 					pg_path_replay_trackNo_onOff(pathNo, -1);
@@ -8505,7 +8115,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	case _path_replay_playAll:
-		if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			printf("play all tracks %.3f\n", pg_CurrentClockTime);
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
 				if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
@@ -8545,151 +8155,155 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 }
 
-#if defined(var_activeClipArts)
-void ClipArt_OnOff(int indImage) {
-	if (indImage <= int(pg_ClipArts[pg_current_configuration_rank].size()) && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArt always visible
-		bool isImageOn = activeClipArts & (1 << (indImage - 1));
-		if (isImageOn) {
-			activeClipArts = activeClipArts & ~(1 << (indImage - 1));
-		}
-		else {
-			activeClipArts |= (1 << (indImage - 1));
-			pg_last_activated_ClipArt = indImage - 1;
-		}
-		BrokenInterpolationVar[_activeClipArts] = true;
-		*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
-		sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-	}
-}
-
-void ClipArt_Off(int indImage) {
-	if (indImage <= int(pg_ClipArts[pg_current_configuration_rank].size()) && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArt always visible
-		bool isImageOn = activeClipArts & (1 << (indImage - 1));
-		if (isImageOn) {
-			activeClipArts = activeClipArts & ~(1 << (indImage - 1));
+void ClipArt_OnOff(int indCLipArt) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+		if (indCLipArt <= int(pg_ClipArts[pg_current_configuration_rank].size()) && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArt always visible
+			bool isClipArtOn = activeClipArts & (1 << (indCLipArt - 1));
+			if (isClipArtOn) {
+				activeClipArts = activeClipArts & ~(1 << (indCLipArt - 1));
+			}
+			else {
+				activeClipArts |= (1 << (indCLipArt - 1));
+				pg_last_activated_ClipArt = indCLipArt - 1;
+			}
 			BrokenInterpolationVar[_activeClipArts] = true;
 			*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
-			sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(AuxString, "/ClipArt_%d_onOff %d", indCLipArt, (!isClipArtOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
 }
 
-void ClipArt_On(int indImage) {
-	if (indImage <= int(pg_ClipArts[pg_current_configuration_rank].size() && activeClipArts != -1)) { // activeClipArts == -1 <=> all ClipArt always visible
-		bool isImageOn = activeClipArts & (1 << (indImage - 1));
-		if (!isImageOn) {
-			activeClipArts |= (1 << (indImage - 1));
-			pg_last_activated_ClipArt = indImage - 1;
-			BrokenInterpolationVar[_activeClipArts] = true;
-			*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
-			sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+void ClipArt_Off(int indCLipArt) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+		if (indCLipArt <= int(pg_ClipArts[pg_current_configuration_rank].size()) && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArt always visible
+			bool isClipArtOn = activeClipArts & (1 << (indCLipArt - 1));
+			if (isClipArtOn) {
+				activeClipArts = activeClipArts & ~(1 << (indCLipArt - 1));
+				BrokenInterpolationVar[_activeClipArts] = true;
+				*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
+				sprintf(AuxString, "/ClipArt_%d_onOff %d", indCLipArt, (!isClipArtOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
 		}
 	}
 }
-#endif
+
+void ClipArt_On(int indCLipArt) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+		if (indCLipArt <= int(pg_ClipArts[pg_current_configuration_rank].size() && activeClipArts != -1)) { // activeClipArts == -1 <=> all ClipArt always visible
+			bool isClipArtOn = activeClipArts & (1 << (indCLipArt - 1));
+			if (!isClipArtOn) {
+				activeClipArts |= (1 << (indCLipArt - 1));
+				pg_last_activated_ClipArt = indCLipArt - 1;
+				BrokenInterpolationVar[_activeClipArts] = true;
+				*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
+				sprintf(AuxString, "/ClipArt_%d_onOff %d", indCLipArt, (!isClipArtOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+	}
+}
 
 #if defined(var_activeMeshes)
-void Mesh_OnOff(int indImage) {
-	if (indImage <= int(pg_Meshes[pg_current_configuration_rank].size())) {
-		bool isImageOn = activeMeshes & (1 << (indImage - 1));
-		if (isImageOn) {
-			activeMeshes = activeMeshes & ~(1 << (indImage - 1));
+void Mesh_OnOff(int indMesh) {
+	if (indMesh <= int(pg_Meshes[pg_current_configuration_rank].size())) {
+		bool isMeshOn = activeMeshes & (1 << (indMesh - 1));
+		if (isMeshOn) {
+			activeMeshes = activeMeshes & ~(1 << (indMesh - 1));
 		}
 		else {
-			activeMeshes |= (1 << (indImage - 1));
-			pg_last_activated_Mesh = indImage - 1;
+			activeMeshes |= (1 << (indMesh - 1));
+			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_activeMeshes] = true;
 		*((int*)ScenarioVarPointers[_activeMeshes]) = activeMeshes;
-		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh, (!isMeshOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
-void Mesh_On(int indImage) {
-	if (indImage <= int(pg_Meshes[pg_current_configuration_rank].size())) {
-		bool isImageOn = activeMeshes & (1 << (indImage - 1));
-		if (!isImageOn) {
-			activeMeshes |= (1 << (indImage - 1));
-			pg_last_activated_Mesh = indImage - 1;
+void Mesh_On(int indMesh) {
+	if (indMesh <= int(pg_Meshes[pg_current_configuration_rank].size())) {
+		bool isMeshOn = activeMeshes & (1 << (indMesh - 1));
+		if (!isMeshOn) {
+			activeMeshes |= (1 << (indMesh - 1));
+			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_activeMeshes] = true;
 		*((int*)ScenarioVarPointers[_activeMeshes]) = activeMeshes;
-		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage, 1); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh, 1); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
-void Mesh_Off(int indImage) {
-	if (indImage <= int(pg_Meshes[pg_current_configuration_rank].size())) {
-		bool isImageOn = activeMeshes & (1 << (indImage - 1));
-		if (isImageOn) {
-			activeMeshes = activeMeshes & ~(1 << (indImage - 1));
+void Mesh_Off(int indMesh) {
+	if (indMesh <= int(pg_Meshes[pg_current_configuration_rank].size())) {
+		bool isMeshOn = activeMeshes & (1 << (indMesh - 1));
+		if (isMeshOn) {
+			activeMeshes = activeMeshes & ~(1 << (indMesh - 1));
 		}
 		BrokenInterpolationVar[_activeMeshes] = true;
 		*((int*)ScenarioVarPointers[_activeMeshes]) = mobileMeshes;
-		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
 #if defined(var_Caverne_Mesh_Profusion)
-void Caverne_Mesh_Profusion_On(int indImage) {
-	pg_Meshes[pg_current_configuration_rank][indImage]->pg_CaverneActveMesh = !pg_Meshes[pg_current_configuration_rank][indImage]->pg_CaverneActveMesh;
-	pg_Meshes[pg_current_configuration_rank][indImage]->pg_CaverneMeshBirthTime = pg_CurrentClockTime;
-	pg_Meshes[pg_current_configuration_rank][indImage]->pg_CaverneMeshDeathTime = pg_CurrentClockTime + 100000.f;
+void Caverne_Mesh_Profusion_On(int indMesh) {
+	pg_Meshes[pg_current_configuration_rank][indMesh].pg_CaverneActveMesh = !pg_Meshes[pg_current_configuration_rank][indMesh].pg_CaverneActveMesh;
+	pg_Meshes[pg_current_configuration_rank][indMesh].pg_CaverneMeshBirthTime = pg_CurrentClockTime;
+	pg_Meshes[pg_current_configuration_rank][indMesh].pg_CaverneMeshDeathTime = pg_CurrentClockTime + 100000.f;
 }
-void Caverne_Mesh_Profusion_Off(int indImage) {
-	pg_Meshes[pg_current_configuration_rank][indImage]->pg_CaverneMeshDeathTime = pg_CurrentClockTime + pg_Meshes[pg_current_configuration_rank][indImage]->pg_CaverneMeshWakeupTime / 3.f;
+void Caverne_Mesh_Profusion_Off(int indMesh) {
+	pg_Meshes[pg_current_configuration_rank][indMesh].pg_CaverneMeshDeathTime = pg_CurrentClockTime + pg_Meshes[pg_current_configuration_rank][indMesh].pg_CaverneMeshWakeupTime / 3.f;
 }
 #endif
 #endif
 #if defined(var_mobileMeshes)
-void Mesh_mobile_OnOff(int indImage) {
-	if (indImage <= int(pg_Meshes[pg_current_configuration_rank].size())) {
-		bool isImageOn = mobileMeshes & (1 << (indImage - 1));
-		printf("Mesh on %d\n", isImageOn);
-		if (isImageOn) {
-			mobileMeshes = mobileMeshes & ~(1 << (indImage - 1));
+void Mesh_mobile_OnOff(int indMesh) {
+	if (indMesh <= int(pg_Meshes[pg_current_configuration_rank].size())) {
+		bool isMeshOn = mobileMeshes & (1 << (indMesh - 1));
+		printf("Mesh on %d\n", isMeshOn);
+		if (isMeshOn) {
+			mobileMeshes = mobileMeshes & ~(1 << (indMesh - 1));
 		}
 		else {
-			mobileMeshes |= (1 << (indImage - 1));
-			pg_last_activated_Mesh = indImage - 1;
+			mobileMeshes |= (1 << (indMesh - 1));
+			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_mobileMeshes] = true;
 		*((int*)ScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
-		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage, (!isImageOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh, (!isMeshOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
-void Mesh_mobile_Off(int indImage) {
-	if (indImage <= int(pg_Meshes[pg_current_configuration_rank].size())) {
-		bool isImageOn = mobileMeshes & (1 << (indImage - 1));
-		if (isImageOn) {
-			mobileMeshes = mobileMeshes & ~(1 << (indImage - 1));
-			pg_Meshes[pg_current_configuration_rank][indImage - 1]->pg_Mesh_Translation_X = pg_Meshes[pg_current_configuration_rank][indImage - 1]-> pg_Mesh_Translation_Ini_X;
-			pg_Meshes[pg_current_configuration_rank][indImage - 1]->pg_Mesh_Translation_Y = pg_Meshes[pg_current_configuration_rank][indImage - 1]-> pg_Mesh_Translation_Ini_Y;
-			pg_Meshes[pg_current_configuration_rank][indImage - 1]->pg_Mesh_Translation_Z = pg_Meshes[pg_current_configuration_rank][indImage - 1]-> pg_Mesh_Translation_Ini_Z;
-			pg_Meshes[pg_current_configuration_rank][indImage - 1]->pg_Mesh_Rotation_X = pg_Meshes[pg_current_configuration_rank][indImage - 1]-> pg_Mesh_Rotation_Ini_X;
-			pg_Meshes[pg_current_configuration_rank][indImage - 1]->pg_Mesh_Rotation_Y = pg_Meshes[pg_current_configuration_rank][indImage - 1]-> pg_Mesh_Rotation_Ini_Y;
-			pg_Meshes[pg_current_configuration_rank][indImage - 1]->pg_Mesh_Rotation_Z = pg_Meshes[pg_current_configuration_rank][indImage - 1]-> pg_Mesh_Rotation_Ini_Z;
+void Mesh_mobile_Off(int indMesh) {
+	if (indMesh <= int(pg_Meshes[pg_current_configuration_rank].size())) {
+		bool isMeshOn = mobileMeshes & (1 << (indMesh - 1));
+		if (isMeshOn) {
+			mobileMeshes = mobileMeshes & ~(1 << (indMesh - 1));
+			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Translation_X = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Translation_Ini_X;
+			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Translation_Y = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Translation_Ini_Y;
+			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Translation_Z = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Translation_Ini_Z;
+			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Rotation_X = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Rotation_Ini_X;
+			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Rotation_Y = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Rotation_Ini_Y;
+			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Rotation_Z = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Rotation_Ini_Z;
 		}
 		BrokenInterpolationVar[_mobileMeshes] = true;
 		*((int*)ScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
-		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
-void Mesh_mobile_On(int indImage) {
-	if (indImage <= int(pg_Meshes[pg_current_configuration_rank].size())) {
-		bool isImageOn = mobileMeshes & (1 << (indImage - 1));
-		if (!isImageOn) {
-			mobileMeshes |= (1 << (indImage - 1));
-			pg_last_activated_Mesh = indImage - 1;
+void Mesh_mobile_On(int indMesh) {
+	if (indMesh <= int(pg_Meshes[pg_current_configuration_rank].size())) {
+		bool isMeshOn = mobileMeshes & (1 << (indMesh - 1));
+		if (!isMeshOn) {
+			mobileMeshes |= (1 << (indMesh - 1));
+			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_mobileMeshes] = true;
 		*((int*)ScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
-		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage, 1); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh, 1); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
 #endif
 
 void ClipArt_SubPathOnOff(int indPath) {
-	if (indPath - 1 < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_nb_paths_in_ClipArt) {
-		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_SubPath[indPath - 1] 
-			= !pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt]->pg_ClipArt_SubPath[indPath - 1];
+	if (indPath - 1 < pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_nb_paths_in_ClipArt) {
+		pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_SubPath[indPath - 1] 
+			= !pg_ClipArts[pg_current_configuration_rank][pg_last_activated_ClipArt].pg_ClipArt_SubPath[indPath - 1];
 	}
 }
 
@@ -8733,8 +8347,8 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 	for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 		for (int indChannel = 0; indChannel < 3; indChannel++) {
 			bandpass_3color_palette[indColorBandPass][indChannel]
-				= (1.f - pulsed_color_percentage[indColorBandPass]) * pg_Palettes[pg_current_configuration_rank][indLowPalette[indColorBandPass]]->pen_palette_colors_values[indColorBandPass * 3 + indChannel]
-				+ pulsed_color_percentage[indColorBandPass] * pg_Palettes[pg_current_configuration_rank][indUpperPalette[indColorBandPass]]->pen_palette_colors_values[indColorBandPass * 3 + indChannel];
+				= (1.f - pulsed_color_percentage[indColorBandPass]) * pg_Palettes[pg_current_configuration_rank][indLowPalette[indColorBandPass]].pen_palette_colors_values[indColorBandPass * 3 + indChannel]
+				+ pulsed_color_percentage[indColorBandPass] * pg_Palettes[pg_current_configuration_rank][indUpperPalette[indColorBandPass]].pen_palette_colors_values[indColorBandPass * 3 + indChannel];
 			bandpass_3color_palette[indColorBandPass][indChannel] = min(1.f, bandpass_3color_palette[indColorBandPass][indChannel]);
 		}
 	}
@@ -8760,7 +8374,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		if (pulse_average != 0 && color_target != _PG_CLIP_ART) {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 #if defined(var_alKemi)
-				if (pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
 					pulsed_color[indChannel]
 						+= color_spectrum_coef * bandpass_3color_palette[indColorBandPass][indChannel] 
 						* (pulse[indColorBandPass] / (3.f * pulse_average));
@@ -8780,7 +8394,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		else {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 #if defined(var_alKemi)
-				if (pg_ScenarioActiveVars[_alKemi][pg_current_configuration_rank]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
 						pulsed_color[indChannel]
 							+= color_spectrum_coef * bandpass_3color_palette[indColorBandPass][indChannel] / 3.f;
 					}
@@ -8935,7 +8549,7 @@ void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_p
 void pg_UpdateLightGroups_from_LightVars() {
 	bool oneLightChanged = false;
 #if defined(var_light1_grey)&& defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light1_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
 		if (light1_grey != light1_grey_prec || light1_grey_pulse != light1_grey_pulse_prec
 			|| light1_color != light1_color_prec || light1_color_pulse != light1_color_pulse_prec
 			|| light1_dimmer != light1_dimmer_prec || light1_dimmer_pulse != light1_dimmer_pulse_prec
@@ -8965,7 +8579,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 				light1_strobe_pulse_prec = light1_strobe_pulse;
 			}
 #if defined(var_Caverne_BackColor)
-			if (pg_ScenarioActiveVars[_Caverne_BackColor][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 				// video background and light color are the same and randomly changed
 				if (Caverne_BackColor && pg_nb_light_groups > 0) {
 					pg_light_groups[0].set_color(Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
@@ -8980,7 +8594,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light2_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
 		if (light2_grey != light2_grey_prec || light2_grey_pulse != light2_grey_pulse_prec
 			|| light2_color != light2_color_prec || light2_color_pulse != light2_color_pulse_prec
 			|| light2_dimmer != light2_dimmer_prec || light2_dimmer_pulse != light2_dimmer_pulse_prec
@@ -9005,7 +8619,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse)
-	if (pg_ScenarioActiveVars[_light3_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
 		if (light3_grey != light3_grey_prec || light3_grey_pulse != light3_grey_pulse_prec
 			|| light3_color != light3_color_prec || light3_color_pulse != light3_color_pulse_prec
 			|| light3_dimmer != light3_dimmer_prec || light3_dimmer_pulse != light3_dimmer_pulse_prec
@@ -9030,7 +8644,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light4_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
 		if (light4_grey != light4_grey_prec || light4_grey_pulse != light4_grey_pulse_prec
 			|| light4_color != light4_color_prec || light4_color_pulse != light4_color_pulse_prec
 			|| light4_dimmer != light4_dimmer_prec || light4_dimmer_pulse != light4_dimmer_pulse_prec
@@ -9055,7 +8669,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light5_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
 		if (light5_grey != light5_grey_prec || light5_grey_pulse != light5_grey_pulse_prec
 			|| light5_color != light5_color_prec || light5_color_pulse != light5_color_pulse_prec
 			|| light5_dimmer != light5_dimmer_prec || light5_dimmer_pulse != light5_dimmer_pulse_prec
@@ -9080,7 +8694,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light6_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
 		if (light6_grey != light6_grey_prec || light6_grey_pulse != light6_grey_pulse_prec
 			|| light6_color != light6_color_prec || light6_color_pulse != light6_color_pulse_prec
 			|| light6_dimmer != light6_dimmer_prec || light6_dimmer_pulse != light6_dimmer_pulse_prec
@@ -9105,7 +8719,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light7_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
 		if (light7_grey != light7_grey_prec || light7_grey_pulse != light7_grey_pulse_prec
 			|| light7_color != light7_color_prec || light7_color_pulse != light7_color_pulse_prec
 			|| light7_dimmer != light7_dimmer_prec || light7_dimmer_pulse != light7_dimmer_pulse_prec
@@ -9131,7 +8745,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
-	if (pg_ScenarioActiveVars[_light8_grey][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
 		if (light8_grey != light8_grey_prec || light8_grey_pulse != light8_grey_pulse_prec
 			|| light8_color != light8_color_prec || light8_color_pulse != light8_color_pulse_prec
 			|| light8_dimmer != light8_dimmer_prec || light8_dimmer_pulse != light8_dimmer_pulse_prec
@@ -9157,7 +8771,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			light8_strobe_prec = light8_strobe;
 			light8_strobe_pulse_prec = light8_strobe_pulse;
 #if defined(var_Caverne_BackColor)
-			if (pg_ScenarioActiveVars[_Caverne_BackColor][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 				// video background and light color are the same and randomly changed
 				if (Caverne_BackColor && Caverne_BackColorFlash != Caverne_BackColorFlash_prec) {
 					if (Caverne_BackColorFlash) {
@@ -9180,7 +8794,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 
 	if (oneLightChanged) {
 #if defined(var_Caverne_BackColor)
-		if (pg_ScenarioActiveVars[_Caverne_BackColor][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 			//printf("pg_light_groups[7]->get_group_val(_dimmer) %.2f           pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(_dimmer), pg_light_groups[0].get_color()[0]);
 		}
 #endif
@@ -9195,7 +8809,7 @@ void pg_update_pulsed_colors(void) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// PEN PULSED COLOR
 	// blending the two closest palettes of the pulsed pen color
-	if (pg_ScenarioActiveVars[_pen_color][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 		if (pen_color != pen_color_prec || pen_color_pulse != pen_color_pulse_prec
 			|| pen_grey != pen_grey_prec || pen_grey_pulse != pen_grey_pulse_prec
 			|| ((pen_grey_pulse != 0 || pen_color_pulse != 0)
@@ -9211,7 +8825,7 @@ void pg_update_pulsed_colors(void) {
 		}
 	}
 #if defined(var_pen_hue)
-	if (pg_ScenarioActiveVars[_pen_hue][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
 		&& defined(var_pen_sat) && defined(var_pen_value)
 			if (pen_hue != pen_hue_prec || pen_hue_pulse != pen_hue_pulse_prec
 				|| pen_sat != pen_sat_prec || pen_sat_pulse != pen_sat_pulse_prec
@@ -9273,7 +8887,7 @@ void pg_update_pulsed_colors(void) {
 	}
 #endif
 
-	if (pg_ScenarioActiveVars[_nb_CATypes][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 		if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
 			|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
 			|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
@@ -9288,9 +8902,9 @@ void pg_update_pulsed_colors(void) {
 			pulse_prec[2] = pulse[2];
 		}
 	}
-	if (pg_ScenarioActiveVars[_part_initialization][pg_current_configuration_rank]) {
-		if (pg_ScenarioActiveVars[_repop_colorPart][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_repop_greyPart][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 			if (repop_colorPart != repop_colorPart_prec || repop_colorPart_pulse != repop_colorPart_pulse_prec
 				|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
 				|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
@@ -9306,9 +8920,9 @@ void pg_update_pulsed_colors(void) {
 			}
 		}
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-		if (pg_ScenarioActiveVars[_repop_huePart][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_repop_satPart][pg_current_configuration_rank]
-			&& pg_ScenarioActiveVars[_repop_valuePart][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 			if (repop_huePart != repop_huePart_prec || repop_huePart_pulse != repop_huePart_pulse_prec
 				|| repop_satPart != repop_satPart_prec || repop_satPart_pulse != repop_satPart_pulse_prec
 				|| repop_valuePart != repop_valuePart_prec || repop_valuePart_pulse != repop_valuePart_pulse_prec
@@ -9368,7 +8982,7 @@ void pg_path_recording_onOff(int indPath) {
 
 			// recording can only be made with one finger
 #if defined(var_fingers)
-			if (pg_ScenarioActiveVars[_fingers][pg_current_configuration_rank]) {
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_fingers]) {
 				NumberOfInteractionFingers(1);
 			}
 #endif
@@ -9405,7 +9019,7 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 		// stops reading 
 		pg_path_replay_trackNo_stop(indPath);
 
-		if (pg_ScenarioActiveVars[_path_replay_trackNo][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
 			&& indPath >= 1 && indPath < PG_NB_PATHS) {
 			((int*)ScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
 		}
@@ -9414,7 +9028,7 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 
 void pg_path_recording_start(int indPath) {
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			((bool*)ScenarioVarPointers[_path_record])[indPath] = true;
 		}
 		if (indPath >= 1 && indPath <= PG_NB_PATHS) {
@@ -9428,7 +9042,7 @@ void pg_path_recording_start(int indPath) {
 
 void pg_path_recording_stop(int indPath) {
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			((bool*)ScenarioVarPointers[_path_record])[indPath] = false;
 		}
 		if (indPath >= 1 && indPath <= PG_NB_PATHS
@@ -9446,7 +9060,7 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 		&& pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
 		is_path_replay[indPath] = true;
 		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
-		if (pg_ScenarioActiveVars[_path_record][pg_current_configuration_rank]
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]
 			&& indPath >= 1 && indPath < PG_NB_PATHS) {
 			((bool*)ScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
 		}

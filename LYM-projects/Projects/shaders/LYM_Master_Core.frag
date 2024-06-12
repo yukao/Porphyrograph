@@ -142,13 +142,13 @@ void main() {
 
   vec3 NonEchoedColor
     = vec3(track0_color.rgb) * trackMasterWeight[0]
-#if PG_NB_TRACKS >= 2 && defined(var_trackMasterWeight_1) && defined(var_trackMasterWeight_1)
+#if PG_NB_TRACKS >= 2
     + vec3(track1_color.rgb) * trackMasterWeight[1]
 #endif
-#if PG_NB_TRACKS >= 3 && defined(var_trackMasterWeight_2)
+#if PG_NB_TRACKS >= 3
     + vec3(track2_color.rgb) * trackMasterWeight[2]
 #endif
-#if PG_NB_TRACKS >= 4 && defined(var_trackMasterWeight_3)
+#if PG_NB_TRACKS >= 4
     + vec3(track3_color.rgb) * trackMasterWeight[3]
 #endif
     + CA_color.rgb * CAMasterWeight
@@ -190,43 +190,12 @@ void main() {
   vec2 scaled_coords = coordsWRTcenter + (centerCoords + vec2(master_offsetX, master_offsetY) / ratioed_scale);
 
   float maskColor = 0;
-#ifdef var_master_mask_opacity_1
-  if(master_mask_opacity_1 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
-      0.0833333333)).g * master_mask_opacity_1;
+  for(int indLayer = 1 ; indLayer <= 6 ; indLayer++){
+    if(master_mask_opacity[indLayer] > 0) {
+      maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
+        0.0833333333 + (indLayer - 1) * 0.1666666667)).g * master_mask_opacity[indLayer];
+    }
   }
-#endif
-#ifdef var_master_mask_opacity_2
-  if(master_mask_opacity_2 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
-      0.25)).g * master_mask_opacity_2;
-  }
-#endif
-#ifdef var_master_mask_opacity_3
-  if(master_mask_opacity_3 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
-      0.4166666667)).g * master_mask_opacity_3;
-  }
-#endif
-#ifdef var_master_mask_opacity_4
-  if(master_mask_opacity_4 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
-      0.5833333333)).g * master_mask_opacity_4;
-  }
-#endif
-#ifdef var_master_mask_opacity_5
-  if(master_mask_opacity_5 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
-      0.75)).g * master_mask_opacity_5;
-  }
-#endif
-#ifdef var_master_mask_opacity_6
-  if(master_mask_opacity_6 > 0) {
-    maskColor += texture(uniform_Master_texture_fs_Mask, vec3(scaled_coords/vec2(2048,2048), 
-      0.9166666667)).g * master_mask_opacity_6;
-  }
-#endif
-
   maskColor = clamp(maskColor, 0, 1);
   outColor0.rgb *= maskColor;
 #endif

@@ -317,59 +317,59 @@ void transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfigur
 	unsigned int mesh_boneWeight_vbo;
 
 	// 3 VBOs
-	//printf("GPU transfer %d mesh %d faces %d\n", indMeshFile, indObjectInMesh, pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh]);
+	//printf("GPU transfer %d mesh %d faces %d\n", indMeshFile, indObjectInMesh, pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]);
 	glGenBuffers(1, &mesh_points_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		3 * 3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		3 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		vertexBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_texCoords_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		2 * 3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		2 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		texCoordBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_normals_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		3 * 3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		3 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		normalBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_boneIndex_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneIndex_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		4 * 3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLint),
+		4 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLint),
 		boneIndexBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_boneWeight_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneWeight_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		4 * 3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		4 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		boneWeightBuffer,
 		GL_STATIC_DRAW);
 
-	glGenBuffers(1, &(pg_Meshes[indConfiguration][indMeshFile]->mesh_index_vbo[indObjectInMesh]));
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[indConfiguration][indMeshFile]->mesh_index_vbo[indObjectInMesh]);
+	glGenBuffers(1, &(pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo[indObjectInMesh]));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo[indObjectInMesh]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLuint),
+		3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLuint),
 		indexBuffer,
 		GL_STATIC_DRAW);
 
 	//printf("Index Buffer mesh %d: ", indMeshFile);
-	//for (int ind = 0; ind < 3 * pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[indObjectInMesh]; ind++) {
+	//for (int ind = 0; ind < 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]; ind++) {
 	//	printf("%d ", indexBuffer[ind]);
 	//}
 	//printf("\n");
 
 	// VAO
-	pg_Meshes[indConfiguration][indMeshFile]->mesh_vao[indObjectInMesh] = 0;
-	glGenVertexArrays(1, &(pg_Meshes[indConfiguration][indMeshFile]->mesh_vao[indObjectInMesh]));
-	glBindVertexArray(pg_Meshes[indConfiguration][indMeshFile]->mesh_vao[indObjectInMesh]);
+	pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh] = 0;
+	glGenVertexArrays(1, &(pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh]));
+	glBindVertexArray(pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
 	// vertex positions are at location 0
@@ -397,10 +397,10 @@ void transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfigur
 	glEnableVertexAttribArray(4); 
 	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile]->mesh_index_vbo[indObjectInMesh]);
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile].mesh_index_vbo[indObjectInMesh]);
 
-	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indObjectInMesh , pg_Meshes[indConfiguration][indMeshFile]->mesh_vao[indObjectInMesh],
-	// pg_Meshes[indConfiguration][indMeshFile]->mesh_index_vbo[indObjectInMesh], pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile);
+	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indObjectInMesh , pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh],
+	// pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo[indObjectInMesh], pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile);
 	glBindVertexArray(0); // Disable our Vertex Buffer Object
 
 	printOglError(23);
@@ -812,7 +812,7 @@ void parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 			barycenter[1] /= nbVerticesMeshIni[indObjectInMesh];
 			barycenter[2] /= nbVerticesMeshIni[indObjectInMesh];
 		}
-		pg_Meshes[indConfiguration][indMeshFile]->mesh_barycenter[indObjectInMesh] = barycenter;
+		pg_Meshes[indConfiguration][indMeshFile].mesh_barycenter[indObjectInMesh] = barycenter;
 		//printf("Object %d/%d barycenter %.2f %.2f %.2f\n", indMeshFile, indObjectInMesh, barycenter[0], barycenter[1], barycenter[2]);
 
 		if (nbVerticesMeshIni[indObjectInMesh] != nbVerticesInEachMesh[indObjectInMesh]) {
@@ -1093,18 +1093,18 @@ void load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigurat
 	//printf("Loading %s\n", mesh_file_name.c_str());
 	int nbMeshObjectsInFile = 0;
 	count_faces_mesh_obj(fileMesh, &nbMeshObjectsInFile, &nbVerticesPerMesh,
-		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile));
+		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile));
 	//printf("File mesh %s has %d objects\n", mesh_file_name.c_str(), nbMeshObjectsInFile);
 	if (nbMeshObjectsInFile > 0) {
 		for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
 			//printf("   Object %d Nb faces %d vertices %d tex coord %d normals %d\n", ind,
-			//	pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile[ind], nbVerticesPerMesh[ind],
+			//	pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[ind], nbVerticesPerMesh[ind],
 			//	nbTexCoordsPerMesh[ind], nbNormalsPerMesh[ind]);
 		}
 	}
 	else {
 		//printf("File mesh withouth objects\n");
-		pg_Meshes[indConfiguration][indMeshFile]->pg_nbObjectsPerMeshFile = 0;
+		pg_Meshes[indConfiguration][indMeshFile].pg_nbObjectsPerMeshFile = 0;
 		exit(0);
 	}
 
@@ -1112,15 +1112,15 @@ void load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigurat
 	// vertex buffer objects and vertex array for the mesh
 	array<float, 3> a = { 0.f };
 	for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
-		pg_Meshes[indConfiguration][indMeshFile]->mesh_vao.push_back(NULL_ID);
-		pg_Meshes[indConfiguration][indMeshFile]->mesh_index_vbo.push_back(NULL_ID);
-		pg_Meshes[indConfiguration][indMeshFile]->mesh_barycenter.push_back(a);
+		pg_Meshes[indConfiguration][indMeshFile].mesh_vao.push_back(NULL_ID);
+		pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo.push_back(NULL_ID);
+		pg_Meshes[indConfiguration][indMeshFile].mesh_barycenter.push_back(a);
 	}
 
-	pg_Meshes[indConfiguration][indMeshFile]->pg_nbObjectsPerMeshFile = nbMeshObjectsInFile;
+	pg_Meshes[indConfiguration][indMeshFile].pg_nbObjectsPerMeshFile = nbMeshObjectsInFile;
 	rewind(fileMesh);
 	parseMeshObj(fileMesh, indMeshFile, nbMeshObjectsInFile, nbVerticesPerMesh,
-		nbTexCoordsPerMesh, nbNormalsPerMesh, pg_Meshes[indConfiguration][indMeshFile]->pg_nbFacesPerMeshFile, indConfiguration);
+		nbTexCoordsPerMesh, nbNormalsPerMesh, pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile, indConfiguration);
 	fclose(fileMesh);
 
 	free(nbVerticesPerMesh);
@@ -1138,41 +1138,41 @@ void pg_loadAllMeshes(void) {
 		std::cout << "    " << indConfiguration << ": ";
 		int nbMeshObjects = 0;
 		int indMeshFile = 0;
-		for (MeshData* aMesh : pg_Meshes[indConfiguration]) {
-			load_mesh_objects(aMesh->pg_Mesh_fileNames, indMeshFile, indConfiguration);
-			nbMeshObjects += aMesh->pg_nbObjectsPerMeshFile;
-			std::cout << aMesh->pg_Mesh_fileNames << " (" << aMesh->pg_nbObjectsPerMeshFile << " objects), ";
+		for (MeshData &aMesh : pg_Meshes[indConfiguration]) {
+			load_mesh_objects(aMesh.pg_Mesh_fileNames, indMeshFile, indConfiguration);
+			nbMeshObjects += aMesh.pg_nbObjectsPerMeshFile;
+			std::cout << aMesh.pg_Mesh_fileNames << " (" << aMesh.pg_nbObjectsPerMeshFile << " objects), ";
 			//printf("Loaded %d mesh objects \n", nbMeshObjects);
 
 			// Mme Changhai: broken glass objects initialization
 #if defined(var_MmeShanghai_brokenGlass)
-			aMesh->pg_MmeShanghaiActveMeshObjects = new bool[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghaiMeshObjectWakeupTime = new double[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Rotation_angle = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Rotation_X = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Rotation_Y = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Rotation_Z = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Translation_X = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Translation_Y = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Translation_Z = new float[aMesh->pg_nbObjectsPerMeshFile];
-			aMesh->pg_MmeShanghai_Object_Rotation_Ini_angle = new float[aMesh->pg_nbObjectsPerMeshFile];
-			for (int indMeshObjectInFile = 0; indMeshObjectInFile < aMesh->pg_nbObjectsPerMeshFile; indMeshObjectInFile++) {
-				aMesh->pg_MmeShanghaiActveMeshObjects[indMeshObjectInFile] = false;
-				aMesh->pg_MmeShanghaiMeshObjectWakeupTime[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Rotation_angle[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Rotation_X[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Rotation_Y[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Rotation_Z[indMeshObjectInFile] = 1.f;
-				aMesh->pg_MmeShanghai_Object_Translation_X[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Translation_Y[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Translation_Z[indMeshObjectInFile] = 0.f;
-				aMesh->pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshObjectInFile] = 0.f;
+			aMesh.pg_MmeShanghaiActveMeshObjects = new bool[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghaiMeshObjectWakeupTime = new double[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Rotation_angle = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Rotation_X = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Rotation_Y = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Rotation_Z = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Translation_X = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Translation_Y = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Translation_Z = new float[aMesh.pg_nbObjectsPerMeshFile];
+			aMesh.pg_MmeShanghai_Object_Rotation_Ini_angle = new float[aMesh.pg_nbObjectsPerMeshFile];
+			for (int indMeshObjectInFile = 0; indMeshObjectInFile < aMesh.pg_nbObjectsPerMeshFile; indMeshObjectInFile++) {
+				aMesh.pg_MmeShanghaiActveMeshObjects[indMeshObjectInFile] = false;
+				aMesh.pg_MmeShanghaiMeshObjectWakeupTime[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Rotation_angle[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Rotation_X[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Rotation_Y[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Rotation_Z[indMeshObjectInFile] = 1.f;
+				aMesh.pg_MmeShanghai_Object_Translation_X[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Translation_Y[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Translation_Z[indMeshObjectInFile] = 0.f;
+				aMesh.pg_MmeShanghai_Object_Rotation_Ini_angle[indMeshObjectInFile] = 0.f;
 			}
-			for (int indMeshSubPart = 0; indMeshSubPart < pg_Meshes[pg_current_configuration_rank][indMeshFile]->pg_MmeShanghai_NbMeshSubParts; indMeshSubPart++) {
-				aMesh->pg_MmeShanghai_MeshSubParts[indMeshSubPart] = new bool[aMesh->pg_nbObjectsPerMeshFile];
-				loadMeshSubParts(aMesh->pg_MmeShanghai_MeshSubPart_FileNames[indMeshSubPart],
-					aMesh->pg_MmeShanghai_MeshSubParts[indMeshSubPart],
-					aMesh->pg_nbObjectsPerMeshFile);
+			for (int indMeshSubPart = 0; indMeshSubPart < pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_MmeShanghai_NbMeshSubParts; indMeshSubPart++) {
+				aMesh.pg_MmeShanghai_MeshSubParts[indMeshSubPart] = new bool[aMesh.pg_nbObjectsPerMeshFile];
+				loadMeshSubParts(aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indMeshSubPart],
+					aMesh.pg_MmeShanghai_MeshSubParts[indMeshSubPart],
+					aMesh.pg_nbObjectsPerMeshFile);
 			}
 #endif
 			std::cout << std::endl;
@@ -1284,7 +1284,7 @@ void copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose
 
 void update_anim(int indMeshFile) {
 #if defined(var_Contact_mesh_anime)
-	if (pg_ScenarioActiveVars[_Contact_mesh_anime][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_mesh_anime]) {
 		if (Contact_mesh_anime < 0) {
 			mesh_anime_precTime[pg_current_configuration_rank][indMeshFile] = pg_CurrentClockTime;
 		}

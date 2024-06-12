@@ -71,10 +71,7 @@ extern std::vector<GLuint> pg_particle_acc_texID[PG_MAX_CONFIGURATIONS];
 extern std::vector<GLuint> pg_pixel_acc_texID[PG_MAX_CONFIGURATIONS];
 #endif
 
-
-#if defined(var_sensor_layout)
 extern GLuint Sensor_texture_rectangle[PG_MAX_CONFIGURATIONS];
-#endif
 
 extern std::string* DisplayTextList;
 extern int* DisplayTextFirstInChapter;
@@ -122,9 +119,8 @@ extern int precedingVideoTrack;
 extern GLuint pg_camera_texture_texID;
 extern GLuint pg_movie_texture_texID;
 extern GLuint pg_camera_BG_texture_texID;
-#if defined(var_camera_BG_subtr)
 extern GLuint pg_camera_BGIni_texture_texID;
-#endif
+
 // extern IplImage *pg_camera_frame;
 // extern IplImage *pg_movie_frame;
 extern int pg_camera_frame_width;
@@ -153,7 +149,7 @@ public:
 	~VideoTrack(void) {
 	}
 };
-extern vector<VideoTrack*> pg_VideoTracks[PG_MAX_CONFIGURATIONS];
+extern vector<VideoTrack> pg_VideoTracks[PG_MAX_CONFIGURATIONS];
 // soundtracks
 class SoundTrack {
 public:
@@ -174,7 +170,7 @@ public:
 	~SoundTrack(void) {
 	}
 };
-extern vector<SoundTrack*> pg_SoundTracks[PG_MAX_CONFIGURATIONS];
+extern vector<SoundTrack> pg_SoundTracks[PG_MAX_CONFIGURATIONS];
 extern int currentlyPlaying_trackNo;
 extern int currentTrackSoundPeakIndex;
 extern int nbTrackSoundPeakIndex[PG_MAX_CONFIGURATIONS];
@@ -224,7 +220,7 @@ public:
 	~ColorPreset(void) {
 	}
 };
-extern vector<ColorPreset*> pg_ColorPresets[PG_MAX_CONFIGURATIONS];
+extern vector<ColorPreset> pg_ColorPresets[PG_MAX_CONFIGURATIONS];
 
 ////////////////////////////////////////////
 // COLOR PALETTES
@@ -240,7 +236,7 @@ public:
 	~Palette(void) {
 	}
 };
-extern vector<Palette*> pg_Palettes[PG_MAX_CONFIGURATIONS];
+extern vector<Palette> pg_Palettes[PG_MAX_CONFIGURATIONS];
 
 ////////////////////////////////
 // LIGHTS
@@ -371,7 +367,7 @@ extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
 // submap of the parameters which can be looped
 extern std::unordered_map<int, std::string> pg_light_loop_param_hashMap;
 // lights
-extern vector<Light*> pg_Lights[PG_MAX_CONFIGURATIONS];
+extern vector<Light> pg_Lights[PG_MAX_CONFIGURATIONS];
 #define _loop_speed_factor 3.f
 class LightGroup {
 private:
@@ -631,7 +627,7 @@ public:
 	~LightGroup() {
 	}
 };
-extern vector<LightGroup*> pg_light_groups[PG_MAX_CONFIGURATIONS];
+extern vector<LightGroup> pg_light_groups[PG_MAX_CONFIGURATIONS];
 // Create an unordered_map of three strings (that map to strings)
 extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
 extern std::unordered_map<int, std::string> pg_light_param_hashMap;
@@ -653,7 +649,6 @@ extern int nb_pen_brushes[PG_MAX_CONFIGURATIONS];
 // textures with multiple layers
 extern int nb_layers_master_mask[PG_MAX_CONFIGURATIONS];
 
-#if defined(var_cameraCaptFreq)
 extern VideoCapture pg_webCam_capture;
 extern vector <VideoCapture> pg_IPCam_capture;
 extern vector<String> pg_IPCam_capture_address;
@@ -676,13 +671,12 @@ public:
 		cameraHeight = 0;
 	}
 };
-extern vector<webCam*> pg_webCams;
+extern vector<webCam> pg_webCams;
 extern int pg_current_active_cameraNo;
 extern bool pg_initializedWebcam;
 extern bool pg_cameraCaptureIsOn;
-#endif
+
 extern VideoCapture  pg_movie_capture;
-#if defined(var_movieCaptFreq)
 class media_status {
 private:
 	int nbFramesLeft;
@@ -718,7 +712,7 @@ public:
 extern media_status pg_movie_status;
 extern bool is_movieLoading;
 extern bool is_movieAtEnd;
-#endif 
+
 extern int initialSecondBGCapture;
 
 #if defined(var_clipCaptFreq)
@@ -841,10 +835,8 @@ extern clip_status pg_clip_status[_clipLR];
 extern int rankOfTopClip;
 #endif
 
-#if defined(var_camera_BG_subtr)
 extern bool secondInitialBGCapture;
 extern bool initialBGCapture;
-#endif
 
 /*! \name Group texture_ mode
  */
@@ -940,7 +932,6 @@ extern GLubyte *pg_CATable;
 #endif
 
 
-#if defined(var_sensor_layout)
 //////////////////////////////////////////////////////////////////////
 // SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -965,7 +956,6 @@ extern int sample_choice[PG_NB_SENSORS];
 extern int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
 // sample start playing time for muting after 1 cycle
 extern double sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
-#endif
 
 // data structure for threads to use.
 // This is passed by void pointer so it can be any data type
@@ -1011,10 +1001,9 @@ void pg_ParticleRenderingPass(void);
 void pg_MixingPass(void);
 // PASS #5: FINAL DISPLAY: MIX OF ECHOED AND NON-ECHOED LAYERS
 void pg_MasterPass(void);
-#if defined(var_sensor_layout)
 // PASS #5: SENSOR PASS
 void pg_SensorPass(void);
-#endif
+
 #if defined(var_activeMeshes)
 // PASS #6: MESH PASS
 void pg_calculate_perspective_matrices(void);

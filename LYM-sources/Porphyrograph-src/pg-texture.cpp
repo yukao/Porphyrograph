@@ -81,7 +81,7 @@ int pg_nbCompressedImages[PG_MAX_CONFIGURATIONS] = { 0 };
 // diaporama directories
 vector<string> pg_compressedImageDirsNames[PG_MAX_CONFIGURATIONS];
 // files inside diaporama directories
-vector <vector<PhotoData*>> pg_compressedImageData[PG_MAX_CONFIGURATIONS];
+vector <vector<PhotoData>> pg_compressedImageData[PG_MAX_CONFIGURATIONS];
 vector<vector<string>> pg_compressedImageFilesNames[PG_MAX_CONFIGURATIONS];
 // the index from which an image available for swapping is looked for
 int pg_IndInitialSwapPhoto = 0;
@@ -187,54 +187,54 @@ bool pg_loadAllTextures(void) {
 	// unless the image itself is used to generate other textures
 	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
-		for (pg_TextureData* texture : pg_Textures[indConfiguration]) {
-			if (texture->texture_usage != Texture_part_init
-				&& texture->texture_usage != Texture_part_acc
-				&& texture->texture_usage != Texture_pixel_acc) {
-				if (texture->texture_Dimension == 2) {
-					pg_loadTexture2D(texture,
+		for (pg_TextureData &texture : pg_Textures[indConfiguration]) {
+			if (texture.texture_usage != Texture_part_init
+				&& texture.texture_usage != Texture_part_acc
+				&& texture.texture_usage != Texture_pixel_acc) {
+				if (texture.texture_Dimension == 2) {
+					pg_loadTexture2D(&texture,
 						GL_RGBA8, GL_RGBA,
 						GL_UNSIGNED_BYTE, GL_LINEAR);
 					printOglError(8);
 				}
-				else if (texture->texture_Dimension == 3) {
-					pg_loadTexture3D(texture,
+				else if (texture.texture_Dimension == 3) {
+					pg_loadTexture3D(&texture,
 						GL_RGBA8, GL_RGBA,
 						GL_UNSIGNED_BYTE, GL_LINEAR);
 					printOglError(8);
 				}
 			}
 #if defined(var_part_initialization) 
-			else if (texture->texture_usage == Texture_part_init
-				&& texture->texture_Dimension == 2) {
-				std::cout << texture->texture_fileName + texture->texture_fileNameSuffix + " (particle init), ";
-				if (generateParticleInitialPosColorRadiusfromImage(texture->texture_fileName + texture->texture_fileNameSuffix, 
+			else if (texture.texture_usage == Texture_part_init
+				&& texture.texture_Dimension == 2) {
+				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (particle init), ";
+				if (generateParticleInitialPosColorRadiusfromImage(texture.texture_fileName + texture.texture_fileNameSuffix, 
 					indConfiguration)) {
-					if (texture->texture_Rank != pg_particle_initial_pos_speed_texID[indConfiguration].size()
-						|| texture->texture_Rank != pg_particle_initial_color_radius_texID[indConfiguration].size()) {
-						sprintf(ErrorStr, "Error: particle initialization texture #%lu/%lu rank incorrect (%d rank expected)!\n", pg_particle_initial_pos_speed_texID[indConfiguration].size(), pg_particle_initial_color_radius_texID[indConfiguration].size(), texture->texture_Rank); ReportError(ErrorStr); throw 336;
+					if (texture.texture_Rank != pg_particle_initial_pos_speed_texID[indConfiguration].size()
+						|| texture.texture_Rank != pg_particle_initial_color_radius_texID[indConfiguration].size()) {
+						sprintf(ErrorStr, "Error: particle initialization texture #%lu/%lu rank incorrect (%d rank expected)!\n", pg_particle_initial_pos_speed_texID[indConfiguration].size(), pg_particle_initial_color_radius_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
 					}
 				}
 			}
 #endif
 #if defined(var_part_image_acceleration) 
-			else if (texture->texture_usage == Texture_part_acc
-				&& texture->texture_Dimension == 2) {
-				std::cout << texture->texture_fileName + texture->texture_fileNameSuffix + " (particle acc), ";
+			else if (texture.texture_usage == Texture_part_acc
+				&& texture.texture_Dimension == 2) {
+				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (particle acc), ";
 				GLuint textureParticle_acc_ID = NULL_ID;
-				pg_loadTexture2D(texture,
+				pg_loadTexture2D(&texture,
 					GL_RGBA8, GL_RGBA,
 					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_particle_acc_texID[indConfiguration].push_back(textureParticle_acc_ID);
 			}
 #endif
 #if defined(var_pixel_image_acceleration) 
-			else if (pg_ScenarioActiveVars[_pixel_image_acceleration][indConfiguration]
-				&& texture->texture_usage == Texture_pixel_acc
-				&& texture->texture_Dimension == 2) {
-				std::cout << texture->texture_fileName + texture->texture_fileNameSuffix + " (pixel acc), ";
+			else if (pg_ScenarioActiveVars[indConfiguration][_pixel_image_acceleration]
+				&& texture.texture_usage == Texture_pixel_acc
+				&& texture.texture_Dimension == 2) {
+				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (pixel acc), ";
 				GLuint texturePixel_acc_ID = -1;
-				pg_loadTexture2D(texture,
+				pg_loadTexture2D(&texture,
 					GL_RGBA8, GL_RGBA,
 					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_pixel_acc_texID[indConfiguration].push_back(texturePixel_acc_ID);
@@ -242,47 +242,51 @@ bool pg_loadAllTextures(void) {
 #endif
 		}
 
+		//for (pg_TextureData& texture : pg_Textures[0]) {
+		//	printf("texture usage %d dim %d rank %d ID %d name %s\n", texture.texture_usage, texture.texture_Dimension,
+		//		texture.texture_Rank, texture.texture_texID, (texture.texture_fileName + texture.texture_fileNameSuffix).c_str());
+		//}
+
 		// assigns the textures to their destination according to their usage field
-		for (pg_TextureData* texture : pg_Textures[indConfiguration]) {
-#if defined(var_sensor_layout)
-			if (pg_ScenarioActiveVars[_sensor_layout][indConfiguration]) {
-				if (texture->texture_usage == Texture_sensor
-					&& texture->texture_Dimension == 2) {
-					Sensor_texture_rectangle[indConfiguration] = texture->texture_texID;
+		for (pg_TextureData &texture : pg_Textures[indConfiguration]) {
+			if (pg_ScenarioActiveVars[indConfiguration][_sensor_layout]) {
+				if (texture.texture_usage == Texture_sensor
+					&& texture.texture_Dimension == 2) {
+					Sensor_texture_rectangle[indConfiguration] = texture.texture_texID;
 				}
 			}
-#endif
+
 #ifdef PG_WITH_MASTER_MASK
-			if (texture->texture_usage == Texture_master_mask
-				&& texture->texture_Dimension == 2) {
-				Master_Mask_texID[indConfiguration] = texture->texture_texID;
+			if (texture.texture_usage == Texture_master_mask
+				&& texture.texture_Dimension == 2) {
+				Master_Mask_texID[indConfiguration] = texture.texture_texID;
 			}
-			else if (texture->texture_usage == Texture_multilayer_master_mask
-				&& texture->texture_Dimension == 3) {
-				Master_Multilayer_Mask_texID[indConfiguration] = texture->texture_texID;
+			else if (texture.texture_usage == Texture_multilayer_master_mask
+				&& texture.texture_Dimension == 3) {
+				Master_Multilayer_Mask_texID[indConfiguration] = texture.texture_texID;
 			}
 #endif
 #if !defined (PG_BEZIER_PATHS) || defined(CORE)
-			if (texture->texture_usage == Texture_brush
-				&& texture->texture_Dimension == 3) {
-				Pen_texture_3D_texID[indConfiguration] = texture->texture_texID;
+			if (texture.texture_usage == Texture_brush
+				&& texture.texture_Dimension == 3) {
+				Pen_texture_3D_texID[indConfiguration] = texture.texture_texID;
 			}
 #endif
-			if (texture->texture_usage == Texture_noise
-				&& texture->texture_Dimension == 3) {
-				Noise_texture_3D[indConfiguration] = texture->texture_texID;
+			if (texture.texture_usage == Texture_noise
+				&& texture.texture_Dimension == 3) {
+				Noise_texture_3D[indConfiguration] = texture.texture_texID;
 			}
 #if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density) 
-			if (texture->texture_usage == Texture_repop_density
-				&& texture->texture_Dimension == 2) {
-				pg_RepopDensity_texture_texID[indConfiguration].push_back(texture->texture_texID);
-				std::cout << texture->texture_fileName + texture->texture_fileNameSuffix + " (repop density), ";
-				if (texture->texture_Rank != pg_RepopDensity_texture_texID[indConfiguration].size()) {
-					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), texture->texture_Rank); ReportError(ErrorStr); throw 336;
+			if (texture.texture_usage == Texture_repop_density
+				&& texture.texture_Dimension == 2) {
+				pg_RepopDensity_texture_texID[indConfiguration].push_back(texture.texture_texID);
+				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (repop density), ";
+				if (texture.texture_Rank != pg_RepopDensity_texture_texID[indConfiguration].size()) {
+					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
 #endif
-			if (pg_ScenarioActiveVars[_part_initialization][indConfiguration]) {
+			if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]) {
 				// printf("Loading particles initial images %s\n", fileName.c_str()); 
 				if (!pg_particle_initial_pos_speed_texID[indConfiguration].size()
 					|| !pg_particle_initial_color_radius_texID[indConfiguration].size()) {
@@ -290,35 +294,34 @@ bool pg_loadAllTextures(void) {
 				}
 			}
 #if defined(var_activeMeshes)
-			if (texture->texture_usage == Texture_mesh
-				&& texture->texture_Dimension == 2) {
+			if (texture.texture_usage == Texture_mesh
+				&& texture.texture_Dimension == 2) {
 				// assigns this textures to the meshes which have the same texture rank
 				for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[indConfiguration].size(); indMeshFile++) {
-					if (pg_Meshes[indConfiguration][indMeshFile]->pg_Mesh_TextureRank == texture->texture_Rank) {
-						pg_Meshes[indConfiguration][indMeshFile]->Mesh_texture_rectangle = texture->texture_texID;
+					if (pg_Meshes[indConfiguration][indMeshFile].pg_Mesh_TextureRank == texture.texture_Rank) {
+						pg_Meshes[indConfiguration][indMeshFile].Mesh_texture_rectangle = texture.texture_texID;
 					}
 				}
 			}
 #endif
 #ifdef CURVE_PARTICLES
-			if (texture->texture_usage == Texture_curve_particle
-				&& texture->texture_Dimension == 2) {
-				comet_texture_2D_texID[indConfiguration] = texture->texture_texID;
+			if (texture.texture_usage == Texture_curve_particle
+				&& texture.texture_Dimension == 2) {
+				comet_texture_2D_texID[indConfiguration] = texture.texture_texID;
 			}
 #endif
 #if defined(TEXTURED_QUAD_PARTICLES)
-			if (texture->texture_usage == Texture_splat_particle
-				&& texture->texture_Dimension == 2) {
-				blurredDisk_texture_2D_texID[indConfiguration].push_back(texture->texture_texID);
-				std::cout << texture->texture_fileName + texture->texture_fileNameSuffix + " (splat), ";
-				if (texture->texture_Rank != blurredDisk_texture_2D_texID[indConfiguration].size()) {
-					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), texture->texture_Rank); ReportError(ErrorStr); throw 336;
+			if (texture.texture_usage == Texture_splat_particle && texture.texture_Dimension == 2) {
+				blurredDisk_texture_2D_texID[indConfiguration].push_back(texture.texture_texID);
+				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (splat), ";
+				if (texture.texture_Rank != blurredDisk_texture_2D_texID[indConfiguration].size()) {
+					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
 #endif
 		}
 		// and checks that the textures were provided
-		if (pg_ScenarioActiveVars[_sensor_layout][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indConfiguration][_sensor_layout]) {
 			if (Sensor_texture_rectangle[indConfiguration] == NULL_ID) {
 				sprintf(ErrorStr, "Error: sensor texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
@@ -337,14 +340,14 @@ bool pg_loadAllTextures(void) {
 			sprintf(ErrorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
 #if defined(var_Part_repop_density)
-		if (pg_ScenarioActiveVars[_Part_repop_density][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indConfiguration][_Part_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: particle repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
 #endif
 #if defined(var_BG_CA_repop_density) 
-		if (pg_ScenarioActiveVars[_BG_CA_repop_density][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indConfiguration][_BG_CA_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: BG/CA repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
@@ -353,9 +356,9 @@ bool pg_loadAllTextures(void) {
 #if defined(var_activeMeshes)
 		// assigns this textures to the meshes which have the same texture rank
 		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[indConfiguration].size(); indMeshFile++) {
-			if (pg_Meshes[indConfiguration][indMeshFile]->pg_Mesh_TextureRank != -1 // frame buffer texture
-				&& pg_Meshes[indConfiguration][indMeshFile]->Mesh_texture_rectangle == NULL_ID) {
-				sprintf(ErrorStr, "Error: mesh texture not provided  for configuration %d scenario %s (mesh #%d and texture rank %d, check texture list with mesh usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str(), indMeshFile, pg_Meshes[indConfiguration][indMeshFile]->pg_Mesh_TextureRank); ReportError(ErrorStr); throw 336;
+			if (pg_Meshes[indConfiguration][indMeshFile].pg_Mesh_TextureRank != -1 // frame buffer texture
+				&& pg_Meshes[indConfiguration][indMeshFile].Mesh_texture_rectangle == NULL_ID) {
+				sprintf(ErrorStr, "Error: mesh texture not provided  for configuration %d scenario %s (mesh #%d and texture rank %d, check texture list with mesh usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str(), indMeshFile, pg_Meshes[indConfiguration][indMeshFile].pg_Mesh_TextureRank); ReportError(ErrorStr); throw 336;
 			}
 		}
 #endif
@@ -1090,11 +1093,14 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 
 //////////////////////////////////////////////
 /// NON THREADED LOAD CAMERA FRAME
-#if defined(var_cameraCaptFreq)
 void loadCameraFrame(bool initial_capture, int IPCam_no) {
 #if defined(KOMPARTSD) || defined(LIGHT)
 	return;
 #endif
+	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		return;
+	}
+
 	//Grabs and returns a frame from camera
 	if (IPCam_no < 0) {
 		if (pg_webCam_capture.grab()) {
@@ -1236,7 +1242,6 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 				pg_camera_frame.data);        // The actual image data itself
 		}
 
-#if defined(var_camera_BG_subtr)
 		if (initialBGCapture || secondInitialBGCapture) { // currentVideoTrack <=> video off
 			printf("*** non threaded initial BG video capture frame %d\n", pg_FrameNo);
 			initialBGCapture = false;
@@ -1258,7 +1263,6 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 				GL_UNSIGNED_BYTE,  // Image data type
 				pg_camera_frame.data);        // The actual image data itself
 		}
-#endif
 	}
 }
 
@@ -1268,6 +1272,10 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 /////////////////////////////////////////////////////////////////
 
 void pg_initCameraFrameTexture(Mat *camera_frame) {
+	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		return;
+	}
+
 	glEnable(GL_TEXTURE_RECTANGLE);
 
 	// camera image
@@ -1305,7 +1313,6 @@ void pg_initCameraFrameTexture(Mat *camera_frame) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// glGenerateMipmap(GL_TEXTURE_2D);
 
-#if defined(var_camera_BG_subtr)
 	// initial background
 	if (!pg_camera_BGIni_texture_texID) {
 		glGenTextures(1, &pg_camera_BGIni_texture_texID);
@@ -1325,10 +1332,13 @@ void pg_initCameraFrameTexture(Mat *camera_frame) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// glGenerateMipmap(GL_TEXTURE_2D);
-#endif
 }
 
 void pg_openCameraCaptureAndLoadFrame(void) {
+	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		return;
+	}
+
 	// video loading openCV
 	//Allocates and initializes cvCapture structure
 	// for reading a video stream from the camera.
@@ -1338,17 +1348,17 @@ void pg_openCameraCaptureAndLoadFrame(void) {
 	printf("camera No %d nbWebcam %d\n", cameraNo, pg_webCams.size());
 	if (cameraNo < 0 && -cameraNo - 1 < int(pg_webCams.size())) {
 		// cv::CAP_FFMPEG or cv::CAP_IMAGES or cv::CAP_DSHOW.
-		printf("Open webcam #%d: %s\n", -cameraNo - 1, pg_webCams[-cameraNo - 1]->cameraString.c_str());
-		pg_webCam_capture.open(pg_webCams[-cameraNo - 1]->cameraID, cv::CAP_DSHOW);
+		printf("Open webcam #%d: %s\n", -cameraNo - 1, pg_webCams[-cameraNo - 1].cameraString.c_str());
+		pg_webCam_capture.open(pg_webCams[-cameraNo - 1].cameraID, cv::CAP_DSHOW);
 		if (!pg_webCam_capture.isOpened()) {
-			sprintf(ErrorStr, "Error: webcam ID #%d not opened!\n", pg_webCams[-cameraNo - 1]->cameraID); 
+			sprintf(ErrorStr, "Error: webcam ID #%d not opened!\n", pg_webCams[-cameraNo - 1].cameraID); 
 			ReportError(ErrorStr);
 			pg_current_active_cameraNo = INT_MIN;
 			pg_cameraCaptureIsOn = false;
 		}
 		else {
-			pg_webCam_capture.set(CAP_PROP_FRAME_WIDTH, pg_webCams[-cameraNo - 1]->cameraWidth);
-			pg_webCam_capture.set(CAP_PROP_FRAME_HEIGHT, pg_webCams[-cameraNo - 1]->cameraHeight);
+			pg_webCam_capture.set(CAP_PROP_FRAME_WIDTH, pg_webCams[-cameraNo - 1].cameraWidth);
+			pg_webCam_capture.set(CAP_PROP_FRAME_HEIGHT, pg_webCams[-cameraNo - 1].cameraHeight);
 
 			// initial webcam frame reading
 			loadCameraFrame(true, cameraNo);
@@ -1384,6 +1394,10 @@ void pg_openCameraCaptureAndLoadFrame(void) {
 }
 
 void pg_releaseCameraCapture(void) {
+	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		return;
+	}
+
 	// video loading openCV
 	//Allocates and initializes cvCapture structure
 	// for reading a video stream from the camera.
@@ -1403,7 +1417,11 @@ void pg_releaseCameraCapture(void) {
 }
 
 void pg_initWebcamParameters(void) {
-		// to be checked in real time
+	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		return;
+	}
+	
+	// to be checked in real time
 	// SHARPNESS
 	// minimum                 : 0
 	// maximum                 : 255
@@ -1535,7 +1553,6 @@ void pg_initWebcamParameters(void) {
 	//printf("Initial Cam gamma      %.2f\n", CameraCurrent_gamma);
 	//printf("Initial Cam WB         %.2f %.2f\n", CameraCurrent_WB_B, CameraCurrent_WB_R);
 }
-#endif
 
 void pg_initMovieFrameTexture(Mat *movie_frame) {
 	glEnable(GL_TEXTURE_RECTANGLE);
@@ -1568,13 +1585,13 @@ void* pg_initVideoMoviePlayback(void * lpParam) {
 
 	// film loading openCV
 	sprintf(AuxString, "/movie_fileName %s",
-		pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
-	pg_movie_capture.open((pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName).c_str());
+		pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
+	pg_movie_capture.open((pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName).c_str());
 	if (!pg_movie_capture.isOpened()) {
-		printf("Movie file %s is not loaded!\n", (pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName).c_str());
+		printf("Movie file %s is not loaded!\n", (pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName).c_str());
 		return NULL;
 	}
-	pg_MovieFrame_buffer_data.PhotoName = pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName;
+	pg_MovieFrame_buffer_data.PhotoName = pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName;
 
 	//Grabs and returns a frame from movie
 	pg_movie_capture >> pg_FirstMovieFrame;
@@ -1602,24 +1619,24 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 	// printf("VideoPb Init movie playback and capture first frame non threaded\n");
 
 	//printf("VideoPb Init movie playback and capture first frame %s\n",
-	//	pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
+	//	pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
 
 	// film loading openCV
 	sprintf(AuxString, "/movie_fileName %s",
-		pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
-	pg_movie_capture.open(pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
+		pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
+	pg_movie_capture.open(pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
 	
 	if (!pg_movie_capture.isOpened()) {
-		printf("Movie file [%s] is not loaded!\n", (pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName).c_str());
+		printf("Movie file [%s] is not loaded!\n", (pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName).c_str());
 		return NULL;
 	}
 
 	//printf("Opens %s\n", (cwd + videos_directory + movieFileName[currentlyPlaying_movieNo]).c_str());
 	if (!pg_movie_capture.isOpened()) {
-		printf("Movie file [%s] not loaded!\n", (cwd + videos_directory + pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName).c_str());
+		printf("Movie file [%s] not loaded!\n", (cwd + videos_directory + pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName).c_str());
 		return NULL;
 	}
-	pg_MovieFrame_buffer_data.PhotoName = cwd + videos_directory + pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName;
+	pg_MovieFrame_buffer_data.PhotoName = cwd + videos_directory + pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName;
 
 	// printf("Name %s Opened\n", pg_MovieFrame_buffer_data.PhotoName);
 
@@ -1627,7 +1644,7 @@ void* pg_initVideoMoviePlayback_nonThreaded(string* fileName) {
 	pg_movie_capture >> pg_FirstMovieFrame;
 	// texture loading
 	if (!pg_FirstMovieFrame.data) {
-		printf("Movie frame %s not grabbed!\n", (cwd + videos_directory + pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName).c_str());
+		printf("Movie frame %s not grabbed!\n", (cwd + videos_directory + pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName).c_str());
 		return NULL;
 	}
 	pg_movie_frame_width = pg_FirstMovieFrame.cols;
@@ -2192,28 +2209,29 @@ void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_e
 	auto subDirIter = fs::directory_iterator(dir_entry);
 	++pg_nbCompressedImageDirs[indConfiguration];
 	vector<string>dir_fileNames;
-	vector<PhotoData*>dir_photoData;
+	vector<PhotoData>dir_photoData;
 	// scans image files inside a diaporama
 	int nbImagesInDir = 0;
 	//printf("Dir photo %s\n", dir_entry.path().string().c_str());
 	for (auto& subdir_entry : subDirIter) {
 		if (subdir_entry.is_regular_file()) {
+			PhotoData photoData;
 			++pg_nbCompressedImages[indConfiguration];
-			dir_photoData.push_back(new PhotoData());
+			dir_photoData.push_back(photoData);
 
 			// allocates a texture ID for the image
-			glGenTextures(1, &(dir_photoData[nbImagesInDir]->texBuffID));
-			dir_photoData[nbImagesInDir]->IDallocated = true;
+			glGenTextures(1, &(dir_photoData[nbImagesInDir].texBuffID));
+			dir_photoData[nbImagesInDir].IDallocated = true;
 
 			// stores the photo file name
-			dir_photoData[nbImagesInDir]->PhotoName = subdir_entry.path().string();
-			//printf("Subdir photo %s\n", subdir_entry.path().string().c_str());
+			dir_photoData[nbImagesInDir].PhotoName = subdir_entry.path().string();
+			//printf("Subdir photo %s ID %d\n", subdir_entry.path().string().c_str(), dir_photoData[nbImagesInDir].texBuffID);
 
 			// loads the images with a size that corresponds to the screen size
-			dir_photoData[nbImagesInDir]->pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
+			dir_photoData[nbImagesInDir].pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
 
 			// loads the compressed image into GPU
-			dir_photoData[nbImagesInDir]->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
+			dir_photoData[nbImagesInDir].pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
 
 			printOglError(8);
 
@@ -2247,20 +2265,20 @@ void pg_AddFilesToDiaporamas(int indConfiguration, fs::directory_entry dir_entry
 			if (std::find(dir_fileNames.begin(), dir_fileNames.end(), subdir_entry.path().string())
 				== dir_fileNames.end()) {
 				++pg_nbCompressedImages[indConfiguration];
-				PhotoData* curPhotoData = new PhotoData();
+				PhotoData curPhotoData;
 
 				// allocates a texture ID for the image
-				glGenTextures(1, &(curPhotoData->texBuffID));
-				curPhotoData->IDallocated = true;
+				glGenTextures(1, &(curPhotoData.texBuffID));
+				curPhotoData.IDallocated = true;
 
 				// stores the photo file name
-				curPhotoData->PhotoName = subdir_entry.path().string();
+				curPhotoData.PhotoName = subdir_entry.path().string();
 
 				// loads the images with a size that corresponds to the screen size
-				curPhotoData->pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
+				curPhotoData.pg_loadPhoto(true, workingWindow_width_powerOf2, window_height_powerOf2, false, indConfiguration);
 
 				// loads the compressed image into GPU
-				curPhotoData->pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
+				curPhotoData.pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
 				// printf("texture ID indCompressedImage %d\n", dir_photoData[indCompressedImage]->texBuffID);
 
 				pg_compressedImageData[indConfiguration][dir_rank].push_back(curPhotoData);

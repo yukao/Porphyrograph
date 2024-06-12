@@ -36,9 +36,7 @@ GLfloat pg_identityModelMatrix[16];
 #if defined(PIERRES)
 GLfloat pg_homographyForTexture[9];
 #endif
-#if defined(var_sensor_layout)
 GLfloat modelMatrixSensor[16];
-#endif
 #if defined(var_activeMeshes)
 GLfloat **modelMatrixMeshes;
 #endif
@@ -596,9 +594,9 @@ void InterfaceInitializations(void) {
 #if !defined(LIGHT)
 	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
 	int indPreset = 0;
-	for(ColorPreset *preset: pg_ColorPresets[pg_current_configuration_rank]) {
+	for(ColorPreset &preset: pg_ColorPresets[pg_current_configuration_rank]) {
 		sprintf(AuxString, "/pen_colorPreset_name%d %s",
-			indPreset, preset->pen_colorPresets_names.c_str()); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			indPreset, preset.pen_colorPresets_names.c_str()); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		indPreset++;
 	}
 	// interpolation duration initial value (0.f)
@@ -606,22 +604,21 @@ void InterfaceInitializations(void) {
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 
-#if defined(var_activeClipArts)
 	// ClipArt GPU INTERFACE VARIABLE INITIALIZATION
-	if (has_NV_path_rendering) {
-		for (unsigned int indImage = 0; indImage < pg_ClipArts[pg_current_configuration_rank].size(); indImage++) {
-			sprintf(AuxString, "/ClipArt_%d_onOff %d", indImage, ((activeClipArts == -1) || (activeClipArts & (1 << (indImage - 1))))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]
+		&& has_NV_path_rendering) {
+		for (unsigned int indClipArt = 0; indClipArt < pg_ClipArts[pg_current_configuration_rank].size(); indClipArt++) {
+			sprintf(AuxString, "/ClipArt_%d_onOff %d", indClipArt, ((activeClipArts == -1) || (activeClipArts & (1 << (indClipArt - 1))))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
-#endif
 
 #if defined(var_activeMeshes) && defined(var_mobileMeshes)
 	// MESH INTERFACE VARIABLE INITIALIZATION
-	for (unsigned int indImage = 0; indImage < pg_Meshes[pg_current_configuration_rank].size(); indImage++) {
-		sprintf(AuxString, "/Mesh_%d_onOff %d", indImage + 1, (activeMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+	for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_current_configuration_rank].size(); indMesh++) {
+		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh + 1, (activeMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
-	for (unsigned int indImage = 0; indImage < pg_Meshes[pg_current_configuration_rank].size(); indImage++) {
-		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indImage + 1, (mobileMeshes & (1 << (indImage)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+	for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_current_configuration_rank].size(); indMesh++) {
+		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh + 1, (mobileMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 #endif
 #if defined(PG_LIGHTS_DMX_IN_PG)
@@ -906,7 +903,7 @@ void pg_initGeometry_quads(void) {
 		quadMaster_indices, GL_STATIC_DRAW);
 	printOglError(23);
 
-	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////
 	// QUADS FOR SENSORS
 	// point positions and texture coordinates

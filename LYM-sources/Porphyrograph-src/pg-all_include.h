@@ -207,7 +207,6 @@ using std::ifstream;
 // light DMX command in porphyrograpa
 #define PG_LIGHTS_DMX_IN_PG
 #include <controller_library.h>
-#include "pg-light.h"
 #else
 // light DMX command in Python
 #define PG_LIGHTS_DMX_IN_PYTHON
@@ -218,6 +217,7 @@ using std::ifstream;
 #define PG_WITH_PORTAUDIO
 #endif
 
+#define PG_MAX_OSC_ARGUMENTS 96
 
 #if defined(PG_WITH_MIDI)
 #define PG_MIDI
@@ -384,6 +384,7 @@ using std::ifstream;
 #include "pg_script_header_CAaudio.h"
 #endif
 
+#include "pg-light.h"
 #include "pg-init.h"
 #include "pg-udp.h"
 #if defined(var_activeMeshes)

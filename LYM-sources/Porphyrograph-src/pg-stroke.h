@@ -86,7 +86,7 @@ public:
 		path_ID = "";
 	}
 };
-extern vector<SVG_scenarioPathCurve*> SVG_scenarioPathCurves[PG_MAX_CONFIGURATIONS];
+extern vector<SVG_scenarioPathCurve> SVG_scenarioPathCurves[PG_MAX_CONFIGURATIONS];
 extern int pg_current_SVG_path_group;
 extern int pg_nb_SVG_path_groups[PG_MAX_CONFIGURATIONS];
 

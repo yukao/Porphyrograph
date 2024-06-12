@@ -177,9 +177,7 @@ extern GLint uniform_Update_texture_fs_CATable[PG_MAX_CONFIGURATIONS];
 #if defined(var_GenerativeNights_planes)
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo[PG_MAX_CONFIGURATIONS];
 #endif
-#if defined(var_camera_BG_subtr)
 extern GLint uniform_Update_texture_fs_Camera_BGIni[PG_MAX_CONFIGURATIONS];
-#endif
 extern GLint uniform_Update_texture_fs_pixel_acc[PG_MAX_CONFIGURATIONS];
 
 // UPDATE SHADER TEXTURE IDS

@@ -154,4 +154,5 @@ void pg_lightGUI_loop_update(int light_param, string light_param_string);
 void pg_lightGUI_all_values_and_pulse_update(void);
 void pg_lightGUI_all_loop_update(void);
 void pg_lightGUI_initialization(void);
+void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments);
 #endif

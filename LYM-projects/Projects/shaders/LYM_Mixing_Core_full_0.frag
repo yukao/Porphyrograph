@@ -15,13 +15,11 @@ float	 echo;
 float	 echoNeg;
 #define var_CAMixingWeight
 float	 CAMixingWeight;
-#define var_ClipArtMixingWeight
-float	 ClipArtMixingWeight;
 #define var_PartMixingWeight
 float	 PartMixingWeight;
 #define var_trackMixingWeight
 float	 trackMixingWeight[4];
-uniform float uniform_Mixing_scenario_var_data[9];
+uniform float uniform_Mixing_scenario_var_data[8];
 
 // Main shader.
 
@@ -70,12 +68,11 @@ void main() {
   echo = uniform_Mixing_scenario_var_data[0];
   echoNeg = uniform_Mixing_scenario_var_data[1];
   CAMixingWeight = uniform_Mixing_scenario_var_data[2];
-  ClipArtMixingWeight = uniform_Mixing_scenario_var_data[3];
-  PartMixingWeight = uniform_Mixing_scenario_var_data[4];
-  trackMixingWeight[0] = (uniform_Mixing_scenario_var_data[5]);
-  trackMixingWeight[1] = (uniform_Mixing_scenario_var_data[6]);
-  trackMixingWeight[2] = (uniform_Mixing_scenario_var_data[7]);
-  trackMixingWeight[3] = (uniform_Mixing_scenario_var_data[8]);
+  PartMixingWeight = uniform_Mixing_scenario_var_data[3];
+  trackMixingWeight[0] = (uniform_Mixing_scenario_var_data[4]);
+  trackMixingWeight[1] = (uniform_Mixing_scenario_var_data[5]);
+  trackMixingWeight[2] = (uniform_Mixing_scenario_var_data[6]);
+  trackMixingWeight[3] = (uniform_Mixing_scenario_var_data[7]);
 
   float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 
@@ -126,13 +123,13 @@ void main() {
   // mix of current layers according to composition weights
   vec3 localColor
     = vec3(track0_color.rgb) * trackMixingWeight[0]
-#if PG_NB_TRACKS >= 2 && defined(var_trackMixingWeight_1)
+#if PG_NB_TRACKS >= 2
     + vec3(track1_color.rgb) * trackMixingWeight[1]
 #endif
-#if PG_NB_TRACKS >= 3 && defined(var_trackMixingWeight_2)
+#if PG_NB_TRACKS >= 3
     + vec3(track2_color.rgb) * trackMixingWeight[2]
 #endif
-#if PG_NB_TRACKS >= 4 && defined(var_trackMixingWeight_3)
+#if PG_NB_TRACKS >= 4
     + vec3(track3_color.rgb) * trackMixingWeight[3]
 #endif
     + CA_color.rgb * CAMixingWeight

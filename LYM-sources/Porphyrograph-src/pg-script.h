@@ -447,7 +447,6 @@ void InitializeConfigurationVar(void);
 void pg_displaySceneVariables( void );
 void pg_send_message_udp( char *pattern , char * message , char *targetHostid );
 void pg_send_message_udp(char *pattern, char * message, pg_IPClient *targetHost);
-pg_IPClient *pg_UDP_client(char *targetHostid);
 void pg_logCurrentLineSceneVariables(string fileName);
 void pg_logFirstLineSceneVariables(void);
 void PlayTrack(int trackNo, double timeFromStart);
@@ -471,7 +470,7 @@ void pg_non_beat_controlled_flashes(void);
 void pg_Make_flashPhoto(void);
 #endif
 void pg_aliasScript( string address , string string_argument_0 ,
-					 float float_arguments[MAX_OSC_ARGUMENTS], int nb_arguments);
+					 float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments);
 void ClipArt_OnOff(int indImage);
 void ClipArt_Off(int indImage);
 void ClipArt_On(int indImage);

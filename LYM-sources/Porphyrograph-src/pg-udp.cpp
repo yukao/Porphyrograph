@@ -880,7 +880,7 @@ void pg_IPServer::InitServer(void) {
 	// message stack initialization
 	IP_InputStackInitialization();
 
-	for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
+	for (int ind = 0; ind < PG_MAX_OSC_ARGUMENTS; ind++) {
 		OSC_arguments[ind] = "";
 	}
 }
@@ -1134,8 +1134,8 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 			// computes the length of the message tag
 			int tagLength = 0;
 			int indOSCParam = 0;
-			float OSC_float_arguments[MAX_OSC_ARGUMENTS] = { 0.f };
-			for (int ind = 0; ind < MAX_OSC_ARGUMENTS; ind++) {
+			float OSC_float_arguments[PG_MAX_OSC_ARGUMENTS] = { 0.f };
+			for (int ind = 0; ind < PG_MAX_OSC_ARGUMENTS; ind++) {
 				OSC_arguments[ind] = "";
 			}
 			if (messString.find(' ', 0) != string::npos) {
@@ -1144,7 +1144,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 				messString = messString.substr(tagLength + 1, string::npos);;
 
 				// printf( "OSC parameters %s\n" );
-				while (indOSCParam < MAX_OSC_ARGUMENTS
+				while (indOSCParam < PG_MAX_OSC_ARGUMENTS
 					&& messString != "") {
 					// computes the length of the message tag
 					if (messString.find(' ', 0) != string::npos) {
@@ -1168,7 +1168,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 
 
 			if (messString != "") {
-				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d vs %d)!", indOSCParam, MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
+				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d vs %d)!", indOSCParam, PG_MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
 			}
 
 			//printf("Alias command %s size %d :\n" , OSC_address.c_str(), indOSCParam);

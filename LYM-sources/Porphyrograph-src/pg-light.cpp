@@ -451,8 +451,8 @@ void  pg_ResetDMX(void) {
 // stores the DMX messages of all lights in light groups
 bool pg_oneLightGroup_Changed(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_current_configuration_rank]; ind_group++) {
-		if (pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_changed_since_last_DMX_update() 
-			|| pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_one_non_null_pulse()) {
+		if (pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_changed_since_last_DMX_update() 
+			|| pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_one_non_null_pulse()) {
 			return true;
 		}
 	}
@@ -462,14 +462,14 @@ bool pg_oneLightGroup_Changed(void) {
 // stores the DMX messages of all lights in light groups
 void pg_Reset_LightGroup_Changed(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_current_configuration_rank]; ind_group++) {
-		pg_light_groups[pg_current_configuration_rank][ind_group - 1]->reset_changed_since_last_DMX_update();
+		pg_light_groups[pg_current_configuration_rank][ind_group - 1].reset_changed_since_last_DMX_update();
 	}
 }
 
 // one light group has an active automation
 bool pg_oneLightGroup_Loops(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_current_configuration_rank]; ind_group++) {
-		if (pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_is_looped()) {
+		if (pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_is_looped()) {
 			return true;
 		}
 	}
@@ -479,15 +479,15 @@ bool pg_oneLightGroup_Loops(void) {
 // update light automations such as loops
 void pg_light_automation_update(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_current_configuration_rank]; ind_group++) {
-		if (pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_is_looped()) {
-			pg_light_groups[pg_current_configuration_rank][ind_group - 1]->update_group_loop();
+		if (pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_is_looped()) {
+			pg_light_groups[pg_current_configuration_rank][ind_group - 1].update_group_loop();
 		}
 	}
 }
 
 void pg_Reset_allLightGroups_Changed(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_current_configuration_rank]; ind_group++) {
-		pg_light_groups[pg_current_configuration_rank][ind_group - 1]->reset_changed_since_last_DMX_update();
+		pg_light_groups[pg_current_configuration_rank][ind_group - 1].reset_changed_since_last_DMX_update();
 	}
 }
 
@@ -496,37 +496,37 @@ void pg_Reset_allLightGroups_Changed(void) {
 void pg_StoreDMXValues_AllLightGroups(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_current_configuration_rank]; ind_group++) {
 		int ind_light = 0;
-		for (Light* light : pg_Lights[pg_current_configuration_rank]) {
-			if (light->light_group == ind_group) {
+		for (Light &light : pg_Lights[pg_current_configuration_rank]) {
+			if (light.light_group == ind_group) {
 				float null3[3] = { 0.f };
 				//printf("store DMX group %d Light %d\n", ind_group, ind_light);
 				pg_StoreDMX(ind_light,
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_dimmer) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_dimmer, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_strobe) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_strobe, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_zoom) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_zoom, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_pan) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_pan, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f), // onOff stops animation but does not reset to 0
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_tilt) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_tilt, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),  // onOff stops animation but does not reset to 0
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_hue) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_hue, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_red) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_red, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_green) == true ?
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_green, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_blue) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_blue, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f),
-					(pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_onOff(_grey) == true ? 
-						pg_light_groups[pg_current_configuration_rank][ind_group - 1]->get_group_val(_grey, pg_Lights[pg_current_configuration_rank][ind_light]->index_in_group) : 0.f));
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_dimmer) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_dimmer, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_strobe) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_strobe, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_zoom) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_zoom, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_pan) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_pan, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f), // onOff stops animation but does not reset to 0
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_tilt) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_tilt, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),  // onOff stops animation but does not reset to 0
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_hue) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_hue, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_red) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_red, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_green) == true ?
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_green, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_blue) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_blue, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f),
+					(pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_onOff(_grey) == true ? 
+						pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_grey, pg_Lights[pg_current_configuration_rank][ind_light].index_in_group) : 0.f));
 				//printf("store DMX group %d Light %d h rgb grey %.2f %.2f %.2f %.2f %.2f\n", ind_group, ind_light,
-				//	pg_light_groups[ind_group - 1]->get_group_val(_hue, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[ind_group - 1]->get_group_val(_red, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[ind_group - 1]->get_group_val(_green, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[ind_group - 1]->get_group_val(_blue, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[ind_group - 1]->get_group_val(_grey, pg_Lights[ind_light]->index_in_group));
+				//	pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_hue, pg_Lights[ind_light]->index_in_group),
+				//	pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_red, pg_Lights[ind_light]->index_in_group),
+				//	pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_green, pg_Lights[ind_light]->index_in_group),
+				//	pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_blue, pg_Lights[ind_light]->index_in_group),
+				//	pg_light_groups[pg_current_configuration_rank][ind_group - 1].get_group_val(_grey, pg_Lights[ind_light]->index_in_group));
 			}
 			ind_light++;
 		}
@@ -556,75 +556,75 @@ void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float z
 	if (device_handle != NULL && light_rank < int(pg_Lights[pg_current_configuration_rank].size()))
 	{
 		// buffer choice according to port
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_port == 1) {
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_port == 1) {
 			myDmx = DMX_message1;
 		}
-		else if (pg_Lights[pg_current_configuration_rank][light_rank]->light_port == 2) {
+		else if (pg_Lights[pg_current_configuration_rank][light_rank].light_port == 2) {
 			myDmx = DMX_message2;
 		}
 		else
 			return;
 
 		// light data in DMX message start at address and are channels long
-		DMX_data_size = pg_Lights[pg_current_configuration_rank][light_rank]->light_channels;
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_address + DMX_data_size - 1 > 512) {
-			sprintf(ErrorStr, "Light no %d address %d and channel nb %d are beyond the capacity of DMX message!", light_rank, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_channels); ReportError(ErrorStr);
+		DMX_data_size = pg_Lights[pg_current_configuration_rank][light_rank].light_channels;
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_address + DMX_data_size - 1 > 512) {
+			sprintf(ErrorStr, "Light no %d address %d and channel nb %d are beyond the capacity of DMX message!", light_rank, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_channels); ReportError(ErrorStr);
 		}
 
 		// sets the channels to 0
-		memset(myDmx + pg_Lights[pg_current_configuration_rank][light_rank]->light_address, 0, DMX_data_size * sizeof(unsigned char));
+		memset(myDmx + pg_Lights[pg_current_configuration_rank][light_rank].light_address, 0, DMX_data_size * sizeof(unsigned char));
 
 		// length update
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_port == 1) {
-			DMX_message1_length = max(DMX_message1_length, pg_Lights[pg_current_configuration_rank][light_rank]->light_address + DMX_data_size);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_port == 1) {
+			DMX_message1_length = max(DMX_message1_length, pg_Lights[pg_current_configuration_rank][light_rank].light_address + DMX_data_size);
 		}
-		else if (pg_Lights[pg_current_configuration_rank][light_rank]->light_port == 2) {
+		else if (pg_Lights[pg_current_configuration_rank][light_rank].light_port == 2) {
 			// printf("send on port 2\n");
-			DMX_message2_length = max(DMX_message2_length, pg_Lights[pg_current_configuration_rank][light_rank]->light_address + DMX_data_size);
+			DMX_message2_length = max(DMX_message2_length, pg_Lights[pg_current_configuration_rank][light_rank].light_address + DMX_data_size);
 		}
 
 		// First byte has to be 0
 		myDmx[0] = 0;
 		// null channel means no channel for this command
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_red > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_red, pg_Lights[pg_current_configuration_rank][light_rank]->light_red_fine, red_value);
-			//printf("DMX add %d chann %d fine %d r %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_red, pg_Lights[pg_current_configuration_rank][light_rank]->light_red_fine, rgb_color_value[0]);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_red > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_red, pg_Lights[pg_current_configuration_rank][light_rank].light_red_fine, red_value);
+			//printf("DMX add %d chann %d fine %d r %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_red, pg_Lights[pg_current_configuration_rank][light_rank].light_red_fine, rgb_color_value[0]);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_green > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_green, pg_Lights[pg_current_configuration_rank][light_rank]->light_green_fine, green_value);
-			//printf("DMX add %d chann %d fine %d g %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_green, pg_Lights[pg_current_configuration_rank][light_rank]->light_green_fine, rgb_color_value[1]);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_green > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_green, pg_Lights[pg_current_configuration_rank][light_rank].light_green_fine, green_value);
+			//printf("DMX add %d chann %d fine %d g %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_green, pg_Lights[pg_current_configuration_rank][light_rank].light_green_fine, rgb_color_value[1]);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_blue > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_blue, pg_Lights[pg_current_configuration_rank][light_rank]->light_blue_fine, blue_value);
-			//printf("DMX add %d chann %d fine %d b %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_blue, pg_Lights[pg_current_configuration_rank][light_rank]->light_blue_fine, rgb_color_value[2]);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_blue > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_blue, pg_Lights[pg_current_configuration_rank][light_rank].light_blue_fine, blue_value);
+			//printf("DMX add %d chann %d fine %d b %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_blue, pg_Lights[pg_current_configuration_rank][light_rank].light_blue_fine, rgb_color_value[2]);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_dimmer > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_dimmer, pg_Lights[pg_current_configuration_rank][light_rank]->light_dimmer_fine, dimmer_value);
-			//printf("DMX add %d chann %d fine %d dimm %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_dimmer, pg_Lights[pg_current_configuration_rank][light_rank]->light_dimmer_fine, dimmer_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_dimmer > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_dimmer, pg_Lights[pg_current_configuration_rank][light_rank].light_dimmer_fine, dimmer_value);
+			//printf("DMX add %d chann %d fine %d dimm %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_dimmer, pg_Lights[pg_current_configuration_rank][light_rank].light_dimmer_fine, dimmer_value);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_grey > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_grey, pg_Lights[pg_current_configuration_rank][light_rank]->light_grey_fine, grey_value);
-			//printf("DMX add %d chann %d fine %d grey %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_grey, pg_Lights[pg_current_configuration_rank][light_rank]->light_grey_fine, grey_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_grey > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_grey, pg_Lights[pg_current_configuration_rank][light_rank].light_grey_fine, grey_value);
+			//printf("DMX add %d chann %d fine %d grey %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_grey, pg_Lights[pg_current_configuration_rank][light_rank].light_grey_fine, grey_value);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_strobe > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_strobe, pg_Lights[pg_current_configuration_rank][light_rank]->light_strobe_fine, strobe_value);
-			//printf("DMX add %d chann %d fine %d strobe %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_strobe, pg_Lights[pg_current_configuration_rank][light_rank]->light_strobe_fine, strobe_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_strobe > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_strobe, pg_Lights[pg_current_configuration_rank][light_rank].light_strobe_fine, strobe_value);
+			//printf("DMX add %d chann %d fine %d strobe %.3f\n", pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_strobe, pg_Lights[pg_current_configuration_rank][light_rank].light_strobe_fine, strobe_value);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_zoom > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_zoom, pg_Lights[pg_current_configuration_rank][light_rank]->light_zoom_fine, zoom_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_zoom > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_zoom, pg_Lights[pg_current_configuration_rank][light_rank].light_zoom_fine, zoom_value);
 		}	
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_pan > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_pan, pg_Lights[pg_current_configuration_rank][light_rank]->light_pan_fine, pan_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_pan > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_pan, pg_Lights[pg_current_configuration_rank][light_rank].light_pan_fine, pan_value);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_tilt > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_tilt, pg_Lights[pg_current_configuration_rank][light_rank]->light_tilt_fine, tilt_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_tilt > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_tilt, pg_Lights[pg_current_configuration_rank][light_rank].light_tilt_fine, tilt_value);
 		}
-		if (pg_Lights[pg_current_configuration_rank][light_rank]->light_hue > 0) {
-			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank]->light_address, pg_Lights[pg_current_configuration_rank][light_rank]->light_hue, pg_Lights[pg_current_configuration_rank][light_rank]->light_hue_fine, hue_value);
+		if (pg_Lights[pg_current_configuration_rank][light_rank].light_hue > 0) {
+			store_one_DMXvalue(myDmx, pg_Lights[pg_current_configuration_rank][light_rank].light_address, pg_Lights[pg_current_configuration_rank][light_rank].light_hue, pg_Lights[pg_current_configuration_rank][light_rank].light_hue_fine, hue_value);
 		}
 		if (with_trace) {
-			printf("DMX Data from %d to %d: ", pg_Lights[pg_current_configuration_rank][light_rank]->light_address, min(pg_Lights[pg_current_configuration_rank][light_rank]->light_address + DMX_data_size, 513) - 1);
-			for (int j = pg_Lights[pg_current_configuration_rank][light_rank]->light_address; j < min(pg_Lights[pg_current_configuration_rank][light_rank]->light_address + DMX_data_size, 513); j++)
+			printf("DMX Data from %d to %d: ", pg_Lights[pg_current_configuration_rank][light_rank].light_address, min(pg_Lights[pg_current_configuration_rank][light_rank].light_address + DMX_data_size, 513) - 1);
+			for (int j = pg_Lights[pg_current_configuration_rank][light_rank].light_address; j < min(pg_Lights[pg_current_configuration_rank][light_rank].light_address + DMX_data_size, 513); j++)
 				printf(" %d ", myDmx[j]);
 			printf("\n");
 		}
@@ -806,43 +806,43 @@ void DMX_light_initialization(void)
 void pg_lightGUI_values_and_pulse_update(int light_param, int interface_light_group, string light_param_string) {
 	if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 		sprintf(AuxString, "/light/%d/%s %.4f", interface_light_group + 1, light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_val(light_param, 0));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_val(light_param, 0));
 		//printf("/light/%d/%s %.4f\n", interface_light_group + 1, light_param_string.c_str(),
-		//	pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_val(light_param, 0));
+		//	pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_val(light_param, 0));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/onOff_%s %d %d", light_param_string.c_str(), interface_light_group + 1,
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_onOff(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_onOff(light_param));
 		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_pulse/%d/%s %.4f", interface_light_group + 1, light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_pulse(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_pulse(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/beatRandom_%s %d %d", light_param_string.c_str(), interface_light_group + 1,
-			int(pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_beatRandom(light_param)));
+			int(pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_beatRandom(light_param)));
 		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/beatOnOff_%s %d %d", light_param_string.c_str(), interface_light_group + 1,
-			int(pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_beatOnOff(light_param)));
+			int(pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_beatOnOff(light_param)));
 		pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
 void pg_lightGUI_loop_update(int light_param, string light_param_string) {
 	if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 		sprintf(AuxString, "/light_control/loop_%s %d", light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_loop_is_looped(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_loop_is_looped(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/loop_curve_%s %d", light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_loop_curve_type(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_loop_curve_type(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/loop_parallel_%s %d", light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_loop_parallel(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_loop_parallel(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/loop_min_%s %.4f", light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_loop_min(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_loop_min(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/loop_max_%s %.4f", light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_loop_max(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_loop_max(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/light_control/loop_speed_%s %.4f", light_param_string.c_str(),
-			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_loop_speed(light_param));
+			pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_loop_speed(light_param));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -850,8 +850,8 @@ void pg_lightGUI_all_values_and_pulse_update(void) {
 	if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 		sprintf(AuxString, "/light_control/light_group %d", pg_interface_light_group);
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-		//printf("group %d id %s\n", pg_interface_light_group, pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_id().c_str());
-		sprintf(AuxString, "/light_control/light_group_label %s", pg_light_groups[pg_current_configuration_rank][pg_interface_light_group]->get_group_id().c_str());
+		//printf("group %d id %s\n", pg_interface_light_group, pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_id().c_str());
+		sprintf(AuxString, "/light_control/light_group_label %s", pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_id().c_str());
 		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		for (const auto& myPair : pg_light_param_hashMap) {
 			int light_param = myPair.first;
@@ -881,4 +881,362 @@ void pg_lightGUI_initialization(void) {
 		pg_lightGUI_all_values_and_pulse_update();
 		pg_lightGUI_all_loop_update();
 	}
+}
+void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments) {
+	// this is a light change command that has to be turned into a DMX command according to the address and the value
+// addresses are /light/[0-9]+/(dimmer|color|strobe|grey)
+// splits the argument separated by /
+	std::vector<std::string> address_tags;
+	address_tags = split_string(address_string, '/');
+	//printf("light command %s %s\n", address_tags[0].c_str(), address_tags[1].c_str());
+		// light group parameters control
+	if (address_tags.size() == 3 && address_tags[0].compare("light") == 0
+		&& std::all_of(address_tags[1].begin(), address_tags[1].end(), ::isdigit)) {
+		int light_group = stoi(address_tags[1]);
+		if (light_group > int(pg_Lights[pg_current_configuration_rank].size()) || light_group <= 0) {
+			sprintf(ErrorStr, "Unregistered light group %s/%d in light command (max: %d)!", address_tags[1].c_str(), light_group, pg_nb_light_groups[pg_current_configuration_rank]); ReportError(ErrorStr);
+		}
+		else if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
+			if (pg_inverse_light_param_hashMap.find(address_tags[2]) == pg_inverse_light_param_hashMap.end()) {
+				sprintf(ErrorStr, "Unknown light command (%s)!", address_tags[2].c_str()); ReportError(ErrorStr);
+			}
+			else {
+				if (nb_arguments != 1) {
+					sprintf(ErrorStr, "light set command (%s) expects %d arguments not %d!", address_string.c_str(), 1, nb_arguments); ReportError(ErrorStr);
+				}
+				else {
+					//printf("sets %s for light group %d %.2f\n", address_tags[2].c_str(), light_group, float_arguments[0]);
+					pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val(pg_inverse_light_param_hashMap[address_tags[2]], float_arguments[0]);
+					sprintf(AuxString, "/%s %.5f", address_string.c_str(), float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+					//printf("TouchOSX % s\n", AuxString);
+				}
+			}
+		}
+#ifdef PG_LIGHTS_DMX_IN_PYTHON
+		// all light value commands are forwarded to python for light DMX commands in Python
+		sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
+#endif
+	}
+	// light group parameters control
+	else if (address_tags.size() == 3 && address_tags[0].compare("light_pulse") == 0
+		&& std::all_of(address_tags[1].begin(), address_tags[1].end(), ::isdigit)) {
+		int light_group = stoi(address_tags[1]);
+		//printf("light pulse %d %.2f\n", light_group, float_arguments[0]);
+		if (light_group > pg_nb_light_groups[pg_current_configuration_rank] || light_group <= 0) {
+			sprintf(ErrorStr, "Unregistered light group %s/%d in light command (max: %d)!", address_tags[1].c_str(), light_group, pg_nb_light_groups[pg_current_configuration_rank]); ReportError(ErrorStr);
+		}
+		else if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
+			if (pg_inverse_light_param_hashMap.find(address_tags[2]) == pg_inverse_light_param_hashMap.end()) {
+				sprintf(ErrorStr, "Unknown light command (%s)!", address_tags[2].c_str()); ReportError(ErrorStr);
+			}
+			else {
+				if (nb_arguments != 1) {
+					sprintf(ErrorStr, "light pulse command (%s) expects %d arguments not %d!", address_string.c_str(), 1, nb_arguments); ReportError(ErrorStr);
+				}
+				else {
+					switch (pg_inverse_light_param_hashMap[address_tags[2]]) {
+					case _dimmer:
+						//printf("sets dimmer pulse for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_dimmer, float_arguments[0]);
+						break;
+					case _strobe:
+						//printf("sets strobe for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_strobe, float_arguments[0]);
+						break;
+					case _zoom:
+						//printf("sets zoom for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_zoom, float_arguments[0]);
+						break;
+					case _pan:
+						//printf("sets pan for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_pan, float_arguments[0]);
+						break;
+					case _tilt:
+						//printf("sets tilt for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_tilt, float_arguments[0]);
+						break;
+					case _hue:
+						//printf("sets hue for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_hue, float_arguments[0]);
+						break;
+					case _red:
+						//printf("sets red for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_red, float_arguments[0]);
+						break;
+					case _green:
+						//printf("sets green for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_green, float_arguments[0]);
+						break;
+					case _blue:
+						//printf("sets blue for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_blue, float_arguments[0]);
+						break;
+					case _grey:
+						//printf("sets grey for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_grey, float_arguments[0]);
+						break;
+					case _palette_color:
+						//printf("sets palette for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val_pulse(_palette_color, float_arguments[0]);
+						break;
+					}
+					sprintf(AuxString, "/%s %.5f", address_string.c_str(), float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+					//printf("TouchOSX % s\n", AuxString);
+				}
+			}
+		}
+#ifdef PG_LIGHTS_DMX_IN_PYTHON
+		// all light value commands are forwarded to python for light DMX commands in Python
+		sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
+#endif
+	}
+	// light control command
+	else if (address_tags.size() == 2 && address_tags[0].compare("light_control") == 0) {
+		//printf("address tag %s %s\n", address_tags[0].c_str(), address_tags[1].c_str());
+#if defined(PG_LIGHTS_DMX_IN_PG)
+				// switching off all lights
+		if (address_tags[1].compare("zero_light") == 0) {
+			pg_SendDMXZeros();
+			if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
+				for (const auto& myPair : pg_light_param_hashMap) {
+					int light_param = myPair.first;
+					string light_param_string = myPair.second;
+					sprintf(AuxString, "/light/%s %.4f", light_param_string.c_str(),
+						pg_light_groups[pg_current_configuration_rank][pg_interface_light_group].get_group_val(pg_light_command_hashMap_IDs(light_param), 0));
+					pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				}
+			}
+#if defined(var_light1_grey) && defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
+				BrokenInterpolationVar[_light1_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light1_grey]) = 0.;
+				BrokenInterpolationVar[_light1_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light1_color]) = 0.;
+				BrokenInterpolationVar[_light1_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light1_dimmer]) = 0.;
+				BrokenInterpolationVar[_light1_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light1_strobe]) = 0.
+			}
+#endif
+#if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
+				BrokenInterpolationVar[_light2_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light2_grey]) = 0.;
+				BrokenInterpolationVar[_light2_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light2_color]) = 0.;
+				BrokenInterpolationVar[_light2_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light2_dimmer]) = 0.;
+				BrokenInterpolationVar[_light2_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light2_strobe]) = 0.
+			}
+#endif
+#if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
+				BrokenInterpolationVar[_light3_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light3_grey]) = 0.;
+				BrokenInterpolationVar[_light3_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light3_color]) = 0.;
+				BrokenInterpolationVar[_light3_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light3_dimmer]) = 0.;
+				BrokenInterpolationVar[_light3_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light3_strobe]) = 0.;
+			}
+#endif
+#if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
+				BrokenInterpolationVar[_light4_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light4_grey]) = 0.;
+				BrokenInterpolationVar[_light4_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light4_color]) = 0.;
+				BrokenInterpolationVar[_light4_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light4_dimmer]) = 0.;
+				BrokenInterpolationVar[_light4_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light4_strobe]) = 0.;
+			}
+#endif
+#if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
+			BrokenInterpolationVar[_light5_grey][pg_current_configuration_rank] = true;
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
+				*((float*)ScenarioVarPointers[_light5_grey]) = 0.;
+				BrokenInterpolationVar[_light5_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light5_color]) = 0.;
+				BrokenInterpolationVar[_light5_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light5_dimmer]) = 0.;
+				BrokenInterpolationVar[_light5_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light5_strobe]) = 0.;
+			}
+#endif
+#if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
+				BrokenInterpolationVar[_light6_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light6_grey]) = 0.;
+				BrokenInterpolationVar[_light6_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light6_color]) = 0.;
+				BrokenInterpolationVar[_light6_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light6_dimmer]) = 0.;
+				BrokenInterpolationVar[_light6_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light6_strobe]) = 0.;
+			}
+#endif
+#if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
+				BrokenInterpolationVar[_light7_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light7_grey]) = 0.;
+				BrokenInterpolationVar[_light7_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light7_color]) = 0.;
+				BrokenInterpolationVar[_light7_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light7_dimmer]) = 0.;
+				BrokenInterpolationVar[_light7_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light7_strobe]) = 0.;
+			}
+#endif
+#if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
+			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
+				BrokenInterpolationVar[_light8_grey][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light8_grey]) = 0.;
+				BrokenInterpolationVar[_light8_color][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light8_color]) = 0.;
+				BrokenInterpolationVar[_light8_dimmer][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light8_dimmer]) = 0.;
+				BrokenInterpolationVar[_light8_strobe][pg_current_configuration_rank] = true;
+				*((float*)ScenarioVarPointers[_light8_strobe]) = 0.;
+			}
+#endif
+		}
+		// light group change in the interface, reships the parameter values
+		else if (address_tags[1].compare("light_group") == 0) {
+			if (nb_arguments != 1) {
+				sprintf(ErrorStr, "light light_group command (%s) expects %d arguments not %d!", address_string.c_str(), 1, nb_arguments); ReportError(ErrorStr);
+			}
+			else if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
+				if (int(float_arguments[0]) < pg_nb_light_groups[pg_current_configuration_rank]) {
+					pg_interface_light_group = int(float_arguments[0]);
+					//printf("light_group command (%s) %d!", address_string.c_str(), pg_interface_light_group); 
+					// interface control values updating according to the current light group focus
+					// update for all the parameters
+					pg_lightGUI_all_values_and_pulse_update();
+					// update for the looped parameters
+					pg_lightGUI_all_loop_update();
+				}
+				//else {
+				//	sprintf(AuxString, "/light_control/light_group %d", pg_interface_light_group);
+				//	pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+				//}
+			}
+		}
+		// single channel value change single precision
+		else if (address_tags[1].compare("channel_value") == 0) {
+			if (nb_arguments != 3) {
+				sprintf(ErrorStr, "light channel_value command (%s) expects %d arguments not %d!", address_string.c_str(), 3, nb_arguments); ReportError(ErrorStr);
+			}
+			else {
+				//printf("Store DMX channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
+				pg_StoreDMX(int(float_arguments[0]), float_arguments[1], int(float_arguments[2]), false);
+				pg_SendDMX();
+			}
+		}
+		// single channel value change double precision
+		else if (address_tags[1].compare("channel_fine_value") == 0) {
+			if (nb_arguments != 3) {
+				sprintf(ErrorStr, "light channel_fine_value command (%s) expects %d arguments not %d!", address_string.c_str(), 3, nb_arguments); ReportError(ErrorStr);
+			}
+			else {
+				//printf("Store DMX *fine* channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
+				pg_StoreDMX(int(float_arguments[0]), float_arguments[1], int(float_arguments[2]), true);
+				pg_SendDMX();
+			}
+		}
+		// random value assignment to a light parameter
+		else if (address_tags[1].compare(0, string("random_").size(), "random_") == 0) {
+			string command = address_tags[1].substr(string("random_").size());
+			int light_group = int(float_arguments[0]);
+			if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
+				float val = rand_0_1;
+				//printf("sets random value %s for light group %d %.2f\n", command.c_str(), light_group, val);
+				pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_val(pg_inverse_light_param_hashMap[command], val);
+				sprintf(AuxString, "/light/%d/%s %.4f", light_group, command.c_str(), val); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+		// onOff assignment to a light parameter
+		else if (address_tags[1].compare(0, string("onOff_").size(), "onOff_") == 0) {
+			string command = address_tags[1].substr(string("onOff_").size());
+			int light_group = int(float_arguments[0]);
+			bool is_on = (float_arguments[1] == 1.f);
+			if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
+				//printf("sets onOff value %s for light group %d %d\n", command.c_str(), light_group, int(is_on));
+				pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_onOff(pg_inverse_light_param_hashMap[command], is_on);
+				sprintf(AuxString, "/light-control/onOff_%s %.2f %.2f", command.c_str(), float(light_group), float(is_on)); pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
+			}
+		}
+		// beat based onOff change assignment to a light parameter
+		else if (address_tags[1].compare(0, string("beatOnOff_").size(), "beatOnOff_") == 0) {
+			string command = address_tags[1].substr(string("beatOnOff_").size());
+			int light_group = int(float_arguments[0]);
+			bool is_on = (float_arguments[1] == 1.f);
+			if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
+				//printf("sets beat on/off %s for light group %d %d\n", command.c_str(), light_group, int(is_on));
+				pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_beatOnOff(pg_inverse_light_param_hashMap[command], is_on);
+			}
+		}
+		// beat based random value assignment to a light parameter
+		else if (address_tags[1].compare(0, string("beatRandom_").size(), "beatRandom_") == 0) {
+			string command = address_tags[1].substr(string("beatRandom_").size());
+			int light_group = int(float_arguments[0]);
+			bool is_on = (float_arguments[1] == 1.f);
+			if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
+				//printf("sets beat random %s for light group %d %d\n", command.c_str(), light_group, int(is_on));
+				pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_beatRandom(pg_inverse_light_param_hashMap[command], is_on);
+			}
+		}
+		// loop assignment to a light parameter
+		else if (address_tags[1].compare(0, string("loop_").size(), "loop_") == 0) {
+			if (nb_arguments != 7) {
+				sprintf(ErrorStr, "light loop command (%s) expects %d arguments not %d!", address_string.c_str(), 7, nb_arguments); ReportError(ErrorStr);
+			}
+			else {
+				string command = address_tags[1].substr(string("loop_").size());
+				//sendOSC('/light_control/loop_tilt', self.values.x, light_group, curve, parallel, min, max, speed, { true })
+				bool on_off = (float_arguments[0] == 1.f);
+				int light_group = int(float_arguments[1]);
+				int curve_type = int(float_arguments[2]);
+				int parallel_vs_alternate = int(float_arguments[3]);
+				float min_val = float_arguments[4];
+				float max_val = float_arguments[5];
+				double speed_val = double(float_arguments[6]);
+				if (light_group <= pg_nb_light_groups[pg_current_configuration_rank] && light_group > 0) {
+					printf("%s loop for light group %d oOff %d curve %d // %d  vals min max speed %.3f %.3f %.3f\n", command.c_str(), light_group, on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
+					pg_light_groups[pg_current_configuration_rank][light_group - 1].set_group_loop(pg_inverse_light_param_hashMap[command], on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
+				}
+			}
+		}
+		else {
+			switch (nb_arguments) {
+			case 0:
+				sprintf(AuxString, "/%s", address_string.c_str());
+				pg_send_message_udp((char*)"", AuxString, (char*)"udp_Python_send");
+				break;
+			case 1:
+				sprintf(AuxString, "/%s %.6f", address_string.c_str(), float_arguments[0]);
+				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
+				break;
+			case 2:
+				sprintf(AuxString, "/%s %.6f %.6f", address_string.c_str(), float_arguments[0], float_arguments[1]);
+				pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_Python_send");
+				break;
+			case 3:
+				sprintf(AuxString, "/%s %.6f %.6f %.6f", address_string.c_str(), float_arguments[0], float_arguments[1], float_arguments[2]);
+				pg_send_message_udp((char*)"fff", AuxString, (char*)"udp_Python_send");
+				break;
+			default:
+				sprintf(AuxString, "/%s %.6f %.6f %.6f %.6f", address_string.c_str(), float_arguments[0], float_arguments[1], float_arguments[2], float_arguments[3]);
+				pg_send_message_udp((char*)"ffff", AuxString, (char*)"udp_Python_send");
+				break;
+			}
+		}
+	}
+#endif 
+#ifdef PG_LIGHTS_DMX_IN_PYTHON
+	// all light control commands are forwarded to python for light_scene management
+	sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
+#endif
 }

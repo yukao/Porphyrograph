@@ -875,7 +875,15 @@ def write_script_header_and_body() :
 		type_string = scenario_to_cpp_type(full_specs[2])
 		index_range = scenario_to_cpp_range(full_specs[2])
 		if(index_range == []) :
-			ScriptBody.write("%-5s %-20s;\n" % (type_string , var_ID))
+			if(full_specs[7] == "") :
+				print("Configuration generator: Variable", var_ID, "without initial value (type [",type_string,"])")
+				sys.exit(0)
+			if(type_string == "string") :
+				ScriptBody.write("%-5s %-20s = \"%s\";\n" % (type_string , var_ID, full_specs[7]))
+			elif(type_string == "float") :
+				ScriptBody.write("%-5s %-20s = float(%s);\n" % (type_string , var_ID, full_specs[7]))
+			else :
+				ScriptBody.write("%-5s %-20s = %s;\n" % (type_string , var_ID, full_specs[7]))
 		else :
 			ScriptBody.write("%-5s %-20s[%s];\n" % (type_string , var_ID, index_range[1]))
 
@@ -897,6 +905,7 @@ def write_script_header_and_body() :
 	ScriptHeader.write("extern void * ScenarioVarPointers[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern char *ScenarioVarMessages[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern char *ScenarioVarStrings[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("void FullScenarioArrayVarInit();\n")
 
 	# scenario variable types declarations
 	ScriptBody.write("VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { \n")
@@ -1026,6 +1035,26 @@ def write_script_header_and_body() :
 	for var_ID in full_scenario_vars_specs_dict:
 		ScriptBody.write("  (char *)\""+var_ID+"\",\n")
 	ScriptBody.write("};\n")
+
+	# initialization of array variables with initial values
+	ScriptBody.write("void FullScenarioArrayVarInit() {\n")
+	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
+		index_range = scenario_to_cpp_range(full_specs[2])
+		type_string = full_specs[2]
+		if(index_range != []) :
+			val_init = full_specs[7].split('/')
+			nb_expected_vals = configurationVarValue(index_range[1]) - int(index_range[0])
+			if(len(val_init) != nb_expected_vals) :
+				print("Configuration generator: Array variable", var_ID, "expects", nb_expected_vals, " initial value (of type [",type_string,"])", "not" , len(val_init))
+				sys.exit(0)
+			for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+				if(type_string.startswith("string")) :
+					ScriptBody.write("	{0}[{1}] = \"{2}\";\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
+				elif(type_string.startswith("float")) :
+					ScriptBody.write("	{0}[{1}] = float({2});\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
+				else :
+					ScriptBody.write("	{0}[{1}] = {2};\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
+	ScriptBody.write("}\n")
 
 	ShaderBodyDecl.write("GLint uniform_ParticleAnimation_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
 	ShaderBodyDecl.write("GLint uniform_Update_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
@@ -1485,7 +1514,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					else:
 						ParticleRender_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
 						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "  Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
+							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "  ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
 							if(pulsing_mode == "*") :
 								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 							elif(pulsing_mode == "pulsed_absolute") :
@@ -1566,7 +1595,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				else:
 					Master_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
 					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Master_bindingString_cpp = Master_bindingString_cpp + "  Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
+						Master_bindingString_cpp = Master_bindingString_cpp + "  Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1584,7 +1613,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				Master_fs_index += 1
 
 
-	# once the varaiabes have been scanned and grouped by 4, the remaining ones are transformed into variables
+	# once the variables have been scanned, C++ and glsl tables are created to pass the values from CPU to GPU. There is a table per shader.
 	if(withParticleShaders[indConfiguration]) :
 		if(ParticleAnimation_fs_index > 0) :
 			ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "uniform float uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"

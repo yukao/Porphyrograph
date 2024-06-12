@@ -31,9 +31,6 @@
 typedef int SOCKET;
 #endif // !_WIN32
 
-
-#define MAX_OSC_ARGUMENTS 96
-
 #define _SpaceChar(c) (c == ' ' || c == '\n' || c == 13 || c == '\t')
 #define _Num(c) (c >= '0' && c <= '9')
 
@@ -114,7 +111,7 @@ public:
 	string       id;
 
 	// OSC argument parsing
-	string OSC_arguments[MAX_OSC_ARGUMENTS];
+	string OSC_arguments[PG_MAX_OSC_ARGUMENTS];
 	string OSC_address;
 
 	// local server socket

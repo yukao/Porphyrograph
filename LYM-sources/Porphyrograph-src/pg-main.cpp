@@ -137,7 +137,7 @@ bool glut_initialized = false;
 int argc; char **argv;
 
 /// MAIN FUNCTION
-int main(int argcMain, char **argvMain) {
+int main(int argcMain, char** argvMain) {
 	argc = argcMain;
 	argv = argvMain;
 
@@ -146,7 +146,7 @@ int main(int argcMain, char **argvMain) {
 
 	// current date/time based on current system
 	time_t now = time(0);
-	tm *ltm = localtime(&now);
+	tm* ltm = localtime(&now);
 
 	// initialisation of cwd
 	cwd = GetCurrentWorkingDir();
@@ -186,10 +186,10 @@ int main(int argcMain, char **argvMain) {
 			sprintf(ErrorStr, "Porphyrograph: should have maximally %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", PG_MAX_CONFIGURATIONS, (argc - 1) / 2); ReportError(ErrorStr); throw(6678);
 		}
 		else {
-			printf("Porphyrograph: % d associated configuration and scenario file(s) (<conf.csv> <scenario.csv>) + ", (argc - 1) / 2); 
+			printf("Porphyrograph: % d associated configuration and scenario file(s) (<conf.csv> <scenario.csv>) + ", (argc - 1) / 2);
 		}
 		pg_Shader_File_Names = new string * [pg_NbConfigurations];
-		pg_Shader_Stages = new GLenum **[pg_NbConfigurations];
+		pg_Shader_Stages = new GLenum * *[pg_NbConfigurations];
 		pg_Shader_nbStages = new int* [pg_NbConfigurations];
 		pg_shader_programme = new unsigned int* [pg_NbConfigurations];
 		pg_ConfigurationFileNames = new string[pg_NbConfigurations];
@@ -216,7 +216,7 @@ int main(int argcMain, char **argvMain) {
 			}
 		}
 	}
-	else{
+	else {
 		sprintf(ErrorStr, "Porphyrograph: should have an odd number of arguments Porphyrograph.exe (<conf.csv> <scenario.csv>)+"); ReportError(ErrorStr); throw(6678);
 	}
 
@@ -254,16 +254,19 @@ int main(int argcMain, char **argvMain) {
 
 	// initializations before rendering
 
+	// initialization of all the array variables from full scenario with scenario initial values
+	FullScenarioArrayVarInit();
+
 	// sensor initialization
-#if defined(var_sensor_layout)
-	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		SensorInitialization();
 	}
-#endif
 
 #if defined(var_activeMeshes)
-	// mesh initialization
-	MeshInitialization();
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+		// mesh initialization
+		MeshInitialization();
+	}
 #endif
 
 #ifdef PG_METAWEAR
@@ -303,11 +306,11 @@ int main(int argcMain, char **argvMain) {
 
 	/////////////////////////////////////////////////////////////////////////
 	// ClipArt GPU INITIALIZATION
-#if defined(var_activeClipArts)
 	// loads the ClipArts and lists them
-	pg_loadAllClipArts();
-	pg_listAllClipArts();
-#endif
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+		pg_loadAllClipArts();
+		pg_listAllClipArts();
+	}
 
 
 	// lights off the LED
@@ -342,12 +345,12 @@ int main(int argcMain, char **argvMain) {
 	printOglError(467);
 
 	// camera frame capture initialization
-	if (pg_ScenarioActiveVars[_cameraCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		pg_openCameraCaptureAndLoadFrame();
 	}
 
 	// video intialization: loads the movie of the intial configuration
-	if (pg_ScenarioActiveVars[_movieCaptFreq][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
 			&& playing_movieNo != currentlyPlaying_movieNo) {
 			pg_movie_frame.setTo(Scalar(0, 0, 0));
@@ -361,11 +364,11 @@ int main(int argcMain, char **argvMain) {
 
 			is_movieLoading = true;
 			printf("Loading movie %s\n",
-					pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName.c_str());
-			sprintf(AuxString, "/movie_shortName %s", pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoShortName.c_str());
+					pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
+			sprintf(AuxString, "/movie_shortName %s", pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoShortName.c_str());
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 
-			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo]->videoFileName);
+			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName);
 		}
 	}
 
@@ -616,7 +619,7 @@ void pg_init_scene(void) {
 	open_IO_MIDI(string("TouchOSC Bridge"), string("TouchOSC Bridge"));
 #endif
 
-	if (pg_ScenarioActiveVars[_sensor_layout][pg_current_configuration_rank]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////////
 		// SENSORS INITIALIZATION
 		// copies the grid layout
@@ -640,15 +643,15 @@ void pg_init_scene(void) {
 #endif
 
 	// server initialization
-	for (pg_IPServer* server : IP_Servers) {
-		server->InitServer();
+	for (pg_IPServer &server : IP_Servers) {
+		server.InitServer();
 	}
 	// client initialization
-	for (pg_IPClient* client : IP_Clients) {
+	for (pg_IPClient &client : IP_Clients) {
 		// printf( "Client %d initialization\n" , ind );
 		  //std::cout << "client->Remote_server_IP: " << ind << " " << client->Remote_server_IP << "\n";
 		  //std::cout << "client->Remote_server_port: " << client->Remote_server_port << "\n";
-		client->InitClient();
+		client.InitClient();
 		// printf( "Client name %s\n" , IP_Clients[ ind ]->id );
 	}
 	Input_Message_String = new char[max_network_message_length];
@@ -668,16 +671,11 @@ void pg_quit( void ) {
 	pg_draw_scene(_Svg);
 	// sends the position of the cursor to the recorder for later replay
 	sprintf(AuxString, "/quit");
-	pg_IPClient * client;
-	if ((client = pg_UDP_client((char *)"udp_Record_send"))) {
-		pg_send_message_udp((char *)"", (char *)AuxString, client);
-	}
-	if ((client = pg_UDP_client((char *)"udp_Usine_send"))) {
-		// sends the new scene to Usine for sample selection
-		for (int ind = 0; ind < 4; ind++) {
-			sprintf(AuxString, "/new_scene_%d 0", ind);
-			pg_send_message_udp((char *)"i", (char *)AuxString, client);
-		}
+	pg_send_message_udp((char *)"", (char *)AuxString, (char*)"udp_Record_send"));
+	// sends the new scene to Usine for sample selection
+	for (int ind = 0; ind < 4; ind++) {
+		sprintf(AuxString, "/new_scene_%d 0", ind);
+		pg_send_message_udp((char *)"i", (char *)AuxString, (char*)"udp_Usine_send"));
 	}
 #endif
 
@@ -734,8 +732,8 @@ void pg_quit( void ) {
 #endif
 
 	// sends all the remaining messages
-	for (pg_IPClient* client : IP_Clients) {
-		client->sendIPmessages();
+	for (pg_IPClient &client : IP_Clients) {
+		client.sendIPmessages();
 	}
 
 	// stores the shutdown status 
@@ -779,14 +777,8 @@ void pg_quit( void ) {
   CurrentWindow = NULL;
 
   // printf("releaseUDP\n");
-  for (pg_IPServer* server : IP_Servers) {
-	  delete server;
-  }
   IP_Servers.clear();
   
-  for (pg_IPClient* client : IP_Clients) {
-    delete client;
-  }
   IP_Clients.clear();
   
   if (ErrorStr) {
@@ -1045,8 +1037,8 @@ void window_idle_browse(int step) {
 		pg_screenMessage_update();
 
 #ifdef CRITON
-		if (MAX_OSC_ARGUMENTS < 3 * 8) {
-			std::cout << "Error: unsufficient MAX_OSC_ARGUMENTS value for processing fftLevel8 command!" << std::endl;
+		if (PG_MAX_OSC_ARGUMENTS < 3 * 8) {
+			std::cout << "Error: unsufficient PG_MAX_OSC_ARGUMENTS value for processing fftLevel8 command!" << std::endl;
 			exit(-1);
 		}
 #endif
@@ -1069,14 +1061,14 @@ void window_idle_browse(int step) {
 
 		// beat in case of internal beat
 		if (auto_beat && pg_CurrentClockTime > lastBeatTime + double(auto_beat_duration)) {
-			float arguments[MAX_OSC_ARGUMENTS];
+			float arguments[PG_MAX_OSC_ARGUMENTS];
 			pg_BeatNo++;
 			lastBeatTime += double(auto_beat_duration);
 			if (lastBeatTime > pg_CurrentClockTime + double(auto_beat_duration)
 				|| lastBeatTime < pg_CurrentClockTime) {
 				lastBeatTime = pg_CurrentClockTime;
 			}
-			memset(arguments, 0, MAX_OSC_ARGUMENTS * sizeof(float)); // make sure the struct is empty
+			memset(arguments, 0, PG_MAX_OSC_ARGUMENTS * sizeof(float)); // make sure the struct is empty
 			arguments[0] = (float)pg_BeatNo;
 			pg_aliasScript("beat", "f", arguments, 0);
 		}
@@ -1117,11 +1109,11 @@ void window_idle_browse(int step) {
 		pg_flash_control(flash_continuous_generation);
 
 		// UDP messages IN/OUT
-		for (pg_IPServer* server : IP_Servers) {
-			server->receiveIPMessages();
+		for (pg_IPServer &server : IP_Servers) {
+			server.receiveIPMessages();
 		}
-		for (pg_IPClient* client : IP_Clients) {
-			client->sendIPmessages();
+		for (pg_IPClient &client : IP_Clients) {
+			client.sendIPmessages();
 		}
 
 		// MIDI messages IN

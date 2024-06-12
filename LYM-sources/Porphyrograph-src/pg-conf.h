@@ -100,9 +100,9 @@ public:
 
 extern bool					    pg_last_scene_update;
 extern int						pg_NbConfigurations;
-extern vector<Scene*>           pg_Scenario[PG_MAX_CONFIGURATIONS];
+extern vector<Scene>           pg_Scenario[PG_MAX_CONFIGURATIONS];
 extern double                   current_scene_percent;
-extern bool						pg_ScenarioActiveVars[_MaxInterpVarIDs][PG_MAX_CONFIGURATIONS];
+extern bool						pg_ScenarioActiveVars[PG_MAX_CONFIGURATIONS][_MaxInterpVarIDs];
 
 // PNG capture
 class pg_Png_Capture {
@@ -157,8 +157,8 @@ public:
 extern pg_Video_Capture pg_Video_Capture_param;
 
 // UDP serversisClearAllLayersnd clients
-extern vector<pg_IPServer*>		IP_Servers;
-extern vector<pg_IPClient*>		IP_Clients;
+extern vector<pg_IPServer>		IP_Servers;
+extern vector<pg_IPClient>		IP_Clients;
 
 extern string					pg_csv_file_name;
 extern string					snapshots_dir_path_name;
@@ -216,7 +216,7 @@ public:
 	~ClipArt(void) {
 	}
 };
-extern vector<ClipArt*>pg_ClipArts[PG_MAX_CONFIGURATIONS];
+extern vector<ClipArt>pg_ClipArts[PG_MAX_CONFIGURATIONS];
 // total number of paths
 extern int pg_nb_tot_SvgGpu_paths[PG_MAX_CONFIGURATIONS];
 // lastisClearAllLayersctivated SvgGpu
@@ -311,7 +311,7 @@ public:
 		mesh_barycenter = {};
 		mesh_index_vbo = {};
 #if defined(var_Caverne_Mesh_Profusion)
-		if (pg_ScenarioActiveVars[_Caverne_Mesh_Profusion][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indConfiguration][_Caverne_Mesh_Profusion]) {
 			pg_CaverneActveMesh = false;
 			if (indFile < 7) {
 				pg_CaverneMeshWakeupTime = float(rand_0_1 * 10.);
@@ -324,7 +324,7 @@ public:
 		}
 #endif
 #if defined(var_MmeShanghai_brokenGlass)
-		if (pg_ScenarioActiveVars[_MmeShanghai_brokenGlass][indConfiguration]) {
+		if (pg_ScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
 			pg_MmeShanghai_MeshSubParts = NULL;
 			pg_MmeShanghai_NbMeshSubParts = 0;
 			pg_MmeShanghai_MeshSubPart_FileNames = NULL;
@@ -365,7 +365,7 @@ class CaverneBackColor {
 	bool Caverne_BackColorFlash_prec;
 };
 // MESHES
-extern vector<MeshData*> pg_Meshes[PG_MAX_CONFIGURATIONS];
+extern vector<MeshData> pg_Meshes[PG_MAX_CONFIGURATIONS];
 extern int pg_last_activated_Mesh;
 #endif
 
@@ -375,7 +375,7 @@ double my_stod(string str);
 
 // TEXTURES
 // file names
-extern vector<pg_TextureData *> pg_Textures[PG_MAX_CONFIGURATIONS];
+extern vector<pg_TextureData> pg_Textures[PG_MAX_CONFIGURATIONS];
 
 /// the params of the font file
 extern string                    font_file_encoding;

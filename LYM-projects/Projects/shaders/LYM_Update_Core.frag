@@ -2440,21 +2440,6 @@ void main() {
   vec4 flashToCACumul = vec4(0.0);
 
   /////////////////////////////////////
-  // builds a path_replay_trackNo vector so that it can be used in the for loop
-  #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo[1],path_replay_trackNo[2],
-                                      path_replay_trackNo[3]);
-  #endif
-  #if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo[4],path_replay_trackNo[5],
-                                      path_replay_trackNo[6],path_replay_trackNo[7]);
-  #endif
-  #if PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo[8],path_replay_trackNo[9],
-                                      path_replay_trackNo[10],path_replay_trackNo[11]);
-  #endif
-
-  /////////////////////////////////////
   // TRACK indTrack between 1 and PG_NB_TRACKS - 1 + track 0 in the end
   for( int indTrack = 1 ; indTrack <= PG_NB_TRACKS ; indTrack++ ) {
     // track 0 is processed last
@@ -2472,24 +2457,11 @@ void main() {
       if( indPath == 0 && currentDrawingTrack == indCurTrack ) {
         pathStroke = DRAWING_BEZIER;
       }
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
       // path drawing on current track
-      else if( indPath > 0 && indPath < 4 && path_replay_trackNo03[indPath - 1] == indCurTrack ) {
+      else if( indPath > 0 && path_replay_trackNo[indPath] == indCurTrack ) {
         pathStroke = DRAWING_BEZIER;
       }
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-      // path drawing on current track
-      else if( indPath >= 4 && path_replay_trackNo47[indPath - 4] == indCurTrack ) {
-        pathStroke = DRAWING_BEZIER;
-      }
-#endif
-#if PG_NB_PATHS == 11
-      // path drawing on current track
-      else if( indPath >= 8 && path_replay_trackNo811[indPath - 8] == indCurTrack ) {
-        pathStroke = DRAWING_BEZIER;
-      }
-#endif
+
       // drawing occurs
       if( pathStroke > 0 ) {
         BezierControlX = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];

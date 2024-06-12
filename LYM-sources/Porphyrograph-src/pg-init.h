@@ -227,7 +227,6 @@ extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
 extern unsigned int *pg_Particle_indices;
 
-#if defined(var_sensor_layout)
 //////////////////////////////////////////////////////////////////////
 // SENSORS
 //////////////////////////////////////////////////////////////////////
@@ -252,7 +251,6 @@ extern int sample_choice[PG_NB_SENSORS];
 extern int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
 // sample start playing time for muting after 1 cycle
 extern double sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
-#endif
 
 // +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
 #ifdef PG_METAWEAR

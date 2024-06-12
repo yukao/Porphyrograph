@@ -249,7 +249,7 @@ extern vector<int>pg_nbCompressedImagesPerFolder[PG_MAX_CONFIGURATIONS];
 // diaporama directories
 extern vector<string> pg_compressedImageDirsNames[PG_MAX_CONFIGURATIONS];
 // files inside diaporama directories
-extern vector <vector<PhotoData*>> pg_compressedImageData[PG_MAX_CONFIGURATIONS];
+extern vector <vector<PhotoData>> pg_compressedImageData[PG_MAX_CONFIGURATIONS];
 extern vector<vector<string>> pg_compressedImageFilesNames[PG_MAX_CONFIGURATIONS];
 
 // the index from which an image available for swapping is looked for
@@ -335,13 +335,11 @@ bool pg_loadTexture2D(pg_TextureData* texData,
 	GLenum datatype, GLenum texturefilter);
 
 /// NON THREADED LOAD CAMERA FRAME
-#if defined(var_cameraCaptFreq)
 void loadCameraFrame(bool initial_capture, int IPCam_no);
 void pg_initCameraFrameTexture(Mat *video_frame);
 void pg_openCameraCaptureAndLoadFrame(void);
 void pg_releaseCameraCapture(void);
 void pg_initWebcamParameters(void);
-#endif
 
 // particle initialization from photography
 bool generateParticleInitialPosColorRadiusfromImage(string fileName, int indConfiguration); // 2 texture IDs one for pos/speed, the other one for color/radius
