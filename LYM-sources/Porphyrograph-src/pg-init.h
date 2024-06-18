@@ -58,7 +58,7 @@ enum pg_FBO_Update_samplers
 #endif
 	pg_Camera_BGIni_FBO_Update_sampler,
 	pg_pixel_image_acc_Update_sampler,
-#ifdef WITH_BURST_MASK
+#if defined(WITH_BURST_MASK)
 	pg_Burst_Mask_FBO_Update_sampler,
 #endif
 };
@@ -182,7 +182,6 @@ extern float quadMaster_points[];
 extern float quadMaster_texCoords[];
 extern unsigned int quadMaster_indices[PG_SIZE_QUAD_ARRAY];
 
-#if defined(var_activeMeshes)
 #define PG_MAX_ANIMATION_POSES 7
 class Bone;
 extern int* pg_nb_bones[PG_MAX_CONFIGURATIONS];
@@ -214,10 +213,9 @@ public:
 	}
 };
 extern MotionPose** pg_motionPoses[PG_MAX_CONFIGURATIONS];
-#endif
 
 // particle curves
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 extern GLfloat *pg_Particle_control_points;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
@@ -253,7 +251,7 @@ extern int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
 extern double sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 
 // +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 #define PG_MW_NB_MAX_SENSORS 2
 struct metawear_sensor_data {
 	float mw_mss_pos[3];		// x y z
@@ -277,23 +275,18 @@ extern GLuint FBO_ParticleRendering_depthAndStencilBuffer;
 extern GLuint pg_FBO_ClipArtRendering; // ClipArt GPU rendering
 extern GLuint pg_FBO_ClipArt_render_texID; // ClipArt GPU rendering
 extern GLuint FBO_ClipArt_depthAndStencilBuffer;
-#if defined(var_part_initialization) 
 extern GLuint pg_FBO_ParticleAnimation; // particle animation
 extern GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS]; // particle animation
-#endif
 extern GLuint pg_FBO_Mixing_capturedFB_prec; //  drawing memory on odd and even frames for echo
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-extern GLuint pg_FBO_Master_capturedFB_prec; // master output memory for mapping on mesh  
-#endif
+extern GLuint pg_FBO_Master_capturedFB_prec; // master output memory for mapping on mesh or bypassing mesh rendering
 
 // FBO texture
 extern GLuint pg_FBO_Update_texID[2 * PG_FBO_UPDATE_NBATTACHTS]; // update 
 extern GLuint pg_FBO_Mixing_capturedFB_prec_texID[2]; // drawing memory on odd and even frames for echo 
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for mapping on mesh  
-#endif
+extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for mapping on mesh or bypassing mesh rendering
+
 
 /////////////////////////////////////////////////////////////////
 // TEXTURES
@@ -301,7 +294,7 @@ extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for m
 //extern GLuint pg_Particle_Pos_Texture_texID;
 //extern GLfloat *pg_Particle_Pos_Texture;
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 // comet texture
 extern GLuint comet_texture_2D_texID[PG_MAX_CONFIGURATIONS];
 #endif
@@ -326,7 +319,7 @@ std::string GetCurrentWorkingDir(void);
 
 // time management
 double RealTime(void);
-#ifdef _WIN32
+#if defined(_WIN32)
 int gettimeofday(struct timeval* tp);
 #endif
 
@@ -351,10 +344,8 @@ void assignSensorPositions(void);
 void assignSensorActivations(void);
 void sensor_sample_setUp_interpolation(void);
 
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 void MetawearSensorInitialization();
 #endif
 
-#if defined(var_activeMeshes)
 void MeshInitialization(void);
-#endif

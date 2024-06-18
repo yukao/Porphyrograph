@@ -226,7 +226,6 @@ extern GLuint ClipArt_path_baseID[PG_MAX_CONFIGURATIONS];
 // fill color table
 extern unsigned int** ClipArt_path_fill_color[PG_MAX_CONFIGURATIONS];
 
-#if defined(var_activeMeshes)
 class MeshData {
 public:
 	string pg_Mesh_fileNames;
@@ -367,7 +366,6 @@ class CaverneBackColor {
 // MESHES
 extern vector<MeshData> pg_Meshes[PG_MAX_CONFIGURATIONS];
 extern int pg_last_activated_Mesh;
-#endif
 
 float my_stof(string str);
 int my_stoi(string str);

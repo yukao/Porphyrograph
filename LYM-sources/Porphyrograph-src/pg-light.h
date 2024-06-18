@@ -36,7 +36,7 @@
 #include <conio.h>
 #include "Ftd2xx.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
     // PORPHYROGRAPH #include "ms_stdint.h"
     #include <stdint.h>
 #else

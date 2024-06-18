@@ -24,7 +24,7 @@
  */
 
 #include "pg-all_include.h"
-#ifdef CRITON
+#if defined(CRITON)
 #include "pg_shader_body_decl_Criton.cpp"
 #endif
 #if defined(KOMPARTSD)
@@ -121,7 +121,7 @@ GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[PG_MAX_C
 GLint uniform_Update_fs_4fv_flashTrkCAWghts[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_path_data[PG_MAX_CONFIGURATIONS] = {-1};
 
-#ifdef CRITON
+#if defined(CRITON)
 GLint uniform_Update_fs_4fv_fftLevels03[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftFrequencies03[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftPhases03[PG_MAX_CONFIGURATIONS] = {-1};
@@ -175,9 +175,7 @@ GLint uniform_Update_texture_fs_Camera_frame[PG_MAX_CONFIGURATIONS] = {-1};  // 
 GLint uniform_Update_texture_fs_Camera_BG[PG_MAX_CONFIGURATIONS] = {-1};  // current camera BG capture
 GLint uniform_Update_texture_fs_Movie_frame[PG_MAX_CONFIGURATIONS] = {-1};  // movie frame
 GLint uniform_Update_texture_fs_Noise[PG_MAX_CONFIGURATIONS] = {-1};  // 3D noise
-#if defined(var_BG_CA_repop_density)
 GLint uniform_Update_texture_fs_RepopDensity[PG_MAX_CONFIGURATIONS] = {-1};  // repop density
-#endif
 GLint uniform_Update_texture_fs_Photo0[PG_MAX_CONFIGURATIONS] = {-1};  // photo[0]
 GLint uniform_Update_texture_fs_Photo1[PG_MAX_CONFIGURATIONS] = {-1};  // photo[1]
 GLint uniform_Update_texture_fs_Clip0[PG_MAX_CONFIGURATIONS] = {-1};  // clip[0]
@@ -207,7 +205,7 @@ GLint uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[PG_MAX_CONFIGURATIONS] 
 GLint uniform_ParticleCurve_texture_vp_Part_pos_speed[PG_MAX_CONFIGURATIONS] = {-1};				 // Particle position/speed update
 GLint uniform_ParticleCurve_texture_vp_Part_col_rad[PG_MAX_CONFIGURATIONS] = {-1};          // Particle color/radius update
 #endif
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 // color texture
 GLint uniform_ParticleCurve_Comet_texture_fs_decal[PG_MAX_CONFIGURATIONS] = {-1};  // comet texture
 #endif
@@ -280,7 +278,7 @@ GLint uniform_Master_texture_fs_Trk2[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pon
 #if PG_NB_TRACKS >= 4
 GLint uniform_Master_texture_fs_Trk3[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 3 (FBO)
 #endif
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 GLint uniform_Master_texture_fs_Mask[PG_MAX_CONFIGURATIONS] = {-1};  // mask for master output
 #endif
 
@@ -296,7 +294,6 @@ GLint uniform_Sensor_texture_fs_decal[PG_MAX_CONFIGURATIONS] = {-1};         // 
 GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency[PG_MAX_CONFIGURATIONS] = {-1};
 // GLint uniform_Sensor_fs_2fv_frameno_invert[PG_MAX_CONFIGURATIONS] = {-1};
 
-#if defined(var_activeMeshes)
 /////////////////////////////////////////////////////////////////////////
 // MESH SHADER
 // MESH SHADER UNIFORM VARIABLES
@@ -316,11 +313,9 @@ GLint uniform_Mesh_fs_4fv_color[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Mesh_fs_4fv_color_master_photo_weight_bg[PG_MAX_CONFIGURATIONS] = {-1};
 #endif
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 GLint uniform_Mesh_fs_4fv_textureFrontier[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Mesh_fs_4fv_textureFrontier_width[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Mesh_fs_4fv_textureScaleTransl[PG_MAX_CONFIGURATIONS] = {-1};
-#endif
 // Mesh SHADER TEXTURE IDS
 GLint uniform_Mesh_texture_fs_decal[PG_MAX_CONFIGURATIONS] = {-1};         // Mesh texture
 #if defined(var_Contact_mesh_palette)
@@ -329,8 +324,6 @@ GLint uniform_Mesh_fs_4fv_color_palette[PG_MAX_CONFIGURATIONS] = {-1};         /
 #if defined(var_MmeShanghai_brokenGlass)
 GLint uniform_Mesh_texture_fs_BG[PG_MAX_CONFIGURATIONS] = {-1};         // Mesh texture
 #endif
-#endif
-
 
 //////////////////////////////////////////////////////////////
 // UTILITIES
@@ -480,14 +473,12 @@ void pg_loadAllShaders(void) {
 					pg_stringShaderTypes[_pg_shader_Sensor].c_str(), pg_ConfigurationFileNames[indConfig].c_str(), indConfig,
 					pg_Shader_File_Names[indConfig][_pg_shader_Sensor].c_str()); ReportError(ErrorStr); throw 430;
 			}
-#if defined(var_activeMeshes)
 			else if (shader_type == _pg_shader_Mesh && pg_ScenarioActiveVars[indConfig][_activeMeshes]
 				&& pg_Shader_File_Names[indConfig][_pg_shader_Mesh] == "NULL") {
 				sprintf(ErrorStr, "Error: Expected [%s] shader in configuration file %s (configuration #%d): currently %s shader file name!",
 					pg_stringShaderTypes[_pg_shader_Mesh].c_str(), pg_ConfigurationFileNames[indConfig].c_str(), indConfig,
 					pg_Shader_File_Names[indConfig][_pg_shader_Mesh].c_str()); ReportError(ErrorStr); throw 430;
 			}
-#endif
 			if (pg_Shader_File_Names[indConfig][shader_type] != "NULL") {
 				pg_shader_programme[indConfig][shader_type] = glCreateProgram();
 				unsigned int *pg_shader = new unsigned int[pg_Shader_nbStages[indConfig][shader_type]];
@@ -559,7 +550,7 @@ void pg_loadAllShaders(void) {
 	////////////////////////////////////////
 	// binding and allocating tables in shaders
 
-#ifdef CRITON
+#if defined(CRITON)
 #include "pg_shader_body_bind_Criton.cpp"
 #endif
 #if defined(KOMPARTSD)
@@ -589,7 +580,6 @@ void pg_loadAllShaders(void) {
 	std::cout << "Unbound uniforms: " << std::endl;
 	for (int indConfig = 0; indConfig < pg_NbConfigurations; indConfig++) {
 		std::cout << "   " << indConfig << ": ";
-#if defined(var_part_initialization) 
 		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
 			////////////////////////////////////////////////////////////////////////////////
 			// PARTICLE ANIMATION SHADER parameters bindings
@@ -636,7 +626,6 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Part_init_col_rad, "uniform_ParticleAnimation_texture_fs_Part_init_col_rad", _pg_shader_ParticleAnimation);  // particle initialization pairs of textures color/radius
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Part_acc, "uniform_ParticleAnimation_texture_fs_Part_acc", _pg_shader_ParticleAnimation);  // particle acceleration texture
 		}
-#endif
 
 		////////////////////////////////////////////////////////////////////////////////
 		// UPDATE SHADER parameters bindings
@@ -660,7 +649,7 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkCAWghts, "uniform_Update_fs_4fv_flashTrkCAWghts", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_path_data, "uniform_Update_path_data", _pg_shader_Update);
-#ifdef CRITON
+#if defined(CRITON)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftLevels03, "uniform_Update_fs_4fv_fftLevels03", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftFrequencies03, "uniform_Update_fs_4fv_fftFrequencies03", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftPhases03, "uniform_Update_fs_4fv_fftPhases03", _pg_shader_Update);
@@ -746,22 +735,18 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Camera_BG, "uniform_Update_texture_fs_Camera_BG", _pg_shader_Update);  // current background frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Movie_frame, "uniform_Update_texture_fs_Movie_frame", _pg_shader_Update);  // movie frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Noise, "uniform_Update_texture_fs_Noise", _pg_shader_Update);  // 3D noise
-#if defined(var_BG_CA_repop_density)
 		if (pg_ScenarioActiveVars[indConfig][_BG_CA_repop_density]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_RepopDensity, "uniform_Update_texture_fs_RepopDensity", _pg_shader_Update);  // repop density
 		}
-#endif
 
 		// photo frames
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Photo0, "uniform_Update_texture_fs_Photo0", _pg_shader_Update);  // photo[0] frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Photo1, "uniform_Update_texture_fs_Photo1", _pg_shader_Update);  // photo[1] frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Clip0, "uniform_Update_texture_fs_Clip0", _pg_shader_Update);  // clip[0]
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Clip1, "uniform_Update_texture_fs_Clip1", _pg_shader_Update);  // clip[1]
-#if defined(var_part_initialization) 
 		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Part_render, "uniform_Update_texture_fs_Part_render", _pg_shader_Update);  // particle rendering capture
 		}
-#endif
 
 		////////////////////////////////////////////////////////////////////////////////
 		// PARTICLE RENDERING SHADER parameters bindings
@@ -793,16 +778,14 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleCurve_texture_vp_Part_col_rad, "uniform_ParticleCurve_texture_vp_Part_col_rad", _pg_shader_ParticleRender);
 #endif
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 		// color texture
 		pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleCurve_Comet_texture_fs_decal, "fs_comet", _pg_shader_ParticleRender);
 #endif
-#if defined(var_part_initialization) 
 		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
 			// color texture
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleSplat_texture_fs_decal, "uniform_ParticleSplat_texture_fs_decal", _pg_shader_ParticleRender);
 		}
-#endif
 
 		////////////////////////////////////////////////////////////////////////////////
 		// MIXING SHADER parameters bindings
@@ -875,7 +858,7 @@ void pg_loadAllShaders(void) {
 #if PG_NB_TRACKS >= 4
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Trk3, "uniform_Master_texture_fs_Trk3", _pg_shader_Master); // ping-pong track 3 (FBO)
 #endif
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Mask, "uniform_Master_texture_fs_Mask", _pg_shader_Master);  // mask for master output
 #endif
 
@@ -891,7 +874,6 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Sensor_texture_fs_decal, "fs_decal", _pg_shader_Sensor); // sensor texture
 		}
 
-#if defined(var_activeMeshes)
 		if (pg_ScenarioActiveVars[indConfig][_activeMeshes]) {
 			////////////////////////////////////////////////////////////////////////////////
 			// MESH SHADER parameters bindings
@@ -918,13 +900,11 @@ void pg_loadAllShaders(void) {
 			}
 #endif
 			// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) && defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
 			if (pg_ScenarioActiveVars[indConfig][_textureFrontier_wmin]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureFrontier, "uniform_Mesh_fs_4fv_textureFrontier", _pg_shader_Mesh);
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureFrontier_width, "uniform_Mesh_fs_4fv_textureFrontier_width", _pg_shader_Mesh);
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureScaleTransl, "uniform_Mesh_fs_4fv_textureScaleTransl", _pg_shader_Mesh);
 			}
-#endif
 #if defined(var_Contact_mesh_palette)
 			if (pg_ScenarioActiveVars[indConfig][_Contact_mesh_palette]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_color_palette, "uniform_Mesh_fs_4fv_color_palette", _pg_shader_Mesh); // mesh color
@@ -937,7 +917,6 @@ void pg_loadAllShaders(void) {
 			}
 #endif
 		}
-#endif
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;

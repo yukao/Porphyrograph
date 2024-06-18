@@ -204,7 +204,6 @@ bool pg_loadAllTextures(void) {
 					printOglError(8);
 				}
 			}
-#if defined(var_part_initialization) 
 			else if (texture.texture_usage == Texture_part_init
 				&& texture.texture_Dimension == 2) {
 				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (particle init), ";
@@ -216,8 +215,6 @@ bool pg_loadAllTextures(void) {
 					}
 				}
 			}
-#endif
-#if defined(var_part_image_acceleration) 
 			else if (texture.texture_usage == Texture_part_acc
 				&& texture.texture_Dimension == 2) {
 				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (particle acc), ";
@@ -227,8 +224,6 @@ bool pg_loadAllTextures(void) {
 					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_particle_acc_texID[indConfiguration].push_back(textureParticle_acc_ID);
 			}
-#endif
-#if defined(var_pixel_image_acceleration) 
 			else if (pg_ScenarioActiveVars[indConfiguration][_pixel_image_acceleration]
 				&& texture.texture_usage == Texture_pixel_acc
 				&& texture.texture_Dimension == 2) {
@@ -239,7 +234,6 @@ bool pg_loadAllTextures(void) {
 					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_pixel_acc_texID[indConfiguration].push_back(texturePixel_acc_ID);
 			}
-#endif
 		}
 
 		//for (pg_TextureData& texture : pg_Textures[0]) {
@@ -256,7 +250,7 @@ bool pg_loadAllTextures(void) {
 				}
 			}
 
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 			if (texture.texture_usage == Texture_master_mask
 				&& texture.texture_Dimension == 2) {
 				Master_Mask_texID[indConfiguration] = texture.texture_texID;
@@ -276,7 +270,6 @@ bool pg_loadAllTextures(void) {
 				&& texture.texture_Dimension == 3) {
 				Noise_texture_3D[indConfiguration] = texture.texture_texID;
 			}
-#if defined(var_Part_repop_density) || defined(var_BG_CA_repop_density) 
 			if (texture.texture_usage == Texture_repop_density
 				&& texture.texture_Dimension == 2) {
 				pg_RepopDensity_texture_texID[indConfiguration].push_back(texture.texture_texID);
@@ -285,7 +278,6 @@ bool pg_loadAllTextures(void) {
 					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
-#endif
 			if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]) {
 				// printf("Loading particles initial images %s\n", fileName.c_str()); 
 				if (!pg_particle_initial_pos_speed_texID[indConfiguration].size()
@@ -293,7 +285,6 @@ bool pg_loadAllTextures(void) {
 					sprintf(ErrorStr, "Error: particle initialization texture not provided for configuration %d scenario %s, check texture list with part_init usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 				}
 			}
-#if defined(var_activeMeshes)
 			if (texture.texture_usage == Texture_mesh
 				&& texture.texture_Dimension == 2) {
 				// assigns this textures to the meshes which have the same texture rank
@@ -303,8 +294,7 @@ bool pg_loadAllTextures(void) {
 					}
 				}
 			}
-#endif
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 			if (texture.texture_usage == Texture_curve_particle
 				&& texture.texture_Dimension == 2) {
 				comet_texture_2D_texID[indConfiguration] = texture.texture_texID;
@@ -326,7 +316,7 @@ bool pg_loadAllTextures(void) {
 				sprintf(ErrorStr, "Error: sensor texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 		if (Master_Mask_texID[indConfiguration] == NULL_ID || Master_Multilayer_Mask_texID[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: master mask texture (usage: master_mask) and multilayer master mask texture (usage: multilayer_master_mask) not provided for configuration %d scenario %s, check texture list with master mask usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
@@ -339,21 +329,16 @@ bool pg_loadAllTextures(void) {
 		if (Noise_texture_3D[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
-#if defined(var_Part_repop_density)
 		if (pg_ScenarioActiveVars[indConfiguration][_Part_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: particle repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
-#endif
-#if defined(var_BG_CA_repop_density) 
 		if (pg_ScenarioActiveVars[indConfiguration][_BG_CA_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: BG/CA repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
-#endif
-#if defined(var_activeMeshes)
 		// assigns this textures to the meshes which have the same texture rank
 		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[indConfiguration].size(); indMeshFile++) {
 			if (pg_Meshes[indConfiguration][indMeshFile].pg_Mesh_TextureRank != -1 // frame buffer texture
@@ -361,8 +346,7 @@ bool pg_loadAllTextures(void) {
 				sprintf(ErrorStr, "Error: mesh texture not provided  for configuration %d scenario %s (mesh #%d and texture rank %d, check texture list with mesh usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str(), indMeshFile, pg_Meshes[indConfiguration][indMeshFile].pg_Mesh_TextureRank); ReportError(ErrorStr); throw 336;
 			}
 		}
-#endif
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 		if (comet_texture_2D_texID[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: curve particles texture not provided for configuration %d scenario %s, check texture list with curve_particle usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
@@ -495,7 +479,7 @@ void *pg_generateTexture(GLuint *textureID, pg_TextureFormat texture_format,
 //////////////////////////////////////////////////////////////////////
 
 /* Attempts to save PNG to file; returns 0 on success, non-zero on error. 
-#ifdef WIN32
+#if defined(WIN32)
 DWORD WINAPI writepng(LPVOID lpParam) {
 #else
 void* writepng(void* lpParam) {
@@ -1576,7 +1560,7 @@ void pg_initMovieFrameTexture(Mat *movie_frame) {
 }
 
 
-#ifdef WIN32
+#if defined(WIN32)
 DWORD WINAPI pg_initVideoMoviePlayback(LPVOID lpParam) {
 #else
 void* pg_initVideoMoviePlayback(void * lpParam) {

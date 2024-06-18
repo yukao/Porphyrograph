@@ -308,12 +308,12 @@ void *pg_generateTexture( GLuint *textureID , pg_TextureFormat texture_format ,
 // THREADED TEXTURE WRITING
 /// SAVE IMAGE
 /*
-#ifdef WIN32
+#if defined(WIN32)
 DWORD WINAPI writepng(LPVOID lpParam);
 #else
 void* writepng(void * lpParam);
 #endif
-#ifdef WIN32
+#if defined(WIN32)
 DWORD WINAPI writejpg(LPVOID lpParam);
 #else
 void* writejpg(void * lpParam);
@@ -350,14 +350,14 @@ bool storeParticleAccelerationfromImage(string fileName);
 // VIDEO FRAME AND CAPTURE INITIALIZATION (CAMERA AND MOVIE)
 void pg_initMovieFrameTexture(Mat *video_frame);
 
-#ifdef WIN32
+#if defined(WIN32)
 DWORD WINAPI pg_initVideoMoviePlayback(LPVOID lpParam);
 #else
 void* pg_initVideoMoviePlayback(void * lpParam);
 #endif
 void* pg_initVideoMoviePlayback_nonThreaded(string * fileName);
 
-#ifdef WIN32
+#if defined(WIN32)
 DWORD WINAPI pg_movieLoop(LPVOID lpParam);
 #else
 void* pg_movieLoop(void * lpParam);

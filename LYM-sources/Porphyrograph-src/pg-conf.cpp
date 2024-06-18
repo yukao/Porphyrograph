@@ -93,12 +93,10 @@ GLuint ClipArt_path_baseID[PG_MAX_CONFIGURATIONS];
 // fill color table
 unsigned int** ClipArt_path_fill_color[PG_MAX_CONFIGURATIONS];
 
-#if defined(var_activeMeshes)
 // MESHES
 vector<MeshData> pg_Meshes[PG_MAX_CONFIGURATIONS];
 // last activated Mesh
 int pg_last_activated_Mesh = 0;
-#endif
 
 // TEXTURES
 // number of Texture files
@@ -816,7 +814,6 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-#if defined(var_activeMeshes) 
 		if (pg_ScenarioActiveVars[indConfiguration][_activeMeshes]) {
 			if (ind_shader_type == _pg_shader_Mesh
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
@@ -827,8 +824,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 		}
 	}
-#endif
-		if (ind_shader_type == _pg_shader_Update
+	if (ind_shader_type == _pg_shader_Update
 			&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 				|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
 			sprintf(ErrorStr, "Error: active shader file for Update is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
@@ -980,7 +976,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 	pg_csv_file_name = snapshots_dir_path_name + "porphyrograph-" + project_name + "-" + date_stringStream.str() + ".csv";
 
 	int nError = 0;
-#ifdef _WIN32
+#if defined(_WIN32)
 	nError = CreateDirectoryA(snapshots_dir_path_name.c_str(), NULL); // can be used on Windows
 #else 
 	nError = mkdir(snapshots_dir_path_name.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // can be used on non-Windows
@@ -1680,7 +1676,6 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 	string ID;
 	string temp;
 
-#if defined(var_activeMeshes)
 	if (pg_ScenarioActiveVars[indConfiguration][_activeMeshes]) {
 		////////////////////////////
 		////// MESHES
@@ -1693,7 +1688,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 		}
 		while(true) {
 			// adds a new mesh
-			MeshData aMesh;
+			MeshData aMesh(indConfiguration);
 
 			// new line
 			std::getline(scenarioFin, line);
@@ -1823,7 +1818,6 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 		}
 #endif
 	}
-#endif
 }
 
 void ParseScenarioTextures(std::ifstream& scenarioFin, int indConfiguration) {
@@ -2866,7 +2860,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 					sprintf(ErrorStr, "Error: unknown interpolation mode in scene %d (%s) parameter %d [%d] [%c]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, int(valCh), valCh); ReportError(ErrorStr); throw 50;
 				}
 
-				//if (indVar == _trkDecay_1 && nbScenesInScenario == 12) {
+				//if (indVar == _trkDecay && nbScenesInScenario == 12) {
 				//	printf("Decay Scene %d Interpolation mode %d offset %.2f dur %.2f init %.2f fin %.2f\n", nbScenesInScenario, newScene.scene_interpolations[indVar].interpolation_mode,
 				//		newScene.scene_interpolations[indVar].offSet,
 				//		newScene.scene_interpolations[indVar].duration,

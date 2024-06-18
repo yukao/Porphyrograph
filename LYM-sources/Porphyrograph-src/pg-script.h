@@ -225,7 +225,7 @@ extern float isClearEcho;
 // DELAYED CAMERA WEIGHT
 extern int delayedCameraWeight;
 
-#ifdef PG_WITH_BLUR
+#if defined(PG_WITH_BLUR)
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
 extern bool is_blur_1;
 extern bool is_blur_2;
@@ -323,7 +323,7 @@ extern int flashPhotoTrk_nbFrames;
 // CA and track working variable
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#ifdef CRITON
+#if defined(CRITON)
 extern float fftLevels[8];
 extern float fftFrequencies[8];
 extern float fftPhases[8];
@@ -419,7 +419,7 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 #endif
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#ifdef CRITON
+#if defined(CRITON)
 extern float fftLevels[8];
 extern float fftFrequencies[8];
 extern float fftPhases[8];
@@ -474,16 +474,14 @@ void pg_aliasScript( string address , string string_argument_0 ,
 void ClipArt_OnOff(int indImage);
 void ClipArt_Off(int indImage);
 void ClipArt_On(int indImage);
-#if defined(var_activeMeshes)
 void Mesh_OnOff(int indImage);
-#endif
+#if defined(var_Caverne_Mesh_Profusion)
 void Caverne_Mesh_Profusion_On(int indImage);
 void Caverne_Mesh_Profusion_Off(int indImage);
-#if defined(var_mobileMeshes)
+#endif
 void Mesh_mobile_OnOff(int indImage);
 void Mesh_mobile_Off(int indImage);
 void Mesh_mobile_On(int indImage);
-#endif
 void Mesh_Off(int indImage);
 void Mesh_On(int indImage);
 void ClipArt_SubPathOnOff(int indPath);

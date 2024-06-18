@@ -1,0 +1,8 @@
+RANK,3,4
+VERBATIM,mask scale,mask contrast
+TYPE,float,float
+ID,mask_scale,mask_contrast
+FUNCTION,NULL,NULL
+GUI,mask_scale,mask_contrast
+SHADER,Update_fs,Update_fs
+PULSE,*,*

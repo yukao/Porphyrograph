@@ -26,7 +26,7 @@
 #ifndef PG_SHADER_H
 #define PG_SHADER_H
 
-#ifdef CRITON
+#if defined(CRITON)
 #include "pg_shader_header_Criton.h"
 #endif
 #if defined(KOMPARTSD)
@@ -88,7 +88,6 @@ extern std::unordered_map<int, std::string> pg_stringShaderTypes;
 //extern GLint uniform_Camera_texture_fs_decal[PG_MAX_CONFIGURATIONS];         // camera capture
 //extern GLint uniform_Camera_texture_fs_lookupTable1[PG_MAX_CONFIGURATIONS];  // current background video frame
 
-#if defined(var_part_initialization) 
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
@@ -125,7 +124,6 @@ extern GLint uniform_ParticleAnimation_texture_fs_RepopDensity[PG_MAX_CONFIGURAT
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed[PG_MAX_CONFIGURATIONS];  // particle initialization pairs of textures position/speed
 extern GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad[PG_MAX_CONFIGURATIONS];  // particle initialization pairs of textures color/radius
 extern GLint uniform_ParticleAnimation_texture_fs_Part_acc[PG_MAX_CONFIGURATIONS];  // particle acceleration texture
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // UPDATE SHADER
@@ -146,7 +144,7 @@ extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[PG_MAX_CONFIG
 extern GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_path_data[PG_MAX_CONFIGURATIONS];
-#ifdef CRITON
+#if defined(CRITON)
 extern GLint uniform_Update_fs_4fv_fftLevels03[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftFrequencies03[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftPhases03[PG_MAX_CONFIGURATIONS];
@@ -201,9 +199,7 @@ extern GLint uniform_Update_texture_fs_Camera_frame[PG_MAX_CONFIGURATIONS];  // 
 extern GLint uniform_Update_texture_fs_Camera_BG[PG_MAX_CONFIGURATIONS];  // camera BG capture
 extern GLint uniform_Update_texture_fs_Movie_frame[PG_MAX_CONFIGURATIONS];  // movie frame
 extern GLint uniform_Update_texture_fs_Noise[PG_MAX_CONFIGURATIONS];  // 3D noise
-#if defined(var_BG_CA_repop_density)
 extern GLint uniform_Update_texture_fs_RepopDensity[PG_MAX_CONFIGURATIONS];  // repop density
-#endif
 extern GLint uniform_Update_texture_fs_Photo0[PG_MAX_CONFIGURATIONS];  // photo[0]
 extern GLint uniform_Update_texture_fs_Photo1[PG_MAX_CONFIGURATIONS];  // photo[1]
 extern GLint uniform_Update_texture_fs_Clip0[PG_MAX_CONFIGURATIONS];  // clip[0]
@@ -215,7 +211,6 @@ extern GLint uniform_Update_texture_fs_Part_init_col_rad[PG_MAX_CONFIGURATIONS];
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE RENDERING SHADER
 // PARTICLE RENDERING SHADER UNIFORM VARIABLES
-#if defined(var_part_initialization) 
 extern GLint uniform_ParticleSplat_vp_model[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleSplat_vp_view[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleSplat_vp_proj[PG_MAX_CONFIGURATIONS];
@@ -225,7 +220,7 @@ extern GLint uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[PG_MAX_CONFIGURA
 // PARTICLE SHADER TEXTURE IDS
 extern GLint uniform_ParticleSplat_texture_vp_Part_pos_speed[PG_MAX_CONFIGURATIONS];				 // Particle position/speed update
 extern GLint uniform_ParticleSplat_texture_vp_Part_col_rad[PG_MAX_CONFIGURATIONS];          // Particle color/radius update
-#endif
+
 #if defined(CURVE_PARTICLES) 
 extern GLint uniform_ParticleCurve_vp_model[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleCurve_vp_view[PG_MAX_CONFIGURATIONS];
@@ -237,7 +232,7 @@ extern GLint uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[PG_MAX_CONFIGURA
 extern GLint uniform_ParticleCurve_texture_vp_Part_pos_speed[PG_MAX_CONFIGURATIONS];				 // Particle position/speed update
 extern GLint uniform_ParticleCurve_texture_vp_Part_col_rad[PG_MAX_CONFIGURATIONS];          // Particle color/radius update
 #endif
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 // color texture
 extern GLint uniform_ParticleCurve_Comet_texture_fs_decal[PG_MAX_CONFIGURATIONS];  // comet texture
 #endif
@@ -308,7 +303,7 @@ extern GLint uniform_Master_texture_fs_Trk2[PG_MAX_CONFIGURATIONS];  // ping-pon
 #if PG_NB_TRACKS >= 4
 extern GLint uniform_Master_texture_fs_Trk3[PG_MAX_CONFIGURATIONS];  // ping-pong track 3 (FBO)
 #endif
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 extern GLint uniform_Master_texture_fs_Mask[PG_MAX_CONFIGURATIONS];  // mask for master output
 #endif
 
@@ -324,7 +319,6 @@ extern GLint uniform_Sensor_texture_fs_decal[PG_MAX_CONFIGURATIONS];         // 
 extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency[PG_MAX_CONFIGURATIONS];
 // extern GLint uniform_Sensor_fs_2fv_frameno_invert[PG_MAX_CONFIGURATIONS];
 
-#if defined(var_activeMeshes)
 /////////////////////////////////////////////////////////////////////////
 // MESH SHADER
 // MESH SHADER UNIFORM VARIABLES
@@ -344,11 +338,9 @@ extern GLint uniform_Mesh_fs_4fv_color[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Mesh_fs_4fv_color_master_photo_weight_bg[PG_MAX_CONFIGURATIONS];
 #endif
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 extern GLint uniform_Mesh_fs_4fv_textureFrontier[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Mesh_fs_4fv_textureFrontier_width[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Mesh_fs_4fv_textureScaleTransl[PG_MAX_CONFIGURATIONS];
-#endif
 // Mesh SHADER TEXTURE IDS
 extern GLint uniform_Mesh_texture_fs_decal[PG_MAX_CONFIGURATIONS];         // Mesh texture
 #if defined(var_Contact_mesh_palette)
@@ -356,5 +348,4 @@ extern GLint uniform_Mesh_fs_4fv_color_palette[PG_MAX_CONFIGURATIONS];         /
 #endif
 #if defined(var_MmeShanghai_brokenGlass)
 extern GLint uniform_Mesh_texture_fs_BG[PG_MAX_CONFIGURATIONS];         // Mesh texture
-#endif
 #endif

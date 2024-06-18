@@ -25,8 +25,6 @@
 
 #include "pg-all_include.h"
 
-#if defined(var_activeMeshes)
-
 ////////////////////////////////////////
 // geometrical data of mesh
 
@@ -1128,7 +1126,6 @@ void load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigurat
 	free(nbNormalsPerMesh);
 }
 
-#if defined(var_activeMeshes)
 /////////////////////////////////////////////////////////////////////
 // LOADS MESHES FROM BLENDER FILES
 // point positions and texture coordinates
@@ -1181,7 +1178,6 @@ void pg_loadAllMeshes(void) {
 	}
 	std::cout << std::endl;
 }
-#endif
 
 #if defined(var_MmeShanghai_brokenGlass)
 void loadMeshSubParts(string meshPart_fileName, bool* ObjectsInSubPart, int nbObjectsInMesh) {
@@ -1778,7 +1774,3 @@ void update_bones(int indMeshFile) {
 		curBone->pointAnimationMatrix = curBone->currentJointTransformation * mj_1;
 	}
 }
-
-
-
-#endif

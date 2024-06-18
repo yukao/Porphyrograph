@@ -912,7 +912,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				}
 			}
 		}
-#ifdef PG_LIGHTS_DMX_IN_PYTHON
+#if defined(PG_LIGHTS_DMX_IN_PYTHON)
 		// all light value commands are forwarded to python for light DMX commands in Python
 		sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
 #endif
@@ -985,7 +985,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				}
 			}
 		}
-#ifdef PG_LIGHTS_DMX_IN_PYTHON
+#if defined(PG_LIGHTS_DMX_IN_PYTHON)
 		// all light value commands are forwarded to python for light DMX commands in Python
 		sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
 #endif
@@ -1235,7 +1235,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 		}
 	}
 #endif 
-#ifdef PG_LIGHTS_DMX_IN_PYTHON
+#if defined(PG_LIGHTS_DMX_IN_PYTHON)
 	// all light control commands are forwarded to python for light_scene management
 	sprintf(AuxString, "/%s %.4f", address, float_arguments[0]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_Python_send");
 #endif

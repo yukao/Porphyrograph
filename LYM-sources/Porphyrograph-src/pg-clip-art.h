@@ -27,7 +27,7 @@
 #ifndef __PG_CLIPARTS_H__
 #define __PG_CLIPARTS_H__
 
-#ifdef __glew_h__
+#if defined(__glew_h__)
 #undef GLAPIENTRYP
 #undef GLAPIENTRY
 #endif
@@ -60,7 +60,7 @@ extern "C" {
 	/* NV_path_rendering */
 #ifndef GL_NV_path_rendering
 #define GL_NV_path_rendering 1
-#ifdef GL_GLEXT_PROTOTYPES
+#if defined(GL_GLEXT_PROTOTYPES)
 	GLAPI GLuint GLAPIENTRY glGenPathsNV(GLsizei range);
 	GLAPI void GLAPIENTRY glDeletePathsNV(GLuint path, GLsizei range);
 	GLAPI GLboolean GLAPIENTRY glIsPathNV(GLuint path);
@@ -290,7 +290,7 @@ extern "C" {
 
 #ifndef __APPLE__
 
-#ifdef sun
+#if defined(sun)
 #define FUNC(x) x##_
 #else
 #define FUNC(x) x

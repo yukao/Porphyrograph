@@ -23,7 +23,7 @@
 
 #include "pg-all_include.h"
 
-#ifdef _CRTDBG_MAP_ALLOC
+#if defined(_CRTDBG_MAP_ALLOC)
 // MEMORY LEAK CONTROL
 _CrtMemState s1{};
 _CrtMemState s2{};
@@ -72,7 +72,7 @@ float paths_Color_b[PG_NB_PATHS + 1];
 float paths_Color_a[PG_NB_PATHS + 1];
 float paths_RadiusX[PG_NB_PATHS + 1];
 float paths_RadiusY[PG_NB_PATHS + 1];
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 float paths_xL[PG_NB_PATHS + 1];
 float paths_yL[PG_NB_PATHS + 1];
 float paths_xR[PG_NB_PATHS + 1];
@@ -117,7 +117,7 @@ glm::mat4 VP1viewMatrix;
 glm::mat4 MeshPosModelMatrix;
 glm::mat4 ObjectPosModelMatrix;
 glm::mat4 VP1homographyMatrix;
-#ifdef PG_SECOND_MESH_CAMERA
+#if defined(PG_SECOND_MESH_CAMERA)
 glm::mat4 VP2perspMatrix;
 glm::mat4 VP2viewMatrix;
 glm::mat4 VP2homographyMatrix;
@@ -125,10 +125,10 @@ glm::mat4 VP2homographyMatrix;
 #endif
 
 #if defined(var_Argenteuil_flash_move_track1_freq)
-float Argenteuil_track_x_transl_0 = 0.f;
-float Argenteuil_track_y_transl_0 = 0.f;
-float Argenteuil_track_x_transl_1 = 0.f;
-float Argenteuil_track_y_transl_1 = 0.f;
+float Argenteuil_track_x_transl[0] = 0.f;
+float Argenteuil_track_y_transl[0] = 0.f;
+float Argenteuil_track_x_transl[1] = 0.f;
+float Argenteuil_track_y_transl[1] = 0.f;
 #endif
 
 #if defined(PG_WITH_PHOTO_HOMOGRAPHY)
@@ -195,7 +195,7 @@ int Sensor_order[PG_NB_SENSORS] = { 8, 13, 14, 11, 7, 2, 1, 4, 12, 15, 3, 0, 9, 
 int Sensor_order[PG_NB_SENSORS] = { 0 };
 #endif
 
-#ifdef PG_SUPERCOLLIDER
+#if defined(PG_SUPERCOLLIDER)
 // groups of samples for aliasing with additive samples
 int sample_groups[PG_NB_SENSOR_GROUPS][4] =
 { { 1, 2, 5, 6 },
@@ -238,12 +238,8 @@ int precedingVideoTrack = -1;
 // textures bitmaps and associated IDs
 std::vector<GLuint> pg_particle_initial_pos_speed_texID[PG_MAX_CONFIGURATIONS];
 std::vector<GLuint> pg_particle_initial_color_radius_texID[PG_MAX_CONFIGURATIONS];
-#if defined(var_part_image_acceleration) 
 std::vector<GLuint> pg_particle_acc_texID[PG_MAX_CONFIGURATIONS];
-#endif
-#if defined(var_pixel_image_acceleration) 
 std::vector<GLuint> pg_pixel_acc_texID[PG_MAX_CONFIGURATIONS];
-#endif
 
 GLuint pg_screenMessageBitmap_texID = 0; // nb_attachments=1
 GLubyte *pg_screenMessageBitmap = NULL;
@@ -257,11 +253,9 @@ GLubyte *pg_CATable = NULL;
 GLuint Pen_texture_3D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
 GLuint Noise_texture_3D[PG_MAX_CONFIGURATIONS] = { NULL_ID };
-#if defined(var_BG_CA_repop_density) || defined(var_Part_repop_density)
 std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_CONFIGURATIONS];
-#endif
 
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 GLuint Master_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 GLuint Master_Multilayer_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
@@ -906,13 +900,12 @@ void window_display(void) {
 #endif
 
 
-#if defined(var_activeMeshes)
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
 		// updates mesh animation
 		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
 			// visibility
 			bool visible = false;
-#if defined(var_moving_messages)
+#if defined(ETOILES)
 			visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
 #elif defined(var_Caverne_Mesh_Profusion)
 			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_CaverneActveMesh
@@ -920,7 +913,6 @@ void window_display(void) {
 				&& (pg_CurrentClockTime < pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_CaverneMeshDeathTime));
 #else
 			visible = (activeMeshes & (1 << indMeshFile));
-#endif
 
 			// visible mesh
 			if (visible) {
@@ -1166,14 +1158,14 @@ void readSensors(void) {
 			&& sample_play_start[sample_choice[indSens]] < 0 // not currently playing
 			) {
 
-#ifdef PG_RENOISE
+#if defined(PG_RENOISE)
 			// Renoise message format && message posting
 			sprintf(AuxString, "/renoise/song/track/%d/prefx_volume %.2f", sample_choice[indSens] + 1, sensorLevel[indSens] * sensor_vol);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
 
 			//printf("RENOISE send %s %f %f\n", AuxString, sensorLevel[indSens], sensor_vol);
 #endif
-#ifdef PG_PORPHYROGRAPH_SOUND
+#if defined(PG_PORPHYROGRAPH_SOUND)
 			// message format
 			std::string format = "f";
 
@@ -1212,13 +1204,13 @@ void readSensors(void) {
 			int indSample = sensor_sample_setUps[indSetup][indSens];
 			if (sample_play_start[indSample] > 0
 				&& pg_CurrentClockTime - sample_play_start[indSample] > BEAT_DURATION) {
-#ifdef PG_RENOISE
+#if defined(PG_RENOISE)
 				// Renoise message format && message posting
 				sprintf(AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
 				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
 #endif
 
-#ifdef PG_PORPHYROGRAPH_SOUND
+#if defined(PG_PORPHYROGRAPH_SOUND)
 				// the sample plays until it finishes and only then it can be retriggered
 				std::string message = "/track_";
 				int_string = std::to_string(indSample + 1);
@@ -1335,7 +1327,7 @@ void playChord() {
 				message += float_string;
 			}
 		}
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_PUREDATA)
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
 #endif
@@ -1411,7 +1403,7 @@ void playChord() {
 		for (int ind = 0; ind < 20; ind++) {
 			format += "f";
 		}
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_PUREDATA)
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
 #endif
@@ -1604,7 +1596,7 @@ void pg_automatic_var_reset_or_update(void) {
 		}
 	}
 
-#ifdef PG_WITH_BLUR
+#if defined(PG_WITH_BLUR)
 	// blur reset
 	if (nb_blur_frames_1 > 0) {
 		nb_blur_frames_1--;
@@ -1857,7 +1849,7 @@ void pg_update_shader_uniforms(void) {
 }
 
 void pg_update_shader_var_data(void) {
-#ifdef CRITON
+#if defined(CRITON)
 #include "pg_update_body_Criton.cpp"
 #endif
 #if defined(KOMPARTSD)
@@ -2065,12 +2057,12 @@ void pg_update_shader_Update_uniforms(void) {
 	// position
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 0] = paths_x_prev[indPath];
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 1] = paths_xL[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 2] = paths_xR[indPath];
 #endif
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 0] = paths_y_prev[indPath];
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 1] = paths_yL[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 2] = paths_yR[indPath];
 #endif
@@ -2106,7 +2098,7 @@ void pg_update_shader_Update_uniforms(void) {
 	// printf("Radius %.2f %.2f\n", paths_RadiusX[0], paths_RadiusY[0]);
 	//printf("pos %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f \n", paths_x_prev[1], paths_y_prev[1],
 	//	paths_xR[1], paths_yR[1], paths_xL[1], paths_yL[1], paths_x[1], paths_y[1]);
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		build_bounding_box(indPath);
 	}
@@ -2130,7 +2122,7 @@ void pg_update_shader_Update_uniforms(void) {
 	//	pg_BezierBox[1].x, pg_BezierBox[1].y, pg_BezierBox[1].z, pg_BezierBox[1].w, isBegin[1], isEnd[1]);
 	glUniform4fv(uniform_Update_path_data[pg_current_configuration_rank], (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_Update);
 
-#ifdef CRITON
+#if defined(CRITON)
 	glUniform4f(uniform_Update_fs_4fv_fftLevels03[pg_current_configuration_rank],
 		fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3]);
 	glUniform4f(uniform_Update_fs_4fv_fftFrequencies03[pg_current_configuration_rank],
@@ -2394,11 +2386,11 @@ void pg_update_shader_Update_uniforms(void) {
 #if defined(var_Argenteuil_flash_move_track1_freq)
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flash_move_track1_freq]) {
 		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
-			Argenteuil_track_x_transl_0, Argenteuil_track_y_transl_0, Argenteuil_track_x_transl_1, Argenteuil_track_y_transl_1);
-		Argenteuil_track_x_transl_0 = 0.f;
-		Argenteuil_track_y_transl_0 = 0.f;
-		Argenteuil_track_x_transl_1 = 0.f;
-		Argenteuil_track_y_transl_1 = 0.f;
+			Argenteuil_track_x_transl[0], Argenteuil_track_y_transl[0], Argenteuil_track_x_transl[1], Argenteuil_track_y_transl[1]);
+		Argenteuil_track_x_transl[0] = 0.f;
+		Argenteuil_track_y_transl[0] = 0.f;
+		Argenteuil_track_x_transl[1] = 0.f;
+		Argenteuil_track_y_transl[1] = 0.f;
 	}
 #else
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_slow_track_translation]) {
@@ -2406,21 +2398,21 @@ void pg_update_shader_Update_uniforms(void) {
 			// track x & y translations
 			float translation_x[2] = { 0.f, 0.f };
 			float translation_y[2] = { 0.f, 0.f };
-			translation_x[0] = frame_based_translation(track_x_transl_0, 0);
-			translation_y[0] = frame_based_translation(track_y_transl_0, 1);
-			translation_x[1] = frame_based_translation(track_x_transl_1, 2);
-			translation_y[1] = frame_based_translation(track_y_transl_1, 3);
+			translation_x[0] = frame_based_translation(track_x_transl[0], 0);
+			translation_y[0] = frame_based_translation(track_y_transl[0], 1);
+			translation_x[1] = frame_based_translation(track_x_transl[1], 2);
+			translation_y[1] = frame_based_translation(track_y_transl[1], 3);
 			glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
 				translation_x[0], translation_y[0], translation_x[1], translation_y[1]);
 		}
 		else {
 			glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
-				track_x_transl_0, track_y_transl_0, track_x_transl_1, track_y_transl_1);
+				track_x_transl[0], track_y_transl[0], track_x_transl[1], track_y_transl[1]);
 		}
 	}
 	else {
 		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
-			track_x_transl_0, track_y_transl_0, track_x_transl_1, track_y_transl_1);
+			track_x_transl[0], track_y_transl[0], track_x_transl[1], track_y_transl[1]);
 	}
 #endif
 
@@ -2627,13 +2619,13 @@ void pg_update_shader_Master_uniforms(void) {
 		//printf("cur %d %d frame %d mobile %d\n", CurrentCursorHooverPos_x, CurrentCursorHooverPos_y, pg_FrameNo, mobile_cursor);
 		glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift[pg_current_configuration_rank],
 			(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
-			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
+			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_pulse[0]);
 
 		//printf("curseur %d %d\n", int(paths_x_forGPU[0]), int(paths_y_forGPU[0]));
 		///////////////////////// cursor on first finger given up
 			//glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift[pg_current_configuration_rank],
 			//	(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
-			//	(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse);
+			//	(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl[0]_pulse);
 
 
 		// screen size
@@ -2661,7 +2653,7 @@ void pg_update_shader_Master_uniforms(void) {
 	/*
 	if (pg_ConfigurationFrameNo % 1000 == 0) {
 		printf("Master #%d %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %d %d\n", pg_current_configuration_rank, (GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
-			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_0_pulse,
+			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl[0]_pulse,
 			(GLfloat)workingWindow_width, (GLfloat)window_height, GLfloat(pg_CurrentClockTime - InitialScenarioTime),
 			(GLfloat)muteRightScreen,
 			(mobile_cursor ? 1 : 0), pg_CurrentSceneIndex);
@@ -2678,7 +2670,6 @@ void pg_update_shader_Master_uniforms(void) {
 /////////////////////////////////////////////////////////////////////////
 // MASTER SHADER UNIFORM VARIABLES
 void pg_update_shader_Mesh_uniforms(void) {
-#if defined(var_activeMeshes)
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
 		if (pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
 			/////////////////////////////////////////////////////////////////////////
@@ -2708,7 +2699,6 @@ void pg_update_shader_Mesh_uniforms(void) {
 #endif
 		}
 	}
-#endif
 	printOglError(517);
 }
 
@@ -3071,7 +3061,6 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Noise_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Noise_texture_3D[pg_current_configuration_rank]);
 
-#if defined(var_BG_CA_repop_density)
 	// repop density texture
 	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_Update_sampler);
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_BG_CA_repop_density]
@@ -3082,7 +3071,6 @@ void pg_UpdatePass(void) {
 	else {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
-#endif
 
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_Update_sampler);
@@ -3230,7 +3218,6 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
 
-#if defined(var_pixel_image_acceleration)
 	// pixel acceleration  (FBO attachment 11)
 	//printf("pixel image acceleration (image based acceleration) %d size %d\n", pixel_image_acceleration, pg_pixel_acc_texID.size());
 	glActiveTexture(GL_TEXTURE0 + pg_pixel_image_acc_Update_sampler);
@@ -3244,7 +3231,6 @@ void pg_UpdatePass(void) {
 	else {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
 	}
-#endif
 
 	// draw points from the currently bound VAO with current in-use shader
 	// glDrawArrays (GL_TRIANGLES, 0, 3 * PG_SIZE_QUAD_ARRAY);
@@ -3363,7 +3349,7 @@ void pg_ParticleRenderingPass(void) {
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleAnimation_texID[(pg_FrameNo % 2) * PG_FBO_PARTICLEANIMATION_NBATTACHTS + pg_Part_col_rad_FBO_ParticleAnimation_attcht]);
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 	// comet texture
 	glActiveTexture(GL_TEXTURE0 + 2);
 	glBindTexture(GL_TEXTURE_2D, comet_texture_2D_texID[pg_current_configuration_rank]);
@@ -3399,7 +3385,7 @@ void pg_ParticleRenderingPass(void) {
 	// vertex buffer for a patch, made of 4 points: 4 x 3 floats
 	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 	// patch vertices for curve particles fed into tesselation shader
 	glPatchParameteri(GL_PATCH_VERTICES, (PG_PARTICLE_CURVE_DEGREE + 1));  // number of vertices in each patch
 #endif
@@ -3407,7 +3393,7 @@ void pg_ParticleRenderingPass(void) {
 	// Index buffer for indexed rendering
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 	// Draw the patches !
 	glDrawElements(
 		GL_PATCHES,      // mode
@@ -3579,29 +3565,22 @@ void pg_MasterPass(void) {
 		return;
 	}
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]
+		&& ((pg_ScenarioActiveVars[pg_current_configuration_rank][_augmentedReality] && augmentedReality)
+			|| (pg_ScenarioActiveVars[pg_current_configuration_rank][_meshRenderBypass] && meshRenderBypass))) {
 		if (pg_FrameNo > 0) {
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh or bypassing mesh rendering
 		}
 	}
-#else
+	else {
 		// unbind output FBO 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	}
 
 	// sets viewport to double window
 	glViewport(0, 0, window_width, window_height);
 
-	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
-		// TO BE CHECKED
-		// glDrawBuffer(GL_BACK);
-	}
-#endif
-
-		// output video buffer clean-up
+	// output video buffer clean-up
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -3637,7 +3616,7 @@ void pg_MasterPass(void) {
 #if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Master_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Master_sampler);
 #endif
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 	glUniform1i(uniform_Master_texture_fs_Mask[pg_current_configuration_rank], pg_Mask_FBO_Master_sampler);
 #endif
 
@@ -3693,7 +3672,7 @@ void pg_MasterPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Master_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
-#ifdef PG_WITH_MASTER_MASK
+#if defined(PG_WITH_MASTER_MASK)
 	// Master mask texture
 	glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
 	if (nb_layers_master_mask[pg_current_configuration_rank] > 0) {
@@ -4081,11 +4060,10 @@ void MmeShanghai_automatic_brokenGlass_animation(int indMeshFile, int indObjectI
 }
 #endif
 
-#if defined(var_activeMeshes)
 void pg_drawOneMesh(int indMeshFile) {
 	// visibility
 	bool visible = false;
-#if defined(var_moving_messages)
+#if defined(ETOILES)
 	visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
 #elif defined(var_Caverne_Mesh_Profusion)
 	visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_CaverneActveMesh
@@ -4098,7 +4076,7 @@ void pg_drawOneMesh(int indMeshFile) {
 	// visible mesh
 	if (visible) {
 		// mesh animation
-#if defined(var_moving_messages)
+#if defined(ETOILES)
 		Etoiles_ray_animation();
 #elif defined(var_Caverne_Mesh_Profusion)
 		Caverne_profusion_automatic_rotation(indMeshFile);
@@ -4254,24 +4232,16 @@ void pg_drawOneMesh(int indMeshFile) {
 				glUniform1i(uniform_Mesh_texture_fs_decal[pg_current_configuration_rank], 0);
 				glActiveTexture(GL_TEXTURE0 + 0);
 
+				// specific texture
 				if (pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Mesh_TextureRank != -1) {
-					// specific texture
 					glBindTexture(GL_TEXTURE_RECTANGLE, pg_Meshes[pg_current_configuration_rank][indMeshFile].Mesh_texture_rectangle);
 				}
+				// Augmented Reality: FBO capture of Master to be displayed on a mesh
+				else if (augmentedReality) {
+					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);
+				}
 				else {
-					// previous pass output
-					// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
-// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
-						glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
-					}
-					else {
-						glBindTexture(GL_TEXTURE_RECTANGLE, 0);
-					}
-#else
 					glBindTexture(GL_TEXTURE_RECTANGLE, 0);
-#endif
 				}
 
 #if defined(var_MmeShanghai_brokenGlass)
@@ -4283,7 +4253,7 @@ void pg_drawOneMesh(int indMeshFile) {
 				}
 #endif
 				// standard filled mesh drawing
-// draw triangles from the currently bound VAO with current in-use shader
+				// draw triangles from the currently bound VAO with current in-use shader
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile].mesh_index_vbo[indObjectInMesh]);
 				glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
 
@@ -4315,8 +4285,8 @@ void pg_drawOneMesh(int indMeshFile) {
 				}
 #endif
 				// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] 
+					&& pg_ScenarioActiveVars[pg_current_configuration_rank][_meshRenderBypass]) {
 					// optional additional drawing of the polygon contours for checking calibration in augmented reality
 					if (with_mesh) {
 						// no z-Buffer
@@ -4330,7 +4300,6 @@ void pg_drawOneMesh(int indMeshFile) {
 						glEnable(GL_DEPTH_TEST);
 					}
 				}
-#endif
 				//printf("Display mesh VP1 %d/%d size (nb faces) %d\n\n", indMeshFile + 1, pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Meshes->pg_nbObjectsPerMeshFile,
 				//	pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]);
 			} // visible submesh object
@@ -4386,19 +4355,16 @@ void pg_drawOneMesh2(int indMeshFile) {
 			// texture unit location
 			glUniform1i(uniform_Mesh_texture_fs_decal[pg_current_configuration_rank], 0);
 			glActiveTexture(GL_TEXTURE0 + 0);
+			// specific mesh texture
 			if (pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Mesh_TextureRank != -1) {
-				// specific texture
 				glBindTexture(GL_TEXTURE_RECTANGLE, pg_Meshes[pg_current_configuration_rank][indMeshFile].Mesh_texture_rectangle);
 			}
+			// Augmented Reality: FBO capture of Master to be displayed on a mesh
+			else if (augmentedReality) {
+				glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);
+			}
 			else {
-				// previous pass output
-				// mapping echo output (GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);  // drawing memory on odd and even frames for echo 
-				// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
-					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
-				}
-#endif
+				glBindTexture(GL_TEXTURE_RECTANGLE, 0);  // no texture
 			}
 
 			// standard filled mesh drawing
@@ -4413,7 +4379,6 @@ void pg_drawOneMesh2(int indMeshFile) {
 			glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 
 			// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) && defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
 					// optional additional drawing of the polygon contours for checking calibration in augmented reality
 			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_textureFrontier_wmin]) {
 				if (with_mesh) {
@@ -4428,7 +4393,6 @@ void pg_drawOneMesh2(int indMeshFile) {
 					glEnable(GL_DEPTH_TEST);
 				}
 			}
-#endif
 			//printf("Display mesh VP2 %d/%d size (nb faces) %d\n", indMeshFile, indObjectInMesh,
 			//	pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]);
 
@@ -4439,7 +4403,6 @@ void pg_drawOneMesh2(int indMeshFile) {
 }
 
 void pg_MeshPass(void) {
-#if defined(var_activeMeshes)
 	float eyePosition[3] = { 20.f, 0.f, 0.f };
 	float lookat[3] = { 0.f, 0.f, 0.f };
 
@@ -4448,173 +4411,183 @@ void pg_MeshPass(void) {
 	}
 
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-	if (!directRenderingwithoutMeshScreen1) {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
 
-			// draws the meshes alone
-			// unbind output FBO 
+	// Meshes rendering
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+		// mesh geometry rendering
+		if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_meshRenderBypass]
+			|| !meshRenderBypass) {
+			// draws the mesh on top of clip arts or particles if they exit (before mixing/master rendering)
+			if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_augmentedReality]
+				|| !augmentedReality) {
+				// draws the mesh alone
+				// unbind output FBO 
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+				// draws on back buffer
+				glDrawBuffer(GL_BACK);
+
+				// no transparency
+				glDisable(GL_BLEND);
+
+				// draws the mesh on top clip arts if they exit
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+					// draws the meshes on top of clipArt
+					if (pg_FrameNo > 0) {
+						glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ClipArtRendering);
+					}
+				}
+				// draws the mesh on top particles if they exit
+				else if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+					// draws the meshes on top of particles
+					if (pg_FrameNo > 0) {
+						glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
+					}
+				}
+			}
+			else {
+				// draws the mesh alone after mixing/master rendering
+				// unbind output FBO 
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+				// draws on back buffer
+				glDrawBuffer(GL_BACK);
+
+				// no transparency
+				glDisable(GL_BLEND);
+			}
+
+			// transparency
+			glEnable(GL_BLEND);
+			// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+			// output buffer cleanup
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
+			//glDepthMask(GL_FALSE);
+			//glDepthFunc(GL_LESS);
+
+			////////////////////////////////////////
+			// drawing meshes
+
+			// activate shaders and sets uniform variable values    
+			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
+
+			// calculates the view and perspective matrices according to the parameters in the scenario file
+			// for one camera if single screen, and two otherwise
+#if !defined(var_MmeShanghai_brokenGlass)
+			pg_calculate_perspective_matrices();
+#else
+			pg_calculate_orthographic_matrices();
+#endif
+
+#if defined(PG_WITH_HOMOGRAPHY)
+			// Read points
+			std::vector<cv::Point2f> sourcePoints;
+			//std::vector<cv::Point2f> source2Points;
+			std::vector<cv::Point2f> destinationPoints;
+
+			sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
+				-VP1KeystoneYBottomLeft));
+			sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
+				-VP1KeystoneYBottomRight));
+			sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
+				VP1KeystoneYTopRight));
+			sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
+				VP1KeystoneYTopLeft));
+
+			destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
+			destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
+			destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
+			destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
+
+			// initializes the homography matrices for the distortion of the projected image
+			pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, matValues, 4);
+			*homographyMatrix = (glm::make_mat4(matValues));
+#endif
+
+			// sets viewport to single window
+			if (double_window) {
+#if defined(TEMPETE)
+				glViewport(0, window_height / 2, workingWindow_width, window_height);
+#else
+				glViewport(0, 0, workingWindow_width, window_height);
+#endif
+			}
+			else {
+				glViewport(0, 0, workingWindow_width, window_height);
+			}
+
+			// projection and view matrices
+			glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_current_configuration_rank], 1, GL_FALSE,
+				// glm::value_ptr(VP1homographyMatrix * VP1perspMatrix));
+				glm::value_ptr(VP1perspMatrix));
+			glUniformMatrix4fv(uniform_Mesh_vp_view[pg_current_configuration_rank], 1, GL_FALSE,
+				glm::value_ptr(VP1viewMatrix));
+
+			// all the meshes
+			for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
+				pg_drawOneMesh(indMeshFile);
+			} // all the meshes
+			printOglError(697);
+		}
+		// direct rendering
+		else {
+			// bypassing mesh rendering: outputs master output memory 
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-			// draws on back buffer
 			glDrawBuffer(GL_BACK);
+			glBlitFramebuffer(0, 0, workingWindow_width, window_height, 0, 0, workingWindow_width, window_height,
+				GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
+			printOglError(599);
+		}
 
+#if defined(PG_SECOND_MESH_CAMERA)
+		if (!directRenderingwithoutMeshScreen2) {
+			// sets viewport to second window
+#if defined(TEMPETE)
+			glViewport(0, 0, workingWindow_width, window_height / 2);
+#else
+			glViewport(workingWindow_width, 0, workingWindow_width, window_height);
+#endif
+			// duplicates the Meshs in case of double window
+
+			glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_current_configuration_rank], 1, GL_FALSE,
+				// glm::value_ptr(VP2homographyMatrix * VP2perspMatrix));
+				glm::value_ptr(VP2perspMatrix));
+			glUniformMatrix4fv(uniform_Mesh_vp_view[pg_current_configuration_rank], 1, GL_FALSE,
+				glm::value_ptr(VP2viewMatrix));
+
+			// all mesh files
+			for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
+				pg_drawOneMesh2(indMeshFile);
+			} // all the meshes
+
+			// sets viewport to full window
+			glViewport(0, 0, window_width, window_height);
+
+			glDisable(GL_DEPTH_TEST);
 			// no transparency
 			glDisable(GL_BLEND);
-		}
-#else
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
-			// draws the meshes on top of particles
-			if (pg_FrameNo > 0) {
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ClipArtRendering);
-			}
-		}
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-			// draws the meshes on top of particles
-			if (pg_FrameNo > 0) {
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_ParticleRendering);
-			}
-		}
-
-		// transparency
-		glEnable(GL_BLEND);
-		// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#endif
-
-		// output buffer cleanup
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		//glDepthMask(GL_FALSE);
-		//glDepthFunc(GL_LESS);
-
-		////////////////////////////////////////
-		// drawing meshes
-
-		// activate shaders and sets uniform variable values    
-		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
-
-		// calculates the view and perspective matrices according to the parameters in the scenario file
-		// for one camera if single screen, and two otherwise
-#if !defined(var_MmeShanghai_brokenGlass)
-		pg_calculate_perspective_matrices();
-#else
-		pg_calculate_orthographic_matrices();
-#endif
-
-#ifdef PG_WITH_HOMOGRAPHY
-		// Read points
-		std::vector<cv::Point2f> sourcePoints;
-		//std::vector<cv::Point2f> source2Points;
-		std::vector<cv::Point2f> destinationPoints;
-
-		sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
-			-VP1KeystoneYBottomLeft));
-		sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
-			-VP1KeystoneYBottomRight));
-		sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
-			VP1KeystoneYTopRight));
-		sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
-			VP1KeystoneYTopLeft));
-
-		destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
-		destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
-		destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
-		destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
-
-		// initializes the homography matrices for the distortion of the projected image
-		pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, matValues, 4);
-		*homographyMatrix = (glm::make_mat4(matValues));
-#endif
-
-		// sets viewport to single window
-		if (double_window) {
-#if defined(TEMPETE)
-			glViewport(0, window_height / 2, workingWindow_width, window_height);
-#else
-			glViewport(0, 0, workingWindow_width, window_height);
-#endif
+			printOglError(598);
 		}
 		else {
-			glViewport(0, 0, workingWindow_width, window_height);
+			//printf("Direct copy of Master shader output right window to back buffer\n");
+			// bypassing mesh rendering: outputs master output memory 
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glDrawBuffer(GL_BACK);
+			glBlitFramebuffer(workingWindow_width, 0, 2 * workingWindow_width, window_height, workingWindow_width, 0, 2 * workingWindow_width, window_height,
+				GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
+			printOglError(599);
 		}
-
-		// projection and view matrices
-		glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_current_configuration_rank], 1, GL_FALSE,
-			// glm::value_ptr(VP1homographyMatrix * VP1perspMatrix));
-			glm::value_ptr(VP1perspMatrix));
-		glUniformMatrix4fv(uniform_Mesh_vp_view[pg_current_configuration_rank], 1, GL_FALSE,
-			glm::value_ptr(VP1viewMatrix));
-
-		// all the meshes
-		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
-			pg_drawOneMesh(indMeshFile);
-		} // all the meshes
-		printOglError(697);
-
-		// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_textureFrontier_wmin)&& defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h) 
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
+#endif
 	}
-	// direct rendering without using the mesh
-	else 
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glDrawBuffer(GL_BACK);
-		glBlitFramebuffer(0, 0, workingWindow_width, window_height, 0, 0, workingWindow_width, window_height,
-			GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
-		printOglError(599);
-	}
-#endif
-#endif
-
-#ifdef PG_SECOND_MESH_CAMERA
-	if (!directRenderingwithoutMeshScreen2) {
-		// sets viewport to second window
-#if defined(TEMPETE)
-		glViewport(0, 0, workingWindow_width, window_height / 2);
-#else
-		glViewport(workingWindow_width , 0, workingWindow_width, window_height);
-#endif
-		// duplicates the Meshs in case of double window
-
-		glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_current_configuration_rank], 1, GL_FALSE,
-			// glm::value_ptr(VP2homographyMatrix * VP2perspMatrix));
-			glm::value_ptr(VP2perspMatrix));
-		glUniformMatrix4fv(uniform_Mesh_vp_view[pg_current_configuration_rank], 1, GL_FALSE,
-			glm::value_ptr(VP2viewMatrix));
-
-		// all mesh files
-		for (int indMeshFile = 0; indMeshFile < pg_nb_Mesh_files; indMeshFile++) {
-			pg_drawOneMesh2(indMeshFile);
-		} // all the meshes
-
-		// sets viewport to full window
-		glViewport(0, 0, window_width, window_height);
-
-		glDisable(GL_DEPTH_TEST);
-		// no transparency
-		glDisable(GL_BLEND);
-		printOglError(598);
-	}
-	else {
-		//printf("Direct copy of Master shader output right window to back buffer\n");
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Master_capturedFB_prec); //  master output memory for mapping on mesh
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glDrawBuffer(GL_BACK);
-		glBlitFramebuffer(workingWindow_width, 0, 2 * workingWindow_width, window_height, workingWindow_width, 0, 2 * workingWindow_width, window_height,
-			GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
-		printOglError(599);
-	}
-#endif
-#endif
 }
-#endif
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -4640,7 +4613,7 @@ void pg_draw_scene(DrawingMode mode) {
 			writesvg((void*)&pDataWriteSvg);
 		}
 		else {
-#ifdef WIN32
+#if defined(WIN32)
 			DWORD rc;
 			HANDLE  hThread = CreateThread(
 				NULL,                   // default security attributes
@@ -4713,7 +4686,7 @@ void pg_draw_scene(DrawingMode mode) {
 			writepng((void*)&pDataWritePng);
 		}
 		else {
-#ifdef WIN32
+#if defined(WIN32)
 			DWORD rc;
 			HANDLE  hThread = CreateThread(
 				NULL,                   // default security attributes
@@ -4794,7 +4767,7 @@ void pg_draw_scene(DrawingMode mode) {
 			writejpg((void*)&pDataWriteJpg);
 		}
 		else {
-#ifdef WIN32
+#if defined(WIN32)
 			DWORD rc;
 			HANDLE  hThread = CreateThread(
 				NULL,                   // default security attributes
@@ -4854,15 +4827,16 @@ void pg_draw_scene(DrawingMode mode) {
 
 		//////////////////////////////////////
 		// mesh pass #2b
-		// the meshes are displayed together with the particles except for augmented reality
+		// the meshes are displayed together with the particles except for augmented reality or mesh rendering bypassing
 		// where they are displayed last
-#if defined(var_activeMeshes) && !defined(var_directRenderingwithoutMeshScreen1)
 		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
-			if (activeMeshes > 0) {
-				pg_MeshPass();
+			if (!(pg_ScenarioActiveVars[pg_current_configuration_rank][_augmentedReality] && augmentedReality)
+				|| (pg_ScenarioActiveVars[pg_current_configuration_rank][_meshRenderBypass] && meshRenderBypass)) {
+				if (activeMeshes > 0) {
+					pg_MeshPass();
+				}
 			}
 		}
-#endif
 
 		//////////////////////////////////////
 		// layer compositing & echo pass #3
@@ -4924,13 +4898,14 @@ void pg_draw_scene(DrawingMode mode) {
 		// last mesh pass with final rendering texture
 		// for augmented reality
 		// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] && pg_ScenarioActiveVars[pg_current_configuration_rank][_directRenderingwithoutMeshScreen1]) {
-			if (activeMeshes > 0) {
-				pg_MeshPass();
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+			if ((pg_ScenarioActiveVars[pg_current_configuration_rank][_augmentedReality] && augmentedReality)
+				|| (pg_ScenarioActiveVars[pg_current_configuration_rank][_meshRenderBypass] && meshRenderBypass)) {
+				if (activeMeshes > 0) {
+					pg_MeshPass();
+				}
 			}
 		}
-#endif
 	}
 	printOglError(686);
 }

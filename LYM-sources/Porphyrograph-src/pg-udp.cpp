@@ -100,7 +100,7 @@ pg_IPClient::~pg_IPClient(void) {
 	}
 	output_pattern_stack = NULL;
 
-#ifdef WIN32
+#if defined(WIN32)
 	//if (send_format != OSC) {
 		closesocket(SocketToRemoteServer);
 	//}
@@ -817,7 +817,7 @@ pg_IPServer::~pg_IPServer(void) {
 		input_message_length_stack = NULL;
 	}
 
-#ifdef WIN32
+#if defined(WIN32)
 	closesocket(SocketToLocalServer);
 #endif
 }

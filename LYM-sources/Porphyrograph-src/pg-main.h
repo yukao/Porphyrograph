@@ -162,7 +162,7 @@ void window_key_browse(unsigned char key, int x, int y) ;
 void window_key_browse(unsigned char key, int x, int y) ;
 void window_special_key_browse(int key, int x, int y) ;
 
-#ifdef PG_WACOM_TABLET
+#if defined(PG_WACOM_TABLET)
 void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist , int cursor );
 #endif
 

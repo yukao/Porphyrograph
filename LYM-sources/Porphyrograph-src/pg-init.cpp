@@ -37,9 +37,7 @@ GLfloat pg_identityModelMatrix[16];
 GLfloat pg_homographyForTexture[9];
 #endif
 GLfloat modelMatrixSensor[16];
-#if defined(var_activeMeshes)
 GLfloat **modelMatrixMeshes;
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // GEOMETRY
@@ -98,11 +96,10 @@ float quadSensor_texCoords[] = {
 };
 
 // +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
 #endif
 
-#if defined(var_activeMeshes)
 int *pg_nb_bones[PG_MAX_CONFIGURATIONS] = { NULL };
 Bone** TabBones[PG_MAX_CONFIGURATIONS] = { NULL };
 int* pg_nb_LibraryPoses[PG_MAX_CONFIGURATIONS] = { NULL };
@@ -111,10 +108,9 @@ float** pg_interpolation_weight_AnimationPose[PG_MAX_CONFIGURATIONS] = { NULL };
 int* pg_nb_MotionPoses[PG_MAX_CONFIGURATIONS] = { NULL };
 MotionPose** pg_motionPoses[PG_MAX_CONFIGURATIONS] = { NULL };
 float** pg_interpolation_weight_MotionPose[PG_MAX_CONFIGURATIONS] = { NULL };
-#endif
 
 // particle curves
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 GLfloat *pg_Particle_control_points;
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
@@ -130,7 +126,7 @@ unsigned int *pg_Particle_indices;
 //GLuint pg_Particle_Pos_Texture_texID = 0;
 //GLfloat *pg_Particle_Pos_Texture = NULL;
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 // comet texture
 GLuint comet_texture_2D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 #endif
@@ -160,10 +156,8 @@ GLuint pg_FBO_ParticleRendering = 0; // particle rendering
 GLuint pg_FBO_ClipArtRendering = 0; // ClipArt rendering
 GLuint pg_FBO_ParticleAnimation = 0; // PG_FBO_PARTICLEANIMATION_NBATTACHTS
 GLuint pg_FBO_Mixing_capturedFB_prec = 0; //  drawing memory on odd and even frames for echo
-// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
+// Augmented Reality or mesh rendering bypassing: FBO capture of Master to be displayed on a mesh
 GLuint pg_FBO_Master_capturedFB_prec = 0; // master output memory for mapping on mesh
-#endif
 
 // FBO texture
 GLuint pg_FBO_ParticleAnimation_texID[2 * PG_FBO_PARTICLEANIMATION_NBATTACHTS] = { 0 }; // particle animation
@@ -174,10 +168,8 @@ GLuint FBO_ClipArt_depthAndStencilBuffer = 0;
 GLuint pg_FBO_Update_texID[2 * PG_FBO_UPDATE_NBATTACHTS] = { 0 }; // Update
 GLuint pg_FBO_Mixing_capturedFB_prec_texID[2] = { 0 }; // drawing memory on odd and even frames for echo 
 // GLuint FBO_CameraFrame_texID = 0; // video preprocessing outcome 
-// augmented reality
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
+// augmented reality or mesh rendering bypassing
 GLuint pg_FBO_Master_capturedFB_prec_texID = 0; // master output memory for mapping on mesh  
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // TEXT
@@ -612,7 +604,6 @@ void InterfaceInitializations(void) {
 		}
 	}
 
-#if defined(var_activeMeshes) && defined(var_mobileMeshes)
 	// MESH INTERFACE VARIABLE INITIALIZATION
 	for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_current_configuration_rank].size(); indMesh++) {
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh + 1, (activeMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -620,7 +611,7 @@ void InterfaceInitializations(void) {
 	for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_current_configuration_rank].size(); indMesh++) {
 		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh + 1, (mobileMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
-#endif
+
 #if defined(PG_LIGHTS_DMX_IN_PG)
 	if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 		pg_lightGUI_initialization();
@@ -727,7 +718,7 @@ std::string GetCurrentWorkingDir(void) {
 // TIME
 /////////////////////////////////////////////////////////////////
 
-#ifdef _WIN32
+#if defined(_WIN32)
 static const double epoch = 116444736000000000.;
 int gettimeofday(struct timeval* tp) {
 	SYSTEMTIME system_time;
@@ -1136,7 +1127,7 @@ void pg_initGeometry_quads(void) {
 	// initializes the arrays that contains the positions and the indices of the particles
 	pg_initParticlePosition_Texture();
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 	// vertex buffer objects and vertex array
 	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
 	// vertices
@@ -1185,7 +1176,7 @@ void pg_initGeometry_quads(void) {
 	glEnableVertexAttribArray(2); 
 #endif
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 	 // vertex indices for indexed rendering 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
@@ -1209,15 +1200,15 @@ void pg_initGeometry_quads(void) {
 /////////////////////////////////////////////////////////////////
 
 void SensorInitialization(void) {
-#ifdef PG_RENOISE
+#if defined(PG_RENOISE)
 		sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char*)"", AuxString, (char*)"udp_RN_send");
 #endif
-#ifdef PG_PORPHYROGRAPH_SOUND
+#if defined(PG_PORPHYROGRAPH_SOUND)
 		sprintf(AuxString, "/loop_level 0.0"); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PGsound_send");
 		sprintf(AuxString, "/input_level 0.0"); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PGsound_send");
 #endif
 		for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
-#ifdef PG_RENOISE
+#if defined(PG_RENOISE)
 			// Renoise message format && message posting
 			sprintf(AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
@@ -1225,7 +1216,7 @@ void SensorInitialization(void) {
 			sprintf(AuxString, "/renoise/song/track/%d/prostx_volume %.2f", indSample + 1, 3.f);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
 #endif
-#ifdef PG_PORPHYROGRAPH_SOUND
+#if defined(PG_PORPHYROGRAPH_SOUND)
 			std::string message = "/track_";
 			std::string int_string = std::to_string(indSample + 1);
 			message += int_string + "_level 0";
@@ -1375,7 +1366,7 @@ void MeshInitialization(void) {
 }
 #endif
 
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 void MetawearSensorInitialization() {
 	for (int ind_sensor = 0; ind_sensor < PG_MW_NB_MAX_SENSORS; ind_sensor++) {
 		for (int i = 0; i < 3; i++) {
@@ -1532,21 +1523,17 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_activeMeshes) && defined(var_directRenderingwithoutMeshScreen1)
-#		// FBO: composition output for echo
-	// initializations to NULL
+	// Augmented Reality or bypassing mesh rendering: FBO capture of Master to be displayed on a mesh
 	pg_FBO_Master_capturedFB_prec_texID = 0;
 	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
 	printf("FBO Master size %d %d attachments %d\n", workingWindow_width, window_height, 1);
 	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
 
-	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh 
+	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh of bypassing mesh rendering
 	// texture binding is constant and made once for all
 	pg_bindFBOTextures(pg_FBO_Master_capturedFB_prec, &pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 
 	printOglError(342);
 	return true;
@@ -2006,7 +1993,7 @@ int pg_displayMessage_update(int indMesg) {
 // PARTICLES INITIALIZATION
 
 void pg_initParticlePosition_Texture( void ) {
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 	// the control point position contain column and row of the control point coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader

@@ -1,0 +1,8 @@
+RANK,2,3,4,45,46,47,48,49,50
+VERBATIM,photo scale,mask scale,mask contrast,MIDIwithBeat,MIDIwithColor,MIDIwithBrush,MIDIwithCameraFlash,MIDIwithPhotoFlash,directRenderingwithoutMeshScreen1
+TYPE,float,float,float,bool,bool,bool,bool,bool,bool
+ID,photo_scale,mask_scale,mask_contrast,MIDIwithBeat,MIDIwithColor,MIDIwithBrush,MIDIwithCameraFlash,MIDIwithPhotoFlash,directRenderingwithoutMeshScreen1
+FUNCTION,NULL,NULL,NULL,MIDIwithBeat_callBack,MIDIwithColor_callBack,MIDIwithBrush_callBack,MIDIwithCameraFlash_callBack,MIDIwithPhotoFlash_callBack,NULL
+GUI,photo_scale,mask_scale,mask_contrast,MIDIwithBeat,MIDIwithColor,MIDIwithBrush,MIDIwithCameraFlash,MIDIwithPhotoFlash,directRenderingwithoutMeshScreen1
+SHADER,Update_fs,Update_fs,Update_fs,*,*,*,*,*,*
+PULSE,*,*,*,*,*,*,*,*,*

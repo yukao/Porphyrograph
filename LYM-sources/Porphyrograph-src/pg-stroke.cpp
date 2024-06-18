@@ -57,7 +57,7 @@ int						 pg_current_SVG_path_group = 1;
 
 Path_Status* pg_Path_Status = NULL;
 
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 // convex hull shipped to the GPU
 glm::vec2 pg_BezierControl[(PG_NB_PATHS + 1) * 4];
 glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
@@ -703,7 +703,7 @@ void Path_Status::LoadPathTimeStampsFromXML(string pathString, int * nbRecordedF
 //////////////////////////////////////////////////////////////////
 // CONVEX HULL 
 //////////////////////////////////////////////////////////////////
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 bool pointEquals(glm::vec2 *p, glm::vec2 *q) {
 	return p->x == q->x && p->y == q->y;
 };
@@ -1293,7 +1293,7 @@ void stroke_geometry_calculation(int pathNo, int curr_position_x, int curr_posit
 	// printf("/abs_pen_xy %.0f %.0f\n", float(curr_position_x), float(curr_position_y));
 	//printf("stroke_geometry_calculation for path %d (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f)\n", pathNo, paths_x_prev_prev[pathNo], paths_y_prev_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo], paths_x[pathNo], paths_y[pathNo], paths_x_next[pathNo], paths_y_next[pathNo]);
 
-#ifdef KOMPARTSD
+#if defined(KOMPARTSD)
 	// sends the position of the cursor to the recorder for later replay
 	sprintf(AuxString, "/abs_pen_xy %.0f %.0f", float(CurrentMousePos_x[0]), float(CurrentMousePos_y[0]));
 	pg_send_message_udp((char *)"ff", (char *)AuxString, (char*)"udp_Record_send");
@@ -1502,7 +1502,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	bool isCurveBreakBegin = false;
 	bool isCurveBreakEnd = false;
 	pg_Path_Status[pathNo].path_lastPlayedindReading = pg_Path_Status[pathNo].path_indReading;
-#ifdef PG_SYNC_REPLAY
+#if defined(PG_SYNC_REPLAY)
 	double playingTimeSinceLastPlayedFrame = (theTime - pg_Path_Status[pathNo].path_lastPlayedFrameTime);
 	double lastPlayedFrameRecordingTime = pg_Path_Status[pathNo].getFrameTimeStamp(pg_current_configuration_rank, pg_Path_Status[pathNo].path_lastPlayedindReading);
 	bool newFrame = false;
@@ -1629,7 +1629,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//indFrameReading = pg_Path_Status[pathNo].path_indPreviousReading + 1;
 		paths_x_prev[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y_prev[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		paths_xL[pathNo] = 0.f;
 		paths_yL[pathNo] = 0.f;
 #endif
@@ -1651,7 +1651,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 				path_scaleX, path_scaleY);
 		}
 #endif
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		paths_xL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_yL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
@@ -1676,7 +1676,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	// next frame for tangent and position
 	// negative values in case of curve break
 	if (isCurveBreakEnd) {
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		paths_xR[pathNo] = 0.f;
 		paths_yR[pathNo] = 0.f;
 		//printf("curve end\n");
@@ -1685,7 +1685,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_y[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 	}
 	else {
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		paths_xR[pathNo] = pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, indFrameReading);
 		paths_yR[pathNo] = pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, indFrameReading);
 		paths_x[pathNo] = pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, indFrameReading);
@@ -1836,7 +1836,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 }
 
 // outputs the trace of a metawear sensor
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 void pg_play_metawear_trajectory(int pathNo, int sensorNo) {
 	if (!is_path_replay[pathNo]) {
 		is_path_replay[pathNo] = true;
@@ -1863,7 +1863,7 @@ void pg_play_metawear_trajectory(int pathNo, int sensorNo) {
 // PATHS REPLAY
 void pg_replay_paths(double theTime) {
 	for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 		int ind_sensor = pathNo - 1;
 		if (ind_sensor < PG_MW_NB_MAX_SENSORS) {
 			if (pg_mw_sensors[ind_sensor].mw_mss_pos_update == true) {
@@ -1978,7 +1978,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 		//	   paths_Color_g[1] , paths_Color_b[2] , paths_Color_a[3] );
 
 		paths_BrushID[pathNo] = pen_brush;
-#ifdef PG_WACOM_TABLET
+#if defined(PG_WACOM_TABLET)
 		paths_RadiusX[pathNo]
 			= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
 			+ tabletPressureRadius * pen_radius_pressure_coef
@@ -2202,7 +2202,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 				//		pg_PathCurveFrame_Data[pg_current_configuration_rank][indRecordingPath][indFrameRec].path_Color_b, pg_PathCurveFrame_Data[pg_current_configuration_rank][indRecordingPath][indFrameRec].path_Color_a);
 				//}
 
-#ifdef PG_WACOM_TABLET
+#if defined(PG_WACOM_TABLET)
 				pg_Path_Status[indRecordingPath].setFrameBrushRadius(pg_current_configuration_rank, indFrameRec, pen_brush, 
 					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
 					+ tabletPressureRadius * pen_radius_pressure_coef
@@ -2223,7 +2223,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 				float loc_Pos_x_prev = paths_x_prev[0];
 				float loc_Pos_y_prev = paths_y_prev[0];
 
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 				// second control point
 				float loc_path_Pos_xL = paths_xL[0];
 				float loc_path_Pos_yL = paths_yL[0];
@@ -2277,7 +2277,7 @@ void Path_Status::load_svg_path(char *fileName,
 		paths_y_prev[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 		isBegin[pathNo] = false;
 		isEnd[pathNo] = false;
-#ifdef PG_BEZIER_PATHS
+#if defined(PG_BEZIER_PATHS)
 		paths_xL[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yL[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[pathNo] = PG_OUT_OF_SCREEN_CURSOR;

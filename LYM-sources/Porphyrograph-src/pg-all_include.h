@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 #define _USE_MATH_DEFINES
 #include <math.h>    // math constants such as M_PI
 // define the round function for Visual Studio (not include in math.h)
-#ifdef _WIN32
+#if defined(_WIN32)
 	#include <conio.h>
 	//#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
 	//double round(double x) { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
@@ -59,7 +59,7 @@ namespace fs = std::filesystem;
 #include <algorithm>    // std::max / min
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 // memory leak tracing
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
@@ -95,7 +95,7 @@ constexpr auto rand_x(T x) { return ( x * (2 * rand_0_1 - 1.f)); }
  *  \brief time management
 */
 //\ {
-#ifdef _WIN32
+#if defined(_WIN32)
 	#include <time.h>
 	#include <Winbase.h>
 	#include <Windows.h>
@@ -122,7 +122,7 @@ constexpr auto rand_x(T x) { return ( x * (2 * rand_0_1 - 1.f)); }
 
 ////////////////////////////////////////////
 // current directory 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <direct.h>
 #define GetCurrentDir _getcwd
 #else
@@ -179,13 +179,13 @@ using std::ifstream;
 
 //GLEW
 #include <GL/glew.h>
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <GL/wglew.h>
 #endif
 
 #define  GL_GLEXT_LEGACY
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #ifndef PG_WACOM_TABLET
 #define PG_WACOM_TABLET
 #endif
@@ -300,16 +300,8 @@ using std::ifstream;
 #define LINE_SPLAT_PARTICLES
 #endif
 
-#ifdef CURVE_PARTICLES
+#if defined(CURVE_PARTICLES)
 #define PG_PARTICLE_CURVE_DEGREE 3
-#endif
-
-#if defined(var_part_initialization) 
-// NB PARTICLE MODES
-#define PG_NB_PARTMOVE_MODES 5
-
-#define PG_NB_PARTREPOP_MODES 2
-#define PARTREPOP_GRID 1
 #endif
 
 // CLIPS
@@ -348,17 +340,17 @@ using std::ifstream;
 #define PG_BEZIER_PATHS
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	#include "../share/freeglut-wacom/include/GL/freeglut.h"
 #endif
-#ifdef LINUX
+#if defined(LINUX)
 	#include <GL/freeglut.h>
 	#include <GL/freeglut_ext.h>
 
     #define   GLX_GLXEXT_LEGACY
 	#include <GL/glx.h>
 #endif
-#ifdef __APPLE_CC__
+#if defined(__APPLE_CC__)
 	#include <GLUT/glut.h>
 #endif // __APPLE_CC__
 
@@ -387,9 +379,7 @@ using std::ifstream;
 #include "pg-light.h"
 #include "pg-init.h"
 #include "pg-udp.h"
-#if defined(var_activeMeshes)
 #include "pg-mesh.h"
-#endif
 #include "pg-script.h"
 #include "pg-update.h"
 #include "pg-texture.h"
@@ -400,7 +390,7 @@ using std::ifstream;
 #include "pg-main.h"
 #include "pg-conf.h"
 
-#ifdef PG_WITH_PORTAUDIO
+#if defined(PG_WITH_PORTAUDIO)
 #include "pg-audio.h"
 #endif
 

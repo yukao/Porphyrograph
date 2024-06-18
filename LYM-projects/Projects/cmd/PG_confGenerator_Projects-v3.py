@@ -110,6 +110,7 @@ scenario_var_pulsing_modes_dict = dict()
 def handler(signal_received, frame) :
 	# Handle any cleanup here
 	print('SIGINT or CTRL-C detected. Exiting gracefully')
+	print("Configuration generator: End of configuration generation\n\n")
 	sys.exit(0)
 
 USAGE = '''	print("Configuration generator: Usage: python PG_confGenerator_song-v1.py song/configuration/LYM_song-head-single.csv song/scenarios/LYM_song-scenario-v1.csv song/shaders/LYM_ParticleAnimation_song.frag song/shaders/LYM_ParticleAnimation_song_full.frag song/shaders/LYM_Update_song.frag song/shaders/LYM_Update_song_full.frag song/shaders/LYM_Mixing_song.frag song/shaders/LYM_Mixing_song_full.frag song/shaders/LYM_ParticleRender_song.frag song/shaders/LYM_ParticleRender_song_full.frag song/shaders/LYM_Master_song.frag song/shaders/LYM_Master_song_full.frag ../Porphyrograph/Porphyrograph-song-src/pg_script_header.h ../Porphyrograph/Porphyrograph-song-src/pg_script_body.cpp  ../Porphyrograph/Porphyrograph-song-src/pg_shader_header.h ../Porphyrograph/Porphyrograph-song-src/pg_shader_body_decl.cpp ../Porphyrograph/Porphyrograph-song-src/pg_shader_body_bind.cpp ../Porphyrograph/Porphyrograph-song-src/pg_update_body.cpp")
@@ -167,6 +168,7 @@ def read_configuration_vars(configurationFileName) :
 			# variable types (used for declarations)
 			if(line[0] != "TYPE") :
 				print("Configuration generator: TYPE line expected not [",line[0],"]!")
+				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)
 			config_types = line[1:]
 			line = next(readCSV)
@@ -175,6 +177,7 @@ def read_configuration_vars(configurationFileName) :
 			# and for variable & initial values declarations)
 			if(line[0] != "ID") :
 				print("Configuration generator: ID line expected not [",line[0],"]!")
+				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)			
 			config_ids = line[1:]
 			line = next(readCSV)
@@ -351,6 +354,7 @@ def expect_tag(line_scenario, tag_string) :
 	if(line_scenario[0] != tag_string) :
 		print(tag_string, "first column string expected not [",line_scenario[0],"]!")
 		print(line_scenario)
+		print("Configuration generator: End of configuration generation\n\n")
 		sys.exit(0)
 def check_tag(line_scenario, tag_string) :
 	return (line_scenario[0] == tag_string)
@@ -529,6 +533,7 @@ def read_scenario_scenes(readCSV, indConfiguration) :
 
 		else :
 			print("Configuration generator: Unknown scenario line [",lineScenario,"] !")
+			print("Configuration generator: End of configuration generation\n\n")
 			sys.exit(0)
 
 		loc_nb_scenes = loc_nb_scenes + 1
@@ -579,7 +584,7 @@ def post_reading_scenarios() :
 	# and exists if all the variables are not inside the full scenario, 
 	# so that they can be added there
 	if(len(scenario_unknown_vars_specs_dict) != 0) :
-		print(scenario_unknown_vars_specs_dict)
+		# print(scenario_unknown_vars_specs_dict)
 		unknown_vars_scenario_name = Scenario_InputCsv_names[indConfiguration]
 		path = re.findall(r'^(.*[/\\])[^/\\\.]+\.csv$', unknown_vars_scenario_name)
 		if(path != []) :
@@ -591,8 +596,8 @@ def post_reading_scenarios() :
 			unknown_vars_scenario_fileCsv = open(unknown_vars_scenario_name, "wt", newline='')
 		except IOError:
 			print("Configuration generator: New Scenario File not opened:", unknown_vars_scenario_name, " or path is incorrect")
-		print("Some variables in scenarios should be declared inside the full scenario")
-		print("See file:", unknown_vars_scenario_name)
+		print("Configuration generator: Some variables in scenarios should be declared inside the full scenario")
+		print("Configuration generator: See file:", unknown_vars_scenario_name)
 
 		varVerbatim = []
 		varType = []
@@ -622,6 +627,7 @@ def post_reading_scenarios() :
 		CSVwriter.writerow(["SHADER"] +  varShader)
 		CSVwriter.writerow(["PULSE"] +  varPulse)
 		unknown_vars_scenario_fileCsv.close()
+		print("Configuration generator: End of configuration generation\n\n")
 		sys.exit(0)
 
 	# TAKES NOTE OF THE CONFIGURATIONS IN WHICH THE VARIABLES ARE KNOWN
@@ -646,18 +652,22 @@ def post_reading_scenarios() :
 				if(local_specs[2] != full_specs[2]) :
 					print("Configuration generator: var",var_ID,"has inconsistent types in full scenario",	FullScenario_InputCsv_name,\
 						"(",full_specs[2],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[2],")!")
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				if(local_specs[3] != full_specs[3]) :
 					print("Configuration generator: var",var_ID,"has inconsistent callBacks in scenario",FullScenario_InputCsv_name,\
 						"(",full_specs[3],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[3],")!")
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				if(local_specs[5] != full_specs[5]) :
 					print("Configuration generator: var",var_ID,"has inconsistent target shaders in scenario",FullScenario_InputCsv_name,\
 						"(",full_specs[5],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[5],")!")
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				if(local_specs[6] != full_specs[6]) :
 					print("Configuration generator: var",var_ID,"has inconsistent pulsing modes in scenario",FullScenario_InputCsv_name,\
 						"(",full_specs[6],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[6],")!")
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 	# generates new scenarios in which the variables are ranked in the same order as in the full scenario
@@ -740,6 +750,7 @@ def post_reading_scenarios() :
 					var_index = var_index_in_scenario(var_ID, indConfiguration)
 					if(var_index < 0 or var_index >= len(scene_columns)) :
 						print("Configuration generator: var",var_ID,"scenes not found in scenario",Scenario_InputCsv_names[indConfiguration],"(config: ",indConfiguration,")!")
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 
 					# retrieves the column of the current variable from the original scenario  file
@@ -827,6 +838,7 @@ def scenario_to_cpp_type(scenario_type) :
 	elif(scenario_type.startswith("float")) :
 		return "float"
 	print("Configuration generator: Unknown scenario variable type ", scenario_type)
+	print("Configuration generator: End of configuration generation\n\n")
 	sys.exit(0)
 
 def scenario_to_cpp_range(scenario_type) :
@@ -837,6 +849,7 @@ def scenario_to_cpp_range(scenario_type) :
 		if(len(indices) == 1 and len(indices[0]) == 2) :
 			return [indices[0][0], indices[0][1]]
 	print("Configuration generator: Unknown scenario variable type ", scenario_type)
+	print("Configuration generator: End of configuration generation\n\n")
 	sys.exit(0)
 
 
@@ -877,6 +890,7 @@ def write_script_header_and_body() :
 		if(index_range == []) :
 			if(full_specs[7] == "") :
 				print("Configuration generator: Variable", var_ID, "without initial value (type [",type_string,"])")
+				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)
 			if(type_string == "string") :
 				ScriptBody.write("%-5s %-20s = \"%s\";\n" % (type_string , var_ID, full_specs[7]))
@@ -989,6 +1003,7 @@ def write_script_header_and_body() :
 				ScriptBody.write("	}\n")
 			else :
 				print("Configuration generator: Unknown callback ",callBack_id_string," parameter type [",type_string,"]")
+				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)
 			ScriptBody.write("}\n")
 
@@ -1014,7 +1029,7 @@ def write_script_header_and_body() :
 	ScriptBody.write("};\n")
 
 	# ScriptHeader.write("enum PulseTypes : _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none "
-	ScriptBody.write("PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = { ")
+	ScriptBody.write("PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = { \n")
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		pulsing_mode = full_specs[6]
@@ -1046,6 +1061,7 @@ def write_script_header_and_body() :
 			nb_expected_vals = configurationVarValue(index_range[1]) - int(index_range[0])
 			if(len(val_init) != nb_expected_vals) :
 				print("Configuration generator: Array variable", var_ID, "expects", nb_expected_vals, " initial value (of type [",type_string,"])", "not" , len(val_init))
+				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)
 			for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
 				if(type_string.startswith("string")) :
@@ -1222,6 +1238,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
 					else :
 						print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 					
 					if(ParticleAnimation_fs_index == 0) :
@@ -1238,7 +1255,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
 							ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
 							ParticleAnimation_fs_index  += 1
-						ParticleAnimation_fs_index  -= 1
+							ParticleAnimation_fs_index  -= 1
 					elif(type_string.startswith("int")) :
 						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
 							ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
@@ -1251,6 +1268,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						ParticleAnimation_fs_index  -= 1
 					else :
 						print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 					
 					if(not re.findall(r'\[', type_string)) :
@@ -1265,6 +1283,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
+							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
 					else:
 						ParticleAnimation_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
@@ -1280,6 +1299,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 							else :
 								print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
+								print("Configuration generator: End of configuration generation\n\n")
 								sys.exit(0)
 							ParticleAnimation_fs_index  += 1
 						ParticleAnimation_fs_index  -= 1
@@ -1303,6 +1323,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					Update_head_glsl = Update_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown update shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(Update_fs_index == 0) :
@@ -1332,6 +1353,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					Update_fs_index  -= 1
 				else :
 					print("Configuration generator: Unknown update shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
@@ -1346,6 +1368,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 					else :
 						print("Configuration generator: Unknown Update pulsing mode [%s]" % pulsing_mode)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
 					Update_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
@@ -1361,6 +1384,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
+							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
 						Update_fs_index  += 1
 					Update_fs_index  -= 1
@@ -1384,6 +1408,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					Mixing_head_glsl = Mixing_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown mixing shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(Mixing_fs_index == 0) :
@@ -1413,6 +1438,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					Mixing_fs_index  -= 1
 				else :
 					print("Configuration generator: Unknown mixing shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
@@ -1427,6 +1453,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 					else :
 						print("Configuration generator: Unknown Mixing pulsing mode [%s]" % pulsing_mode)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
 					Mixing_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
@@ -1442,6 +1469,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
+							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
 						Mixing_fs_index  += 1
 					Mixing_fs_index  -= 1
@@ -1467,6 +1495,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
 					else :
 						print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 
 					if(ParticleRender_fs_index == 0) :
@@ -1496,6 +1525,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						ParticleRender_fs_index  -= 1
 					else :
 						print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 					
 					if(not re.findall(r'\[', type_string)) :
@@ -1510,6 +1540,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 						else :
 							print("Configuration generator: Unknown ParticleRender pulsing mode [%s]" % pulsing_mode)
+							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
 					else:
 						ParticleRender_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
@@ -1525,6 +1556,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 							else :
 								print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
+								print("Configuration generator: End of configuration generation\n\n")
 								sys.exit(0)
 							ParticleRender_fs_index  += 1
 						ParticleRender_fs_index  -= 1
@@ -1548,6 +1580,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					Master_head_glsl = Master_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown master shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(Master_fs_index == 0) :
@@ -1577,6 +1610,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					Master_fs_index  -= 1
 				else :
 					print("Configuration generator: Unknown master shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
@@ -1591,6 +1625,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 					else :
 						print("Configuration generator: Unknown Master pulsing mode [%s]" % pulsing_mode)
+						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
 					Master_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
@@ -1606,6 +1641,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
+							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
 						Master_fs_index  += 1
 					Master_fs_index  -= 1
@@ -1764,6 +1800,7 @@ def main(main_args) :
 		opts, args = getopt.getopt(main_args,"n:c:f:o:s:",["nb_configurations=","configuration=", "full_scenario=", "output_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "update_body_out="])
 	except getopt.GetoptError:
 		print(USAGE)
+		print("Configuration generator: End of configuration generation\n\n")
 		sys.exit(2)
 	for opt, arg in opts:
 
@@ -1853,9 +1890,11 @@ def main(main_args) :
 	# CSV PARAMETER INPUT FILES
 	if(len(Configuration_InputCsv_names) != Nb_Configurations) :
 		print("Configuration generator: Expected number of configuration files incorrect: ",len(Configuration_InputCsv_names)," instead of ", Nb_Configurations)
+		print("Configuration generator: End of configuration generation\n\n")
 		sys.exit(0)
 	if(len(Scenario_InputCsv_names) != Nb_Configurations) :
 		print("Configuration generator: Expected number of scenario files incorrect: ",len(Scenario_InputCsv_names)," instead of ", Nb_Configurations)
+		print("Configuration generator: End of configuration generation\n\n")
 		sys.exit(0)
 
 	try:
@@ -1923,6 +1962,11 @@ def main(main_args) :
 	 	write_binding_vars_header_and_body(indConfig)
 
 	UpdateBody.close()
+
+	###############################################################################
+	# END OF CONFIGURATION GENERATOR
+	###############################################################################
+	print("Configuration generator: End of configuration generation\n\n")
 
 	return 1
 

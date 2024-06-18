@@ -25,7 +25,7 @@
 
 #include<stdlib.h>
 
-#ifdef _WIN32
+#if defined(_WIN32)
 // only for VC++
 #include<crtdbg.h>
 #endif
@@ -237,11 +237,12 @@ int main(int argcMain, char** argvMain) {
 	// printf( "Glut initialization\n" );
 	// glut parameters initialization 
 	glutInit(&argc, argv);
-#if defined(var_activeMeshes)
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
-#else
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS); // 
-#endif
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
+	}
+	else {
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS); // 
+	}
 
 	initGlutWindows();
 	printOglError(474);
@@ -262,14 +263,12 @@ int main(int argcMain, char** argvMain) {
 		SensorInitialization();
 	}
 
-#if defined(var_activeMeshes)
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
 		// mesh initialization
 		MeshInitialization();
 	}
-#endif
 
-#ifdef PG_METAWEAR
+#if defined(PG_METAWEAR)
 	MetawearSensorInitialization();
 #endif
 
@@ -294,9 +293,9 @@ int main(int argcMain, char** argvMain) {
 	printOglError(36);
 
 	// meshes loading
-#if defined(var_activeMeshes)
-	pg_loadAllMeshes();
-#endif
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+		pg_loadAllMeshes();
+	}
 
 	// soundtrack listing
 	pg_listAllSoundtracks();
@@ -316,7 +315,7 @@ int main(int argcMain, char** argvMain) {
 	// lights off the LED
 	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 
-#ifdef PG_RENOISE
+#if defined(PG_RENOISE)
 	//pg_send_message_udp((char *)"i", (char *)"/track/1/solo 1", (char *)"udp_RN_send");
 	//pg_send_message_udp((char *)"i", (char *)"/track/2/solo 1", (char *)"udp_RN_send");
 	//pg_send_message_udp((char *)"i", (char *)"/track/3/mute 1", (char *)"udp_RN_send");
@@ -399,7 +398,7 @@ int main(int argcMain, char** argvMain) {
 	}
 #endif
 
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_PUREDATA)
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
 #endif
@@ -436,7 +435,7 @@ void initGlutWindows(void) {
 
 	///////////////////////////////////////////////
 	// OpenGL extended
-#ifdef WIN32_EXTENDED
+#if defined(WIN32_EXTENDED)
 	if (!CreateGLContext()) {
 		printf("OpenGL transparency context not initialized\n");
 		exit(0);
@@ -494,7 +493,7 @@ void initGlutWindows(void) {
 	// special keys handling
 	glutSpecialFunc(&window_special_key_browse);
 
-#ifdef PG_WACOM_TABLET
+#if defined(PG_WACOM_TABLET)
 	// wacom tablet handling
 	glutWacomTabletCursorFunc(&window_PG_WACOM_TABLET_browse);
 #else  // mouse clicks handling
@@ -614,7 +613,7 @@ void pg_init_scene(void) {
 	}
 #endif
 
-#ifdef PG_MIDI
+#if defined(PG_MIDI)
 	//open_IO_MIDI(string("loopMIDI Port"), string("loopMIDI Port"));
 	open_IO_MIDI(string("TouchOSC Bridge"), string("TouchOSC Bridge"));
 #endif
@@ -631,7 +630,7 @@ void pg_init_scene(void) {
 
 	/////////////////////////////////////////////////////////////////////////
 	// UDP INITIALIZATION
-#ifdef WIN32
+#if defined(WIN32)
 	WSADATA wsaData;
 	// Initialize Winsock
 	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -667,7 +666,7 @@ bool pg_shutdown = false;
 
 void pg_quit( void ) {
 	// for Annika performance: save the svg paths before quitting (could perhaps be generalized)
-#ifdef KOMPARTSD
+#if defined(KOMPARTSD)
 	pg_draw_scene(_Svg);
 	// sends the position of the cursor to the recorder for later replay
 	sprintf(AuxString, "/quit");
@@ -689,10 +688,10 @@ void pg_quit( void ) {
 	// lights off the LED
 	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 
-#ifdef PG_RENOISE
+#if defined(PG_RENOISE)
 	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
 #endif
-#ifdef PG_WITH_PUREDATA
+#if defined(PG_WITH_PUREDATA)
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/disconnect 1", (char*)"udp_PD_send");
 #endif
@@ -709,7 +708,7 @@ void pg_quit( void ) {
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 	printf("Main: soundtrack: %s\n", AuxString);
 #endif
-#ifdef PG_WITH_PORTAUDIO
+#if defined(PG_WITH_PORTAUDIO)
 	pa_sound_data.pa_closeMyStream();
 	printf("close portaudio\n");
 	delete paInit;
@@ -718,7 +717,7 @@ void pg_quit( void ) {
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	sprintf(AuxString, "/soundtrack_volume %d", 0);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-#ifdef PG_WITH_JUCE
+#if defined(PG_WITH_JUCE)
 	// soundtrack off
 	pg_send_message_udp((char *)"", (char *)"/JUCE_stop_track", (char *)"udp_SoundJUCE_send");
 	pg_send_message_udp((char *)"", (char *)"/JUCE_exit", (char *)"udp_SoundJUCE_send");
@@ -727,7 +726,7 @@ void pg_quit( void ) {
 	// lights out the LEDs
 	//pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
 
-#ifdef PG_MIDI
+#if defined(PG_MIDI)
 	midi_io.finalise();
 #endif
 
@@ -850,7 +849,7 @@ void MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
 #endif
 }
 
-#ifdef PG_WACOM_TABLET
+#if defined(PG_WACOM_TABLET)
 void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
 	int mappedX = x;
 	int mappedY = y;
@@ -1036,20 +1035,18 @@ void window_idle_browse(int step) {
 		// printf( "Window %s\n" , CurrentWindow->id );
 		pg_screenMessage_update();
 
-#ifdef CRITON
+#if defined(CRITON)
 		if (PG_MAX_OSC_ARGUMENTS < 3 * 8) {
 			std::cout << "Error: unsufficient PG_MAX_OSC_ARGUMENTS value for processing fftLevel8 command!" << std::endl;
 			exit(-1);
 		}
 #endif
 
-#if defined(var_photo_diaporama)
 		// updates diaporama
 		if (photo_diaporama >= 0 && photo_diaporama < pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
 			// printf("pg_update_diaporama\n");
 			pg_update_diaporama();
 		}
-#endif
 
 		printOglError(467);
 
@@ -1079,7 +1076,7 @@ void window_idle_browse(int step) {
 			pulse[1] = float(PerlinNoise(seed_pulsePerlinNoise[2], seed_pulsePerlinNoise[3], pg_FrameNo) * sound_volume + sound_min);
 			pulse[2] = float(PerlinNoise(seed_pulsePerlinNoise[4], seed_pulsePerlinNoise[5], pg_FrameNo) * sound_volume + sound_min);
 			// not used currently  pulse_attack = PerlinNoise(x, y, pg_FrameNo) * sound_volume + sound_min;
-#ifdef PG_WITH_SOUND_LEVELS_GUI_FEEDBACK
+#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 			sprintf(AuxString, "/pulse_low %.2f", pulse[0]);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(AuxString, "/pulse_medium %.2f", pulse[1]);
@@ -1091,7 +1088,7 @@ void window_idle_browse(int step) {
 			pulse_average_prec = pulse_average;
 			pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
 
-#ifdef PG_WITH_SOUND_LEVELS_GUI_FEEDBACK
+#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 			sprintf(AuxString, "/pulse %.2f", pulse_average);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 #endif
@@ -1104,7 +1101,7 @@ void window_idle_browse(int step) {
 		}
 
 		// continous flashes
-		// in case the flash frequency (flashPixel_freq, flashTrkCA_freq_0, flashCABG_freq)
+		// in case the flash frequency (flashPixel_freq, flashTrkCA_freq, flashCABG_freq)
 		// is equal to (PG_LOOP_SIZE + 1), whatever the value, flashes are emitted at every frame (or on beats if we reach an onset for the video or the movie)
 		pg_flash_control(flash_continuous_generation);
 
@@ -1117,14 +1114,14 @@ void window_idle_browse(int step) {
 		}
 
 		// MIDI messages IN
-#ifdef PG_MIDI
+#if defined(PG_MIDI)
 		event_read = midi_io.read_event(MIDI_IN_event);
 		if (event_read) {
 			printf("MIDI IN event %d %d %d (time %d)\n", Pm_MessageStatus(MIDI_IN_event.message), Pm_MessageData1(MIDI_IN_event.message), Pm_MessageData2(MIDI_IN_event.message), MIDI_IN_event.timestamp);
 		}
 #endif
 
-#ifdef PG_LIGHTS_DMX_IN_PG
+#if defined(PG_LIGHTS_DMX_IN_PG)
 		if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 			// light automation management
 			pg_light_automation_update();

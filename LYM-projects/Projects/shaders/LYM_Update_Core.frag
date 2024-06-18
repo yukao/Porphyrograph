@@ -1922,10 +1922,6 @@ void main() {
 #include_initializations
 
   //////////////////////////
-  // TRACK DECAY
-  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
-
-  //////////////////////////
   // variables 
   // frame number
   frameNo = int(round(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.x));

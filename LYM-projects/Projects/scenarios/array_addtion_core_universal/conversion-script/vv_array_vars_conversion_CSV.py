@@ -15,9 +15,10 @@ def handler(signal_received, frame):
 	sys.exit(0)
 
 def main():
-	if( vv_array_vars_conversion_CSV_subdirs.main(["-i", "/mnt/c/home/LYM-projects/Projects/scenarios/",\
-		"-t", "/mnt/c/home/LYM-projects/Projects/scenarios/tmp.txt"]) == 0):
-		return 0
+	for loop_no in range(0,15) :
+		if( vv_array_vars_conversion_CSV_subdirs.main(["-i", "/mnt/c/home/LYM-projects/Projects/scenarios/array_addtion_core_universal/working_dir",\
+			"-t", "/mnt/c/home/LYM-projects/Projects/scenarios/array_addtion_core_universal/tmp.txt", "-n", loop_no]) == 0):
+			return 0
 	return 1
 
 if __name__ == "__main__":

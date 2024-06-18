@@ -236,126 +236,18 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	int low_palette = -1;
 	float alpha = 0;
 	float palette_pulse = 0.f;
-#if defined(var_ClipArt_layer_1_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_1_color_preset]) {
-		if (indLayer == 0) {
-			if (ClipArt_layer_1_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_1_color_preset));
-				alpha = ClipArt_layer_1_color_preset - low_palette;
-#if defined(var_ClipArt_layer_1_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_1_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_1_color_preset_pulse;
+	if (indLayer >= 0 && indLayer < PG_NB_CLIPART_LAYERS) {
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_color_preset]) {
+			if (ClipArt_layer_color_preset[indLayer + 1] >= 0) {
+				low_palette = int(floor(ClipArt_layer_color_preset[indLayer + 1]));
+				alpha = ClipArt_layer_color_preset[indLayer + 1] - low_palette;
+				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_color_preset_pulse]) {
+					palette_pulse = ClipArt_layer_color_preset_pulse[indLayer + 1];
 				}
-#endif
 			}
 		}
 	}
-#endif
-#if defined(var_ClipArt_layer_2_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_2_color_preset]) {
-		if (indLayer == 1) {
-			if (ClipArt_layer_2_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_2_color_preset));
-				alpha = ClipArt_layer_2_color_preset - low_palette;
-#if defined(var_ClipArt_layer_2_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_2_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_2_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
-#if defined(var_ClipArt_layer_3_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_3_color_preset]) {
-		if (indLayer == 2) {
-			if (ClipArt_layer_3_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_3_color_preset));
-				alpha = ClipArt_layer_3_color_preset - low_palette;
-#if defined(var_ClipArt_layer_3_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_3_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_3_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
-#if defined(var_ClipArt_layer_4_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_4_color_preset]) {
-		if (indLayer == 3) {
-			if (ClipArt_layer_4_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_4_color_preset));
-				alpha = ClipArt_layer_4_color_preset - low_palette;
-#if defined(var_ClipArt_layer_4_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_4_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_4_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
-#if defined(var_ClipArt_layer_5_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_5_color_preset]) {
-		if (indLayer == 4) {
-			if (ClipArt_layer_5_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_5_color_preset));
-				alpha = ClipArt_layer_5_color_preset - low_palette;
-#if defined(var_ClipArt_layer_5_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_5_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_5_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
-#if defined(var_ClipArt_layer_6_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_6_color_preset]) {
-		if (indLayer == 5) {
-			if (ClipArt_layer_6_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_6_color_preset));
-				alpha = ClipArt_layer_6_color_preset - low_palette;
-#if defined(var_ClipArt_layer_6_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_6_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_6_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
-#if defined(var_ClipArt_layer_7_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_7_color_preset]) {
-		if (indLayer == 6) {
-			if (ClipArt_layer_7_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_7_color_preset));
-				alpha = ClipArt_layer_7_color_preset - low_palette;
-#if defined(var_ClipArt_layer_7_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_7_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_7_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
-#if defined(var_ClipArt_layer_8_color_preset)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_8_color_preset]) {
-		if (indLayer == 7) {
-			if (ClipArt_layer_8_color_preset >= 0) {
-				low_palette = int(floor(ClipArt_layer_8_color_preset));
-				alpha = ClipArt_layer_8_color_preset - low_palette;
-#if defined(var_ClipArt_layer_8_color_preset_pulse)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_ClipArt_layer_8_color_preset_pulse]) {
-					palette_pulse = ClipArt_layer_8_color_preset_pulse;
-				}
-#endif
-			}
-		}
-	}
-#endif
+
 	// scenario-based clip art color for surface filling
 	if (low_palette >= 0) {
 		low_palette = low_palette % pg_ColorPresets[pg_current_configuration_rank].size();
@@ -458,13 +350,20 @@ void pg_Display_All_ClipArt(int activeFiles) {
 							glTranslatef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_X, pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_Y, 0);
 							glRotatef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Rotation, 0, 0, 1);
 							glScalef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale, pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale, 1);
-							for (int indPath = 0;
-								indPath < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt;
-								indPath++) {
-								if (indPath < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt
-									&& pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_SubPath[indPath] == true) {
-									//printf("config %d active clipart display %d layer %d\n", pg_current_configuration_rank, indClipArt, indPath);
-									pg_Display_One_ClipArt(indClipArt, indPath);
+							//printf("config %d active clipart display %d layer color: ", pg_current_configuration_rank, indClipArt);
+							//for (int indLayer = 0;
+							//	indLayer < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt;
+							//	indLayer++) {
+							//	printf("%.2f ", ClipArt_layer_color_preset[indLayer + 1]);
+							//}
+							//printf("\n");
+							for (int indLayer = 0;
+								indLayer < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt;
+								indLayer++) {
+								if (indLayer < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt
+									&& pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_SubPath[indLayer] == true) {
+									//printf("config %d active clipart display %d layer %d\n", pg_current_configuration_rank, indClipArt, indLayer);
+									pg_Display_One_ClipArt(indClipArt, indLayer);
 								}
 							}
 						}
@@ -505,7 +404,7 @@ void convertTextStringToClipartIndices(std::vector<int> *indClipArts, string dis
 		// indChar character code
 		char curChar = displayed_text.at(indChar);
 		int indClipArt = -1;
-#ifdef ETOILES
+#if defined(ETOILES)
 		/* TEASEER ETOiLES */
 		if (curChar >= '0' && curChar <= '9') {
 			indClipArt = curChar - '0';
@@ -556,7 +455,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
 			glMatrixPushEXT(GL_MODELVIEW);
 			std::string displayed_text("");
-#ifdef ETOILES
+#if defined(ETOILES)
 			int digit_rank = (*ind_Current_DisplayText) / 10;
 			// digits of the number
 			if ((*ind_Current_DisplayText) < 130) {
@@ -619,7 +518,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					else {
 						y_transl = pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_Y;
 					}
-#ifdef ETOILES
+#if defined(ETOILES)
 					glTranslatef(100.f + 100.f * indChar, y_transl, 0);
 #else
 						if (mobile == 2 && indChar < (unsigned int)(DisplayText_maxLen)) {
@@ -641,17 +540,17 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					//glRotatef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Rotation, 0, 0, 1);
 					//glScalef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale, pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale, 1);
 					// the clipart can be made of several sub-paths, only display the ones that are not been set to off
-					for (int indPath = 0;
-						indPath < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt;
-						indPath++) {
-						//if (pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_SubPath[indPath] == true) {
-							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Colors[indPath] 
-							//	<< " ind PATH " << indPath << " ind CLIPART " << indClipArt << std::endl;
+					for (int indLayer = 0;
+						indLayer < pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_nb_paths_in_ClipArt;
+						indLayer++) {
+						//if (pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_SubPath[indLayer] == true) {
+							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Colors[indLayer] 
+							//	<< " ind PATH " << indLayer << " ind CLIPART " << indClipArt << std::endl;
 #ifndef ETOILES
 						float scale = pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale;
 						glScalef(scale, scale, scale);
 #endif
-						pg_Display_One_ClipArt(indClipArt, indPath);
+						pg_Display_One_ClipArt(indClipArt, indLayer);
 						//}
 						//else {
 						//	printf("subpath not visible\n");
@@ -664,7 +563,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 			glDisable(GL_STENCIL_TEST);
 		}
 	}
-#ifdef ETOILES
+#if defined(ETOILES)
 	if (pg_FrameNo % 3 == 0) {
 		(*ind_Current_DisplayText) = int(min(float((*ind_Current_DisplayText) + 1), float(NbDisplayTexts - 1)));
 	}
