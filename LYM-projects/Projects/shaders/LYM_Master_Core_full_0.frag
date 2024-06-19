@@ -47,6 +47,8 @@ float	 master;
 bool	  mute_second_screen;
 #define var_CAMasterWeight
 float	 CAMasterWeight;
+#define var_ClipArtMasterWeight
+float	 ClipArtMasterWeight;
 #define var_PartMasterWeight
 float	 PartMasterWeight;
 #define var_SecondMasterMixingWeight
@@ -55,7 +57,7 @@ float	 SecondMasterMixingWeight;
 float	 trackMasterWeight[4];
 #define var_currentMaskTrack
 int		currentMaskTrack;
-uniform float uniform_Master_scenario_var_data[31];
+uniform float uniform_Master_scenario_var_data[32];
 
 #define graylevel(col) ((col.r+col.g+col.b)/3.0)
 
@@ -133,13 +135,14 @@ void main() {
   master = uniform_Master_scenario_var_data[21];
   mute_second_screen = (uniform_Master_scenario_var_data[22] > 0 ? true : false);
   CAMasterWeight = uniform_Master_scenario_var_data[23];
-  PartMasterWeight = uniform_Master_scenario_var_data[24];
-  SecondMasterMixingWeight = uniform_Master_scenario_var_data[25];
-  trackMasterWeight[0] = (uniform_Master_scenario_var_data[26]);
-  trackMasterWeight[1] = (uniform_Master_scenario_var_data[27]);
-  trackMasterWeight[2] = (uniform_Master_scenario_var_data[28]);
-  trackMasterWeight[3] = (uniform_Master_scenario_var_data[29]);
-  currentMaskTrack = int(uniform_Master_scenario_var_data[30]);
+  ClipArtMasterWeight = uniform_Master_scenario_var_data[24];
+  PartMasterWeight = uniform_Master_scenario_var_data[25];
+  SecondMasterMixingWeight = uniform_Master_scenario_var_data[26];
+  trackMasterWeight[0] = (uniform_Master_scenario_var_data[27]);
+  trackMasterWeight[1] = (uniform_Master_scenario_var_data[28]);
+  trackMasterWeight[2] = (uniform_Master_scenario_var_data[29]);
+  trackMasterWeight[3] = (uniform_Master_scenario_var_data[30]);
+  currentMaskTrack = int(uniform_Master_scenario_var_data[31]);
 
   float width = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.x;
   float height = uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen.y;

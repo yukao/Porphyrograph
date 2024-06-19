@@ -2066,10 +2066,7 @@ void main() {
   int currentPhotoSource = 0;
   int currentClipSource = 0;
   vec2 photo_scale = vec2(1);
-#if defined(var_photo_scaleX) && defined(var_photo_scaleY)
   photo_scale = vec2(photo_scaleX, photo_scaleY);
-#endif
-#if defined(var_photoWeight)
   if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy 
       + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
@@ -2081,11 +2078,9 @@ void main() {
 #if defined(var_photoSobel)
     Sobel(1,-1, coordsImageScaled);
 #endif
-#if defined(var_invertPhoto)
     if( invertPhoto) {
         photoOriginal = vec3(1) - photoOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photoOriginal;
   }
   else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0) {
@@ -2098,11 +2093,9 @@ void main() {
 #if defined(var_photoSobel)
     Sobel(-1,1, coordsImageScaled);
 #endif
-#if defined(var_invertPhoto)
    if( invertPhoto) {
         clipOriginal = vec3(1) - clipOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clipOriginal;
   }
 
@@ -2117,11 +2110,9 @@ void main() {
 #if defined(var_photoSobel)
     Sobel(2, -1, coordsImageScaled);
 #endif
-#if defined(var_invertPhoto)
     if( invertPhoto) {
         photoOriginal = vec3(1) - photoOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
   }
   else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0) {
@@ -2134,14 +2125,11 @@ void main() {
 #if defined(var_photoSobel)
     Sobel(-1, 2, coordsImageScaled);
 #endif
-#if defined(var_invertPhoto)
     if( invertPhoto) {
         clipOriginal = vec3(1) - clipOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clipOriginal;
   }
-#endif
 
 #if defined(var_photo_value)
   photocolor *= vec3(photo_value);
@@ -2507,6 +2495,7 @@ void main() {
     // TRACK video
     bool videoOn = false;
     if( currentVideoTrack == indCurTrack) {
+      out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
       if( videoWeight > 0) {
         videoOn = true;
 #ifdef var_cameraCumul
@@ -2550,7 +2539,7 @@ void main() {
     /////////////////
     // TRACK photo
     if(currentPhotoTrack == indCurTrack) {
-#if defined(var_photoWeight)
+      out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
       // visible photo
       if(photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
         + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
@@ -2588,7 +2577,6 @@ void main() {
       //     }
       //   }
       // }
-#endif
       if( flashPhotoTrkWght > 0 
           && graylevel(photocolor) > flashPhotoTrkWght ) { // flash photo
         // photo image copy when there is a flash photo

@@ -15,11 +15,13 @@ float	 echo;
 float	 echoNeg;
 #define var_CAMixingWeight
 float	 CAMixingWeight;
+#define var_ClipArtMixingWeight
+float	 ClipArtMixingWeight;
 #define var_PartMixingWeight
 float	 PartMixingWeight;
 #define var_trackMixingWeight
 float	 trackMixingWeight[4];
-uniform float uniform_Mixing_scenario_var_data[8];
+uniform float uniform_Mixing_scenario_var_data[9];
 
 // Main shader.
 
@@ -68,11 +70,12 @@ void main() {
   echo = uniform_Mixing_scenario_var_data[0];
   echoNeg = uniform_Mixing_scenario_var_data[1];
   CAMixingWeight = uniform_Mixing_scenario_var_data[2];
-  PartMixingWeight = uniform_Mixing_scenario_var_data[3];
-  trackMixingWeight[0] = (uniform_Mixing_scenario_var_data[4]);
-  trackMixingWeight[1] = (uniform_Mixing_scenario_var_data[5]);
-  trackMixingWeight[2] = (uniform_Mixing_scenario_var_data[6]);
-  trackMixingWeight[3] = (uniform_Mixing_scenario_var_data[7]);
+  ClipArtMixingWeight = uniform_Mixing_scenario_var_data[3];
+  PartMixingWeight = uniform_Mixing_scenario_var_data[4];
+  trackMixingWeight[0] = (uniform_Mixing_scenario_var_data[5]);
+  trackMixingWeight[1] = (uniform_Mixing_scenario_var_data[6]);
+  trackMixingWeight[2] = (uniform_Mixing_scenario_var_data[7]);
+  trackMixingWeight[3] = (uniform_Mixing_scenario_var_data[8]);
 
   float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 

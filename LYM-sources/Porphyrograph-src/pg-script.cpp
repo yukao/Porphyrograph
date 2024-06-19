@@ -1178,9 +1178,6 @@ void pg_initializeScenearioVariables(void) {
 		/////////////////////////////////////////////////////////////////////////
 		// CONSTANT UNIFORM VARIABLES
 		// only assigned at initialization, does not change during the set
-		//glUseProgram(pg_shader_programme[indConfiguration][pg_shader_Camera]);
-		//glUniform2f(uniform_Camera_vp_2fv_width_height[indConfiguration],
-		//	(GLfloat)workingWindow_width, (GLfloat)window_height);
 		if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]
 			&& pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]) {
 			// only assigned at initialization, does not change during the set
@@ -2446,6 +2443,7 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scen
 				printf("video no is outside the range of available videos: stops the playing video \n");
 
 				currentlyPlaying_movieNo = -1;
+				movieWeight = 0.f;
 				pg_movie_frame.setTo(Scalar(0, 0, 0));
 				sprintf(AuxString, "/movie_shortName %s", "---");
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");

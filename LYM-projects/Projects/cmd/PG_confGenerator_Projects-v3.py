@@ -58,8 +58,6 @@ Mixing_OutputShader_name = []
 ParticleRendering_OutputShader_name = []
 Master_OutputShader_name = []
 
-withParticleShaders = []
-
 # C++ included file names (only one file cumulating the data 
 # from the first configuration file and all the scenario files)
 ScriptHeader_name = ""
@@ -710,7 +708,7 @@ def post_reading_scenarios() :
 				varID.append(var_ID)
 
 		CSVwriter = csv.writer(output_scenario_fileCsv, delimiter=',')
-		print("rank",len(full_scenario_vars_specs_dict.keys()),"varID",len(varID))
+		# print("rank",len(full_scenario_vars_specs_dict.keys()),"varID",len(varID))
 		CSVwriter.writerow(["RANK"] + list(range(1, len(varID) + 1)))
 		# variable_full_scenario_header_dictionary[current_scenario_var_ID] = [varVerbatim, varType, varCallBack, varShader, varPulse, varDefault]
 		CSVwriter.writerow(["VERBATIM"] + varVerbatim)
@@ -1122,8 +1120,6 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 	global ShadersDir
 
-	global withParticleShaders
-
 	global scenario_active_vars
 
 	try:
@@ -1153,7 +1149,6 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 	# GLSL OPTIONAL PARTICLE SHADER INPUT AND OUTPUT FILES
 	if(ParticleAnimation_InputShader_name[indConfiguration] != "NULL") :
-		withParticleShaders[indConfiguration] = True
 		try:
 			ParticleAnimation_InputShader = open(ShadersDir+ParticleAnimation_InputShader_name[indConfiguration], "rt")
 		except IOError:
@@ -1170,8 +1165,6 @@ def write_binding_vars_header_and_body(indConfiguration) :
 			ParticleRendering_OutputShader = open(ShadersDir+ParticleRendering_OutputShader_name[indConfiguration], "wt")
 		except IOError:
 			print("Configuration generator: ParticleRendering_OutputShader File not opened:", ShadersDir+ParticleRendering_OutputShader_name[indConfiguration], " or path is incorrect")
-	else:
-		withParticleShaders[indConfiguration] = False
 
 	##################################################################
 	# SHADER VARIABLES
@@ -1208,7 +1201,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 	ShaderBodyBind.write("\n"); 
 
-	# scans the line of the scenario file that indicates what is the target shader for each variable
+	# scans the line of the full scenario file that indicates what is the target shader for each variable
 	# variables are grouped by 4 to be declared as vec4
 	# target_shader_list is * / ParticleRender_fs / Master_fs / Update_fs / Mixing_fs / ParticleAnimation_fs
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
@@ -1217,95 +1210,98 @@ def write_binding_vars_header_and_body(indConfiguration) :
 		index_range = scenario_to_cpp_range(type_string)
 		target_shader_list = full_specs[5]
 		pulsing_mode = full_specs[6]
-		active_var_in_config = scenario_active_vars[var_ID]
-		if(target_shader_list != "*" and active_var_in_config[indConfiguration] == True) :
+		# all vars in full scenario are taken not only active ones. 
+		# active_var_in_config = scenario_active_vars[var_ID]
+		# if(target_shader_list != "*" and active_var_in_config[indConfiguration] == True) :
+		if(target_shader_list != "*") :
 			# "*" nothing is done, the variable is not a shader parameter or the variable is not in the scenario of this configuration
-			if(withParticleShaders[indConfiguration]) :
-				if(re.search(r'ParticleAnimation_fs', target_shader_list) != None) :
-					# ParticleAnimation_fs parameter
-					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "#define var_" + var_ID + "\n"
-					if(type_string == "bool" or type_string == "path") :
-						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + var_ID + ";\n"
-					elif(type_string == "int") :
-						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + var_ID + ";\n"
-					elif(type_string == "float") :
-						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + ";\n"
-					elif(type_string.startswith("bool")) :
-						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
-					elif(type_string.startswith("int")) :
-						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
-					elif(type_string.startswith("float")) :
-						ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+			if(re.search(r'ParticleAnimation_fs', target_shader_list) != None) :
+				# ParticleAnimation_fs parameter
+				ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "#define var_" + var_ID + "\n"
+				if(type_string == "bool" or type_string == "path") :
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + var_ID + ";\n"
+				elif(type_string == "int") :
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + var_ID + ";\n"
+				elif(type_string == "float") :
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + ";\n"
+				elif(type_string.startswith("bool")) :
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+				elif(type_string.startswith("int")) :
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+				elif(type_string.startswith("float")) :
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+				else :
+					print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
+					sys.exit(0)
+				
+				if(ParticleAnimation_fs_index == 0) :
+					ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data[%d];\n" % Nb_Configurations)
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", _pg_shader_ParticleAnimation);\n")
+					ShaderBodyBind.write("    }\n")
+				
+				if(type_string == "bool" or type_string == "path") :
+					ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
+				elif(type_string == "int") :
+					ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n"
+				elif(type_string == "float") :
+					ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
+				elif(type_string.startswith("bool")) :
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
+						ParticleAnimation_fs_index  += 1
+					ParticleAnimation_fs_index  -= 1
+				elif(type_string.startswith("int")) :
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
+						ParticleAnimation_fs_index  += 1
+					ParticleAnimation_fs_index  -= 1
+				elif(type_string.startswith("float")) :
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
+						ParticleAnimation_fs_index  += 1
+					ParticleAnimation_fs_index  -= 1
+				else :
+					print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
+					sys.exit(0)
+				
+				if(not re.findall(r'\[', type_string)) :
+					ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      ParticleAnimation_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleAnimation_fs_index) + "] = "
+					if(pulsing_mode == "*") :
+						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
+					elif(pulsing_mode == "pulsed_absolute") :
+						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " * (1.f + pulse_average * " + var_ID + "_pulse);\n"
+					elif(pulsing_mode == "pulsed_uniform") :
+						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse;\n"
+					elif(pulsing_mode == "pulsed_differential") :
+						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 					else :
-						print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
+						print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
-					
-					if(ParticleAnimation_fs_index == 0) :
-						ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data[%d];\n" % Nb_Configurations)
-						ShaderBodyBind.write("	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", _pg_shader_ParticleAnimation);\n")
-					
-					if(type_string == "bool" or type_string == "path") :
-						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
-					elif(type_string == "int") :
-						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n"
-					elif(type_string == "float") :
-						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
-					elif(type_string.startswith("bool")) :
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
-							ParticleAnimation_fs_index  += 1
-							ParticleAnimation_fs_index  -= 1
-					elif(type_string.startswith("int")) :
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
-							ParticleAnimation_fs_index  += 1
-						ParticleAnimation_fs_index  -= 1
-					elif(type_string.startswith("float")) :
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
-							ParticleAnimation_fs_index  += 1
-						ParticleAnimation_fs_index  -= 1
-					else :
-						print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
-						print("Configuration generator: End of configuration generation\n\n")
-						sys.exit(0)
-					
-					if(not re.findall(r'\[', type_string)) :
-						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "  ParticleAnimation_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleAnimation_fs_index) + "] = "
+				else:
+					ParticleAnimation_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      ParticleAnimation_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleAnimation_fs_index) + "] = "
 						if(pulsing_mode == "*") :
-							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
+							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
-							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " * (1.f + pulse_average * " + var_ID + "_pulse);\n"
+							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 						elif(pulsing_mode == "pulsed_uniform") :
-							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse;\n"
+							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_differential") :
-							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
+							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
 							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
-					else:
-						ParticleAnimation_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "  ParticleAnimation_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleAnimation_fs_index) + "] = "
-							if(pulsing_mode == "*") :
-								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
-							elif(pulsing_mode == "pulsed_absolute") :
-								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
-							elif(pulsing_mode == "pulsed_uniform") :
-								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
-							elif(pulsing_mode == "pulsed_differential") :
-								ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
-							else :
-								print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
-								print("Configuration generator: End of configuration generation\n\n")
-								sys.exit(0)
-							ParticleAnimation_fs_index  += 1
-						ParticleAnimation_fs_index  -= 1
-				 	
-					ParticleAnimation_fs_index  += 1
-			
+						ParticleAnimation_fs_index  += 1
+					ParticleAnimation_fs_index  -= 1
+			 	
+				ParticleAnimation_fs_index  += 1
+		
 			if(re.search(r'Update_fs', target_shader_list) != None) :
 				# Update_fs parameter
 				Update_head_glsl = Update_head_glsl + "#define var_" + var_ID + "\n"
@@ -1328,7 +1324,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 				if(Update_fs_index == 0) :
 					ShaderHeader.write("extern GLint uniform_Update_scenario_var_data[%d];\n" % Nb_Configurations);
-					ShaderBodyBind.write("	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", _pg_shader_Update);\n")
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", _pg_shader_Update);\n")
+					ShaderBodyBind.write("    }\n")
 
 				if(type_string == "bool" or type_string == "path") :
 					Update_body_glsl = Update_body_glsl + "  " + var_ID + " = (uniform_Update_scenario_var_data[" + str(Update_fs_index) + "] > 0 ? true : false);\n";
@@ -1357,7 +1355,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					Update_bindingString_cpp = Update_bindingString_cpp + "  Update_scenario_var_data["+str(indConfiguration)+"][" + str(Update_fs_index) + "] = "
+					Update_bindingString_cpp = Update_bindingString_cpp + "      Update_scenario_var_data["+str(indConfiguration)+"][" + str(Update_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1373,7 +1371,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				else:
 					Update_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
 					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Update_bindingString_cpp = Update_bindingString_cpp + "  Update_scenario_var_data["+str(indConfiguration)+"][" + str(Update_fs_index) + "] = "
+						Update_bindingString_cpp = Update_bindingString_cpp + "      Update_scenario_var_data["+str(indConfiguration)+"][" + str(Update_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1413,7 +1411,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 				if(Mixing_fs_index == 0) :
 					ShaderHeader.write("extern GLint uniform_Mixing_scenario_var_data[%d];\n" % Nb_Configurations)
-					ShaderBodyBind.write("	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", _pg_shader_Mixing);\n")
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", _pg_shader_Mixing);\n")
+					ShaderBodyBind.write("    }\n")
 				
 				if(type_string == "bool" or type_string == "path") :
 					Mixing_body_glsl = Mixing_body_glsl + "  " + var_ID + " = (uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "] > 0 ? true : false);\n";
@@ -1442,7 +1442,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					Mixing_bindingString_cpp = Mixing_bindingString_cpp + "  Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Mixing_fs_index) + "] = "
+					Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Mixing_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1458,7 +1458,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				else:
 					Mixing_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
 					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "  Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Mixing_fs_index) + "] = "
+						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Mixing_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1477,91 +1477,92 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				Mixing_fs_index += 1
 			
 
-			if(withParticleShaders[indConfiguration]) :
-				if(re.search(r'ParticleRender_fs', target_shader_list) != None) :
-					# ParticleRender_fs parameter
-					ParticleRender_head_glsl = ParticleRender_head_glsl + "#define var_" + var_ID + "\n"
-					if(type_string == "bool" or type_string == "path") :
-						ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + var_ID + ";\n"
-					elif(type_string == "int") :
-						ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + var_ID + ";\n"
-					elif(type_string == "float") :
-						ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + ";\n"
-					elif(type_string.startswith("bool")) :
-						ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
-					elif(type_string.startswith("int")) :
-						ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
-					elif(type_string.startswith("float")) :
-						ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
-					else :
-						print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
-						print("Configuration generator: End of configuration generation\n\n")
-						sys.exit(0)
+			if(re.search(r'ParticleRender_fs', target_shader_list) != None) :
+				# ParticleRender_fs parameter
+				ParticleRender_head_glsl = ParticleRender_head_glsl + "#define var_" + var_ID + "\n"
+				if(type_string == "bool" or type_string == "path") :
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + var_ID + ";\n"
+				elif(type_string == "int") :
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + var_ID + ";\n"
+				elif(type_string == "float") :
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + ";\n"
+				elif(type_string.startswith("bool")) :
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+				elif(type_string.startswith("int")) :
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+				elif(type_string.startswith("float")) :
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+				else :
+					print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
+					sys.exit(0)
 
-					if(ParticleRender_fs_index == 0) :
-						ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data[%d];\n" % Nb_Configurations)
-						ShaderBodyBind.write("	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", _pg_shader_Particle);\n")
-					
-					if(type_string == "bool" or type_string == "path") :
-						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
-					elif(type_string == "int") :
-						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = int(uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n"
-					elif(type_string == "float") :
-						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
-					elif(type_string.startswith("bool")) :
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
-							ParticleRender_fs_index  += 1
-						ParticleRender_fs_index  -= 1
-					elif(type_string.startswith("int")) :
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n";
-							ParticleRender_fs_index  += 1
-						ParticleRender_fs_index  -= 1
-					elif(type_string.startswith("float")) :
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n";
-							ParticleRender_fs_index  += 1
-						ParticleRender_fs_index  -= 1
+				if(ParticleRender_fs_index == 0) :
+					ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data[%d];\n" % Nb_Configurations)
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Particle]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", _pg_shader_Particle);\n")
+					ShaderBodyBind.write("    }\n")
+				
+				if(type_string == "bool" or type_string == "path") :
+					ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
+				elif(type_string == "int") :
+					ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = int(uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n"
+				elif(type_string == "float") :
+					ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
+				elif(type_string.startswith("bool")) :
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
+						ParticleRender_fs_index  += 1
+					ParticleRender_fs_index  -= 1
+				elif(type_string.startswith("int")) :
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n";
+						ParticleRender_fs_index  += 1
+					ParticleRender_fs_index  -= 1
+				elif(type_string.startswith("float")) :
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n";
+						ParticleRender_fs_index  += 1
+					ParticleRender_fs_index  -= 1
+				else :
+					print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
+					print("Configuration generator: End of configuration generation\n\n")
+					sys.exit(0)
+				
+				if(not re.findall(r'\[', type_string)) :
+					ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
+					if(pulsing_mode == "*") :
+						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
+					elif(pulsing_mode == "pulsed_absolute") :
+						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " * (1.f + pulse_average * " + var_ID + "_pulse);\n"
+					elif(pulsing_mode == "pulsed_uniform") :
+						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse;\n"
+					elif(pulsing_mode == "pulsed_differential") :
+						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
 					else :
-						print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
+						print("Configuration generator: Unknown ParticleRender pulsing mode [%s]" % pulsing_mode)
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
-					
-					if(not re.findall(r'\[', type_string)) :
-						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + " ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
+				else:
+					ParticleRender_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
 						if(pulsing_mode == "*") :
-							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
+							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
-							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " * (1.f + pulse_average * " + var_ID + "_pulse);\n"
+							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
 						elif(pulsing_mode == "pulsed_uniform") :
-							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " + pulse_average * " + var_ID + "_pulse;\n"
+							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_differential") :
-							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + " * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse;\n"
+							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
 						else :
-							print("Configuration generator: Unknown ParticleRender pulsing mode [%s]" % pulsing_mode)
+							print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
 							print("Configuration generator: End of configuration generation\n\n")
 							sys.exit(0)
-					else:
-						ParticleRender_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-						for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "  ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
-							if(pulsing_mode == "*") :
-								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
-							elif(pulsing_mode == "pulsed_absolute") :
-								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (1.f + pulse_average * " + var_ID + "_pulse[" + str(index) + "]);\n"
-							elif(pulsing_mode == "pulsed_uniform") :
-								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] + pulse_average * " + var_ID + "_pulse[" + str(index) + "];\n"
-							elif(pulsing_mode == "pulsed_differential") :
-								ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "] * (pulse_average - pulse_average_prec) * " + var_ID + "_pulse[" + str(index) + "];\n"
-							else :
-								print("Configuration generator: Unknown ParticleAnimation pulsing mode [%s]" % pulsing_mode)
-								print("Configuration generator: End of configuration generation\n\n")
-								sys.exit(0)
-							ParticleRender_fs_index  += 1
-						ParticleRender_fs_index  -= 1
-				 	
-					ParticleRender_fs_index += 1
+						ParticleRender_fs_index  += 1
+					ParticleRender_fs_index  -= 1
+			 	
+				ParticleRender_fs_index += 1
 			
 			if(re.search(r'Master_fs', target_shader_list) != None) :
 				# Master_fs parameter
@@ -1585,7 +1586,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 				if(Master_fs_index == 0) :
 					ShaderHeader.write("extern GLint uniform_Master_scenario_var_data[%d];\n" % Nb_Configurations)
-					ShaderBodyBind.write("	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", _pg_shader_Master);\n")
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", _pg_shader_Master);\n")
+					ShaderBodyBind.write("    }\n")
 				
 				if(type_string == "bool" or type_string == "path") :
 					Master_body_glsl = Master_body_glsl + "  " + var_ID + " = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "] > 0 ? true : false);\n";
@@ -1614,7 +1617,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					Master_bindingString_cpp = Master_bindingString_cpp + "  Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
+					Master_bindingString_cpp = Master_bindingString_cpp + "      Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1630,7 +1633,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				else:
 					Master_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
 					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Master_bindingString_cpp = Master_bindingString_cpp + "  Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
+						Master_bindingString_cpp = Master_bindingString_cpp + "      Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1650,61 +1653,70 @@ def write_binding_vars_header_and_body(indConfiguration) :
 
 
 	# once the variables have been scanned, C++ and glsl tables are created to pass the values from CPU to GPU. There is a table per shader.
-	if(withParticleShaders[indConfiguration]) :
-		if(ParticleAnimation_fs_index > 0) :
-			ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "uniform float uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
-			ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "  glUniform1fv(uniform_ParticleAnimation_scenario_var_data["+str(indConfiguration)+"], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data["+str(indConfiguration)+"]);\n"
-			ShaderHeader.write("extern float *ParticleAnimation_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-			ShaderBodyBind.write("	ParticleAnimation_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
+	if(ParticleAnimation_fs_index > 0) :
+		ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "uniform float uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
+		ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      glUniform1fv(uniform_ParticleAnimation_scenario_var_data["+str(indConfiguration)+"], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data["+str(indConfiguration)+"]);\n"
+		ShaderHeader.write("extern float *ParticleAnimation_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderBodyBind.write("	ParticleAnimation_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 		
 	if(Update_fs_index > 0) :
 		Update_head_glsl = Update_head_glsl + "uniform float uniform_Update_scenario_var_data[" + str(Update_fs_index) + "];\n"
-		Update_bindingString_cpp = Update_bindingString_cpp + "  glUniform1fv(uniform_Update_scenario_var_data["+str(indConfiguration)+"], " + str(Update_fs_index) + ", Update_scenario_var_data["+str(indConfiguration)+"]);\n"
+		Update_bindingString_cpp = Update_bindingString_cpp + "      glUniform1fv(uniform_Update_scenario_var_data["+str(indConfiguration)+"], " + str(Update_fs_index) + ", Update_scenario_var_data["+str(indConfiguration)+"]);\n"
 		ShaderHeader.write("extern float *Update_scenario_var_data[" + str(Nb_Configurations) + "];\n")
 		ShaderBodyBind.write("	Update_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(Update_fs_index) + "];\n")
 
 	if(Mixing_fs_index > 0) :
 		Mixing_head_glsl = Mixing_head_glsl + "uniform float uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n"
-		Mixing_bindingString_cpp = Mixing_bindingString_cpp + "  glUniform1fv(uniform_Mixing_scenario_var_data["+str(indConfiguration)+"], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data["+str(indConfiguration)+"]);\n"
+		Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      glUniform1fv(uniform_Mixing_scenario_var_data["+str(indConfiguration)+"], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data["+str(indConfiguration)+"]);\n"
 		ShaderHeader.write("extern float *Mixing_scenario_var_data[" + str(Nb_Configurations) + "];\n")
 		ShaderBodyBind.write("	Mixing_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(Mixing_fs_index) + "];\n")
 
-	if(withParticleShaders[indConfiguration]) :
-		if(ParticleRender_fs_index > 0) :
-			ParticleRender_head_glsl = ParticleRender_head_glsl + "uniform float uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
-			ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "  glUniform1fv(uniform_ParticleRender_scenario_var_data["+str(indConfiguration)+"], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data["+str(indConfiguration)+"]);\n"
-			ShaderHeader.write("extern float *ParticleRender_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-			ShaderBodyBind.write("	ParticleRender_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
+	if(ParticleRender_fs_index > 0) :
+		ParticleRender_head_glsl = ParticleRender_head_glsl + "uniform float uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
+		ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      glUniform1fv(uniform_ParticleRender_scenario_var_data["+str(indConfiguration)+"], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data["+str(indConfiguration)+"]);\n"
+		ShaderHeader.write("extern float *ParticleRender_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+		ShaderBodyBind.write("	ParticleRender_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 
 	if(Master_fs_index > 0) :
 		Master_head_glsl = Master_head_glsl + "uniform float uniform_Master_scenario_var_data[" + str(Master_fs_index) + "];\n"
-		Master_bindingString_cpp = Master_bindingString_cpp + "  glUniform1fv(uniform_Master_scenario_var_data["+str(indConfiguration)+"], " + str(Master_fs_index) + ", Master_scenario_var_data["+str(indConfiguration)+"]);\n"
+		Master_bindingString_cpp = Master_bindingString_cpp + "      glUniform1fv(uniform_Master_scenario_var_data["+str(indConfiguration)+"], " + str(Master_fs_index) + ", Master_scenario_var_data["+str(indConfiguration)+"]);\n"
 		ShaderHeader.write("extern float *Master_scenario_var_data[" + str(Nb_Configurations) + "];\n")
 		ShaderBodyBind.write("	Master_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(Master_fs_index) + "];\n")
 
 	# draws the bindings grouped by shader in the draw.cpp file
 
-	UpdateBody.write("\n if(pg_current_configuration_rank == "+str(indConfiguration)+") {\n")
-	if(withParticleShaders[indConfiguration]) :
-		UpdateBody.write("\n  glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
+	UpdateBody.write("\nif(pg_current_configuration_rank == "+str(indConfiguration)+") {\n")
 
-	UpdateBody.write("\n  glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]);\n" + Update_bindingString_cpp)
-	UpdateBody.write("\n  glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]);\n" + Mixing_bindingString_cpp)
-	if(withParticleShaders[indConfiguration]) :
-		UpdateBody.write("\n  glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
+	UpdateBody.write("    }\n")
 
-	UpdateBody.write("\n  glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]);\n" + Master_bindingString_cpp)
-	UpdateBody.write("\n }\n")
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]) {\n" )
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]);\n" + Update_bindingString_cpp)
+	UpdateBody.write("    }\n")
+
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]);\n" + Mixing_bindingString_cpp)
+	UpdateBody.write("    }\n")
+
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleRender]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
+	UpdateBody.write("    }\n")
+
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]);\n" + Master_bindingString_cpp)
+	UpdateBody.write("    }\n")
+
+	UpdateBody.write("}\n")
 
 	# manages the inclusions inside the shader files to generate the linearized shader files
-	if(withParticleShaders[indConfiguration]) :
-		for line in ParticleAnimation_InputShader.readlines() :
-			if(re.search(r'\#include_declarations', line) != None) :
-				ParticleAnimation_OutputShader.write(ParticleAnimation_head_glsl)
-			elif(re.search(r'\#include_initializations', line) != None) :
-				ParticleAnimation_OutputShader.write(ParticleAnimation_body_glsl)
-			else :
-				ParticleAnimation_OutputShader.write(line)
+	for line in ParticleAnimation_InputShader.readlines() :
+		if(re.search(r'\#include_declarations', line) != None) :
+			ParticleAnimation_OutputShader.write(ParticleAnimation_head_glsl)
+		elif(re.search(r'\#include_initializations', line) != None) :
+			ParticleAnimation_OutputShader.write(ParticleAnimation_body_glsl)
+		else :
+			ParticleAnimation_OutputShader.write(line)
 
 	for line in Update_InputShader.readlines() :
 		if(re.search(r'\#include_declarations', line) != None) :
@@ -1722,14 +1734,13 @@ def write_binding_vars_header_and_body(indConfiguration) :
 		else :
 			Mixing_OutputShader.write(line)
 
-	if(withParticleShaders[indConfiguration]) :
-		for line in ParticleRendering_InputShader.readlines() :
-			if(re.search(r'\#include_declarations', line) != None) :
-				ParticleRendering_OutputShader.write(ParticleRender_head_glsl)
-			elif(re.search(r'\#include_initializations', line) != None) :
-				ParticleRendering_OutputShader.write(ParticleRender_body_glsl)
-			else :
-				ParticleRendering_OutputShader.write(line)
+	for line in ParticleRendering_InputShader.readlines() :
+		if(re.search(r'\#include_declarations', line) != None) :
+			ParticleRendering_OutputShader.write(ParticleRender_head_glsl)
+		elif(re.search(r'\#include_initializations', line) != None) :
+			ParticleRendering_OutputShader.write(ParticleRender_body_glsl)
+		else :
+			ParticleRendering_OutputShader.write(line)
 
 	for line in Master_InputShader.readlines() :
 		if(re.search(r'\#include_declarations', line) != None) :
@@ -1739,17 +1750,15 @@ def write_binding_vars_header_and_body(indConfiguration) :
 		else :
 			Master_OutputShader.write(line)
 
-	if(withParticleShaders[indConfiguration]) :
-		ParticleAnimation_InputShader.close()
-		ParticleAnimation_OutputShader.close()
+	ParticleAnimation_InputShader.close()
+	ParticleAnimation_OutputShader.close()
 
 	Update_InputShader.close()
 	Update_OutputShader.close()
 	Mixing_InputShader.close()
 	Mixing_OutputShader.close()
-	if(withParticleShaders[indConfiguration]) :
-		ParticleRendering_InputShader.close() 
-		ParticleRendering_OutputShader.close() 
+	ParticleRendering_InputShader.close() 
+	ParticleRendering_OutputShader.close() 
 
 	Master_InputShader.close() 
 	Master_OutputShader.close() 
@@ -1788,7 +1797,6 @@ def main(main_args) :
 	global TouchOSCScene
 
 	global scenario_var_target_shaders
-	global withParticleShaders
 
 	global full_scenario_vars_specs_dict
 	global scenario_vars_specs_dict
@@ -1957,7 +1965,6 @@ def main(main_args) :
 	###############################################################################
 	# WRITE SHADER HEADER BODY AND BINDING AND C++ UPDATE
 	###############################################################################
-	withParticleShaders = [False] * Nb_Configurations
 	for indConfig in range(Nb_Configurations) :
 	 	write_binding_vars_header_and_body(indConfig)
 
@@ -1966,7 +1973,9 @@ def main(main_args) :
 	###############################################################################
 	# END OF CONFIGURATION GENERATOR
 	###############################################################################
-	print("Configuration generator: End of configuration generation\n\n")
+	print("\n*************************************************************\n")
+	print("Configuration generator: Successfull configuration generation\n")
+	print("*************************************************************\n\n")
 
 	return 1
 

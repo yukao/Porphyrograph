@@ -2008,6 +2008,9 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 /////////////////////////////////////////////////////////////////////////
 // UPDATE SHADER UNIFORM VARIABLES
 void pg_update_shader_Update_uniforms(void) {
+	if (!pg_shader_programme[pg_current_configuration_rank][_pg_shader_Update]) {
+		return;
+	}
 
 	glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Update]);
 	printOglError(5197);
@@ -2269,14 +2272,19 @@ void pg_update_shader_Update_uniforms(void) {
 			//glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
 			//	0.f, 1.f, rand_0_1, rand_0_1);
 			//printf("photo weight %.2f %.2f phot index %d %d\n", pg_Photo_weight[0], pg_Photo_weight[1],
-			//	pg_Photo_swap_buffer_data[0].indSwappedPhoto,
-			//	pg_Photo_swap_buffer_data[1].indSwappedPhoto);
+				//pg_Photo_swap_buffer_data[0].indSwappedPhoto,
+				//pg_Photo_swap_buffer_data[1].indSwappedPhoto);
 		}
 		else {
 			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
 				0.f, 0.f, rand_0_1, rand_0_1);
-			//printf("photo weight 0.f 0.f\n");
+			//printf("photo weight diaporama -1 0.f 0.f\n");
 		}
+	}
+	else {
+		glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
+			0.f, 0.f, rand_0_1, rand_0_1);
+		//printf("photo weight 0.f 0.f\n");
 	}
 
 	// clip rendering
@@ -2362,10 +2370,12 @@ void pg_update_shader_Update_uniforms(void) {
 				if (!(playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank])) {
 					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
 						0.0, pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
+					//printf("clip weights %.2f %.2f\n", 0.0, pg_clip_status[_clipRight].clip_level[0]);
 				}
 				else if (!(playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips[pg_current_configuration_rank])) {
 					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
 						pg_clip_status[_clipLeft].clip_level1[1], 0.0, rand_0_1, rand_0_1);
+					//printf("clip weights %.2f %.2f\n", pg_clip_status[_clipLeft].clip_level1[1], 0.0);
 				}
 			}
 		}
@@ -2598,13 +2608,7 @@ void pg_update_shader_Mixing_uniforms(void) {
 		glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha[pg_current_configuration_rank],
 			messageTransparency,
 			(GLfloat)1.f, (GLfloat)0.f);	}
-	// printOglError(512);
-	/*
-	if (pg_ConfigurationFrameNo % 1000 == 0) {
-		printf("Mixing #%d %.5f %.5f %.5f\n", pg_current_configuration_rank, 
-			(GLfloat)window_height, flashCameraTrk_weight, messageTransparency );
-	}
-	*/
+		printOglError(512);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2621,15 +2625,7 @@ void pg_update_shader_Master_uniforms(void) {
 			(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
 			(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl_pulse[0]);
 
-		//printf("curseur %d %d\n", int(paths_x_forGPU[0]), int(paths_y_forGPU[0]));
-		///////////////////////// cursor on first finger given up
-			//glUniform4f(uniform_Master_fs_4fv_xy_frameno_pulsedShift[pg_current_configuration_rank],
-			//	(GLfloat)CurrentCursorHooverPos_x, (GLfloat)CurrentCursorHooverPos_y,
-			//	(GLfloat)pg_FrameNo, (pulse_average - pulse_average_prec) * track_x_transl[0]_pulse);
-
-
 		// screen size
-		//printf("time from start %.2f\n", GLfloat(pg_CurrentClockTime - InitialScenarioTime));
 		glUniform4f(uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen[pg_current_configuration_rank],
 			(GLfloat)workingWindow_width, (GLfloat)window_height, GLfloat(pg_CurrentClockTime - InitialScenarioTime),
 			(GLfloat)muteRightScreen);
@@ -2661,43 +2657,36 @@ void pg_update_shader_Master_uniforms(void) {
 	*/
 }
 
-	/////////////////////////////////////////////////////////////////////////
-	// SENSOR SHADER UNIFORM VARIABLES
-	// glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Sensor]);
-	// the variable of the sensor shader is updated individually before each sensor rendering
-	// no update is made globally for all the sensors
-
 /////////////////////////////////////////////////////////////////////////
-// MASTER SHADER UNIFORM VARIABLES
+// MESH SHADER UNIFORM VARIABLES
 void pg_update_shader_Mesh_uniforms(void) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
-		if (pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
-			/////////////////////////////////////////////////////////////////////////
-			// MESH SHADER UNIFORM VARIABLES
-			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
-			// the variable of the mesh shader is updated before each rendering mode (lines of facets)
+	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]
+		&& pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
+		/////////////////////////////////////////////////////////////////////////
+		// MESH SHADER UNIFORM VARIABLES
+		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
+		// the variable of the mesh shader is updated before each rendering mode (lines of facets)
 			glUniform3f(uniform_Mesh_fs_3fv_light[pg_current_configuration_rank], mesh_light_x, mesh_light_y, mesh_light_z);
 #if defined(var_Contact_mesh_expand)
 			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_mesh_expand]) {
 				glUniform2f(uniform_Mesh_vp_2fv_dilate_explode[pg_current_configuration_rank], Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
 			}
-			//printf("mesh %.2f %.2f\n", Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
+		//printf("mesh %.2f %.2f\n", Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
 #endif
 #if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_textureFrontier_wmin]) {
-				glUniform4f(uniform_Mesh_fs_4fv_textureFrontier[pg_current_configuration_rank], textureFrontier_wmin, textureFrontier_wmax, textureFrontier_hmin, textureFrontier_hmax);
-				glUniform4f(uniform_Mesh_fs_4fv_textureFrontier_width[pg_current_configuration_rank], textureFrontier_wmin_width, textureFrontier_wmax_width, textureFrontier_hmin_width, textureFrontier_hmax_width);
-				glUniform4f(uniform_Mesh_fs_4fv_textureScaleTransl[pg_current_configuration_rank], textureScale_w, textureScale_h, textureTranslate_w, textureTranslate_h);
-			}
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_textureFrontier_wmin]) {
+			glUniform4f(uniform_Mesh_fs_4fv_textureFrontier[pg_current_configuration_rank], textureFrontier_wmin, textureFrontier_wmax, textureFrontier_hmin, textureFrontier_hmax);
+			glUniform4f(uniform_Mesh_fs_4fv_textureFrontier_width[pg_current_configuration_rank], textureFrontier_wmin_width, textureFrontier_wmax_width, textureFrontier_hmin_width, textureFrontier_hmax_width);
+			glUniform4f(uniform_Mesh_fs_4fv_textureScaleTransl[pg_current_configuration_rank], textureScale_w, textureScale_h, textureTranslate_w, textureTranslate_h);
+		}
 #endif
 #if defined(var_Contact_mesh_palette)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_mesh_palette]) {
-				float pulsed_color[3];
-				compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, _PG_PEN);
-				glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_current_configuration_rank], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(Contact_mesh_palette));
-			}
-#endif
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_mesh_palette]) {
+			float pulsed_color[3];
+			compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, _PG_PEN);
+			glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_current_configuration_rank], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(Contact_mesh_palette));
 		}
+#endif
 	}
 	printOglError(517);
 }
@@ -2903,6 +2892,10 @@ void pg_ParticleAnimationPass(void) {
 // PASS #1: UPDATE (CA, PIXELS, PARTICLES, DRAWING, PHOTOS & VIDEOS)
 
 void pg_UpdatePass(void) {
+	if (!pg_shader_programme[pg_current_configuration_rank][_pg_shader_Update]) {
+		return;
+	}
+
 	// ping pong output and input FBO bindings
 	// next frame
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg_FBO_Update);
@@ -3129,6 +3122,7 @@ void pg_UpdatePass(void) {
 			glBindTexture(GL_TEXTURE_2D, pg_compressedImageData[pg_current_configuration_rank][photo_diaporama][pg_Photo_swap_buffer_data[1].indSwappedPhoto].texBuffID);
 		}
 		else {
+			//printf("null photo texture\n");
 			glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		}
 
@@ -3163,6 +3157,7 @@ void pg_UpdatePass(void) {
 			+ pg_clip_status[_clipRight].get_lastFrame(1)]->texBuffID);
 	}
 	else {
+		//printf("null second photo texture\n");
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 	}
 #endif
@@ -3360,9 +3355,11 @@ void pg_ParticleRenderingPass(void) {
 	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partSplat_texture]) {
 		if (partSplat_texture > 0 
 			&& partSplat_texture - 1 < int(blurredDisk_texture_2D_texID[pg_current_configuration_rank].size())) {
+			// printf("bind splat texture %d %d\n", partSplat_texture, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture - 1));
 			glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture - 1));
 		}
 		else {
+			//printf("no splat texture %d\n", partSplat_texture);
 			glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		}
 	}
@@ -3586,128 +3583,130 @@ void pg_MasterPass(void) {
 
 	////////////////////////////////////////
 	// activate shaders and sets uniform variable values    
-	glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Master]);
-	glBindVertexArray(pg_vaoID[pg_VAOQuadMaster]);
+	if (pg_shader_programme[pg_current_configuration_rank][_pg_shader_Master]) {
+		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Master]);
+		glBindVertexArray(pg_vaoID[pg_VAOQuadMaster]);
 
-	glUniformMatrix4fv(uniform_Master_vp_proj[pg_current_configuration_rank], 1, GL_FALSE, doubleProjMatrix);
-	glUniformMatrix4fv(uniform_Master_vp_view[pg_current_configuration_rank], 1, GL_FALSE, pg_identityViewMatrix);
-	glUniformMatrix4fv(uniform_Master_vp_model[pg_current_configuration_rank], 1, GL_FALSE, pg_identityModelMatrix);
+		glUniformMatrix4fv(uniform_Master_vp_proj[pg_current_configuration_rank], 1, GL_FALSE, doubleProjMatrix);
+		glUniformMatrix4fv(uniform_Master_vp_view[pg_current_configuration_rank], 1, GL_FALSE, pg_identityViewMatrix);
+		glUniformMatrix4fv(uniform_Master_vp_model[pg_current_configuration_rank], 1, GL_FALSE, pg_identityModelMatrix);
 
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	// texture unit locations
-	glUniform1i(uniform_Master_texture_fs_Render_curr[pg_current_configuration_rank], pg_Render_curr_FBO_Master_sampler);
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
-		glUniform1i(uniform_Master_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Master_sampler);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		// texture unit locations
+		glUniform1i(uniform_Master_texture_fs_Render_curr[pg_current_configuration_rank], pg_Render_curr_FBO_Master_sampler);
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+			glUniform1i(uniform_Master_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Master_sampler);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+		}
 
-	glUniform1i(uniform_Master_texture_fs_ClipArt_render[pg_current_configuration_rank], pg_ClipArt_render_FBO_Master_sampler);
-	glUniform1i(uniform_Master_texture_fs_Particle_render[pg_current_configuration_rank], pg_Particle_render_FBO_Master_sampler);
-	glUniform1i(uniform_Master_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_ClipArt_render[pg_current_configuration_rank], pg_ClipArt_render_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_Particle_render[pg_current_configuration_rank], pg_Particle_render_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Master_sampler);
 #if PG_NB_TRACKS >= 2
-	glUniform1i(uniform_Master_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Master_sampler);
 #endif
 #if PG_NB_TRACKS >= 3
-	glUniform1i(uniform_Master_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Master_sampler);
 #endif
 #if PG_NB_TRACKS >= 4
-	glUniform1i(uniform_Master_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Master_sampler);
 #endif
 #if defined(PG_WITH_MASTER_MASK)
-	glUniform1i(uniform_Master_texture_fs_Mask[pg_current_configuration_rank], pg_Mask_FBO_Master_sampler);
+		glUniform1i(uniform_Master_texture_fs_Mask[pg_current_configuration_rank], pg_Mask_FBO_Master_sampler);
 #endif
 
-	// Mixing pass output (echoed composition of tracks)
-	glActiveTexture(GL_TEXTURE0 + pg_Render_curr_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);
+		// Mixing pass output (echoed composition of tracks)
+		glActiveTexture(GL_TEXTURE0 + pg_Render_curr_FBO_Master_sampler);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)]);
 
-	// 2-cycle ping-pong CA step n (FBO attachment 0) -- next frame (outout from update pass)
-	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+		// 2-cycle ping-pong CA step n (FBO attachment 0) -- next frame (outout from update pass)
+		glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+			glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+		}
 
-	// ClipArt GPU step n 
-	glActiveTexture(GL_TEXTURE0 + pg_ClipArt_render_FBO_Master_sampler);
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ClipArt_render_texID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+		// ClipArt GPU step n 
+		glActiveTexture(GL_TEXTURE0 + pg_ClipArt_render_FBO_Master_sampler);
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+			glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ClipArt_render_texID);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+		}
 
-	// Particles step n 
-	glActiveTexture(GL_TEXTURE0 + pg_Particle_render_FBO_Master_sampler);
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+		// Particles step n 
+		glActiveTexture(GL_TEXTURE0 + pg_Particle_render_FBO_Master_sampler);
+		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+			glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+		}
 
-	// 2-cycle ping-pong track 0 step n (FBO attachment 3) -- next frame (outout from update pass)
-	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk0_FBO_Update_attcht]);
+		// 2-cycle ping-pong track 0 step n (FBO attachment 3) -- next frame (outout from update pass)
+		glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Master_sampler);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk0_FBO_Update_attcht]);
 
 #if PG_NB_TRACKS >= 2
-	// 2-cycle ping-pong track 1 step n (FBO attachment 4) -- next frame (outout from update pass)
-	glActiveTexture(GL_TEXTURE0 + pg_Trk1_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk1_FBO_Update_attcht]);
+		// 2-cycle ping-pong track 1 step n (FBO attachment 4) -- next frame (outout from update pass)
+		glActiveTexture(GL_TEXTURE0 + pg_Trk1_FBO_Master_sampler);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk1_FBO_Update_attcht]);
 #endif
 
 #if PG_NB_TRACKS >= 3
-	// 2-cycle ping-pong track 2 step n (FBO attachment 5) -- next frame (outout from update pass)
-	glActiveTexture(GL_TEXTURE0 + pg_Trk2_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk2_FBO_Update_attcht]);
+		// 2-cycle ping-pong track 2 step n (FBO attachment 5) -- next frame (outout from update pass)
+		glActiveTexture(GL_TEXTURE0 + pg_Trk2_FBO_Master_sampler);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk2_FBO_Update_attcht]);
 #endif
 
 #if PG_NB_TRACKS >= 4
-	// 2-cycle ping-pong track 3 step n (FBO attachment 6) -- next frame (outout from update pass)
-	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Master_sampler);
-	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
+		// 2-cycle ping-pong track 3 step n (FBO attachment 6) -- next frame (outout from update pass)
+		glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Master_sampler);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
 #endif
 #if defined(PG_WITH_MASTER_MASK)
-	// Master mask texture
-	glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
-	if (nb_layers_master_mask[pg_current_configuration_rank] > 0) {
-		//printf("multilayer mask texture %d (%d layers)\n", Master_Multilayer_Mask_texID[pg_current_configuration_rank], nb_layers_master_mask[pg_current_configuration_rank]);
-		glBindTexture(GL_TEXTURE_3D, Master_Multilayer_Mask_texID[pg_current_configuration_rank]);
-	}
-	else {
-		//printf("single layer mask texture %d\n", Master_Mask_texID[pg_current_configuration_rank]);
-		glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID[pg_current_configuration_rank]);
-	}
+		// Master mask texture
+		glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
+		if (nb_layers_master_mask[pg_current_configuration_rank] > 0) {
+			//printf("multilayer mask texture %d (%d layers)\n", Master_Multilayer_Mask_texID[pg_current_configuration_rank], nb_layers_master_mask[pg_current_configuration_rank]);
+			glBindTexture(GL_TEXTURE_3D, Master_Multilayer_Mask_texID[pg_current_configuration_rank]);
+		}
+		else {
+			//printf("single layer mask texture %d\n", Master_Mask_texID[pg_current_configuration_rank]);
+			glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID[pg_current_configuration_rank]);
+		}
 #endif
 
-	//if (pg_FrameNo % 1000 <= 1) {
-	//	printf("Final check texID 0-5 %d %d %d %d %d %d\n\n",
-	//		pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)],
-	//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS],
-	//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 2],
-	//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 3],
-	//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 4],
-	//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 5]);
-	//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 5]);
-	//}
+		//if (pg_FrameNo % 1000 <= 1) {
+		//	printf("Final check texID 0-5 %d %d %d %d %d %d\n\n",
+		//		pg_FBO_Mixing_capturedFB_prec_texID[(pg_FrameNo % 2)],
+		//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS],
+		//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 2],
+		//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 3],
+		//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 4],
+		//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 5]);
+		//		pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + 5]);
+		//}
 
-	// draw points from the currently bound VAO with current in-use shader
-	// glDrawArrays (GL_TRIANGLES, 0, 3 * PG_SIZE_QUAD_ARRAY);
-	// Index buffer for indexed rendering
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABQuadMaster]);
-	// Draw the triangles !
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glDrawElements(
-		GL_TRIANGLE_STRIP,      // mode
-		3 * PG_SIZE_QUAD_ARRAY,    // count
-		GL_UNSIGNED_INT,   // type
-		(void*)0           // element array buffer offset
-	);
+		// draw points from the currently bound VAO with current in-use shader
+		// glDrawArrays (GL_TRIANGLES, 0, 3 * PG_SIZE_QUAD_ARRAY);
+		// Index buffer for indexed rendering
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EABQuadMaster]);
+		// Draw the triangles !
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDrawElements(
+			GL_TRIANGLE_STRIP,      // mode
+			3 * PG_SIZE_QUAD_ARRAY,    // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+		);
+	}
 }
 
 //////////////////////////////////////////////////
@@ -4217,7 +4216,8 @@ void pg_drawOneMesh(int indMeshFile) {
 				}
 			}
 #endif
-			if (visibleObject && pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
+			if (visibleObject 
+				&& pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
 				//printf("mesh pass mesh %d obj %d\n", indMeshFile, indObjectInMesh);
 
 				// binds VAO
@@ -4255,7 +4255,6 @@ void pg_drawOneMesh(int indMeshFile) {
 				// standard filled mesh drawing
 				// draw triangles from the currently bound VAO with current in-use shader
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile].mesh_index_vbo[indObjectInMesh]);
-				glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
 
 				// updates this variable according whether triangles or lines are shown
 				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank],
@@ -4325,7 +4324,11 @@ void pg_drawOneMesh2(int indMeshFile) {
 	visible = (activeMeshes & (1 << indMeshFile));
 
 	// visible mesh
-	if (visible) {
+	if (visible
+		&& pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]) {
+
+		// activate shaders and sets uniform variable values    
+		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
 
 		// Model matrix 
 		// transformed mesh according to scenario file
@@ -4347,9 +4350,6 @@ void pg_drawOneMesh2(int indMeshFile) {
 			// binds VAO
 			glBindVertexArray(pg_Meshes[pg_current_configuration_rank][indMeshFile].mesh_vao[indObjectInMesh]);
 
-			// activate shaders and sets uniform variable values    
-			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
-
 			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			// texture unit location
@@ -4370,7 +4370,6 @@ void pg_drawOneMesh2(int indMeshFile) {
 			// standard filled mesh drawing
 			// draw triangles from the currently bound VAO with current in-use shader
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_current_configuration_rank][indMeshFile].mesh_index_vbo[indObjectInMesh]);
-			glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_Mesh]);
 
 			// updates this variable according whether triangles or lines are shown
 			glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_current_configuration_rank], isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);

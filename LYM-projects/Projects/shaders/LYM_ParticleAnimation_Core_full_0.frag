@@ -57,7 +57,7 @@ float	 repop_path;
 bool	  freeze;
 #define var_partDecay
 float	 partDecay;
-uniform float uniform_ParticleAnimation_scenario_var_data[25];
+uniform float uniform_ParticleAnimation_scenario_var_data[47];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -888,37 +888,37 @@ void main() {
   partMove_target = (uniform_ParticleAnimation_scenario_var_data[13] > 0 ? true : false);
   partStroke_mode = int(uniform_ParticleAnimation_scenario_var_data[14]);
   part_path_follow[0] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[1] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[2] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[3] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[4] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[5] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[6] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[7] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[8] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[9] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[10] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_follow[11] = (uniform_ParticleAnimation_scenario_var_data[15] > 0 ? true : false);
-  part_path_repulse[0] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[1] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[2] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[3] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[4] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[5] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[6] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[7] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[8] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[9] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[10] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  part_path_repulse[11] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
-  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[17];
-  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[18];
-  Part_repop_color_mode = int(uniform_ParticleAnimation_scenario_var_data[19]);
-  Part_repop_density = int(uniform_ParticleAnimation_scenario_var_data[20]);
-  repop_part = uniform_ParticleAnimation_scenario_var_data[21];
-  repop_path = uniform_ParticleAnimation_scenario_var_data[22];
-  freeze = (uniform_ParticleAnimation_scenario_var_data[23] > 0 ? true : false);
-  partDecay = uniform_ParticleAnimation_scenario_var_data[24];
+  part_path_follow[1] = (uniform_ParticleAnimation_scenario_var_data[16] > 0 ? true : false);
+  part_path_follow[2] = (uniform_ParticleAnimation_scenario_var_data[17] > 0 ? true : false);
+  part_path_follow[3] = (uniform_ParticleAnimation_scenario_var_data[18] > 0 ? true : false);
+  part_path_follow[4] = (uniform_ParticleAnimation_scenario_var_data[19] > 0 ? true : false);
+  part_path_follow[5] = (uniform_ParticleAnimation_scenario_var_data[20] > 0 ? true : false);
+  part_path_follow[6] = (uniform_ParticleAnimation_scenario_var_data[21] > 0 ? true : false);
+  part_path_follow[7] = (uniform_ParticleAnimation_scenario_var_data[22] > 0 ? true : false);
+  part_path_follow[8] = (uniform_ParticleAnimation_scenario_var_data[23] > 0 ? true : false);
+  part_path_follow[9] = (uniform_ParticleAnimation_scenario_var_data[24] > 0 ? true : false);
+  part_path_follow[10] = (uniform_ParticleAnimation_scenario_var_data[25] > 0 ? true : false);
+  part_path_follow[11] = (uniform_ParticleAnimation_scenario_var_data[26] > 0 ? true : false);
+  part_path_repulse[0] = (uniform_ParticleAnimation_scenario_var_data[27] > 0 ? true : false);
+  part_path_repulse[1] = (uniform_ParticleAnimation_scenario_var_data[28] > 0 ? true : false);
+  part_path_repulse[2] = (uniform_ParticleAnimation_scenario_var_data[29] > 0 ? true : false);
+  part_path_repulse[3] = (uniform_ParticleAnimation_scenario_var_data[30] > 0 ? true : false);
+  part_path_repulse[4] = (uniform_ParticleAnimation_scenario_var_data[31] > 0 ? true : false);
+  part_path_repulse[5] = (uniform_ParticleAnimation_scenario_var_data[32] > 0 ? true : false);
+  part_path_repulse[6] = (uniform_ParticleAnimation_scenario_var_data[33] > 0 ? true : false);
+  part_path_repulse[7] = (uniform_ParticleAnimation_scenario_var_data[34] > 0 ? true : false);
+  part_path_repulse[8] = (uniform_ParticleAnimation_scenario_var_data[35] > 0 ? true : false);
+  part_path_repulse[9] = (uniform_ParticleAnimation_scenario_var_data[36] > 0 ? true : false);
+  part_path_repulse[10] = (uniform_ParticleAnimation_scenario_var_data[37] > 0 ? true : false);
+  part_path_repulse[11] = (uniform_ParticleAnimation_scenario_var_data[38] > 0 ? true : false);
+  pixel_acc_shiftX = uniform_ParticleAnimation_scenario_var_data[39];
+  pixel_acc_shiftY = uniform_ParticleAnimation_scenario_var_data[40];
+  Part_repop_color_mode = int(uniform_ParticleAnimation_scenario_var_data[41]);
+  Part_repop_density = int(uniform_ParticleAnimation_scenario_var_data[42]);
+  repop_part = uniform_ParticleAnimation_scenario_var_data[43];
+  repop_path = uniform_ParticleAnimation_scenario_var_data[44];
+  freeze = (uniform_ParticleAnimation_scenario_var_data[45] > 0 ? true : false);
+  partDecay = uniform_ParticleAnimation_scenario_var_data[46];
 
   //////////////////////////
   // variables 

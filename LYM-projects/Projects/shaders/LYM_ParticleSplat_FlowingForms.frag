@@ -45,7 +45,9 @@ void main() {
 	else {
 			 fColor.a = texture(uniform_ParticleSplat_texture_fs_decal , VertexIn.texCoord).b;
 	}
-*/	fColor.a = texture(uniform_ParticleSplat_texture_fs_decal , VertexIn.texCoord).a;
+*/	
+
+	fColor.a = texture(uniform_ParticleSplat_texture_fs_decal , VertexIn.texCoord).a;
 	// fColor.rgb = vec3(1,0,0);
 	// fColor.a = 1;
 }

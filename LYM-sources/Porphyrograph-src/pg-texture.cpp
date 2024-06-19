@@ -303,6 +303,7 @@ bool pg_loadAllTextures(void) {
 #if defined(TEXTURED_QUAD_PARTICLES)
 			if (texture.texture_usage == Texture_splat_particle && texture.texture_Dimension == 2) {
 				blurredDisk_texture_2D_texID[indConfiguration].push_back(texture.texture_texID);
+				//printf("splat texture %d\n", texture.texture_texID);
 				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (splat), ";
 				if (texture.texture_Rank != blurredDisk_texture_2D_texID[indConfiguration].size()) {
 					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
@@ -1682,7 +1683,7 @@ void pg_launch_diaporama(int slideNo) {
 	}
 
 	// loads the first images if it is not the case
-	pg_CurrentDiaporamaFile = slideNo;
+	pg_CurrentDiaporamaFile = slideNo % pg_nbCompressedImagesPerFolder[pg_current_configuration_rank][photo_diaporama];
 	if (photo_diaporama >= 0) {
 		// launches blending of the first image
 		pg_Photo_swap_buffer_data[0].blendStart = float(pg_CurrentClockTime);
