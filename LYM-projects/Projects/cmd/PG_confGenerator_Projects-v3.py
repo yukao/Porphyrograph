@@ -858,7 +858,7 @@ def write_script_header_and_body() :
 
 	global full_scenario_vars_specs_dict
 
-	ScriptHeader.write("// SCENARIO VARIABLES # FULL SCENARIO\n")
+	ScriptHeader.write("// FULL SCENARIO VARIABLES\n")
 
 	############################### constant declarations
 	# number of scene variables
@@ -878,7 +878,7 @@ def write_script_header_and_body() :
 	############################### scenario variable declarations
 	# interpolation cancelation variable declaration
 	# ScriptBody.write("bool BrokenInterpolationVar[ _MaxInterpVarIDs ]"
-	ScriptBody.write("// SCENARIO VARIABLES\n")
+	ScriptBody.write("// FULL SCENARIO VARIABLES\n")
 
 	# scenario variable declarations
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
@@ -912,15 +912,15 @@ def write_script_header_and_body() :
 	# extern scenario variable types, pointers and messages declaration in the header file
 	ScriptHeader.write("enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };\n")
 	ScriptHeader.write("enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };\n")
-	ScriptHeader.write("extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];\n")
-	ScriptHeader.write("extern int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2];\n")
-	ScriptHeader.write("extern void * ScenarioVarPointers[_MaxInterpVarIDs];\n")
-	ScriptHeader.write("extern char *ScenarioVarMessages[_MaxInterpVarIDs];\n")
-	ScriptHeader.write("extern char *ScenarioVarStrings[_MaxInterpVarIDs];\n")
-	ScriptHeader.write("void FullScenarioArrayVarInit();\n")
+	ScriptHeader.write("extern VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("extern int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2];\n")
+	ScriptHeader.write("extern void * pg_FullScenarioVarPointers[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("extern std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("extern std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("void pg_FullScenarioArrayVarInit();\n")
 
 	# scenario variable types declarations
-	ScriptBody.write("VarTypes ScenarioVarTypes[_MaxInterpVarIDs] = { \n")
+	ScriptBody.write("VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = { \n")
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		type_string = scenario_to_cpp_type(full_specs[2])
@@ -928,7 +928,7 @@ def write_script_header_and_body() :
 	ScriptBody.write("};\n")
 
 	# scenario variable ranges declarations
-	ScriptBody.write("int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = { \n")
+	ScriptBody.write("int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = { \n")
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		index_range = scenario_to_cpp_range(full_specs[2])
@@ -939,7 +939,7 @@ def write_script_header_and_body() :
 	ScriptBody.write("};\n")
 
 	# scenario variable pointers declarations
-	ScriptBody.write("void * ScenarioVarPointers[_MaxInterpVarIDs] = { \n")
+	ScriptBody.write("void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = { \n")
 	for var_ID in full_scenario_vars_specs_dict:
 		ScriptBody.write("	(void *)&%s,\n" % var_ID)
 	ScriptBody.write("};\n")
@@ -1005,7 +1005,7 @@ def write_script_header_and_body() :
 				sys.exit(0)
 			ScriptBody.write("}\n")
 
-	ScriptBody.write("void (*ScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { \n")
+	ScriptBody.write("void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { \n")
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		callBack_id_string = full_specs[3]
@@ -1016,14 +1016,14 @@ def write_script_header_and_body() :
 			ScriptBody.write("	&%s,\n" % callBack_generic_id_string)
 	ScriptBody.write("};\n")
 
-	ScriptBody.write("char *ScenarioVarMessages[_MaxInterpVarIDs] = { \n")
+	ScriptBody.write("std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = { \n")
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		msg_string = full_specs[4]
 		if(msg_string == "NULL") :
-			ScriptBody.write("  (char *)\"\",\n")
+			ScriptBody.write("  \"\",\n")
 		else :
-			ScriptBody.write("  (char *)\""+msg_string+"\",\n")
+			ScriptBody.write("  \""+msg_string+"\",\n")
 	ScriptBody.write("};\n")
 
 	# ScriptHeader.write("enum PulseTypes : _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none "
@@ -1044,13 +1044,13 @@ def write_script_header_and_body() :
 	ScriptBody.write("};\n")
 
 	# alias string list declarations (commands received from PD)
-	ScriptBody.write("char *ScenarioVarStrings[_MaxInterpVarIDs] = { \n")
+	ScriptBody.write("std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = { \n")
 	for var_ID in full_scenario_vars_specs_dict:
-		ScriptBody.write("  (char *)\""+var_ID+"\",\n")
+		ScriptBody.write("  \""+var_ID+"\",\n")
 	ScriptBody.write("};\n")
 
 	# initialization of array variables with initial values
-	ScriptBody.write("void FullScenarioArrayVarInit() {\n")
+	ScriptBody.write("void pg_FullScenarioArrayVarInit() {\n")
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		index_range = scenario_to_cpp_range(full_specs[2])
 		type_string = full_specs[2]

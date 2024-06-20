@@ -467,13 +467,13 @@ void pg_loadAllShaders(void) {
 	for (int indConfig = 0; indConfig < pg_NbConfigurations; indConfig++) {
 		std::cout << "   " << indConfig << ": ";
 		for (int shader_type = 0; shader_type < _pg_shader_TotalNbTypes; shader_type++) {
-			if (shader_type == _pg_shader_Sensor && pg_ScenarioActiveVars[indConfig][_sensor_layout]
+			if (shader_type == _pg_shader_Sensor && pg_FullScenarioActiveVars[indConfig][_sensor_layout]
 				&& pg_Shader_File_Names[indConfig][_pg_shader_Sensor] == "NULL") {
 				sprintf(ErrorStr, "Error: Expected [%s] shader in configuration file %s (configuration #%d): currently %s shader file name!",
 					pg_stringShaderTypes[_pg_shader_Sensor].c_str(), pg_ConfigurationFileNames[indConfig].c_str(), indConfig,
 					pg_Shader_File_Names[indConfig][_pg_shader_Sensor].c_str()); ReportError(ErrorStr); throw 430;
 			}
-			else if (shader_type == _pg_shader_Mesh && pg_ScenarioActiveVars[indConfig][_activeMeshes]
+			else if (shader_type == _pg_shader_Mesh && pg_FullScenarioActiveVars[indConfig][_activeMeshes]
 				&& pg_Shader_File_Names[indConfig][_pg_shader_Mesh] == "NULL") {
 				sprintf(ErrorStr, "Error: Expected [%s] shader in configuration file %s (configuration #%d): currently %s shader file name!",
 					pg_stringShaderTypes[_pg_shader_Mesh].c_str(), pg_ConfigurationFileNames[indConfig].c_str(), indConfig,
@@ -580,7 +580,7 @@ void pg_loadAllShaders(void) {
 	std::cout << "Unbound uniforms: " << std::endl;
 	for (int indConfig = 0; indConfig < pg_NbConfigurations; indConfig++) {
 		std::cout << "   " << indConfig << ": ";
-		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[indConfig][_part_initialization]) {
 			////////////////////////////////////////////////////////////////////////////////
 			// PARTICLE ANIMATION SHADER parameters bindings
 			////////////////////////////////////////////////////////////////////////////////
@@ -645,7 +645,7 @@ void pg_loadAllShaders(void) {
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow, "uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow", _pg_shader_Update);
-		if (pg_ScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkCAWghts, "uniform_Update_fs_4fv_flashTrkCAWghts", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_path_data, "uniform_Update_path_data", _pg_shader_Update);
@@ -659,58 +659,58 @@ void pg_loadAllShaders(void) {
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, "uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght, "uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght", _pg_shader_Update);
-		if (pg_ScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_repop_ColorCA, "uniform_Update_fs_3fv_repop_ColorCA", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, "uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres", _pg_shader_Update);
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright)  && defined(var_flashPhotoTrkLength)  && defined(var_flashPhotoChangeBeat)
-		if (pg_ScenarioActiveVars[indConfig][_flashPhotoTrkBeat]
-			&& pg_ScenarioActiveVars[indConfig][_flashPhotoTrkBright]
-			&& pg_ScenarioActiveVars[indConfig][_flashPhotoTrkLength]
-			&& pg_ScenarioActiveVars[indConfig][_flashPhotoChangeBeat]) {
+		if (pg_FullScenarioActiveVars[indConfig][_flashPhotoTrkBeat]
+			&& pg_FullScenarioActiveVars[indConfig][_flashPhotoTrkBright]
+			&& pg_FullScenarioActiveVars[indConfig][_flashPhotoTrkLength]
+			&& pg_FullScenarioActiveVars[indConfig][_flashPhotoChangeBeat]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY, "uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY", _pg_shader_Update);
 		}
 #endif
-		if (pg_ScenarioActiveVars[indConfig][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[indConfig][_photo_diaporama]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01_wh, "uniform_Update_fs_4fv_photo01_wh", _pg_shader_Update);
 		}
-		if (pg_ScenarioActiveVars[indConfig][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[indConfig][_photo_diaporama]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01Wghts_randomValues, "uniform_Update_fs_4fv_photo01Wghts_randomValues", _pg_shader_Update);
 		}
 #if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
-		if (pg_ScenarioActiveVars[indConfig][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[indConfig][_clipCaptFreq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_clip01Wghts, "uniform_Update_fs_2fv_clip01Wghts", _pg_shader_Update);
 		}
 #endif
-		if (pg_ScenarioActiveVars[indConfig][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[indConfig][_cameraCaptFreq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H, "uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H", _pg_shader_Update);
 		}
-		if (pg_ScenarioActiveVars[indConfig][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[indConfig][_clipCaptFreq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_photo_rgb, "uniform_Update_fs_3fv_photo_rgb", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_xy_transl_tracks_0_1, "uniform_Update_fs_4fv_xy_transl_tracks_0_1", _pg_shader_Update);
-		if (pg_ScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_CAType_SubType_blurRadius, "uniform_Update_fs_4fv_CAType_SubType_blurRadius", _pg_shader_Update);
 			//printf("allocate uniform_Update_fs_4fv_CAType_SubType_blurRadius config %d\n", indConfig);
 		}
 #if defined(var_CATable)
-		if (pg_ScenarioActiveVars[indConfig][_CATable]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CATable]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_CATable, "uniform_Update_texture_fs_CATable", _pg_shader_Update);
 		}
 #endif
 #if defined(var_GenerativeNights_planes)
-		if (pg_ScenarioActiveVars[indConfig][_GenerativeNights_planes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_GenerativeNights_planes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_initCA_1stPlaneFrameNo, "uniform_Update_fs_2fv_initCA_1stPlaneFrameNo", _pg_shader_Update);
 		}
 #endif
-		if (pg_ScenarioActiveVars[indConfig][_camera_BG_subtr]) {
+		if (pg_FullScenarioActiveVars[indConfig][_camera_BG_subtr]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Camera_BGIni, "uniform_Update_texture_fs_Camera_BGIni", _pg_shader_Update);  // initial background frame
 		}
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_pixel_acc, "uniform_Update_texture_fs_pixel_acc", _pg_shader_Update);  // initial background frame
 
 		// BG track FBO
-		if (pg_ScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_CA, "uniform_Update_texture_fs_CA", _pg_shader_Update);         // 2-cycle ping-pong CA (FBO)
 		}
 
@@ -735,7 +735,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Camera_BG, "uniform_Update_texture_fs_Camera_BG", _pg_shader_Update);  // current background frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Movie_frame, "uniform_Update_texture_fs_Movie_frame", _pg_shader_Update);  // movie frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Noise, "uniform_Update_texture_fs_Noise", _pg_shader_Update);  // 3D noise
-		if (pg_ScenarioActiveVars[indConfig][_BG_CA_repop_density]) {
+		if (pg_FullScenarioActiveVars[indConfig][_BG_CA_repop_density]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_RepopDensity, "uniform_Update_texture_fs_RepopDensity", _pg_shader_Update);  // repop density
 		}
 
@@ -744,14 +744,14 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Photo1, "uniform_Update_texture_fs_Photo1", _pg_shader_Update);  // photo[1] frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Clip0, "uniform_Update_texture_fs_Clip0", _pg_shader_Update);  // clip[0]
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Clip1, "uniform_Update_texture_fs_Clip1", _pg_shader_Update);  // clip[1]
-		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[indConfig][_part_initialization]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Part_render, "uniform_Update_texture_fs_Part_render", _pg_shader_Update);  // particle rendering capture
 		}
 
 		////////////////////////////////////////////////////////////////////////////////
 		// PARTICLE RENDERING SHADER parameters bindings
 		////////////////////////////////////////////////////////////////////////////////
-		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[indConfig][_part_initialization]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleSplat_vp_model, "vp_modelMatrix", _pg_shader_ParticleRender);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleSplat_vp_view, "vp_viewMatrix", _pg_shader_ParticleRender);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleSplat_vp_proj, "vp_projMatrix", _pg_shader_ParticleRender);
@@ -782,7 +782,7 @@ void pg_loadAllShaders(void) {
 		// color texture
 		pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleCurve_Comet_texture_fs_decal, "fs_comet", _pg_shader_ParticleRender);
 #endif
-		if (pg_ScenarioActiveVars[indConfig][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[indConfig][_part_initialization]) {
 			// color texture
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleSplat_texture_fs_decal, "uniform_ParticleSplat_texture_fs_decal", _pg_shader_ParticleRender);
 		}
@@ -797,7 +797,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght, "uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght", _pg_shader_Mixing);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha, "uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha", _pg_shader_Mixing);
 
-		if (pg_ScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_CA, "uniform_Mixing_texture_fs_CA", _pg_shader_Mixing); // ping-pong CA (FBO)
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_ClipArt_render, "uniform_Mixing_texture_fs_ClipArt_render", _pg_shader_Mixing);  // Particles (FBO)
@@ -832,18 +832,18 @@ void pg_loadAllShaders(void) {
 		//pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, "uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb", _pg_shader_Master);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_2iv_mobile_cursor_currentScene, "uniform_Master_fs_2iv_mobile_cursor_currentScene", _pg_shader_Master);
 #if defined(var_Caverne_BackColor)
-		if (pg_ScenarioActiveVars[indConfig][_Caverne_BackColor]) {
+		if (pg_FullScenarioActiveVars[indConfig][_Caverne_BackColor]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_Caverne_BackColor_rgb, "uniform_Master_fs_3fv_Caverne_BackColor_rgb", _pg_shader_Master);
 		}
 #endif
 #if defined(var_flashchange_BGcolor_freq)
-		if (pg_ScenarioActiveVars[indConfig][_flashchange_BGcolor_freq]) {
+		if (pg_FullScenarioActiveVars[indConfig][_flashchange_BGcolor_freq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_BG_color_rgb, "uniform_Master_fs_3fv_BG_color_rgb", _pg_shader_Master);
 		}
 #endif
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Render_curr, "uniform_Master_texture_fs_Render_curr", _pg_shader_Master); // previous pass output
-		if (pg_ScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_CA, "uniform_Master_texture_fs_CA", _pg_shader_Master); // ping-pong CA (FBO)
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_ClipArt_render, "uniform_Master_texture_fs_ClipArt_render", _pg_shader_Master); // Particles
@@ -862,7 +862,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Mask, "uniform_Master_texture_fs_Mask", _pg_shader_Master);  // mask for master output
 #endif
 
-		if (pg_ScenarioActiveVars[indConfig][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[indConfig][_sensor_layout]) {
 			////////////////////////////////////////////////////////////////////////////////
 			// SENSOR SHADER parameters bindings
 			////////////////////////////////////////////////////////////////////////////////
@@ -874,7 +874,7 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Sensor_texture_fs_decal, "fs_decal", _pg_shader_Sensor); // sensor texture
 		}
 
-		if (pg_ScenarioActiveVars[indConfig][_activeMeshes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_activeMeshes]) {
 			////////////////////////////////////////////////////////////////////////////////
 			// MESH SHADER parameters bindings
 			////////////////////////////////////////////////////////////////////////////////
@@ -884,35 +884,35 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, "uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene", _pg_shader_Mesh);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_3fv_light, "uniform_Mesh_fs_3fv_light", _pg_shader_Mesh);
 #if defined(var_Contact_mesh_expand)
-			if (pg_ScenarioActiveVars[indConfig][_Contact_mesh_expand]) {
+			if (pg_FullScenarioActiveVars[indConfig][_Contact_mesh_expand]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_vp_2fv_dilate_explode, "uniform_Mesh_vp_2fv_dilate_explode", _pg_shader_Mesh);
 			}
 #endif
 #if defined(var_Contact_mesh_anime)
-			if (pg_ScenarioActiveVars[indConfig][_Contact_mesh_anime]) {
+			if (pg_FullScenarioActiveVars[indConfig][_Contact_mesh_anime]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_bones_matrices, "uniform_Mesh_bones_matrices", _pg_shader_Mesh);
 			}
 #endif
 #if defined(var_MmeShanghai_brokenGlass)
-			if (pg_ScenarioActiveVars[indConfig][_MmeShanghai_brokenGlass]) {
+			if (pg_FullScenarioActiveVars[indConfig][_MmeShanghai_brokenGlass]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_color, "uniform_Mesh_fs_4fv_color", _pg_shader_Mesh);
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_color_master_photo_weight_bg, "uniform_Mesh_fs_4fv_color_master_photo_weight_bg", _pg_shader_Mesh);
 			}
 #endif
 			// Augmented Reality: FBO capture of Master to be displayed on a mesh
-			if (pg_ScenarioActiveVars[indConfig][_textureFrontier_wmin]) {
+			if (pg_FullScenarioActiveVars[indConfig][_textureFrontier_wmin]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureFrontier, "uniform_Mesh_fs_4fv_textureFrontier", _pg_shader_Mesh);
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureFrontier_width, "uniform_Mesh_fs_4fv_textureFrontier_width", _pg_shader_Mesh);
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureScaleTransl, "uniform_Mesh_fs_4fv_textureScaleTransl", _pg_shader_Mesh);
 			}
 #if defined(var_Contact_mesh_palette)
-			if (pg_ScenarioActiveVars[indConfig][_Contact_mesh_palette]) {
+			if (pg_FullScenarioActiveVars[indConfig][_Contact_mesh_palette]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_color_palette, "uniform_Mesh_fs_4fv_color_palette", _pg_shader_Mesh); // mesh color
 			}
 #endif
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_texture_fs_decal, "fs_Mesh_texture_fs_decal", _pg_shader_Mesh); // previous pass output
 #if defined(var_MmeShanghai_brokenGlass)
-			if (pg_ScenarioActiveVars[indConfig][_MmeShanghai_brokenGlass]) {
+			if (pg_FullScenarioActiveVars[indConfig][_MmeShanghai_brokenGlass]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_texture_fs_BG, "fs_Mesh_texture_fs_BG", _pg_shader_Mesh); // previous pass output
 			}
 #endif

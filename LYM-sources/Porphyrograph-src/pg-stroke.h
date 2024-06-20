@@ -675,9 +675,6 @@ extern glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
 extern glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
 #endif
 
-// pen_radius multiplicative factor for large pen_brush
-extern float pen_radiusMultiplier;
-
 struct vec2
 {
   float x;

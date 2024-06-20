@@ -237,7 +237,7 @@ int main(int argcMain, char** argvMain) {
 	// printf( "Glut initialization\n" );
 	// glut parameters initialization 
 	glutInit(&argc, argv);
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
 		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
 	}
 	else {
@@ -256,14 +256,14 @@ int main(int argcMain, char** argvMain) {
 	// initializations before rendering
 
 	// initialization of all the array variables from full scenario with scenario initial values
-	FullScenarioArrayVarInit();
+	pg_FullScenarioArrayVarInit();
 
 	// sensor initialization
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		SensorInitialization();
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
 		// mesh initialization
 		MeshInitialization();
 	}
@@ -293,7 +293,7 @@ int main(int argcMain, char** argvMain) {
 	printOglError(36);
 
 	// meshes loading
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
 		pg_loadAllMeshes();
 	}
 
@@ -306,7 +306,7 @@ int main(int argcMain, char** argvMain) {
 	/////////////////////////////////////////////////////////////////////////
 	// ClipArt GPU INITIALIZATION
 	// loads the ClipArts and lists them
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
 		pg_loadAllClipArts();
 		pg_listAllClipArts();
 	}
@@ -335,21 +335,19 @@ int main(int argcMain, char** argvMain) {
 	// LOADS DIAPORAMA
 	pg_initDiaporamas();
 	pg_loadAllDiaporamas();
-#if defined(var_clipCaptFreq)
 	pg_ReadInitalClipFramesTextures();
-#endif
 
 	// applies all callbacks
 	pg_initializationCallBacks();
 	printOglError(467);
 
 	// camera frame capture initialization
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		pg_openCameraCaptureAndLoadFrame();
 	}
 
 	// video intialization: loads the movie of the intial configuration
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
 			&& playing_movieNo != currentlyPlaying_movieNo) {
 			pg_movie_frame.setTo(Scalar(0, 0, 0));
@@ -618,7 +616,7 @@ void pg_init_scene(void) {
 	open_IO_MIDI(string("TouchOSC Bridge"), string("TouchOSC Bridge"));
 #endif
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////////
 		// SENSORS INITIALIZATION
 		// copies the grid layout

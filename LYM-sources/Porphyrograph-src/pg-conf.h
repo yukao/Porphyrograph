@@ -76,13 +76,13 @@ public:
 		scene_initial_parameters = new ScenarioValue[_MaxInterpVarIDs];
 		scene_final_parameters = new ScenarioValue[_MaxInterpVarIDs];
 		for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-			if (ScenarioVarIndiceRanges[indP][0] == -1) {
+			if (pg_FullScenarioVarIndiceRanges[indP][0] == -1) {
 				scene_initial_parameters[indP].init_ScenarioValue(0., "", NULL, 0);
 				scene_final_parameters[indP].init_ScenarioValue(0., "", NULL, 0);
 			}
 			else {
-				scene_initial_parameters[indP].init_ScenarioValue(0., "", NULL, ScenarioVarIndiceRanges[indP][1]);
-				scene_final_parameters[indP].init_ScenarioValue(0., "", NULL, ScenarioVarIndiceRanges[indP][1]);
+				scene_initial_parameters[indP].init_ScenarioValue(0., "", NULL, pg_FullScenarioVarIndiceRanges[indP][1]);
+				scene_final_parameters[indP].init_ScenarioValue(0., "", NULL, pg_FullScenarioVarIndiceRanges[indP][1]);
 			}
 		}
 		scene_interpolations = new pg_Interpolation[_MaxInterpVarIDs];
@@ -91,8 +91,8 @@ public:
 			scene_interpolations[indP].initialization_mode = pg_scenario_initial;
 			scene_interpolations[indP].offSet = 0.0;
 			scene_interpolations[indP].duration = 1.0;
-			if (ScenarioVarIndiceRanges[indP][0] != -1) {
-				scene_interpolations[indP].midTermValueArray = new double[ScenarioVarIndiceRanges[indP][1]];
+			if (pg_FullScenarioVarIndiceRanges[indP][0] != -1) {
+				scene_interpolations[indP].midTermValueArray = new double[pg_FullScenarioVarIndiceRanges[indP][1]];
 			}
 		}
 	}
@@ -102,7 +102,7 @@ extern bool					    pg_last_scene_update;
 extern int						pg_NbConfigurations;
 extern vector<Scene>           pg_Scenario[PG_MAX_CONFIGURATIONS];
 extern double                   current_scene_percent;
-extern bool						pg_ScenarioActiveVars[PG_MAX_CONFIGURATIONS][_MaxInterpVarIDs];
+extern bool						pg_FullScenarioActiveVars[PG_MAX_CONFIGURATIONS][_MaxInterpVarIDs];
 
 // PNG capture
 class pg_Png_Capture {
@@ -310,7 +310,7 @@ public:
 		mesh_barycenter = {};
 		mesh_index_vbo = {};
 #if defined(var_Caverne_Mesh_Profusion)
-		if (pg_ScenarioActiveVars[indConfiguration][_Caverne_Mesh_Profusion]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_Caverne_Mesh_Profusion]) {
 			pg_CaverneActveMesh = false;
 			if (indFile < 7) {
 				pg_CaverneMeshWakeupTime = float(rand_0_1 * 10.);
@@ -323,7 +323,7 @@ public:
 		}
 #endif
 #if defined(var_MmeShanghai_brokenGlass)
-		if (pg_ScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
 			pg_MmeShanghai_MeshSubParts = NULL;
 			pg_MmeShanghai_NbMeshSubParts = 0;
 			pg_MmeShanghai_MeshSubPart_FileNames = NULL;

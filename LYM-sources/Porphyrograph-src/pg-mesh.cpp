@@ -1280,7 +1280,7 @@ void copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose
 
 void update_anim(int indMeshFile) {
 #if defined(var_Contact_mesh_anime)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_mesh_anime]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Contact_mesh_anime]) {
 		if (Contact_mesh_anime < 0) {
 			mesh_anime_precTime[pg_current_configuration_rank][indMeshFile] = pg_CurrentClockTime;
 		}

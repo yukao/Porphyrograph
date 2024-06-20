@@ -64,9 +64,6 @@ glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
 glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
 #endif
 
-// pen_radius multiplicative factor for large pen_brush 
-float pen_radiusMultiplier = 1.0f;
-
 // tension of catmul-rom spline: currently, the standard value 1/6
 // could be a parameter in the future
 float Tension = 1.0F/6.0F;
@@ -1376,7 +1373,7 @@ void stroke_geometry_calculation(int pathNo, int curr_position_x, int curr_posit
 
 	// random angle for cristal effect used in PIERRES
 #if defined(var_pen_angle_pulse)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_angle_pulse]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_angle_pulse]) {
 		if (pen_angle_pulse > 0) {
 			paths_x_prev[pathNo] += rand_0_1 * pen_angle_pulse * 10;
 			paths_y_prev[pathNo] += rand_0_1 * pen_angle_pulse * 10;
@@ -1488,7 +1485,7 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	// does not advance the path if the speed is null or negative
 	double readingSpeed = pg_Path_Status[pathNo].get_path_curve_readSpeedScale(pg_current_configuration_rank);
 #if defined(var_path_replay_speed)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_speed]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_speed]) {
 		readingSpeed *= path_replay_speed;
 		// printf("reading speed of path %d is replay speed %.2f readingSpeed %.2f\n", pathNo, path_replay_speed, readingSpeed);
 	}
@@ -1638,15 +1635,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_x_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_y_prev[pathNo] = pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_translX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
 			path_transl(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_translX, path_translY);
 	}
 #endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
 			path_scale_wrtScreenCenter(&paths_x_prev[pathNo], &paths_y_prev[pathNo], paths_x_prev[pathNo], paths_y_prev[pathNo],
 				path_scaleX, path_scaleY);
 		}
@@ -1655,15 +1652,15 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		paths_xL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionX(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionXR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 		paths_yL[pathNo] = 2 * (float)pg_Path_Status[pathNo].getFramePositionY(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading) - (float)pg_Path_Status[pathNo].getFramePositionYR(pg_current_configuration_rank, pg_Path_Status[pathNo].path_indPreviousReading);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_translX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
 			path_transl(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_translX, path_translY);
 		}
 #endif
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
 			path_scale_wrtScreenCenter(&paths_xL[pathNo], &paths_yL[pathNo], paths_xL[pathNo], paths_yL[pathNo],
 				path_scaleX, path_scaleY);
 		}
@@ -1693,8 +1690,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//printf("Path %d Point ini %.2f %.2f %.2f %.2f\n",
 		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_translX) && defined(var_path_translY)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_translX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_translY]) {
 			path_transl(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_translX, path_translY);
 			path_transl(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
@@ -1704,8 +1701,8 @@ void pg_replay_one_path(int pathNo, double theTime) {
 		//printf("Path %d Point transl %.2f %.2f %.2f %.2f\n",
 		//	pathNo, paths_xR[pathNo], paths_yR[pathNo], paths_x[pathNo], paths_y[pathNo]);
 #if defined(var_path_scaleX) && defined(var_path_scaleY)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_scaleX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_scaleY]) {
 			path_scale_wrtScreenCenter(&paths_xR[pathNo], &paths_yR[pathNo], paths_xR[pathNo], paths_yR[pathNo],
 				path_scaleX, path_scaleY);
 			path_scale_wrtScreenCenter(&paths_x[pathNo], &paths_y[pathNo], paths_x[pathNo], paths_y[pathNo],
@@ -1876,7 +1873,7 @@ void pg_replay_paths(double theTime) {
 		// active reading
 #if defined(var_Novak_flight_on)
 		//printf("pathNo %d replay %d \n", pathNo, is_path_replay[pathNo]);
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Novak_flight_on]
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Novak_flight_on]
 			&& is_path_replay[pathNo] && Novak_flight_on) {
 			//printf("pathNo %d flight clock %.2f %.2f\n", pathNo, pg_CurrentClockTime, prev_Novak_flightCurrentCLockTime[pathNo]);
 			if (pg_CurrentClockTime != prev_Novak_flightCurrentCLockTime[pathNo]) {
@@ -1903,14 +1900,14 @@ void pg_replay_paths(double theTime) {
 				}
 				// management of brush radius (w/wo possible interpolation)
 				paths_RadiusX[pathNo]
-					= (pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse) * pen_radius_replay;
+					= (pen_radius + pulse_average * pen_radius_pulse) * pen_radius_replay;
 				paths_RadiusY[pathNo]
-					= (pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse) * pen_radius_replay;
+					= (pen_radius + pulse_average * pen_radius_pulse) * pen_radius_replay;
 				paths_Color_r[pathNo] = min(1.f, pulsed_Novak_flight_color[0]);
 				paths_Color_g[pathNo] = min(1.f, pulsed_Novak_flight_color[1]);
 				paths_Color_b[pathNo] = min(1.f, pulsed_Novak_flight_color[2]);
 				paths_Color_a[pathNo] = min(1.f, 1.f);
-				//printf("flight radius %.2f x %.2f pen_radius, pen_radiusMultiplier, pen_radius_replay  %.2f %.2f %.2f\n", paths_RadiusX[pathNo], paths_RadiusY[pathNo], pen_radius, pen_radiusMultiplier, pen_radius_replay);
+				//printf("flight radius %.2f pen_radius, pen_radius_replay  %.2f %.2f %.2f\n", paths_RadiusX[pathNo], paths_RadiusY[pathNo], pen_radius, pen_radiusMultiplier, pen_radius_replay);
 				//paths_RadiusX[pathNo] = 2.f;
 				//paths_RadiusY[pathNo] = 2.f;
 			}
@@ -1980,22 +1977,22 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 		paths_BrushID[pathNo] = pen_brush;
 #if defined(PG_WACOM_TABLET)
 		paths_RadiusX[pathNo]
-			= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+			= pen_radius + pulse_average * pen_radius_pulse
 			+ tabletPressureRadius * pen_radius_pressure_coef
 			+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef;
 		paths_RadiusY[pathNo]
-			= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+			= pen_radius + pulse_average * pen_radius_pulse
 			+ tabletPressureRadius * pen_radius_pressure_coef
 			+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef;
 		//if (pathNo == 0) {
 		//	printf("message %s\n", AuxString);
 		//	printf("PEN pen_radius %f pulse_average pen_radius_pulse %.2f %.2f muliplied radius %.2f en radius calculated [%.2f %.2f]\n",
-		//		pen_radius, pulse_average, pen_radius_pulse, pen_radius * pen_radiusMultiplier, paths_RadiusX[pathNo], paths_RadiusY[pathNo]);
+		//		pen_radius, pulse_average, pen_radius_pulse, pen_radius, paths_RadiusX[pathNo], paths_RadiusY[pathNo]);
 		//}
 #else
-		paths_RadiusX[pathNo] = pen_radius * pen_radiusMultiplier
+		paths_RadiusX[pathNo] = pen_radius
 			+ pulse_average * pen_radius_pulse;
-		paths_RadiusY[pathNo] = pen_radius * pen_radiusMultiplier
+		paths_RadiusY[pathNo] = pen_radius
 			+ pulse_average * pen_radius_pulse;
 #endif
 		if (pathNo == 0) {
@@ -2033,7 +2030,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 
 // pen position variation from pulse used in PIERRES
 #if defined(var_pen_position_pulse)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_position_pulse]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_position_pulse]) {
 			if (pathNo == 0) {
 				// pen position update from noise
 				float random_angle = rand_0_1 * 2.f * float(PI);
@@ -2073,8 +2070,8 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 #ifndef var_alKemi
 		if (distanceFromPrecedingPoint < std::max(2.f, (paths_RadiusX[pathNo] / 5.f))
 #else
-		if (((pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi] == true && distanceFromPrecedingPoint < 2.f)
-			|| (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi] == false 
+		if (((pg_FullScenarioActiveVars[pg_current_configuration_rank][_alKemi] == true && distanceFromPrecedingPoint < 2.f)
+			|| (pg_FullScenarioActiveVars[pg_current_configuration_rank][_alKemi] == false 
 				&& distanceFromPrecedingPoint < std::max(2.f, (paths_RadiusX[pathNo] / 5.f))))
 #endif
 			&& Pulsed_CurrentMousePos_x[pathNo] != PG_OUT_OF_SCREEN_CURSOR
@@ -2153,7 +2150,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 				}
 			}
 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 				// tactile drawing above first track
 				if (pathNo > 0) {
 					// tells the shader that it should be drawn on the current drawing track
@@ -2166,9 +2163,9 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 
 					// management of brush radius (w/wo possible interpolation)
 					paths_RadiusX[pathNo]
-						= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
+						= pen_radius + pulse_average * pen_radius_pulse;
 					paths_RadiusY[pathNo]
-						= pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse;
+						= pen_radius + pulse_average * pen_radius_pulse;
 					paths_Color_r[pathNo] = min(1.f, pulsed_pen_color[0]);
 					paths_Color_g[pathNo] = min(1.f, pulsed_pen_color[1]);
 					paths_Color_b[pathNo] = min(1.f, pulsed_pen_color[2]);
@@ -2204,16 +2201,16 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 
 #if defined(PG_WACOM_TABLET)
 				pg_Path_Status[indRecordingPath].setFrameBrushRadius(pg_current_configuration_rank, indFrameRec, pen_brush, 
-					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+					pen_radius + pulse_average * pen_radius_pulse
 					+ tabletPressureRadius * pen_radius_pressure_coef
 					+ fabs(sin(tabletAzimutRadius))  * tabletInclinationRadius * pen_radius_angleHor_coef,
-					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse
+					pen_radius + pulse_average * pen_radius_pulse
 					+ tabletPressureRadius * pen_radius_pressure_coef
 					+ fabs(cos(tabletAzimutRadius)) * tabletInclinationRadius * pen_radius_angleVer_coef);
 #else
 				pg_Path_Status[indRecordingPath].setFrameBrushRadius(pg_current_configuration_rank, indFrameRec, pen_brush,
-					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse,
-					pen_radius * pen_radiusMultiplier + pulse_average * pen_radius_pulse);
+					pen_radius + pulse_average * pen_radius_pulse,
+					pen_radius + pulse_average * pen_radius_pulse);
 #endif
 
 
@@ -2264,11 +2261,11 @@ void Path_Status::load_svg_path(char *fileName,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, 
 	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
 	if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-		if (pg_ScenarioActiveVars[indConfiguration][_path_replay_trackNo]
-			&& pg_ScenarioActiveVars[indConfiguration][_path_record]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_path_replay_trackNo]
+			&& pg_FullScenarioActiveVars[indConfiguration][_path_record]) {
 			is_path_replay[pathNo] = false;
-			((int *)ScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
-			((bool *)ScenarioVarPointers[_path_record])[pathNo] = false;
+			((int *)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
+			((bool *)pg_FullScenarioVarPointers[_path_record])[pathNo] = false;
 		}
 		recorded_path[pathNo] = true;
 		paths_x[pathNo] = PG_OUT_OF_SCREEN_CURSOR;

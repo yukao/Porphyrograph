@@ -21,7 +21,7 @@ constexpr auto nb_particles                   = 200000    ;
 constexpr auto nb_CATypes                     = 7         ;
 #define PG_NB_TRACKS                   4         
 #define PG_NB_PATHS                    12        
-constexpr auto project_name                   = "Ada";
+constexpr auto project_name                   = "Song";
 #define PG_MAX_CONFIGURATIONS          10        
 #define PG_NB_CA_PARAMS                8         
 #define PG_NB_MASTER_MASKS             6         
@@ -78,7 +78,7 @@ enum ConfigurationVarIDs {
   _PG_NB_MASTER_MASKS,
   _PG_NB_CLIPART_LAYERS,
   _MaxConfigurationVarIDs};
-// SCENARIO VARIABLES # FULL SCENARIO
+// FULL SCENARIO VARIABLES
 #define var_CA1_CA2_weight
 #define var_CA1SubType
 #define var_CA1Type
@@ -160,6 +160,10 @@ enum ConfigurationVarIDs {
 #define var_playing_secondClipNameRight
 #define var_activeClipArts
 #define var_moving_messages
+#define var_ClipArt_width
+#define var_ClipArt_width_pulse
+#define var_ClipArt_stroke_color_preset
+#define var_ClipArt_stroke_color_preset_pulse
 #define var_invertMovie
 #define var_movie_gamma
 #define var_movie_gamma_pulse
@@ -508,6 +512,10 @@ enum InterpVarIDs{
   _playing_secondClipNameRight,
   _activeClipArts,
   _moving_messages,
+  _ClipArt_width,
+  _ClipArt_width_pulse,
+  _ClipArt_stroke_color_preset,
+  _ClipArt_stroke_color_preset_pulse,
   _invertMovie,
   _movie_gamma,
   _movie_gamma_pulse,
@@ -856,6 +864,10 @@ extern string playing_secondClipNameLeft;
 extern string playing_secondClipNameRight;
 extern int   activeClipArts      ;
 extern float moving_messages     ;
+extern float ClipArt_width       ;
+extern float ClipArt_width_pulse ;
+extern float ClipArt_stroke_color_preset;
+extern float ClipArt_stroke_color_preset_pulse;
 extern bool  invertMovie         ;
 extern float movie_gamma         ;
 extern float movie_gamma_pulse   ;
@@ -1124,9 +1136,9 @@ extern bool  augmentedReality    ;
 extern bool  meshRenderBypass    ;
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };
 enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
-extern VarTypes ScenarioVarTypes[_MaxInterpVarIDs];
-extern int ScenarioVarIndiceRanges[_MaxInterpVarIDs][2];
-extern void * ScenarioVarPointers[_MaxInterpVarIDs];
-extern char *ScenarioVarMessages[_MaxInterpVarIDs];
-extern char *ScenarioVarStrings[_MaxInterpVarIDs];
-void FullScenarioArrayVarInit();
+extern VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs];
+extern int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2];
+extern void * pg_FullScenarioVarPointers[_MaxInterpVarIDs];
+extern std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs];
+extern std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs];
+void pg_FullScenarioArrayVarInit();

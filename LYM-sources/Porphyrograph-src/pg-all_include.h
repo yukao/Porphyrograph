@@ -213,9 +213,7 @@ using std::ifstream;
 #endif
 #endif
 
-#if defined(CORE)
 #define PG_WITH_PORTAUDIO
-#endif
 
 #define PG_MAX_OSC_ARGUMENTS 96
 
@@ -292,12 +290,12 @@ using std::ifstream;
 #define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
-#if defined(CORE)
-#define TEXTURED_QUAD_PARTICLES
-#elif defined(DASEIN)
+#if defined(DASEIN)
 #define CURVE_PARTICLES
 #elif defined(VOLUSPA) || defined(CAAUDIO) || defined(ARAKNIT)
 #define LINE_SPLAT_PARTICLES
+#else
+#define TEXTURED_QUAD_PARTICLES
 #endif
 
 #if defined(CURVE_PARTICLES)
@@ -305,10 +303,8 @@ using std::ifstream;
 #endif
 
 // CLIPS
-#if defined(CORE)
 // different clips on right and left screens
 #define PG_NB_PARALLEL_CLIPS 2
-#endif
 
 // MASTER's MASK
 #if defined(ARAKNIT) || defined(VOLUSPA) ||  defined(CORE)
@@ -320,12 +316,12 @@ using std::ifstream;
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
-#if defined(CORE)
+
 #define PG_NB_SENSORS 16
 #define PG_NB_MAX_SENSOR_ACTIVATIONS 6
 #define BEAT_DURATION (1.0f)
 #define PG_RENOISE
-#endif
+
 #if defined(TEMPETE)
 #define PG_SECOND_MESH_CAMERA
 #endif

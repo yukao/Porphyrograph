@@ -597,7 +597,7 @@ void InterfaceInitializations(void) {
 #endif
 
 	// ClipArt GPU INTERFACE VARIABLE INITIALIZATION
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]
 		&& has_NV_path_rendering) {
 		for (unsigned int indClipArt = 0; indClipArt < pg_ClipArts[pg_current_configuration_rank].size(); indClipArt++) {
 			sprintf(AuxString, "/ClipArt_%d_onOff %d", indClipArt, ((activeClipArts == -1) || (activeClipArts & (1 << (indClipArt - 1))))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -894,7 +894,7 @@ void pg_initGeometry_quads(void) {
 		quadMaster_indices, GL_STATIC_DRAW);
 	printOglError(23);
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////
 	// QUADS FOR SENSORS
 	// point positions and texture coordinates
@@ -1303,68 +1303,67 @@ void sensor_sample_setUp_interpolation(void) {
 }
 
 
-
-#if defined(var_activeMeshes)
 void MeshInitialization(void) {
 	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-		pg_nb_bones[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-		TabBones[indConfiguration] = new Bone * [pg_Meshes[indConfiguration].size()];
-		pg_nb_AnimationPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-		pg_nb_LibraryPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-		pg_interpolation_weight_AnimationPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
-		for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
-			TabBones[indConfiguration][ind] = NULL;
-			pg_nb_AnimationPoses[indConfiguration][ind] = 0;
-			pg_nb_LibraryPoses[indConfiguration][ind] = 0;
-			pg_interpolation_weight_AnimationPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
-			for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-				pg_interpolation_weight_AnimationPose[indConfiguration][ind][indPose] = 0.f;
+		if (pg_FullScenarioActiveVars[indConfiguration][_activeMeshes]) {
+			pg_nb_bones[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+			TabBones[indConfiguration] = new Bone * [pg_Meshes[indConfiguration].size()];
+			pg_nb_AnimationPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+			pg_nb_LibraryPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+			pg_interpolation_weight_AnimationPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
+			for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
+				TabBones[indConfiguration][ind] = NULL;
+				pg_nb_AnimationPoses[indConfiguration][ind] = 0;
+				pg_nb_LibraryPoses[indConfiguration][ind] = 0;
+				pg_interpolation_weight_AnimationPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
+				for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+					pg_interpolation_weight_AnimationPose[indConfiguration][ind][indPose] = 0.f;
+				}
 			}
-		}
 
-		pg_nb_MotionPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-		pg_interpolation_weight_MotionPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
-		for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
-			pg_nb_MotionPoses[indConfiguration][ind] = 0;
-			pg_interpolation_weight_MotionPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
-			for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-				pg_interpolation_weight_MotionPose[indConfiguration][ind][indPose] = 0.f;
+			pg_nb_MotionPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+			pg_interpolation_weight_MotionPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
+			for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
+				pg_nb_MotionPoses[indConfiguration][ind] = 0;
+				pg_interpolation_weight_MotionPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
+				for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+					pg_interpolation_weight_MotionPose[indConfiguration][ind][indPose] = 0.f;
+				}
 			}
-		}
-		pg_motionPoses[indConfiguration] = new MotionPose * [pg_Meshes[indConfiguration].size()];
-		for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
-			pg_motionPoses[indConfiguration][ind] = new MotionPose[PG_MAX_ANIMATION_POSES]();
-		}
+			pg_motionPoses[indConfiguration] = new MotionPose * [pg_Meshes[indConfiguration].size()];
+			for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
+				pg_motionPoses[indConfiguration][ind] = new MotionPose[PG_MAX_ANIMATION_POSES]();
+			}
 
-		// shader variable pointers
-		uniform_mesh_model[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
-		uniform_mesh_view[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
-		uniform_mesh_proj[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
-		uniform_mesh_light[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+			// shader variable pointers
+			uniform_mesh_model[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+			uniform_mesh_view[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+			uniform_mesh_proj[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
+			uniform_mesh_light[indConfiguration] = new GLint[pg_Meshes[indConfiguration].size()];
 
-		// animation variable pointers
-		mesh_startAnime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-		mesh_anime_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-		mesh_precedingAnime[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-		mesh_positiveChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
-		mesh_negativeChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
-		for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
-			mesh_startAnime[indConfiguration][indMesh] = -1;
-			mesh_anime_precTime[indConfiguration][indMesh] = -1;
-			mesh_positiveChange[indConfiguration][indMesh] = false;
-			mesh_precedingAnime[indConfiguration][indMesh] = false;
-		}
-		// motion variable pointers
-		mesh_startMotion[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-		mesh_motion_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-		mesh_precedingMotion[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-		for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
-			mesh_startMotion[indConfiguration][indMesh] = -1;
-			mesh_motion_precTime[indConfiguration][indMesh] = -1;
+			// animation variable pointers
+			mesh_startAnime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+			mesh_anime_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+			mesh_precedingAnime[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+			mesh_positiveChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
+			mesh_negativeChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
+			for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
+				mesh_startAnime[indConfiguration][indMesh] = -1;
+				mesh_anime_precTime[indConfiguration][indMesh] = -1;
+				mesh_positiveChange[indConfiguration][indMesh] = false;
+				mesh_precedingAnime[indConfiguration][indMesh] = false;
+			}
+			// motion variable pointers
+			mesh_startMotion[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+			mesh_motion_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
+			mesh_precedingMotion[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
+			for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
+				mesh_startMotion[indConfiguration][indMesh] = -1;
+				mesh_motion_precTime[indConfiguration][indMesh] = -1;
+			}
 		}
 	}
 }
-#endif
 
 #if defined(PG_METAWEAR)
 void MetawearSensorInitialization() {

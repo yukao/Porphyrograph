@@ -1036,7 +1036,6 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "flashMaster", _flashMaster },
 	{ "NextRecordReplayPath", _NextRecordReplayPath },
 };
-// if (strcmp(address_string, ScenarioVarStrings[indVar]
 
 // callBack variable conversions
 bool double_to_bool(double param) {
@@ -1169,7 +1168,7 @@ void pg_initializeScenearioVariables(void) {
 	/////////////////////////////////////////////////////////////////////////
 	// ADDITION OF SCENARIO-CONTROLLED UNIFORM VARIABLES TO THE HASH MAP
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
-		pg_OSC_addresses_hashMap[std::string(ScenarioVarStrings[indVar])] = indVar;
+		pg_OSC_addresses_hashMap[pg_FullScenarioVarStrings[indVar]] = indVar;
 	}
 
 	/////////////////////////////////////////////////////////////////////////
@@ -1178,7 +1177,7 @@ void pg_initializeScenearioVariables(void) {
 		/////////////////////////////////////////////////////////////////////////
 		// CONSTANT UNIFORM VARIABLES
 		// only assigned at initialization, does not change during the set
-		if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]
+		if (pg_FullScenarioActiveVars[indConfiguration][_part_initialization]
 			&& pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]) {
 			// only assigned at initialization, does not change during the set
 			glUseProgram(pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]);
@@ -1203,50 +1202,50 @@ void pg_initializeScenearioVariables(void) {
 		// INItiAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			int indVar = ConfigScenarioVarRank[indConfiguration][indP];
-			if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
-				if (ScenarioVarIndiceRanges[indVar][0] == -1) {
-					if (ScenarioVarTypes[indVar] == _pg_float) {
-						*((float*)ScenarioVarPointers[indVar]) = float(InitialValuesInterpVar[indConfiguration][indVar].val_num);
+			if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
+				if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
+					if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+						*((float*)pg_FullScenarioVarPointers[indVar]) = float(InitialValuesInterpVar[indConfiguration][indVar].val_num);
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_int) {
-						*((int*)ScenarioVarPointers[indVar]) = int(InitialValuesInterpVar[indConfiguration][indVar].val_num);
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+						*((int*)pg_FullScenarioVarPointers[indVar]) = int(InitialValuesInterpVar[indConfiguration][indVar].val_num);
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_bool) {
-						*((bool*)ScenarioVarPointers[indVar]) = (InitialValuesInterpVar[indConfiguration][indVar].val_num != 0);
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
+						*((bool*)pg_FullScenarioVarPointers[indVar]) = (InitialValuesInterpVar[indConfiguration][indVar].val_num != 0);
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_sign) {
-						*((int*)ScenarioVarPointers[indVar]) = (InitialValuesInterpVar[indConfiguration][indVar].val_num > 0 ? 1 : (InitialValuesInterpVar[indConfiguration][indVar].val_num < 0 ? -1 : 0));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
+						*((int*)pg_FullScenarioVarPointers[indVar]) = (InitialValuesInterpVar[indConfiguration][indVar].val_num > 0 ? 1 : (InitialValuesInterpVar[indConfiguration][indVar].val_num < 0 ? -1 : 0));
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_path) {
-						*((bool*)ScenarioVarPointers[indVar]) = (InitialValuesInterpVar[indConfiguration][indVar].val_num > 0);
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
+						*((bool*)pg_FullScenarioVarPointers[indVar]) = (InitialValuesInterpVar[indConfiguration][indVar].val_num > 0);
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_string) {
-						*((string*)ScenarioVarPointers[indVar]) = InitialValuesInterpVar[indConfiguration][indVar].val_string;
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
+						*((string*)pg_FullScenarioVarPointers[indVar]) = InitialValuesInterpVar[indConfiguration][indVar].val_string;
 					}
 					else {
-						sprintf(ErrorStr, "Incorrect variable type (%d) for scenario variable #%d!", ScenarioVarTypes[indVar], indVar); ReportError(ErrorStr);
+						sprintf(ErrorStr, "Incorrect variable type (%d) for scenario variable #%d!", pg_FullScenarioVarTypes[indVar], indVar); ReportError(ErrorStr);
 					}
 				}
 				// array
 				else {
-					for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
-						if (ScenarioVarTypes[indVar] == _pg_float) {
-							((float*)ScenarioVarPointers[indVar])[index] = float(InitialValuesInterpVar[indConfiguration][indVar].val_array[index]);
+					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+						if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+							((float*)pg_FullScenarioVarPointers[indVar])[index] = float(InitialValuesInterpVar[indConfiguration][indVar].val_array[index]);
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_int) {
-							((int*)ScenarioVarPointers[indVar])[index] = int(InitialValuesInterpVar[indConfiguration][indVar].val_array[index]);
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+							((int*)pg_FullScenarioVarPointers[indVar])[index] = int(InitialValuesInterpVar[indConfiguration][indVar].val_array[index]);
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_bool) {
-							((bool*)ScenarioVarPointers[indVar])[index] = (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] != 0);
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
+							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] != 0);
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_sign) {
-							((int*)ScenarioVarPointers[indVar])[index] = (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] > 0 ? 1 : (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] < 0 ? -1 : 0));
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
+							((int*)pg_FullScenarioVarPointers[indVar])[index] = (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] > 0 ? 1 : (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] < 0 ? -1 : 0));
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_path) {
-							((bool*)ScenarioVarPointers[indVar])[index] = (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] > 0);
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
+							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (InitialValuesInterpVar[indConfiguration][indVar].val_array[index] > 0);
 						}
 						else {
-							sprintf(ErrorStr, "Incorrect variable type (%d) for scenario variable #%d!", ScenarioVarTypes[indVar], indVar); ReportError(ErrorStr);
+							sprintf(ErrorStr, "Incorrect variable type (%d) for scenario variable #%d!", pg_FullScenarioVarTypes[indVar], indVar); ReportError(ErrorStr);
 						}
 					}
 				}
@@ -1260,7 +1259,7 @@ void pg_initializeScenearioVariables(void) {
 		// track replay 
 		// source track recording
 		// is recording source -> has to stop recording source 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			for (int indPath = 1; indPath < PG_NB_PATHS; indPath++) {
 				if (path_replay_trackNo[indPath] >= 0) {
 					if (tracksSync) {
@@ -1276,7 +1275,7 @@ void pg_initializeScenearioVariables(void) {
 		// track recording 
 		// source track recording
 		// is recording source -> has to stop recording source 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			for (int indPath = 1; indPath < PG_NB_PATHS; indPath++) {
 				if (!path_record[indPath]) {
 					pg_path_recording_stop(indPath);
@@ -1327,11 +1326,11 @@ void pg_initializeScenearioVariables(void) {
 	// SCENARIO VARIABLES INITIALIZATION FOR THE CURRENT CONFIGURATION
 	if (pg_current_configuration_rank >= 0 && pg_current_configuration_rank < unsigned int(pg_NbConfigurations)) {
 		// background subraction
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
 		}
 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 			// particle initialization reset
 			part_initialization = -1;
 		}
@@ -1508,9 +1507,9 @@ void pg_initializeScenearioVariables(void) {
 	if (pg_current_configuration_rank >= 0 && pg_current_configuration_rank < unsigned int(pg_NbConfigurations)) {
 		// color interface initialization
 #if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
 			float control_color[3];
 			HSVtoRGB(pen_hue, pen_sat, pen_value, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1519,9 +1518,9 @@ void pg_initializeScenearioVariables(void) {
 #endif
 
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 			float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1530,7 +1529,7 @@ void pg_initializeScenearioVariables(void) {
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(DessinButtonsPaths, DessinButtonLabelsPaths, DessinButtonValues, true, trkDecay[1]);
 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			// photo diaporama initialization
 			ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, photo_diaporama);
 		}
@@ -1544,8 +1543,8 @@ void pg_initializeScenearioVariables(void) {
 // INITIALIZES ALL SCENARIO VARIABLES CALLBACKS
 void pg_initializationCallBacks(void) {
 	for (int indVar = 0; indVar < _MaxInterpVarIDs; indVar++) {
-		if (ScenarioVarCallbacks[indVar] != NULL) {
-			(*ScenarioVarCallbacks[indVar])(_PG_SCENARIO, InitialValuesInterpVar[pg_current_configuration_rank][indVar]);
+		if (pg_FullScenarioVarCallbacks[indVar] != NULL) {
+			(*pg_FullScenarioVarCallbacks[indVar])(_PG_SCENARIO, InitialValuesInterpVar[pg_current_configuration_rank][indVar]);
 		}
 	}
 }
@@ -1596,30 +1595,30 @@ void pg_displaySceneVariables(void) {
 #endif
 #if defined(PG_WITH_PUREDATA)
 		// resends the sound variables to PD (as in the callback)
-		sprintf(AuxString, "/sound_env_min %.2f", float(*((float*)ScenarioVarPointers[_sound_env_min])));
+		sprintf(AuxString, "/sound_env_min %.2f", float(*((float*)pg_FullScenarioVarPointers[_sound_env_min])));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
-		sprintf(AuxString, "/sound_env_max %.2f", float(*((float*)ScenarioVarPointers[_sound_env_max])));
+		sprintf(AuxString, "/sound_env_max %.2f", float(*((float*)pg_FullScenarioVarPointers[_sound_env_max])));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
 #endif
 
 #if defined(var_partColor_mode) || defined(var_partStroke_mode) || defined(var_partExit_mode) 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]
-			|| pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]
-			|| pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]
+			|| pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]
+			|| pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partColor_mode])) {
 					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
 					sprintf(AuxString, "/partColor_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
-				if (ind == *((int*)ScenarioVarPointers[_partStroke_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partStroke_mode])) {
 					sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
 					sprintf(AuxString, "/partStroke_mode_%d 0", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
-				if (ind == *((int*)ScenarioVarPointers[_partExit_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partExit_mode])) {
 					sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -1629,7 +1628,7 @@ void pg_displaySceneVariables(void) {
 		}
 #endif
 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			// clip intialization for First Clip
 			sprintf(AuxString, "/clip_autoplay_left %d", int(pg_clip_status[_clipLeft].get_clip_autoplay(0)));
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
@@ -1652,8 +1651,8 @@ void pg_displaySceneVariables(void) {
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 		}
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			for (int pathNo = 1; pathNo < PG_NB_PATHS; pathNo++) {
 				sprintf(AuxString, "/path_replay_trackNo_%d %d", pathNo, path_replay_trackNo[pathNo]);
 				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -1715,86 +1714,86 @@ void pg_displaySceneVariables(void) {
 	//for (int indVar = rank * 45; indVar < min((rank + 1) * 45, int(_MaxInterpVarIDs)); indVar++) {
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			// the variable has a registered GUI ID in the scenario
 			// and its values has changed since it was sent to the GUI last time
-			if (*(ScenarioVarMessages[indVar])) {
-				if (ScenarioVarIndiceRanges[indVar][0] == -1) {
-					if (ScenarioVarTypes[indVar] == _pg_float) {
-						float new_value = float(*((float*)ScenarioVarPointers[indVar]));
+			if (pg_FullScenarioVarMessages[indVar] != "") {
+				if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
+					if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+						float new_value = float(*((float*)pg_FullScenarioVarPointers[indVar]));
 						switch (ScenarioVarPulse[indVar]) {
 						case _pg_pulsed_absolute:
-							new_value *= (1.f + pulse_average * float(*((float*)ScenarioVarPointers[indVar + 1])));
+							new_value *= (1.f + pulse_average * float(*((float*)pg_FullScenarioVarPointers[indVar + 1])));
 							break;
 						case _pg_pulsed_uniform:
-							new_value += pulse_average * float(*((float*)ScenarioVarPointers[indVar + 1]));
+							new_value += pulse_average * float(*((float*)pg_FullScenarioVarPointers[indVar + 1]));
 							break;
 						case _pg_pulsed_differential:
-							new_value *= (pulse_average - pulse_average_prec) * float(*((float*)ScenarioVarPointers[indVar + 1]));
+							new_value *= (pulse_average - pulse_average_prec) * float(*((float*)pg_FullScenarioVarPointers[indVar + 1]));
 							break;
 						default:
 							break;
 
 						}
 						if (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != new_value || resend_all_variables) {
-							sprintf(AuxString, "/%s %.4f", ScenarioVarMessages[indVar], new_value); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+							sprintf(AuxString, "/%s %.4f", pg_FullScenarioVarMessages[indVar].c_str(), new_value); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = new_value;
 							//if (indVar == _track_y_transl[1]) {
-							//	printf("REPOST: track_y_transl[1] %s %.1f\n", ScenarioVarMessages[indVar], new_value);
+							//	printf("REPOST: track_y_transl[1] %s %.1f\n", pg_FullScenarioVarMessages[indVar].c_str(), new_value);
 							//}
 						}
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_int) {
-						float new_value = float(*((int*)ScenarioVarPointers[indVar]));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+						float new_value = float(*((int*)pg_FullScenarioVarPointers[indVar]));
 						switch (ScenarioVarPulse[indVar]) {
 						case _pg_pulsed_absolute:
-							new_value *= (1.f + pulse_average * float(*((float*)ScenarioVarPointers[indVar + 1])));
+							new_value *= (1.f + pulse_average * float(*((float*)pg_FullScenarioVarPointers[indVar + 1])));
 							break;
 						case _pg_pulsed_uniform:
-							new_value += pulse_average * float(*((float*)ScenarioVarPointers[indVar + 1]));
+							new_value += pulse_average * float(*((float*)pg_FullScenarioVarPointers[indVar + 1]));
 							break;
 						case _pg_pulsed_differential:
-							new_value *= (pulse_average - pulse_average_prec) * float(*((float*)ScenarioVarPointers[indVar + 1]));
+							new_value *= (pulse_average - pulse_average_prec) * float(*((float*)pg_FullScenarioVarPointers[indVar + 1]));
 							break;
 						default:
 							break;
 						}
 						if (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(int(new_value)) || resend_all_variables) {
-							sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], int(new_value)); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+							sprintf(AuxString, "/%s %d", pg_FullScenarioVarMessages[indVar].c_str(), int(new_value)); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							// memorizes the shipped value in order to resend it only when changed
 							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(int(new_value));
 						}
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_bool
-						&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(*((bool*)ScenarioVarPointers[indVar])) || resend_all_variables)) {
-						sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], (int)(*((bool*)ScenarioVarPointers[indVar]))); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-						LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(*((bool*)ScenarioVarPointers[indVar]));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_bool
+						&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(*((bool*)pg_FullScenarioVarPointers[indVar])) || resend_all_variables)) {
+						sprintf(AuxString, "/%s %d", pg_FullScenarioVarMessages[indVar].c_str(), (int)(*((bool*)pg_FullScenarioVarPointers[indVar]))); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+						LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(*((bool*)pg_FullScenarioVarPointers[indVar]));
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_sign
-						&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(*((int*)ScenarioVarPointers[indVar])) || resend_all_variables)) {
-						sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], *((int*)ScenarioVarPointers[indVar])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-						LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(*((int*)ScenarioVarPointers[indVar]));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_sign
+						&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(*((int*)pg_FullScenarioVarPointers[indVar])) || resend_all_variables)) {
+						sprintf(AuxString, "/%s %d", pg_FullScenarioVarMessages[indVar].c_str(), *((int*)pg_FullScenarioVarPointers[indVar])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+						LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(*((int*)pg_FullScenarioVarPointers[indVar]));
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_path
-						&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(*((bool*)ScenarioVarPointers[indVar])) || resend_all_variables)) {
-						sprintf(AuxString, "/%s %d", ScenarioVarMessages[indVar], (int)(*((bool*)ScenarioVarPointers[indVar]))); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-						LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(*((bool*)ScenarioVarPointers[indVar]));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_path
+						&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num != float(*((bool*)pg_FullScenarioVarPointers[indVar])) || resend_all_variables)) {
+						sprintf(AuxString, "/%s %d", pg_FullScenarioVarMessages[indVar].c_str(), (int)(*((bool*)pg_FullScenarioVarPointers[indVar]))); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+						LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].val_num = float(*((bool*)pg_FullScenarioVarPointers[indVar]));
 					}
 				}
 				// array
 				else {
-					for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
-						if (ScenarioVarTypes[indVar] == _pg_float) {
-							float new_value = float(((float*)ScenarioVarPointers[indVar])[index]);
+					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+						if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+							float new_value = float(((float*)pg_FullScenarioVarPointers[indVar])[index]);
 							switch (ScenarioVarPulse[indVar]) {
 							case _pg_pulsed_absolute:
-								new_value *= (1.f + pulse_average * float(((float*)ScenarioVarPointers[indVar + 1])[index]));
+								new_value *= (1.f + pulse_average * float(((float*)pg_FullScenarioVarPointers[indVar + 1])[index]));
 								break;
 							case _pg_pulsed_uniform:
-								new_value += pulse_average * float(((float*)ScenarioVarPointers[indVar + 1])[index]);
+								new_value += pulse_average * float(((float*)pg_FullScenarioVarPointers[indVar + 1])[index]);
 								break;
 							case _pg_pulsed_differential:
-								new_value *= (pulse_average - pulse_average_prec) * float(((float*)ScenarioVarPointers[indVar + 1])[index]);
+								new_value *= (pulse_average - pulse_average_prec) * float(((float*)pg_FullScenarioVarPointers[indVar + 1])[index]);
 								break;
 							default:
 								break;
@@ -1803,30 +1802,30 @@ void pg_displaySceneVariables(void) {
 							if (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != new_value || resend_all_variables) {
 								std::regex array_command("([a-zA-Z0-9_]+[a-zA-Z])(_pulse)");
 								std::smatch pieces_match;
-								std::string var_mess = string(ScenarioVarMessages[indVar]);
+								std::string var_mess = pg_FullScenarioVarMessages[indVar];
 								if (std::regex_match(var_mess, pieces_match, array_command)) {
 									sprintf(AuxString, "/%s_%d%s %.4f", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), new_value); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 								}
 								else {
-									sprintf(AuxString, "/%s_%d %.4f", ScenarioVarMessages[indVar], index, new_value); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+									sprintf(AuxString, "/%s_%d %.4f", pg_FullScenarioVarMessages[indVar].c_str(), index, new_value); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 								}
 								LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, new_value);
 								//if (indVar == _track_y_transl[1]) {
-								//	printf("REPOST: track_y_transl[1] %s %.1f\n", ScenarioVarMessages[indVar], new_value);
+								//	printf("REPOST: track_y_transl[1] %s %.1f\n", pg_FullScenarioVarMessages[indVar].c_str(), new_value);
 								//}
 							}
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_int) {
-							float new_value = float(((int*)ScenarioVarPointers[indVar])[index]);
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+							float new_value = float(((int*)pg_FullScenarioVarPointers[indVar])[index]);
 							switch (ScenarioVarPulse[indVar]) {
 							case _pg_pulsed_absolute:
-								new_value *= (1.f + pulse_average * float(((float*)ScenarioVarPointers[indVar + 1])[index]));
+								new_value *= (1.f + pulse_average * float(((float*)pg_FullScenarioVarPointers[indVar + 1])[index]));
 								break;
 							case _pg_pulsed_uniform:
-								new_value += pulse_average * float(((float*)ScenarioVarPointers[indVar + 1])[index]);
+								new_value += pulse_average * float(((float*)pg_FullScenarioVarPointers[indVar + 1])[index]);
 								break;
 							case _pg_pulsed_differential:
-								new_value *= (pulse_average - pulse_average_prec) * float(((float*)ScenarioVarPointers[indVar + 1])[index]);
+								new_value *= (pulse_average - pulse_average_prec) * float(((float*)pg_FullScenarioVarPointers[indVar + 1])[index]);
 								break;
 							default:
 								break;
@@ -1834,55 +1833,55 @@ void pg_displaySceneVariables(void) {
 							if (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(int(new_value)) || resend_all_variables) {
 								std::regex array_command("([a-zA-Z0-9_]+[a-zA-Z])(_pulse)");
 								std::smatch pieces_match;
-								std::string var_mess = string(ScenarioVarMessages[indVar]);
+								std::string var_mess = pg_FullScenarioVarMessages[indVar];
 								if (std::regex_match(var_mess, pieces_match, array_command)) {
 									sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), int(new_value)); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 								}
 								else {
-									sprintf(AuxString, "/%s_%d %d", ScenarioVarMessages[indVar], index, int(new_value)); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+									sprintf(AuxString, "/%s_%d %d", pg_FullScenarioVarMessages[indVar].c_str(), index, int(new_value)); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 								}
 								// memorizes the shipped value in order to resend it only when changed
 								LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(int(new_value)));
 							}
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_bool
-							&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(((bool*)ScenarioVarPointers[indVar])[index]) || resend_all_variables)) {
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_bool
+							&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(((bool*)pg_FullScenarioVarPointers[indVar])[index]) || resend_all_variables)) {
 							std::regex array_command("([a-zA-Z0-9_]+[a-zA-Z])(_pulse)");
 							std::smatch pieces_match;
-							std::string var_mess = string(ScenarioVarMessages[indVar]);
+							std::string var_mess = pg_FullScenarioVarMessages[indVar];
 							if (std::regex_match(var_mess, pieces_match, array_command)) {
-								sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), (int)(((bool*)ScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+								sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), (int)(((bool*)pg_FullScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							}
 							else {
-								sprintf(AuxString, "/%s_%d %d", ScenarioVarMessages[indVar], index, (int)(((bool*)ScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+								sprintf(AuxString, "/%s_%d %d", pg_FullScenarioVarMessages[indVar].c_str(), index, (int)(((bool*)pg_FullScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							}
-							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(((bool*)ScenarioVarPointers[indVar])[index]));
+							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(((bool*)pg_FullScenarioVarPointers[indVar])[index]));
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_sign
-							&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(((int*)ScenarioVarPointers[indVar])[index]) || resend_all_variables)) {
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_sign
+							&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(((int*)pg_FullScenarioVarPointers[indVar])[index]) || resend_all_variables)) {
 							std::regex array_command("([a-zA-Z0-9_]+[a-zA-Z])(_pulse)");
 							std::smatch pieces_match;
-							std::string var_mess = string(ScenarioVarMessages[indVar]);
+							std::string var_mess = pg_FullScenarioVarMessages[indVar];
 							if (std::regex_match(var_mess, pieces_match, array_command)) {
-								sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), ((int*)ScenarioVarPointers[indVar])[index]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+								sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), ((int*)pg_FullScenarioVarPointers[indVar])[index]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							}
 							else {
-								sprintf(AuxString, "/%s_%d %d", ScenarioVarMessages[indVar], index, ((int*)ScenarioVarPointers[indVar])[index]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+								sprintf(AuxString, "/%s_%d %d", pg_FullScenarioVarMessages[indVar].c_str(), index, ((int*)pg_FullScenarioVarPointers[indVar])[index]); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							}
-							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(((int*)ScenarioVarPointers[indVar])[index]));
+							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(((int*)pg_FullScenarioVarPointers[indVar])[index]));
 						}
-						else if (ScenarioVarTypes[indVar] == _pg_path
-							&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(((bool*)ScenarioVarPointers[indVar])[index]) || resend_all_variables)) {
+						else if (pg_FullScenarioVarTypes[indVar] == _pg_path
+							&& (LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].get_array_value(index) != float(((bool*)pg_FullScenarioVarPointers[indVar])[index]) || resend_all_variables)) {
 							std::regex array_command("([a-zA-Z0-9_]+[a-zA-Z])(_pulse)");
 							std::smatch pieces_match;
-							std::string var_mess = string(ScenarioVarMessages[indVar]);
+							std::string var_mess = pg_FullScenarioVarMessages[indVar];
 							if (std::regex_match(var_mess, pieces_match, array_command)) {
-								sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), (int)(((bool*)ScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+								sprintf(AuxString, "/%s_%d%s %d", pieces_match[1].str().c_str(), index, pieces_match[2].str().c_str(), (int)(((bool*)pg_FullScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							}
 							else {
-								sprintf(AuxString, "/%s_%d %d", ScenarioVarMessages[indVar], index, (int)(((bool*)ScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+								sprintf(AuxString, "/%s_%d %d", pg_FullScenarioVarMessages[indVar].c_str(), index, (int)(((bool*)pg_FullScenarioVarPointers[indVar])[index])); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 							}
-							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(((bool*)ScenarioVarPointers[indVar])[index]));
+							LastGUIShippedValuesInterpVar[pg_current_configuration_rank][indVar].set_array_value(index, float(((bool*)pg_FullScenarioVarPointers[indVar])[index]));
 						}
 					}
 				}
@@ -1926,56 +1925,56 @@ void pg_logCurrentLineSceneVariables(string fileName) {
 	// SCENARIO-CONTROLLED UNIFORM VARIABLES
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			// dimension 1 variable: number
-			if (ScenarioVarIndiceRanges[indVar][0] == -1) {
-				if (ScenarioVarTypes[indVar] == _pg_float) {
-					fprintf(pg_csv_log_file, ",%.6f", *((float*)ScenarioVarPointers[indVar]));
+			if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
+				if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+					fprintf(pg_csv_log_file, ",%.6f", *((float*)pg_FullScenarioVarPointers[indVar]));
 				}
-				else if (ScenarioVarTypes[indVar] == _pg_int) {
-					fprintf(pg_csv_log_file, ",%d", *((int*)ScenarioVarPointers[indVar]));
+				else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+					fprintf(pg_csv_log_file, ",%d", *((int*)pg_FullScenarioVarPointers[indVar]));
 				}
-				else if (ScenarioVarTypes[indVar] == _pg_bool) {
-					fprintf(pg_csv_log_file, ",%d", int(*((bool*)ScenarioVarPointers[indVar])));
+				else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
+					fprintf(pg_csv_log_file, ",%d", int(*((bool*)pg_FullScenarioVarPointers[indVar])));
 				}
-				else if (ScenarioVarTypes[indVar] == _pg_sign) {
-					fprintf(pg_csv_log_file, ",%d", (*((int*)ScenarioVarPointers[indVar]) > 0 ? +1 : (*((int*)ScenarioVarPointers[indVar]) < 0) ? -1 : 0));
+				else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
+					fprintf(pg_csv_log_file, ",%d", (*((int*)pg_FullScenarioVarPointers[indVar]) > 0 ? +1 : (*((int*)pg_FullScenarioVarPointers[indVar]) < 0) ? -1 : 0));
 				}
-				else if (ScenarioVarTypes[indVar] == _pg_path) {
-					fprintf(pg_csv_log_file, ",%d", int(*((bool*)ScenarioVarPointers[indVar])));
+				else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
+					fprintf(pg_csv_log_file, ",%d", int(*((bool*)pg_FullScenarioVarPointers[indVar])));
 				}
-				else if (ScenarioVarTypes[indVar] == _pg_string) {
-					fprintf(pg_csv_log_file, ",%s", (*((string*)ScenarioVarPointers[indVar])).c_str());
+				else if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
+					fprintf(pg_csv_log_file, ",%s", (*((string*)pg_FullScenarioVarPointers[indVar])).c_str());
 				}
 			}
 			// array
 			else {
-				for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+				for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 					// column separator
-					if (index == ScenarioVarIndiceRanges[indVar][0]) {
+					if (index == pg_FullScenarioVarIndiceRanges[indVar][0]) {
 						fprintf(pg_csv_log_file, ",");
 					}
 					// value
-					if (ScenarioVarTypes[indVar] == _pg_float) {
-						fprintf(pg_csv_log_file, "%.6f", ((float*)ScenarioVarPointers[indVar])[index]);
+					if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+						fprintf(pg_csv_log_file, "%.6f", ((float*)pg_FullScenarioVarPointers[indVar])[index]);
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_int) {
-						fprintf(pg_csv_log_file, "%d", ((int*)ScenarioVarPointers[indVar])[index]);
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+						fprintf(pg_csv_log_file, "%d", ((int*)pg_FullScenarioVarPointers[indVar])[index]);
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_bool) {
-						fprintf(pg_csv_log_file, "%d", int(((bool*)ScenarioVarPointers[indVar])[index]));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
+						fprintf(pg_csv_log_file, "%d", int(((bool*)pg_FullScenarioVarPointers[indVar])[index]));
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_sign) {
-						fprintf(pg_csv_log_file, "%d", (((int*)ScenarioVarPointers[indVar])[index] > 0 ? +1 : (((int*)ScenarioVarPointers[indVar])[index] < 0) ? -1 : 0));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
+						fprintf(pg_csv_log_file, "%d", (((int*)pg_FullScenarioVarPointers[indVar])[index] > 0 ? +1 : (((int*)pg_FullScenarioVarPointers[indVar])[index] < 0) ? -1 : 0));
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_path) {
-						fprintf(pg_csv_log_file, "%d", int(((bool*)ScenarioVarPointers[indVar])[index]));
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
+						fprintf(pg_csv_log_file, "%d", int(((bool*)pg_FullScenarioVarPointers[indVar])[index]));
 					}
-					else if (ScenarioVarTypes[indVar] == _pg_string) {
-						fprintf(pg_csv_log_file, "%s", (((string*)ScenarioVarPointers[indVar])[index]).c_str());
+					else if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
+						fprintf(pg_csv_log_file, "%s", (((string*)pg_FullScenarioVarPointers[indVar])[index]).c_str());
 					}
 					// value separator
-					if (index < ScenarioVarIndiceRanges[indVar][1] - 1) {
+					if (index < pg_FullScenarioVarIndiceRanges[indVar][1] - 1) {
 						fprintf(pg_csv_log_file, "/");
 					}
 				}
@@ -1992,8 +1991,8 @@ void pg_logFirstLineSceneVariables(void) {
 	fprintf(pg_csv_log_file, "ID");
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
-			fprintf(pg_csv_log_file, ",%s", ScenarioVarStrings[indVar]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+			fprintf(pg_csv_log_file, ",%s", pg_FullScenarioVarStrings[indVar].c_str());
 		}
 	}
 	fprintf(pg_csv_log_file, "\n");
@@ -2008,9 +2007,9 @@ void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music beats
-		sprintf(AuxString, "/auto_beat %d", (int)(*((bool *)ScenarioVarPointers[_auto_beat])));
+		sprintf(AuxString, "/auto_beat %d", (int)(*((bool *)pg_FullScenarioVarPointers[_auto_beat])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("auto_beat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_auto_beat])));
+		// printf("auto_beat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_auto_beat])));
 #endif
 	}
 }
@@ -2019,9 +2018,9 @@ void MIDIwithStroke_callBack(pg_Parameter_Input_Type param_input_type, bool scen
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music beats
-		sprintf(AuxString, "/MIDIwithStroke %d", (int)(*((bool*)ScenarioVarPointers[_MIDIwithStroke])));
+		sprintf(AuxString, "/MIDIwithStroke %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithStroke])));
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
-		// printf("MIDIwithStroke[%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithBeat])));
+		// printf("MIDIwithStroke[%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBeat])));
 #endif
 	}
 }
@@ -2031,9 +2030,9 @@ void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, bool scenar
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music beats
-		sprintf(AuxString, "/MIDIwithBeat %d", (int)(*((bool*)ScenarioVarPointers[_MIDIwithBeat])));
+		sprintf(AuxString, "/MIDIwithBeat %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithBeat])));
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
-		// printf("MIDIwithBeat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithBeat])));
+		// printf("MIDIwithBeat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBeat])));
 #endif
 	}
 }
@@ -2043,9 +2042,9 @@ void MIDIwithColor_callBack(pg_Parameter_Input_Type param_input_type, bool scena
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music Colors
-		sprintf(AuxString, "/MIDIwithColor %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithColor])));
+		sprintf(AuxString, "/MIDIwithColor %d", (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithColor])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithColor [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithColor])));
+		// printf("MIDIwithColor [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithColor])));
 #endif
 	}
 }
@@ -2055,22 +2054,22 @@ void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, bool scena
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music Brushs
-		sprintf(AuxString, "/MIDIwithBrush %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithBrush])));
+		sprintf(AuxString, "/MIDIwithBrush %d", (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBrush])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithBrush [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithBrush])));
+		// printf("MIDIwithBrush [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBrush])));
 #endif
 	}
 }
 #endif
 #if defined(var_MIDIwithCameraFlash)
 void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 			// sends a message to PD to stop sending music Flashs
-			sprintf(AuxString, "/MIDIwithCameraFlash %d", (int)(*((bool*)ScenarioVarPointers[_MIDIwithCameraFlash])));
+			sprintf(AuxString, "/MIDIwithCameraFlash %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithCameraFlash])));
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
-			// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithFlash])));
+			// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithFlash])));
 #endif
 		}
 	}
@@ -2078,7 +2077,7 @@ void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool
 #endif
 #if defined(var_Contact_clip_in_range)
 void Contact_clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			ContAct_clip_ranges_min.clear();
 			ContAct_clip_ranges_max.clear();
@@ -2101,9 +2100,9 @@ void MIDIwithPhotoFlash_callBack(pg_Parameter_Input_Type param_input_type, bool 
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music Flashs
-		sprintf(AuxString, "/MIDIwithPhotoFlash %d", (int)(*((bool *)ScenarioVarPointers[_MIDIwithPhotoFlash])));
+		sprintf(AuxString, "/MIDIwithPhotoFlash %d", (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithPhotoFlash])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_MIDIwithFlash])));
+		// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithFlash])));
 #endif
 	}
 }
@@ -2112,9 +2111,9 @@ void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, bool scenario
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music pulse
-		sprintf(AuxString, "/auto_pulse %d", (int)(*((bool *)ScenarioVarPointers[_auto_pulse])));
+		sprintf(AuxString, "/auto_pulse %d", (int)(*((bool *)pg_FullScenarioVarPointers[_auto_pulse])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("auto_pulse [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)ScenarioVarPointers[_auto_pulse])));
+		// printf("auto_pulse [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_auto_pulse])));
 #endif
 		for (int ind = 0; ind < 3 * 2; ind++) {
 			seed_pulsePerlinNoise[ind] = rand_0_1 * 255;
@@ -2218,7 +2217,7 @@ void pen_value_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 void repop_huePart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(var_repop_huePart)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
 			&& defined(var_repop_satPart) && defined(var_repop_valuePart)
 				float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
@@ -2233,7 +2232,7 @@ void repop_huePart_callBack(pg_Parameter_Input_Type param_input_type, float scen
 void repop_satPart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 #if defined(var_repop_huePart)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
 			&& defined(var_repop_satPart) && defined(var_repop_valuePart)
 				float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
@@ -2249,9 +2248,9 @@ void repop_valuePart_callBack(pg_Parameter_Input_Type param_input_type, float sc
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 		HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 		sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
@@ -2289,7 +2288,7 @@ void Contact_motion_speed_callBack(pg_Parameter_Input_Type param_input_type, flo
 #endif
 
 void cameraExposure_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// sprintf(AuxString, "/message Exposure_%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			if (scenario_or_gui_command_value != CameraCurrent_exposure) {
@@ -2321,7 +2320,7 @@ void Caverne_Mesh_Profusion_callBack(pg_Parameter_Input_Type param_input_type, f
 }
 #endif
 void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// sprintf(AuxString, "/message Gamma%.1f", scenario_or_gui_command_value); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
 			if (scenario_or_gui_command_value != CameraCurrent_gamma) {
@@ -2335,7 +2334,7 @@ void cameraGamma_callBack(pg_Parameter_Input_Type param_input_type, float scenar
 	}
 }
 void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_gain) {
 				printf("Cam gain %.2f\n", scenario_or_gui_command_value);
@@ -2348,7 +2347,7 @@ void cameraGain_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 }
 void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_brightness) {
 				//printf("Cam brightness %.2f\n", scenario_or_gui_command_value);
@@ -2361,7 +2360,7 @@ void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float s
 	}
 }
 void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_saturation) {
 				//printf("Cam saturation %.2f\n", scenario_or_gui_command_value);
@@ -2374,7 +2373,7 @@ void cameraSaturation_callBack(pg_Parameter_Input_Type param_input_type, float s
 	}
 }
 void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_contrast) {
 				//printf("Cam contrast %.2f\n", scenario_or_gui_command_value);
@@ -2387,7 +2386,7 @@ void cameraContrast_callBack(pg_Parameter_Input_Type param_input_type, float sce
 	}
 }
 void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_WB_B) {
 				//printf("Cam WB B %.2f\n", scenario_or_gui_command_value);
@@ -2400,7 +2399,7 @@ void cameraWB_B_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 	}
 }
 void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != CameraCurrent_WB_R) {
 				//printf("Cam WB R %.2f\n", scenario_or_gui_command_value);
@@ -2432,7 +2431,7 @@ void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int
 }
 #endif
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// starts playing another video
 			pg_play_movie_no();
@@ -2452,7 +2451,7 @@ void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scen
 	}
 }
 void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			//printf("Movie No %d\n", playing_movieNo);
 			// if the video no is outside the range of available videos: stops the playing video
@@ -2463,7 +2462,7 @@ void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scen
 	}
 }
 void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			//printf("camera current %d new %d param type %d\n", pg_current_active_cameraNo, cameraNo, param_input_type);
 			if (cameraNo != pg_current_active_cameraNo) {
@@ -2476,7 +2475,7 @@ void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or
 
 #if defined(var_script_1)
 void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_script_1]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_script_1]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			// stops the current script #1 if one is active
 			if (currently_runnings_script_1 != "NULL") {
@@ -2538,7 +2537,7 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 #endif
 
 void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
@@ -2565,7 +2564,7 @@ void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, str
 	}
 }
 void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
@@ -2592,7 +2591,7 @@ void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, st
 }
 #if PG_NB_PARALLEL_CLIPS >= 2
 void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
@@ -2619,7 +2618,7 @@ void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_typ
 }
 
 void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL" && scenario_or_gui_command_value != "") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_current_configuration_rank]; ind_clip++) {
@@ -2647,7 +2646,7 @@ void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_ty
 #endif
 
 void pg_play_movie_no(void) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
 			&& playing_movieNo != currentlyPlaying_movieNo) {
 			pg_movie_frame.setTo(Scalar(0, 0, 0));
@@ -2721,7 +2720,7 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 				sprintf(AuxString, "/clip_play_0 %d", playing_clipNoLeft);
 				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-				(*((string*)ScenarioVarPointers[_playing_clipNameLeft])) = pg_clip_tracks[pg_current_configuration_rank][playing_clipNoLeft].get_name();
+				(*((string*)pg_FullScenarioVarPointers[_playing_clipNameLeft])) = pg_clip_tracks[pg_current_configuration_rank][playing_clipNoLeft].get_name();
 				playing_clipNameLeft = pg_clip_tracks[pg_current_configuration_rank][playing_clipNoLeft].get_name();
 				//printf("Play left clip %d at %d fps, is playing %d nb frames %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]), pg_clip_tracks[pg_current_configuration_rank][pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)].get_initialNbFrames());
 			}
@@ -2733,7 +2732,7 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				sprintf(AuxString, "/clip2_play_0 %d", playing_secondClipNoLeft);
 				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 				//printf("Play second left clip %d at %d fps, is playing %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]));
-				(*((string*)ScenarioVarPointers[_playing_secondClipNameLeft])) = pg_clip_tracks[pg_current_configuration_rank][playing_secondClipNoLeft].get_name();
+				(*((string*)pg_FullScenarioVarPointers[_playing_secondClipNameLeft])) = pg_clip_tracks[pg_current_configuration_rank][playing_secondClipNoLeft].get_name();
 				playing_secondClipNameLeft = pg_clip_tracks[pg_current_configuration_rank][playing_secondClipNoLeft].get_name();
 			}
 #endif
@@ -2746,7 +2745,7 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				sprintf(AuxString, "/clip_play_1 %d", playing_clipNoRight);
 				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 				//printf("Play right clip %d at %d fps, is playing %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]));
-				(*((string*)ScenarioVarPointers[_playing_clipNameRight])) = pg_clip_tracks[pg_current_configuration_rank][playing_clipNoRight].get_name();
+				(*((string*)pg_FullScenarioVarPointers[_playing_clipNameRight])) = pg_clip_tracks[pg_current_configuration_rank][playing_clipNoRight].get_name();
 				playing_clipNameRight = pg_clip_tracks[pg_current_configuration_rank][playing_clipNoRight].get_name();
 			}
 #if PG_NB_PARALLEL_CLIPS >= 2
@@ -2757,7 +2756,7 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				sprintf(AuxString, "/clip2_play_1 %d", playing_secondClipNoRight);
 				pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 				//printf("Play second right clip %d at %d fps, is playing %d\n", pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_clip_status[clipSide].clip_play[indClipRank]));
-				(*((string*)ScenarioVarPointers[_playing_secondClipNameRight])) = pg_clip_tracks[pg_current_configuration_rank][playing_secondClipNoRight].get_name();
+				(*((string*)pg_FullScenarioVarPointers[_playing_secondClipNameRight])) = pg_clip_tracks[pg_current_configuration_rank][playing_secondClipNoRight].get_name();
 				playing_secondClipNameRight = pg_clip_tracks[pg_current_configuration_rank][playing_secondClipNoRight].get_name();
 			}
 #endif
@@ -2833,16 +2832,12 @@ void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, floa
 #endif
 void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
-		if (scenario_or_gui_command_value >= 1) { // large radius for the image brushes*
-			pen_radiusMultiplier = 50.0f;
-#if defined(CORE)
-			pen_radiusMultiplier = 1.0f;
-#endif
-		}
-		else {
-			pen_radiusMultiplier = 1.0f;
-		}
-		// printf("pen_radiusMultiplier %.2f\n", pen_radiusMultiplier);
+		//if (scenario_or_gui_command_value >= 1) { // large radius for the image brushes*
+		//	pen_radiusMultiplier = 50.0f;
+		//}
+		//else {
+		//	pen_radiusMultiplier = 1.0f;
+		//}
 	}
 }
 void clearAllLayers_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
@@ -2982,14 +2977,14 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 					&& curve.path_group == pg_current_SVG_path_group) {
 					was_path_replay[curve.path_no]
 						= is_path_replay[curve.path_no];
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 						if (is_path_replay[curve.path_no]) {
 							//printf("Stops Replay path_no %d: %d\n", paths[indPrerecPath].path_no, is_path_replay[paths[indPrerecPath].indPath]);
 
 							(curve.path_no);
 						}
 					}
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 						// is recording source -> has to stop recording source 
 						if (pg_Path_Status[curve.path_no].path_isActiveRecording) {
 							//printf("Stops Recording indPath %d: %d\n", paths[indPrerecPath].path_no, pg_Path_Status[paths[indPrerecPath].path_no].path_isActiveRecording);
@@ -3007,8 +3002,8 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 				if (pathNo <= PG_NB_PATHS
 					&& curve.path_group == pg_current_SVG_path_group) {
 					//printf("load path for replay %s\n", paths[indPrerecPath].path_fileName.c_str());
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
-						&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+						&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 						pg_Path_Status[pathNo].load_svg_path((char*)curve.path_fileName.c_str(),
 							curve.pathRadius,
 							curve.path_r_color, 
@@ -3020,7 +3015,7 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 							curve.secondsforwidth,
 							pg_current_configuration_rank);
 					}
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 						// start reading if it was already reading
 						if (was_path_replay[curve.path_no]) {
 							//printf("Starts Replay indPath %d: %d\n", paths[indPrerecPath].path_no, was_path_replay[paths[indPrerecPath].path_no]);
@@ -3054,7 +3049,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		}
 		// stops recording if recording is on
 		bool isTrackRecord = false;
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			isTrackRecord = path_record[pathNo];
 		}
 
@@ -3106,8 +3101,8 @@ void reload_paths_callBack(pg_Parameter_Input_Type param_input_type, bool scenar
 			for(SVG_scenarioPathCurve &curve: SVG_scenarioPathCurves[pg_current_configuration_rank]) {
 				int pathNo = curve.path_no;
 				if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
-						&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+						&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 						pg_Path_Status[pathNo].load_svg_path((char*)curve.path_fileName.c_str(),
 							curve.pathRadius,
 							curve.path_r_color, 
@@ -3173,36 +3168,36 @@ void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, 
 	//printf("end callback path record for path 2 recording %d active recording %d (recorded %d)\n", path_record[2], int(pg_Path_Status[2].path_isActiveRecording), recorded_path[2]);
 }
 void part_move_init(void) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_follow]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_repulse]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_path_follow]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_path_repulse]) {
 		for (int pathNo = 0; pathNo < PG_NB_PATHS; pathNo++) {
-			((bool*)ScenarioVarPointers[_part_path_follow])[pathNo] = false;
-			((bool*)ScenarioVarPointers[_part_path_repulse])[pathNo] = false;
+			((bool*)pg_FullScenarioVarPointers[_part_path_follow])[pathNo] = false;
+			((bool*)pg_FullScenarioVarPointers[_part_path_repulse])[pathNo] = false;
 		}
 	}
 }
 void part_path_follow_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	bool state = false;
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_follow]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_path_follow]) {
 		state = part_path_follow[pathNo];
 		if (!state) {
 			return; // nothing to do for false values (does not follow)
 		}
 		part_move_init();
-		((bool*)ScenarioVarPointers[_part_path_follow])[pathNo] = state;
+		((bool*)pg_FullScenarioVarPointers[_part_path_follow])[pathNo] = state;
 	}
 }
 void part_path_repulse_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	bool state = false;
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_path_repulse]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_path_repulse]) {
 		state = part_path_repulse[pathNo];
 		if (!state) {
 			return; // nothing to do for false values (does not reoulse)
 		}
 		part_move_init();
-		((bool*)ScenarioVarPointers[_part_path_repulse])[pathNo] = state;
+		((bool*)pg_FullScenarioVarPointers[_part_path_repulse])[pathNo] = state;
 	}
 }
 void partMove_target_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
@@ -3225,24 +3220,24 @@ void part_initialization_callBack(pg_Parameter_Input_Type param_input_type, int 
 }
 
 void sensor_layout_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		// copies the grid layout
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 			assignSensorPositions();
 		}
 	}
 }
 void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_activation]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_activation]) {
 		// copies the grid layout
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 			assignSensorActivations();
 		}
 	}
 }
 void sensor_sample_setUp_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_sample_setUp]) {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_sample_setUp]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 			sensor_sample_setUp_interpolation();
 		}
 	}
@@ -3261,8 +3256,8 @@ void pg_NextRecordReplayPath(void) {
 	bool new_record = false;
 	for (int pathNo = PG_NB_PATHS - 1; pathNo >= 1; pathNo--) {
 		if (path_record[pathNo]) {
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
-				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 				path_replay_trackNo_callBack(pathNo, _PG_GUI_COMMAND, -1);
 				if (pathNo < PG_NB_PATHS - 1) {
 					path_record_callBack(pathNo + 1, _PG_GUI_COMMAND, true);
@@ -3301,19 +3296,19 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 	pg_variable_param_input_type[indVar] = param_input_type;
 
 	// dimension 1 variable
-	if (ScenarioVarIndiceRanges[indVar][0] == -1) {
-		if (ScenarioVarTypes[indVar] == _pg_float) {
+	if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
+		if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
 			if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-				*((float*)ScenarioVarPointers[indVar]) = float(scenario_or_gui_command_value.val_num);
+				*((float*)pg_FullScenarioVarPointers[indVar]) = float(scenario_or_gui_command_value.val_num);
 			}
 			//if (indVar == 45) {
 			//	printf("Param %d (%s) interp value %.2f var value %.2f\n", 
-			//		indVar, ScenarioVarStrings[indVar], float(scenario_or_gui_command_value.val_num), pen_radius);
+			//		indVar, pg_FullScenarioVarStrings[indVar].c_str(), float(scenario_or_gui_command_value.val_num), pen_radius);
 			//}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_int) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
 			if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
 					&& (indVar == _CA1Type || indVar == _CA2Type ||
 						indVar == _CA1SubType || indVar == _CA2SubType)) {
 					// for CAType we choose to alternate randomly between both types, according
@@ -3322,146 +3317,146 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 					float thefloor = float(floor(scenario_or_gui_command_value.val_num));
 					float decimalPart = float(scenario_or_gui_command_value.val_num - thefloor);
 					if (randVal > decimalPart) {
-						*((int*)ScenarioVarPointers[indVar]) = (int)thefloor;
+						*((int*)pg_FullScenarioVarPointers[indVar]) = (int)thefloor;
 					}
 					if (randVal < decimalPart) {
-						*((int*)ScenarioVarPointers[indVar]) = (int)thefloor + 1;
+						*((int*)pg_FullScenarioVarPointers[indVar]) = (int)thefloor + 1;
 					}
 				}
 				else
 				{
-					*((int*)ScenarioVarPointers[indVar]) = int(round(scenario_or_gui_command_value.val_num));
+					*((int*)pg_FullScenarioVarPointers[indVar]) = int(round(scenario_or_gui_command_value.val_num));
 				}
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_bool) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
 			if (param_input_type == _PG_SCENARIO) {
-				*((bool*)ScenarioVarPointers[indVar]) = bool(round(scenario_or_gui_command_value.val_num));
+				*((bool*)pg_FullScenarioVarPointers[indVar]) = bool(round(scenario_or_gui_command_value.val_num));
 			}
 			else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-				*((bool*)ScenarioVarPointers[indVar]) = !(*((bool*)ScenarioVarPointers[indVar]));
-				// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)ScenarioVarPointers[indVar]));
+				*((bool*)pg_FullScenarioVarPointers[indVar]) = !(*((bool*)pg_FullScenarioVarPointers[indVar]));
+				// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_sign) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
 			if (param_input_type == _PG_SCENARIO) {
-				*((int*)ScenarioVarPointers[indVar]) = (scenario_or_gui_command_value.val_num > 0 ? 1 : (scenario_or_gui_command_value.val_num > 0 ? false : 0));
+				*((int*)pg_FullScenarioVarPointers[indVar]) = (scenario_or_gui_command_value.val_num > 0 ? 1 : (scenario_or_gui_command_value.val_num > 0 ? false : 0));
 			}
 			else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-				*((float*)ScenarioVarPointers[indVar]) = -1.0f * (*((float*)ScenarioVarPointers[indVar]));
+				*((float*)pg_FullScenarioVarPointers[indVar]) = -1.0f * (*((float*)pg_FullScenarioVarPointers[indVar]));
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_path) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
 			if (param_input_type == _PG_SCENARIO) {
-				*((bool*)ScenarioVarPointers[indVar]) = (scenario_or_gui_command_value.val_num > 0 ? true : false);
+				*((bool*)pg_FullScenarioVarPointers[indVar]) = (scenario_or_gui_command_value.val_num > 0 ? true : false);
 			}
 			else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-				*((bool*)ScenarioVarPointers[indVar]) = !(*((bool*)ScenarioVarPointers[indVar]));
-				// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)ScenarioVarPointers[indVar]));
+				*((bool*)pg_FullScenarioVarPointers[indVar]) = !(*((bool*)pg_FullScenarioVarPointers[indVar]));
+				// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
 			}
 		}
 	}
-	// dimension 2 variable: between ScenarioVarIndiceRanges[indVar][0] and ScenarioVarIndiceRanges[indVar][1] - 1
+	// dimension 2 variable: between pg_FullScenarioVarIndiceRanges[indVar][0] and pg_FullScenarioVarIndiceRanges[indVar][1] - 1
 	else {
-		if (ScenarioVarTypes[indVar] == _pg_float) {
+		if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 					if (array_index < 0) {
-						for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
-							((float*)ScenarioVarPointers[indVar])[index] = float(scenario_or_gui_command_value.val_array[index]);
+						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+							((float*)pg_FullScenarioVarPointers[indVar])[index] = float(scenario_or_gui_command_value.val_array[index]);
 						}
 					}
-					else if (array_index < ScenarioVarIndiceRanges[indVar][1]) {
-						((float*)ScenarioVarPointers[indVar])[array_index] = float(scenario_or_gui_command_value.val_array[array_index]);
+					else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
+						((float*)pg_FullScenarioVarPointers[indVar])[array_index] = float(scenario_or_gui_command_value.val_array[array_index]);
 					}
 				}
 			}
 			else {
-				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 100;
+				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 100;
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_int) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
 						&& (indVar == _CA1Type || indVar == _CA2Type ||
 							indVar == _CA1SubType || indVar == _CA2SubType)) {
 						// for CAType we choose to alternate randomly between both types, according
 						// to the proximity of floor or ceiling
 						if (array_index < 0) {
-							for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+							for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 								float randVal = rand_0_1;
 								float thefloor = float(floor(scenario_or_gui_command_value.val_array[index]));
 								float decimalPart = float(scenario_or_gui_command_value.val_array[index] - thefloor);
 								if (randVal > decimalPart) {
-									((int*)ScenarioVarPointers[indVar])[index] = (int)thefloor;
+									((int*)pg_FullScenarioVarPointers[indVar])[index] = (int)thefloor;
 								}
 								if (randVal < decimalPart) {
-									((int*)ScenarioVarPointers[indVar])[index] = (int)thefloor + 1;
+									((int*)pg_FullScenarioVarPointers[indVar])[index] = (int)thefloor + 1;
 								}
 							}
 						}
-						else if (array_index < ScenarioVarIndiceRanges[indVar][1]) {
+						else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
 							float randVal = rand_0_1;
 							float thefloor = float(floor(scenario_or_gui_command_value.val_array[array_index]));
 							float decimalPart = float(scenario_or_gui_command_value.val_array[array_index] - thefloor);
 							if (randVal > decimalPart) {
-								((int*)ScenarioVarPointers[indVar])[array_index] = (int)thefloor;
+								((int*)pg_FullScenarioVarPointers[indVar])[array_index] = (int)thefloor;
 							}
 							if (randVal < decimalPart) {
-								((int*)ScenarioVarPointers[indVar])[array_index] = (int)thefloor + 1;
+								((int*)pg_FullScenarioVarPointers[indVar])[array_index] = (int)thefloor + 1;
 							}
 						}
 					}
 					else
 					{
 						if (array_index < 0) {
-							for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
-								((int*)ScenarioVarPointers[indVar])[index] = int(scenario_or_gui_command_value.val_array[index]);
+							for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+								((int*)pg_FullScenarioVarPointers[indVar])[index] = int(scenario_or_gui_command_value.val_array[index]);
 							}
 						}
-						else if (array_index < ScenarioVarIndiceRanges[indVar][1]) {
-							((int*)ScenarioVarPointers[indVar])[array_index] = int(scenario_or_gui_command_value.val_array[array_index]);
+						else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
+							((int*)pg_FullScenarioVarPointers[indVar])[array_index] = int(scenario_or_gui_command_value.val_array[array_index]);
 						}
 					}
 				}
 			}
 			else {
-				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 100;
+				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 100;
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_bool) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (array_index < 0) {
-					for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 						if (param_input_type == _PG_SCENARIO) {
-							((bool*)ScenarioVarPointers[indVar])[index] = bool(round(scenario_or_gui_command_value.val_array[index]));
+							((bool*)pg_FullScenarioVarPointers[indVar])[index] = bool(round(scenario_or_gui_command_value.val_array[index]));
 						}
 						else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-							((bool*)ScenarioVarPointers[indVar])[index] = !(((bool*)ScenarioVarPointers[indVar])[index]);
-							// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)ScenarioVarPointers[indVar]));
+							((bool*)pg_FullScenarioVarPointers[indVar])[index] = !(((bool*)pg_FullScenarioVarPointers[indVar])[index]);
+							// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
 						}
 					}
 				}
-				else if (array_index < ScenarioVarIndiceRanges[indVar][1]) {
+				else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
 					if (param_input_type == _PG_SCENARIO) {
-						((bool*)ScenarioVarPointers[indVar])[array_index] = bool(round(scenario_or_gui_command_value.val_array[array_index]));
+						((bool*)pg_FullScenarioVarPointers[indVar])[array_index] = bool(round(scenario_or_gui_command_value.val_array[array_index]));
 					}
 					else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-						((bool*)ScenarioVarPointers[indVar])[array_index] = !(((bool*)ScenarioVarPointers[indVar])[array_index]);
-						// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)ScenarioVarPointers[indVar]));
+						((bool*)pg_FullScenarioVarPointers[indVar])[array_index] = !(((bool*)pg_FullScenarioVarPointers[indVar])[array_index]);
+						// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
 					}
 				}
 			}
 			else {
-				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 100;
+				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 100;
 			}
 		}
 
 		// runs the callBack on the updated variables which have one
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar] && ScenarioVarCallbacks[indVar]) {
-			//printf("Run callback of var \"%s\"\n", ScenarioVarMessages[indVar]);
-			(*ScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar] && pg_FullScenarioVarCallbacks[indVar]) {
+			//printf("Run callback of var \"%s\"\n", pg_FullScenarioVarMessages[indVar].c_str());
+			(*pg_FullScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value);
 		}
 	}
 }
@@ -3491,58 +3486,58 @@ void updateXYKeystonePad(void) {
 // saves the current values of the parameters in case of k (copy) interpolation mode
 // or in case of interpolation between the current values and the initial values of the current scene
 void pg_keep_value_copy(int indVar, ScenarioValue* parameter_value) {
-	if (ScenarioVarIndiceRanges[indVar][0] == -1) {
-		if (ScenarioVarTypes[indVar] == _pg_float) {
-			parameter_value[indVar].val_num = double(*((float*)ScenarioVarPointers[indVar]));
+	if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
+		if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+			parameter_value[indVar].val_num = double(*((float*)pg_FullScenarioVarPointers[indVar]));
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_int) {
-			parameter_value[indVar].val_num = double(*((int*)ScenarioVarPointers[indVar]));
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+			parameter_value[indVar].val_num = double(*((int*)pg_FullScenarioVarPointers[indVar]));
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_bool) {
-			if (*((bool*)ScenarioVarPointers[indVar]) != false) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
+			if (*((bool*)pg_FullScenarioVarPointers[indVar]) != false) {
 				parameter_value[indVar].val_num = 1;
 			}
 			else {
 				parameter_value[indVar].val_num = 0;
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_sign) {
-			parameter_value[indVar].val_num = double(*((int*)ScenarioVarPointers[indVar]));
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
+			parameter_value[indVar].val_num = double(*((int*)pg_FullScenarioVarPointers[indVar]));
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_path) {
-			if (*((bool*)ScenarioVarPointers[indVar]) != false) {
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
+			if (*((bool*)pg_FullScenarioVarPointers[indVar]) != false) {
 				parameter_value[indVar].val_num = 1;
 			}
 			else {
 				parameter_value[indVar].val_num = 0;
 			}
 		}
-		else if (ScenarioVarTypes[indVar] == _pg_string) {
-			parameter_value[indVar].val_string = *((string*)ScenarioVarPointers[indVar]);
+		else if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
+			parameter_value[indVar].val_string = *((string*)pg_FullScenarioVarPointers[indVar]);
 		}
 	}
 	// array
 	else {
-		for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
-			if (ScenarioVarTypes[indVar] == _pg_float) {
-				parameter_value[indVar].val_array[index] = double(((float*)ScenarioVarPointers[indVar])[index]);
+		for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+			if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
+				parameter_value[indVar].val_array[index] = double(((float*)pg_FullScenarioVarPointers[indVar])[index]);
 			}
-			else if (ScenarioVarTypes[indVar] == _pg_int) {
-				parameter_value[indVar].val_array[index] = double(((int*)ScenarioVarPointers[indVar])[index]);
+			else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
+				parameter_value[indVar].val_array[index] = double(((int*)pg_FullScenarioVarPointers[indVar])[index]);
 			}
-			else if (ScenarioVarTypes[indVar] == _pg_bool) {
-				if (((bool*)ScenarioVarPointers[indVar])[index] != false) {
+			else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
+				if (((bool*)pg_FullScenarioVarPointers[indVar])[index] != false) {
 					parameter_value[indVar].val_array[index] = 1;
 				}
 				else {
 					parameter_value[indVar].val_array[index] = 0;
 				}
 			}
-			else if (ScenarioVarTypes[indVar] == _pg_sign) {
-				parameter_value[indVar].val_array[index] = double(((int*)ScenarioVarPointers[indVar])[index]);
+			else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
+				parameter_value[indVar].val_array[index] = double(((int*)pg_FullScenarioVarPointers[indVar])[index]);
 			}
-			else if (ScenarioVarTypes[indVar] == _pg_path) {
-				if (((bool*)ScenarioVarPointers[indVar])[index] != false) {
+			else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
+				if (((bool*)pg_FullScenarioVarPointers[indVar])[index] != false) {
 					parameter_value[indVar].val_array[index] = 1;
 				}
 				else {
@@ -3644,7 +3639,7 @@ void StartNewScene(int ind_scene, double delta_time) {
 
 			for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 				int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 					// copies the current value in the initial value
 					pg_keep_value_copy(indVar, pg_CurrentScene->scene_initial_parameters);
 					// if the next interpolation keeps the value, copies the current value in the final value
@@ -3659,13 +3654,13 @@ void StartNewScene(int ind_scene, double delta_time) {
 			}
 			for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 				int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 					pg_CurrentScene->scene_interpolations[indVar].interpolation_mode = pg_linear_interpolation;
 					pg_CurrentScene->scene_interpolations[indVar].offSet = 0.0;
 					pg_CurrentScene->scene_interpolations[indVar].duration = 1.0;
 				}
 			}
-			//printf("Master values cur %.2f ini %.2f fin %.2f\n", *((float*)ScenarioVarPointers[_master]), 
+			//printf("Master values cur %.2f ini %.2f fin %.2f\n", *((float*)pg_FullScenarioVarPointers[_master]), 
 			//	pg_CurrentScene->scene_final_parameters[_master], pg_CurrentScene->scene_final_parameters[_master]);
 			// resets interpolation time so that the interpolation does not restart indefinitely
 			pg_SceneInterpolationDuration = 0.f;
@@ -3705,7 +3700,7 @@ void StartNewScene(int ind_scene, double delta_time) {
 		// reinitialization of the interpolation control variables at the beginning of a new scene
 		for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 			int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 				BrokenInterpolationVar[indVar] = false;
 				StepwiseInterpolationEffective[indVar] = false;
 				if (pg_CurrentScene->scene_interpolations[indVar].interpolation_mode == pg_keep_value
@@ -3718,10 +3713,10 @@ void StartNewScene(int ind_scene, double delta_time) {
 	// stops ongoing flashes if there is one
 	flashCameraTrk_weight = 0.0f;
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		flashPhotoTrk_weight = 0.0f;
 		flashPhotoTrk_nbFrames = 0;
 	}
@@ -3739,9 +3734,9 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 		//printf("Scene %d indP %d indVar %d\n", pg_CurrentSceneIndex, indP, indVar);
 		//if (indVar == _auto_beat) {
 		//	printf("Scene %d belongs to config %d\n",
-		//		pg_CurrentSceneIndex, pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]);
+		//		pg_CurrentSceneIndex, pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]);
 		//}
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			//if (indVar == _cameraNo) {
 			//	printf("Scene %d interpolation %d pg_keep_value %d\n",
 			//		pg_CurrentSceneIndex, cur_scene->scene_interpolations[indVar].interpolation_mode, pg_keep_value);
@@ -3883,24 +3878,24 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 				// continuous interpolation
 				else if (cur_scene->scene_interpolations[indVar].interpolation_mode != pg_bell_interpolation
 					&& cur_scene->scene_interpolations[indVar].interpolation_mode != pg_sawtooth_interpolation) {
-					if (ScenarioVarTypes[indVar] != _pg_string) {
+					if (pg_FullScenarioVarTypes[indVar] != _pg_string) {
 						// make sure that variables are interpolated to their final value when they reach the target value
 						if (transformedInterpolation >= 1.f) {
 							//if (indVar == _part_path_follow_0) {
 							//	printf("Final value\n");
 							//}				// calculation of the interpolated value and assignment to variable
-							if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+							if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 								double interpolated_value = cur_scene->scene_final_parameters[indVar].val_num;
 								ScenarioValue interpolated_scene_value(interpolated_value, "", NULL, 0);
 								pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
 
 							}
 							else {
-								double* valArray = new double[ScenarioVarIndiceRanges[indVar][1]];
-								for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+								double* valArray = new double[pg_FullScenarioVarIndiceRanges[indVar][1]];
+								for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 									valArray[index] = cur_scene->scene_final_parameters[indVar].val_array[index];
 								}
-								ScenarioValue interpolated_scene_value(0.f, "", valArray, ScenarioVarIndiceRanges[indVar][1]);
+								ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 								pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
 								free(valArray);
 							}
@@ -3909,7 +3904,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 							//if (indVar == _part_path_follow_0) {
 							//	printf("Interpolated value\n");
 							//}
-							if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+							if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 								double interpolated_value
 									= (1.0F - transformedInterpolation)
 									* cur_scene->scene_initial_parameters[indVar].val_num
@@ -3919,15 +3914,15 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 								pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
 							}
 							else {
-								double* valArray = new double[ScenarioVarIndiceRanges[indVar][1]];
-								for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+								double* valArray = new double[pg_FullScenarioVarIndiceRanges[indVar][1]];
+								for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 									valArray[index]
 										= (1.0F - transformedInterpolation)
 										* cur_scene->scene_initial_parameters[indVar].val_array[index]
 										+ transformedInterpolation
 										* cur_scene->scene_final_parameters[indVar].val_array[index];
 								}
-								ScenarioValue interpolated_scene_value(0.f, "", valArray, ScenarioVarIndiceRanges[indVar][1]);
+								ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 								pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
 								free(valArray);
 							}
@@ -3941,7 +3936,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 						//if (indVar == _part_path_follow_0) {
 						//	printf("val ini fin %.2f %.2f alpha %.2f value %.2f val %d/%d\n",
 						//		cur_scene->scene_initial_parameters[indVar].val_num,
-						//		cur_scene->scene_final_parameters[indVar].val_num, transformedInterpolation, interpolated_value, part_path_follow_0, *((bool*)ScenarioVarPointers[_part_path_follow_0]));
+						//		cur_scene->scene_final_parameters[indVar].val_num, transformedInterpolation, interpolated_value, part_path_follow_0, *((bool*)pg_FullScenarioVarPointers[_part_path_follow_0]));
 						//}
 					}
 					else {
@@ -3955,8 +3950,8 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 				}
 				// 3-valued bell interpolation between initial, median and end value
 				else {
-					if (ScenarioVarTypes[indVar] != _pg_string) {
-						if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+					if (pg_FullScenarioVarTypes[indVar] != _pg_string) {
+						if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 							double interpolated_value
 								= twoStepInterpolation[0]
 								* cur_scene->scene_initial_parameters[indVar].val_num
@@ -3968,8 +3963,8 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 							pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
 						}
 						else {
-							double* valArray = new double[ScenarioVarIndiceRanges[indVar][1]];
-							for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+							double* valArray = new double[pg_FullScenarioVarIndiceRanges[indVar][1]];
+							for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 								valArray[index]
 									= twoStepInterpolation[0]
 									* cur_scene->scene_initial_parameters[indVar].val_array[index]
@@ -3978,7 +3973,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 									+ twoStepInterpolation[2]
 									* cur_scene->scene_final_parameters[indVar].val_array[index];
 							}
-							ScenarioValue interpolated_scene_value(0.f, "", valArray, ScenarioVarIndiceRanges[indVar][1]);
+							ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 							pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
 							free(valArray);
 						}
@@ -4176,7 +4171,7 @@ void pg_process_key(int key) {
 
 		/* ------------------------------- current video background capture */
 	case 'v':
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
 		}
 		break;
@@ -4395,7 +4390,7 @@ void pg_launch_performance(int ind_scene) {
 	// reinitialization of the interpolation control variables at the beginning of a new scene
 	for (int indP = 0; indP < ScenarioVarNb[pg_current_configuration_rank]; indP++) {
 		int indVar = ConfigScenarioVarRank[pg_current_configuration_rank][indP];
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			BrokenInterpolationVar[indVar] = false;
 			StepwiseInterpolationEffective[indVar] = false;
 		}
@@ -4405,7 +4400,7 @@ void pg_launch_performance(int ind_scene) {
 	// remove_files_in_dir(&snapshots_dir_path_name); // removes snapshots before pg_launch_performance
 
 #if defined(var_GenerativeNights_planes)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
 		initCA = 1.2f;
 		printf("initCA %.2f\n", initCA);
 	}
@@ -4460,7 +4455,7 @@ void pg_keyStrokeScripts(int key) {
 		setup_plus(1);
 		break;
 	case 'b':
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			pg_NextRecordReplayPath();
 		}
 		break;
@@ -4582,17 +4577,17 @@ void pg_flash_control(bool (*control_function)(int)) {
 		flashPixel = flashPixel_duration;
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashParticleInit_freq]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_part_timeToTargt]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashParticleInit_freq]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_timeToTargt]) {
 		if ((*control_function)(flashParticleInit_freq)) {
 			part_initialization = (unsigned int)(floor(rand_0_1 * pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size())) % pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size();
 			pg_ParticleTargetFrameNo = pg_FrameNo + int(part_timeToTargt);
 		}
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
 		for (int indTrack = 0; indTrack < PG_NB_TRACKS; indTrack++) {
 			if ((*control_function)(flashTrkCA_freq[indTrack])) {
 				flashTrkCA_weights[indTrack] = 1.0;
@@ -4601,7 +4596,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 			}
 		}
 	}
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq]) {
 		for (int indTrack = 0; indTrack < PG_NB_TRACKS; indTrack++) {
 			if ((*control_function)(flashTrkPart_freq[indTrack])) {
 				flashTrkPart_weights[indTrack] = 1.0;
@@ -4610,7 +4605,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 			}
 		}
 	}
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkBG_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkBG_freq]) {
 		for (int indTrack = 1; indTrack < PG_NB_TRACKS; indTrack++) {
 			// should only be flashed every second frame because of the way the pixels are spreaded
 			// otherwise the pixels are not emitted
@@ -4622,7 +4617,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCABG_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashCABG_freq]) {
 		if ((*control_function)(flashCABG_freq)) {
 			flashCABG_weight = 1.0;
 			flashCABG_weight_duration = 1;
@@ -4630,7 +4625,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCAPart_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashCAPart_freq]) {
 		if ((*control_function)(flashCAPart_freq)) {
 			flashCAPart_weight = 1.0;
 			flashCAPart_weight_duration = 1;
@@ -4638,7 +4633,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPartBG_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPartBG_freq]) {
 		if ((*control_function)(flashPartBG_freq)) {
 			flashPartBG_weight = 1.0;
 			flashPartBG_weight_duration = 1;
@@ -4646,7 +4641,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPartCA_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPartCA_freq]) {
 		if ((*control_function)(flashPartCA_freq)) {
 			flashPartCA_weight = 1.0;
 			flashPartCA_weight_duration = 1;
@@ -4655,19 +4650,19 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 
 #if defined(var_AT5_stop_motion) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_AT5_stop_motion]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_AT5_stop_motion]) {
 		BrokenInterpolationVar[_cameraWeight] = true;
 		if ((*control_function)(AT5_stop_motion)) {
 			//printf("stop motion\n");
-			if (*((float*)ScenarioVarPointers[_cameraWeight]) <= 0.) {
-				*((float*)ScenarioVarPointers[_cameraWeight]) = 1.f;
-				//*((float*)ScenarioVarPointers[_trackMixingWeight_2]) = 1.f;
-				*((float*)ScenarioVarPointers[_trackMasterWeight_2]) = 1.f;
+			if (*((float*)pg_FullScenarioVarPointers[_cameraWeight]) <= 0.) {
+				*((float*)pg_FullScenarioVarPointers[_cameraWeight]) = 1.f;
+				//*((float*)pg_FullScenarioVarPointers[_trackMixingWeight_2]) = 1.f;
+				*((float*)pg_FullScenarioVarPointers[_trackMasterWeight_2]) = 1.f;
 			}
 			else {
-				*((float*)ScenarioVarPointers[_cameraWeight]) = 0.f;
-					//*((float*)ScenarioVarPointers[_trackMixingWeight_2]) = 0.f;
-				*((float*)ScenarioVarPointers[_trackMasterWeight_2]) = 0.f;
+				*((float*)pg_FullScenarioVarPointers[_cameraWeight]) = 0.f;
+					//*((float*)pg_FullScenarioVarPointers[_trackMixingWeight_2]) = 0.f;
+				*((float*)pg_FullScenarioVarPointers[_trackMasterWeight_2]) = 0.f;
 			}
 		}
 		//printf("cameraW %.2f\n", cameraWeight);
@@ -4683,10 +4678,10 @@ void pg_flash_control(bool (*control_function)(int)) {
 	int clip_no_low = 0;
 	int clip_no_high = pg_nbClips[pg_current_configuration_rank] - 1;
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_flashchangeClipLeft_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Contact_flashchangeClipLeft_freq]) {
 
 #if defined(var_Contact_clip_in_range)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Contact_clip_in_range]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Contact_clip_in_range]) {
 			if (ContAct_clip_ranges_min.size() > 0 && ContAct_clip_ranges_min.size() == ContAct_clip_ranges_max.size()) {
 				// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
 				int range_selected = int(rand_0_1 * ContAct_clip_ranges_min.size()) % ContAct_clip_ranges_min.size();
@@ -4750,22 +4745,22 @@ void pg_flash_control(bool (*control_function)(int)) {
 			// 2: L+R full size / 3: L+R half size side by side
 			// 4: 4 screens / 5: L+R half size on top of each other
 			int layout = int(rand_0_1 * 6) % 6;
-			(*((int*)ScenarioVarPointers[_ContAct_screenLayout])) = layout;
+			(*((int*)pg_FullScenarioVarPointers[_ContAct_screenLayout])) = layout;
 			ContAct_screenLayout = layout;
 		}
 		if ((*control_function)(Contact_flashchange_mesh_palette_freq)) {
 			int level = int(rand_0_1 * 9) % 9;
-			(*((int*)ScenarioVarPointers[_Contact_mesh_palette])) = level;
+			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_palette])) = level;
 			Contact_mesh_palette = level;
 		}
 		if ((*control_function)(Contact_flashchange_mesh_anime_freq)) {
 			int anime = int(rand_0_1 * (_lastMesh_Anime + 1)) % (_lastMesh_Anime + 1);
-			(*((int*)ScenarioVarPointers[_Contact_mesh_anime])) = anime;
+			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_anime])) = anime;
 			Contact_mesh_anime = anime;
 		}
 		if ((*control_function)(Contact_flashchange_mesh_motion_freq)) {
 			int motion = int(rand_0_1 * (_lastMesh_Motion + 1)) % (_lastMesh_Motion + 1);
-			(*((int*)ScenarioVarPointers[_Contact_mesh_motion])) = motion;
+			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_motion])) = motion;
 			Contact_mesh_motion = motion;
 		}
 		bool fixedLeftPose = false;
@@ -4779,7 +4774,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		if (fixedRightPose || fixedLeftPose) {
 			int chosen_mesh_LibraryPose = -1;
 			// bianry animation between two indentical poses
-			(*((int*)ScenarioVarPointers[_Contact_mesh_anime])) = 1;
+			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_anime])) = 1;
 			Contact_mesh_anime = 1;
 			// two poses are memorized: twice the randomly selected pose;
 			for (int indMeshFile = 0; indMeshFile < min(2, pg_nb_Mesh_files); indMeshFile++) {
@@ -4803,16 +4798,16 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashchange_invertAllLayers_freq)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_invertAllLayers_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_invertAllLayers_freq]) {
 		if ((*control_function)(flashchange_invertAllLayers_freq)) {
 			invertAllLayers = !invertAllLayers;
-			*((bool*)ScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
+			*((bool*)pg_FullScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
 		}
 	}
 #endif
 	// random selection of an image in the list of available ones
 #if defined(var_flashchange_diaporama_freq)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_diaporama_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_diaporama_freq]) {
 		if ((*control_function)(flashchange_diaporama_freq)) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -4837,7 +4832,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 	// first selects all the available ones in a random order
 	// second selects randomly one among the possible ones
 #if defined(var_Argenteuil_flashchange_diaporama_freq)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flashchange_diaporama_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flashchange_diaporama_freq]) {
 		if ((*control_function)(Argenteuil_flashchange_diaporama_freq)) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				// first pass generates a permuation of the n images
@@ -4882,7 +4877,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashchange_BGcolor_freq)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
 		if ((*control_function)(flashchange_BGcolor_freq)) {
 			float BG_hue = rand_0_1;
 			HSVtoRGB(BG_hue, 1.f, 1.f, &BG_r, &BG_g, &BG_b);
@@ -4897,10 +4892,10 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 
 #if defined(var_flashchange_freeze_freq)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashchange_freeze_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_freeze_freq]) {
 		if ((*control_function)(flashchange_freeze_freq)) {
 			freeze = !freeze;
-			*((bool*)ScenarioVarPointers[_freeze]) = freeze;
+			*((bool*)pg_FullScenarioVarPointers[_freeze]) = freeze;
 		}
 	}
 #endif
@@ -4946,8 +4941,8 @@ void ReceiveBeat(void) {
 	sprintf(AuxString, "/loop_beat %d", pg_BeatNo % PG_LOOP_SIZE); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #endif
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 		// loop start 
 		if ((pg_BeatNo % PG_LOOP_SIZE) == 0) {
 			for (int ind = 1; ind <= PG_NB_PATHS; ind++) {
@@ -4969,7 +4964,7 @@ void ReceiveBeat(void) {
 	}
 
 #if defined(var_flashCameraTrkBeat)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBeat]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBeat]) {
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		// camera flash
 		if (is_flashCameraTrk
@@ -4985,10 +4980,10 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
-		&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		// photo flash
 		// weight is the current brightness of the lighting at each frame  until it reaches the threshold value and is then stopped 
 		if (is_flashPhotoTrk
@@ -5002,7 +4997,7 @@ void ReceiveBeat(void) {
 	pg_flash_control(flash_beat_generation);
 
 #if defined(var_flashPhotoChangeBeat)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		// photo change flash
 		if (flashPhotoChangeBeat > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == flashPhotoChangeBeat)) {
 			// goes to the first photo diaporama if it is not already selected and if there is one 
@@ -5022,7 +5017,7 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_Caverne_BackColor)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 		if (Caverne_BackColor) {
 			Caverne_BackColorRed = rand_0_1;
 			Caverne_BackColorGreen = rand_0_1;
@@ -5074,7 +5069,7 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_penStrokeAtBeat)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_penStrokeAtBeat]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_penStrokeAtBeat]) {
 		if (penStrokeAtBeat) {
 			FourFrameStrokeNb = 5;
 			FourFrameStroke_x = int(640 + 2 * rand_0_1);
@@ -5084,7 +5079,7 @@ void ReceiveBeat(void) {
 #endif
 
 #if defined(var_Argenteuil_flash_move_track1_freq)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flash_move_track1_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flash_move_track1_freq]) {
 		if (Argenteuil_flash_move_track1_freq > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == Argenteuil_flash_move_track1_freq)) {
 			Argenteuil_track_x_transl[1] = 200.f + (rand_0_1 - 0.5f) * 300.f;
 			Argenteuil_track_y_transl[1] = 100.f + (rand_0_1 - 0.5f) * 150.f;
@@ -5141,8 +5136,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				//printf("match string %s\n", pieces_match[1].str().c_str());
 				if (pg_OSC_addresses_hashMap.find(pieces_match[1].str()) != pg_OSC_addresses_hashMap.end()) {
 					indVar = pg_OSC_addresses_hashMap.at(pieces_match[1].str());
-					if (ScenarioVarIndiceRanges[indVar][0] != -1 && provided_index >= ScenarioVarIndiceRanges[indVar][0]
-						&& provided_index < ScenarioVarIndiceRanges[indVar][1]) {
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1 && provided_index >= pg_FullScenarioVarIndiceRanges[indVar][0]
+						&& provided_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
 						indexChangedValue = provided_index;
 					}
 				}
@@ -5151,8 +5146,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				int provided_index = stoi(pieces_match[2].str());
 				if (pg_OSC_addresses_hashMap.find(pieces_match[1].str()+ pieces_match[3].str()) != pg_OSC_addresses_hashMap.end()) {
 					indVar = pg_OSC_addresses_hashMap.at(pieces_match[1].str() + pieces_match[3].str());
-					if (ScenarioVarIndiceRanges[indVar][0] != -1 && provided_index >= ScenarioVarIndiceRanges[indVar][0]
-						&& provided_index < ScenarioVarIndiceRanges[indVar][1]) {
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1 && provided_index >= pg_FullScenarioVarIndiceRanges[indVar][0]
+						&& provided_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
 						indexChangedValue = provided_index;
 					}
 				}
@@ -5218,26 +5213,26 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// command from the scenario file
 	// change of array variable
 	if (indVar < _MaxInterpVarIDs && indexChangedValue >= 0) {
-		double* valArray = new double[ScenarioVarIndiceRanges[indVar][1]];
+		double* valArray = new double[pg_FullScenarioVarIndiceRanges[indVar][1]];
 		// do stuff
-		for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+		for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 			valArray[index] = 0.;
 		}
 		valArray[indexChangedValue] = float_arguments[0];
 		//printf("index %d value %.2f\n", indexChangedValue, valArray[indexChangedValue]);
-		ScenarioValue interpolated_scene_value(0.f, "", valArray, ScenarioVarIndiceRanges[indVar][1]);
+		ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 		pg_update_variable(_PG_GUI_COMMAND, indVar, interpolated_scene_value, indexChangedValue);
 		free(valArray);
 		return;
 	}
 	// change of scalar variable
 	else if (indVar < _MaxInterpVarIDs) {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][indVar]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar]) {
 			ScenarioValue arg_val(float_arguments[0], "", NULL, 0);
 			pg_update_variable(_PG_GUI_COMMAND, indVar, arg_val, -1);
 		}
 		else {
-			sprintf(ErrorStr, "OSC command %s for inactive var %d (%s)!", address_string.c_str(), indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr);
+			sprintf(ErrorStr, "OSC command %s for inactive var %d (%s)!", address_string.c_str(), indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr);
 		}
 		return;
 	}
@@ -5359,7 +5354,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			else {
 				master_scale_pulse = 0.f;
 			}
-			*((float*)ScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
+			*((float*)pg_FullScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
 			sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 			pg_launch_diaporama(0);
@@ -5367,7 +5362,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 #endif
 #if defined(var_MIDIwithBrush)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
 			if (MIDIwithBrush) {
 				pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
 				BrokenInterpolationVar[_pen_brush] = true;
@@ -5376,15 +5371,15 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithColor)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
 			if (MIDIwithColor) {
 				if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
 					printf("new palette %d\n", current_pen_colorPreset);
 #if defined(var_pen_color)
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 						BrokenInterpolationVar[_pen_color] = true;
-						*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
+						*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 					}
 #endif
 					// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
@@ -5396,7 +5391,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithCameraFlash)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
 			if (MIDIwithCameraFlash) {
 				printf("Flash camera\n");
 				pg_Make_flashCamera();
@@ -5404,8 +5399,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 			if (MIDIwithPhotoFlash) {
 				printf("Flash photo\n");
 				pg_Make_flashPhoto();
@@ -5413,7 +5408,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithBeat)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
 			if (MIDIwithBeat) {
 				pg_BeatNo++;
 				printf("beat %d\n", pg_BeatNo);
@@ -5422,7 +5417,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithStroke)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
 			if (MIDIwithStroke) {
 				FourFrameStrokeNb = 5;
 				FourFrameStroke_x = int(workingWindow_width * rand_0_1);
@@ -5431,8 +5426,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_flashCameraTrkBright)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBright]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBright]) {
 			if (flashCameraTrkBright > 0) {
 				is_flashCameraTrk = false;
 				flashCameraTrk_weight = flashCameraTrkBright;
@@ -5450,7 +5445,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _Velocity1:
 	{
 #if defined(var_alKemi)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
 			int argt0 = int(round(float_arguments[0]));
 			if (argt0 > 0) {
 				pg_BeatNo++;
@@ -5463,10 +5458,10 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 #if defined(var_flashPhotoTrkBeat)
 	case _flashPhoto: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]) {
 			if (flashPhotoTrkBeat == 0) {
 #if defined(var_flashPhotoTrkBright)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 					pg_Make_flashPhoto();
 				}
 #endif
@@ -5510,17 +5505,17 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 
 #if defined(var_pen_color) && defined(var_pen_grey)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
 			//printf("pulse %.2f %.2f %.2f avg %.2f\n", pulse[0], pulse[1], pulse[2], pulse_average);
 			//printf("pen_color %.2f pen_color_pulse %.2f pen_grey %.2f pen_grey_pulse %.2f pulsed_pen_color  %.2f %.2f %.2f %.2f\n", pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pulsed_pen_color[3]);
 			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, _PG_PEN);
 		}
 #endif
 #if defined(var_pen_hue) & defined(var_pen_sat) && defined(var_pen_value)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
 			compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pulsed_pen_color, true);
 		}
 #endif
@@ -5536,17 +5531,17 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 #endif
 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 #if defined(var_repop_colorPart) && defined(var_repop_greyPart)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
-				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
+				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
 			}
 #endif
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
-				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-				&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 				compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
 			}
 #endif
@@ -5586,7 +5581,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			pg_MIDINote = 0;
 		}
 #if defined(var_MIDIwithBrush)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
 			if (MIDIwithBrush) {
 				if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
 					pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
@@ -5597,14 +5592,14 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithColor)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
 			if (MIDIwithColor) {
 #if !defined(LIGHT)
 				//if (nb_pen_colorPresets > 0) {
 				//	current_pen_colorPreset = pg_MIDINote % pg_ColorPresets[pg_current_configuration_rank].size();
 				//	printf("new palette %d\n", current_pen_colorPreset);
 				//	BrokenInterpolationVar[_pen_color] = true;
-				//	*((float*)ScenarioVarPointers[_pen_color]) = pg_colorPreset_values[current_pen_colorPreset];
+				//	*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_colorPreset_values[current_pen_colorPreset];
 				//	// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				//	// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				//	// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -5614,9 +5609,9 @@ void pg_aliasScript(string address_string, string string_argument_0,
 					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
 					printf("new palette %d\n", current_pen_colorPreset);
 #if defined(var_pen_color)
-					if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 						BrokenInterpolationVar[_pen_color] = true;
-						*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
+						*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 					}
 #endif
 					sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -5627,7 +5622,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithCameraFlash)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
 			if (MIDIwithCameraFlash) {
 				printf("Flash camera\n");
 				pg_Make_flashCamera();
@@ -5635,8 +5630,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 			if (MIDIwithPhotoFlash) {
 				printf("Flash photo\n");
 				pg_Make_flashPhoto();
@@ -5644,7 +5639,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithBeat)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
 			if (MIDIwithBeat) {
 				pg_BeatNo++;
 				printf("beat %d\n", pg_BeatNo);
@@ -5653,7 +5648,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_MIDIwithStroke)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
 			if (MIDIwithStroke) {
 				FourFrameStrokeNb = 5;
 				FourFrameStroke_x = int(window_width * rand_0_1);
@@ -5668,8 +5663,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// flash on/off values
 	// ======================================== 
 	case _flashTrkCA_onOff: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
 			if (currentDrawingTrack >= 0 && currentDrawingTrack < PG_NB_TRACKS) {
 				if (flashTrkCA_freq[currentDrawingTrack] > 0) {
 					flashTrkCA_freq_saved[currentDrawingTrack] = flashTrkCA_freq[currentDrawingTrack];
@@ -5684,7 +5679,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _flashTrkPart_onOff: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkPart_freq]) {
 			if (currentDrawingTrack >= 0 && currentDrawingTrack < PG_NB_TRACKS) {
 				if (flashTrkPart_freq[currentDrawingTrack] > 0) {
 					flashTrkPart_freq_saved[currentDrawingTrack] = flashTrkPart_freq[currentDrawingTrack];
@@ -5715,7 +5710,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// relaunches CA initialization, in case it does not work                  
 		// ====================================== 
 	case _initialBGCapture: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
 			initialBGCapture = true;
 		}
 
@@ -5726,7 +5721,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 	// CA initialization for Generative Nights
 	case _initCA: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_GenerativeNights_planes]) {
 			initCA = 1.2f;
 		}
 		break;
@@ -5749,136 +5744,136 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ CAMERA PARAMETERS +++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraWB_R_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraWB_R]) += 100.f;
-			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_R]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraWB_R]) += 100.f;
+			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)pg_FullScenarioVarPointers[_cameraWB_R])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraWB_R]);
 		}
 		break;
 	}
 	case _cameraWB_R_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraWB_R]) -= 100.f;
-			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)ScenarioVarPointers[_cameraWB_R])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_R]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraWB_R]) -= 100.f;
+			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, (*((float*)pg_FullScenarioVarPointers[_cameraWB_R])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraWB_R]);
 		}
 		break;
 	}
 	case _cameraWB_B_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraWB_B]) += 100.f;
-			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_B]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraWB_B]) += 100.f;
+			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)pg_FullScenarioVarPointers[_cameraWB_B])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraWB_B]);
 		}
 		break;
 	}
 	case _cameraWB_B_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraWB_B]) -= 100.f;
-			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)ScenarioVarPointers[_cameraWB_B])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraWB_B]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraWB_B]) -= 100.f;
+			pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, (*((float*)pg_FullScenarioVarPointers[_cameraWB_B])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraWB_B]);
 		}
 		break;
 	}
 	case _cameraExposure_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraExposure]) += 1.f;
-			pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraExposure]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraExposure]) += 1.f;
+			pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)pg_FullScenarioVarPointers[_cameraExposure])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraExposure]);
 		}
 		break;
 	}
 	case _cameraExposure_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraExposure]) -= 1.f;
-			pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)ScenarioVarPointers[_cameraExposure])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraExposure]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraExposure]) -= 1.f;
+			pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float*)pg_FullScenarioVarPointers[_cameraExposure])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraExposure]);
 		}
 		break;
 	}
 	case _cameraGain_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraGain]) += 1.f;
-			pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGain]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraGain]) += 1.f;
+			pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)pg_FullScenarioVarPointers[_cameraGain])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraGain]);
 		}
 		break;
 	}
 	case _cameraGain_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraGain]) -= 1.f;
-			pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)ScenarioVarPointers[_cameraGain])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGain]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraGain]) -= 1.f;
+			pg_webCam_capture.set(CAP_PROP_GAIN, (*((float*)pg_FullScenarioVarPointers[_cameraGain])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraGain]);
 		}
 		break;
 	}
 	case _cameraBrightness_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraBrightness]) += 10.f;
-			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraBrightness]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraBrightness]) += 10.f;
+			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)pg_FullScenarioVarPointers[_cameraBrightness])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraBrightness]);
 		}
 		break;
 	}
 	case _cameraBrightness_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraBrightness]) -= 10.f;
-			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)ScenarioVarPointers[_cameraBrightness])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraBrightness]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraBrightness]) -= 10.f;
+			pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, (*((float*)pg_FullScenarioVarPointers[_cameraBrightness])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraBrightness]);
 		}
 		break;
 	}
 	case _cameraSaturation_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraSaturation]) += 10.f;
-			pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraSaturation]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraSaturation]) += 10.f;
+			pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)pg_FullScenarioVarPointers[_cameraSaturation])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraSaturation]);
 		}
 		break;
 	}
 	case _cameraSaturation_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraSaturation]) -= 10.f;
-			pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)ScenarioVarPointers[_cameraSaturation])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraSaturation]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraSaturation]) -= 10.f;
+			pg_webCam_capture.set(CAP_PROP_SATURATION, (*((float*)pg_FullScenarioVarPointers[_cameraSaturation])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraSaturation]);
 		}
 		break;
 	}
 	case _cameraContrast_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraContrast]) += 10.f;
-			pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraContrast]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraContrast]) += 10.f;
+			pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)pg_FullScenarioVarPointers[_cameraContrast])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraContrast]);
 		}
 		break;
 	}
 	case _cameraContrast_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraContrast]) -= 10.f;
-			pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)ScenarioVarPointers[_cameraContrast])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraContrast]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraContrast]) -= 10.f;
+			pg_webCam_capture.set(CAP_PROP_CONTRAST, (*((float*)pg_FullScenarioVarPointers[_cameraContrast])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraContrast]);
 		}
 		break;
 	}
 	case _cameraGamma_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraGamma]) += 10.f;
-			pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGamma]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraGamma]) += 10.f;
+			pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)pg_FullScenarioVarPointers[_cameraGamma])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraGamma]);
 		}
 		break;
 	}
 	case _cameraGamma_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-			*((float*)ScenarioVarPointers[_cameraGamma]) -= 10.f;
-			pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)ScenarioVarPointers[_cameraGamma])));
-			CameraCurrent_exposure = *((float*)ScenarioVarPointers[_cameraGamma]);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+			*((float*)pg_FullScenarioVarPointers[_cameraGamma]) -= 10.f;
+			pg_webCam_capture.set(CAP_PROP_GAMMA, (*((float*)pg_FullScenarioVarPointers[_cameraGamma])));
+			CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraGamma]);
 		}
 		break;
 	}
 
 	case _reset_on_camera: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
 			// the camera weight is set to 1 in 10 frames
 			delayedCameraWeight = 11;
@@ -5887,7 +5882,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _reset_camera_params: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			pg_initWebcamParameters();
 		}
 		break;
@@ -5969,26 +5964,26 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 #if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_master_offsetY) && defined(var_photo_diaporama)
 	case _flashMaster:
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_master_scale]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_master_offsetX]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_master_offsetY]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_master_scale]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_master_offsetX]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_master_offsetY]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			master = 1.f;
-			*((float*)ScenarioVarPointers[_master]) = master;
+			*((float*)pg_FullScenarioVarPointers[_master]) = master;
 			master_scale = rand_0_1 * float_arguments[1] + 1;
-			*((float*)ScenarioVarPointers[_master_scale]) = master_scale;
+			*((float*)pg_FullScenarioVarPointers[_master_scale]) = master_scale;
 			master_offsetX = (rand_0_1 - 0.5f) * 300;
-			*((float*)ScenarioVarPointers[_master_offsetX]) = master_offsetX;
+			*((float*)pg_FullScenarioVarPointers[_master_offsetX]) = master_offsetX;
 			master_offsetY = (rand_0_1 - 0.5f) * 150;
-			*((float*)ScenarioVarPointers[_master_offsetY]) = master_offsetY;
+			*((float*)pg_FullScenarioVarPointers[_master_offsetY]) = master_offsetY;
 			photo_threshold = rand_0_1;
-			*((float*)ScenarioVarPointers[_photo_threshold]) = photo_threshold;
+			*((float*)pg_FullScenarioVarPointers[_photo_threshold]) = photo_threshold;
 			photo_gamma = rand_0_1;
-			*((float*)ScenarioVarPointers[_photo_gamma]) = photo_gamma;
+			*((float*)pg_FullScenarioVarPointers[_photo_gamma]) = photo_gamma;
 			photo_satur = rand_0_1;
-			*((float*)ScenarioVarPointers[_photo_satur]) = photo_satur;
+			*((float*)pg_FullScenarioVarPointers[_photo_satur]) = photo_satur;
 			invertAllLayers = (rand_0_1 > 0.5f);
-			*((bool*)ScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
+			*((bool*)pg_FullScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
 
 			flashMaster = max(1, int(rand_0_1 * float_arguments[0]));
 		}
@@ -5996,7 +5991,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 
 	case _NextRecordReplayPath:
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
 			if (float_arguments[0] > 0) {
 				pg_NextRecordReplayPath();
 			}
@@ -6112,11 +6107,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if defined(var_partStroke_mode)
 	case _partStroke_mode_0: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
-			*((int*)ScenarioVarPointers[_partStroke_mode]) = 0;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partStroke_mode]) = 0;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partStroke_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partStroke_mode])) {
 					sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6127,11 +6122,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partStroke_mode_1: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
-			*((int*)ScenarioVarPointers[_partStroke_mode]) = 1;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partStroke_mode]) = 1;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partStroke_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partStroke_mode])) {
 					sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6142,11 +6137,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partStroke_mode_2: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
-			*((int*)ScenarioVarPointers[_partStroke_mode]) = 2;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partStroke_mode]) = 2;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partStroke_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partStroke_mode])) {
 					sprintf(AuxString, "/partStroke_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6159,11 +6154,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partColor_mode)
 	case _partColor_mode_0: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
-			*((int*)ScenarioVarPointers[_partColor_mode]) = 0;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partColor_mode]) = 0;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partColor_mode])) {
 					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6174,11 +6169,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partColor_mode_1: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
-			*((int*)ScenarioVarPointers[_partColor_mode]) = 1;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partColor_mode]) = 1;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partColor_mode])) {
 					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6189,11 +6184,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partColor_mode_2: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
-			*((int*)ScenarioVarPointers[_partColor_mode]) = 2;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partColor_mode]) = 2;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partColor_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partColor_mode])) {
 					sprintf(AuxString, "/partColor_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6206,11 +6201,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partExit_mode)
 	case _partExit_mode_0: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
-			*((int*)ScenarioVarPointers[_partExit_mode]) = 0;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partExit_mode]) = 0;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partExit_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partExit_mode])) {
 					sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6221,11 +6216,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partExit_mode_1: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
-			*((int*)ScenarioVarPointers[_partExit_mode]) = 1;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partExit_mode]) = 1;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partExit_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partExit_mode])) {
 					sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6236,11 +6231,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _partExit_mode_2: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
-			*((int*)ScenarioVarPointers[_partExit_mode]) = 2;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
+			*((int*)pg_FullScenarioVarPointers[_partExit_mode]) = 2;
 
 			for (int ind = 0; ind < 3; ind++) {
-				if (ind == *((int*)ScenarioVarPointers[_partExit_mode])) {
+				if (ind == *((int*)pg_FullScenarioVarPointers[_partExit_mode])) {
 					sprintf(AuxString, "/partExit_mode_%d 1", ind); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 				}
 				else {
@@ -6282,7 +6277,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ CAMERA IMAGE CUMUL MODE +++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraCumul_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			cameraCumul = (cameraCumul + 1) % PG_NB_CAMERA_CUMUL_MODES;
 			BrokenInterpolationVar[_cameraCumul] = true;
 		}
@@ -6296,43 +6291,35 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
 			pen_brush = (pen_brush + 1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
 			BrokenInterpolationVar[_pen_brush] = true;
-			if (pen_brush >= 1) { // large radius for the image brushes
-				pen_radiusMultiplier = 50.0f;
-#if defined(CORE)
-				pen_radiusMultiplier = 1.0f;
-#endif
-			}
-			else {
-				pen_radiusMultiplier = 1.0f;
-			}
-
+			//if (pen_brush >= 1) { // large radius for the image brushes*
+			//	pen_radiusMultiplier = 50.0f;
+			//}
+			//else {
+			//	pen_radiusMultiplier = 1.0f;
+			//}
 		}
 		break;
 	case _pen_brush_minus:
 		if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
 			pen_brush = (pen_brush - 1 + (nb_pen_brushes[pg_current_configuration_rank] * 3)) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
 			BrokenInterpolationVar[_pen_brush] = true;
-			if (pen_brush >= 1) { // large radius for the image brushes
-				pen_radiusMultiplier = 50.0f;
-#if defined(CORE)
-				pen_radiusMultiplier = 1.0f;
-#endif
-			}
-			else {
-				pen_radiusMultiplier = 1.0f;
-			}
-
+			//if (pen_brush >= 1) { // large radius for the image brushes*
+			//	pen_radiusMultiplier = 50.0f;
+			//}
+			//else {
+			//	pen_radiusMultiplier = 1.0f;
+			//}
 		}
 		break;
 
 #if defined(var_pen_brush_replay)
 	case _pen_brush_replay_plus:
 		pen_brush_replay += 1;
-		*((int*)ScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
+		*((int*)pg_FullScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
 		break;
 	case _pen_brush_replay_minus:
 		pen_brush_replay -= 1;
-		*((int*)ScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
+		*((int*)pg_FullScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
 		break;
 #endif
 
@@ -6350,41 +6337,41 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if defined(var_nb_CATypes)
 	case _CA1Type_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1Type = (CA1Type + 1) % nb_CATypes;
 			BrokenInterpolationVar[_CA1Type] = true;
 			// printf("CA1Type %d\n", CA1Type);
-			*((int*)ScenarioVarPointers[_CA1Type]) = CA1Type;
+			*((int*)pg_FullScenarioVarPointers[_CA1Type]) = CA1Type;
 		}
 		break;
 	}
 	case _CA1Type_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1Type = (CA1Type - 1 + nb_CATypes) % nb_CATypes;
 			BrokenInterpolationVar[_CA1Type] = true;
 			// printf("CA1Type %d\n", CA1Type);
-			*((int*)ScenarioVarPointers[_CA1Type]) = CA1Type;
+			*((int*)pg_FullScenarioVarPointers[_CA1Type]) = CA1Type;
 		}
 		break;
 	}
 	case _CA1SubType_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
 			BrokenInterpolationVar[_CA1SubType] = true;
-			*((int*)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
+			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		}
 		break;
 	}
 	case _CA1SubType_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
 			BrokenInterpolationVar[_CA1SubType] = true;
-			*((int*)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
+			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		}
 		break;
 	}
 	case _CAonOff: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			if (CA1SubType != 0) {
 				CASubTypeMem = CA1SubType;
 				CA1SubType = 0;
@@ -6394,7 +6381,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			}
 			BrokenInterpolationVar[_CA1SubType] = true;
 			printf("CA1SubType ON/OFF %d\n", CA1SubType);
-			*((int*)ScenarioVarPointers[_CA1SubType]) = CA1SubType;
+			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		}
 		break;
 	}
@@ -6404,8 +6391,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _sensor_layout_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 				sensor_layout = (sensor_layout + 1) % PG_NB_MAX_SENSOR_LAYOUTS;
 				BrokenInterpolationVar[_sensor_layout] = true;
 				assignSensorPositions();
@@ -6414,8 +6401,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _sensor_sample_setUp_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 				sensor_sample_setUp = (sensor_sample_setUp + 1);
 				if (sensor_sample_setUp >= PG_NB_MAX_SAMPLE_SETUPS) {
 					sensor_sample_setUp -= PG_NB_MAX_SAMPLE_SETUPS;
@@ -6427,8 +6414,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _sensor_activation_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 				sensor_activation = (sensor_activation + 1) % PG_NB_MAX_SENSOR_ACTIVATIONS;
 				BrokenInterpolationVar[_sensor_activation] = true;
 				assignSensorActivations();
@@ -6442,7 +6429,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 #if defined(var_partExit_mode)
 	case _partExit_mode_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			partExit_mode = (partExit_mode + 1) % PG_NB_PARTEXIT_MODES;
 			BrokenInterpolationVar[_partExit_mode] = true;
 		}
@@ -6451,7 +6438,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partStroke_mode)
 	case _partStroke_mode_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			partStroke_mode = (partStroke_mode + 1) % PG_NB_PARTSTROKE_MODES;
 			BrokenInterpolationVar[_partStroke_mode] = true;
 		}
@@ -6460,7 +6447,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_partColor_mode)
 	case _partColor_mode_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			partColor_mode = (partColor_mode + 1) % PG_NB_PARTCOLOR_MODES;
 			BrokenInterpolationVar[_partColor_mode] = true;
 		}
@@ -6474,7 +6461,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// ====================================== 
 	case _pen_BW: {
 #if defined(var_pen_grey)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
 			if (pen_grey > 0) {
 					pen_grey = 0.0f;
 			}								
@@ -6485,7 +6472,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 #endif
 #if defined(var_pen_value)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
 
 			if (pen_value > 0) {
 				pen_value = 0.0f;
@@ -6510,7 +6497,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _repopCA_BW: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			if (repop_greyCA > 0) {
 				repop_greyCA = 0.0f;
 			}
@@ -6523,9 +6510,9 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _repopPart_BW: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 #if defined(var_repop_greyPart)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 				if (repop_greyPart > 0) {
 					repop_greyPart = 0.0f;
 				}
@@ -6536,7 +6523,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			}
 #endif
 #if defined(var_repop_valuePart)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 				if (repop_valuePart > 0) {
 					repop_valuePart = 0.0f;
 				}
@@ -6573,31 +6560,31 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _diaporama_add_dirs: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			pg_addNewDiaporamas(pg_current_configuration_rank, true);
 		}
 		break;
 	}
 	case _reload_all_diaporamas: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			pg_reloadAllDiaporamas(pg_current_configuration_rank, true);
 		}
 		break;
 	}
 	case _diaporama_random: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			diaporama_random();
 		}
 		break;
 	}
 	case _diaporama_slide: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			diaporama_slide(int(float_arguments[0]));
 		}
 		break;
 	}
 	case _diaporama_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				// goes to the first photo diaporama if it is not already selected and if there is one 
 				if (photo_diaporama < 0 && pg_ImageDirectory[pg_current_configuration_rank] != "") {
@@ -6613,7 +6600,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _diaporama_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
 				photo_diaporama = (photo_diaporama - 1 + pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
 				printf("photo_diaporama %d\n", photo_diaporama);
@@ -6625,7 +6612,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _flash_photo_diaporama: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0 && float_arguments[0] >= 0) {
 				photo_diaporama = int(float_arguments[0]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
 				pg_CurrentDiaporamaEnd = float_arguments[1] + pg_CurrentClockTime;
@@ -6652,7 +6639,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				PlayTrack((currentlyPlaying_trackNo + 1) % pg_SoundTracks[pg_current_configuration_rank].size(), 0.);
 			}
 			BrokenInterpolationVar[_playing_soundtrackNo] = true;
-			*((int *)ScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
+			*((int *)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
 		}
 		break;
 	}
@@ -6665,7 +6652,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				PlayTrack((currentlyPlaying_trackNo + pg_SoundTracks[pg_current_configuration_rank].size() - 1) % pg_SoundTracks[pg_current_configuration_rank].size(), 0.);
 			}
 			BrokenInterpolationVar[_playing_soundtrackNo] = true;
-			*((int*)ScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
+			*((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = currentlyPlaying_trackNo;
 		}
 		break;
 	}
@@ -6682,7 +6669,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				printf("soundtrack_seek: currentlyPlaying_trackNo %d != soundTrack_no %d\n", currentlyPlaying_trackNo, soundTrack_no);
 				StopTrack();
 				BrokenInterpolationVar[_playing_soundtrackNo] = true;
-				*((int*)ScenarioVarPointers[_playing_soundtrackNo]) = soundTrack_no;
+				*((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = soundTrack_no;
 				currentlyPlaying_trackNo = soundTrack_no;
 			}
 			PlayTrack(currentlyPlaying_trackNo, seek_position);
@@ -6694,7 +6681,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				StopTrack();
 			}
 			BrokenInterpolationVar[_playing_soundtrackNo] = true;
-			*((int*)ScenarioVarPointers[_playing_soundtrackNo]) = -1;
+			*((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = -1;
 			currentlyPlaying_trackNo = -1;
 		}
 		break;
@@ -6711,7 +6698,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #endif
 	case _movie_loop_onOff: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			movie_loop = !movie_loop;
 			sprintf(AuxString, "/movie_loop_onOff %d", int(movie_loop));
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -6725,16 +6712,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _pen_colorPreset_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 			if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 				current_pen_colorPreset = (current_pen_colorPreset - 1 + pg_ColorPresets[pg_current_configuration_rank].size()) % pg_ColorPresets[pg_current_configuration_rank].size();
 				// printf( "/new palette %d\n", current_pen_colorPreset);
 				BrokenInterpolationVar[_pen_color] = true;
-				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
+				*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 				BrokenInterpolationVar[_pen_grey] = true;
-				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
+				*((float*)pg_FullScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
 				BrokenInterpolationVar[_pen_color_a] = true;
-				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
+				*((float*)pg_FullScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
 				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -6745,15 +6732,15 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _pen_colorPreset_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 			if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 				current_pen_colorPreset = (current_pen_colorPreset + 1) % pg_ColorPresets[pg_current_configuration_rank].size();
 				BrokenInterpolationVar[_pen_color] = true;
-				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
+				*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 				BrokenInterpolationVar[_pen_grey] = true;
-				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
+				*((float*)pg_FullScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
 				BrokenInterpolationVar[_pen_color_a] = true;
-				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
+				*((float*)pg_FullScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
 				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -6763,16 +6750,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _pen_colorPreset: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 			int presetValue = int(float_arguments[0]);
 			if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
 				current_pen_colorPreset = presetValue % pg_ColorPresets[pg_current_configuration_rank].size();
 				BrokenInterpolationVar[_pen_color] = true;
-				*((float*)ScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
+				*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
 				BrokenInterpolationVar[_pen_grey] = true;
-				*((float*)ScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
+				*((float*)pg_FullScenarioVarPointers[_pen_grey]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.grey;
 				BrokenInterpolationVar[_pen_color_a] = true;
-				*((float*)ScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
+				*((float*)pg_FullScenarioVarPointers[_pen_color_a]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.alpha;
 				// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
 				// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
 				// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
@@ -6935,7 +6922,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _movie_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (!pg_VideoTracks[pg_current_configuration_rank].empty()) {
 				playing_movieNo = (playing_movieNo + 1) % pg_VideoTracks[pg_current_configuration_rank].size();
 				pg_play_movie_no();
@@ -6945,7 +6932,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _movie_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (!pg_VideoTracks[pg_current_configuration_rank].empty()) {
 				playing_movieNo = (playing_movieNo - 1 + pg_VideoTracks[pg_current_configuration_rank].size()) % pg_VideoTracks[pg_current_configuration_rank].size();
 				pg_play_movie_no();
@@ -6956,7 +6943,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// +++++++++++++++++ MOVIE FWD ++++++++++++++++++++++++++++++ 
 	case _movie_forward: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (currentlyPlaying_movieNo >= 0) {
 				pg_movie_forward(int(movieCaptFreq * 10));
 			}
@@ -6964,7 +6951,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _movie_backward: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			if (currentlyPlaying_movieNo >= 0) {
 				pg_movie_backward(int(movieCaptFreq * 10));
 			}
@@ -6978,7 +6965,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _camera_close: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			// release webCam
 			if (pg_webCam_capture.isOpened()) {
 				pg_webCam_capture.release();
@@ -6987,7 +6974,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _camera_open: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			// release webCam
 			if (!pg_webCam_capture.isOpened() && cameraNo < 0 && -cameraNo - 1 < int(pg_webCams.size())) {
 				pg_openCameraCaptureAndLoadFrame();
@@ -6996,7 +6983,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_plus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0) {
 				for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
@@ -7008,7 +6995,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 
 	case _clip_minus: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0) {
 				for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
@@ -7021,7 +7008,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// +++++++++++++++++ CLIP FWD ++++++++++++++++++++++++++++++ 
 	case _clip_forward: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 				if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7032,7 +7019,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_backward: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 				if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7051,7 +7038,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// SCRATCHING
 #if defined(var_clip_scratch_factor3)
 	case _clip_scratch: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
 			float angle_pos = 0.f;
 			float prec_angle_pos = 0.f;
 			double prec_angle_time = 0.;
@@ -7090,7 +7077,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_scratch_touch_press: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_scratch_angle(-1., pg_CurrentClockTime);
@@ -7100,7 +7087,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_scratch_touch_release: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clip_scratch_factor3]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_scratch_angle(-1., pg_CurrentClockTime);
@@ -7113,8 +7100,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// TEMPO BENDING
 #if defined(var_clipCaptFreq) and defined(var_clip_nudge_factor)
 	case _clip_nudge: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
 			int clipSide = int(float_arguments[0]);
 			for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
 				if (clipSide < _clipLR && clipSide >= 0 && pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank) >= 0) {
@@ -7136,8 +7123,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}	 
 	case _clip_nudge_touch_press: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_nudge_angle(-1., pg_CurrentClockTime);
@@ -7146,8 +7133,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_nudge_touch_release: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_clip_nudge_factor]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				pg_clip_status[clipSide].set_last_nudge_angle(-1., pg_CurrentClockTime);
@@ -7159,7 +7146,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// CUE MANAGEMENT
 	case _clip_cue_onOff: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				for (int indClipRank = 0; indClipRank < PG_NB_PARALLEL_CLIPS; indClipRank++) {
@@ -7189,7 +7176,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 						// goto cue: makes a difference whether or not the clip is playing (jump vs call)
 	case _clip_cue_jump: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				int indClip = pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(0);
@@ -7207,7 +7194,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_cue_jump: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				int indClip = pg_clip_status[clipSide].getCurrentlyPlaying_clipNo(1);
@@ -7226,7 +7213,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// goto cue: makes a difference whether or not the clip is playing (jump vs call)
 	case _clip_cue_call: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clipCueNo = int(float_arguments[1]);
 			bool onOff = (float_arguments[2] == 1.f);
@@ -7255,7 +7242,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	
 					   // FX
 	case _clip_fx: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int fxNo = int(float_arguments[1]);
 			if (clipSide == _clipLeft) {
@@ -7312,11 +7299,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 					  break;
 				case 2:
 					echo = float_arguments[2];
-					*((float*)ScenarioVarPointers[_echo]) = echo * fx_dry_wet;
+					*((float*)pg_FullScenarioVarPointers[_echo]) = echo * fx_dry_wet;
 					break;
 				case 3:
 					photo_gamma = float_arguments[2];
-					*((float*)ScenarioVarPointers[_photo_gamma]) = photo_gamma * fx_dry_wet;
+					*((float*)pg_FullScenarioVarPointers[_photo_gamma]) = photo_gamma * fx_dry_wet;
 					break;
 				}
 			}
@@ -7328,11 +7315,11 @@ void pg_aliasScript(string address_string, string string_argument_0,
 					break;
 				case 1:
 					flashTrkBG_freq[2] = max(0, min(9, int(floor(float_arguments[2] * 10 * fx_dry_wet))));
-					((int*)ScenarioVarPointers[_flashTrkBG_freq])[2] = flashTrkBG_freq[2];
+					((int*)pg_FullScenarioVarPointers[_flashTrkBG_freq])[2] = flashTrkBG_freq[2];
 					break;
 				case 2:
 					photo_satur = float_arguments[2];
-					*((float*)ScenarioVarPointers[_photo_satur]) = photo_satur * fx_dry_wet;
+					*((float*)pg_FullScenarioVarPointers[_photo_satur]) = photo_satur * fx_dry_wet;
 					break;
 				case 3:
 					pg_clip_status[_clipLeft].jump_frame_freq = int(float_arguments[2] * 10 * fx_dry_wet);
@@ -7346,28 +7333,28 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 				 // FX
 	case _clip_fx_std: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int fxNo = int(float_arguments[0]);
 			switch (fxNo) {
 			case 0:
 				repop_part = 1.f - repop_part;
-				*((float*)ScenarioVarPointers[_repop_part]) = repop_part;
+				*((float*)pg_FullScenarioVarPointers[_repop_part]) = repop_part;
 				break;
 			case 1:
 				pixel_radius = 1.f - pixel_radius;
-				*((float*)ScenarioVarPointers[_pixel_radius]) = pixel_radius;
+				*((float*)pg_FullScenarioVarPointers[_pixel_radius]) = pixel_radius;
 				break;
 			case 2:
 				pixel_acc = 0.0001f;
-				*((float*)ScenarioVarPointers[_pixel_acc]) = pixel_acc;
+				*((float*)pg_FullScenarioVarPointers[_pixel_acc]) = pixel_acc;
 				break;
 			case 3:
 				CAdecay = 0.f;
-				*((float*)ScenarioVarPointers[_CAdecay]) = CAdecay;
+				*((float*)pg_FullScenarioVarPointers[_CAdecay]) = CAdecay;
 				break;
 			case 4:
 				part_size_pulse = 0.5f;
-				*((float*)ScenarioVarPointers[_part_size_pulse]) = part_size_pulse;
+				*((float*)pg_FullScenarioVarPointers[_part_size_pulse]) = part_size_pulse;
 				break;
 			}
 		}
@@ -7375,7 +7362,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 				 // EQ
 	case _clip_equalizer: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (nb_arguments == 3) {
 				int eqNo = int(float_arguments[1]);
@@ -7419,7 +7406,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #if PG_NB_PARALLEL_CLIPS >= 2
 	// EQ
 	case _clip2_equalizer: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (nb_arguments == 3) {
 				int eqNo = int(float_arguments[1]);
@@ -7463,7 +7450,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// NEW RANDOM CLIP
 	case _clip_new: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			clip_new(0, clipSide, nb_arguments, float_arguments);
 		}
@@ -7471,7 +7458,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_new: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			clip_new(1, clipSide, nb_arguments, float_arguments);
 		}
@@ -7481,7 +7468,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// NEW SELECTED CLIP
 	case _clip_sample: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clip_no = int(float_arguments[1]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0 && clip_no >= 0) {
@@ -7494,7 +7481,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 	// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
 	case _clip_sample_range: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clipRank = int(float_arguments[1]);
 			int clip_no_low = int(float_arguments[2]);
@@ -7511,7 +7498,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #if PG_NB_PARALLEL_CLIPS >= 2
    // NEW SELECTED CLIP IN CASE OF TWO DECKS ON EACH SIDE
 	case _clip2_sample: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			int clip_no = int(float_arguments[1]);
 			if (clipSide < _clipLR && clipSide >= 0 && pg_nbClips[pg_current_configuration_rank] > 0 && clip_no >= 0) {
@@ -7525,7 +7512,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// LEFT OR RIGHT CLIP FADE IN/OUT
 	case _clip_fader: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				// pg_clip_status[clipSide].clip_level[0] = float_arguments[1];
@@ -7535,7 +7522,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_fader: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < _clipLR && clipSide >= 0) {
 				// pg_clip_status[clipSide].clip_level[1] = float_arguments[1];
@@ -7546,19 +7533,19 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 	// CLIP PLAY STOP
 	case _clip_autoplay_left: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_autoplay[0] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip_autoplay_right: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_autoplay[0] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip_play_left: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_play[0] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipLeft].clip_play[0]) {
 				pg_clip_status[_clipLeft].set_lastPlayedFrameTime(0, pg_CurrentClockTime);
@@ -7567,7 +7554,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip_play_right: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_play[0] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipRight].clip_play[0]) {
 				pg_clip_status[_clipRight].set_lastPlayedFrameTime(0, pg_CurrentClockTime);
@@ -7577,19 +7564,19 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_autoplay_left: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_autoplay[1] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip2_autoplay_right: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_autoplay[1] = (float_arguments[0] == 1.f);
 		}
 		break;
 	}
 	case _clip2_play_left: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipLeft].clip_play[1] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipLeft].clip_play[1]) {
 				pg_clip_status[_clipLeft].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
@@ -7598,7 +7585,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _clip2_play_right: {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			pg_clip_status[_clipRight].clip_play[1] = (float_arguments[0] == 1.f);
 			if (pg_clip_status[_clipRight].clip_play[1]) {
 				pg_clip_status[_clipRight].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
@@ -7856,16 +7843,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 #if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	case _pen_hue_sat_value:
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
 			pen_hue = float_arguments[0];
 			BrokenInterpolationVar[_pen_hue][pg_current_configuration_rank] = true;
-			*((float*)ScenarioVarPointers[_pen_hue]) = pen_hue;
+			*((float*)pg_FullScenarioVarPointers[_pen_hue]) = pen_hue;
 			pen_sat = float_arguments[1];
 			BrokenInterpolationVar[_pen_sat][pg_current_configuration_rank] = true;
-			*((float*)ScenarioVarPointers[_pen_sat]) = pen_sat;
+			*((float*)pg_FullScenarioVarPointers[_pen_sat]) = pen_sat;
 			pen_value = float_arguments[2];
 			BrokenInterpolationVar[_pen_value][pg_current_configuration_rank] = true;
-			*((float*)ScenarioVarPointers[_pen_value]) = pen_value;
+			*((float*)pg_FullScenarioVarPointers[_pen_value]) = pen_value;
 			HSVtoRGB(pen_hue, pen_sat, pen_value, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			//printf("color2 msg %s\n", AuxString);
@@ -7874,16 +7861,16 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	case _repop_hue_sat_valuePart:
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
 			repop_huePart = float_arguments[0];
 			BrokenInterpolationVar[_repop_huePart] = true;
-			*((float*)ScenarioVarPointers[_repop_huePart]) = repop_huePart;
+			*((float*)pg_FullScenarioVarPointers[_repop_huePart]) = repop_huePart;
 			repop_satPart = float_arguments[1];
 			BrokenInterpolationVar[_repop_satPart] = true;
-			*((float*)ScenarioVarPointers[_repop_satPart]) = repop_satPart;
+			*((float*)pg_FullScenarioVarPointers[_repop_satPart]) = repop_satPart;
 			repop_valuePart = float_arguments[2];
 			BrokenInterpolationVar[_repop_valuePart] = true;
-			*((float*)ScenarioVarPointers[_repop_valuePart]) = repop_valuePart;
+			*((float*)pg_FullScenarioVarPointers[_repop_valuePart]) = repop_valuePart;
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			//printf("color2 msg %s\n", AuxString);
@@ -7891,7 +7878,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 #endif
 	case _path_replay_stopAll:
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
 				if (is_path_replay[pathNo]) {
 					pg_path_replay_trackNo_onOff(pathNo, -1);
@@ -7903,7 +7890,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	case _path_replay_playAll:
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			printf("play all tracks %.3f\n", pg_CurrentClockTime);
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
 				if (!is_path_replay[pathNo] && pg_Path_Status[pathNo].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
@@ -7944,7 +7931,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 }
 
 void ClipArt_OnOff(int indCLipArt) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
 		if (indCLipArt <= int(pg_ClipArts[pg_current_configuration_rank].size()) && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArt always visible
 			bool isClipArtOn = activeClipArts & (1 << (indCLipArt - 1));
 			if (isClipArtOn) {
@@ -7955,20 +7942,20 @@ void ClipArt_OnOff(int indCLipArt) {
 				pg_last_activated_ClipArt = indCLipArt - 1;
 			}
 			BrokenInterpolationVar[_activeClipArts] = true;
-			*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
+			*((int*)pg_FullScenarioVarPointers[_activeClipArts]) = activeClipArts;
 			sprintf(AuxString, "/ClipArt_%d_onOff %d", indCLipArt, (!isClipArtOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
 }
 
 void ClipArt_Off(int indCLipArt) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
 		if (indCLipArt <= int(pg_ClipArts[pg_current_configuration_rank].size()) && activeClipArts != -1) { // activeClipArts == -1 <=> all ClipArt always visible
 			bool isClipArtOn = activeClipArts & (1 << (indCLipArt - 1));
 			if (isClipArtOn) {
 				activeClipArts = activeClipArts & ~(1 << (indCLipArt - 1));
 				BrokenInterpolationVar[_activeClipArts] = true;
-				*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
+				*((int*)pg_FullScenarioVarPointers[_activeClipArts]) = activeClipArts;
 				sprintf(AuxString, "/ClipArt_%d_onOff %d", indCLipArt, (!isClipArtOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			}
 		}
@@ -7976,14 +7963,14 @@ void ClipArt_Off(int indCLipArt) {
 }
 
 void ClipArt_On(int indCLipArt) {
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
 		if (indCLipArt <= int(pg_ClipArts[pg_current_configuration_rank].size() && activeClipArts != -1)) { // activeClipArts == -1 <=> all ClipArt always visible
 			bool isClipArtOn = activeClipArts & (1 << (indCLipArt - 1));
 			if (!isClipArtOn) {
 				activeClipArts |= (1 << (indCLipArt - 1));
 				pg_last_activated_ClipArt = indCLipArt - 1;
 				BrokenInterpolationVar[_activeClipArts] = true;
-				*((int*)ScenarioVarPointers[_activeClipArts]) = activeClipArts;
+				*((int*)pg_FullScenarioVarPointers[_activeClipArts]) = activeClipArts;
 				sprintf(AuxString, "/ClipArt_%d_onOff %d", indCLipArt, (!isClipArtOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			}
 		}
@@ -8001,7 +7988,7 @@ void Mesh_OnOff(int indMesh) {
 			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_activeMeshes] = true;
-		*((int*)ScenarioVarPointers[_activeMeshes]) = activeMeshes;
+		*((int*)pg_FullScenarioVarPointers[_activeMeshes]) = activeMeshes;
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh, (!isMeshOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -8013,7 +8000,7 @@ void Mesh_On(int indMesh) {
 			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_activeMeshes] = true;
-		*((int*)ScenarioVarPointers[_activeMeshes]) = activeMeshes;
+		*((int*)pg_FullScenarioVarPointers[_activeMeshes]) = activeMeshes;
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh, 1); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -8024,7 +8011,7 @@ void Mesh_Off(int indMesh) {
 			activeMeshes = activeMeshes & ~(1 << (indMesh - 1));
 		}
 		BrokenInterpolationVar[_activeMeshes] = true;
-		*((int*)ScenarioVarPointers[_activeMeshes]) = mobileMeshes;
+		*((int*)pg_FullScenarioVarPointers[_activeMeshes]) = mobileMeshes;
 		sprintf(AuxString, "/Mesh_%d_onOff %d", indMesh, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -8050,7 +8037,7 @@ void Mesh_mobile_OnOff(int indMesh) {
 			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_mobileMeshes] = true;
-		*((int*)ScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
+		*((int*)pg_FullScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
 		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh, (!isMeshOn)); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -8067,7 +8054,7 @@ void Mesh_mobile_Off(int indMesh) {
 			pg_Meshes[pg_current_configuration_rank][indMesh - 1].pg_Mesh_Rotation_Z = pg_Meshes[pg_current_configuration_rank][indMesh - 1]. pg_Mesh_Rotation_Ini_Z;
 		}
 		BrokenInterpolationVar[_mobileMeshes] = true;
-		*((int*)ScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
+		*((int*)pg_FullScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
 		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh, 0); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -8079,7 +8066,7 @@ void Mesh_mobile_On(int indMesh) {
 			pg_last_activated_Mesh = indMesh - 1;
 		}
 		BrokenInterpolationVar[_mobileMeshes] = true;
-		*((int*)ScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
+		*((int*)pg_FullScenarioVarPointers[_mobileMeshes]) = mobileMeshes;
 		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh, 1); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
@@ -8157,7 +8144,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		if (pulse_average != 0 && color_target != _PG_CLIP_ART) {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 #if defined(var_alKemi)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
 					pulsed_color[indChannel]
 						+= color_spectrum_coef * bandpass_3color_palette[indColorBandPass][indChannel] 
 						* (pulse[indColorBandPass] / (3.f * pulse_average));
@@ -8177,7 +8164,7 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 		else {
 			for (int indColorBandPass = 0; indColorBandPass < 3; indColorBandPass++) {
 #if defined(var_alKemi)
-				if (pg_ScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
 						pulsed_color[indChannel]
 							+= color_spectrum_coef * bandpass_3color_palette[indColorBandPass][indChannel] / 3.f;
 					}
@@ -8332,7 +8319,7 @@ void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_p
 void pg_UpdateLightGroups_from_LightVars() {
 	bool oneLightChanged = false;
 #if defined(var_light1_grey)&& defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
 		if (light1_grey != light1_grey_prec || light1_grey_pulse != light1_grey_pulse_prec
 			|| light1_color != light1_color_prec || light1_color_pulse != light1_color_pulse_prec
 			|| light1_dimmer != light1_dimmer_prec || light1_dimmer_pulse != light1_dimmer_pulse_prec
@@ -8362,7 +8349,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 				light1_strobe_pulse_prec = light1_strobe_pulse;
 			}
 #if defined(var_Caverne_BackColor)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 				// video background and light color are the same and randomly changed
 				if (Caverne_BackColor && pg_nb_light_groups > 0) {
 					pg_light_groups[0].set_color(Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
@@ -8377,7 +8364,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
 		if (light2_grey != light2_grey_prec || light2_grey_pulse != light2_grey_pulse_prec
 			|| light2_color != light2_color_prec || light2_color_pulse != light2_color_pulse_prec
 			|| light2_dimmer != light2_dimmer_prec || light2_dimmer_pulse != light2_dimmer_pulse_prec
@@ -8402,7 +8389,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
 		if (light3_grey != light3_grey_prec || light3_grey_pulse != light3_grey_pulse_prec
 			|| light3_color != light3_color_prec || light3_color_pulse != light3_color_pulse_prec
 			|| light3_dimmer != light3_dimmer_prec || light3_dimmer_pulse != light3_dimmer_pulse_prec
@@ -8427,7 +8414,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
 		if (light4_grey != light4_grey_prec || light4_grey_pulse != light4_grey_pulse_prec
 			|| light4_color != light4_color_prec || light4_color_pulse != light4_color_pulse_prec
 			|| light4_dimmer != light4_dimmer_prec || light4_dimmer_pulse != light4_dimmer_pulse_prec
@@ -8452,7 +8439,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
 		if (light5_grey != light5_grey_prec || light5_grey_pulse != light5_grey_pulse_prec
 			|| light5_color != light5_color_prec || light5_color_pulse != light5_color_pulse_prec
 			|| light5_dimmer != light5_dimmer_prec || light5_dimmer_pulse != light5_dimmer_pulse_prec
@@ -8477,7 +8464,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
 		if (light6_grey != light6_grey_prec || light6_grey_pulse != light6_grey_pulse_prec
 			|| light6_color != light6_color_prec || light6_color_pulse != light6_color_pulse_prec
 			|| light6_dimmer != light6_dimmer_prec || light6_dimmer_pulse != light6_dimmer_pulse_prec
@@ -8502,7 +8489,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
 		if (light7_grey != light7_grey_prec || light7_grey_pulse != light7_grey_pulse_prec
 			|| light7_color != light7_color_prec || light7_color_pulse != light7_color_pulse_prec
 			|| light7_dimmer != light7_dimmer_prec || light7_dimmer_pulse != light7_dimmer_pulse_prec
@@ -8528,7 +8515,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 	}
 #endif
 #if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
 		if (light8_grey != light8_grey_prec || light8_grey_pulse != light8_grey_pulse_prec
 			|| light8_color != light8_color_prec || light8_color_pulse != light8_color_pulse_prec
 			|| light8_dimmer != light8_dimmer_prec || light8_dimmer_pulse != light8_dimmer_pulse_prec
@@ -8554,7 +8541,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 			light8_strobe_prec = light8_strobe;
 			light8_strobe_pulse_prec = light8_strobe_pulse;
 #if defined(var_Caverne_BackColor)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 				// video background and light color are the same and randomly changed
 				if (Caverne_BackColor && Caverne_BackColorFlash != Caverne_BackColorFlash_prec) {
 					if (Caverne_BackColorFlash) {
@@ -8577,7 +8564,7 @@ void pg_UpdateLightGroups_from_LightVars() {
 
 	if (oneLightChanged) {
 #if defined(var_Caverne_BackColor)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 			//printf("pg_light_groups[7]->get_group_val(_dimmer) %.2f           pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(_dimmer), pg_light_groups[0].get_color()[0]);
 		}
 #endif
@@ -8592,7 +8579,7 @@ void pg_update_pulsed_colors(void) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// PEN PULSED COLOR
 	// blending the two closest palettes of the pulsed pen color
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
 		if (pen_color != pen_color_prec || pen_color_pulse != pen_color_pulse_prec
 			|| pen_grey != pen_grey_prec || pen_grey_pulse != pen_grey_pulse_prec
 			|| ((pen_grey_pulse != 0 || pen_color_pulse != 0)
@@ -8608,7 +8595,7 @@ void pg_update_pulsed_colors(void) {
 		}
 	}
 #if defined(var_pen_hue)
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
 		&& defined(var_pen_sat) && defined(var_pen_value)
 			if (pen_hue != pen_hue_prec || pen_hue_pulse != pen_hue_pulse_prec
 				|| pen_sat != pen_sat_prec || pen_sat_pulse != pen_sat_pulse_prec
@@ -8670,7 +8657,7 @@ void pg_update_pulsed_colors(void) {
 	}
 #endif
 
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 		if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
 			|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
 			|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
@@ -8685,9 +8672,9 @@ void pg_update_pulsed_colors(void) {
 			pulse_prec[2] = pulse[2];
 		}
 	}
-	if (pg_ScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 			if (repop_colorPart != repop_colorPart_prec || repop_colorPart_pulse != repop_colorPart_pulse_prec
 				|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
 				|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
@@ -8703,9 +8690,9 @@ void pg_update_pulsed_colors(void) {
 			}
 		}
 #if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-			&& pg_ScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 			if (repop_huePart != repop_huePart_prec || repop_huePart_pulse != repop_huePart_pulse_prec
 				|| repop_satPart != repop_satPart_prec || repop_satPart_pulse != repop_satPart_pulse_prec
 				|| repop_valuePart != repop_valuePart_prec || repop_valuePart_pulse != repop_valuePart_pulse_prec
@@ -8746,7 +8733,7 @@ void pg_path_recording_onOff(int indPath) {
 	bool is_path_record = false;
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
 		is_path_record = !pg_Path_Status[indPath].path_isActiveRecording;
-		((bool*)ScenarioVarPointers[_path_record])[indPath] = is_path_record;
+		((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = is_path_record;
 
 		// starts recording source 
 		if (is_path_record) {
@@ -8765,7 +8752,7 @@ void pg_path_recording_onOff(int indPath) {
 
 			// recording can only be made with one finger
 #if defined(var_fingers)
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_fingers]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_fingers]) {
 				NumberOfInteractionFingers(1);
 			}
 #endif
@@ -8802,17 +8789,17 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 		// stops reading 
 		pg_path_replay_trackNo_stop(indPath);
 
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]
 			&& indPath >= 1 && indPath < PG_NB_PATHS) {
-			((int*)ScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
+			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
 		}
 	}
 }
 
 void pg_path_recording_start(int indPath) {
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
-			((bool*)ScenarioVarPointers[_path_record])[indPath] = true;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+			((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = true;
 		}
 		if (indPath >= 1 && indPath <= PG_NB_PATHS) {
 			pg_Path_Status[indPath].path_isActiveRecording = true;
@@ -8825,8 +8812,8 @@ void pg_path_recording_start(int indPath) {
 
 void pg_path_recording_stop(int indPath) {
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
-			((bool*)ScenarioVarPointers[_path_record])[indPath] = false;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
+			((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = false;
 		}
 		if (indPath >= 1 && indPath <= PG_NB_PATHS
 			&& pg_Path_Status[indPath].path_isActiveRecording == true) {
@@ -8843,9 +8830,9 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 		&& pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
 		is_path_replay[indPath] = true;
 		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
-		if (pg_ScenarioActiveVars[pg_current_configuration_rank][_path_record]
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]
 			&& indPath >= 1 && indPath < PG_NB_PATHS) {
-			((bool*)ScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
+			((bool*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
 		}
 		// first time reading: starts from beginning
 		// otherwise starts from where it is
@@ -8883,7 +8870,7 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		paths_RadiusX[indPath] = 0.0F;
 		paths_RadiusY[indPath] = 0.0F;
 		// printf( "-> start_read_path\n"  );
-		((int*)ScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
+		((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
 		sprintf(AuxString, "/path_replay_trackNo_%d 0", indPath);
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	}

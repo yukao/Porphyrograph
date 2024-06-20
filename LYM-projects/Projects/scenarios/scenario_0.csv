@@ -1,8 +1,8 @@
 RANK,0,1,2
-VERBATIM,mask scale,mask contrast,screen_drawing_no
-TYPE,float,float,int
-ID,mask_scale,mask_contrast,screen_drawing_no
-FUNCTION,NULL,NULL,NULL
-GUI,mask_scale,mask_contrast,screen_drawing_no
-SHADER,Update_fs,Update_fs,*
+VERBATIM,screen_drawing_no,current light scene in Python,Song_CA_color_mode
+TYPE,int,int,bool
+ID,screen_drawing_no,currentLightScene,Song_CA_color_mode
+FUNCTION,NULL,currentLightScene_callBack,NULL
+GUI,screen_drawing_no,currentLightScene,Song_CA_color_mode
+SHADER,*,*,Update_fs
 PULSE,*,*,*

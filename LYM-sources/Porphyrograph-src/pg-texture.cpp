@@ -224,7 +224,7 @@ bool pg_loadAllTextures(void) {
 					GL_UNSIGNED_BYTE, GL_LINEAR);
 				pg_particle_acc_texID[indConfiguration].push_back(textureParticle_acc_ID);
 			}
-			else if (pg_ScenarioActiveVars[indConfiguration][_pixel_image_acceleration]
+			else if (pg_FullScenarioActiveVars[indConfiguration][_pixel_image_acceleration]
 				&& texture.texture_usage == Texture_pixel_acc
 				&& texture.texture_Dimension == 2) {
 				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (pixel acc), ";
@@ -243,7 +243,7 @@ bool pg_loadAllTextures(void) {
 
 		// assigns the textures to their destination according to their usage field
 		for (pg_TextureData &texture : pg_Textures[indConfiguration]) {
-			if (pg_ScenarioActiveVars[indConfiguration][_sensor_layout]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][_sensor_layout]) {
 				if (texture.texture_usage == Texture_sensor
 					&& texture.texture_Dimension == 2) {
 					Sensor_texture_rectangle[indConfiguration] = texture.texture_texID;
@@ -278,7 +278,7 @@ bool pg_loadAllTextures(void) {
 					sprintf(ErrorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
-			if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][_part_initialization]) {
 				// printf("Loading particles initial images %s\n", fileName.c_str()); 
 				if (!pg_particle_initial_pos_speed_texID[indConfiguration].size()
 					|| !pg_particle_initial_color_radius_texID[indConfiguration].size()) {
@@ -312,7 +312,7 @@ bool pg_loadAllTextures(void) {
 #endif
 		}
 		// and checks that the textures were provided
-		if (pg_ScenarioActiveVars[indConfiguration][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_sensor_layout]) {
 			if (Sensor_texture_rectangle[indConfiguration] == NULL_ID) {
 				sprintf(ErrorStr, "Error: sensor texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
@@ -330,12 +330,12 @@ bool pg_loadAllTextures(void) {
 		if (Noise_texture_3D[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
-		if (pg_ScenarioActiveVars[indConfiguration][_Part_repop_density]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_Part_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: particle repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
-		if (pg_ScenarioActiveVars[indConfiguration][_BG_CA_repop_density]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_BG_CA_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indConfiguration].size() == 0) {
 				sprintf(ErrorStr, "Error: BG/CA repopulation texture density not provided for configuration %d scenario %s, check texture list with BG_CA_repop_density usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
@@ -1082,7 +1082,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 #if defined(KOMPARTSD) || defined(LIGHT)
 	return;
 #endif
-	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		return;
 	}
 
@@ -1257,7 +1257,7 @@ void loadCameraFrame(bool initial_capture, int IPCam_no) {
 /////////////////////////////////////////////////////////////////
 
 void pg_initCameraFrameTexture(Mat *camera_frame) {
-	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		return;
 	}
 
@@ -1320,7 +1320,7 @@ void pg_initCameraFrameTexture(Mat *camera_frame) {
 }
 
 void pg_openCameraCaptureAndLoadFrame(void) {
-	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		return;
 	}
 
@@ -1379,7 +1379,7 @@ void pg_openCameraCaptureAndLoadFrame(void) {
 }
 
 void pg_releaseCameraCapture(void) {
-	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		return;
 	}
 
@@ -1402,7 +1402,7 @@ void pg_releaseCameraCapture(void) {
 }
 
 void pg_initWebcamParameters(void) {
-	if (!pg_ScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		return;
 	}
 	
@@ -1478,53 +1478,53 @@ void pg_initWebcamParameters(void) {
 	printf("Current Cam saturation %.2f\n", CameraCurrent_saturation);
 	//printf("Current Cam WB         %.2f %.2f\n", CameraCurrent_WB_B, CameraCurrent_WB_R);
 
-	if (*((float *)ScenarioVarPointers[_cameraExposure]) != CameraCurrent_exposure) {
-		printf("cv VideoCapture set exposure new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraExposure]), CameraCurrent_exposure);
-		//pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float *)ScenarioVarPointers[_cameraExposure])));
-		CameraCurrent_exposure = *((float *)ScenarioVarPointers[_cameraExposure]);
+	if (*((float *)pg_FullScenarioVarPointers[_cameraExposure]) != CameraCurrent_exposure) {
+		printf("cv VideoCapture set exposure new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraExposure]), CameraCurrent_exposure);
+		//pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float *)pg_FullScenarioVarPointers[_cameraExposure])));
+		CameraCurrent_exposure = *((float *)pg_FullScenarioVarPointers[_cameraExposure]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float *)ScenarioVarPointers[_cameraGain]) != CameraCurrent_gain) {
-		printf("cv VideoCapture set gain new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraGain]), CameraCurrent_gain);
-		pg_webCam_capture.set(CAP_PROP_GAIN, *((float *)ScenarioVarPointers[_cameraGain]));
-		CameraCurrent_gain = *((float *)ScenarioVarPointers[_cameraGain]);
+	if (*((float *)pg_FullScenarioVarPointers[_cameraGain]) != CameraCurrent_gain) {
+		printf("cv VideoCapture set gain new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraGain]), CameraCurrent_gain);
+		pg_webCam_capture.set(CAP_PROP_GAIN, *((float *)pg_FullScenarioVarPointers[_cameraGain]));
+		CameraCurrent_gain = *((float *)pg_FullScenarioVarPointers[_cameraGain]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float *)ScenarioVarPointers[_cameraBrightness]) != CameraCurrent_brightness) {
-		printf("cv VideoCapture set brightness new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraBrightness]), CameraCurrent_brightness);
-		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, *((float *)ScenarioVarPointers[_cameraBrightness]));
-		CameraCurrent_brightness = *((float *)ScenarioVarPointers[_cameraBrightness]);
+	if (*((float *)pg_FullScenarioVarPointers[_cameraBrightness]) != CameraCurrent_brightness) {
+		printf("cv VideoCapture set brightness new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraBrightness]), CameraCurrent_brightness);
+		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, *((float *)pg_FullScenarioVarPointers[_cameraBrightness]));
+		CameraCurrent_brightness = *((float *)pg_FullScenarioVarPointers[_cameraBrightness]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float *)ScenarioVarPointers[_cameraSaturation]) != CameraCurrent_saturation) {
-		printf("cv VideoCapture set saturation new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraSaturation]), CameraCurrent_saturation);
-		pg_webCam_capture.set(CAP_PROP_SATURATION, *((float *)ScenarioVarPointers[_cameraSaturation]));
-		CameraCurrent_saturation = *((float *)ScenarioVarPointers[_cameraSaturation]);
+	if (*((float *)pg_FullScenarioVarPointers[_cameraSaturation]) != CameraCurrent_saturation) {
+		printf("cv VideoCapture set saturation new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraSaturation]), CameraCurrent_saturation);
+		pg_webCam_capture.set(CAP_PROP_SATURATION, *((float *)pg_FullScenarioVarPointers[_cameraSaturation]));
+		CameraCurrent_saturation = *((float *)pg_FullScenarioVarPointers[_cameraSaturation]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)ScenarioVarPointers[_cameraContrast]) != CameraCurrent_contrast) {
-		printf("cv VideoCapture set contrast new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraContrast]), CameraCurrent_contrast);
-		pg_webCam_capture.set(CAP_PROP_CONTRAST, *((float*)ScenarioVarPointers[_cameraContrast]));
-		CameraCurrent_contrast = *((float*)ScenarioVarPointers[_cameraContrast]);
+	if (*((float*)pg_FullScenarioVarPointers[_cameraContrast]) != CameraCurrent_contrast) {
+		printf("cv VideoCapture set contrast new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraContrast]), CameraCurrent_contrast);
+		pg_webCam_capture.set(CAP_PROP_CONTRAST, *((float*)pg_FullScenarioVarPointers[_cameraContrast]));
+		CameraCurrent_contrast = *((float*)pg_FullScenarioVarPointers[_cameraContrast]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)ScenarioVarPointers[_cameraGamma]) != CameraCurrent_gamma) {
-		printf("cv VideoCapture set gamma new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraGamma]), CameraCurrent_gamma);
-		pg_webCam_capture.set(CAP_PROP_GAMMA, *((float*)ScenarioVarPointers[_cameraGamma]));
-		CameraCurrent_contrast = *((float*)ScenarioVarPointers[_cameraGamma]);
+	if (*((float*)pg_FullScenarioVarPointers[_cameraGamma]) != CameraCurrent_gamma) {
+		printf("cv VideoCapture set gamma new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraGamma]), CameraCurrent_gamma);
+		pg_webCam_capture.set(CAP_PROP_GAMMA, *((float*)pg_FullScenarioVarPointers[_cameraGamma]));
+		CameraCurrent_contrast = *((float*)pg_FullScenarioVarPointers[_cameraGamma]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float *)ScenarioVarPointers[_cameraWB_R]) != CameraCurrent_WB_R
-		&& *((float *)ScenarioVarPointers[_cameraWB_R]) >= 0) {
-		printf("cv VideoCapture set wbR new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraWB_R]), CameraCurrent_WB_R);
-		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, *((float *)ScenarioVarPointers[_cameraWB_R]));
-		CameraCurrent_WB_R = *((float *)ScenarioVarPointers[_cameraWB_R]);
+	if (*((float *)pg_FullScenarioVarPointers[_cameraWB_R]) != CameraCurrent_WB_R
+		&& *((float *)pg_FullScenarioVarPointers[_cameraWB_R]) >= 0) {
+		printf("cv VideoCapture set wbR new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraWB_R]), CameraCurrent_WB_R);
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, *((float *)pg_FullScenarioVarPointers[_cameraWB_R]));
+		CameraCurrent_WB_R = *((float *)pg_FullScenarioVarPointers[_cameraWB_R]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float *)ScenarioVarPointers[_cameraWB_B]) != CameraCurrent_WB_B) {
-		printf("cv VideoCapture set wbB new/current  %.2f / %.2f\n", *((float*)ScenarioVarPointers[_cameraWB_B]), CameraCurrent_WB_B);
-		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, *((float *)ScenarioVarPointers[_cameraWB_B]));
-		CameraCurrent_WB_B = *((float *)ScenarioVarPointers[_cameraWB_B]);
+	if (*((float *)pg_FullScenarioVarPointers[_cameraWB_B]) != CameraCurrent_WB_B) {
+		printf("cv VideoCapture set wbB new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraWB_B]), CameraCurrent_WB_B);
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, *((float *)pg_FullScenarioVarPointers[_cameraWB_B]));
+		CameraCurrent_WB_B = *((float *)pg_FullScenarioVarPointers[_cameraWB_B]);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 

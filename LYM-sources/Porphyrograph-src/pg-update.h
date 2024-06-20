@@ -705,7 +705,6 @@ extern bool is_movieAtEnd;
 
 extern int initialSecondBGCapture;
 
-#if defined(var_clipCaptFreq)
 #define _NbMaxCues 8
 enum pg_clip_LR
 {
@@ -823,7 +822,6 @@ extern float fx_dry_wet;
 extern clip_status pg_clip_status[_clipLR];
 // index of top clip 
 extern int rankOfTopClip;
-#endif
 
 extern bool secondInitialBGCapture;
 extern bool initialBGCapture;

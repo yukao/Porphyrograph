@@ -42,7 +42,7 @@ vector<Scene>			 pg_Scenario[PG_MAX_CONFIGURATIONS];
 double                   current_scene_percent = 0.f;
 						// table of PG_MAX_CONFIGURATIONS booleans tables indicating whether a var (from the full scenario) 
 						// is active for the current configuration and scenario
-bool					 pg_ScenarioActiveVars[PG_MAX_CONFIGURATIONS][_MaxInterpVarIDs] = { {false} };
+bool					 pg_FullScenarioActiveVars[PG_MAX_CONFIGURATIONS][_MaxInterpVarIDs] = { {false} };
 
 string					 pg_csv_file_name;
 string					 snapshots_dir_path_prefix;
@@ -778,7 +778,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				}
 			}
 		}
-		if (pg_ScenarioActiveVars[indConfiguration][_part_initialization]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_part_initialization]) {
 			if (ind_shader_type == _pg_shader_ParticleAnimation
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -796,7 +796,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-		if (pg_ScenarioActiveVars[indConfiguration][_sensor_layout]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_sensor_layout]) {
 			if (ind_shader_type == _pg_shader_Sensor
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -806,7 +806,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-		if (pg_ScenarioActiveVars[indConfiguration][_activeClipArts]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_activeClipArts]) {
 			if (ind_shader_type == _pg_shader_ClipArt
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -814,7 +814,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				printf("Particle aniation shader, ");
 			}
 		}
-		if (pg_ScenarioActiveVars[indConfiguration][_activeMeshes]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_activeMeshes]) {
 			if (ind_shader_type == _pg_shader_Mesh
 				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
 					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
@@ -1006,7 +1006,7 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 
 int pg_varID_to_rank(string var_ID, int indConfig) {
 	for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
-		if (strcmp(ScenarioVarStrings[indP], var_ID.c_str()) == 0) {
+		if (pg_FullScenarioVarStrings[indP] == var_ID) {
 			return indP;
 		}
 	}
@@ -1526,8 +1526,8 @@ void ParseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration) {
 		//	pathRank, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
 		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
 			if (local_path_group == pg_current_SVG_path_group) {
-				if (pg_ScenarioActiveVars[indConfiguration][_path_replay_trackNo] 
-					&& pg_ScenarioActiveVars[indConfiguration][_path_record]) {
+				if (pg_FullScenarioActiveVars[indConfiguration][_path_replay_trackNo] 
+					&& pg_FullScenarioActiveVars[indConfiguration][_path_record]) {
 					//printf("Load svg path No %d track %d\n", pathNo, path_track);
 					pg_Path_Status[pathNo].load_svg_path((char*)fileName.c_str(),
 						pathRadius, path_r_color, path_g_color, path_b_color,
@@ -1554,7 +1554,7 @@ void pg_listAllSVG_paths(void) {
 	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 		std::cout << "    " << indConfiguration << ": ";
 		for (SVG_scenarioPathCurve &curve : SVG_scenarioPathCurves[indConfiguration]) {
-			if (pg_ScenarioActiveVars[indConfiguration][_path_replay_trackNo] && pg_ScenarioActiveVars[indConfiguration][_path_record]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][_path_replay_trackNo] && pg_FullScenarioActiveVars[indConfiguration][_path_record]) {
 				std::cout << curve.path_fileName << " (" << curve.path_no << ", "
 					<< curve.path_group << "), ";
 			}
@@ -1676,7 +1676,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 	string ID;
 	string temp;
 
-	if (pg_ScenarioActiveVars[indConfiguration][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[indConfiguration][_activeMeshes]) {
 		////////////////////////////
 		////// MESHES
 		// the meshes are loaded inside the GPU and diplayed depending on their activity
@@ -1795,7 +1795,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 			//	aMesh.pg_Mesh_Rotation_angle);
 			// the rank of the mesh textures applied to this mesh
 #if defined(var_MmeShanghai_brokenGlass)
-			if (pg_ScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
 				sstream >> aMesh.pg_MmeShanghai_NbMeshSubParts;
 				aMesh.pg_MmeShanghai_MeshSubPart_FileNames = new string[aMesh.pg_MmeShanghai_NbMeshSubParts];
 				aMesh.pg_MmeShanghai_MeshSubParts = new bool* [aMesh.pg_MmeShanghai_NbMeshSubParts];
@@ -1811,7 +1811,7 @@ void ParseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 		}
 		// Augmented Reality: FBO capture of Master to be displayed on a mesh
 #if defined(var_textureFrontier_wmin)&& defined(var_textureFrontier_wmax) and defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) and defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
-		if (pg_ScenarioActiveVars[indConfiguration][_textureFrontier_wmin]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][_textureFrontier_wmin]) {
 			if (pg_Meshes[indConfiguration].empty()) {
 				sprintf(ErrorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); ReportError(ErrorStr); throw 100;
 			}
@@ -2228,14 +2228,14 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	int nb_vars = 0;
 	// initializations for scenario variables: value arrray and active vars
 	for (int indP = 0; indP < _MaxInterpVarIDs + 1; indP++) {
-		pg_ScenarioActiveVars[indConfiguration][indP] = false;
-		if (ScenarioVarIndiceRanges[indP][0] == -1) {
+		pg_FullScenarioActiveVars[indConfiguration][indP] = false;
+		if (pg_FullScenarioVarIndiceRanges[indP][0] == -1) {
 			InitialValuesInterpVar[indConfiguration][indP].init_ScenarioValue(0., "", NULL, 0);
 			LastGUIShippedValuesInterpVar[indConfiguration][indP].init_ScenarioValue(0., "", NULL, 0);
 		}
 		else {
-			InitialValuesInterpVar[indConfiguration][indP].init_ScenarioValue(0., "", NULL, ScenarioVarIndiceRanges[indP][1]);
-			LastGUIShippedValuesInterpVar[indConfiguration][indP].init_ScenarioValue(0., "", NULL, ScenarioVarIndiceRanges[indP][1]);
+			InitialValuesInterpVar[indConfiguration][indP].init_ScenarioValue(0., "", NULL, pg_FullScenarioVarIndiceRanges[indP][1]);
+			LastGUIShippedValuesInterpVar[indConfiguration][indP].init_ScenarioValue(0., "", NULL, pg_FullScenarioVarIndiceRanges[indP][1]);
 		}
 	}
 
@@ -2256,7 +2256,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 			if (indVar == -1) {
 				sprintf(ErrorStr, "Error: scenario variable %s (index %d) of configuration %d not found in the variable list generated by python generator\n", temp.c_str(), indP, indConfiguration); ReportError(ErrorStr); throw 50;
 			}
-			pg_ScenarioActiveVars[indConfiguration][indVar] = true;
+			pg_FullScenarioActiveVars[indConfiguration][indVar] = true;
 			nb_vars++;
 		}
 	}
@@ -2282,30 +2282,30 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	stringstreamStoreLine(&sstream, &line);
 	for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 		indVar = ConfigScenarioVarRank[indConfiguration][indP];
-		if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
 			ConfigScenarioVarRank[indConfiguration][indVar];
 			if (sstream.eof()) {
 				sprintf(ErrorStr, "Error: missing initial value %s %d\n", temp.c_str(), indVar); ReportError(ErrorStr); throw 50;
 			}
 			sstream >> temp;
-			if (ScenarioVarTypes[indVar] != _pg_string) {
+			if (pg_FullScenarioVarTypes[indVar] != _pg_string) {
 				// dimension 1 variable: number
-				if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+				if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 					bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
 					if (!has_only_digits) {
-						sprintf(ErrorStr, "Error: non numeric variable initial value for var %d (%s)\n", indVar, ScenarioVarStrings[indVar]); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: non numeric variable initial value for var %d (%s)\n", indVar, pg_FullScenarioVarStrings[indVar].c_str()); ReportError(ErrorStr); throw 50;
 					}
 					InitialValuesInterpVar[indConfiguration][indVar].val_num = my_stod(temp);
 				}
 				// array
 				else {
-					unsigned int size_of_array = ScenarioVarIndiceRanges[indVar][1] - ScenarioVarIndiceRanges[indVar][0];
+					unsigned int size_of_array = pg_FullScenarioVarIndiceRanges[indVar][1] - pg_FullScenarioVarIndiceRanges[indVar][0];
 					vector<string> values = split_string(temp, '/');
 					if (values.size() != size_of_array) {
-						sprintf(ErrorStr, "Error: numeric array variable expects %d initial value not %d (%s[%d..%d])\n", size_of_array, values.size(), ScenarioVarStrings[indVar], ScenarioVarIndiceRanges[indVar][0], ScenarioVarIndiceRanges[indVar][1]); ReportError(ErrorStr); throw 50;
+						sprintf(ErrorStr, "Error: numeric array variable expects %d initial value not %d (%s[%d..%d])\n", size_of_array, values.size(), pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1]); ReportError(ErrorStr); throw 50;
 					}
 					int indVect = 0;
-					for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 						InitialValuesInterpVar[indConfiguration][indVar].val_array[index] = my_stod(values[indVect]);
 						indVect++;
 					}
@@ -2340,7 +2340,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 	pg_variable_param_input_type = new pg_Parameter_Input_Type[_MaxInterpVarIDs];
 	for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 		indVar = ConfigScenarioVarRank[indConfiguration][indP];
-		if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
+		if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
 			pg_variable_param_input_type[indVar] = _PG_SCENARIO;
 		}
 	}
@@ -2418,22 +2418,22 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 		//std::cout << "\ninitial values :\n";
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			indVar = ConfigScenarioVarRank[indConfiguration][indP];
-			if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
 				if (sstream.eof()) {
 					sprintf(ErrorStr, "Error: missing initial value in scene %d var %d (%s)\n",
-						nbScenesInScenario + 1, indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 50;
+						nbScenesInScenario + 1, indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 50;
 				}
 				sstream >> temp;
-				if (ScenarioVarTypes[indVar] == _pg_string) {
+				if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
 					newScene.scene_initial_parameters[indVar].val_string = temp;
 				}
 				else {
 					// dimension 1 variable: number
-					if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 						bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
 						if (!has_only_digits) {
 							sprintf(ErrorStr, "Error: non numeric variable initial value in scene %d var %d (%s) type %d\n",
-								nbScenesInScenario + 1, indVar, ScenarioVarStrings[indVar], ScenarioVarTypes[indVar]); ReportError(ErrorStr); throw 50;
+								nbScenesInScenario + 1, indVar, pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarTypes[indVar]); ReportError(ErrorStr); throw 50;
 						}
 						else {
 							newScene.scene_initial_parameters[indVar].val_num = my_stod(temp);
@@ -2441,13 +2441,13 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 					}
 					// array
 					else {
-						unsigned int size_of_array = ScenarioVarIndiceRanges[indVar][1] - ScenarioVarIndiceRanges[indVar][0];
+						unsigned int size_of_array = pg_FullScenarioVarIndiceRanges[indVar][1] - pg_FullScenarioVarIndiceRanges[indVar][0];
 						vector<string> values = split_string(temp, '/');
 						if (values.size() != size_of_array) {
-							sprintf(ErrorStr, "Error: numeric array variable expects %d scene initial values not %d (%s[%d..%d])\n", size_of_array, values.size(), ScenarioVarStrings[indVar], ScenarioVarIndiceRanges[indVar][0], ScenarioVarIndiceRanges[indVar][1]); ReportError(ErrorStr); throw 50;
+							sprintf(ErrorStr, "Error: numeric array variable expects %d scene initial values not %d (%s[%d..%d])\n", size_of_array, values.size(), pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1]); ReportError(ErrorStr); throw 50;
 						}
 						int indVect = 0;
-						for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 							newScene.scene_initial_parameters[indVar].val_array[index] = my_stod(values[indVect]);
 							indVect++;
 						}
@@ -2469,22 +2469,22 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			indVar = ConfigScenarioVarRank[indConfiguration][indP];
-			if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
 				if (sstream.eof()) {
 					sprintf(ErrorStr, "Error: missing final value in scene %d var %d (%s)\n", nbScenesInScenario + 1, indVar, temp.c_str()); ReportError(ErrorStr); throw 50;
 				}
 				sstream >> temp;
 				//printf("val %s\n", temp.c_str());
-				if (ScenarioVarTypes[indVar] == _pg_string) {
+				if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
 					newScene.scene_final_parameters[indVar].val_string = temp;
 				}
 				else {
 					// dimension 1 variable: number
-					if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 						bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
 						if (!has_only_digits) {
 							sprintf(ErrorStr, "Error: non numeric variable initial value in scene %d var %d (%s) type %d\n",
-								nbScenesInScenario + 1, indVar, ScenarioVarStrings[indVar], ScenarioVarTypes[indVar]); ReportError(ErrorStr); throw 50;
+								nbScenesInScenario + 1, indVar, pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarTypes[indVar]); ReportError(ErrorStr); throw 50;
 						}
 						else {
 							newScene.scene_final_parameters[indVar].val_num = my_stod(temp);
@@ -2492,13 +2492,13 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 					}
 					// array
 					else {
-						unsigned int size_of_array = ScenarioVarIndiceRanges[indVar][1] - ScenarioVarIndiceRanges[indVar][0];
+						unsigned int size_of_array = pg_FullScenarioVarIndiceRanges[indVar][1] - pg_FullScenarioVarIndiceRanges[indVar][0];
 						vector<string> values = split_string(temp, '/');
 						if (values.size() != size_of_array) {
-							sprintf(ErrorStr, "Error: numeric array variable expects %d scene initial values not %d (%s[%d..%d])\n", size_of_array, values.size(), ScenarioVarStrings[indVar], ScenarioVarIndiceRanges[indVar][0], ScenarioVarIndiceRanges[indVar][1]); ReportError(ErrorStr); throw 50;
+							sprintf(ErrorStr, "Error: numeric array variable expects %d scene initial values not %d (%s[%d..%d])\n", size_of_array, values.size(), pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1]); ReportError(ErrorStr); throw 50;
 						}
 						int indVect = 0;
-						for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 							newScene.scene_final_parameters[indVar].val_array[index] = my_stod(values[indVect]);
 							indVect++;
 						}
@@ -2520,7 +2520,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 		// storing the interpolation mode
 		for (int indP = 0; indP < ScenarioVarNb[indConfiguration]; indP++) {
 			indVar = ConfigScenarioVarRank[indConfiguration][indP];
-			if (pg_ScenarioActiveVars[indConfiguration][indVar]) {
+			if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
 				char valCh = 0;
 				char valCh2 = 0;
 				string vals, val2s;
@@ -2528,13 +2528,13 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 
 				newScene.scene_interpolations[indVar].offSet = 0.0;
 				newScene.scene_interpolations[indVar].duration = 1.0;
-				if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+				if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 					newScene.scene_interpolations[indVar].midTermValue
 						= 0.5 * (newScene.scene_initial_parameters[indVar].val_num
 							+ newScene.scene_final_parameters[indVar].val_num);
 				}
 				else {
-					for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 						newScene.scene_interpolations[indVar].midTermValueArray[index]
 							= 0.5 * (newScene.scene_initial_parameters[indVar].val_array[index]
 								+ newScene.scene_final_parameters[indVar].val_array[index]);
@@ -2543,7 +2543,7 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 
 				if (sstream.eof()) {
 					sprintf(ErrorStr, "Error: missing interpolation value in scene %d (%s) var %d (%s)\n",
-						nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 50;
+						nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 50;
 				}
 				sstream >> std::skipws >> temp;
 				valCh = temp.at(0);
@@ -2740,14 +2740,14 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 						newScene.scene_interpolations[indVar].initialization_mode = pg_current_value;
 					}
 					sstream >> newScene.scene_interpolations[indVar].midTermValue;
-					if (ScenarioVarIndiceRanges[indVar][0] != -1) {
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1) {
 						if (newScene.scene_interpolations[indVar].midTermValueArray != NULL) {
-							for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+							for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 								newScene.scene_interpolations[indVar].midTermValueArray[index] = newScene.scene_interpolations[indVar].midTermValue;
 							}
 						}
 						else {
-							sprintf(ErrorStr, "Unexpected null array for bell interpolation %d (%s)!", indVar, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 100;
+							sprintf(ErrorStr, "Unexpected null array for bell interpolation %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 100;
 						}
 					}
 					//printf("Bell interpolation mode in scene %d (%s) parameter %d [%d] [%c] mid term value %.2f!\n",
@@ -2795,8 +2795,8 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 						newScene.scene_interpolations[indVar].initialization_mode = pg_current_value;
 					}
 					sstream >> newScene.scene_interpolations[indVar].midTermValue;
-					if (ScenarioVarIndiceRanges[indVar][0] != -1) {
-						for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1) {
+						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 							newScene.scene_interpolations[indVar].midTermValueArray[index] = newScene.scene_interpolations[indVar].midTermValue;
 						}
 					}
@@ -2822,29 +2822,29 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 						}
 					}
 					else {
-						if (ScenarioVarTypes[indVar] == _pg_string
+						if (pg_FullScenarioVarTypes[indVar] == _pg_string
 							&& newScene.scene_initial_parameters[indVar].val_string
 							!= newScene.scene_final_parameters[indVar].val_string) {
 							sprintf(ErrorStr, "Error: S(tepwise) interpolation should have same initial and final values %s/%s in scene %d (%s) var %d (%s)\n",
 								newScene.scene_initial_parameters[indVar].val_string.c_str(), newScene.scene_final_parameters[indVar].val_string.c_str(), 
-								nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 50;
+								nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 50;
 						}
-						else if (ScenarioVarTypes[indVar] != _pg_string) {
-							if (ScenarioVarIndiceRanges[indVar][0] == -1) {
+						else if (pg_FullScenarioVarTypes[indVar] != _pg_string) {
+							if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 								if (newScene.scene_initial_parameters[indVar].val_num
 									!= newScene.scene_final_parameters[indVar].val_num) {
 									sprintf(ErrorStr, "Error: S(tepwise) interpolation should have same initial and final values %.2f/%.2f in scene %d (%s) var %d (%s)\n",
 										newScene.scene_initial_parameters[indVar].val_num, newScene.scene_final_parameters[indVar].val_num, nbScenesInScenario + 1,
-										newScene.scene_IDs.c_str(), indVar + 1, ScenarioVarMessages[indVar]); ReportError(ErrorStr); throw 50;
+										newScene.scene_IDs.c_str(), indVar + 1, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 50;
 								}
 							}
 							else {
-								for (int index = ScenarioVarIndiceRanges[indVar][0]; index < ScenarioVarIndiceRanges[indVar][1]; index++) {
+								for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 									if (newScene.scene_initial_parameters[indVar].val_array[index]
 										!= newScene.scene_final_parameters[indVar].val_array[index]) {
 										sprintf(ErrorStr, "Error: S(tepwise) interpolation should have same initial and final values %.2f/%.2f in scene %d (%s) var %d  (%s) index %d\n", 
 											newScene.scene_initial_parameters[indVar].val_array[index], newScene.scene_final_parameters[indVar].val_array[index],
-											nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, ScenarioVarMessages[indVar], index + 1); ReportError(ErrorStr); throw 50;
+											nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, pg_FullScenarioVarMessages[indVar].c_str(), index + 1); ReportError(ErrorStr); throw 50;
 									}
 								}
 							}

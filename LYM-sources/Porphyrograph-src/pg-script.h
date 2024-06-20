@@ -144,14 +144,12 @@ extern int FourFrameStroke_y;
 // Cuurent palette after interpolation
 extern float pen_bandpass_3color_palette[3][3];
 
-#if defined(CORE)
 #define CA_SQUENCR                0
 #define CA_TOTALISTIC             1
 #define CA_GENERATION             2
 #define CA_GAL_BIN_MOORE          3
 #define CA_GAL_BIN_NEUMANN        4
 #define CA_NEUMANN_BINARY         5
-#endif
 
 #if defined(CAAUDIO) && !defined(SOUNDINITATIVE)
 #define CA_TOTALISTIC             0

@@ -231,10 +231,9 @@ extern PhotoSwapData pg_Photo_swap_buffer_data[PG_PHOTO_NB_TEXTURES];
 // image index management for progessive image turnover
 // according to image swap frequency and duration
 // and according to directory size
-#if defined(var_photo_diaporama)
 extern double pg_CurrentDiaporamaEnd;
 extern int pg_CurrentDiaporamaFile;
-#endif
+
 
 ///////////////////////////////////////////////////////////////////
 // IMAGE TEXTURES
@@ -254,9 +253,7 @@ extern vector<vector<string>> pg_compressedImageFilesNames[PG_MAX_CONFIGURATIONS
 
 // the index from which an image available for swapping is looked for
 extern int pg_IndInitialSwapPhoto;
-#if defined(var_moving_messages)
 extern std::string pg_MessageFile[PG_MAX_CONFIGURATIONS];
-#endif
 
 ////////////////////////////////////////////////////////////////////
 // SHORT CLIP IMAGE FILES
@@ -364,12 +361,10 @@ void* pg_movieLoop(void * lpParam);
 #endif
 
 // TEXTURE BUFFER MANAGEMENT
-#if defined(var_photo_diaporama)
 void diaporama_random(void);
 void diaporama_slide(int slideNo);
 void pg_launch_diaporama(int slideNo);
 bool pg_update_diaporama(void);
-#endif
 
 #if defined(var_CATable)
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);

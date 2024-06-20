@@ -1007,99 +1007,99 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				}
 			}
 #if defined(var_light1_grey) && defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
 				BrokenInterpolationVar[_light1_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light1_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light1_grey]) = 0.;
 				BrokenInterpolationVar[_light1_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light1_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light1_color]) = 0.;
 				BrokenInterpolationVar[_light1_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light1_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light1_dimmer]) = 0.;
 				BrokenInterpolationVar[_light1_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light1_strobe]) = 0.
+				*((float*)pg_FullScenarioVarPointers[_light1_strobe]) = 0.
 			}
 #endif
 #if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
 				BrokenInterpolationVar[_light2_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light2_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light2_grey]) = 0.;
 				BrokenInterpolationVar[_light2_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light2_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light2_color]) = 0.;
 				BrokenInterpolationVar[_light2_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light2_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light2_dimmer]) = 0.;
 				BrokenInterpolationVar[_light2_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light2_strobe]) = 0.
+				*((float*)pg_FullScenarioVarPointers[_light2_strobe]) = 0.
 			}
 #endif
 #if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
 				BrokenInterpolationVar[_light3_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light3_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light3_grey]) = 0.;
 				BrokenInterpolationVar[_light3_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light3_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light3_color]) = 0.;
 				BrokenInterpolationVar[_light3_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light3_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light3_dimmer]) = 0.;
 				BrokenInterpolationVar[_light3_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light3_strobe]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light3_strobe]) = 0.;
 			}
 #endif
 #if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
 				BrokenInterpolationVar[_light4_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light4_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light4_grey]) = 0.;
 				BrokenInterpolationVar[_light4_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light4_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light4_color]) = 0.;
 				BrokenInterpolationVar[_light4_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light4_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light4_dimmer]) = 0.;
 				BrokenInterpolationVar[_light4_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light4_strobe]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light4_strobe]) = 0.;
 			}
 #endif
 #if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
 			BrokenInterpolationVar[_light5_grey][pg_current_configuration_rank] = true;
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
-				*((float*)ScenarioVarPointers[_light5_grey]) = 0.;
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
+				*((float*)pg_FullScenarioVarPointers[_light5_grey]) = 0.;
 				BrokenInterpolationVar[_light5_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light5_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light5_color]) = 0.;
 				BrokenInterpolationVar[_light5_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light5_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light5_dimmer]) = 0.;
 				BrokenInterpolationVar[_light5_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light5_strobe]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light5_strobe]) = 0.;
 			}
 #endif
 #if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
 				BrokenInterpolationVar[_light6_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light6_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light6_grey]) = 0.;
 				BrokenInterpolationVar[_light6_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light6_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light6_color]) = 0.;
 				BrokenInterpolationVar[_light6_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light6_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light6_dimmer]) = 0.;
 				BrokenInterpolationVar[_light6_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light6_strobe]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light6_strobe]) = 0.;
 			}
 #endif
 #if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
 				BrokenInterpolationVar[_light7_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light7_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light7_grey]) = 0.;
 				BrokenInterpolationVar[_light7_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light7_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light7_color]) = 0.;
 				BrokenInterpolationVar[_light7_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light7_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light7_dimmer]) = 0.;
 				BrokenInterpolationVar[_light7_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light7_strobe]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light7_strobe]) = 0.;
 			}
 #endif
 #if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
-			if (pg_ScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
 				BrokenInterpolationVar[_light8_grey][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light8_grey]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light8_grey]) = 0.;
 				BrokenInterpolationVar[_light8_color][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light8_color]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light8_color]) = 0.;
 				BrokenInterpolationVar[_light8_dimmer][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light8_dimmer]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light8_dimmer]) = 0.;
 				BrokenInterpolationVar[_light8_strobe][pg_current_configuration_rank] = true;
-				*((float*)ScenarioVarPointers[_light8_strobe]) = 0.;
+				*((float*)pg_FullScenarioVarPointers[_light8_strobe]) = 0.;
 			}
 #endif
 		}
