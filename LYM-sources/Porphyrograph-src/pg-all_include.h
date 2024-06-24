@@ -191,74 +191,21 @@ using std::ifstream;
 #endif
 #endif // _WIN32
 
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #define PG_WITH_BLUR
 #endif
 
-#if defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
-#if defined(var_light1_dimmer)
-// light variables inside scenario
-#define PG_LIGHTS_CONTROL_IN_PG
-#else
-// curve based control in Python
-#define PG_LIGHTS_CONTROL_IN_PYTHON
-#endif
-#if defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
-// light DMX command in porphyrograpa
-#define PG_LIGHTS_DMX_IN_PG
+// light DMX command in porphyrograph
 #include <controller_library.h>
-#else
-// light DMX command in Python
-#define PG_LIGHTS_DMX_IN_PYTHON
-#endif
-#endif
 
-#define PG_WITH_PORTAUDIO
-
+// maximal number of arguments for an OSC command
 #define PG_MAX_OSC_ARGUMENTS 96
-
-#if defined(PG_WITH_MIDI)
-#define PG_MIDI
-#include "portmidi.h"
-#include "pg-MIDI.h"
-#endif
-
-
-//#if defined(CRITON) || defined(LIGHT)
-//// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 3 WITH THE CURRENT VARIABLES) 
-//#define PG_NB_PATHS 3   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
-//#elif defined(CORE)
-//// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 11 WITH THE CURRENT VARIABLES) 
-//#define PG_NB_PATHS 11   // **** ALSO TO BE CHANGED IN UPDATE AND PARTICLE ANIMATION FRAGMENT SHADER ****
-//#else
-//// NB PATHS (0=CURRENT DRAWING HAS TO BE <= 7 WITH THE CURRENT VARIABLES) 
-//#define PG_NB_PATHS 7   // **** ALSO TO BE CHANGED IN UPDATE FRAGMENT SHADER ****
-//#endif
-
-// for a tactile entry, there is no mouseover and the path has to be broken if the distance between two consecutive points is too big
-#if defined(var_fingers)
-#define PG_TACTILE_TABLET
-#endif
-
 
 // REST DELAY FOR CAMERA AFTER CHANGE OF PARAMETERS
 #define PG_CAMERA_REST_DELAY 240
 
 // NB OF POSSIBLE CURSORS THROUGH HAND INTERFACE
-#if defined(var_fingers)
 #define PG_NB_CURSORS_MAX 5
-#else
-#define PG_NB_CURSORS_MAX 1
-#endif
-
-#if !defined(LIGHT)
-#define PG_WITH_SOUND_LEVELS_GUI_FEEDBACK
-#endif
-
-// HSV color system instead of Palettes + grey
-#if !defined(var_fingers)
-#define PG_NB_CURSORS_MAX 1
-#endif
 
 // NB NOISE TYPES
 #define PG_NB_NOISE_TYPES 4
@@ -267,9 +214,7 @@ using std::ifstream;
 // camera noise
 // video noise
 
-#ifndef CRITON
-#define PG_WITH_PUREDATA
-#else
+#if defined(pg_Project_Criton)
 #define PG_WITH_JUCE
 #endif
 
@@ -290,9 +235,9 @@ using std::ifstream;
 #define PG_NB_CA_SUBTYPES 20
 
 // CURVE VS SPLAT PARTICLES
-#if defined(DASEIN)
+#if defined(pg_Project_Dasein)
 #define CURVE_PARTICLES
-#elif defined(VOLUSPA) || defined(CAAUDIO) || defined(ARAKNIT)
+#elif defined(pg_Project_Voluspa) || defined(pg_Project_CAaudio) || defined(pg_Project_araKnit)
 #define LINE_SPLAT_PARTICLES
 #else
 #define TEXTURED_QUAD_PARTICLES
@@ -306,13 +251,8 @@ using std::ifstream;
 // different clips on right and left screens
 #define PG_NB_PARALLEL_CLIPS 2
 
-// MASTER's MASK
-#if defined(ARAKNIT) || defined(VOLUSPA) ||  defined(CORE)
-#define PG_WITH_MASTER_MASK
-#endif
-
 // SENSORS
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 #define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
@@ -322,7 +262,7 @@ using std::ifstream;
 #define BEAT_DURATION (1.0f)
 #define PG_RENOISE
 
-#if defined(TEMPETE)
+#if defined(pg_Project_Tempete)
 #define PG_SECOND_MESH_CAMERA
 #endif
 
@@ -330,11 +270,6 @@ using std::ifstream;
 #define PG_SENSOR_GEOMETRY_WIDTH 10
 #define PG_NB_MAX_SENSOR_LAYOUTS 4
 #define PG_NB_MAX_SAMPLE_SETUPS 3
-
-// BEZIER CURVES INSTEAD OF LINES FOR PEN
-#if defined(KOMPARTSD) || defined(VOLUSPA) || defined(ARAKNIT) || defined(LIGHT) || defined(CORE)
-#define PG_BEZIER_PATHS
-#endif
 
 #if defined(_WIN32)
 	#include "../share/freeglut-wacom/include/GL/freeglut.h"
@@ -350,26 +285,14 @@ using std::ifstream;
 	#include <GLUT/glut.h>
 #endif // __APPLE_CC__
 
-#if defined(CRITON)
-#include "pg_script_header_Criton.h"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_script_header_KompartSD.h"
-#endif
-#if defined(LIGHT)
-#include "pg_script_header_Light.h"
-#endif
 #if defined(CORE)
 #include "pg_script_header_Core.h"
 #endif
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #include "pg_script_header_voluspa.h"
 #endif
-#if defined(ARAKNIT)
+#if defined(pg_Project_araKnit)
 #include "pg_script_header_araknit.h"
-#endif
-#if defined(CAAUDIO)
-#include "pg_script_header_CAaudio.h"
 #endif
 
 #include "pg-light.h"
@@ -386,9 +309,7 @@ using std::ifstream;
 #include "pg-main.h"
 #include "pg-conf.h"
 
-#if defined(PG_WITH_PORTAUDIO)
 #include "pg-audio.h"
-#endif
 
 
 // end of standard included files

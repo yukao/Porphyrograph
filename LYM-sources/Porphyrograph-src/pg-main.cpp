@@ -268,9 +268,11 @@ int main(int argcMain, char** argvMain) {
 		MeshInitialization();
 	}
 
-#if defined(PG_METAWEAR)
-	MetawearSensorInitialization();
-#endif
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pg_metawear]) {
+		if (pg_metawear) {
+			MetawearSensorInitialization();
+		}
+	}
 
 	// matrices, geometry, shaders and FBOs
 	pg_initRenderingMatrices();
@@ -396,10 +398,8 @@ int main(int argcMain, char** argvMain) {
 	}
 #endif
 
-#if defined(PG_WITH_PUREDATA)
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
-#endif
 	printOglError(37);
 
 	/////////////////////////////////////////////////////////////////////////
@@ -598,23 +598,14 @@ void pg_init_scene(void) {
 	Novak_flight_init_control_points();
 #endif
 
-#if defined(PG_LIGHTS_DMX_IN_PG)
 	DMX_light_initialization();
-#endif
 
-#if defined(PG_WITH_PORTAUDIO)
 	printf("Open portaudio\n");
 	paInit = new ScopedPaHandler();
 	if (paInit->result() != paNoError) {
 		fprintf(stderr, "Error number: %d\n", paInit->result());
 		fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
 	}
-#endif
-
-#if defined(PG_MIDI)
-	//open_IO_MIDI(string("loopMIDI Port"), string("loopMIDI Port"));
-	open_IO_MIDI(string("TouchOSC Bridge"), string("TouchOSC Bridge"));
-#endif
 
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////////
@@ -662,128 +653,105 @@ void pg_init_scene(void) {
 
 bool pg_shutdown = false;
 
-void pg_quit( void ) {
-	// for Annika performance: save the svg paths before quitting (could perhaps be generalized)
-#if defined(KOMPARTSD)
+void pg_quit(void) {
+	//  save the svg paths before quitting (could perhaps be generalized)
 	pg_draw_scene(_Svg);
-	// sends the position of the cursor to the recorder for later replay
-	sprintf(AuxString, "/quit");
-	pg_send_message_udp((char *)"", (char *)AuxString, (char*)"udp_Record_send"));
-	// sends the new scene to Usine for sample selection
-	for (int ind = 0; ind < 4; ind++) {
-		sprintf(AuxString, "/new_scene_%d 0", ind);
-		pg_send_message_udp((char *)"i", (char *)AuxString, (char*)"udp_Usine_send"));
-	}
-#endif
 
 	// script
-#if defined(var_script_1)
-	if (pi_script_1.hProcess != NULL) {
-		TerminateProcess(pi_script_1.hProcess, 0);
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+		if (pi_script_1.hProcess != NULL) {
+			TerminateProcess(pi_script_1.hProcess, 0);
+		}
 	}
-#endif
 
 	// lights off the LED
 	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 
 #if defined(PG_RENOISE)
-	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char *)"", AuxString, (char *)"udp_RN_send");
+	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char*)"", AuxString, (char*)"udp_RN_send");
 #endif
-#if defined(PG_WITH_PUREDATA)
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/disconnect 1", (char*)"udp_PD_send");
-#endif
-
-#if !defined(LIGHT)
-	pg_send_message_udp((char *)"f", (char *)"/quit 1", (char *)"udp_TouchOSC_send");
-#endif
+	pg_send_message_udp((char*)"f", (char*)"/quit 1", (char*)"udp_TouchOSC_send");
 
 	// soundtrack on
 	soundTrack_on = false;
-#if defined(PG_WITH_PUREDATA)
 	pg_send_message_udp((char*)"f", (char*)"/stopsoundtrack 0", (char*)"udp_PD_send");
 	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 	printf("Main: soundtrack: %s\n", AuxString);
-#endif
-#if defined(PG_WITH_PORTAUDIO)
 	pa_sound_data.pa_closeMyStream();
 	printf("close portaudio\n");
 	delete paInit;
-#endif
 	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	sprintf(AuxString, "/soundtrack_volume %d", 0);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 #if defined(PG_WITH_JUCE)
 	// soundtrack off
-	pg_send_message_udp((char *)"", (char *)"/JUCE_stop_track", (char *)"udp_SoundJUCE_send");
-	pg_send_message_udp((char *)"", (char *)"/JUCE_exit", (char *)"udp_SoundJUCE_send");
+	pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
+	pg_send_message_udp((char*)"", (char*)"/JUCE_exit", (char*)"udp_SoundJUCE_send");
 #endif
 
 	// lights out the LEDs
 	//pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
 
-#if defined(PG_MIDI)
-	midi_io.finalise();
-#endif
-
 	// sends all the remaining messages
-	for (pg_IPClient &client : IP_Clients) {
+	for (pg_IPClient& client : IP_Clients) {
 		client.sendIPmessages();
 	}
 
 	// stores the shutdown status 
   // in order to avoid recalling itself and infinite recursion
-  if( pg_shutdown ) {
-    return;
-  }
-  else {
-    pg_shutdown = true;
-  }
+	if (pg_shutdown) {
+		return;
+	}
+	else {
+		pg_shutdown = true;
+	}
 
-  printf( "Last Frame #%d\n" , pg_FrameNo );
+	printf("Last Frame #%d\n", pg_FrameNo);
 
-  if( pg_csv_log_file != stdout ) {
-    fclose( pg_csv_log_file );
-  }
+	if (pg_csv_log_file != stdout) {
+		fclose(pg_csv_log_file);
+	}
 
-  // release movie
-  if (pg_movie_capture.isOpened()) {
-	  pg_movie_capture.release();
-  }
-  // release webCam
-  if (pg_webCam_capture.isOpened()) {
-	  pg_webCam_capture.release();
-  }
-  // release IPCam
-  for (unsigned int ind_IPCam = 0; ind_IPCam < pg_IPCam_capture.size(); ind_IPCam++) {
-	  if (pg_IPCam_capture[ind_IPCam].isOpened()) {
-		  pg_IPCam_capture[ind_IPCam].release();
-	  }
-  }
+	// release movie
+	if (pg_movie_capture.isOpened()) {
+		pg_movie_capture.release();
+	}
+	// release webCam
+	if (pg_webCam_capture.isOpened()) {
+		pg_webCam_capture.release();
+	}
+	// release IPCam
+	for (unsigned int ind_IPCam = 0; ind_IPCam < pg_IPCam_capture.size(); ind_IPCam++) {
+		if (pg_IPCam_capture[ind_IPCam].isOpened()) {
+			pg_IPCam_capture[ind_IPCam].release();
+		}
+	}
 
 
-  //// realse USB
-  //pg_release_USB();
+	//// realse USB
+	//pg_release_USB();
 
-  // release global parameters
-  // release the common variables in PG_EnvironmentNode. (Must be relased before releaseSceneObjects()
-  // printf("releasewindows\n");
-  delete CurrentWindow;
-  CurrentWindow = NULL;
+	// release global parameters
+	// release the common variables in PG_EnvironmentNode. (Must be relased before releaseSceneObjects()
+	// printf("releasewindows\n");
+	delete CurrentWindow;
+	CurrentWindow = NULL;
 
-  // printf("releaseUDP\n");
-  IP_Servers.clear();
-  
-  IP_Clients.clear();
-  
-  if (ErrorStr) {
-    delete [] ErrorStr;
-    ErrorStr = NULL;
-  }
+	// printf("releaseUDP\n");
+	IP_Servers.clear();
 
-  exit(1);
+	IP_Clients.clear();
+
+	if (ErrorStr) {
+		delete[] ErrorStr;
+		ErrorStr = NULL;
+	}
+
+	exit(1);
 }
 
 void window_key_browse(unsigned char key, int x, int y)
@@ -799,52 +767,14 @@ void window_key_browse(unsigned char key, int x, int y)
   }
 }
 
-void window_special_key_browse(int key, int x, int y)
-{
+void window_special_key_browse(int key, int x, int y) {
   // use standard key processing (non-platform dependent)
   pg_process_special_key( key );
 }
 
 void MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
-#if defined(TEMPETE)
-	//if (!double_window) {
-	//printf("pos = %d %d\n", CurrentMousePos_x[0], CurrentMousePos_y[0]);
-	// mapping between tablet and target texture position
-	// 2 sets of four corners in tablet position are selected (by they x,y coordinates of the pen)
-	// the source corners corresponding to the drawing area on the tablet (a rectangle) (X0s,Y0s), (X1s, Y1s)...
-	// the target corners corresponding to the drawing area on the screen (a rectangle) (X0t,Y0t), (X1t, Y1t)...
-	// the scale is calculated as follows
-	// s = ( (X1t-X0t)/(X1s-X0s), (Y3t-Y0t)/(Y3s-Y0s) )
-	// and the translation as follows
-	// t = (X0t,Y0t) - s * (X0s,Y0s)
-	// the final transformation to be applied on the mouse coordinates is
-	// CurrentCursorHooverPos_x = sx (x) + tx
-	// CurrentCursorHooverPos_y = sy (y) + ty
-	//*mappedX = int(x * 1.39f - 451.0f);
-	//*mappedY = int(y * 1.336f - 216.5f);
-	//*mappedX = int(x * 1.f - 0.0f);
-	//*mappedY = int(y * 1.f - 0.0);
-	//*mappedX = int(x * 0.7194f + 324.6f);
-	//*mappedY = int(y * 0.777f + 146.5f);
-	// source 350x0 350x1080      1550x0  1550x1080
-	// target 265x15  290x1080       1425x15  1425x1051
-	float sx = float(1425 - 290) / (1650 - 250);
-	float sy = float(1051 - 15) / (1050 - 0)
-
-	float tx = 265.f - sx * 250;
-	float ty = 15.f - sy * 0;
-	*mappedX = int(x * sx + tx);
-	*mappedY = int(y * sy + ty);
-	//* mappedX = int(x);
-	//* mappedY = int(y);
-	//printf("%d x, %d y, %.2f press, %.2f az, %.2f incl, %.2f twist, %d cursor", x, y, press, az, incl, twist, cursor);
-#elif defined(DOUBLE_WIDTH_SCREEN)
-	*mappedX = int((x) * 2);
-	*mappedY = int(y);
-#else
 	*mappedX = x;
 	*mappedY = y;
-#endif
 }
 
 #if defined(PG_WACOM_TABLET)
@@ -864,12 +794,10 @@ void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float in
 		CurrentMousePos_x[0] = mappedX;
 		CurrentMousePos_y[0] = mappedY;
 
-#if !defined(LIGHT)
 		// visual feedback on a drawing interface on the tablet, if there is one
 		float x_tab = float(CurrentMousePos_x[0]) / workingWindow_width;
 		float y_tab = float(CurrentMousePos_y[0]) / window_height;
 		sprintf(AuxString, "/pen_xy %.2f %.2f", x_tab, y_tab); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
-#endif
 
 		if (CurrentCursorStylusvsRubber == pg_Stylus || CurrentCursorStylusvsRubber == pg_Rubber) {
 			CurrentCursorHooverPos_x = PG_OUT_OF_SCREEN_CURSOR;
@@ -1033,13 +961,6 @@ void window_idle_browse(int step) {
 		// printf( "Window %s\n" , CurrentWindow->id );
 		pg_screenMessage_update();
 
-#if defined(CRITON)
-		if (PG_MAX_OSC_ARGUMENTS < 3 * 8) {
-			std::cout << "Error: unsufficient PG_MAX_OSC_ARGUMENTS value for processing fftLevel8 command!" << std::endl;
-			exit(-1);
-		}
-#endif
-
 		// updates diaporama
 		if (photo_diaporama >= 0 && photo_diaporama < pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
 			// printf("pg_update_diaporama\n");
@@ -1074,28 +995,21 @@ void window_idle_browse(int step) {
 			pulse[1] = float(PerlinNoise(seed_pulsePerlinNoise[2], seed_pulsePerlinNoise[3], pg_FrameNo) * sound_volume + sound_min);
 			pulse[2] = float(PerlinNoise(seed_pulsePerlinNoise[4], seed_pulsePerlinNoise[5], pg_FrameNo) * sound_volume + sound_min);
 			// not used currently  pulse_attack = PerlinNoise(x, y, pg_FrameNo) * sound_volume + sound_min;
-#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 			sprintf(AuxString, "/pulse_low %.2f", pulse[0]);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(AuxString, "/pulse_medium %.2f", pulse[1]);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(AuxString, "/pulse_high %.2f", pulse[2]);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-#endif
 
 			pulse_average_prec = pulse_average;
 			pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
 
-#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 			sprintf(AuxString, "/pulse %.2f", pulse_average);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-#endif
-
-#if !defined(LIGHT)
 			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(pulsed_pen_color[0] * 255), int(pulsed_pen_color[1] * 255), int(pulsed_pen_color[2] * 255));
 			pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			//printf("%s\n", AuxString);
-#endif
 		}
 
 		// continous flashes
@@ -1111,15 +1025,6 @@ void window_idle_browse(int step) {
 			client.sendIPmessages();
 		}
 
-		// MIDI messages IN
-#if defined(PG_MIDI)
-		event_read = midi_io.read_event(MIDI_IN_event);
-		if (event_read) {
-			printf("MIDI IN event %d %d %d (time %d)\n", Pm_MessageStatus(MIDI_IN_event.message), Pm_MessageData1(MIDI_IN_event.message), Pm_MessageData2(MIDI_IN_event.message), MIDI_IN_event.timestamp);
-		}
-#endif
-
-#if defined(PG_LIGHTS_DMX_IN_PG)
 		if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 			// light automation management
 			pg_light_automation_update();
@@ -1131,7 +1036,6 @@ void window_idle_browse(int step) {
 				pg_lightGUI_all_values_and_pulse_update();
 			}
 		}
-#endif
 	}
 
 	// defines the global variables associated with the current window

@@ -269,11 +269,9 @@ extern int pg_nbCompressedClipFrames[PG_MAX_CONFIGURATIONS];
 ////////////////////////////////////////////////////////////////////
 // BG COLOR
 ////////////////////////////////////////////////////////////////////
-#if defined(var_flashchange_BGcolor_freq)
 extern float BG_r;
 extern float BG_g;
 extern float BG_b;
-#endif
 
 ////////////////////////////////////////////////////////////////////
 // PROTOTYPES
@@ -366,10 +364,7 @@ void diaporama_slide(int slideNo);
 void pg_launch_diaporama(int slideNo);
 bool pg_update_diaporama(void);
 
-#if defined(var_CATable)
 void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int height);
-#endif
-#endif
 
 void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_entry);
 void pg_AddFilesToDiaporamas(int indConfiguration, fs::directory_entry dir_entry);
@@ -378,3 +373,4 @@ bool pg_addNewDiaporamas(int current_config, bool with_trace);
 bool pg_reloadAllDiaporamas(int currentConfig, bool with_trace);
 bool pg_loadAllDiaporamas(void);
 bool pg_ReadInitalClipFramesTextures(void);
+#endif

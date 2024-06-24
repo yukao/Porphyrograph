@@ -33,8 +33,6 @@
  *
  */
 
-#if defined(PG_WITH_PORTAUDIO)
-
 pa_AudioOut pa_sound_data;
 ScopedPaHandler *paInit;
 callback_data_s soundfile_data;
@@ -202,5 +200,3 @@ void pa_AudioOut::paStreamFinished(void* userData)
 {
     return ((pa_AudioOut*)userData)->paStreamFinishedMethod();
 }
-
-#endif

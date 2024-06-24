@@ -135,11 +135,9 @@ int* pg_firstCompressedClipFramesInFolder[PG_MAX_CONFIGURATIONS] = { NULL };
 ////////////////////////////////////////////////////////////////////
 // BG COLOR
 ////////////////////////////////////////////////////////////////////
-#if defined(var_flashchange_BGcolor_freq)
 float BG_r = 0.f;
 float BG_g = 0.f;
 float BG_b = 0.f;
-#endif
 
 
 // FUNCTION FOR CLEARING A DIRECTORY
@@ -250,7 +248,6 @@ bool pg_loadAllTextures(void) {
 				}
 			}
 
-#if defined(PG_WITH_MASTER_MASK)
 			if (texture.texture_usage == Texture_master_mask
 				&& texture.texture_Dimension == 2) {
 				Master_Mask_texID[indConfiguration] = texture.texture_texID;
@@ -259,17 +256,17 @@ bool pg_loadAllTextures(void) {
 				&& texture.texture_Dimension == 3) {
 				Master_Multilayer_Mask_texID[indConfiguration] = texture.texture_texID;
 			}
-#endif
-#if !defined (PG_BEZIER_PATHS) || defined(CORE)
+
 			if (texture.texture_usage == Texture_brush
 				&& texture.texture_Dimension == 3) {
 				Pen_texture_3D_texID[indConfiguration] = texture.texture_texID;
 			}
-#endif
+
 			if (texture.texture_usage == Texture_noise
 				&& texture.texture_Dimension == 3) {
 				Noise_texture_3D[indConfiguration] = texture.texture_texID;
 			}
+
 			if (texture.texture_usage == Texture_repop_density
 				&& texture.texture_Dimension == 2) {
 				pg_RepopDensity_texture_texID[indConfiguration].push_back(texture.texture_texID);
@@ -285,6 +282,7 @@ bool pg_loadAllTextures(void) {
 					sprintf(ErrorStr, "Error: particle initialization texture not provided for configuration %d scenario %s, check texture list with part_init usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 				}
 			}
+
 			if (texture.texture_usage == Texture_mesh
 				&& texture.texture_Dimension == 2) {
 				// assigns this textures to the meshes which have the same texture rank
@@ -317,16 +315,14 @@ bool pg_loadAllTextures(void) {
 				sprintf(ErrorStr, "Error: sensor texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 			}
 		}
-#if defined(PG_WITH_MASTER_MASK)
 		if (Master_Mask_texID[indConfiguration] == NULL_ID || Master_Multilayer_Mask_texID[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: master mask texture (usage: master_mask) and multilayer master mask texture (usage: multilayer_master_mask) not provided for configuration %d scenario %s, check texture list with master mask usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
-#endif
-#if !defined (PG_BEZIER_PATHS) || defined(CORE)
+
 		if (Pen_texture_3D_texID[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: brush texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
-#endif
+
 		if (Noise_texture_3D[indConfiguration] == NULL_ID) {
 			sprintf(ErrorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
 		}
@@ -371,24 +367,24 @@ bool pg_loadAllTextures(void) {
 		}
 
 	// CA Tables
-#if defined(var_CATable)
+		if (pg_FullScenarioActiveVars[indConfiguration][_CATable]) {
 #define width_data_table 600
 #define height_data_table 200
-		pg_CATable =
-			(GLubyte*)pg_generateTexture(&pg_CATable_ID, pg_byte_tex_format,
+			pg_CATable =
+				(GLubyte*)pg_generateTexture(&pg_CATable_ID, pg_byte_tex_format,
+					width_data_table, height_data_table);
+			pg_CATable_values(pg_CATable_ID, pg_CATable,
 				width_data_table, height_data_table);
-		pg_CATable_values(pg_CATable_ID, pg_CATable,
-			width_data_table, height_data_table);
-		if (!pg_CATable_ID) {
-			sprintf(ErrorStr, "Error: data tables for the CA bitmap not allocated (%dx%d)!\n", width_data_table, height_data_table); ReportError(ErrorStr); throw 336;
-		}
+			if (!pg_CATable_ID) {
+				sprintf(ErrorStr, "Error: data tables for the CA bitmap not allocated (%dx%d)!\n", width_data_table, height_data_table); ReportError(ErrorStr); throw 336;
+			}
 
-		//printf( "\n" );
-		//for( int i = 0 ; i <= 243 * 4 ; i+=4 ) {
-		//  printf("%d " , (int)pg_CATable[ 4 * 51 * width_data_table + i ] );
-		//}
-		//printf( "\n" );
-#endif
+			//printf( "\n" );
+			//for( int i = 0 ; i <= 243 * 4 ; i+=4 ) {
+			//  printf("%d " , (int)pg_CATable[ 4 * 51 * width_data_table + i ] );
+			//}
+			//printf( "\n" );
+		}
 		std::cout << std::endl;
 
 		printOglError(6);
@@ -456,11 +452,11 @@ void *pg_generateTexture(GLuint *textureID, pg_TextureFormat texture_format,
 // INITIALIZATION OF THE TRANSITION TABLES FOR THE CELLULAR AUTOMATA
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(var_CATable) && !defined(CAAUDIO)
+#if defined(var_CATable) && !defined(pg_Project_CAaudio)
 #include "pg_CATable_GN.cpp"
 #endif
 
-#if defined(var_CATable) && defined(CAAUDIO)
+#if defined(var_CATable) && defined(pg_Project_CAaudio)
 #include "pg_CATable_CAaudio.cpp"
 #endif
 
@@ -960,9 +956,9 @@ bool generateParticleInitialPosColorRadiusfromImage(string fileName, int indConf
 	//	partic_width * partic_height, partic_width, partic_height, nb_particles,
 	//	partic_radius);
 
-	free(color_radius);
-	free(pos_speed);
-	free(allocated);
+	delete(color_radius);
+	delete(pos_speed);
+	delete(allocated);
 
 	printOglError(706);
 
@@ -1079,9 +1075,6 @@ bool storeParticleAccelerationfromImage(string fileName)  {
 //////////////////////////////////////////////
 /// NON THREADED LOAD CAMERA FRAME
 void loadCameraFrame(bool initial_capture, int IPCam_no) {
-#if defined(KOMPARTSD) || defined(LIGHT)
-	return;
-#endif
 	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 		return;
 	}

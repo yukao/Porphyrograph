@@ -1,9 +1,9 @@
-RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
-VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,camera ID,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers
-TYPE,bool,bool,int,int,int,int,float,float,float,int,int,bool,bool,int,int,int,int,int,int,const,const,string,const,const,const,const
-ID,double_window,wide_screen,window_width,window_height,window_x,window_y,minimal_interframe_latency,time_scale,initial_time,camID,message_pixel_length,trace_output_frame_number,trace_time,first_frame_number,last_frame_number,max_mouse_recording_frames,max_network_message_length,nb_particles,nb_CATypes,PG_NB_TRACKS,PG_NB_PATHS,project_name,PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS,PG_NB_CLIPART_LAYERS
+RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
+VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,camera ID,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers,nb lights
+TYPE,bool,bool,int,int,int,int,float,float,float,int,int,bool,bool,int,int,int,int,int,int,const,const,string,const,const,const,const,const
+ID,double_window,wide_screen,window_width,window_height,window_x,window_y,minimal_interframe_latency,time_scale,initial_time,camID,message_pixel_length,trace_output_frame_number,trace_time,first_frame_number,last_frame_number,max_mouse_recording_frames,max_network_message_length,nb_particles,nb_CATypes,PG_NB_TRACKS,PG_NB_PATHS,project_name,PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS,PG_NB_CLIPART_LAYERS,PG_NB_LIGHTS
 initial_values,,,,,,,,,,,,,,,,,,,,,,
-,0,0,1440,900,0,0,0.001,1,0,0,128,0,0,0,4000000,16384,65535,100000,5,4,12,Ada,10,8,6,8
+,0,0,1440,900,0,0,0.001,1,0,0,128,0,0,0,4000000,16384,65535,100000,5,4,12,Ada,10,8,6,8,8
 /initial_values,,,,,,,,,,,,,,,,,,,,,,
 rendering_files,,,,,,,,,,,,,,,,,,,,,,
 TYPE,int,int,int,string,string,,,,,,,,,,,,,,,,,

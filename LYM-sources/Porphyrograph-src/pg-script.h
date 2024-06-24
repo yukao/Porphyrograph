@@ -151,7 +151,7 @@ extern float pen_bandpass_3color_palette[3][3];
 #define CA_GAL_BIN_NEUMANN        4
 #define CA_NEUMANN_BINARY         5
 
-#if defined(CAAUDIO) && !defined(SOUNDINITATIVE)
+#if defined(pg_Project_CAaudio)
 #define CA_TOTALISTIC             0
 #define CA_GENERATION             1
 #define CA_GAL_BIN_MOORE          2
@@ -159,15 +159,9 @@ extern float pen_bandpass_3color_palette[3][3];
 #define CA_NEUMANN_BINARY         4
 #endif
 
-#if defined(var_partExit_mode) 
 #define PG_NB_PARTEXIT_MODES 3
-#endif
-#if defined(var_partStroke_mode) 
 #define PG_NB_PARTSTROKE_MODES 4
-#endif
-#if defined(var_partColor_mode) 
 #define PG_NB_PARTCOLOR_MODES 3
-#endif
 
 #if defined(var_GenerativeNights_planes)
 //////////////////////////////////////////////
@@ -180,13 +174,10 @@ extern float initCA;
 #endif
 
 // +++++++++++++++++++++++ scripts for external control through python programming +++++
-#if defined(var_script_1)
 // currently running script: NULLL if none
 extern string currently_runnings_script_1;
 extern STARTUPINFOA si_script_1;
 extern PROCESS_INFORMATION pi_script_1;
-#endif
-
 
 /////////////////////////////////////////////////////////////////////////
 // WORKING VARIABLES
@@ -309,19 +300,17 @@ extern float flashCameraTrk_decay;
 extern float flashCameraTrk_threshold;
 
 // +++++++++++++++++++++ PHOTO FLASH +++++++++++++++++++++
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 extern bool is_flashPhotoTrk;
 extern float flashPhotoTrk_weight;
 extern float flashPhotoTrk_decay;
 extern float flashPhotoTrk_threshold;
 extern int flashPhotoTrk_nbFrames;
-#endif
 
 // ++++++++++++++++++++++ CA and TACKS WOKING VARIABLE ++++
 // CA and track working variable
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 extern float fftLevels[8];
 extern float fftFrequencies[8];
 extern float fftPhases[8];
@@ -384,7 +373,7 @@ extern double lastBeatTime;
 extern int pg_BeatNo;
 
 // +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 enum pg_CAseed_types
 {
 	_pg_CAseed_dot_center = 0,
@@ -417,7 +406,7 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 #endif
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 extern float fftLevels[8];
 extern float fftFrequencies[8];
 extern float fftPhases[8];
@@ -464,9 +453,7 @@ bool flash_continuous_generation(int flash_frequency);
 void pg_flash_control(bool (*control_function)(int));
 void pg_beat_controlled_flashes(void);
 void pg_non_beat_controlled_flashes(void);
-#if defined(var_flashPhotoTrkBright)
 void pg_Make_flashPhoto(void);
-#endif
 void pg_aliasScript( string address , string string_argument_0 ,
 					 float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments);
 void ClipArt_OnOff(int indImage);
@@ -488,26 +475,19 @@ void compute_pulsed_palette_color(float color, float color_pulse, float grey, fl
 void HSVtoRGB(float h, float s, float v, float* r, float* g, float* b);
 void RGBtoHSV(float r, float g, float b, float* h, float* s, float* v);
 void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_pulse, float value, float value_pulse, float pulsed_color[3], bool is_pen_color);
-#if defined(var_path_record)
 void pg_path_recording_onOff(int indPath);
-#endif
+
 // playing track onoff
-#if defined(var_path_replay_trackNo)
 void pg_path_replay_trackNo_onOff( int indPath, int trackNo);
 void path_replay_trackNo_callBack( int indPath, pg_Parameter_Input_Type param_input_type , int scenario_or_gui_command_value );
 void pg_path_replay_trackNo_start(int indPath, int trackNo);
 void pg_path_replay_trackNo_stop(int indPath);
-#endif
-#if defined(var_path_record)
 void path_record_callBack( int indPath, pg_Parameter_Input_Type param_input_type , int scenario_or_gui_command_value );
 void pg_path_recording_start( int indPath );
 // recording on off
 void pg_path_recording_stop( int indPath );
-#endif
 // interpolation on off
-#if defined(var_fingers)
 void NumberOfInteractionFingers(int nb_fingers);
-#endif
 
 void pg_writeMessageOnScreen( string text );
 void pg_snapshot( char * type );

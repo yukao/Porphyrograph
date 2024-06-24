@@ -26,26 +26,14 @@
 #ifndef PG_SHADER_H
 #define PG_SHADER_H
 
-#if defined(CRITON)
-#include "pg_shader_header_Criton.h"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_shader_header_KompartSD.h"
-#endif
-#if defined(LIGHT)
-#include "pg_shader_header_Light.h"
-#endif
 #if defined(CORE)
 #include "pg_shader_header_Core.h"
 #endif
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #include "pg_shader_header_voluspa.h"
 #endif
-#if defined(ARAKNIT)
+#if defined(pg_Project_araKnit)
 #include "pg_shader_header_araknit.h"
-#endif
-#if defined(CAAUDIO)
-#include "pg_shader_header_CAaudio.h"
 #endif
 
 // #include "pg_scripts/pg_shader_header.h"
@@ -54,7 +42,7 @@ unsigned long pg_getFileLength(ifstream& file);
 void pg_printShaderCompileLog(GLuint obj);
 void pg_printShaderLinkLog(GLuint obj);
 void pg_loadAllShaders(void);
-void pg_shaderVariablesInit( void );
+
 // INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
 void pg_initializeScenearioVariables( void );
 
@@ -76,19 +64,6 @@ extern unsigned int pg_current_configuration_rank;
 extern std::unordered_map<int, std::string> pg_stringShaderTypes;
 
 /////////////////////////////////////////////////////////////////////////
-// CAMERA SHADER
-// CAMERA SHADER UNIFORM VARIABLES
-//extern GLint uniform_Camera_vp_model[PG_MAX_CONFIGURATIONS];
-//extern GLint uniform_Camera_vp_view[PG_MAX_CONFIGURATIONS];
-//extern GLint uniform_Camera_vp_proj[PG_MAX_CONFIGURATIONS];
-//extern GLint uniform_Camera_fs_4fv_W_H[PG_MAX_CONFIGURATIONS];
-//extern GLint uniform_Camera_vp_2fv_width_height[PG_MAX_CONFIGURATIONS];
-//
-//// Camera SHADER TEXTURE IDS
-//extern GLint uniform_Camera_texture_fs_decal[PG_MAX_CONFIGURATIONS];         // camera capture
-//extern GLint uniform_Camera_texture_fs_lookupTable1[PG_MAX_CONFIGURATIONS];  // current background video frame
-
-/////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
 extern GLint uniform_ParticleAnimation_vp_model[PG_MAX_CONFIGURATIONS];
@@ -102,15 +77,9 @@ extern GLint uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo[PG_MAX_CONFIGU
 extern GLint uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleAnimation_texture_fs_Trk0[PG_MAX_CONFIGURATIONS];  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 extern GLint uniform_ParticleAnimation_texture_fs_Trk1[PG_MAX_CONFIGURATIONS];  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 extern GLint uniform_ParticleAnimation_texture_fs_Trk2[PG_MAX_CONFIGURATIONS];  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 extern GLint uniform_ParticleAnimation_texture_fs_Trk3[PG_MAX_CONFIGURATIONS];  // ping-pong track 3 (FBO)
-#endif
 
 // UPDATE SHADER TEXTURE IDS
 extern GLint uniform_ParticleAnimation_texture_fs_CA[PG_MAX_CONFIGURATIONS];         // ping-pong CA (FBO)
@@ -131,47 +100,40 @@ extern GLint uniform_ParticleAnimation_texture_fs_Part_acc[PG_MAX_CONFIGURATIONS
 extern GLint uniform_Update_vp_model[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_vp_view[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_vp_proj[PG_MAX_CONFIGURATIONS];
-#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 extern GLint uniform_Update_homographyForTexture[PG_MAX_CONFIGURATIONS];
-#endif
 extern GLint uniform_Update_vp_2fv_width_height[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_W_H_time_currentScene[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[PG_MAX_CONFIGURATIONS];
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 extern GLint uniform_Update_fs_4fv_CAseed_type_size_loc[PG_MAX_CONFIGURATIONS];
 #endif
 extern GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_path_data[PG_MAX_CONFIGURATIONS];
-#if defined(CRITON)
+
+// pg_Project_Criton PROJECT
 extern GLint uniform_Update_fs_4fv_fftLevels03[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftFrequencies03[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftPhases03[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftLevels47[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftFrequencies47[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_fftPhases47[PG_MAX_CONFIGURATIONS];
-#endif
+
 extern GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_3fv_repop_ColorCA[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres[PG_MAX_CONFIGURATIONS];
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 extern GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY[PG_MAX_CONFIGURATIONS];
-#endif
 extern GLint uniform_Update_fs_4fv_photo01_wh[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_photo01Wghts_randomValues[PG_MAX_CONFIGURATIONS];
 #endif
-#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
 extern GLint uniform_Update_fs_2fv_clip01Wghts[PG_MAX_CONFIGURATIONS];
-#endif
 extern GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Update_fs_3fv_photo_rgb[PG_MAX_CONFIGURATIONS];
-#if defined(var_CATable)
 extern GLint uniform_Update_texture_fs_CATable[PG_MAX_CONFIGURATIONS];
-#endif
 #if defined(var_GenerativeNights_planes)
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo[PG_MAX_CONFIGURATIONS];
 #endif
@@ -183,18 +145,10 @@ extern GLint uniform_Update_texture_fs_CA[PG_MAX_CONFIGURATIONS];         // pin
 extern GLint uniform_Update_texture_fs_PreviousCA[PG_MAX_CONFIGURATIONS];         // ping-pong CA (FBO)
 extern GLint uniform_Update_texture_fs_Pixels[PG_MAX_CONFIGURATIONS];  // 2-cycle ping-pong speed/position of pixels (FBO)
 extern GLint uniform_Update_texture_fs_Trk0[PG_MAX_CONFIGURATIONS];  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 extern GLint uniform_Update_texture_fs_Trk1[PG_MAX_CONFIGURATIONS];  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 extern GLint uniform_Update_texture_fs_Trk2[PG_MAX_CONFIGURATIONS];  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 extern GLint uniform_Update_texture_fs_Trk3[PG_MAX_CONFIGURATIONS];  // ping-pong track 3 (FBO)
-#endif
-#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 extern GLint uniform_Update_texture_fs_Brushes[PG_MAX_CONFIGURATIONS];  // pen patterns
-#endif
 extern GLint uniform_Update_texture_fs_Camera_frame[PG_MAX_CONFIGURATIONS];  // camera frame
 extern GLint uniform_Update_texture_fs_Camera_BG[PG_MAX_CONFIGURATIONS];  // camera BG capture
 extern GLint uniform_Update_texture_fs_Movie_frame[PG_MAX_CONFIGURATIONS];  // movie frame
@@ -255,15 +209,9 @@ extern GLint uniform_Mixing_texture_fs_CA[PG_MAX_CONFIGURATIONS]; // ping-pong B
 extern GLint uniform_Mixing_texture_fs_ClipArt_render[PG_MAX_CONFIGURATIONS];  // Particles (FBO)
 extern GLint uniform_Mixing_texture_fs_Particle_render[PG_MAX_CONFIGURATIONS];  // Particles (FBO)
 extern GLint uniform_Mixing_texture_fs_Trk0[PG_MAX_CONFIGURATIONS];  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 extern GLint uniform_Mixing_texture_fs_Trk1[PG_MAX_CONFIGURATIONS];  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 extern GLint uniform_Mixing_texture_fs_Trk2[PG_MAX_CONFIGURATIONS];  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 extern GLint uniform_Mixing_texture_fs_Trk3[PG_MAX_CONFIGURATIONS];  // ping-pong track 3 (FBO)
-#endif
 extern GLint uniform_Mixing_texture_fs_Render_prec[PG_MAX_CONFIGURATIONS];  // preceding snapshot
 extern GLint uniform_Mixing_texture_fs_Screen_Font[PG_MAX_CONFIGURATIONS];  // message Font
 extern GLint uniform_Mixing_texture_fs_Screen_Message[PG_MAX_CONFIGURATIONS];  // message string
@@ -284,9 +232,7 @@ extern GLint uniform_Master_fs_2iv_mobile_cursor_currentScene[PG_MAX_CONFIGURATI
 #if defined(var_Caverne_BackColor)
 extern GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb[PG_MAX_CONFIGURATIONS];
 #endif
-#if defined(var_flashchange_BGcolor_freq)
 extern GLint uniform_Master_fs_3fv_BG_color_rgb[PG_MAX_CONFIGURATIONS];
-#endif
 
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_Render_curr[PG_MAX_CONFIGURATIONS];         // previous pass output
@@ -294,18 +240,10 @@ extern GLint uniform_Master_texture_fs_CA[PG_MAX_CONFIGURATIONS];  // ping-pong 
 extern GLint uniform_Master_texture_fs_ClipArt_render[PG_MAX_CONFIGURATIONS];  // Particles
 extern GLint uniform_Master_texture_fs_Particle_render[PG_MAX_CONFIGURATIONS];  // Particles
 extern GLint uniform_Master_texture_fs_Trk0[PG_MAX_CONFIGURATIONS];  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 extern GLint uniform_Master_texture_fs_Trk1[PG_MAX_CONFIGURATIONS];  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 extern GLint uniform_Master_texture_fs_Trk2[PG_MAX_CONFIGURATIONS];  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 extern GLint uniform_Master_texture_fs_Trk3[PG_MAX_CONFIGURATIONS];  // ping-pong track 3 (FBO)
-#endif
-#if defined(PG_WITH_MASTER_MASK)
 extern GLint uniform_Master_texture_fs_Mask[PG_MAX_CONFIGURATIONS];  // mask for master output
-#endif
 
   /////////////////////////////////////////////////////////////////////////
 // SENSOR SHADER
@@ -317,7 +255,6 @@ extern GLint uniform_Sensor_vp_proj[PG_MAX_CONFIGURATIONS];
 // SENSOR SHADER TEXTURE IDS
 extern GLint uniform_Sensor_texture_fs_decal[PG_MAX_CONFIGURATIONS];         // sensor texture
 extern GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency[PG_MAX_CONFIGURATIONS];
-// extern GLint uniform_Sensor_fs_2fv_frameno_invert[PG_MAX_CONFIGURATIONS];
 
 /////////////////////////////////////////////////////////////////////////
 // MESH SHADER

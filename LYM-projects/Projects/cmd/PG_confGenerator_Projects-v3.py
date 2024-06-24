@@ -982,25 +982,19 @@ def write_script_header_and_body() :
 				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
 				ScriptBody.write("	{}(param_input_type, scenario_or_gui_command_value.val_string);\n".format(callBack_id_string))
 			elif(type_string.startswith("int")) :
-				ScriptBody.write("void {}(int ind_path, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n".format(callBack_id_string))
-				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
-				ScriptBody.write("	for (int index = {}; index < {}; index++) {{;\n".format(index_range[0], index_range[1]));
-				ScriptBody.write("		{}(index, param_input_type, int(scenario_or_gui_command_value.val_array[index]));\n".format(callBack_id_string))
-				ScriptBody.write("	}\n")
+				ScriptBody.write("void {}(int array_index, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value, int array_index) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(array_index, param_input_type, int(scenario_or_gui_command_value.val_array[array_index]));\n".format(callBack_id_string))
 			elif(type_string.startswith("bool")) :
-				ScriptBody.write("void {}(int ind_path, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n".format(callBack_id_string))
-				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
-				ScriptBody.write("	for (int index = {}; index < {}; index++) {{;\n".format(index_range[0], index_range[1]));
-				ScriptBody.write("		{}(index, param_input_type, bool(scenario_or_gui_command_value.val_array[index]));\n".format(callBack_id_string))
-				ScriptBody.write("	}\n")
+				ScriptBody.write("void {}(int array_index, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value, int array_index) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(array_index, param_input_type, bool(scenario_or_gui_command_value.val_array[array_index]));\n".format(callBack_id_string))
 			elif(type_string.startswith("float")) :
-				ScriptBody.write("void {}(int ind_path, pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);\n".format(callBack_id_string))
-				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {{\n".format(callBack_generic_id_string))
-				ScriptBody.write("	for (int index = {}; index < {}; index++) {{;\n".format(index_range[0], index_range[1]));
-				ScriptBody.write("		{}(index, param_input_type, scenario_or_gui_command_value.val_array[index]);\n".format(callBack_id_string))
-				ScriptBody.write("	}\n")
+				ScriptBody.write("void {}(int array_index, pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);\n".format(callBack_id_string))
+				ScriptBody.write("void {}(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value, int array_index) {{\n".format(callBack_generic_id_string))
+				ScriptBody.write("	{}(array_index, param_input_type, scenario_or_gui_command_value.val_array[array_index]);\n".format(callBack_id_string))
 			else :
-				print("Configuration generator: Unknown callback ",callBack_id_string," parameter type [",type_string,"]")
+				print("Configuration generator: Unknown callback {} parameter type [{}]".format(callBack_id_string, type_string))
 				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)
 			ScriptBody.write("}\n")
@@ -1010,7 +1004,22 @@ def write_script_header_and_body() :
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		callBack_id_string = full_specs[3]
 		callBack_generic_id_string = callBack_id_string + "_generic"
-		if(callBack_id_string == "NULL") :
+		type_string = full_specs[2]
+		index_range = scenario_to_cpp_range(type_string)
+		if(callBack_id_string == "NULL" or index_range != []) :
+			ScriptBody.write("	NULL,\n")
+		else :
+			ScriptBody.write("	&%s,\n" % callBack_generic_id_string)
+	ScriptBody.write("};\n")
+
+	ScriptBody.write("void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int) = { \n")
+	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
+	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
+		callBack_id_string = full_specs[3]
+		callBack_generic_id_string = callBack_id_string + "_generic"
+		type_string = full_specs[2]
+		index_range = scenario_to_cpp_range(type_string)
+		if(callBack_id_string == "NULL" or index_range == []) :
 			ScriptBody.write("	NULL,\n")
 		else :
 			ScriptBody.write("	&%s,\n" % callBack_generic_id_string)

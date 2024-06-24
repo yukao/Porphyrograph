@@ -24,8 +24,6 @@
 #ifndef PG_AUDIO_H
 #define PG_AUDIO_H
 
-#if defined(PG_WITH_PORTAUDIO)
-
 #include <stdio.h>
 #include <math.h>
 #include "sndfile.h"
@@ -136,7 +134,5 @@ void readFmtChunk(uint32_t chunkLen);
 void OpenWavFileAndReadHeader(char* tackFileName);
 void audio_main(int argc, char** argv);
 
-
-#endif
 
 #endif

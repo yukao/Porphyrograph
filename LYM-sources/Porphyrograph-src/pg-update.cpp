@@ -72,7 +72,7 @@ float paths_Color_b[PG_NB_PATHS + 1];
 float paths_Color_a[PG_NB_PATHS + 1];
 float paths_RadiusX[PG_NB_PATHS + 1];
 float paths_RadiusY[PG_NB_PATHS + 1];
-#if defined(PG_BEZIER_PATHS)
+
 float paths_xL[PG_NB_PATHS + 1];
 float paths_yL[PG_NB_PATHS + 1];
 float paths_xR[PG_NB_PATHS + 1];
@@ -81,7 +81,7 @@ float tang_x[PG_NB_PATHS + 1];
 float tang_y[PG_NB_PATHS + 1];
 float tang_x_prev[PG_NB_PATHS + 1];
 float tang_y_prev[PG_NB_PATHS + 1];
-#endif
+
 int paths_BrushID[PG_NB_PATHS + 1];
 
 float repop_ColorBG_r;
@@ -110,7 +110,6 @@ float				svg_scale = 1.f;
 // mobile cursor for cursor blinking in Master shader
 bool mobile_cursor = true;
 
-#if defined(var_VP1LocX) && defined(var_VP1LocY) && defined(var_VP1LocZ) &&  defined(var_VP1LookAtX) && defined(var_VP1LookAtY) && defined(var_VP1LookAtZ) && defined(var_VP1UpY) && defined(var_VP1Reversed) && defined(var_VP1WidthTopAt1m) && defined(var_VP1BottomAt1m) && defined(var_VP1TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 // MVP matrices
 glm::mat4 VP1perspMatrix;
 glm::mat4 VP1viewMatrix;
@@ -122,18 +121,11 @@ glm::mat4 VP2perspMatrix;
 glm::mat4 VP2viewMatrix;
 glm::mat4 VP2homographyMatrix;
 #endif
-#endif
 
-#if defined(var_Argenteuil_flash_move_track1_freq)
-float Argenteuil_track_x_transl[0] = 0.f;
-float Argenteuil_track_y_transl[0] = 0.f;
-float Argenteuil_track_x_transl[1] = 0.f;
-float Argenteuil_track_y_transl[1] = 0.f;
-#endif
+// homography matrix
+float matValues[16] = { 0 };
 
-#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 cv::Mat homography;
-#endif
 
 float pen_x, pen_y, vec_x, vec_y;
 
@@ -159,7 +151,7 @@ bool sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 // sample choice
 // current sample choice
 int sample_choice[PG_NB_SENSORS];
-#ifndef CAAUDIO
+#ifndef pg_Project_CAaudio
 // all possible sensor layouts
 int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 },
@@ -185,31 +177,12 @@ float sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { 0.0, 0.0, 0.0 };
 #endif
 
-#ifndef CAAUDIO
+#ifndef pg_Project_CAaudio
 // sensor rendering
 int Sensor_order[PG_NB_SENSORS] = { 8, 13, 14, 11, 7, 2, 1, 4, 12, 15, 3, 0, 9, 10, 5, 6 };
 #else
 // sensor rendering
 int Sensor_order[PG_NB_SENSORS] = { 0 };
-#endif
-
-#if defined(PG_SUPERCOLLIDER)
-// groups of samples for aliasing with additive samples
-int sample_groups[PG_NB_SENSOR_GROUPS][4] =
-{ { 1, 2, 5, 6 },
-{ 3, 4, 7, 8 },
-{ 9, 10, 13, 14 },
-{ 11, 12 , 15, 16 },
-
-{ 17, 18, 21, 22 },
-{ 19, 20, 23, 24 },
-{ 25, 26, 29, 30 },
-{ 27, 28, 31, 32 },
-
-{ 33, 34, 37, 38 },
-{ 35, 36, 39, 40 },
-{ 41, 42, 45, 46 },
-{ 43, 44, 47, 48 } };
 #endif
 
 // current sensor
@@ -242,21 +215,16 @@ std::vector<GLuint> pg_pixel_acc_texID[PG_MAX_CONFIGURATIONS];
 GLuint pg_screenMessageBitmap_texID = 0; // nb_attachments=1
 GLubyte *pg_screenMessageBitmap = NULL;
 
-#if defined(var_CATable)
 GLuint pg_CATable_ID = NULL_ID;
 GLubyte *pg_CATable = NULL;
-#endif
 
-#if !defined(PG_BEZIER_PATHS) || defined(CORE)
+
 GLuint Pen_texture_3D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
-#endif
 GLuint Noise_texture_3D[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_CONFIGURATIONS];
 
-#if defined(PG_WITH_MASTER_MASK)
 GLuint Master_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 GLuint Master_Multilayer_Mask_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
-#endif
 
 std::string* DisplayTextList = NULL;
 int* DisplayTextFirstInChapter = NULL;
@@ -823,30 +791,33 @@ clip_status::~clip_status() {
 
 }
 
-#if defined(var_slow_track_translation)
 ///////////////////////////////////////////////////////
 // CONVERSION OF FLOAT TRANSLATION INTO FRAME BASED INTEGER TRANSLATION
 float frame_based_translation(float transl, int translation_rank) {
-	if (transl == 0) {
-		return 0.f;
-	}
-	else {
-		float sign = (transl > 0 ? 1.f : -1.f);
-		transl *= sign; // absolute value
-		if (transl < 1) {
-			if (pg_FrameNo % int(1 / transl) == 0) {
-				return 1.f * sign;
-			}
-			else {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_slow_track_translation]) {
+		if (slow_track_translation) {
+			if (transl == 0) {
 				return 0.f;
 			}
-		}
-		else {
-			return float(int(transl)) * sign;
+			else {
+				float sign = (transl > 0 ? 1.f : -1.f);
+				transl *= sign; // absolute value
+				if (transl < 1) {
+					if (pg_FrameNo % int(1 / transl) == 0) {
+						return 1.f * sign;
+					}
+					else {
+						return 0.f;
+					}
+				}
+				else {
+					return float(int(transl)) * sign;
+				}
+			}
 		}
 	}
+	return 0.f;
 }
-#endif
 
 ///////////////////////////////////////////////////////
 // GLUT draw function (from the viewpoint)
@@ -899,7 +870,7 @@ void window_display(void) {
 		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_current_configuration_rank].size(); indMeshFile++) {
 			// visibility
 			bool visible = false;
-#if defined(ETOILES)
+#if defined(pg_Project_Etoiles)
 			visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
 #elif defined(var_Caverne_Mesh_Profusion)
 			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_CaverneActveMesh
@@ -925,7 +896,8 @@ void window_display(void) {
 	}
 #endif
 
-#if defined(PG_WITH_PORTAUDIO)
+	// Looks for next peak or onset for random diaporama (cf GrabIt! music piece)
+#if defined(var_Argenteuil_onsetchange_diaporama)
 	double timeFromBeginning = RealTime() - soundfile_data.sound_file_StartReadingTime;
 	if (currentlyPlaying_trackNo >= 0 
 		&& int(pg_SoundTracks[pg_current_configuration_rank].size()) > currentlyPlaying_trackNo) {
@@ -940,11 +912,12 @@ void window_display(void) {
 			}
 		}
 	}
+#endif
+
 	// tests whether the soundtrack is finished reading
 	if (pa_sound_data.pa_checkAudioStream()) {
 		//printf("soundtrack current time %f\n", RealTime() - soundfile_data.sound_file_StartReadingTime);
 	}
-#endif
 
 	//////////////////////////////////////////////////
 	//////////////////////////////////////////////////
@@ -1159,21 +1132,6 @@ void readSensors(void) {
 
 			//printf("RENOISE send %s %f %f\n", AuxString, sensorLevel[indSens], sensor_vol);
 #endif
-#if defined(PG_PORPHYROGRAPH_SOUND)
-			// message format
-			std::string format = "f";
-
-			std::string message = "/track_";
-			int_string = std::to_string(sample_choice[indSens] + 1);
-			message += int_string + "_level";
-			float_string = std::to_string(static_cast<long double>(sensorLevel[indSens])*sensor_vol);
-			// float_str.resize(4);
-			message += " " + float_string;
-			// message posting
-			pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
-			printf("send %s\n", message.c_str());
-			PlaySound(TEXT("C:/sync.com/Sync/LYM-projects/SoundData/soundYN-GN-data/samples-YN/samples_part1/sample_part1-002.wav"), NULL, SND_ASYNC);
-#endif
 
 			// starts the clock for stopping the sample play after a certain time
 			sample_play_start[sample_choice[indSens]] = pg_CurrentClockTime;
@@ -1204,19 +1162,6 @@ void readSensors(void) {
 				pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
 #endif
 
-#if defined(PG_PORPHYROGRAPH_SOUND)
-				// the sample plays until it finishes and only then it can be retriggered
-				std::string message = "/track_";
-				int_string = std::to_string(indSample + 1);
-				message += int_string + "_level 0";
-
-				// message format
-				std::string format = "f";
-
-				// message posting
-				pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PGsound_send");
-#endif
-
 				// resets the clock for replaying the sample if sensor triggered again
 				sample_play_start[indSample] = -1.f;
 			}
@@ -1229,7 +1174,7 @@ void readSensors(void) {
 	//std::cout << "msg: " << message << "\n";
 }
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 class GreyNote {
 public:
 	float grey;
@@ -1321,10 +1266,8 @@ void playChord() {
 				message += float_string;
 			}
 		}
-#if defined(PG_WITH_PUREDATA)
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
-#endif
 	}
 	else {
 		message = "/chord ";
@@ -1397,10 +1340,8 @@ void playChord() {
 		for (int ind = 0; ind < 20; ind++) {
 			format += "f";
 		}
-#if defined(PG_WITH_PUREDATA)
 		// message posting
 		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
-#endif
 	}
 	delete rowColor;
 	delete rowGrey;
@@ -1606,7 +1547,7 @@ void pg_automatic_var_reset_or_update(void) {
 	}
 #endif
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 	// CA seed
 	pg_CAseed_trigger = false;
 #endif
@@ -1841,26 +1782,14 @@ void pg_update_shader_uniforms(void) {
 }
 
 void pg_update_shader_var_data(void) {
-#if defined(CRITON)
-#include "pg_update_body_Criton.cpp"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_update_body_KompartSD.cpp"
-#endif
-#if defined(LIGHT)
-#include "pg_update_body_Light.cpp"
-#endif
 #if defined(CORE)
 #include "pg_update_body_Core.cpp"
 #endif
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #include "pg_update_body_voluspa.cpp"
 #endif
-#if defined(ARAKNIT)
+#if defined(pg_Project_araKnit)
 #include "pg_update_body_araknit.cpp"
-#endif
-#if defined(CAAUDIO)
-#include "pg_update_body_CAaudio.cpp"
 #endif
 
 // #include "pg_scripts/pg_update_body.cpp"
@@ -1954,29 +1883,10 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 		//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 3]);
 		glUniform4fv(uniform_ParticleAnimation_path_data[pg_current_configuration_rank], (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_ParticleAnimation);
 
-#if PG_NB_TRACKS >= 4
 		// flash Trk -> Part weights
 		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
 			flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], flashTrkPart_weights[3]);
 		// printf("flashTrkPart_weights %.2f %.2f %.2f %.2f \n", flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], flashTrkPart_weights[3]);
-#elif PG_NB_TRACKS >= 3
-		// flash Trk -> Part weights
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
-			flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], 0.f);
-		// printf("flashTrkPart_weights %.2f %.2f %.2f \n", flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2]);
-
-#elif PG_NB_TRACKS >= 2
-		// flash Trk -> Part weights
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
-			flashTrkPart_weights[0], flashTrkPart_weights[1], 0.f, 0.f);
-		// printf("flashTrkPart_weights %.2f %.2f \n", flashTrkPart_weights[0],  flashTrkPart_weights[1]);
-
-#else
-		// flash Trk -> Part weights
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
-			flashTrkPart_weights[0], 0.f, 0.f, 0.f);
-		// printf("flashTrkPart_weights %.2f %.2f \n", flashTrkPart_weights[0],  flashTrkPart_weights[1]);
-#endif
 
 	// movie size, flash camera and copy tracks
 	// copy to layer above (+1) or to layer below (-1)
@@ -2034,7 +1944,7 @@ void pg_update_shader_Update_uniforms(void) {
 	}
 	printOglError(5197);
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 	if (pg_CAseed_trigger) {
 		glUniform4f(uniform_Update_fs_4fv_CAseed_type_size_loc[pg_current_configuration_rank],
 			(GLfloat)pg_CAseed_type, (GLfloat)pg_CAseed_size,
@@ -2052,21 +1962,17 @@ void pg_update_shader_Update_uniforms(void) {
 	// position
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 0] = paths_x_prev[indPath];
-#if defined(PG_BEZIER_PATHS)
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 1] = paths_xL[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 2] = paths_xR[indPath];
-#endif
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 0] = paths_y_prev[indPath];
-#if defined(PG_BEZIER_PATHS)
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 1] = paths_yL[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 2] = paths_yR[indPath];
-#endif
 	}
-	for (int indPath = 0; indPath < PG_NB_CURSORS_MAX; indPath++) {
+	for (int indPath = 0; indPath < fingers; indPath++) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x_forGPU[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y_forGPU[indPath];
 	}
-	for (int indPath = PG_NB_CURSORS_MAX; indPath < (PG_NB_PATHS + 1); indPath++) {
+	for (int indPath = fingers; indPath < (PG_NB_PATHS + 1); indPath++) {
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_X * 4 + 3] = paths_x[indPath];
 		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_P_Y * 4 + 3] = paths_y[indPath];
 	}
@@ -2093,7 +1999,6 @@ void pg_update_shader_Update_uniforms(void) {
 	// printf("Radius %.2f %.2f\n", paths_RadiusX[0], paths_RadiusY[0]);
 	//printf("pos %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f \n", paths_x_prev[1], paths_y_prev[1],
 	//	paths_xR[1], paths_yR[1], paths_xL[1], paths_yL[1], paths_x[1], paths_y[1]);
-#if defined(PG_BEZIER_PATHS)
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 		build_bounding_box(indPath);
 	}
@@ -2112,12 +2017,12 @@ void pg_update_shader_Update_uniforms(void) {
 		//		path_data_Update[indPath * PG_MAX_PATH_DATA * 4 + PG_PATH_BOX * 4 + 3]);
 		//}
 	}
-#endif
+
 	//printf("pos %.1f %.1f %.1f %.1f bez %.1f %.1f %.1f %.1f beging./end %d %d \n", paths_Color_r[1], paths_Color_g[1], paths_Color_b[1], paths_Color_a[1],
 	//	pg_BezierBox[1].x, pg_BezierBox[1].y, pg_BezierBox[1].z, pg_BezierBox[1].w, isBegin[1], isEnd[1]);
 	glUniform4fv(uniform_Update_path_data[pg_current_configuration_rank], (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_Update);
 
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 	glUniform4f(uniform_Update_fs_4fv_fftLevels03[pg_current_configuration_rank],
 		fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3]);
 	glUniform4f(uniform_Update_fs_4fv_fftFrequencies03[pg_current_configuration_rank],
@@ -2138,7 +2043,6 @@ void pg_update_shader_Update_uniforms(void) {
 	//printf("Phase %.2f\n", fftPhases[0]);
 #endif
 
-#if PG_NB_TRACKS >= 4
 	// flash BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
 		flashTrkBG_weights[1], flashTrkBG_weights[2], flashTrkBG_weights[3], flashPartBG_weight);
@@ -2148,48 +2052,6 @@ void pg_update_shader_Update_uniforms(void) {
 			flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
 		// printf("flashTrkCA_weights %.2f %.2f %.2f %.2f \n", flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
 	}
-
-#else
-#if PG_NB_TRACKS >= 3
-	// flash Trk -> BG weights
-	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
-		flashTrkBG_weights[1], flashTrkBG_weights[2], 0.f, flashPartBG_weight);
-	//printf("flashTrkBG_weights %.2f %.2f \n", flashTrkBG_weights[1], flashTrkBG_weights[2]);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
-		// flash Trk -> CA weights
-		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
-			flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], 0.f);
-		// printf("flashTrkCA_weights %.2f %.2f %.2f \n", flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2]);
-	}
-#else
-#if PG_NB_TRACKS >= 2
-	// flash Trk -> BG weights
-	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
-		flashTrkBG_weights[1], 0.f, 0.f, flashPartBG_weight);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
-		// flash Trk -> CA weights
-		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
-			flashTrkCA_weights[0], flashTrkCA_weights[1], 0.f, 0.f);
-		// printf("flashTrkCA_weights %.2f %.2f \n", flashTrkCA_weights[0],  flashTrkCA_weights[1]);
-	}
-#else
-#if PG_NB_TRACKS >= 1
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		// flash Trk -> BG weights
-		glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
-			0.f, 0.f, 0.f, flashPartBG_weight);
-	}
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
-		// flash Trk -> CA weights
-		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
-			flashTrkCA_weights[0], 0.f, 0.f, 0.f);
-		// printf("flashTrkCA_weights %.2f %.2f \n", flashTrkCA_weights[0],  flashTrkCA_weights[1]);
-	}
-
-#endif
-#endif
-#endif
-#endif
 
 	//printf("Signs %d \n", currentDrawingTrack);
 
@@ -2210,7 +2072,6 @@ void pg_update_shader_Update_uniforms(void) {
 		printf("copyToNextTrack %d\n", copyToNextTrack);
 
 	// photo flash
-#if defined(var_photoJitterAmpl) && defined(var_photo_offsetX) && defined(var_photo_offsetY) && defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	photo_offsetX = 0;
 	photo_offsetY = 0;
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photoJitterAmpl]
@@ -2224,7 +2085,6 @@ void pg_update_shader_Update_uniforms(void) {
 		glUniform4f(uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY[pg_current_configuration_rank],
 			flashPhotoTrk_weight, flashPhotoTrk_threshold, photo_offsetX, photo_offsetY);
 	}
-#endif
 
 	// flash CA -> BG & repop color (BG & CA)
 	glUniform4f(uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[pg_current_configuration_rank],
@@ -2380,16 +2240,6 @@ void pg_update_shader_Update_uniforms(void) {
 		//printf("Update shader camera frame size %dx%d offset %dx%d\n", pg_camera_frame_width, pg_camera_frame_height, pg_camera_x_offset, pg_camera_y_offset);
 	}
 
-#if defined(var_Argenteuil_flash_move_track1_freq)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flash_move_track1_freq]) {
-		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
-			Argenteuil_track_x_transl[0], Argenteuil_track_y_transl[0], Argenteuil_track_x_transl[1], Argenteuil_track_y_transl[1]);
-		Argenteuil_track_x_transl[0] = 0.f;
-		Argenteuil_track_y_transl[0] = 0.f;
-		Argenteuil_track_x_transl[1] = 0.f;
-		Argenteuil_track_y_transl[1] = 0.f;
-	}
-#else
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_slow_track_translation]) {
 		if (slow_track_translation) {
 			// track x & y translations
@@ -2411,7 +2261,6 @@ void pg_update_shader_Update_uniforms(void) {
 		glUniform4f(uniform_Update_fs_4fv_xy_transl_tracks_0_1[pg_current_configuration_rank],
 			track_x_transl[0], track_y_transl[0], track_x_transl[1], track_y_transl[1]);
 	}
-#endif
 
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 		// acceleration center and CA subtype
@@ -2624,12 +2473,11 @@ void pg_update_shader_Master_uniforms(void) {
 				Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
 		}
 #endif
-#if defined(var_flashchange_BGcolor_freq)
+
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
 			glUniform3f(uniform_Master_fs_3fv_BG_color_rgb[pg_current_configuration_rank],
 				BG_r, BG_g, BG_b);
 		}
-#endif
 	}
 	/*
 	if (pg_ConfigurationFrameNo % 1000 == 0) {
@@ -2722,15 +2570,9 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Camera_frame[pg_current_configuration_rank], pg_Camera_frame_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Movie_frame[pg_current_configuration_rank], pg_Movie_frame_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_ParticleAnimation_sampler);
-#if PG_NB_TRACKS >= 2
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_ParticleAnimation_sampler);
-#endif
-#if PG_NB_TRACKS >= 3
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_ParticleAnimation_sampler);
-#endif
-#if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_ParticleAnimation_sampler);
-#endif
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -2838,23 +2680,17 @@ void pg_ParticleAnimationPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk0_FBO_Update_attcht]);
 
-#if PG_NB_TRACKS >= 2
 	// 2-cycle ping-pong track 1 step n (FBO attachment 6)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk1_FBO_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk1_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 3
 	// 2-cycle ping-pong track 2 step n (FBO attachment 7)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk2_FBO_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk2_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 4
 	// 2-cycle ping-pong track 2 step n (FBO attachment 8)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_ParticleAnimation_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
-#endif
 
 	// draw points from the currently bound VAO with current in-use shader
 	// glDrawArrays (GL_TRIANGLES, 0, 3 * PG_SIZE_QUAD_ARRAY);
@@ -2901,33 +2737,36 @@ void pg_UpdatePass(void) {
 	glUniformMatrix4fv(uniform_Update_vp_view[pg_current_configuration_rank], 1, GL_FALSE, pg_identityViewMatrix);
 	glUniformMatrix4fv(uniform_Update_vp_model[pg_current_configuration_rank], 1, GL_FALSE, pg_identityModelMatrix);
 
-#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
-	// homography for background texture distortion
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_homography]) {
+		if (photo_homography) {
+			// homography for background texture distortion
 	// source points
-	std::vector<cv::Point2f> sourcePoints;
-	// destination points
-	std::vector<cv::Point2f> destinationPoints;
+			std::vector<cv::Point2f> sourcePoints;
+			// destination points
+			std::vector<cv::Point2f> destinationPoints;
 
-	// the current image coordinates are given by the keystone variables
-	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomLeft, VP1KeystoneYBottomLeft));
-	sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight, VP1KeystoneYBottomRight));
-	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight, VP1KeystoneYTopRight));
-	sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopLeft, VP1KeystoneYTopLeft));
+			// the current image coordinates are given by the keystone variables
+			sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomLeft, VP1KeystoneYBottomLeft));
+			sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight, VP1KeystoneYBottomRight));
+			sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight, VP1KeystoneYTopRight));
+			sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopLeft, VP1KeystoneYTopLeft));
 
-	// the initial texture coordinates are based on unit for the whole image
-	// they are then multiplied by the image ratio (wrt power of two uper dimensions)
-	// inside the shader to access only the part of the texture that corresponds to the image
-	destinationPoints.push_back(cv::Point2f(0.0f, 1.f));
-	destinationPoints.push_back(cv::Point2f(1.f, 1.f));
-	destinationPoints.push_back(cv::Point2f(1.f, 0.0f));
-	destinationPoints.push_back(cv::Point2f(0.0f, 0.0f));
+			// the initial texture coordinates are based on unit for the whole image
+			// they are then multiplied by the image ratio (wrt power of two uper dimensions)
+			// inside the shader to access only the part of the texture that corresponds to the image
+			destinationPoints.push_back(cv::Point2f(0.0f, 1.f));
+			destinationPoints.push_back(cv::Point2f(1.f, 1.f));
+			destinationPoints.push_back(cv::Point2f(1.f, 0.0f));
+			destinationPoints.push_back(cv::Point2f(0.0f, 0.0f));
 
-	// initializes the homography matrices for the distortion of the projected image
-	pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, pg_homographyForTexture, 3);
+			// initializes the homography matrices for the distortion of the projected image
+			pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, pg_homographyForTexture, 3);
 
-	// and transfer the matrix to the shader
-	glUniformMatrix3fv(uniform_Update_homographyForTexture[pg_current_configuration_rank], 1, GL_FALSE, pg_homographyForTexture);
-#endif
+			// and transfer the matrix to the shader
+			glUniformMatrix3fv(uniform_Update_homographyForTexture[pg_current_configuration_rank], 1, GL_FALSE, pg_homographyForTexture);
+		}
+	}
+
 
 	////////////////////////////////////////////////////////
 	// texture unit location
@@ -2963,11 +2802,9 @@ void pg_UpdatePass(void) {
 	glUniform1i(uniform_Update_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Update_sampler);
-#if defined(var_CATable)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CATable]) {
 		glUniform1i(uniform_Update_texture_fs_CATable[pg_current_configuration_rank], pg_CATable_Update_sampler);
 	}
-#endif
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_camera_BG_subtr]) {
 		glUniform1i(uniform_Update_texture_fs_Camera_BGIni[pg_current_configuration_rank], pg_Camera_BGIni_FBO_Update_sampler);
 	}
@@ -3011,10 +2848,8 @@ void pg_UpdatePass(void) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// pen patterns
-#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 	glActiveTexture(GL_TEXTURE0 + pg_Brushes_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, Pen_texture_3D_texID[pg_current_configuration_rank]);
-#endif
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -3104,7 +2939,7 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 	}
 
-#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+#if PG_NB_PARALLEL_CLIPS >= 2
 	// clip[0] texture
 	// second clips on left and right
 	glActiveTexture(GL_TEXTURE0 + pg_SecondClipLeft_Update_sampler);
@@ -3153,34 +2988,23 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk0_FBO_Update_attcht]);
 
-#if PG_NB_TRACKS >= 2
 	// 2-cycle ping-pong track 1 step n (FBO attachment 6) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Trk1_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk1_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 3
 	// 2-cycle ping-pong track 2 step n (FBO attachment 7) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Trk2_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk2_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 4
 	// 2-cycle ping-pong track 2 step n (FBO attachment 8) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
-#endif
 
-#if defined(var_CATable)
 	// CA Data table (FBO attachment 11)
-	glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CATable]) {
+		glActiveTexture(GL_TEXTURE0 + pg_CATable_Update_sampler);
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
 	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
-#endif 
 
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_Camera_BGIni_FBO_Update_sampler);
@@ -3237,7 +3061,7 @@ void pg_ClipArtRenderingPass(void) {
 		// ClipArt TEXT OR CLIP ART RENDERING    
 		////////////////////////////////////////
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_moving_messages] && moving_messages >= 0) {
-			/* ETOILES TEASER */
+			/* pg_Project_Etoiles TEASER */
 			/*
 			if (pg_CurrentSceneIndex == 0) {
 				pg_Display_ClipArt_Text(&pg_Ind_Current_DisplayText, 0);
@@ -3329,7 +3153,6 @@ void pg_ParticleRenderingPass(void) {
 #elif defined(TEXTURED_QUAD_PARTICLES)
 	// blurred disk texture
 	glActiveTexture(GL_TEXTURE0 + 2);
-#if defined(var_partSplat_texture)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partSplat_texture]) {
 		if (partSplat_texture > 0 
 			&& partSplat_texture - 1 < int(blurredDisk_texture_2D_texID[pg_current_configuration_rank].size())) {
@@ -3341,9 +3164,7 @@ void pg_ParticleRenderingPass(void) {
 			glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		}
 	}
-	else
-#else
-	{
+	else {
 		if (blurredDisk_texture_2D_texID[pg_current_configuration_rank].size() > 0) {
 			glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(0));
 		}
@@ -3351,7 +3172,6 @@ void pg_ParticleRenderingPass(void) {
 			glBindTexture(GL_TEXTURE_2D, NULL_ID);
 		}
 	}
-#endif
 #endif
 	printOglError(5259);
 
@@ -3443,16 +3263,11 @@ void pg_MixingPass(void) {
 
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Font[pg_current_configuration_rank], pg_Screen_Font_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Screen_Message[pg_current_configuration_rank], pg_Screen_Message_FBO_Mixing_sampler);
+
 	glUniform1i(uniform_Mixing_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Mixing_sampler);
-#if PG_NB_TRACKS >= 2
 	glUniform1i(uniform_Mixing_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Mixing_sampler);
-#endif
-#if PG_NB_TRACKS >= 3
 	glUniform1i(uniform_Mixing_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Mixing_sampler);
-#endif
-#if PG_NB_TRACKS >= 4
 	glUniform1i(uniform_Mixing_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Mixing_sampler);
-#endif
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -3488,23 +3303,17 @@ void pg_MixingPass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk0_FBO_Update_attcht]);
 
-#if PG_NB_TRACKS >= 2
 	// 2-cycle ping-pong track 1 (FBO attachment 4) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk1_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk1_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 3
 	// 2-cycle ping-pong track 2 step n + 1 (FBO attachment 5) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk2_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk2_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 4
 	// 2-cycle ping-pong track 3 step n + 1 (FBO attachment 6) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
-#endif
 
 	//if (pg_FrameNo % 1000 <= 1) {
 	//	printf("Comp check texID 0-7 %d %d %d %d %d %d %d %d\n",
@@ -3583,18 +3392,11 @@ void pg_MasterPass(void) {
 		glUniform1i(uniform_Master_texture_fs_ClipArt_render[pg_current_configuration_rank], pg_ClipArt_render_FBO_Master_sampler);
 		glUniform1i(uniform_Master_texture_fs_Particle_render[pg_current_configuration_rank], pg_Particle_render_FBO_Master_sampler);
 		glUniform1i(uniform_Master_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Master_sampler);
-#if PG_NB_TRACKS >= 2
 		glUniform1i(uniform_Master_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Master_sampler);
-#endif
-#if PG_NB_TRACKS >= 3
 		glUniform1i(uniform_Master_texture_fs_Trk2[pg_current_configuration_rank], pg_Trk2_FBO_Master_sampler);
-#endif
-#if PG_NB_TRACKS >= 4
 		glUniform1i(uniform_Master_texture_fs_Trk3[pg_current_configuration_rank], pg_Trk3_FBO_Master_sampler);
-#endif
-#if defined(PG_WITH_MASTER_MASK)
+
 		glUniform1i(uniform_Master_texture_fs_Mask[pg_current_configuration_rank], pg_Mask_FBO_Master_sampler);
-#endif
 
 		// Mixing pass output (echoed composition of tracks)
 		glActiveTexture(GL_TEXTURE0 + pg_Render_curr_FBO_Master_sampler);
@@ -3631,24 +3433,18 @@ void pg_MasterPass(void) {
 		glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Master_sampler);
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk0_FBO_Update_attcht]);
 
-#if PG_NB_TRACKS >= 2
 		// 2-cycle ping-pong track 1 step n (FBO attachment 4) -- next frame (outout from update pass)
 		glActiveTexture(GL_TEXTURE0 + pg_Trk1_FBO_Master_sampler);
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk1_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 3
 		// 2-cycle ping-pong track 2 step n (FBO attachment 5) -- next frame (outout from update pass)
 		glActiveTexture(GL_TEXTURE0 + pg_Trk2_FBO_Master_sampler);
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk2_FBO_Update_attcht]);
-#endif
 
-#if PG_NB_TRACKS >= 4
 		// 2-cycle ping-pong track 3 step n (FBO attachment 6) -- next frame (outout from update pass)
 		glActiveTexture(GL_TEXTURE0 + pg_Trk3_FBO_Master_sampler);
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_Trk3_FBO_Update_attcht]);
-#endif
-#if defined(PG_WITH_MASTER_MASK)
+
 		// Master mask texture
 		glActiveTexture(GL_TEXTURE0 + pg_Mask_FBO_Master_sampler);
 		if (nb_layers_master_mask[pg_current_configuration_rank] > 0) {
@@ -3659,7 +3455,6 @@ void pg_MasterPass(void) {
 			//printf("single layer mask texture %d\n", Master_Mask_texID[pg_current_configuration_rank]);
 			glBindTexture(GL_TEXTURE_RECTANGLE, Master_Mask_texID[pg_current_configuration_rank]);
 		}
-#endif
 
 		//if (pg_FrameNo % 1000 <= 1) {
 		//	printf("Final check texID 0-5 %d %d %d %d %d %d\n\n",
@@ -3769,8 +3564,6 @@ void pg_SensorPass(void) {
 	glDisable(GL_BLEND);
 }
 
-
-#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 // initializes the homography matrices for the distortion of the projected image
 void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, std::vector<cv::Point2f> *destinationPoints, GLfloat matValues[], int dim) {
 	//////////////////////////////////////////////////////////////////////////////////
@@ -3822,19 +3615,33 @@ void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, st
 		 sprintf(ErrorStr, "homography dimension should be 3 or 4, not %d", dim); ReportError(ErrorStr);
 	 }
 }
-#endif
 
-#if defined(var_VP1LocX)  && defined(var_VP1LocY) && defined(var_VP1LocZ) &&  defined(var_VP1LookAtX) && defined(var_VP1LookAtY) && defined(var_VP1LookAtZ) && defined(var_VP1UpY) && defined(var_VP1Reversed) && defined(var_VP1WidthTopAt1m) && defined(var_VP1BottomAt1m) && defined(var_VP1TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 // initializes the transformation matrices related to the frustum
 // should only be called when the values are changed through pd or maxmsp
 void pg_calculate_perspective_matrices(void) {
 	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
 	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
 
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_VP1LocX]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LocY]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LocZ]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LookAtX]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LookAtY]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LookAtZ]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1UpY]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1Reversed]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1WidthTopAt1m]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1BottomAt1m]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1TopAt1m]
+		|| !pg_shader_programme[pg_current_configuration_rank][_nearPlane]
+		|| !pg_shader_programme[pg_current_configuration_rank][_farPlane]) {
+		return;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
 	if (double_window) {
-#if defined(TEMPETE)
+#if defined(pg_Project_Tempete)
 		VP1perspMatrix
 			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m * 2.0f, VP1TopAt1m * 2.0f, nearPlane, farPlane);
 #else
@@ -3883,7 +3690,7 @@ void pg_calculate_perspective_matrices(void) {
 #if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 	//////////////////////////////////////////////////////////////////////////////////
 	// left camera (right display)
-#if defined(TEMPETE)
+#if defined(pg_Project_Tempete)
 	VP2perspMatrix
 		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m * 2.0f, VP2TopAt1m * 2.0f, nearPlane, farPlane);
 #else
@@ -3927,6 +3734,22 @@ void pg_calculate_orthographic_matrices(void) {
 	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
 	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
 
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_VP1LocX]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LocY]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LocZ]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LookAtX]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LookAtY]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1LookAtZ]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1UpY]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1Reversed]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1WidthTopAt1m]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1BottomAt1m]
+		|| !pg_shader_programme[pg_current_configuration_rank][_VP1TopAt1m]
+		|| !pg_shader_programme[pg_current_configuration_rank][_nearPlane]
+		|| !pg_shader_programme[pg_current_configuration_rank][_farPlane]) {
+		return;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
 	if (double_window) {
@@ -3949,12 +3772,10 @@ void pg_calculate_orthographic_matrices(void) {
 	// TODO
 #endif
 }
-#endif
 
 //////////////////////////////////////////////////
 // PASS #6: MESH PASS
 // MESH ANIMATIONS FOR PROJECTS
-#if defined(ETOILES)
 bool Etoiles_mesh_guided_by_strokes(int indMeshFile) {
 	// meshes are guided by strokes
 	int path_no = indMeshFile + 1;
@@ -3969,7 +3790,7 @@ bool Etoiles_mesh_guided_by_strokes(int indMeshFile) {
 			pen_y = (paths_y[path_no] / window_height) * 2.f - 1.f;
 		}
 		else {
-			visible = path_record[pathNo] && paths_x[0] > 0 && paths_y[0] > 0;
+			visible = path_record[path_no] && paths_x[0] > 0 && paths_y[0] > 0;
 			if (visible) {
 				// normal pen coordinates
 				pen_x = (paths_x[0] / workingWindow_width) * 2.f - 1.f;
@@ -4001,7 +3822,6 @@ void Etoiles_ray_animation(int indMeshFile) {
 	pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Mesh_Scale = norm_vec;
 }
 
-#endif
 
 #if defined(var_Caverne_Mesh_Profusion)
 void Caverne_profusion_automatic_rotation(int indMeshFile) {
@@ -4040,7 +3860,7 @@ void MmeShanghai_automatic_brokenGlass_animation(int indMeshFile, int indObjectI
 void pg_drawOneMesh(int indMeshFile) {
 	// visibility
 	bool visible = false;
-#if defined(ETOILES)
+#if defined(pg_Project_Etoiles)
 	visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
 #elif defined(var_Caverne_Mesh_Profusion)
 	visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_CaverneActveMesh
@@ -4053,7 +3873,7 @@ void pg_drawOneMesh(int indMeshFile) {
 	// visible mesh
 	if (visible) {
 		// mesh animation
-#if defined(ETOILES)
+#if defined(pg_Project_Etoiles)
 		Etoiles_ray_animation();
 #elif defined(var_Caverne_Mesh_Profusion)
 		Caverne_profusion_automatic_rotation(indMeshFile);
@@ -4094,9 +3914,7 @@ void pg_drawOneMesh(int indMeshFile) {
 		}
 #endif
 		// 3. a varying scaling matrix 
-#if defined(var_moving_messages)
-		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Mesh_Scale));
-#elif defined(var_Caverne_Mesh_Profusion)
+#if defined(var_Caverne_Mesh_Profusion)
 		if (indMeshFile < 7) {
 			MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Mesh_Scale));
 		}
@@ -4106,6 +3924,7 @@ void pg_drawOneMesh(int indMeshFile) {
 #else
 		MeshPosModelMatrix = glm::scale(MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_Mesh_Scale));
 #endif
+
 		// model matrix transfered to GPU (if it is not object by object made)
 		glUniformMatrix4fv(uniform_Mesh_vp_model[pg_current_configuration_rank], 1, GL_FALSE,
 			glm::value_ptr(MeshPosModelMatrix));
@@ -4460,34 +4279,38 @@ void pg_MeshPass(void) {
 			pg_calculate_orthographic_matrices();
 #endif
 
-#if defined(PG_WITH_HOMOGRAPHY)
-			// Read points
-			std::vector<cv::Point2f> sourcePoints;
-			//std::vector<cv::Point2f> source2Points;
-			std::vector<cv::Point2f> destinationPoints;
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_mesh_homography]) {
+				if (mesh_homography) {
+					glm::highp_mat4 homographyMatrix;
 
-			sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
-				-VP1KeystoneYBottomLeft));
-			sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
-				-VP1KeystoneYBottomRight));
-			sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
-				VP1KeystoneYTopRight));
-			sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
-				VP1KeystoneYTopLeft));
+					// Read points
+					std::vector<cv::Point2f> sourcePoints;
+					//std::vector<cv::Point2f> source2Points;
+					std::vector<cv::Point2f> destinationPoints;
 
-			destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
-			destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
-			destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
-			destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
+					sourcePoints.push_back(cv::Point2f(-VP1KeystoneXBottomLeft,
+						-VP1KeystoneYBottomLeft));
+					sourcePoints.push_back(cv::Point2f(VP1KeystoneXBottomRight,
+						-VP1KeystoneYBottomRight));
+					sourcePoints.push_back(cv::Point2f(VP1KeystoneXTopRight,
+						VP1KeystoneYTopRight));
+					sourcePoints.push_back(cv::Point2f(-VP1KeystoneXTopLeft,
+						VP1KeystoneYTopLeft));
 
-			// initializes the homography matrices for the distortion of the projected image
-			pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, matValues, 4);
-			*homographyMatrix = (glm::make_mat4(matValues));
-#endif
+					destinationPoints.push_back(cv::Point2f(-1.0f, -1.0f));
+					destinationPoints.push_back(cv::Point2f(1.0f, -1.0f));
+					destinationPoints.push_back(cv::Point2f(1.0f, 1.0f));
+					destinationPoints.push_back(cv::Point2f(-1.0f, 1.0f));
+
+					// initializes the homography matrices for the distortion of the projected image
+					pg_calculate_homography_matrices(&sourcePoints, &destinationPoints, matValues, 4);
+					homographyMatrix = (glm::make_mat4(matValues));
+				}
+			}
 
 			// sets viewport to single window
 			if (double_window) {
-#if defined(TEMPETE)
+#if defined(pg_Project_Tempete)
 				glViewport(0, window_height / 2, workingWindow_width, window_height);
 #else
 				glViewport(0, 0, workingWindow_width, window_height);
@@ -4525,7 +4348,7 @@ void pg_MeshPass(void) {
 #if defined(PG_SECOND_MESH_CAMERA)
 		if (!directRenderingwithoutMeshScreen2) {
 			// sets viewport to second window
-#if defined(TEMPETE)
+#if defined(pg_Project_Tempete)
 			glViewport(0, 0, workingWindow_width, window_height / 2);
 #else
 			glViewport(workingWindow_width, 0, workingWindow_width, window_height);
@@ -4737,40 +4560,6 @@ void pg_draw_scene(DrawingMode mode) {
 		printOglError(706);
 
 		writejpg(imageFileName);
-
-/*
-		if (!threaded) 
-
-			writejpg((void*)&pDataWriteJpg);
-		}
-		else {
-#if defined(WIN32)
-			DWORD rc;
-			HANDLE  hThread = CreateThread(
-				NULL,                   // default security attributes
-				0,                      // use default stack size  
-				writejpg,		    // thread function name
-				(void*)&pDataWriteJpg,		    // argument to thread function 
-				0,                      // use default creation flags 
-				&rc);   // returns the thread identifier 
-			if (hThread == NULL) {
-				std::cout << "Error:unable to create thread writejpg" << std::endl;
-				exit(-1);
-			}
-			CloseHandle(hThread);
-#else
-			pthread_t drawing_thread;
-			int rc;
-			rc = pthread_create(&drawing_thread, NULL,
-				writejpg, (void*)pData);
-			if (rc) {
-				std::cout << "Error:unable to create thread writejpg" << rc << std::endl;
-				exit(-1);
-			}
-			pthread_exit(NULL);
-#endif
-		}
-*/
 	}
 
 	// ******************** interactive output ********************
@@ -4863,7 +4652,7 @@ void pg_draw_scene(DrawingMode mode) {
 		}
 
 
-#if defined(CAAUDIO) && defined(PG_PUREDATA_SOUND) && defined(var_nb_CATypes)
+#if defined(pg_Project_CAaudio) && defined(PG_PUREDATA_SOUND) && defined(var_nb_CATypes)
 		// drawing memory on odd and even frames for CA	
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec); // drawing memory on odd and even frames for echo and sensors	
 		pg_bindFBOTextures(pg_FBO_Mixing_capturedFB_prec, pg_FBO_Mixing_capturedFB_prec_texID + (pg_FrameNo % 2), 1, false, 0);

@@ -668,12 +668,10 @@ public:
 // extern struct PathCurveFrame** pg_PathCurveFrame_Data[PG_MAX_CONFIGURATIONS];
 extern Path_Status* pg_Path_Status;
 
-#if defined(PG_BEZIER_PATHS)
-// convex hull shipped to the GPU
+// Bezier Path convex hull shipped to the GPU
 extern glm::vec2 pg_BezierControl[(PG_NB_PATHS + 1) * 4];
 extern glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
 extern glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
-#endif
 
 struct vec2
 {
@@ -709,8 +707,7 @@ float    pg_ScanFloatString(int* p_c,
 	int withTrailingSpaceChars,
 	char* charstring, int* ind);
 
-// CONVEX HULL 
-#if defined(PG_BEZIER_PATHS)
+// BEZIER PATH CONVEX HULL 
 bool pointEquals(glm::vec2 *p, glm::vec2 *q);
 bool left_oriented(glm::vec2 *p1, glm::vec2 *p2, glm::vec2 *candidate);
 void cubicBezier(glm::vec2 control_points[4], glm::vec2* curve_point, float alphaBezier);
@@ -721,7 +718,6 @@ float Bezier_length(glm::vec2 control_points[4], int nb_steps);
 void build_bounding_box(int indPath);
 void build_expanded_hull(int indPath);
 void test_hull(void);
-#endif
 
 #if defined(var_Novak_flight_on)
 #define PG_NB_FLIGHTS 11

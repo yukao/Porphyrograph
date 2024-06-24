@@ -33,9 +33,7 @@ GLfloat pg_orthoWindowProjMatrix[16];
 GLfloat doubleProjMatrix[16];
 GLfloat pg_identityViewMatrix[16];
 GLfloat pg_identityModelMatrix[16];
-#if defined(PIERRES)
 GLfloat pg_homographyForTexture[9];
-#endif
 GLfloat modelMatrixSensor[16];
 GLfloat **modelMatrixMeshes;
 
@@ -96,9 +94,7 @@ float quadSensor_texCoords[] = {
 };
 
 // +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
-#if defined(PG_METAWEAR)
 struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
-#endif
 
 int *pg_nb_bones[PG_MAX_CONFIGURATIONS] = { NULL };
 Bone** TabBones[PG_MAX_CONFIGURATIONS] = { NULL };
@@ -583,7 +579,6 @@ int stb__arial_50_usascii_a[95] = { 199,199,254,398,398,637,478,137,
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 void InterfaceInitializations(void) {
-#if !defined(LIGHT)
 	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
 	int indPreset = 0;
 	for(ColorPreset &preset: pg_ColorPresets[pg_current_configuration_rank]) {
@@ -594,7 +589,6 @@ void InterfaceInitializations(void) {
 	// interpolation duration initial value (0.f)
 	sprintf(AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-#endif
 
 	// ClipArt GPU INTERFACE VARIABLE INITIALIZATION
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]
@@ -612,11 +606,9 @@ void InterfaceInitializations(void) {
 		sprintf(AuxString, "/Mesh_mobile_%d_onOff %d", indMesh + 1, (mobileMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
 
-#if defined(PG_LIGHTS_DMX_IN_PG)
 	if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 		pg_lightGUI_initialization();
 	}
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -958,7 +950,7 @@ void pg_initGeometry_quads(void) {
 		///////////////////////////////////////////////////////////////////////////////////////
 		int indLayout;
 
-#ifndef CAAUDIO
+#ifndef pg_Project_CAaudio
 		int indSens;
 
 		// square grid
@@ -1051,7 +1043,7 @@ void pg_initGeometry_quads(void) {
 		///////////////////////////////////////////////////////////////////////////////////////
 		int indActivation;
 
-#ifndef CAAUDIO
+#ifndef pg_Project_CAaudio
 		// no activation
 		indActivation = 0;
 		for (int indSensor = 0; indSensor < PG_NB_SENSORS; indSensor++) {
@@ -1203,10 +1195,7 @@ void SensorInitialization(void) {
 #if defined(PG_RENOISE)
 		sprintf(AuxString, "/renoise/transport/start"); pg_send_message_udp((char*)"", AuxString, (char*)"udp_RN_send");
 #endif
-#if defined(PG_PORPHYROGRAPH_SOUND)
-		sprintf(AuxString, "/loop_level 0.0"); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PGsound_send");
-		sprintf(AuxString, "/input_level 0.0"); pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PGsound_send");
-#endif
+
 		for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
 #if defined(PG_RENOISE)
 			// Renoise message format && message posting
@@ -1216,18 +1205,6 @@ void SensorInitialization(void) {
 			sprintf(AuxString, "/renoise/song/track/%d/prostx_volume %.2f", indSample + 1, 3.f);
 			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_RN_send");
 #endif
-#if defined(PG_PORPHYROGRAPH_SOUND)
-			std::string message = "/track_";
-			std::string int_string = std::to_string(indSample + 1);
-			message += int_string + "_level 0";
-
-			// message format
-			std::string format = "f";
-
-			// message posting
-			pg_send_message_udp((char*)format.c_str(), (char*)message.c_str(), (char*)"udp_PGsound_send");
-#endif
-
 			// resets the clock for replaying the sample if sensor triggered again
 			sample_play_start[indSample] = -1.0f;
 		}
@@ -1365,7 +1342,6 @@ void MeshInitialization(void) {
 	}
 }
 
-#if defined(PG_METAWEAR)
 void MetawearSensorInitialization() {
 	for (int ind_sensor = 0; ind_sensor < PG_MW_NB_MAX_SENSORS; ind_sensor++) {
 		for (int i = 0; i < 3; i++) {
@@ -1374,8 +1350,6 @@ void MetawearSensorInitialization() {
 		pg_mw_sensors[ind_sensor].mw_mss_pos_update = false;
 	}
 }
-#endif
-
 
 
 /////////////////////////////////////////////////////////////////
@@ -1572,9 +1546,7 @@ void pg_initRenderingMatrices(void) {
 		(GLfloat)(-(r + l) / (r - l)), (GLfloat)(-(t + b) / (t - b)), (GLfloat)(-(f + n) / (f - n)), 1.0f };
 	memcpy((char *)pg_orthoWindowProjMatrix, mat, 16 * sizeof(float));
 	// printf("Orthographic projection l %.2f r %.2f b %.2f t %.2f n %.2f f %.2f\n" , l,r,b,t,n,f);
-#if defined(PIERRES)
 	memcpy((char*)pg_homographyForTexture, mat, 9 * sizeof(float));
-#endif
 
 	r = (float)window_width;
 	GLfloat mat2[] = {
@@ -1764,7 +1736,6 @@ void pg_screenMessage_update(void) {
 	}
 }
 
-#if defined(_PG_IMAGE_TEXT) || defined(var_moving_messages)
 ///////////////////////////////////////////////////////
 // Message Uploads
 
@@ -1774,9 +1745,6 @@ bool pg_ReadAllDisplayMessages(string basefilename) {
 	if (basefilename == "") {
 		return false;
 	}
-#if defined(_PG_IMAGE_TEXT)
-	NbDisplayTexts = PG_NB_DISPLAY_MESSAGES;
-#else
 	// line count
 	ifstream myReadFile;
 	myReadFile.open(basefilename);
@@ -1793,7 +1761,7 @@ bool pg_ReadAllDisplayMessages(string basefilename) {
 		strcpy(ErrorStr, ("File " + basefilename + " not opened!").c_str()); ReportError(ErrorStr); throw 152;
 	}
 	myReadFile.close();
-#endif
+
 	std::cout << "Nb of messages: #" << NbDisplayTexts << " from " << basefilename << "\n";
 	DisplayText_rand_translX = new float[DisplayText_maxLen];
 	DisplayText_rand_translY = new float[DisplayText_maxLen];
@@ -1817,14 +1785,6 @@ bool pg_ReadAllDisplayMessages(string basefilename) {
 	if (myReadFile.is_open()) {
 		while (!myReadFile.eof() && indtext < NbDisplayTexts) {
 			std::getline(myReadFile, DisplayTextList[indtext]); // Saves the line in DisplayTextList[indtext].
-#if defined(_PG_IMAGE_TEXT)
-		    // std::cout << DisplayTextList[indtext]+"\n"; // Prints our STRING.
-			while (!myReadFile.eof() && (DisplayTextList[indtext].find("request =>", 0, strlen("request =>")) == 0)) {
-				DisplayTextFirstInChapter[indChapter++] = indtext;
-				// std::cout << "Message dir #" << indChapter - 1 << " index #" << DisplayTextFirstInChapter[indChapter-1] << "\n"; // Prints our STRING.
-				std::getline(myReadFile, DisplayTextList[indtext]);
-			}
-#endif
 			if (!(DisplayTextList[indtext].empty())) {
 				indtext++;
 			}
@@ -1841,152 +1801,10 @@ bool pg_ReadAllDisplayMessages(string basefilename) {
 		valRet = false;
 	}
 
-#if defined(_PG_IMAGE_TEXT)
-	photo_diaporama = -1;
-	DisplayTextFirstInChapter[indChapter] = NbDisplayTexts;
-	NbTextChapters = indChapter;
-	std::cout << "Loaded texts #" << NbDisplayTexts << " in chapters #" << NbTextChapters << "\n";
-
-	DisplayText1Front = false;
-	DisplayText1 = "";
-	DisplayText2 = "";
-#endif
 	std::cout << "Loaded texts #" << NbDisplayTexts << " from " << basefilename << "\n";
 
 	return valRet;
 }
-
-#if defined(_PG_IMAGE_TEXT)
-///////////////////////////////////////////////////////
-// large display messages
-int pg_displayMessage_update(int indMesg) {
-	GLbyte *yfont = stb__arial_25_usascii_y;
-	GLubyte *wfont = stb__arial_25_usascii_w;
-	GLubyte *hfont = stb__arial_25_usascii_h;
-	GLubyte *sfont = stb__arial_25_usascii_s;
-	GLubyte *tfont = stb__arial_25_usascii_t;
-
-	int pixelRank = 0;
-	GLubyte *offSetText = (indMesg == 1 ? pg_displayMsg1Bitmap : pg_displayMsg2Bitmap);
-	memset(offSetText, (GLubyte)0, message_pixel_length * 4);
-
-	if (indMesg == 1) {
-		if (IndDisplayText1 == -1) {
-			return 0;
-		}
-		DisplayText1 = DisplayTextList[IndDisplayText1 % NbDisplayTexts];
-		// DisplayText1 = "abcdefghijkl";
-	}
-	else {
-		if (IndDisplayText2 == -1) {
-			return 0;
-		}
-		DisplayText2 = DisplayTextList[IndDisplayText2 % NbDisplayTexts];
-		// DisplayText1 = "abcdefghijkl";
-	}
-
-	for (const char *c = (indMesg == 1 ? DisplayText1.c_str() : DisplayText2.c_str());
-		*c != '\0' && pixelRank < message_pixel_length; c++) {
-		char cur_car = *c;
-		if (cur_car == 'à' ||
-			cur_car == 'â') {
-			cur_car = 'a';
-		}
-		else if (cur_car == 'é' ||
-			cur_car == 'è' ||
-			cur_car == 'ê' ||
-			cur_car == 'ë') {
-			cur_car = 'e';
-		}
-		else if (cur_car == 'î' ||
-			cur_car == 'ï') {
-			cur_car = 'i';
-		}
-		else if (cur_car == 'ô') {
-			cur_car = 'o';
-		}
-		else if (cur_car == 'û' ||
-			cur_car == 'ù') {
-			cur_car = 'u';
-		}
-		else if (cur_car == 'À' ||
-			cur_car == 'Â') {
-			cur_car = 'A';
-		}
-		else if (cur_car == 'É' ||
-			cur_car == 'È' ||
-			cur_car == 'Ê' ||
-			cur_car == 'Ë') {
-			cur_car = 'E';
-		}
-		else if (cur_car == 'Î' ||
-			cur_car == 'Ï') {
-			cur_car = 'I';
-		}
-		else if (cur_car == 'Ô') {
-			cur_car = 'o';
-		}
-		else if (cur_car == 'Û' ||
-			cur_car == 'Ù') {
-			cur_car = 'U';
-		}
-
-		// usable ascii starts at blank space
-		int cur_car_rank = (int)cur_car - 32;
-		cur_car_rank = (cur_car_rank < 0 ? 0 : cur_car_rank);
-		cur_car_rank = (cur_car_rank > 94 ? 94 : cur_car_rank);
-
-		// defines offset according to table
-		// defines the offsets for all the horizontal pixels covering 
-		// the texture of the current character
-		for (int indPixel = 0;
-			indPixel < wfont[cur_car_rank] && (pixelRank + indPixel) < message_pixel_length;
-			indPixel++) {
-			// the position of the four bytes corresponding to the current horizontal pixel
-			// pixelRank is the rank of the first horizontal pixel of the current character
-			// indPixel is the rank of the current pixel inside the horizontal texture of the current character
-			int indPixelColor = (pixelRank + indPixel) * 4;
-			// X encodes the s texture coordinate of the current character (it is offseted by
-			// indPixel because we are on the indPixel_th horizontal pixel
-			offSetText[indPixelColor] = GLubyte(sfont[cur_car_rank] + indPixel);
-			// Y encodes the t texture coordinate of the current character
-			offSetText[indPixelColor + 1] = tfont[cur_car_rank];
-			// Z and W encode height H and vertical offsets Y
-			// the character texture coordinates are bound by Y and Y + H
-			offSetText[indPixelColor + 2] = hfont[cur_car_rank];
-			offSetText[indPixelColor + 3] = yfont[cur_car_rank];
-			// printf( "%d %d - " ,  sfont[ cur_car_rank ] ,  tfont[ cur_car_rank ] );
-		}
-		// jumps to the next character over the width of the current character + 1 black vertical 1 pixel stripe
-		pixelRank += wfont[cur_car_rank] + 1;
-	}
-
-	if (indMesg == 1) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_Display_Message1_Bitmap_texID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_Display_Message2_Bitmap_texID);
-	}
-	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER,
-		GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER,
-		GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-	glTexImage2D(GL_TEXTURE_RECTANGLE,     // Type of texture
-		0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-		GL_RGBA8,           // Internal colour format to convert to
-		message_pixel_length,         // Image width
-		1,                 // Image height
-		0,                 // Border width in pixels (can either be 1 or 0)
-		GL_RGBA,           // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-		GL_UNSIGNED_BYTE,  // Image data type
-		offSetText);        // The actual image data itself
-	printOglError(6);
-	return pixelRank + 1;
-}
-#endif
-#endif
 
 /////////////////////////////////////////////////
 // PARTICLES INITIALIZATION

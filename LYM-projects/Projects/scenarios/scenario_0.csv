@@ -1,8 +1,8 @@
-RANK,0,1,2
-VERBATIM,screen_drawing_no,current light scene in Python,Song_CA_color_mode
-TYPE,int,int,bool
-ID,screen_drawing_no,currentLightScene,Song_CA_color_mode
-FUNCTION,NULL,currentLightScene_callBack,NULL
-GUI,screen_drawing_no,currentLightScene,Song_CA_color_mode
-SHADER,*,*,Update_fs
-PULSE,*,*,*
+RANK,0
+VERBATIM,repop_hsvPart
+TYPE,bool
+ID,repop_hsvPart
+FUNCTION,NULL
+GUI,repop_hsvPart
+SHADER,*
+PULSE,*

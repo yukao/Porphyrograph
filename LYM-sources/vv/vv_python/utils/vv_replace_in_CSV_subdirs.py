@@ -78,16 +78,16 @@ def main(main_args):
 				line = line.rstrip()
 				while(line):
 					line = line.rstrip()
-					if(re.search(r'22,23,24', line) != None) :
-						line = re.sub(r'22,23,24', '22,23,24,25',line)
-					if(re.search(r'nb of configs,nb CA parameters,nb Master Masks', line) != None) :
-						line = re.sub(r'nb of configs,nb CA parameters,nb Master Masks', 'nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers',line)
-					if(re.search(r'const,const,const', line) != None) :
-						line = re.sub(r'const,const,const', 'const,const,const,const',line)
-					if(re.search(r'PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS', line) != None) :
-						line = re.sub(r'PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS', 'PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS,PG_NB_CLIPART_LAYERS',line)
-					if(re.search(r'10,8,6', line) != None) :
-						line = re.sub(r'10,8,6', '10,8,6,8',line)
+					if(re.search(r'22,23,24,25', line) != None) :
+						line = re.sub(r'22,23,24,25', '22,23,24,25,26',line)
+					if(re.search(r'nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers', line) != None) :
+						line = re.sub(r'nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers', 'nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers,nb lights',line)
+					if(re.search(r'const,const,const,const', line) != None) :
+						line = re.sub(r'const,const,const,const', 'const,const,const,const,const',line)
+					if(re.search(r'PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS,PG_NB_CLIPART_LAYERS', line) != None) :
+						line = re.sub(r'PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS,PG_NB_CLIPART_LAYERS', 'PG_MAX_CONFIGURATIONS,PG_NB_CA_PARAMS,PG_NB_MASTER_MASKS,PG_NB_CLIPART_LAYERS,PG_NB_LIGHTS',line)
+					if(re.search(r'10,8,6,8', line) != None) :
+						line = re.sub(r'10,8,6,8', '10,8,6,8,8',line)
 					
 					FILEout.write(line)
 					FILEout.write("\n")

@@ -2494,7 +2494,8 @@ void main() {
     /////////////////
     // TRACK video
     bool videoOn = false;
-    if( currentVideoTrack == indCurTrack) {
+    if( currentVideoTrack == indCurTrack 
+      && (videoWeight > 0 || flashCameraTrkWght > 0)) {
       out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
       if( videoWeight > 0) {
         videoOn = true;
@@ -2529,6 +2530,7 @@ void main() {
       }
       if( flashCameraTrkWght > 0 
         && graylevel(cameraOriginal) > flashCameraTrkWght ) { // flash camera
+        videoOn = true;
         // video image copy when there is a flash video
         flashToCACumul.rgb = cameraImage;
         flashToBGCumul.rgb = cameraImage;
@@ -2538,8 +2540,15 @@ void main() {
 
     /////////////////
     // TRACK photo
-    if(currentPhotoTrack == indCurTrack) {
-      out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
+    float photoCumulWgth = photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
+        + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
+        + uniform_Update_fs_2fv_clip01Wghts.x 
+        + uniform_Update_fs_2fv_clip01Wghts.y);
+    if(currentPhotoTrack == indCurTrack 
+      && (photoCumulWgth > 0 || flashPhotoTrkWght > 0)) {
+      if(!videoOn) {
+        out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
+      }
       // visible photo
       if(photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
         + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
@@ -2561,22 +2570,6 @@ void main() {
             out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
         }
       }
-      // no photo
-      // this has been commented because if there is no photo and no video on the
-      // same track as drawing, the drawing is erased
-      // else {
-      //   if(currentVideoTrack == indCurTrack) {
-      //     // no photo and no video on the same track
-      //     // and no drawing has occurred
-      //     // resets to O so that the last photo or video image does not last forever
-      //     if(!videoOn) {
-      //       out_track_FBO[indCurTrack].rgb = vec3( 0.0 );
-      //     }
-      //     else {
-      //       // nothing to do video or drawing has already been copied
-      //     }
-      //   }
-      // }
       if( flashPhotoTrkWght > 0 
           && graylevel(photocolor) > flashPhotoTrkWght ) { // flash photo
         // photo image copy when there is a flash photo
@@ -2584,7 +2577,6 @@ void main() {
         flashToCACumul.a = 1;
       }
     }
-
 
     // non BG track flash on BG track (only concerns tracks >= 1)
     if( indCurTrack != 0 ) {

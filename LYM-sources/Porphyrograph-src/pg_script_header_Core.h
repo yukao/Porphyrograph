@@ -1,6 +1,6 @@
 // CONFIGURATION CONSTANTS
-// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
-// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers
+// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
+// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers,nb lights
 constexpr auto double_window                  = false     ;
 constexpr auto wide_screen                    = false     ;
 constexpr auto window_width                   = 1920      ;
@@ -26,6 +26,7 @@ constexpr auto project_name                   = "Song";
 #define PG_NB_CA_PARAMS                8         
 #define PG_NB_MASTER_MASKS             6         
 #define PG_NB_CLIPART_LAYERS           8         
+#define PG_NB_LIGHTS                   8         
 #define var_double_window
 #define var_wide_screen
 #define var_window_width
@@ -51,6 +52,7 @@ constexpr auto project_name                   = "Song";
 #define var_PG_NB_CA_PARAMS
 #define var_PG_NB_MASTER_MASKS
 #define var_PG_NB_CLIPART_LAYERS
+#define var_PG_NB_LIGHTS
 enum ConfigurationVarIDs {
   _double_window = 0,
   _wide_screen,
@@ -77,6 +79,7 @@ enum ConfigurationVarIDs {
   _PG_NB_CA_PARAMS,
   _PG_NB_MASTER_MASKS,
   _PG_NB_CLIPART_LAYERS,
+  _PG_NB_LIGHTS,
   _MaxConfigurationVarIDs};
 // FULL SCENARIO VARIABLES
 #define var_CA1_CA2_weight
@@ -85,6 +88,7 @@ enum ConfigurationVarIDs {
 #define var_CA2SubType
 #define var_CA2Type
 #define var_CAcolorSpread
+#define var_CATable
 #define var_CAParams
 #define var_CAParams_pulse
 #define var_CAstep
@@ -94,6 +98,9 @@ enum ConfigurationVarIDs {
 #define var_flashCameraTrkBright
 #define var_flashCameraTrkLength
 #define var_flashCAPart_freq
+#define var_flashchange_invertAllLayers_freq
+#define var_flashchange_diaporama_freq
+#define var_flashchange_BGcolor_freq
 #define var_flashPartBG_freq
 #define var_flashPartCA_freq
 #define var_flashParticleInit_freq
@@ -186,6 +193,7 @@ enum ConfigurationVarIDs {
 #define var_photo_gamma_pulse
 #define var_photo_hue
 #define var_photo_hue_pulse
+#define var_photo_homography
 #define var_photo_offsetX
 #define var_photo_offsetY
 #define var_photo_rot
@@ -262,13 +270,22 @@ enum ConfigurationVarIDs {
 #define var_path_translX
 #define var_path_translY
 #define var_color_spectrum_coef
+#define var_fingers
+#define var_tactile_tablet
 #define var_pen_angle_pulse
 #define var_pen_brush
 #define var_pen_brush_replay
 #define var_pen_color
+#define var_pen_color_pulse
 #define var_pen_color_a
 #define var_pen_color_a_pulse
-#define var_pen_color_pulse
+#define var_pen_hue
+#define var_pen_hue_pulse
+#define var_pen_sat
+#define var_pen_sat_pulse
+#define var_pen_value
+#define var_pen_value_pulse
+#define var_pen_hsv
 #define var_pen_color_replay
 #define var_pen_color_replay_pulse
 #define var_pen_grey
@@ -323,11 +340,19 @@ enum ConfigurationVarIDs {
 #define var_repop_greyCA_pulse
 #define var_repop_greyPart
 #define var_repop_greyPart_pulse
+#define var_repop_huePart
+#define var_repop_huePart_pulse
+#define var_repop_satPart
+#define var_repop_satPart_pulse
+#define var_repop_valuePart
+#define var_repop_valuePart_pulse
+#define var_repop_hsvPart
 #define var_repop_part
 #define var_repop_part_pulse
 #define var_repop_path
 #define var_repop_path_pulse
 #define var_script_1
+#define var_pg_metawear
 #define var_sensor_activation
 #define var_sensor_layout
 #define var_sensor_sample_setUp
@@ -388,6 +413,7 @@ enum ConfigurationVarIDs {
 #define var_ClipArt_layer_color_preset_pulse
 #define var_activeMeshes
 #define var_mobileMeshes
+#define var_mesh_homography
 #define var_isDisplayLookAt
 #define var_with_mesh
 #define var_with_blue
@@ -430,6 +456,21 @@ enum ConfigurationVarIDs {
 #define var_farPlane
 #define var_augmentedReality
 #define var_meshRenderBypass
+#define var_MIDIwithBeat
+#define var_MIDIwithColor
+#define var_MIDIwithBrush
+#define var_MIDIwithCameraFlash
+#define var_MIDIwithPhotoFlash
+#define var_MIDIwithStroke
+#define var_MIDIwithDiaporama
+#define var_light_color
+#define var_light_color_pulse
+#define var_light_grey
+#define var_light_grey_pulse
+#define var_light_dimmer
+#define var_light_dimmer_pulse
+#define var_light_strobe
+#define var_light_strobe_pulse
 enum InterpVarIDs{ 
   _CA1_CA2_weight = 0,
   _CA1SubType,
@@ -437,6 +478,7 @@ enum InterpVarIDs{
   _CA2SubType,
   _CA2Type,
   _CAcolorSpread,
+  _CATable,
   _CAParams,
   _CAParams_pulse,
   _CAstep,
@@ -446,6 +488,9 @@ enum InterpVarIDs{
   _flashCameraTrkBright,
   _flashCameraTrkLength,
   _flashCAPart_freq,
+  _flashchange_invertAllLayers_freq,
+  _flashchange_diaporama_freq,
+  _flashchange_BGcolor_freq,
   _flashPartBG_freq,
   _flashPartCA_freq,
   _flashParticleInit_freq,
@@ -538,6 +583,7 @@ enum InterpVarIDs{
   _photo_gamma_pulse,
   _photo_hue,
   _photo_hue_pulse,
+  _photo_homography,
   _photo_offsetX,
   _photo_offsetY,
   _photo_rot,
@@ -614,13 +660,22 @@ enum InterpVarIDs{
   _path_translX,
   _path_translY,
   _color_spectrum_coef,
+  _fingers,
+  _tactile_tablet,
   _pen_angle_pulse,
   _pen_brush,
   _pen_brush_replay,
   _pen_color,
+  _pen_color_pulse,
   _pen_color_a,
   _pen_color_a_pulse,
-  _pen_color_pulse,
+  _pen_hue,
+  _pen_hue_pulse,
+  _pen_sat,
+  _pen_sat_pulse,
+  _pen_value,
+  _pen_value_pulse,
+  _pen_hsv,
   _pen_color_replay,
   _pen_color_replay_pulse,
   _pen_grey,
@@ -675,11 +730,19 @@ enum InterpVarIDs{
   _repop_greyCA_pulse,
   _repop_greyPart,
   _repop_greyPart_pulse,
+  _repop_huePart,
+  _repop_huePart_pulse,
+  _repop_satPart,
+  _repop_satPart_pulse,
+  _repop_valuePart,
+  _repop_valuePart_pulse,
+  _repop_hsvPart,
   _repop_part,
   _repop_part_pulse,
   _repop_path,
   _repop_path_pulse,
   _script_1,
+  _pg_metawear,
   _sensor_activation,
   _sensor_layout,
   _sensor_sample_setUp,
@@ -740,6 +803,7 @@ enum InterpVarIDs{
   _ClipArt_layer_color_preset_pulse,
   _activeMeshes,
   _mobileMeshes,
+  _mesh_homography,
   _isDisplayLookAt,
   _with_mesh,
   _with_blue,
@@ -782,6 +846,21 @@ enum InterpVarIDs{
   _farPlane,
   _augmentedReality,
   _meshRenderBypass,
+  _MIDIwithBeat,
+  _MIDIwithColor,
+  _MIDIwithBrush,
+  _MIDIwithCameraFlash,
+  _MIDIwithPhotoFlash,
+  _MIDIwithStroke,
+  _MIDIwithDiaporama,
+  _light_color,
+  _light_color_pulse,
+  _light_grey,
+  _light_grey_pulse,
+  _light_dimmer,
+  _light_dimmer_pulse,
+  _light_strobe,
+  _light_strobe_pulse,
   _MaxInterpVarIDs};
 extern float CA1_CA2_weight      ;
 extern int   CA1SubType          ;
@@ -789,6 +868,7 @@ extern int   CA1Type             ;
 extern int   CA2SubType          ;
 extern int   CA2Type             ;
 extern bool  CAcolorSpread       ;
+extern bool  CATable             ;
 extern float CAParams            [(PG_NB_CA_PARAMS+1)];
 extern float CAParams_pulse      [(PG_NB_CA_PARAMS+1)];
 extern int   CAstep              ;
@@ -798,6 +878,9 @@ extern int   flashCameraTrkBeat  ;
 extern float flashCameraTrkBright;
 extern float flashCameraTrkLength;
 extern int   flashCAPart_freq    ;
+extern int   flashchange_invertAllLayers_freq;
+extern int   flashchange_diaporama_freq;
+extern int   flashchange_BGcolor_freq;
 extern int   flashPartBG_freq    ;
 extern int   flashPartCA_freq    ;
 extern int   flashParticleInit_freq;
@@ -890,6 +973,7 @@ extern float photo_gamma         ;
 extern float photo_gamma_pulse   ;
 extern float photo_hue           ;
 extern float photo_hue_pulse     ;
+extern bool  photo_homography    ;
 extern float photo_offsetX       ;
 extern float photo_offsetY       ;
 extern float photo_rot           ;
@@ -966,13 +1050,22 @@ extern float path_scaleY         ;
 extern float path_translX        ;
 extern float path_translY        ;
 extern float color_spectrum_coef ;
+extern int   fingers             ;
+extern bool  tactile_tablet      ;
 extern float pen_angle_pulse     ;
 extern int   pen_brush           ;
 extern int   pen_brush_replay    ;
 extern float pen_color           ;
+extern float pen_color_pulse     ;
 extern float pen_color_a         ;
 extern float pen_color_a_pulse   ;
-extern float pen_color_pulse     ;
+extern float pen_hue             ;
+extern float pen_hue_pulse       ;
+extern float pen_sat             ;
+extern float pen_sat_pulse       ;
+extern float pen_value           ;
+extern float pen_value_pulse     ;
+extern bool  pen_hsv             ;
 extern float pen_color_replay    ;
 extern float pen_color_replay_pulse;
 extern float pen_grey            ;
@@ -1027,11 +1120,19 @@ extern float repop_greyCA        ;
 extern float repop_greyCA_pulse  ;
 extern float repop_greyPart      ;
 extern float repop_greyPart_pulse;
+extern float repop_huePart       ;
+extern float repop_huePart_pulse ;
+extern float repop_satPart       ;
+extern float repop_satPart_pulse ;
+extern float repop_valuePart     ;
+extern float repop_valuePart_pulse;
+extern bool  repop_hsvPart       ;
 extern float repop_part          ;
 extern float repop_part_pulse    ;
 extern float repop_path          ;
 extern float repop_path_pulse    ;
 extern string script_1            ;
+extern bool  pg_metawear         ;
 extern int   sensor_activation   ;
 extern int   sensor_layout       ;
 extern float sensor_sample_setUp ;
@@ -1077,8 +1178,8 @@ extern float trackMasterWeight   [PG_NB_TRACKS];
 extern float trackMasterWeight_pulse[PG_NB_TRACKS];
 extern float trackMixingWeight   [PG_NB_TRACKS];
 extern float trackMixingWeight_pulse[PG_NB_TRACKS];
-extern int   blurRadius_1        ;
-extern int   blurRadius_2        ;
+extern float blurRadius_1        ;
+extern float blurRadius_2        ;
 extern int   currentDrawingTrack ;
 extern int   currentMaskTrack    ;
 extern int   currentPhotoTrack   ;
@@ -1092,6 +1193,7 @@ extern float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
 extern float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
 extern int   activeMeshes        ;
 extern int   mobileMeshes        ;
+extern bool  mesh_homography     ;
 extern float isDisplayLookAt     ;
 extern float with_mesh           ;
 extern float with_blue           ;
@@ -1134,6 +1236,21 @@ extern float nearPlane           ;
 extern float farPlane            ;
 extern bool  augmentedReality    ;
 extern bool  meshRenderBypass    ;
+extern bool  MIDIwithBeat        ;
+extern bool  MIDIwithColor       ;
+extern bool  MIDIwithBrush       ;
+extern bool  MIDIwithCameraFlash ;
+extern bool  MIDIwithPhotoFlash  ;
+extern bool  MIDIwithStroke      ;
+extern bool  MIDIwithDiaporama   ;
+extern float light_color         [(PG_NB_LIGHTS+1)];
+extern float light_color_pulse   [(PG_NB_LIGHTS+1)];
+extern float light_grey          [(PG_NB_LIGHTS+1)];
+extern float light_grey_pulse    [(PG_NB_LIGHTS+1)];
+extern float light_dimmer        [(PG_NB_LIGHTS+1)];
+extern float light_dimmer_pulse  [(PG_NB_LIGHTS+1)];
+extern float light_strobe        [(PG_NB_LIGHTS+1)];
+extern float light_strobe_pulse  [(PG_NB_LIGHTS+1)];
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };
 enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs];

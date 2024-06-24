@@ -47,14 +47,11 @@ extern _CrtMemState sDiff;
 extern GLuint pg_screenMessageBitmap_texID; // nb_attachments=1
 extern GLubyte *pg_screenMessageBitmap;
 
-#if defined(PG_WITH_MASTER_MASK)
 extern GLuint Master_Mask_texID[PG_MAX_CONFIGURATIONS];
 extern GLuint Master_Multilayer_Mask_texID[PG_MAX_CONFIGURATIONS];
-#endif
 
-#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 extern GLuint Pen_texture_3D_texID[PG_MAX_CONFIGURATIONS];
-#endif
+
 extern GLuint Noise_texture_3D[PG_MAX_CONFIGURATIONS];
 extern std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_CONFIGURATIONS];
 
@@ -81,6 +78,9 @@ extern glm::mat4 VP1perspMatrix;
 extern glm::mat4 VP1viewMatrix;
 extern glm::mat4 VP1homographyMatrix;
 extern glm::mat4 MeshPosModelMatrix;
+
+// homography matrix
+extern float matValues[16];
 
 ////////////////////////////////////////
 // geometry: track lines
@@ -843,16 +843,12 @@ extern GLuint enumDrawBuffersEntries[16];
 // stroke shipping to GPU (Update and PartcleAnimation shaders)
 #define PG_PATH_P_X              0
 #define PG_PATH_P_Y              1
-#if defined(PG_BEZIER_PATHS)
+
 #define PG_PATH_BOX              2
 #define PG_PATH_COLOR            3
 #define PG_PATH_RADIUS_BEGINEND  4
 #define PG_MAX_PATH_DATA         5
-#else
-#define PG_PATH_COLOR            2
-#define PG_PATH_RADIUS_BEGINEND  3
-#define PG_MAX_PATH_DATA         4
-#endif
+
 extern float path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
 
 #define PG_PATH_ANIM_POS              0
@@ -893,7 +889,7 @@ extern float repop_ColorPart_g;
 extern float repop_ColorPart_b;
 extern float paths_RadiusX[PG_NB_PATHS + 1];
 extern float paths_RadiusY[PG_NB_PATHS + 1];
-#if defined(PG_BEZIER_PATHS)
+
 extern float paths_xL[PG_NB_PATHS + 1];
 extern float paths_yL[PG_NB_PATHS + 1];
 extern float paths_xR[PG_NB_PATHS + 1];
@@ -902,23 +898,13 @@ extern float tang_x[PG_NB_PATHS + 1];
 extern float tang_y[PG_NB_PATHS + 1];
 extern float tang_x_prev[PG_NB_PATHS + 1];
 extern float tang_y_prev[PG_NB_PATHS + 1];
-#endif
+
 extern int paths_BrushID[PG_NB_PATHS + 1];
 
 extern bool mobile_cursor;
 
-#if defined(var_Argenteuil_flash_move_track1_freq)
-extern float Argenteuil_track_x_transl[0];
-extern float Argenteuil_track_y_transl[0];
-extern float Argenteuil_track_x_transl[1];
-extern float Argenteuil_track_y_transl[1];
-#endif
-
-#if defined(var_CATable)
 extern GLuint pg_CATable_ID;
 extern GLubyte *pg_CATable;
-#endif
-
 
 //////////////////////////////////////////////////////////////////////
 // SENSORS
@@ -996,9 +982,7 @@ void pg_SensorPass(void);
 void pg_calculate_perspective_matrices(void);
 void pg_calculate_orthographic_matrices(void);
 void pg_MeshPass(void);
-#if defined(PG_WITH_HOMOGRAPHY) || defined(PG_WITH_PHOTO_HOMOGRAPHY)
 void pg_calculate_homography_matrices(std::vector<cv::Point2f>* sourcePoints, std::vector<cv::Point2f>* destinationPoints, GLfloat matValues[], int dim);
-#endif
 // DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
 void pg_draw_scene(DrawingMode mode);
 #endif

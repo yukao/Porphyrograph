@@ -24,26 +24,14 @@
  */
 
 #include "pg-all_include.h"
-#if defined(CRITON)
-#include "pg_shader_body_decl_Criton.cpp"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_shader_body_decl_KompartSD.cpp"
-#endif
-#if defined(LIGHT)
-#include "pg_shader_body_decl_Light.cpp"
-#endif
 #if defined(CORE)
 #include "pg_shader_body_decl_Core.cpp"
 #endif
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #include "pg_shader_body_decl_voluspa.cpp"
 #endif
-#if defined(ARAKNIT)
+#if defined(pg_Project_araKnit)
 #include "pg_shader_body_decl_araknit.cpp"
-#endif
-#if defined(CAAUDIO)
-#include "pg_shader_body_decl_CAaudio.cpp"
 #endif
 
 // #include "pg_scripts/pg_shader_body_decl.cpp"
@@ -91,15 +79,9 @@ GLint uniform_ParticleAnimation_texture_fs_Part_init_pos_speed[PG_MAX_CONFIGURAT
 GLint uniform_ParticleAnimation_texture_fs_Part_init_col_rad[PG_MAX_CONFIGURATIONS] = {-1};  // particle initialization pairs of textures color/radius
 GLint uniform_ParticleAnimation_texture_fs_Part_acc[PG_MAX_CONFIGURATIONS] = {-1};  // particle acceleration texture
 GLint uniform_ParticleAnimation_texture_fs_Trk0[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 GLint uniform_ParticleAnimation_texture_fs_Trk1[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 GLint uniform_ParticleAnimation_texture_fs_Trk2[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 GLint uniform_ParticleAnimation_texture_fs_Trk3[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 3 (FBO)
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // UPDATE SHADER
@@ -107,13 +89,11 @@ GLint uniform_ParticleAnimation_texture_fs_Trk3[PG_MAX_CONFIGURATIONS] = {-1};  
 GLint uniform_Update_vp_model[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_vp_view[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_vp_proj[PG_MAX_CONFIGURATIONS] = {-1};
-#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
 GLint uniform_Update_homographyForTexture[PG_MAX_CONFIGURATIONS] = {-1};
-#endif
 GLint uniform_Update_vp_2fv_width_height[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_W_H_time_currentScene[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[PG_MAX_CONFIGURATIONS] = {-1};
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 GLint uniform_Update_fs_4fv_CAseed_type_size_loc[PG_MAX_CONFIGURATIONS] = {-1};
 #endif
 GLint uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[PG_MAX_CONFIGURATIONS] = {-1};
@@ -121,14 +101,14 @@ GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[PG_MAX_C
 GLint uniform_Update_fs_4fv_flashTrkCAWghts[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_path_data[PG_MAX_CONFIGURATIONS] = {-1};
 
-#if defined(CRITON)
+// pg_Project_Criton PROJECT
 GLint uniform_Update_fs_4fv_fftLevels03[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftFrequencies03[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftPhases03[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftLevels47[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftFrequencies47[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_fftPhases47[PG_MAX_CONFIGURATIONS] = {-1};
-#endif
+
 GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_3fv_repop_ColorCA[PG_MAX_CONFIGURATIONS] = {-1};
@@ -145,9 +125,7 @@ GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H[PG_MAX_CONFIGURATIONS] =
 GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Update_fs_3fv_photo_rgb[PG_MAX_CONFIGURATIONS] = {-1};
-#if defined(var_CATable)
 GLint uniform_Update_texture_fs_CATable[PG_MAX_CONFIGURATIONS] = {-1};
-#endif
 #if defined(var_GenerativeNights_planes)
 GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo[PG_MAX_CONFIGURATIONS] = {-1};
 #endif
@@ -159,18 +137,10 @@ GLint uniform_Update_texture_fs_CA[PG_MAX_CONFIGURATIONS] = {-1};         // pin
 GLint uniform_Update_texture_fs_PreviousCA[PG_MAX_CONFIGURATIONS] = {-1};         // ping-pong CA (FBO)
 GLint uniform_Update_texture_fs_Pixels[PG_MAX_CONFIGURATIONS] = {-1};  // 2-cycle ping-pong speed/position of pixels (FBO)
 GLint uniform_Update_texture_fs_Trk0[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 GLint uniform_Update_texture_fs_Trk1[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 GLint uniform_Update_texture_fs_Trk2[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 GLint uniform_Update_texture_fs_Trk3[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 3 (FBO)
-#endif
-#if !defined(PG_BEZIER_PATHS) || defined(CORE)
 GLint uniform_Update_texture_fs_Brushes[PG_MAX_CONFIGURATIONS] = {-1};  // pen patterns
-#endif
 GLint uniform_Update_texture_fs_Camera_frame[PG_MAX_CONFIGURATIONS] = {-1};  // camera frame
 GLint uniform_Update_texture_fs_Camera_BG[PG_MAX_CONFIGURATIONS] = {-1};  // current camera BG capture
 GLint uniform_Update_texture_fs_Movie_frame[PG_MAX_CONFIGURATIONS] = {-1};  // movie frame
@@ -228,15 +198,9 @@ GLint uniform_Mixing_texture_fs_CA[PG_MAX_CONFIGURATIONS] = {-1};         // pin
 GLint uniform_Mixing_texture_fs_ClipArt_render[PG_MAX_CONFIGURATIONS] = { -1 };  // ClipArt (FBO)
 GLint uniform_Mixing_texture_fs_Particle_render[PG_MAX_CONFIGURATIONS] = { -1 };  // Particles (FBO)
 GLint uniform_Mixing_texture_fs_Trk0[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 GLint uniform_Mixing_texture_fs_Trk1[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 GLint uniform_Mixing_texture_fs_Trk2[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 GLint uniform_Mixing_texture_fs_Trk3[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 3 (FBO)
-#endif
 GLint uniform_Mixing_texture_fs_Render_prec[PG_MAX_CONFIGURATIONS] = {-1};  // preceding snapshot
 GLint uniform_Mixing_texture_fs_Screen_Font[PG_MAX_CONFIGURATIONS] = {-1};  // message Font
 GLint uniform_Mixing_texture_fs_Screen_Message[PG_MAX_CONFIGURATIONS] = {-1};  // message string
@@ -257,9 +221,8 @@ GLint uniform_Master_fs_2iv_mobile_cursor_currentScene[PG_MAX_CONFIGURATIONS] = 
 #if defined(var_Caverne_BackColor)
 GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb[PG_MAX_CONFIGURATIONS] = {-1};
 #endif
-#if defined(var_flashchange_BGcolor_freq)
 GLint uniform_Master_fs_3fv_BG_color_rgb[PG_MAX_CONFIGURATIONS] = {-1};
-#endif
+
 
 // MASTER SHADER TEXTURE IDS
 GLint uniform_Master_texture_fs_Render_curr[PG_MAX_CONFIGURATIONS] = {-1};         // previous pass output
@@ -269,18 +232,10 @@ GLint uniform_Master_texture_fs_CA[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong 
 GLint uniform_Master_texture_fs_ClipArt_render[PG_MAX_CONFIGURATIONS] = { -1 };  // Particles
 GLint uniform_Master_texture_fs_Particle_render[PG_MAX_CONFIGURATIONS] = { -1 };  // Particles
 GLint uniform_Master_texture_fs_Trk0[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 GLint uniform_Master_texture_fs_Trk1[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 GLint uniform_Master_texture_fs_Trk2[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 GLint uniform_Master_texture_fs_Trk3[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 3 (FBO)
-#endif
-#if defined(PG_WITH_MASTER_MASK)
 GLint uniform_Master_texture_fs_Mask[PG_MAX_CONFIGURATIONS] = {-1};  // mask for master output
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // SENSOR SHADER
@@ -292,7 +247,6 @@ GLint uniform_Sensor_vp_proj[PG_MAX_CONFIGURATIONS] = {-1};
 // SENSOR SHADER TEXTURE IDS
 GLint uniform_Sensor_texture_fs_decal[PG_MAX_CONFIGURATIONS] = {-1};         // sensor texture
 GLint uniform_Sensor_fs_4fv_onOff_isCurrentSensor_masterLevel_transparency[PG_MAX_CONFIGURATIONS] = {-1};
-// GLint uniform_Sensor_fs_2fv_frameno_invert[PG_MAX_CONFIGURATIONS] = {-1};
 
 /////////////////////////////////////////////////////////////////////////
 // MESH SHADER
@@ -550,26 +504,14 @@ void pg_loadAllShaders(void) {
 	////////////////////////////////////////
 	// binding and allocating tables in shaders
 
-#if defined(CRITON)
-#include "pg_shader_body_bind_Criton.cpp"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_shader_body_bind_KompartSD.cpp"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_shader_body_bind_Light.cpp"
-#endif
 #if defined(CORE)
 #include "pg_shader_body_bind_Core.cpp"
 #endif
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #include "pg_shader_body_bind_voluspa.cpp"
 #endif
-#if defined(ARAKNIT)
+#if defined(pg_Project_araKnit)
 #include "pg_shader_body_bind_araknit.cpp"
-#endif
-#if defined(CAAUDIO)
-#include "pg_shader_body_bind_CAaudio.cpp"
 #endif
 
 // #include "pg_scripts/pg_shader_body_bind.cpp"
@@ -602,15 +544,9 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Part_col_rad, "uniform_ParticleAnimation_texture_fs_Part_col_rad", _pg_shader_ParticleAnimation);  // 2-cycle ping-pong color/radius of particles (FBO)
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad, "uniform_ParticleAnimation_texture_fs_Part_Target_pos_col_rad", _pg_shader_ParticleAnimation);  // 2-cycle ping-pong target position/color/radius of particles (FBO)
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Trk0, "uniform_ParticleAnimation_texture_fs_Trk0", _pg_shader_ParticleAnimation);  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Trk1, "uniform_ParticleAnimation_texture_fs_Trk1", _pg_shader_ParticleAnimation);  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Trk2, "uniform_ParticleAnimation_texture_fs_Trk2", _pg_shader_ParticleAnimation);  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_texture_fs_Trk3, "uniform_ParticleAnimation_texture_fs_Trk3", _pg_shader_ParticleAnimation);  // ping-pong track 3 (FBO)
-#endif
 
 			///////////////////////////////////////////////////////////////////////////
 			// textures
@@ -633,14 +569,18 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_vp_model, "vp_modelMatrix", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_vp_view, "vp_viewMatrix", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_vp_proj, "vp_projMatrix", _pg_shader_Update);
-#if defined(PG_WITH_PHOTO_HOMOGRAPHY)
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_homographyForTexture, "fs_homographyForTexture", _pg_shader_Update);
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_homography]) {
+			if (photo_homography) {
+				pg_allocateBindAndCheckUniform(indConfig, uniform_Update_homographyForTexture, "fs_homographyForTexture", _pg_shader_Update);
+			}
+		}
+
+
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_vp_2fv_width_height, "uniform_Update_vp_2fv_width_height", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_W_H_time_currentScene, "uniform_Update_fs_4fv_W_H_time_currentScene", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift, "uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift", _pg_shader_Update);
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_CAseed_type_size_loc, "uniform_Update_fs_4fv_CAseed_type_size_loc", _pg_shader_Update);
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght", _pg_shader_Update);
@@ -649,7 +589,8 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkCAWghts, "uniform_Update_fs_4fv_flashTrkCAWghts", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_path_data, "uniform_Update_path_data", _pg_shader_Update);
-#if defined(CRITON)
+
+#if defined(pg_Project_Criton)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftLevels03, "uniform_Update_fs_4fv_fftLevels03", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftFrequencies03, "uniform_Update_fs_4fv_fftFrequencies03", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftPhases03, "uniform_Update_fs_4fv_fftPhases03", _pg_shader_Update);
@@ -663,21 +604,19 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_repop_ColorCA, "uniform_Update_fs_3fv_repop_ColorCA", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, "uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres", _pg_shader_Update);
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright)  && defined(var_flashPhotoTrkLength)  && defined(var_flashPhotoChangeBeat)
 		if (pg_FullScenarioActiveVars[indConfig][_flashPhotoTrkBeat]
 			&& pg_FullScenarioActiveVars[indConfig][_flashPhotoTrkBright]
 			&& pg_FullScenarioActiveVars[indConfig][_flashPhotoTrkLength]
 			&& pg_FullScenarioActiveVars[indConfig][_flashPhotoChangeBeat]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY, "uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY", _pg_shader_Update);
 		}
-#endif
 		if (pg_FullScenarioActiveVars[indConfig][_photo_diaporama]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01_wh, "uniform_Update_fs_4fv_photo01_wh", _pg_shader_Update);
 		}
 		if (pg_FullScenarioActiveVars[indConfig][_photo_diaporama]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01Wghts_randomValues, "uniform_Update_fs_4fv_photo01Wghts_randomValues", _pg_shader_Update);
 		}
-#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+#if PG_NB_PARALLEL_CLIPS >= 2
 		if (pg_FullScenarioActiveVars[indConfig][_clipCaptFreq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_clip01Wghts, "uniform_Update_fs_2fv_clip01Wghts", _pg_shader_Update);
 		}
@@ -693,11 +632,9 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_CAType_SubType_blurRadius, "uniform_Update_fs_4fv_CAType_SubType_blurRadius", _pg_shader_Update);
 			//printf("allocate uniform_Update_fs_4fv_CAType_SubType_blurRadius config %d\n", indConfig);
 		}
-#if defined(var_CATable)
 		if (pg_FullScenarioActiveVars[indConfig][_CATable]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_CATable, "uniform_Update_texture_fs_CATable", _pg_shader_Update);
 		}
-#endif
 #if defined(var_GenerativeNights_planes)
 		if (pg_FullScenarioActiveVars[indConfig][_GenerativeNights_planes]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_initCA_1stPlaneFrameNo, "uniform_Update_fs_2fv_initCA_1stPlaneFrameNo", _pg_shader_Update);
@@ -717,20 +654,12 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_PreviousCA, "uniform_Update_texture_fs_PreviousCA", _pg_shader_Update);         // 2-cycle ping-pong CA (FBO)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Pixels, "uniform_Update_texture_fs_Pixels", _pg_shader_Update);  // 2-cycle ping-pong speed/position of pixels (FBO)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Trk0, "uniform_Update_texture_fs_Trk0", _pg_shader_Update);  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Trk1, "uniform_Update_texture_fs_Trk1", _pg_shader_Update);  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Trk2, "uniform_Update_texture_fs_Trk2", _pg_shader_Update);  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Trk3, "uniform_Update_texture_fs_Trk3", _pg_shader_Update);  // ping-pong track 3 (FBO)
-#endif
-		// textures
-#if !defined(PG_BEZIER_PATHS) || defined(CORE)
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Brushes, "uniform_Update_texture_fs_Brushes", _pg_shader_Update);  // pen patterns
-#endif
 
+		// textures
+		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Brushes, "uniform_Update_texture_fs_Brushes", _pg_shader_Update);  // pen patterns
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Camera_frame, "uniform_Update_texture_fs_Camera_frame", _pg_shader_Update);  // camera frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Camera_BG, "uniform_Update_texture_fs_Camera_BG", _pg_shader_Update);  // current background frame
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_Movie_frame, "uniform_Update_texture_fs_Movie_frame", _pg_shader_Update);  // movie frame
@@ -803,15 +732,9 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_ClipArt_render, "uniform_Mixing_texture_fs_ClipArt_render", _pg_shader_Mixing);  // Particles (FBO)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Particle_render, "uniform_Mixing_texture_fs_Particle_render", _pg_shader_Mixing);  // Particles (FBO)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Trk0, "uniform_Mixing_texture_fs_Trk0", _pg_shader_Mixing);  // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Trk1, "uniform_Mixing_texture_fs_Trk1", _pg_shader_Mixing);  // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Trk2, "uniform_Mixing_texture_fs_Trk2", _pg_shader_Mixing);  // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Trk3, "uniform_Mixing_texture_fs_Trk3", _pg_shader_Mixing);  // ping-pong track 3 (FBO)
-#endif
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Render_prec, "uniform_Mixing_texture_fs_Render_prec", _pg_shader_Mixing);  // preceding snapshot for echo
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Screen_Font, "uniform_Mixing_texture_fs_Screen_Font", _pg_shader_Mixing);  // message Font
@@ -836,11 +759,9 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_Caverne_BackColor_rgb, "uniform_Master_fs_3fv_Caverne_BackColor_rgb", _pg_shader_Master);
 		}
 #endif
-#if defined(var_flashchange_BGcolor_freq)
 		if (pg_FullScenarioActiveVars[indConfig][_flashchange_BGcolor_freq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_BG_color_rgb, "uniform_Master_fs_3fv_BG_color_rgb", _pg_shader_Master);
 		}
-#endif
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Render_curr, "uniform_Master_texture_fs_Render_curr", _pg_shader_Master); // previous pass output
 		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
@@ -849,18 +770,10 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_ClipArt_render, "uniform_Master_texture_fs_ClipArt_render", _pg_shader_Master); // Particles
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Particle_render, "uniform_Master_texture_fs_Particle_render", _pg_shader_Master); // Particles
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Trk0, "uniform_Master_texture_fs_Trk0", _pg_shader_Master); // ping-pong track 0 (FBO)
-#if PG_NB_TRACKS >= 2
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Trk1, "uniform_Master_texture_fs_Trk1", _pg_shader_Master); // ping-pong track 1 (FBO)
-#endif
-#if PG_NB_TRACKS >= 3
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Trk2, "uniform_Master_texture_fs_Trk2", _pg_shader_Master); // ping-pong track 2 (FBO)
-#endif
-#if PG_NB_TRACKS >= 4
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Trk3, "uniform_Master_texture_fs_Trk3", _pg_shader_Master); // ping-pong track 3 (FBO)
-#endif
-#if defined(PG_WITH_MASTER_MASK)
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Mask, "uniform_Master_texture_fs_Mask", _pg_shader_Master);  // mask for master output
-#endif
 
 		if (pg_FullScenarioActiveVars[indConfig][_sensor_layout]) {
 			////////////////////////////////////////////////////////////////////////////////

@@ -66,7 +66,7 @@ if(pg_current_configuration_rank == 0) {
       Update_scenario_var_data[0][8] = (GLfloat)CAParams[8] * (1.f + pulse_average * CAParams_pulse[8]);
       Update_scenario_var_data[0][9] = (GLfloat)CAstep;
       Update_scenario_var_data[0][10] = (GLfloat)repop_CA * (1.f + pulse_average * repop_CA_pulse);
-      Update_scenario_var_data[0][11] = (GLfloat)camera_gamma;
+      Update_scenario_var_data[0][11] = (GLfloat)camera_gamma * (1.f + pulse_average * camera_gamma_pulse);
       Update_scenario_var_data[0][12] = (GLfloat)cameraCumul;
       Update_scenario_var_data[0][13] = (GLfloat)cameraGamma;
       Update_scenario_var_data[0][14] = (GLfloat)cameraSobel * (1.f + pulse_average * cameraSobel_pulse);

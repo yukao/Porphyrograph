@@ -20,27 +20,14 @@
 
 #include "pg-all_include.h"
 
-#if defined(CRITON)
-#include "pg_script_body_Criton.cpp"
-#endif
-#if defined(KOMPARTSD)
-#include "pg_script_body_KompartSD.cpp"
-bool testUDP_KOMPARTSD = false;
-#endif
-#if defined(LIGHT)
-#include "pg_script_body_Light.cpp"
-#endif
 #if defined(CORE)
 #include "pg_script_body_Core.cpp"
 #endif
-#if defined(VOLUSPA)
+#if defined(pg_Project_Voluspa)
 #include "pg_script_body_voluspa.cpp"
 #endif
-#if defined(ARAKNIT)
+#if defined(pg_Project_araKnit)
 #include "pg_script_body_araknit.cpp"
-#endif
-#if defined(CAAUDIO)
-#include "pg_script_body_CAaudio.cpp"
 #endif
 
 //#include "pg_scripts/pg_script_body.cpp"
@@ -116,97 +103,16 @@ int pg_key_modifier = 0;
 // ++++++++++++++++++++++ MUSIC CONTROL ++++++++++++++++++++ 
 // music control inputs received at each frame
 
-#if defined(PG_LIGHTS_CONTROL_IN_PG)
-float pulse_light_prec[3] = { 0.f };
-#if defined(var_light1_grey) && defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
-float light1_color_prec = 0.f;
-float light1_grey_prec = 0.f;
-float light1_dimmer_prec = 0.f;
-float light1_strobe_prec = 0.f;
+float pulse_light_prec[PG_NB_LIGHTS + 1][3] = { { 0.f } };
+float light_color_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float light_grey_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float light_dimmer_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float light_strobe_prec[PG_NB_LIGHTS + 1] = { 0.f };
 // addition of color for light based on palette
-float light1_color_pulse_prec = 0.f;
-float light1_grey_pulse_prec = 0.f;
-float light1_dimmer_pulse_prec = 0.f;
-float light1_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
-float light2_color_prec = 0.f;
-float light2_grey_prec = 0.f;
-float light2_dimmer_prec = 0.f;
-float light2_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light2_color_pulse_prec = 0.f;
-float light2_grey_pulse_prec = 0.f;
-float light2_dimmer_pulse_prec = 0.f;
-float light2_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse) 
-float light3_color_prec = 0.f;
-float light3_grey_prec = 0.f;
-float light3_dimmer_prec = 0.f;
-float light3_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light3_color_pulse_prec = 0.f;
-float light3_grey_pulse_prec = 0.f;
-float light3_dimmer_pulse_prec = 0.f;
-float light3_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
-float light4_color_prec = 0.f;
-float light4_grey_prec = 0.f;
-float light4_dimmer_prec = 0.f;
-float light4_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light4_color_pulse_prec = 0.f;
-float light4_grey_pulse_prec = 0.f;
-float light4_dimmer_pulse_prec = 0.f;
-float light4_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
-float light5_color_prec = 0.f;
-float light5_grey_prec = 0.f;
-float light5_dimmer_prec = 0.f;
-float light5_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light5_color_pulse_prec = 0.f;
-float light5_grey_pulse_prec = 0.f;
-float light5_dimmer_pulse_prec = 0.f;
-float light5_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
-float light6_color_prec = 0.f;
-float light6_grey_prec = 0.f;
-float light6_dimmer_prec = 0.f;
-float light6_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light6_color_pulse_prec = 0.f;
-float light6_grey_pulse_prec = 0.f;
-float light6_dimmer_pulse_prec = 0.f;
-float light6_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
-float light7_color_prec = 0.f;
-float light7_grey_prec = 0.f;
-float light7_dimmer_prec = 0.f;
-float light7_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light7_color_pulse_prec = 0.f;
-float light7_grey_pulse_prec = 0.f;
-float light7_dimmer_pulse_prec = 0.f;
-float light7_strobe_pulse_prec = 0.f;
-#endif
-#if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
-float light8_color_prec = 0.f;
-float light8_grey_prec = 0.f;
-float light8_dimmer_prec = 0.f;
-float light8_strobe_prec = 0.f;
-// addition of color for light based on palette
-float light8_color_pulse_prec = 0.f;
-float light8_grey_pulse_prec = 0.f;
-float light8_dimmer_pulse_prec = 0.f;
-float light8_strobe_pulse_prec = 0.f;
-#endif
-#endif
+float light_color_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float light_grey_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float light_dimmer_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float light_strobe_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
 
 // addition of colorfor pen  based on palette
 float pulsed_pen_color[4];
@@ -229,35 +135,23 @@ float pen_color_prec = -1.f;
 float pen_color_pulse_prec = -1.f;
 float pen_grey_prec = -1.f;
 float pen_grey_pulse_prec = -1.f;
-#if defined(var_pen_hue)
 float pen_hue_prec = -1.f;
 float pen_hue_pulse_prec = -1.f;
-#endif
-#if defined(var_pen_sat)
 float pen_sat_prec = -1.f;
 float pen_sat_pulse_prec = -1.f;
-#endif
-#if defined(var_pen_value)
 float pen_value_prec = -1.f;
 float pen_value_pulse_prec = -1.f;
-#endif
 
 float repop_colorPart_prec = -1.f;
 float repop_colorPart_pulse_prec = -1.f;
 float repop_greyPart_prec = -1.f;
 float repop_greyPart_pulse_prec = -1.f;
-#if defined(var_repop_huePart)
 float repop_huePart_prec = -1.f;
 float repop_huePart_pulse_prec = -1.f;
-#endif
-#if defined(var_repop_satPart)
 float repop_satPart_prec = -1.f;
 float repop_satPart_pulse_prec = -1.f;
-#endif
-#if defined(var_repop_valuePart)
 float repop_valuePart_prec = -1.f;
 float repop_valuePart_pulse_prec = -1.f;
-#endif
 
 float pulse_prec[3] = { -1.f };
 
@@ -332,12 +226,6 @@ int flashPixel;
 // one-frame master flashing  
 int flashMaster;
 
-#if defined(var_Argenteuil_flashchange_diaporama_freq)
-// diaporama change flashing with a first pass on a permutation of all the images
-int var_Argenteuil_flashchange_diaporama_pass = -1;
-std::vector<int> imageRanksPermutation;
-#endif
-
 int flashTrkCA_freq_saved[PG_NB_TRACKS] = { 0 };
 int flashTrkPart_freq_saved[PG_NB_TRACKS] = { 0 };
 int flashTrkBG_freq_saved[PG_NB_TRACKS] = { 0 };
@@ -347,13 +235,11 @@ bool is_flashCameraTrk = false;
 float flashCameraTrk_weight = 0.0f;
 float flashCameraTrk_decay = 1.0f;
 float flashCameraTrk_threshold = 0.5f;
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 bool is_flashPhotoTrk = false;
 float flashPhotoTrk_weight = 0.0f;
 float flashPhotoTrk_decay = 1.0f;
 float flashPhotoTrk_threshold = 0.5f;
 int flashPhotoTrk_nbFrames = 0;
-#endif
 
 // +++++++++++++++++++++ VIDEO BACKGROUND SUBTRACTION +++++
 bool is_firstVideoOn = true;
@@ -432,7 +318,7 @@ double lastBeatTime = 0.;
 // +++++++++++++++++++++++ CA SubType memory for CA on/off command ++++++++++
 int CASubTypeMem = 1;
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 pg_CAseed_types pg_CAseed_type = _pg_CAseed_dot_center;
 pg_CAseed_locations pg_CAseed_location = _pg_CAseed_loc_center;
 int pg_CAseed_coordinates[2] = { -1, -1 };
@@ -441,7 +327,7 @@ bool pg_CAseed_trigger = false;
 #endif
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 float fftLevels[8];
 float fftFrequencies[8];
 float fftPhases[8];
@@ -468,12 +354,10 @@ std::vector<int> ContAct_clip_ranges_max;
 #endif
 
 // +++++++++++++++++++++++ scripts for external control through python programming +++++
-#if defined(var_script_1)
 // currently running script: NULLL if none
 string currently_runnings_script_1 = "NULL";
 STARTUPINFOA si_script_1 = { 0 };
 PROCESS_INFORMATION pi_script_1;
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -489,16 +373,11 @@ enum pg_OSC_addresses_hashMap_IDs
 	_connect_PD,
 	_quit,
 	_flashCamera,
-	_Note1,
-	_Note2,
-	_Note3,
-	_Velocity1,
-	_Velocity2,
-	_Velocity3,
 	_flashPhoto,
 	_pulse_spectrum,
 	_beat,
 	_MIDINote,
+	_MIDIVelocity,
 	_flashTrkCA_onOff,
 	_flashTrkPart_onOff,
 	_snapshot,
@@ -570,7 +449,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_pen_colorPreset_minus,
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 	_CAseed_dot_center,
 	_CAseed_dot,
 	_CAseed_h_line,
@@ -649,7 +528,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_interpolation_duration,
 	_master_decay,
 	_master_incay,
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 	_JUCE_loop_track,
 	_JUCE_exit,
 	_fftLevel8,
@@ -711,19 +590,13 @@ enum pg_OSC_addresses_hashMap_IDs
 	_muteRightScreen_onOff,
 	_isClearAllLayers,
 	_StylusvsRubber,
-#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	_pen_hue_sat_value,
-#endif
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	_repop_hue_sat_valuePart,
-#endif
 	_take_snapshot,
 	_path_replay_stopAll,
 	_path_replay_playAll,
 	_clear_path_group,
-#if defined(PG_METAWEAR)
 	_mw_mss_pos,
-#endif
 	_cameraWB_R_plus,
 	_cameraWB_B_plus,
 	_cameraExposure_plus,
@@ -745,10 +618,10 @@ enum pg_OSC_addresses_hashMap_IDs
 	_processing_video,
 	_processing_image,
 	_processing_master,
-	_BottomLeft,
-	_BottomRight,
-	_TopLeft,
-	_TopRight,
+	_BottomLeftKeystone,
+	_BottomRightKeystone,
+	_TopLeftKeystone,
+	_TopRightKeystone,
 	_ZeroLight,
 	_flashPixel,
 	_flashTrkPart,
@@ -769,16 +642,11 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "connect_PD", _connect_PD },
 	{ "quit", _quit },
 	{ "flashCamera", _flashCamera },
-	{ "Note1", _Note1 },
-	{ "Note2", _Note2 },
-	{ "Note3", _Note3 },
-	{ "Velocity1", _Velocity1 },
-	{ "Velocity2", _Velocity2 },
-	{ "Velocity3", _Velocity3 },
 	{ "flashPhoto", _flashPhoto },
 	{ "pulse_spectrum", _pulse_spectrum },
-	{ "MIDINote", _MIDINote },
 	{ "beat", _beat },
+	{ "MIDINote", _MIDINote },
+	{ "Velocity1", _MIDIVelocity },
 	{ "flashTrkCA_onOff", _flashTrkCA_onOff },
 	{ "flashTrkPart_onOff", _flashTrkPart_onOff },
 	{ "snapshot", _snapshot },
@@ -850,7 +718,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 	{ "CAseed_dot_center", _CAseed_dot_center },
 	{ "CAseed_dot", _CAseed_dot },
 	{ "CAseed_h_line", _CAseed_h_line },
@@ -927,7 +795,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "interpolation_duration", _interpolation_duration },
 	{ "master_decay", _master_decay },
 	{ "master_incay", _master_incay },
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 	{ "JUCE_loop_track", _JUCE_loop_track },
 	{ "JUCE_exit", _JUCE_exit },
 	{ "fftLevel8", _fftLevel8 },
@@ -989,19 +857,13 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "muteRightScreen_onOff", _muteRightScreen_onOff },
 	{ "isClearAllLayers", _isClearAllLayers },
 	{ "StylusvsRubber", _StylusvsRubber },
-#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	{ "pen_hue_sat_value", _pen_hue_sat_value },
-#endif
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	{ "repop_hue_sat_valuePart", _repop_hue_sat_valuePart },
-#endif
 	{ "take_snapshot", _take_snapshot },
 	{ "path_replay_stopAll", _path_replay_stopAll },
 	{ "path_replay_playAll", _path_replay_playAll },
 	{ "clear_path_group", _clear_path_group },
-#if defined(PG_METAWEAR)
 	{ "mw_mss_pos", _mw_mss_pos },
-#endif
 	{ "cameraWB_R_plus", _cameraWB_R_plus },
 	{ "cameraWB_B_plus", _cameraWB_B_plus },
 	{ "cameraExposure_plus", _cameraExposure_plus },
@@ -1023,10 +885,10 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "processing_video", _processing_video },
 	{ "processing_image", _processing_image },
 	{ "processing_master", _processing_master },
-	{ "TopLeft", _TopLeft },
-	{ "TopRight", _TopRight },
-	{ "BottomLeft", _BottomLeft },
-	{ "BottomRight", _BottomRight },
+	{ "TopLeftKeystone", _TopLeftKeystone },
+	{ "TopRightKeystone", _TopRightKeystone },
+	{ "BottomLeftKeystone", _BottomLeftKeystone },
+	{ "BottomRightKeystone", _BottomRightKeystone },
 	{ "ZeroLight", _ZeroLight },
 	{ "flashPixel", _flashPixel },
 	{ "flashTrkPart", _flashTrkPart },
@@ -1049,7 +911,7 @@ int double_to_sign(double param) {
 }
 
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordinates[2]) {
 	switch(location) {
 	case 	_pg_CAseed_loc_center: {
@@ -1353,7 +1215,7 @@ void pg_initializeScenearioVariables(void) {
 	nb_blur_frames_2 = 0;
 #endif
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 	// CA seed
 	pg_CAseed_trigger = false;
 	pg_CAseed_type = _pg_CAseed_dot_center;
@@ -1414,7 +1276,7 @@ void pg_initializeScenearioVariables(void) {
 		paths_y_prev_memory[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		isBegin[indPath] = false;
 		isEnd[indPath] = false;
-#if defined(PG_BEZIER_PATHS)
+
 		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
@@ -1423,7 +1285,6 @@ void pg_initializeScenearioVariables(void) {
 		tang_y[indPath] = 0;
 		tang_x_prev[indPath] = 0;
 		tang_y_prev[indPath] = 0;
-#endif
 
 		// pen color
 		paths_Color_r[indPath] = 0.0F;
@@ -1478,21 +1339,19 @@ void pg_initializeScenearioVariables(void) {
 
 	// soundtrack on
 	soundTrack_on = true;
-#if defined(PG_WITH_PUREDATA)
 	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 	//printf("Init script: soundtrack: %s\n", AuxString);
-#endif
+
 	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	sprintf(AuxString, "/soundtrack_volume %d", int(soundTrack_on));
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 
-#if defined(PIERRES)
+#if defined(pg_Project_Pierres)
 	updateXYKeystonePad();
 #endif
 
-#if !defined(LIGHT)
 	// rubber vs pen interface initialization
 	if (CurrentCursorStylusvsRubber == pg_Stylus) {
 		sprintf(AuxString, "/StylusvsRubber %d", pg_Stylus); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
@@ -1500,32 +1359,29 @@ void pg_initializeScenearioVariables(void) {
 	else {
 		sprintf(AuxString, "/StylusvsRubber %d", pg_Rubber); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 	}
-#endif
 
 	/////////////////////////////////////////
 	// INTERACE INITIALIZATION FOR THE CURRENT CONFIGURATION
 	if (pg_current_configuration_rank >= 0 && pg_current_configuration_rank < unsigned int(pg_NbConfigurations)) {
 		// color interface initialization
-#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]
+			&& pen_hsv) {
 			float control_color[3];
 			HSVtoRGB(pen_hue, pen_sat, pen_value, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			//printf("color msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 		}
-#endif
-
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+			&& repop_hsvPart) {
 			float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
-#endif
+
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(DessinButtonsPaths, DessinButtonLabelsPaths, DessinButtonValues, true, trkDecay[1]);
 
@@ -1554,7 +1410,6 @@ void pg_initializationCallBacks(void) {
 /////////////////////////////////////////////////////////////
 void pg_displaySceneVariables(void) {
 	if (resend_all_variables) {
-#if !defined(LIGHT)
 		if (pg_CurrentScene && pg_CurrentSceneIndex >= 0 && pg_CurrentSceneIndex < int(pg_Scenario[pg_current_configuration_rank].size())) {
 			string next_string = "";
 			if (pg_CurrentScene->scene_change_when_ends == true) {
@@ -1592,16 +1447,13 @@ void pg_displaySceneVariables(void) {
 		sprintf(AuxString, "/configurationNo %d", pg_current_configuration_rank); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		InterfaceInitializations();
-#endif
-#if defined(PG_WITH_PUREDATA)
+
 		// resends the sound variables to PD (as in the callback)
 		sprintf(AuxString, "/sound_env_min %.2f", float(*((float*)pg_FullScenarioVarPointers[_sound_env_min])));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
 		sprintf(AuxString, "/sound_env_max %.2f", float(*((float*)pg_FullScenarioVarPointers[_sound_env_max])));
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
-#endif
 
-#if defined(var_partColor_mode) || defined(var_partStroke_mode) || defined(var_partExit_mode) 
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]
 			|| pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]
 			|| pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
@@ -1626,7 +1478,6 @@ void pg_displaySceneVariables(void) {
 				}
 			}
 		}
-#endif
 
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 			// clip intialization for First Clip
@@ -1662,18 +1513,15 @@ void pg_displaySceneVariables(void) {
 		}
 	}
 
-#if defined(LIGHT)
 	if (resend_all_light_variables) {
 		pg_lightGUI_initialization();
 		resend_all_light_variables = false;
 	}
-#endif
 
 	/////////////////////////////////////////////////////////////////////////
 	// TIME CONTROLLED VARIABLES (NOT FORWARDED TO SHADERS)
 	// time display
 	// time exceeded in scene
-#if !defined(LIGHT)
 	sprintf(AuxString, "/volumeDisplay %.2f", pulse_average);
 	pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 
@@ -1706,7 +1554,6 @@ void pg_displaySceneVariables(void) {
 		}
 		sprintf(AuxString, "/time_color 3"); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	}
-#endif
 
 	/////////////////////////////////////////////////////////////////////////
 	// SCENARIO-CONTROLLED VARIABLES
@@ -1890,7 +1737,6 @@ void pg_displaySceneVariables(void) {
 	}
 
 	resend_all_variables = false;
-
 }
 
 void pg_send_message_udp(char *pattern, char * message, char *targetHostid) {
@@ -2005,76 +1851,62 @@ void pg_logFirstLineSceneVariables(void) {
 void auto_beat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	lastBeatTime = pg_CurrentClockTime;
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music beats
 		sprintf(AuxString, "/auto_beat %d", (int)(*((bool *)pg_FullScenarioVarPointers[_auto_beat])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("auto_beat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_auto_beat])));
-#endif
 	}
 }
-#if defined(var_MIDIwithStroke)
 void MIDIwithStroke_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
-		// sends a message to PD to stop sending music beats
-		sprintf(AuxString, "/MIDIwithStroke %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithStroke])));
-		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
-		// printf("MIDIwithStroke[%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBeat])));
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
+			// sends a message to PD to stop sending music beats
+			sprintf(AuxString, "/MIDIwithStroke %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithStroke])));
+			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
+			// printf("MIDIwithStroke[%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBeat])));
+		}
 	}
 }
-#endif
-#if defined(var_MIDIwithBeat)
 void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
-		// sends a message to PD to stop sending music beats
-		sprintf(AuxString, "/MIDIwithBeat %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithBeat])));
-		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
-		// printf("MIDIwithBeat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBeat])));
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
+			// sends a message to PD to stop sending music beats
+			sprintf(AuxString, "/MIDIwithBeat %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithBeat])));
+			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
+			// printf("MIDIwithBeat [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBeat])));
+		}
 	}
 }
-#endif
-#if defined(var_MIDIwithColor)
 void MIDIwithColor_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
-		// sends a message to PD to stop sending music Colors
-		sprintf(AuxString, "/MIDIwithColor %d", (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithColor])));
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithColor [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithColor])));
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
+			// sends a message to PD to stop sending music Colors
+			sprintf(AuxString, "/MIDIwithColor %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithColor])));
+			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
+			// printf("MIDIwithColor [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithColor])));
+		}
 	}
 }
-#endif
-#if defined(var_MIDIwithBrush)
 void MIDIwithBrush_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
-		// sends a message to PD to stop sending music Brushs
-		sprintf(AuxString, "/MIDIwithBrush %d", (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBrush])));
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithBrush [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBrush])));
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
+			// sends a message to PD to stop sending music Brushs
+			sprintf(AuxString, "/MIDIwithBrush %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithBrush])));
+			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
+			// printf("MIDIwithBrush [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithBrush])));
+		}
 	}
 }
-#endif
-#if defined(var_MIDIwithCameraFlash)
 void MIDIwithCameraFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
-		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
+	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			// sends a message to PD to stop sending music Flashs
 			sprintf(AuxString, "/MIDIwithCameraFlash %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithCameraFlash])));
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 			// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithFlash])));
-#endif
 		}
 	}
 }
-#endif
 #if defined(var_Contact_clip_in_range)
 void Contact_clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
@@ -2095,26 +1927,22 @@ void Contact_clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, st
 	}
 }
 #endif
-#if defined(var_MIDIwithPhotoFlash)
 void MIDIwithPhotoFlash_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
-		// sends a message to PD to stop sending music Flashs
-		sprintf(AuxString, "/MIDIwithPhotoFlash %d", (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithPhotoFlash])));
-		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
-		// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithFlash])));
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]) {
+			// sends a message to PD to stop sending music Flashs
+			sprintf(AuxString, "/MIDIwithPhotoFlash %d", (int)(*((bool*)pg_FullScenarioVarPointers[_MIDIwithPhotoFlash])));
+			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
+			// printf("MIDIwithFlash [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_MIDIwithFlash])));
+		}
 	}
 }
-#endif
 void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
 		// sends a message to PD to stop sending music pulse
 		sprintf(AuxString, "/auto_pulse %d", (int)(*((bool *)pg_FullScenarioVarPointers[_auto_pulse])));
 		pg_send_message_udp((char *)"i", AuxString, (char *)"udp_PD_send");
 		// printf("auto_pulse [%s] %.2f %d\n", AuxString, scenario_or_gui_command_value, (int)(*((bool *)pg_FullScenarioVarPointers[_auto_pulse])));
-#endif
 		for (int ind = 0; ind < 3 * 2; ind++) {
 			seed_pulsePerlinNoise[ind] = rand_0_1 * 255;
 		}
@@ -2122,68 +1950,54 @@ void auto_pulse_callBack(pg_Parameter_Input_Type param_input_type, bool scenario
 }
 void beat_delay_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
 		sprintf(AuxString, "/beat_delay %.5f", scenario_or_gui_command_value);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
-#endif
 	}
 }
 void beat_threshold_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(PG_WITH_PUREDATA)
 		sprintf(AuxString, "/beat_threshold %.5f", scenario_or_gui_command_value);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
-#endif
 	}
 }
-#if defined(var_pen_color)
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/pen_colorPreset -1.0");
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }
-#endif
-#if defined(PG_WITH_PUREDATA) || defined(PG_WITH_JUCE)
+
 void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		audioInput_weight = scenario_or_gui_command_value;
-#if defined(PG_WITH_PUREDATA)
 		sprintf(AuxString, "/audioInput_weight %.2f", audioInput_weight);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_PD_send");
-#endif
 #if defined(PG_WITH_JUCE)
 		sprintf(AuxString, "/JUCE_audioInput_weight %.2f", audioInput_weight);
 		pg_send_message_udp((char *)"f", AuxString, (char *)"udp_SoundJUCE_send");
 #endif
 	}
 }
-#endif
-#if defined(PG_WITH_PUREDATA) || defined(PG_WITH_JUCE)
+
 void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		soundtrack_PD_weight = scenario_or_gui_command_value;
-#if defined(PG_WITH_PUREDATA)
 		sprintf(AuxString, "/soundtrack_weight %.2f", soundtrack_PD_weight);
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
-#endif
+
 #if defined(PG_WITH_JUCE)
 		sprintf(AuxString, "/JUCE_soundtrack_weight %.2f", soundtrack_PD_weight);
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_SoundJUCE_send");
 #endif
 	}
 }
-#endif
-#if defined(PG_WITH_PORTAUDIO)
+
 void soundtrack_PA_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		soundtrack_PA_weight = scenario_or_gui_command_value;
 	}
 }
-#endif
 
-
-#if defined(var_pen_hue)
 void pen_hue_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
@@ -2192,8 +2006,6 @@ void pen_hue_callBack(pg_Parameter_Input_Type param_input_type, float scenario_o
 		//printf("colorH msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 	}
 }
-#endif
-#if defined(var_pen_sat)
 void pen_sat_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
@@ -2202,8 +2014,6 @@ void pen_sat_callBack(pg_Parameter_Input_Type param_input_type, float scenario_o
 		//printf("colorS msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 	}
 }
-#endif
-#if defined(var_pen_value)
 void pen_value_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
@@ -2212,61 +2022,51 @@ void pen_value_callBack(pg_Parameter_Input_Type param_input_type, float scenario
 		//printf("colorV msg HSV %.2f %.2f %.2f  %s\n", pen_hue, pen_sat, pen_value, AuxString);
 	}
 }
-#endif
-#if defined(var_repop_huePart)
 void repop_huePart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(var_repop_huePart)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
-			&& defined(var_repop_satPart) && defined(var_repop_valuePart)
-				float control_color[3];
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+			&& repop_hsvPart) {
+			float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
-#endif
 		//printf("colorH msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
 	}
 }
-#endif
-#if defined(var_repop_satPart)
 void repop_satPart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-#if defined(var_repop_huePart)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
-			&& defined(var_repop_satPart) && defined(var_repop_valuePart)
-				float control_color[3];
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+			&& repop_hsvPart) {
+			float control_color[3];
 			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
-#endif
 		//printf("colorS msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
 	}
 }
-#endif
-#if defined(var_repop_valuePart)
 void repop_valuePart_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		float control_color[3];
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
-		HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
-		sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-#endif
-		//printf("colorV msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+			&& repop_hsvPart) {
+			HSVtoRGB(repop_huePart, repop_satPart, repop_valuePart, &control_color[0], &control_color[1], &control_color[2]);
+			sprintf(AuxString, "/part_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
+			//printf("colorV msg HSV %.2f %.2f %.2f  %s\n", repop_huePart, repop_satPart, repop_valuePart, AuxString);
+		}
 	}
 }
-#endif
-#if defined(var_fingers)
 void fingers_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// drawing type initialization
 		NumberOfInteractionFingers(scenario_or_gui_command_value);
 	}
 }
-#endif
-
 #if defined(var_Contact_anim_speed)
 void Contact_anim_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -2413,7 +2213,6 @@ void cameraWB_R_callBack(pg_Parameter_Input_Type param_input_type, float scenari
 		}
 	}
 }
-#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA) || defined(PG_WITH_PORTAUDIO)
 void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		// play a new track
@@ -2429,7 +2228,7 @@ void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int
 		}
 	}
 }
-#endif
+
 void playing_movieNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -2473,7 +2272,6 @@ void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or
 	}
 }
 
-#if defined(var_script_1)
 void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_script_1]) {
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -2534,7 +2332,6 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 		}
 	}
 }
-#endif
 
 void playing_clipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
@@ -2818,7 +2615,6 @@ void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, flo
 		}
 	}
 }
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		if (scenario_or_gui_command_value > 0.) {
@@ -2829,7 +2625,6 @@ void flashPhotoTrkLength_callBack(pg_Parameter_Input_Type param_input_type, floa
 		}
 	}
 }
-#endif
 void pen_brush_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		//if (scenario_or_gui_command_value >= 1) { // large radius for the image brushes*
@@ -2889,7 +2684,7 @@ void currentLightScene_callBack(pg_Parameter_Input_Type param_input_type, int sc
 	}
 }
 #endif
-#if defined(PG_WITH_PUREDATA)
+
 void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/sound_env_min %.2f", scenario_or_gui_command_value);
@@ -2897,6 +2692,7 @@ void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scen
 	}
 	// printf("reset sound\n");
 }
+
 void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
 		sprintf(AuxString, "/sound_env_max %.2f", scenario_or_gui_command_value);
@@ -2904,7 +2700,7 @@ void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scen
 	}
 	// printf("reset sound\n");
 }
-#endif
+
 void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE || param_input_type == _PG_SCENARIO) {
 		// MESH INTERFACE VARIABLE INITIALIZATION
@@ -3039,14 +2835,16 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		playing_track = scenario_or_gui_command_value;
 	}
 	// is not currently reading -> starts reading if it is a valid track number
+	//printf("path %d is replay %d playing_track %d\n", pathNo, is_path_replay[pathNo], playing_track);
 	if (!is_path_replay[pathNo]) {
 		// does not change anything if it is not a valid track
 		if (playing_track < 0 || playing_track >= PG_NB_TRACKS) {
-			sprintf(AuxString, "/path_replay_trackNo_%d -1", pathNo);
+			//sprintf(AuxString, "/path_replay_trackNo_%d -1", pathNo);
 			//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay unchanged (stop) invalid track\n");
 			return;
 		}
+
 		// stops recording if recording is on
 		bool isTrackRecord = false;
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
@@ -3057,7 +2855,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		if (isTrackRecord) {
 			// stops recording 
 			pg_path_recording_onOff(pathNo);
-			//printf("replay stops recording\n");
+			printf("replay stops recording\n");
 		}
 
 		// only reads a track that has been recorded
@@ -3068,7 +2866,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 				synchr_start_path_replay_trackNo[pathNo] = playing_track;
 			}
 			else {
-				//printf("start replay path %d\n", pathNo);
+				printf("start replay path %d\n", pathNo);
 				pg_path_replay_trackNo_onOff(pathNo, playing_track);
 			}
 			//sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
@@ -3076,9 +2874,10 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 			//printf("replay on recorded track (%s)\n", AuxString);
 		}
 		else {
-			//sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
-			//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
-			//printf("replay off non recorded track\n");
+			sprintf(AuxString, "/path_replay_trackNo_%d -1", pathNo);
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+			//printf("replay off non recorded track %s\n", AuxString);
+			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
 		}
 	}
 	// is currently reading && playing_track < 0 (scenario) or on/off command -> stops reading 
@@ -3088,7 +2887,7 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		}
 		if (playing_track == -1) {
 			pg_path_replay_trackNo_onOff(pathNo, playing_track);
-			//sprintf(AuxString,  "/path_replay_trackNo_%d 0", pathNo);
+			//sprintf(AuxString,  "/path_replay_trackNo_%d -1", pathNo);
 			//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay off track was currently read (%s)\n", AuxString);
 		}
@@ -3355,9 +3154,15 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 				// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
 			}
 		}
+		// runs the callBack on the updated variables which have one
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar] && pg_FullScenarioVarCallbacks[indVar]) {
+			//printf("Run callback of var \"%s\"\n", pg_FullScenarioVarMessages[indVar].c_str());
+			(*pg_FullScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value);
+		}
 	}
 	// dimension 2 variable: between pg_FullScenarioVarIndiceRanges[indVar][0] and pg_FullScenarioVarIndiceRanges[indVar][1] - 1
 	else {
+		//printf("2D variable  %d-%d type %d\n", pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1], pg_FullScenarioVarTypes[indVar]);
 		if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
@@ -3367,6 +3172,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 						}
 					}
 					else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
+						//printf("changed value %.2f index %d\n", scenario_or_gui_command_value.val_array[array_index], array_index);
 						((float*)pg_FullScenarioVarPointers[indVar])[array_index] = float(scenario_or_gui_command_value.val_array[array_index]);
 					}
 				}
@@ -3410,12 +3216,14 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 					}
 					else
 					{
+						//printf("array index int var %d\n", array_index);
 						if (array_index < 0) {
 							for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 								((int*)pg_FullScenarioVarPointers[indVar])[index] = int(scenario_or_gui_command_value.val_array[index]);
 							}
 						}
 						else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
+							//printf("changed value %d index %d\n", int(scenario_or_gui_command_value.val_array[array_index]), array_index);
 							((int*)pg_FullScenarioVarPointers[indVar])[array_index] = int(scenario_or_gui_command_value.val_array[array_index]);
 						}
 					}
@@ -3434,7 +3242,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 						}
 						else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 							((bool*)pg_FullScenarioVarPointers[indVar])[index] = !(((bool*)pg_FullScenarioVarPointers[indVar])[index]);
-							// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
+							//printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
 						}
 					}
 				}
@@ -3444,7 +3252,9 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 					}
 					else if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
 						((bool*)pg_FullScenarioVarPointers[indVar])[array_index] = !(((bool*)pg_FullScenarioVarPointers[indVar])[array_index]);
-						// printf("Opposite boolean index %d value %d\n" , indVar,*((bool *)pg_FullScenarioVarPointers[indVar]));
+						//for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+						//	printf("Opposite boolean index %d value %d array index %d\n", indVar, ((bool*)pg_FullScenarioVarPointers[indVar])[index], index);
+						//}
 					}
 				}
 			}
@@ -3452,16 +3262,27 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 				sprintf(ErrorStr, "Unexpected null array for var %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str()); ReportError(ErrorStr); throw 100;
 			}
 		}
-
 		// runs the callBack on the updated variables which have one
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar] && pg_FullScenarioVarCallbacks[indVar]) {
-			//printf("Run callback of var \"%s\"\n", pg_FullScenarioVarMessages[indVar].c_str());
-			(*pg_FullScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value);
+		if (array_index < 0) {
+			for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
+				// runs the callBack on the updated variables which have one
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar] && pg_FullScenarioArrayVarCallbacks[indVar]) {
+					//printf("Run callback of var \"%s\"\n", pg_FullScenarioVarMessages[indVar].c_str());
+					(*pg_FullScenarioArrayVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value, index);
+				}
+			}
+		}
+		else if (array_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
+			//printf("changed value %.2f index %d\n", scenario_or_gui_command_value.val_array[array_index], array_index);
+			// runs the callBack on the updated variables which have one
+			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][indVar] && pg_FullScenarioArrayVarCallbacks[indVar]) {
+				//printf("Run callback of var \"%s\"\n", pg_FullScenarioVarMessages[indVar].c_str());
+				(*pg_FullScenarioArrayVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value, array_index);
+			}
 		}
 	}
 }
 
-#if defined(PIERRES)
 /// <summary>
 /// updates the position of the cursor in the Keystone pad for texture keystone distortion
 /// </summary>
@@ -3477,8 +3298,6 @@ void updateXYKeystonePad(void) {
 	sprintf(AuxString, "/BottomRight %.2f %.2f", -float(double(VP1KeystoneYBottomRight) - 1.f), float(double(VP1KeystoneXBottomRight) - 1.f));
 	pg_send_message_udp((char*)"ff", AuxString, (char*)"udp_TouchOSC_send");
 }
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////////
 // BEGINNING OF A NEW SCENE: INITIALIZATION OF TIMES AND DURATIONS, AND VARIABLE VALUES
@@ -3593,27 +3412,17 @@ void StartNewScene(int ind_scene, double delta_time) {
 		pg_SceneIndexBeforeInterpolation = -1;
 		pg_SceneIndexAfterInterpolation = -1;
 
-#if defined(KOMPARTSD)
+#if defined(pg_Project_SilentDrawing)
 		// sends the new scene to recording for later replay
 		sprintf(AuxString, "/new_scene %d", ind_scene);
 		pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_Record_send");
-		// sends the new scene to Usine for sample selection
-		for (int ind = 0; ind < 4; ind++) {
-			if (ind == ind_scene) {
-				sprintf(AuxString, "/new_scene_%d 1", ind);
-			}
-			else {
-				sprintf(AuxString, "/new_scene_%d 0", ind);
-			}
-			pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_Usine_send");
-		}
-#endif
-#if defined(var_moving_messages)
-		if (pg_CurrentSceneIndex == 0 || pg_CurrentSceneIndex == 5) {
-			pg_Ind_Current_DisplayText = 0;
-		}
 #endif
 
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_moving_messages]) {
+			if (pg_CurrentSceneIndex == 0 || pg_CurrentSceneIndex == 5) {
+				pg_Ind_Current_DisplayText = 0;
+			}
+		}
 	}
 	/////////////////////////////////////////////////
 	// SCENE INTERPOLATION: linear interpolation of current variable values to a new scene 
@@ -3664,14 +3473,12 @@ void StartNewScene(int ind_scene, double delta_time) {
 			//	pg_CurrentScene->scene_final_parameters[_master], pg_CurrentScene->scene_final_parameters[_master]);
 			// resets interpolation time so that the interpolation does not restart indefinitely
 			pg_SceneInterpolationDuration = 0.f;
-#if !defined(LIGHT)
+
 			sprintf(AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-#endif
 		}
 	}
 
-#if !defined(LIGHT)
 	if (pg_CurrentScene) {
 		pg_FirstFrameInScene = true;
 		sprintf(AuxString, "/setupNo %d", pg_CurrentSceneIndex); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
@@ -3692,7 +3499,6 @@ void StartNewScene(int ind_scene, double delta_time) {
 			sprintf(AuxString, "/setup_next %s_%s", next_string.c_str(), (char*)"END"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
-#endif
 
 	if (pg_CurrentScene) {
 		std::cout << "Scene: " << pg_CurrentScene->scene_IDs << std::endl;
@@ -3712,7 +3518,6 @@ void StartNewScene(int ind_scene, double delta_time) {
 	}
 	// stops ongoing flashes if there is one
 	flashCameraTrk_weight = 0.0f;
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
 		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
 		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
@@ -3720,7 +3525,6 @@ void StartNewScene(int ind_scene, double delta_time) {
 		flashPhotoTrk_weight = 0.0f;
 		flashPhotoTrk_nbFrames = 0;
 	}
-#endif
 }
 
 
@@ -3897,7 +3701,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 								}
 								ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 								pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
-								free(valArray);
+								delete(valArray);
 							}
 						}
 						else {
@@ -3924,7 +3728,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 								}
 								ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 								pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
-								free(valArray);
+								delete(valArray);
 							}
 						}
 
@@ -3975,7 +3779,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 							}
 							ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 							pg_update_variable(_PG_SCENARIO, indVar, interpolated_scene_value, -1);
-							free(valArray);
+							delete(valArray);
 						}
 
 						//printf("Scene %s param %d time from start %.2f transf_interp %.2f 2-step interp  %.2f %.2f %.2f interpolated value %.2f\n",
@@ -4038,12 +3842,12 @@ void pg_update_scenario(void) {
 								pg_last_scene_update = true;
 							}
 							current_scene_percent = 1.;
-#if defined(var_script_1)
-							sprintf(AuxString, "/percent %.5f", current_scene_percent);
-							//printf("send %.5f\n", 1.);
-							pg_send_message_udp((char*)"f", AuxString, (char*)"udp_script_1_send");
-							//printf("send %s\n", AuxString);
-#endif
+							if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+								sprintf(AuxString, "/percent %.5f", current_scene_percent);
+								//printf("send %.5f\n", 1.);
+								pg_send_message_udp((char*)"f", AuxString, (char*)"udp_script_1_send");
+								//printf("send %s\n", AuxString);
+							}
 							return;
 						}
 					}
@@ -4062,14 +3866,15 @@ void pg_update_scenario(void) {
 						current_scene_percent = 0.;
 					}
 					// feeds the current script #1 if one is active
-#if defined(var_script_1)
-					if (currently_runnings_script_1 != "NULL") {
-						sprintf(AuxString, "/percent %.5f", current_scene_percent);
-						//printf("send %.5f\n", percent);
-						pg_send_message_udp((char*)"f", AuxString, (char*)"udp_script_1_send");
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+						if (currently_runnings_script_1 != "NULL") {
+							sprintf(AuxString, "/percent %.5f", current_scene_percent);
+							//printf("send %.5f\n", percent);
+							pg_send_message_udp((char*)"f", AuxString, (char*)"udp_script_1_send");
 							//printf("send %s\n", AuxString);
+						}
 					}
-#endif
+
 					// fprintf(pg_csv_log_file, "frame %ld cursor size %d\n", pg_FrameNo, cursorSize);
 					return;
 				}
@@ -4121,47 +3926,24 @@ void pg_process_key(int key) {
 
 	switch (key) {
 
-		/* ------------------------------- beat */
+	/* ------------------------------- beat */
 	case 'b':
 		auto_beat = !auto_beat;
 		lastBeatTime = pg_CurrentClockTime;
 		break;
 
-		/* ------------------------------- frame per second */
+	/* ------------------------------- frame per second */
 	case 'f':
 		DisplayFramePerSecond = !DisplayFramePerSecond;
 		printf("FPS display %d\n", DisplayFramePerSecond);
 		break;
 
-		/* ------------------------------- MIDI play */
-	case 'm':
-		// MIDI messages IN
-#if defined(PG_MIDI)
-		MIDI_OUT_event.message = Pm_Message(0xB0, 1, 0); // B = 1011 (Control Change) 0 = channel 1 / 1 controller number / value 0 = off
-		MIDI_OUT_event.timestamp = midi_io.get_currenttime();
-		midi_io.write_event(&MIDI_OUT_event);
-		printf("MIDI OUT event %d %d %d (time %d)\n", Pm_MessageStatus(MIDI_OUT_event.message), Pm_MessageData1(MIDI_OUT_event.message), Pm_MessageData2(MIDI_OUT_event.message), MIDI_OUT_event.timestamp);
-#endif
-		break;
-
-	case 'M':
-		// MIDI messages IN
-#if defined(PG_MIDI)
-		MIDI_OUT_event.message = Pm_Message(0xB0, 1, 127); // B = 1011 (Control Change) 0 = channel 1 / 1 controller number / value 127 = on
-		MIDI_OUT_event.timestamp = midi_io.get_currenttime();
-		midi_io.write_event(&MIDI_OUT_event);
-		printf("MIDI OUT event %d %d %d (time %d)\n", Pm_MessageStatus(MIDI_OUT_event.message), Pm_MessageData1(MIDI_OUT_event.message), Pm_MessageData2(MIDI_OUT_event.message), MIDI_OUT_event.timestamp);
-#endif
-		break;
-
-#if defined(PG_WITH_PUREDATA)
-		/* ------------------------------- check connection to PD */
+	/* ------------------------------- check connection to PD */
 	case 'p':
 		pg_send_message_udp((char*)"", (char*)"/PD_connected", (char*)"udp_PD_send");
 		break;
-#endif
 
-		/* ------------------------------- snapshot */
+	/* ------------------------------- snapshot */
 	case 's':
 		pg_draw_scene( _Jpg );
 		break;
@@ -4169,7 +3951,7 @@ void pg_process_key(int key) {
 		pg_draw_scene( _Svg );
 		break;
 
-		/* ------------------------------- current video background capture */
+	/* ------------------------------- current video background capture */
 	case 'v':
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
 			reset_camera = true;
@@ -4194,13 +3976,11 @@ void pg_process_special_key( int key ) {
   // }   
 }
 
-#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA)
 void soundTrackvolume(float vol) {
-#if defined(PG_WITH_PUREDATA)
 	sprintf(AuxString, "/soundtrack_onOff %.5f", vol);
 	pg_send_message_udp((char*)"f", AuxString, (char*)"udp_PD_send");
 	printf("Command: soundtrack: %s\n", AuxString);
-#endif
+
 #if defined(PG_WITH_JUCE)
 	if (vol > 0) {
 		pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
@@ -4209,17 +3989,17 @@ void soundTrackvolume(float vol) {
 		pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
 	}
 #endif
+
 	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-	sprintf(AuxString, "/soundtrack_volume %.5f", vol);
-	pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+	//sprintf(AuxString, "/soundtrack_volume %.5f", vol);
+	//pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 }
+
 void soundTrackonOff() {
-#if defined(PG_WITH_PUREDATA)
 	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
 	printf("Command: soundtrack: %s\n", AuxString);
-#endif
 #if defined(PG_WITH_JUCE)
 	if (soundTrack_on) {
 		pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
@@ -4230,8 +4010,8 @@ void soundTrackonOff() {
 #endif
 	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
 	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-	sprintf(AuxString, "/soundtrack_volume %.5f", float(int(soundTrack_on)));
-	pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+	//sprintf(AuxString, "/soundtrack_volume %.5f", float(int(soundTrack_on)));
+	//pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 }
 
 void PlayTrack(int indTrack, double timeFromStart) {
@@ -4247,11 +4027,10 @@ void PlayTrack(int indTrack, double timeFromStart) {
 			std::cout << "Playing soundtrack name: " << pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName << std::endl;
 			sprintf(AuxString, "/soundtrack_fileName %s", pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackFileName.c_str());
 
-#if defined(PG_WITH_PUREDATA)
+			// PureData play
 			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_PD_send");
-#endif
 
-#if defined(PG_WITH_PORTAUDIO)
+			// portaudio play
 			if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < int(pg_SoundTracks[pg_current_configuration_rank].size()))
 				|| pa_sound_data.pa_is_streaming()) {
 				printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_current_configuration_rank][previouslyPlayingSoundtrackNo].soundtrackFileName).c_str());
@@ -4313,11 +4092,9 @@ void PlayTrack(int indTrack, double timeFromStart) {
 			}
 			printf("nbTrackSoundPeakIndex %d nbTrackSoundOnsetIndex %d\n", 
 				nbTrackSoundPeakIndex[pg_current_configuration_rank], nbTrackSoundOnsetIndex[pg_current_configuration_rank]);
-#endif
 
 		}
 
-#if defined(PG_WITH_PORTAUDIO)
 		// start position seeking
 		if (timeFromStart > 0) {
 			if (sf_seek(soundfile_data.sound_file, sf_count_t(timeFromStart * soundfile_data.sound_file_info.samplerate), SEEK_SET) == -1) {
@@ -4330,7 +4107,6 @@ void PlayTrack(int indTrack, double timeFromStart) {
 			soundfile_data.sound_file_StartReadingTime 
 				= RealTime() - pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackOnsetsAndPeasksOffset;
 		}
-#endif
 
 #if defined(PG_WITH_JUCE)
 		sprintf(AuxString, "/JUCE_open_track \"%s\"",
@@ -4351,16 +4127,12 @@ void PlayTrack(int indTrack, double timeFromStart) {
 }
 
 void StopTrack(void) {
-#if defined(PG_WITH_PUREDATA)
 	sprintf(AuxString, "/soundtrack_fileName %s", (char *)"");
 	pg_send_message_udp((char *)"s", AuxString, (char *)"udp_PD_send");
-#endif
 
-#if defined(PG_WITH_PORTAUDIO)
 	if (pa_sound_data.pa_is_streaming()) {
 		pa_sound_data.pa_closeMyStream();
 	}
-#endif
 
 #if defined(PG_WITH_JUCE)
 	sprintf(AuxString, "/JUCE_open_track \"%s\"", (char *)"void");
@@ -4377,7 +4149,6 @@ void StopTrack(void) {
 	//BrokenInterpolationVar[_playing_soundtrackNo][pg_current_configuration_rank] = true;
 	currentlyPlaying_trackNo = -1;
 }
-#endif
 
 void pg_launch_performance(int ind_scene) {
 	// sprintf(AuxString, "/message launching"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
@@ -4606,13 +4377,15 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkBG_freq]) {
-		for (int indTrack = 1; indTrack < PG_NB_TRACKS; indTrack++) {
-			// should only be flashed every second frame because of the way the pixels are spreaded
-			// otherwise the pixels are not emitted
-			if (control_function != flash_continuous_generation || pg_FrameNo % 2 == 0) {
-				flashTrkBG_weights[indTrack] = 1.0;
-				flashTrkBG_weights_duration[indTrack] = 1;
-				//printf( "flashTrkBG_freq_%dn", indTrack );
+		for (int indTrack = 0; indTrack < PG_NB_TRACKS; indTrack++) {
+			if ((*control_function)(flashTrkBG_freq[indTrack])) {
+				// should only be flashed every second frame because of the way the pixels are spreaded
+				// otherwise the pixels are not emitted
+				if (control_function != flash_continuous_generation || pg_FrameNo % 2 == 0) {
+					flashTrkBG_weights[indTrack] = 1.0;
+					flashTrkBG_weights_duration[indTrack] = 1;
+					//printf("flashTrkBG_freq_%d\n", indTrack);
+				}
 			}
 		}
 	}
@@ -4648,26 +4421,6 @@ void pg_flash_control(bool (*control_function)(int)) {
 			// printf( "flashPartCA_freq (%d)\n" , flashPartCA_freq );
 		}
 	}
-
-#if defined(var_AT5_stop_motion) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_AT5_stop_motion]) {
-		BrokenInterpolationVar[_cameraWeight] = true;
-		if ((*control_function)(AT5_stop_motion)) {
-			//printf("stop motion\n");
-			if (*((float*)pg_FullScenarioVarPointers[_cameraWeight]) <= 0.) {
-				*((float*)pg_FullScenarioVarPointers[_cameraWeight]) = 1.f;
-				//*((float*)pg_FullScenarioVarPointers[_trackMixingWeight_2]) = 1.f;
-				*((float*)pg_FullScenarioVarPointers[_trackMasterWeight_2]) = 1.f;
-			}
-			else {
-				*((float*)pg_FullScenarioVarPointers[_cameraWeight]) = 0.f;
-					//*((float*)pg_FullScenarioVarPointers[_trackMixingWeight_2]) = 0.f;
-				*((float*)pg_FullScenarioVarPointers[_trackMasterWeight_2]) = 0.f;
-			}
-		}
-		//printf("cameraW %.2f\n", cameraWeight);
-	}
-#endif
 
 #if defined(var_Contact_flashchangeClipLeft_freq) && defined(var_Contact_flashchangeClip2Left_freq) \
 			&& defined(var_Contact_flashchangeClipRight_freq) && defined(var_Contact_flashchangeClip2Right_freq) \
@@ -4797,16 +4550,15 @@ void pg_flash_control(bool (*control_function)(int)) {
 	}
 #endif
 
-#if defined(var_flashchange_invertAllLayers_freq)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_invertAllLayers_freq]) {
 		if ((*control_function)(flashchange_invertAllLayers_freq)) {
 			invertAllLayers = !invertAllLayers;
 			*((bool*)pg_FullScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
 		}
 	}
-#endif
+
+
 	// random selection of an image in the list of available ones
-#if defined(var_flashchange_diaporama_freq)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_diaporama_freq]) {
 		if ((*control_function)(flashchange_diaporama_freq)) {
 			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
@@ -4827,56 +4579,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 			}
 		}
 	}
-#endif
-	// random selection of an image in the list of available ones
-	// first selects all the available ones in a random order
-	// second selects randomly one among the possible ones
-#if defined(var_Argenteuil_flashchange_diaporama_freq)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flashchange_diaporama_freq]) {
-		if ((*control_function)(Argenteuil_flashchange_diaporama_freq)) {
-			if (pg_nbCompressedImageDirs[pg_current_configuration_rank] > 0) {
-				// first pass generates a permuation of the n images
-				if (var_Argenteuil_flashchange_diaporama_pass == -1) {
-					// 0 discarded because is Fatima hand
-					for (int ind = 1; ind < pg_nbCompressedImageDirs[pg_current_configuration_rank]; ind++) {
-						imageRanksPermutation.push_back(ind);
-					}
-					// using built-in random generator:
-					std::random_device rd;
-					std::mt19937 g(rd());
-					std::shuffle(imageRanksPermutation.begin(), imageRanksPermutation.end(), g);
-					var_Argenteuil_flashchange_diaporama_pass = 0;
-				}
-				// first n paths selects the next permutation
-				if (var_Argenteuil_flashchange_diaporama_pass < pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1) {
-					photo_diaporama = imageRanksPermutation[var_Argenteuil_flashchange_diaporama_pass];
-				}
-				else {
-					// goes to the first photo diaporama if it is not already selected and if there is one 
-					if (photo_diaporama < 0 && pg_ImageDirectory[pg_current_configuration_rank] != "") {
-						photo_diaporama = 0;
-					}
-					int cnt = 0;
-					int new_dir = -1;
-					do {
-						new_dir = int(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank]) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-					} while (cnt++ < 10 && (new_dir == photo_diaporama || new_dir == 0)); // 0 is Fatima hand
-					photo_diaporama = new_dir;
-				}
 
-				//printf("photo_diaporama %d\n", photo_diaporama);
-				sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
-				pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-				pg_launch_diaporama(0);
-
-				// next pass
-				var_Argenteuil_flashchange_diaporama_pass++;
-			}
-		}
-	}
-#endif
-
-#if defined(var_flashchange_BGcolor_freq)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
 		if ((*control_function)(flashchange_BGcolor_freq)) {
 			float BG_hue = rand_0_1;
@@ -4889,7 +4592,6 @@ void pg_flash_control(bool (*control_function)(int)) {
 			BG_b = 0.f;
 		}
 	}
-#endif
 
 #if defined(var_flashchange_freeze_freq)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_freeze_freq]) {
@@ -4905,7 +4607,6 @@ void pg_flash_control(bool (*control_function)(int)) {
 
 ///////////////////////////////////////////////////////////////////////////////////
 // beat reception and corresponding events triggering
-#if defined(var_fingers)
 void NumberOfInteractionFingers(int nb_fingers) {
 	if (nb_fingers == 1) {
 		sprintf(AuxString, "/multixy/5/visible 0"); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_MultiTouch_send");
@@ -4930,16 +4631,11 @@ void NumberOfInteractionFingers(int nb_fingers) {
 		//printf("fingers 2-5 visible\n");
 	}
 }
-#endif
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 // beat reception and corresponding events triggering
 void ReceiveBeat(void) {
-#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 	sprintf(AuxString, "/loop_beat %d", pg_BeatNo % PG_LOOP_SIZE); pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-#endif
 
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]
 		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
@@ -4963,7 +4659,6 @@ void ReceiveBeat(void) {
 		}
 	}
 
-#if defined(var_flashCameraTrkBeat)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBeat]) {
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 		// camera flash
@@ -4977,9 +4672,7 @@ void ReceiveBeat(void) {
 			//	flashCameraTrk_weight , flashCameraTrk_decay, flashPhotoTrk_threshold);
 		}
 	}
-#endif
 
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]
 		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]
 		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkLength]
@@ -4992,11 +4685,9 @@ void ReceiveBeat(void) {
 			pg_Make_flashPhoto();
 		}
 	}
-#endif
 
 	pg_flash_control(flash_beat_generation);
 
-#if defined(var_flashPhotoChangeBeat)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoChangeBeat]) {
 		// photo change flash
 		if (flashPhotoChangeBeat > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == flashPhotoChangeBeat)) {
@@ -5004,7 +4695,6 @@ void ReceiveBeat(void) {
 			if (photo_diaporama < 0 && pg_ImageDirectory[pg_current_configuration_rank] != "") {
 				photo_diaporama = 0;
 			}
-
 			// random selection and loopiing
 			photo_diaporama = (photo_diaporama + int(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
 			//printf("photo_diaporama %d\n", photo_diaporama);
@@ -5014,7 +4704,6 @@ void ReceiveBeat(void) {
 			pg_launch_diaporama(0);
 		}
 	}
-#endif
 
 #if defined(var_Caverne_BackColor)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
@@ -5060,15 +4749,12 @@ void ReceiveBeat(void) {
 	}
 #endif
 
-#if defined(PG_LIGHTS_DMX_IN_PG)
 	for (int ind = 0; ind < pg_nb_light_groups[pg_current_configuration_rank]; ind++) {
 		if (pg_light_groups[pg_current_configuration_rank][ind].get_group_hasBeatCommand()) {
 			pg_light_groups[pg_current_configuration_rank][ind].update_beatCommand();
 		}
 	}
-#endif
 
-#if defined(var_penStrokeAtBeat)
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_penStrokeAtBeat]) {
 		if (penStrokeAtBeat) {
 			FourFrameStrokeNb = 5;
@@ -5076,36 +4762,26 @@ void ReceiveBeat(void) {
 			FourFrameStroke_y = int(180 + 2 * rand_0_1);
 		}
 	}
-#endif
-
-#if defined(var_Argenteuil_flash_move_track1_freq)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Argenteuil_flash_move_track1_freq]) {
-		if (Argenteuil_flash_move_track1_freq > 0 && ((pg_BeatNo % PG_LOOP_SIZE) == Argenteuil_flash_move_track1_freq)) {
-			Argenteuil_track_x_transl[1] = 200.f + (rand_0_1 - 0.5f) * 300.f;
-			Argenteuil_track_y_transl[1] = 100.f + (rand_0_1 - 0.5f) * 150.f;
-		}
-	}
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // photo flash launching
-#if defined(var_flashPhotoTrkBright)
 void pg_Make_flashPhoto(void) {
-	flashPhotoTrk_weight = 1.0f;
-	flashPhotoTrk_nbFrames = 0;
-	flashPhotoTrk_threshold = std::min(std::max(0.0f, 1.0f - flashPhotoTrk_decay * flashPhotoTrkBright), 1.0f);
-	// invertAllLayers = !invertAllLayers;
-	//photo_scale = rand_0_1 * 0.5f + 0.5f;
-	//photo_offsetX = rand_0_1 * 1.5f - 0.5f;
-	//photo_offsetY = rand_0_1 * 1.5f - 0.5f;
-	// photo_diaporama = int(floor(9 + rand_0_1 * 14.9));
-	photo_diaporama = int(floor(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
-	pg_launch_diaporama(0);
-	//printf("flashPhotoTrk_weight %.3f decay %.2f threshold %.3f\n",
-	//	flashPhotoTrk_weight, flashPhotoTrk_decay, flashPhotoTrk_threshold);
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
+		flashPhotoTrk_weight = 1.0f;
+		flashPhotoTrk_nbFrames = 0;
+		flashPhotoTrk_threshold = std::min(std::max(0.0f, 1.0f - flashPhotoTrk_decay * flashPhotoTrkBright), 1.0f);
+		// invertAllLayers = !invertAllLayers;
+		//photo_scale = rand_0_1 * 0.5f + 0.5f;
+		//photo_offsetX = rand_0_1 * 1.5f - 0.5f;
+		//photo_offsetY = rand_0_1 * 1.5f - 0.5f;
+		// photo_diaporama = int(floor(9 + rand_0_1 * 14.9));
+		photo_diaporama = int(floor(rand_0_1 * pg_nbCompressedImageDirs[pg_current_configuration_rank])) % pg_nbCompressedImageDirs[pg_current_configuration_rank];
+		pg_launch_diaporama(0);
+		//printf("flashPhotoTrk_weight %.3f decay %.2f threshold %.3f\n",
+		//	flashPhotoTrk_weight, flashPhotoTrk_decay, flashPhotoTrk_threshold);
+	}
 }
-#endif
 
 void pg_Make_flashCamera(void) {
 	is_flashCameraTrk = true;
@@ -5119,9 +4795,7 @@ void pg_Make_flashCamera(void) {
 ///////////////////////////////////////////////////////////////////////////////////
 void pg_aliasScript(string address_string, string string_argument_0,
 	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments) {
-#if (defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)) || (defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart))
 	float control_color[3] = { 0 };
-#endif
 
 	// first looks whether the message or its prefix (message minus _?[0-9]+) are either a variable or 
 	std::regex array_command("([a-zA-Z0-9_]+[a-zA-Z])_?([0-9]+)(_pulse)?");
@@ -5130,13 +4804,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	int indexChangedValue = -1;
 	if (std::regex_match(address_string, pieces_match, array_command)) {
 		if (pg_OSC_addresses_hashMap.find(pieces_match[1]) != pg_OSC_addresses_hashMap.end()) {
-			//printf("match size %d\n", pieces_match.size());
 			if (pieces_match.size() == 3) {
 				int provided_index = stoi(pieces_match[2].str());
-				//printf("match string %s\n", pieces_match[1].str().c_str());
 				if (pg_OSC_addresses_hashMap.find(pieces_match[1].str()) != pg_OSC_addresses_hashMap.end()) {
 					indVar = pg_OSC_addresses_hashMap.at(pieces_match[1].str());
-					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1 && provided_index >= pg_FullScenarioVarIndiceRanges[indVar][0]
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1 
+						&& provided_index >= pg_FullScenarioVarIndiceRanges[indVar][0]
 						&& provided_index < pg_FullScenarioVarIndiceRanges[indVar][1]) {
 						indexChangedValue = provided_index;
 					}
@@ -5179,14 +4852,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				touchOSC_tab_command_ending_length, touchOSC_tab_command_ending))) {
 			// OKAY this is a tab change in touchOSC
 		}
-#if defined(PG_LIGHTS_CONTROL_IN_PYTHON)
 		// OSC message for lighting
 		else if (address_string.length() > DMX_command_beginning_length
 			&& (0 == address_string.compare(0, DMX_command_beginning_length, DMX_command_beginning))
 			&& pg_nb_light_groups[pg_current_configuration_rank] > 0) {
 			pg_osc_light_command(address_string, float_arguments, nb_arguments);
 		}
-#endif
 		// OSC message for sensors
 		else if ((address_string.length() >= MSS_sensor_command_beginning.length()
 			&& (0 == address_string.compare(0, MSS_sensor_command_beginning.length(), MSS_sensor_command_beginning)))
@@ -5222,7 +4893,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		//printf("index %d value %.2f\n", indexChangedValue, valArray[indexChangedValue]);
 		ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 		pg_update_variable(_PG_GUI_COMMAND, indVar, interpolated_scene_value, indexChangedValue);
-		free(valArray);
+		delete(valArray);
 		return;
 	}
 	// change of scalar variable
@@ -5247,22 +4918,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// from TouchOSC, Lola's sound program or Usine
 		pg_writeMessageOnScreen("*** OK ***");
 		sprintf(AuxString, "/setup UDP_test_received"); pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-#if defined(KOMPARTSD)
-		// sends a message to Usine for confirming UDP connection between porphyrograph and Usine
-		if (testUDP_KOMPARTSD) {
-			sprintf(AuxString, "/testUDP 1");
-		}
-		else {
-			sprintf(AuxString, "/testUDP 0");
-		}
-		testUDP_KOMPARTSD = !testUDP_KOMPARTSD;
-		pg_send_message_udp((char *)"i", (char *)AuxString, (char*)"udp_Usine_send");
-		// sends the new scene to Usine for sample selection
-		for (int ind = 0; ind < 4; ind++) {
-			sprintf(AuxString, "/new_scene_%d 0", ind);
-			pg_send_message_udp((char *)"i", (char *)AuxString, (char*)"udp_Usine_send");
-		}
-#endif
 		break;
 	}
 	case _QT_connected: {
@@ -5292,9 +4947,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pg_launch_performance(0);
 		break;
 	}
-
-#if defined(PG_WITH_PUREDATA)
-				  // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SOUND RESET ++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _reset_sound: {
@@ -5310,7 +4964,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 		break;
 	}
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ QUITS +++++++++++++++++++++++++++++++++ 
@@ -5328,9 +4981,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pg_Make_flashCamera();
 		break;
 	}
-	case _Note1: 
-	case _Note2:
-	case _Note3: 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// ++++++++++++++++++++++ MIDI FLASH +++++++++++++++++++++++ 
+	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+	// message sent by any software that can receive MIDI notes
+	// and emit messages according to these note
+	case _MIDINote:
 	{
 		int argt0 = int(round(float_arguments[0]));
 		if (argt0 >= 0) {
@@ -5339,75 +4995,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		else {
 			pg_MIDINote = 0;
 		}
-
-#if defined(var_MIDIwithDiaporama)
-		if (rand_0_1 < 0.3) {
-			// goes to the first photo diaporama if it is not already selected and if there is one 
-			if (photo_diaporama < 0 && pg_ImageDirectory[pg_current_configuration_rank] != "") {
-				photo_diaporama = 0;
-			}
-			photo_diaporama = (photo_diaporama + 1) % (pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1);
-			printf("photo_diaporama %d\n", photo_diaporama);
-			if (photo_diaporama == 2 || photo_diaporama == 9 || photo_diaporama == 11 || photo_diaporama == 16) {
-				master_scale_pulse = 0.15f;
-			}
-			else {
-				master_scale_pulse = 0.f;
-			}
-			*((float*)pg_FullScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
-			sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
-			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			pg_launch_diaporama(0);
-		}
-		break;
-#endif
-#if defined(var_MIDIwithBrush)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
-			if (MIDIwithBrush) {
-				pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
-				BrokenInterpolationVar[_pen_brush] = true;
-				printf("new brush %d\n", pen_brush);
-			}
-		}
-#endif
-#if defined(var_MIDIwithColor)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
-			if (MIDIwithColor) {
-				if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
-					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
-					printf("new palette %d\n", current_pen_colorPreset);
-#if defined(var_pen_color)
-					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
-						BrokenInterpolationVar[_pen_color] = true;
-						*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
-					}
-#endif
-					// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
-					// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-					// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-				}
-			}
-		}
-#endif
-#if defined(var_MIDIwithCameraFlash)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
-			if (MIDIwithCameraFlash) {
-				printf("Flash camera\n");
-				pg_Make_flashCamera();
-			}
-		}
-#endif
-#if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
-			if (MIDIwithPhotoFlash) {
-				printf("Flash photo\n");
-				pg_Make_flashPhoto();
-			}
-		}
-#endif
-#if defined(var_MIDIwithBeat)
+		// MIDIwithBeat
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
 			if (MIDIwithBeat) {
 				pg_BeatNo++;
@@ -5415,17 +5003,79 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				ReceiveBeat();
 			}
 		}
-#endif
-#if defined(var_MIDIwithStroke)
+		// MIDIwithBrush
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
+			if (MIDIwithBrush) {
+				if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
+					pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
+					BrokenInterpolationVar[_pen_brush] = true;
+					printf("new brush %d\n", pen_brush);
+				}
+			}
+		}
+		// MIDIwithCameraFlash
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
+			if (MIDIwithCameraFlash) {
+				printf("Flash camera\n");
+				pg_Make_flashCamera();
+			}
+		}
+		// MIDIwithColor
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
+			if (MIDIwithColor) {
+				if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
+					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
+					printf("new palette %d\n", current_pen_colorPreset);
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+						BrokenInterpolationVar[_pen_color] = true;
+						*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
+					}
+					sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
+				}
+			}
+			// select hue/sat/value present
+			// TODO
+		}
+		// MIDIwithDiaporama
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithDiaporama]) {
+			if (MIDIwithDiaporama) {
+				if (rand_0_1 < 0.3) {
+					// goes to the first photo diaporama if it is not already selected and if there is one 
+					if (photo_diaporama < 0 && pg_ImageDirectory[pg_current_configuration_rank] != "") {
+						photo_diaporama = 0;
+					}
+					photo_diaporama = (photo_diaporama + 1) % (pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1);
+					printf("photo_diaporama %d\n", photo_diaporama);
+					if (photo_diaporama == 2 || photo_diaporama == 9 || photo_diaporama == 11 || photo_diaporama == 16) {
+						master_scale_pulse = 0.15f;
+					}
+					else {
+						master_scale_pulse = 0.f;
+					}
+					*((float*)pg_FullScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
+					sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
+					pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+					pg_launch_diaporama(0);
+				}
+			}
+		}
+		// MIDIwithPhotoFlash
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
+			if (MIDIwithPhotoFlash) {
+				printf("Flash photo\n");
+				pg_Make_flashPhoto();
+			}
+		}
+		// MIDIwithStroke
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
 			if (MIDIwithStroke) {
 				FourFrameStrokeNb = 5;
-				FourFrameStroke_x = int(workingWindow_width * rand_0_1);
-				FourFrameStroke_y = int(workingWindow_width * rand_0_1);
+				FourFrameStroke_x = int(window_width * rand_0_1);
+				FourFrameStroke_y = int(window_height * rand_0_1);
 			}
 		}
-#endif
-#if defined(var_flashCameraTrkBright)
+		// flashCameraTrkBright triggered by MIDI
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashCameraTrkBright]) {
 			if (flashCameraTrkBright > 0) {
@@ -5435,14 +5085,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				//printf("flashCameraTrk_weight %.3f decay %.2f threshold %.3f\n",
 				//	flashCameraTrk_weight, flashCameraTrk_decay, flashPhotoTrk_threshold);
 				//printf("start flash\n");
-				//    break;
 			}
 		}
-#endif
 		break;
 	}
-	// beats in Alchemy
-	case _Velocity1:
+	// beats in alKemi
+	case _MIDIVelocity:
 	{
 #if defined(var_alKemi)
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_alKemi]) {
@@ -5455,16 +5103,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 #endif
 		break;
 	}
-
-#if defined(var_flashPhotoTrkBeat)
 	case _flashPhoto: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBeat]) {
 			if (flashPhotoTrkBeat == 0) {
-#if defined(var_flashPhotoTrkBright)
 				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
 					pg_Make_flashPhoto();
 				}
-#endif
 			}
 			else {
 				// will be launched when the beat corresponds
@@ -5475,7 +5119,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// printf("start flash\n");
 		break;
 	}
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ MUSIC CONTROL +++++++++++++++++++++++++ 
@@ -5485,7 +5128,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pulse[0] = float_arguments[0] * sound_volume + sound_min;
 		pulse[1] = float_arguments[1] * sound_volume + sound_min;
 		pulse[2] = float_arguments[2] * sound_volume + sound_min;
-#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 		// not used currently  pulse_attack = float_arguments[3] * sound_volume + sound_min;
 		sprintf(AuxString, "/pulse_low %.2f", pulse[0]);
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
@@ -5493,33 +5135,28 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(AuxString, "/pulse_high %.2f", pulse[2]);
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-#endif
 
 		pulse_average_prec = pulse_average;
 		pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
 
-#if defined(PG_WITH_SOUND_LEVELS_GUI_FEEDBACK)
 		sprintf(AuxString, "/pulse %.2f", pulse_average);
 		pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
 		// printf("%s\n", AuxString);
-#endif
 
-#if defined(var_pen_color) && defined(var_pen_grey)
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_grey]
+			&& !pen_hsv) {
 			//printf("pulse %.2f %.2f %.2f avg %.2f\n", pulse[0], pulse[1], pulse[2], pulse_average);
 			//printf("pen_color %.2f pen_color_pulse %.2f pen_grey %.2f pen_grey_pulse %.2f pulsed_pen_color  %.2f %.2f %.2f %.2f\n", pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color[0], pulsed_pen_color[1], pulsed_pen_color[2], pulsed_pen_color[3]);
 			compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pulsed_pen_color, _PG_PEN);
 		}
-#endif
-#if defined(var_pen_hue) & defined(var_pen_sat) && defined(var_pen_value)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+		else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]
+			&& pen_hsv) {
 			compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pulsed_pen_color, true);
 		}
-#endif
-#if !defined(LIGHT)
+
 		sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(pulsed_pen_color[0] * 255), int(pulsed_pen_color[1] * 255), int(pulsed_pen_color[2] * 255));
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		//printf("%s\n", AuxString);
@@ -5529,22 +5166,19 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, _PG_REPOP);
 		sprintf(AuxString, "/BG_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorBG[0] * 255), int(pulsed_repop_colorBG[1] * 255), int(pulsed_repop_colorBG[2] * 255));
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-#endif
 
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-#if defined(var_repop_colorPart) && defined(var_repop_greyPart)
 			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
-				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
+				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]
+				&& !repop_hsvPart) {
 				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
 			}
-#endif
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
 				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+				&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+				&& repop_hsvPart) {
 				compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
 			}
-#endif
 			sprintf(AuxString, "/Part_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorPart[0] * 255), int(pulsed_repop_colorPart[1] * 255), int(pulsed_repop_colorPart[2] * 255));
 			pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		}
@@ -5569,93 +5203,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 
 		ReceiveBeat();
-	}
-	break;
-
-	case _MIDINote: {
-		int argt0 = int(round(float_arguments[0]));
-		if (argt0 >= 0) {
-			pg_MIDINote = argt0;
-		}
-		else {
-			pg_MIDINote = 0;
-		}
-#if defined(var_MIDIwithBrush)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBrush]) {
-			if (MIDIwithBrush) {
-				if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
-					pen_brush = int(nb_pen_brushes[pg_current_configuration_rank] * 3 * rand_0_1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
-					BrokenInterpolationVar[_pen_brush] = true;
-					printf("new brush %d\n", pen_brush);
-				}
-			}
-		}
-#endif
-#if defined(var_MIDIwithColor)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithColor]) {
-			if (MIDIwithColor) {
-#if !defined(LIGHT)
-				//if (nb_pen_colorPresets > 0) {
-				//	current_pen_colorPreset = pg_MIDINote % pg_ColorPresets[pg_current_configuration_rank].size();
-				//	printf("new palette %d\n", current_pen_colorPreset);
-				//	BrokenInterpolationVar[_pen_color] = true;
-				//	*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_colorPreset_values[current_pen_colorPreset];
-				//	// sprintf(AuxString, "/pen_color %.3f", pen_colorPresets_values[current_pen_colorPreset]);
-				//	// pg_send_message_udp((char *)"s", AuxString, (char *)"udp_TouchOSC_send");
-				//	// sprintf(AuxString, "/message palette%s", pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pen_colorPresets_names.c_str()); pg_send_message_udp((char *)"s", (char *)AuxString, (char *)"udp_TouchOSC_send");
-				//	sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-				//}
-				if (pg_ColorPresets[pg_current_configuration_rank].size() > 0) {
-					current_pen_colorPreset = int(pg_ColorPresets[pg_current_configuration_rank].size() * rand_0_1) % pg_ColorPresets[pg_current_configuration_rank].size();
-					printf("new palette %d\n", current_pen_colorPreset);
-#if defined(var_pen_color)
-					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
-						BrokenInterpolationVar[_pen_color] = true;
-						*((float*)pg_FullScenarioVarPointers[_pen_color]) = pg_ColorPresets[pg_current_configuration_rank][current_pen_colorPreset].pg_colorPreset_values.color;
-					}
-#endif
-					sprintf(AuxString, "/pen_colorPreset %d", current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)AuxString, (char*)"udp_TouchOSC_send");
-				}
-			}			// select hue/sat/value present
-				// TODO
-#endif
-		}
-#endif
-#if defined(var_MIDIwithCameraFlash)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithCameraFlash]) {
-			if (MIDIwithCameraFlash) {
-				printf("Flash camera\n");
-				pg_Make_flashCamera();
-			}
-		}
-#endif
-#if defined(var_MIDIwithPhotoFlash) && defined(var_flashPhotoTrkBright)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithPhotoFlash]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashPhotoTrkBright]) {
-			if (MIDIwithPhotoFlash) {
-				printf("Flash photo\n");
-				pg_Make_flashPhoto();
-			}
-		}
-#endif
-#if defined(var_MIDIwithBeat)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithBeat]) {
-			if (MIDIwithBeat) {
-				pg_BeatNo++;
-				printf("beat %d\n", pg_BeatNo);
-				ReceiveBeat();
-			}
-		}
-#endif
-#if defined(var_MIDIwithStroke)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_MIDIwithStroke]) {
-			if (MIDIwithStroke) {
-				FourFrameStrokeNb = 5;
-				FourFrameStroke_x = int(window_width * rand_0_1);
-				FourFrameStroke_y = int(window_height * rand_0_1);
-			}
-		}
-#endif
 	}
 	break;
 
@@ -5907,32 +5454,30 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 
-#if defined(PIERRES)
-	case _TopLeft: {
+	case _TopLeftKeystone: {
 		VP1KeystoneYTopLeft = -float_arguments[0] + 0;
 		VP1KeystoneXTopLeft = float_arguments[1] + 0;
 		updateXYKeystonePad();
 		break;
 	}
-	case _BottomLeft: {
+	case _BottomLeftKeystone: {
 		VP1KeystoneYBottomLeft = -float_arguments[0] + 1.f;
 		VP1KeystoneXBottomLeft = float_arguments[1] + 0;
 		updateXYKeystonePad();
 		break;
 	}
-	case _TopRight: {
+	case _TopRightKeystone: {
 		VP1KeystoneYTopRight = -float_arguments[0] + 0;
 		VP1KeystoneXTopRight = float_arguments[1] + 1.f;
 		updateXYKeystonePad();
 		break;
 	}
-	case _BottomRight: {
+	case _BottomRightKeystone: {
 		VP1KeystoneYBottomRight = -float_arguments[0] + 1.f;
 		VP1KeystoneXBottomRight = float_arguments[1] + 1.f;
 		updateXYKeystonePad();
 		break;
 	}
-#endif
 
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -5962,7 +5507,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		flashCAPart_weight_duration = 1;
 		break;
 
-#if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_master_offsetY) && defined(var_photo_diaporama)
 	case _flashMaster:
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_master_scale]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_master_offsetX]
@@ -5988,7 +5532,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			flashMaster = max(1, int(rand_0_1 * float_arguments[0]));
 		}
 		break;
-#endif
 
 	case _NextRecordReplayPath:
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]) {
@@ -6026,7 +5569,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PEN POSITION ++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if !defined(LIGHT)
 	case _pen_touch: {
 		CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
 		CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
@@ -6080,7 +5622,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// printf("pos %.2f %.2f\n", float_arguments[0], float_arguments[1]);
 		break;
 	}
-#endif
+
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ TRACK COPY +++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -6105,7 +5647,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PART EXIT/STROKE/COLOR MODE +++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if defined(var_partStroke_mode)
 	case _partStroke_mode_0: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			*((int*)pg_FullScenarioVarPointers[_partStroke_mode]) = 0;
@@ -6151,8 +5692,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
-#if defined(var_partColor_mode)
 	case _partColor_mode_0: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			*((int*)pg_FullScenarioVarPointers[_partColor_mode]) = 0;
@@ -6198,8 +5737,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
-#if defined(var_partExit_mode)
 	case _partExit_mode_0: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			*((int*)pg_FullScenarioVarPointers[_partExit_mode]) = 0;
@@ -6245,7 +5782,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
 
 #if defined(PG_WITH_BLUR)
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
@@ -6288,40 +5824,46 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ BRUSH ID SHIFT ++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _pen_brush_plus:
-		if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
-			pen_brush = (pen_brush + 1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
-			BrokenInterpolationVar[_pen_brush] = true;
-			//if (pen_brush >= 1) { // large radius for the image brushes*
-			//	pen_radiusMultiplier = 50.0f;
-			//}
-			//else {
-			//	pen_radiusMultiplier = 1.0f;
-			//}
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_brush]) {
+			if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
+				pen_brush = (pen_brush + 1) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
+				BrokenInterpolationVar[_pen_brush] = true;
+				//if (pen_brush >= 1) { // large radius for the image brushes*
+				//	pen_radiusMultiplier = 50.0f;
+				//}
+				//else {
+				//	pen_radiusMultiplier = 1.0f;
+				//}
+			}
 		}
 		break;
 	case _pen_brush_minus:
-		if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
-			pen_brush = (pen_brush - 1 + (nb_pen_brushes[pg_current_configuration_rank] * 3)) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
-			BrokenInterpolationVar[_pen_brush] = true;
-			//if (pen_brush >= 1) { // large radius for the image brushes*
-			//	pen_radiusMultiplier = 50.0f;
-			//}
-			//else {
-			//	pen_radiusMultiplier = 1.0f;
-			//}
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_brush]) {
+			if (nb_pen_brushes[pg_current_configuration_rank] > 0) {
+				pen_brush = (pen_brush - 1 + (nb_pen_brushes[pg_current_configuration_rank] * 3)) % (nb_pen_brushes[pg_current_configuration_rank] * 3);
+				BrokenInterpolationVar[_pen_brush] = true;
+				//if (pen_brush >= 1) { // large radius for the image brushes*
+				//	pen_radiusMultiplier = 50.0f;
+				//}
+				//else {
+				//	pen_radiusMultiplier = 1.0f;
+				//}
+			}
 		}
 		break;
 
-#if defined(var_pen_brush_replay)
 	case _pen_brush_replay_plus:
-		pen_brush_replay += 1;
-		*((int*)pg_FullScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_brush_replay]) {
+			pen_brush_replay += 1;
+			*((int*)pg_FullScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
+		}
 		break;
 	case _pen_brush_replay_minus:
-		pen_brush_replay -= 1;
-		*((int*)pg_FullScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_brush_replay]) {
+			pen_brush_replay -= 1;
+			*((int*)pg_FullScenarioVarPointers[_pen_brush_replay]) = pen_brush_replay;
+		}
 		break;
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PIXEL MODE +++++++++++++++++++ 
@@ -6335,7 +5877,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if defined(var_nb_CATypes)
 	case _CA1Type_plus: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 			CA1Type = (CA1Type + 1) % nb_CATypes;
@@ -6385,7 +5926,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ SENSOR LAYOUT AND SAMPLES +++++++++++++ 
@@ -6427,7 +5967,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ PARTICLE MODES ++++++++++++++++++++++++
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#if defined(var_partExit_mode)
 	case _partExit_mode_plus: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partExit_mode]) {
 			partExit_mode = (partExit_mode + 1) % PG_NB_PARTEXIT_MODES;
@@ -6435,8 +5974,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
-#if defined(var_partStroke_mode)
 	case _partStroke_mode_plus: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partStroke_mode]) {
 			partStroke_mode = (partStroke_mode + 1) % PG_NB_PARTSTROKE_MODES;
@@ -6444,8 +5981,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
-#if defined(var_partColor_mode)
 	case _partColor_mode_plus: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partColor_mode]) {
 			partColor_mode = (partColor_mode + 1) % PG_NB_PARTCOLOR_MODES;
@@ -6453,14 +5988,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++ B/W SWITCH ++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
 	case _pen_BW: {
-#if defined(var_pen_grey)
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_grey]) {
 			if (pen_grey > 0) {
 					pen_grey = 0.0f;
@@ -6470,8 +6003,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			}
 			BrokenInterpolationVar[_pen_grey] = true;
 		}
-#endif
-#if defined(var_pen_value)
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]) {
 
 			if (pen_value > 0) {
@@ -6482,7 +6013,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			}
 			BrokenInterpolationVar[_pen_value] = true;
 		}
-#endif
 		break;
 	}
 	case _repopBG_BW: {
@@ -6511,7 +6041,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 	case _repopPart_BW: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-#if defined(var_repop_greyPart)
 			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
 				if (repop_greyPart > 0) {
 					repop_greyPart = 0.0f;
@@ -6521,8 +6050,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				}
 				BrokenInterpolationVar[_repop_greyPart] = true;
 			}
-#endif
-#if defined(var_repop_valuePart)
 			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
 				if (repop_valuePart > 0) {
 					repop_valuePart = 0.0f;
@@ -6532,7 +6059,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				}
 				BrokenInterpolationVar[_repop_valuePart] = true;
 			}
-#endif
 			// printf("repop color %.1f\n", repop_grey);
 		}
 		break;
@@ -6629,7 +6155,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ TRACK NO ++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// ====================================== 
-#if defined(PG_WITH_JUCE) || defined(PG_WITH_PUREDATA) || defined(PG_WITH_PORTAUDIO)
 	case _soundtrack_plus: {
 		if (!pg_SoundTracks[pg_current_configuration_rank].empty()) {
 			if (currentlyPlaying_trackNo < 0) {
@@ -6696,7 +6221,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		soundTrackvolume(float_arguments[0]);
 		break;
 	}
-#endif
 	case _movie_loop_onOff: {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
 			movie_loop = !movie_loop;
@@ -6771,7 +6295,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 
-#if defined(CAAUDIO)
+#if defined(pg_Project_CAaudio)
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 	// +++++++++++++++++ CA SEEDING ++++++++++++++++++++++++++++
@@ -6878,7 +6402,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	}
 #endif
 
-#if defined(CRITON)
+#if defined(pg_Project_Criton)
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
 	// +++++++++++++++++ SOUND CONTROL +++++++++++++++++++++++++
@@ -7841,27 +7365,30 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(StylusvsRubberButtonsPaths, StylusvsRubberButtonLabelsPaths, StylusvsRubberButtonValues, false, CurrentCursorStylusvsRubber);
 		break;
-#if defined(var_pen_hue) && defined(var_pen_sat) && defined(var_pen_value)
 	case _pen_hue_sat_value:
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]
+			&& pen_hsv) {
 			pen_hue = float_arguments[0];
-			BrokenInterpolationVar[_pen_hue][pg_current_configuration_rank] = true;
+			BrokenInterpolationVar[_pen_hue] = true;
 			*((float*)pg_FullScenarioVarPointers[_pen_hue]) = pen_hue;
 			pen_sat = float_arguments[1];
-			BrokenInterpolationVar[_pen_sat][pg_current_configuration_rank] = true;
+			BrokenInterpolationVar[_pen_sat] = true;
 			*((float*)pg_FullScenarioVarPointers[_pen_sat]) = pen_sat;
 			pen_value = float_arguments[2];
-			BrokenInterpolationVar[_pen_value][pg_current_configuration_rank] = true;
+			BrokenInterpolationVar[_pen_value] = true;
 			*((float*)pg_FullScenarioVarPointers[_pen_value]) = pen_value;
 			HSVtoRGB(pen_hue, pen_sat, pen_value, &control_color[0], &control_color[1], &control_color[2]);
 			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(control_color[0] * 255), int(control_color[1] * 255), int(control_color[2] * 255)); pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 			//printf("color2 msg %s\n", AuxString);
 		}
 		break;
-#endif
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
 	case _repop_hue_sat_valuePart:
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+			&& repop_hsvPart) {
 			repop_huePart = float_arguments[0];
 			BrokenInterpolationVar[_repop_huePart] = true;
 			*((float*)pg_FullScenarioVarPointers[_repop_huePart]) = repop_huePart;
@@ -7876,13 +7403,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 			//printf("color2 msg %s\n", AuxString);
 		}
 		break;
-#endif
 	case _path_replay_stopAll:
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
 			for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
 				if (is_path_replay[pathNo]) {
 					pg_path_replay_trackNo_onOff(pathNo, -1);
-					//sprintf(AuxString, "/path_replay_trackNo_%d 0", pathNo);
+					//sprintf(AuxString, "/path_replay_trackNo_%d -1", pathNo);
 					//pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 					//printf("replay off track was currently read (%s)\n", AuxString);
 				}
@@ -7905,23 +7431,25 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _clear_path_group:
 		clear_path_group();
 		break;
-#if defined(PG_METAWEAR)
 	case _mw_mss_pos: {
-		int ind_sensor = int(float_arguments[0]);
-		if (ind_sensor < PG_MW_NB_MAX_SENSORS) {
-			for (int i = 0; i < 3; i++) {
-				pg_mw_sensors[ind_sensor].mw_mss_pos[i] = float_arguments[i + 1];
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pg_metawear]) {
+			if(pg_metawear) {
+				int ind_sensor = int(float_arguments[0]);
+				if (ind_sensor < PG_MW_NB_MAX_SENSORS) {
+					for (int i = 0; i < 3; i++) {
+						pg_mw_sensors[ind_sensor].mw_mss_pos[i] = float_arguments[i + 1];
+					}
+					//printf("update position sensor #%d %.2f %.2f %.2f\n", ind_sensor, 
+					//	pg_mw_sensors[ind_sensor].mw_mss_pos[0], pg_mw_sensors[ind_sensor].mw_mss_pos[1], pg_mw_sensors[ind_sensor].mw_mss_pos[2]);
+					pg_mw_sensors[ind_sensor].mw_mss_pos_update = true;
+				}
+				else {
+					sprintf(ErrorStr, "unregistered sensor #%d (max %d)!", ind_sensor, PG_MW_NB_MAX_SENSORS); ReportError(ErrorStr);
+				}
 			}
-			//printf("update position sensor #%d %.2f %.2f %.2f\n", ind_sensor, 
-			//	pg_mw_sensors[ind_sensor].mw_mss_pos[0], pg_mw_sensors[ind_sensor].mw_mss_pos[1], pg_mw_sensors[ind_sensor].mw_mss_pos[2]);
-			pg_mw_sensors[ind_sensor].mw_mss_pos_update = true;
-		}
-		else {
-			sprintf(ErrorStr, "unregistered sensor #%d (max %d)!", ind_sensor, PG_MW_NB_MAX_SENSORS); ReportError(ErrorStr);
 		}
 	}
 	break;
-#endif
 
 	default: {
 			sprintf(ErrorStr, "Command not found (%s)!", address_string.c_str()); ReportError(ErrorStr);
@@ -8315,17 +7843,25 @@ void compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_p
 	}
 }
 
-#if defined(PG_LIGHTS_CONTROL_IN_PG)
 void pg_UpdateLightGroups_from_LightVars() {
 	bool oneLightChanged = false;
-#if defined(var_light1_grey)&& defined(var_light1_color) && defined(var_light1_dimmer) && defined(var_light1_strobe) && defined(var_light1_grey_pulse) && defined(var_light1_color_pulse) && defined(var_light1_dimmer_pulse) && defined(var_light1_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light1_grey]) {
-		if (light1_grey != light1_grey_prec || light1_grey_pulse != light1_grey_pulse_prec
-			|| light1_color != light1_color_prec || light1_color_pulse != light1_color_pulse_prec
-			|| light1_dimmer != light1_dimmer_prec || light1_dimmer_pulse != light1_dimmer_pulse_prec
-			|| light1_strobe != light1_strobe_prec || light1_strobe_pulse != light1_strobe_pulse_prec
-			|| ((light1_grey_pulse != 0 || light1_color_pulse != 0 || light1_dimmer_pulse != 0 || light1_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))
+	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_grey]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_color]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_dimmer]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_strobe]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_grey_pulse]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_color_pulse]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_dimmer_pulse]
+		|| !pg_FullScenarioActiveVars[pg_current_configuration_rank][_light_strobe_pulse]) {
+		return;
+	}
+	for (int indLight = 1; indLight <= min(int(PG_NB_LIGHTS), int(pg_Lights[pg_current_configuration_rank].size())); indLight++) {
+		if (light_grey[indLight] != light_grey_prec[indLight] || light_grey_pulse[indLight] != light_grey_pulse_prec[indLight]
+			|| light_color[indLight] != light_color_prec[indLight] || light_color_pulse[indLight] != light_color_pulse_prec[indLight]
+			|| light_dimmer[indLight] != light_dimmer_prec[indLight] || light_dimmer_pulse[indLight] != light_dimmer_pulse_prec[indLight]
+			|| light_strobe[indLight] != light_strobe_prec[indLight] || light_strobe_pulse[indLight] != light_strobe_pulse_prec[indLight]
+			|| ((light_grey_pulse[indLight] != 0 || light_color_pulse[indLight] != 0 || light_dimmer_pulse[indLight] != 0 || light_strobe_pulse[indLight] != 0)
+				&& (pulse_light_prec[indLight][0] != pulse[0] || pulse_light_prec[indLight][1] != pulse[1] || pulse_light_prec[indLight][2] != pulse[2]))
 #if defined(var_Caverne_BackColor)
 			// video background and light color are the same and randomly changed
 			|| Caverne_BackColorRed != Caverne_BackColorRed_prec
@@ -8333,26 +7869,28 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| Caverne_BackColorBlue != Caverne_BackColorBlue_prec
 #endif
 			) {
+
 			float rgb_color[_rgb];
-			if (pg_nb_light_groups > 0) {
-				compute_pulsed_palette_color(light1_color, light1_color_pulse, light1_grey, light1_grey_pulse, rgb_color, _PG_LIGHT);
-				pg_light_groups[0].set_color(rgb_color);
-				pg_light_groups[0].set_group_val(_dimmer, light1_dimmer * (1.f + pulse_average * light1_dimmer_pulse));
-				pg_light_groups[0].set_group_val(_strobe, light1_strobe * (1.f + pulse_average * light1_strobe_pulse));
-				light1_color_prec = light1_color;
-				light1_color_pulse_prec = light1_color_pulse;
-				light1_grey_prec = light1_grey;
-				light1_grey_pulse_prec = light1_grey_pulse;
-				light1_dimmer_prec = light1_dimmer;
-				light1_dimmer_pulse_prec = light1_dimmer_pulse;
-				light1_strobe_prec = light1_strobe;
-				light1_strobe_pulse_prec = light1_strobe_pulse;
+			Light light = pg_Lights[pg_current_configuration_rank][indLight - 1];
+			if (light.light_group < pg_nb_light_groups[pg_current_configuration_rank]) {
+				compute_pulsed_palette_color(light_color[indLight], light_color_pulse[indLight], light_grey[indLight], light_grey_pulse[indLight], rgb_color, _PG_LIGHT);
+				pg_light_groups[pg_current_configuration_rank][light.light_group - 1].set_color(rgb_color);
+				pg_light_groups[pg_current_configuration_rank][light.light_group - 1].set_group_val(_dimmer, light_dimmer[indLight] * (1.f + pulse_average * light_dimmer_pulse[indLight]));
+				pg_light_groups[pg_current_configuration_rank][light.light_group - 1].set_group_val(_strobe, light_strobe[indLight] * (1.f + pulse_average * light_strobe_pulse[indLight]));
+				light_color_prec[indLight] = light_color[indLight];
+				light_color_pulse_prec[indLight] = light_color_pulse[indLight];
+				light_grey_prec[indLight] = light_grey[indLight];
+				light_grey_pulse_prec[indLight] = light_grey_pulse[indLight];
+				light_dimmer_prec[indLight] = light_dimmer[indLight];
+				light_dimmer_pulse_prec[indLight] = light_dimmer_pulse[indLight];
+				light_strobe_prec[indLight] = light_strobe[indLight];
+				light_strobe_pulse_prec[indLight] = light_strobe_pulse[indLight];
 			}
 #if defined(var_Caverne_BackColor)
 			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
 				// video background and light color are the same and randomly changed
 				if (Caverne_BackColor && pg_nb_light_groups > 0) {
-					pg_light_groups[0].set_color(Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
+					pg_light_groups[pg_current_configuration_rank].set_color(Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
 					Caverne_BackColorRed_prec = Caverne_BackColorRed;
 					Caverne_BackColorGreen_prec = Caverne_BackColorGreen;
 					Caverne_BackColorBlue_prec = Caverne_BackColorBlue;
@@ -8362,224 +7900,25 @@ void pg_UpdateLightGroups_from_LightVars() {
 			oneLightChanged = true;
 		}
 	}
-#endif
-#if defined(var_light2_grey) && defined(var_light2_color) && defined(var_light2_dimmer) && defined(var_light2_strobe) && defined(var_light2_grey_pulse) && defined(var_light2_color_pulse) && defined(var_light2_dimmer_pulse) && defined(var_light2_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light2_grey]) {
-		if (light2_grey != light2_grey_prec || light2_grey_pulse != light2_grey_pulse_prec
-			|| light2_color != light2_color_prec || light2_color_pulse != light2_color_pulse_prec
-			|| light2_dimmer != light2_dimmer_prec || light2_dimmer_pulse != light2_dimmer_pulse_prec
-			|| light2_strobe != light2_strobe_prec || light2_strobe_pulse != light2_strobe_pulse_prec
-			|| ((light2_grey_pulse != 0 || light2_color_pulse != 0 || light2_dimmer_pulse != 0 || light2_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light2_color, light2_color_pulse, light2_grey, light2_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[1].set_color(rgb_color);
-			pg_light_groups[1].set_group_val(_dimmer, light2_dimmer * (1.f + pulse_average * light2_dimmer_pulse));
-			pg_light_groups[1].set_group_val(_strobe, light2_strobe * (1.f + pulse_average * light2_strobe_pulse));
-			light2_color_prec = light2_color;
-			light2_color_pulse_prec = light2_color_pulse;
-			light2_grey_prec = light2_grey;
-			light2_grey_pulse_prec = light2_grey_pulse;
-			light2_dimmer_prec = light2_dimmer;
-			light2_dimmer_pulse_prec = light2_dimmer_pulse;
-			light2_strobe_prec = light2_strobe;
-			light2_strobe_pulse_prec = light2_strobe_pulse;
-			oneLightChanged = true;
-		}
-	}
-#endif
-#if defined(var_light3_grey) && defined(var_light3_color) && defined(var_light3_dimmer) && defined(var_light3_strobe) && defined(var_light3_grey_pulse) && defined(var_light3_color_pulse) && defined(var_light3_dimmer_pulse) && defined(var_light3_strobe_pulse)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light3_grey]) {
-		if (light3_grey != light3_grey_prec || light3_grey_pulse != light3_grey_pulse_prec
-			|| light3_color != light3_color_prec || light3_color_pulse != light3_color_pulse_prec
-			|| light3_dimmer != light3_dimmer_prec || light3_dimmer_pulse != light3_dimmer_pulse_prec
-			|| light3_strobe != light3_strobe_prec || light3_strobe_pulse != light3_strobe_pulse_prec
-			|| ((light3_grey_pulse != 0 || light3_color_pulse != 0 || light3_dimmer_pulse != 0 || light3_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light3_color, light3_color_pulse, light3_grey, light3_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[2].set_color(rgb_color);
-			pg_light_groups[2].set_group_val(_dimmer, light3_dimmer * (1.f + pulse_average * light3_dimmer_pulse));
-			pg_light_groups[2].set_group_val(_strobe, light3_strobe * (1.f + pulse_average * light3_strobe_pulse));
-			light3_color_prec = light3_color;
-			light3_color_pulse_prec = light3_color_pulse;
-			light3_grey_prec = light3_grey;
-			light3_grey_pulse_prec = light3_grey_pulse;
-			light3_dimmer_prec = light3_dimmer;
-			light3_dimmer_pulse_prec = light3_dimmer_pulse;
-			light3_strobe_prec = light3_strobe;
-			light3_strobe_pulse_prec = light3_strobe_pulse;
-			oneLightChanged = true;
-		}
-	}
-#endif
-#if defined(var_light4_grey) && defined(var_light4_color) && defined(var_light4_dimmer) && defined(var_light4_strobe) && defined(var_light4_grey_pulse) && defined(var_light4_color_pulse) && defined(var_light4_dimmer_pulse) && defined(var_light4_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light4_grey]) {
-		if (light4_grey != light4_grey_prec || light4_grey_pulse != light4_grey_pulse_prec
-			|| light4_color != light4_color_prec || light4_color_pulse != light4_color_pulse_prec
-			|| light4_dimmer != light4_dimmer_prec || light4_dimmer_pulse != light4_dimmer_pulse_prec
-			|| light4_strobe != light4_strobe_prec || light4_strobe_pulse != light4_strobe_pulse_prec
-			|| ((light4_grey_pulse != 0 || light4_color_pulse != 0 || light4_dimmer_pulse != 0 || light4_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light4_color, light4_color_pulse, light4_grey, light4_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[3].set_color(rgb_color);
-			pg_light_groups[3].set_group_val(_dimmer, light4_dimmer * (1.f + pulse_average * light4_dimmer_pulse));
-			pg_light_groups[3].set_group_val(_strobe, light4_strobe * (1.f + pulse_average * light4_strobe_pulse));
-			light4_color_prec = light4_color;
-			light4_color_pulse_prec = light4_color_pulse;
-			light4_grey_prec = light4_grey;
-			light4_grey_pulse_prec = light4_grey_pulse;
-			light4_dimmer_prec = light4_dimmer;
-			light4_dimmer_pulse_prec = light4_dimmer_pulse;
-			light4_strobe_prec = light4_strobe;
-			light4_strobe_pulse_prec = light4_strobe_pulse;
-			oneLightChanged = true;
-		}
-	}
-#endif
-#if defined(var_light5_grey) && defined(var_light5_color) && defined(var_light5_dimmer) && defined(var_light5_strobe) && defined(var_light5_grey_pulse) && defined(var_light5_color_pulse) && defined(var_light5_dimmer_pulse) && defined(var_light5_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light5_grey]) {
-		if (light5_grey != light5_grey_prec || light5_grey_pulse != light5_grey_pulse_prec
-			|| light5_color != light5_color_prec || light5_color_pulse != light5_color_pulse_prec
-			|| light5_dimmer != light5_dimmer_prec || light5_dimmer_pulse != light5_dimmer_pulse_prec
-			|| light5_strobe != light5_strobe_prec || light5_strobe_pulse != light5_strobe_pulse_prec
-			|| ((light5_grey_pulse != 0 || light5_color_pulse != 0 || light5_dimmer_pulse != 0 || light5_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light5_color, light5_color_pulse, light5_grey, light5_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[4].set_color(rgb_color);
-			pg_light_groups[4].set_group_val(_dimmer, light5_dimmer * (1.f + pulse_average * light5_dimmer_pulse));
-			pg_light_groups[4].set_group_val(_strobe, light5_strobe * (1.f + pulse_average * light5_strobe_pulse));
-			light5_color_prec = light5_color;
-			light5_color_pulse_prec = light5_color_pulse;
-			light5_grey_prec = light5_grey;
-			light5_grey_pulse_prec = light5_grey_pulse;
-			light5_dimmer_prec = light5_dimmer;
-			light5_dimmer_pulse_prec = light5_dimmer_pulse;
-			light5_strobe_prec = light5_strobe;
-			light5_strobe_pulse_prec = light5_strobe_pulse;
-			oneLightChanged = true;
-		}
-	}
-#endif
-#if defined(var_light6_grey) && defined(var_light6_color) && defined(var_light6_dimmer) && defined(var_light6_strobe) && defined(var_light6_grey_pulse) && defined(var_light6_color_pulse) && defined(var_light6_dimmer_pulse) && defined(var_light6_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light6_grey]) {
-		if (light6_grey != light6_grey_prec || light6_grey_pulse != light6_grey_pulse_prec
-			|| light6_color != light6_color_prec || light6_color_pulse != light6_color_pulse_prec
-			|| light6_dimmer != light6_dimmer_prec || light6_dimmer_pulse != light6_dimmer_pulse_prec
-			|| light6_strobe != light6_strobe_prec || light6_strobe_pulse != light6_strobe_pulse_prec
-			|| ((light6_grey_pulse != 0 || light6_color_pulse != 0 || light6_dimmer_pulse != 0 || light6_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light6_color, light6_color_pulse, light6_grey, light6_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[5].set_color(rgb_color);
-			pg_light_groups[5].set_group_val(_dimmer, light6_dimmer * (1.f + pulse_average * light6_dimmer_pulse));
-			pg_light_groups[5].set_group_val(_strobe, light6_strobe * (1.f + pulse_average * light6_strobe_pulse));
-			light6_color_prec = light6_color;
-			light6_color_pulse_prec = light6_color_pulse;
-			light6_grey_prec = light6_grey;
-			light6_grey_pulse_prec = light6_grey_pulse;
-			light6_dimmer_prec = light6_dimmer;
-			light6_dimmer_pulse_prec = light6_dimmer_pulse;
-			light6_strobe_prec = light6_strobe;
-			light6_strobe_pulse_prec = light6_strobe_pulse;
-			oneLightChanged = true;
-		}
-	}
-#endif
-#if defined(var_light7_grey) && defined(var_light7_color) && defined(var_light7_dimmer) && defined(var_light7_strobe) && defined(var_light7_grey_pulse) && defined(var_light7_color_pulse) && defined(var_light7_dimmer_pulse) && defined(var_light7_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light7_grey]) {
-		if (light7_grey != light7_grey_prec || light7_grey_pulse != light7_grey_pulse_prec
-			|| light7_color != light7_color_prec || light7_color_pulse != light7_color_pulse_prec
-			|| light7_dimmer != light7_dimmer_prec || light7_dimmer_pulse != light7_dimmer_pulse_prec
-			|| light7_strobe != light7_strobe_prec || light7_strobe_pulse != light7_strobe_pulse_prec
-			|| ((light7_grey_pulse != 0 || light7_color_pulse != 0 || light7_dimmer_pulse != 0 || light7_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))
-			) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light7_color, light7_color_pulse, light7_grey, light7_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[6].set_color(rgb_color);
-			pg_light_groups[6].set_group_val(_dimmer, light7_dimmer * (1.f + pulse_average * light7_dimmer_pulse));
-			pg_light_groups[6].set_group_val(_strobe, light7_strobe * (1.f + pulse_average * light7_strobe_pulse));
-			light7_color_prec = light7_color;
-			light7_color_pulse_prec = light7_color_pulse;
-			light7_grey_prec = light7_grey;
-			light7_grey_pulse_prec = light7_grey_pulse;
-			light7_dimmer_prec = light7_dimmer;
-			light7_dimmer_pulse_prec = light7_dimmer_pulse;
-			light7_strobe_prec = light7_strobe;
-			light7_strobe_pulse_prec = light7_strobe_pulse;
-			oneLightChanged = true;
-		}
-	}
-#endif
-#if defined(var_light8_grey) && defined(var_light8_color) && defined(var_light8_dimmer) && defined(var_light8_strobe) && defined(var_light8_grey_pulse) && defined(var_light8_color_pulse) && defined(var_light8_dimmer_pulse) && defined(var_light8_strobe_pulse) 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_light8_grey]) {
-		if (light8_grey != light8_grey_prec || light8_grey_pulse != light8_grey_pulse_prec
-			|| light8_color != light8_color_prec || light8_color_pulse != light8_color_pulse_prec
-			|| light8_dimmer != light8_dimmer_prec || light8_dimmer_pulse != light8_dimmer_pulse_prec
-			|| light8_strobe != light8_strobe_prec || light8_strobe_pulse != light8_strobe_pulse_prec
-			|| ((light8_grey_pulse != 0 || light8_color_pulse != 0 || light8_dimmer_pulse != 0 || light8_strobe_pulse != 0)
-				&& (pulse_light_prec[0] != pulse[0] || pulse_light_prec[1] != pulse[1] || pulse_light_prec[2] != pulse[2]))
-#if defined(var_Caverne_BackColor)
-			// video background and light color are the same and randomly changed
-			|| (Caverne_BackColor && Caverne_BackColorFlash != Caverne_BackColorFlash_prec)
-#endif
-			) {
-			float rgb_color[_rgb];
-			compute_pulsed_palette_color(light8_color, light8_color_pulse, light8_grey, light8_grey_pulse, rgb_color, _PG_LIGHT);
-			pg_light_groups[7].set_color(rgb_color);
-			pg_light_groups[7].set_group_val(_dimmer, light8_dimmer * (1.f + pulse_average * light8_dimmer_pulse));
-			pg_light_groups[7].set_group_val(_strobe, light8_strobe * (1.f + pulse_average * light8_strobe_pulse));
-			light8_color_prec = light8_color;
-			light8_color_pulse_prec = light8_color_pulse;
-			light8_grey_prec = light8_grey;
-			light8_grey_pulse_prec = light8_grey_pulse;
-			light8_dimmer_prec = light8_dimmer;
-			light8_dimmer_pulse_prec = light8_dimmer_pulse;
-			light8_strobe_prec = light8_strobe;
-			light8_strobe_pulse_prec = light8_strobe_pulse;
-#if defined(var_Caverne_BackColor)
-			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
-				// video background and light color are the same and randomly changed
-				if (Caverne_BackColor && Caverne_BackColorFlash != Caverne_BackColorFlash_prec) {
-					if (Caverne_BackColorFlash) {
-						pg_light_groups[7].set_group_val(_dimmer, 0.2f * pg_light_groups[0]->get_group_val(_dimmer));
-						Caverne_BackColorFlash = false;
-						Caverne_BackColorFlash_prec = true;
-					}
-					else {
-						Caverne_BackColorFlash = false;
-						Caverne_BackColorFlash_prec = false;
-						pg_light_groups[7].set_group_val(_dimmer, 0.f);
-					}
-				}
-			}
-#endif
-			oneLightChanged = true;
-		}
-	}
-#endif
 
-	if (oneLightChanged) {
 #if defined(var_Caverne_BackColor)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
-			//printf("pg_light_groups[7]->get_group_val(_dimmer) %.2f           pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(_dimmer), pg_light_groups[0].get_color()[0]);
-		}
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+		//printf("pg_light_groups[7]->get_group_val(_dimmer) %.2f           pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(_dimmer), pg_light_groups[0].get_color()[0]);
+	}
 #endif
-		pulse_light_prec[0] = pulse[0];
-		pulse_light_prec[1] = pulse[1];
-		pulse_light_prec[2] = pulse[2];
+	for (int indLight = 1; indLight <= PG_NB_LIGHTS; indLight++) {
+		pulse_light_prec[indLight][0] = pulse[0];
+		pulse_light_prec[indLight][1] = pulse[1];
+		pulse_light_prec[indLight][2] = pulse[2];
 	}
 }
-#endif
 
 void pg_update_pulsed_colors(void) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// PEN PULSED COLOR
 	// blending the two closest palettes of the pulsed pen color
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_color]
+		&& !pen_hsv) {
 		if (pen_color != pen_color_prec || pen_color_pulse != pen_color_pulse_prec
 			|| pen_grey != pen_grey_prec || pen_grey_pulse != pen_grey_pulse_prec
 			|| ((pen_grey_pulse != 0 || pen_color_pulse != 0)
@@ -8594,27 +7933,28 @@ void pg_update_pulsed_colors(void) {
 			pulse_prec[2] = pulse[2];
 		}
 	}
-#if defined(var_pen_hue)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]) {
-		&& defined(var_pen_sat) && defined(var_pen_value)
-			if (pen_hue != pen_hue_prec || pen_hue_pulse != pen_hue_pulse_prec
-				|| pen_sat != pen_sat_prec || pen_sat_pulse != pen_sat_pulse_prec
-				|| pen_value != pen_value_prec || pen_value_pulse != pen_value_pulse_prec
-				|| ((pen_sat_pulse != 0 || pen_value_pulse != 0 || pen_hue_pulse != 0)
-					&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-				compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pulsed_pen_color, true);
-				pen_hue_prec = pen_hue;
-				pen_hue_pulse_prec = pen_hue_pulse;
-				pen_sat_prec = pen_sat;
-				pen_sat_pulse_prec = pen_sat_pulse;
-				pen_value_prec = pen_value;
-				pen_value_pulse_prec = pen_value_pulse;
-				pulse_prec[0] = pulse[0];
-				pulse_prec[1] = pulse[1];
-				pulse_prec[2] = pulse[2];
-			}
+	else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_hue]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_sat]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_pen_value]
+		&& pen_hsv) {
+		if (pen_hue != pen_hue_prec || pen_hue_pulse != pen_hue_pulse_prec
+			|| pen_sat != pen_sat_prec || pen_sat_pulse != pen_sat_pulse_prec
+			|| pen_value != pen_value_prec || pen_value_pulse != pen_value_pulse_prec
+			|| ((pen_sat_pulse != 0 || pen_value_pulse != 0 || pen_hue_pulse != 0)
+				&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
+			compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pulsed_pen_color, true);
+			pen_hue_prec = pen_hue;
+			pen_hue_pulse_prec = pen_hue_pulse;
+			pen_sat_prec = pen_sat;
+			pen_sat_pulse_prec = pen_sat_pulse;
+			pen_value_prec = pen_value;
+			pen_value_pulse_prec = pen_value_pulse;
+			pulse_prec[0] = pulse[0];
+			pulse_prec[1] = pulse[1];
+			pulse_prec[2] = pulse[2];
+		}
 	}
-#endif
+
 	pulsed_pen_color[3] = 1.f;
 
 
@@ -8650,12 +7990,9 @@ void pg_update_pulsed_colors(void) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// LIGHT PULSED COLOR
 	// blending the two closest palettes of the pulsed Repop color
-	//printf("%.2f %.2f\n", light1_dimmer, light1_dimmer_prec);
-#if defined(PG_LIGHTS_CONTROL_IN_PG)
 	if (pg_FrameNo % 10 == 0) {
 		pg_UpdateLightGroups_from_LightVars();
 	}
-#endif
 
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
 		if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
@@ -8674,7 +8011,8 @@ void pg_update_pulsed_colors(void) {
 	}
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]
+			&& !repop_hsvPart) {
 			if (repop_colorPart != repop_colorPart_prec || repop_colorPart_pulse != repop_colorPart_pulse_prec
 				|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
 				|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
@@ -8689,10 +8027,10 @@ void pg_update_pulsed_colors(void) {
 				pulse_prec[2] = pulse[2];
 			}
 		}
-#if defined(var_repop_huePart) && defined(var_repop_satPart) && defined(var_repop_valuePart)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+		else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+			&& repop_hsvPart) {
 			if (repop_huePart != repop_huePart_prec || repop_huePart_pulse != repop_huePart_pulse_prec
 				|| repop_satPart != repop_satPart_prec || repop_satPart_pulse != repop_satPart_pulse_prec
 				|| repop_valuePart != repop_valuePart_prec || repop_valuePart_pulse != repop_valuePart_pulse_prec
@@ -8710,7 +8048,6 @@ void pg_update_pulsed_colors(void) {
 				pulse_prec[2] = pulse[2];
 			}
 		}
-#endif
 	}
 
 	/***************************** SHOULD BE REACTIVATED WHEN THE INTERFACE CAN DISPLAY COLORS */
@@ -8730,6 +8067,7 @@ void pg_update_pulsed_colors(void) {
 
 void pg_path_recording_onOff(int indPath) {
 	// switches between recording on/off 
+	printf("pg_path_recording_onOff(%d)\n", indPath);
 	bool is_path_record = false;
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
 		is_path_record = !pg_Path_Status[indPath].path_isActiveRecording;
@@ -8751,11 +8089,9 @@ void pg_path_recording_onOff(int indPath) {
 			pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 
 			// recording can only be made with one finger
-#if defined(var_fingers)
 			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_fingers]) {
 				NumberOfInteractionFingers(1);
 			}
-#endif
 		}
 		else {
 			// stops source recording 
@@ -8772,10 +8108,11 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 
 	// is not currently reading and positive or null track -> starts reading 
 	if (!is_path_replay[indPath] && trackNo >= 0) {
-		//printf( "start_read_path #%d on track %d\n", indPath, trackNo);
+		printf( "start_read_path #%d on track %d\n", indPath, trackNo);
 
 		// is recording source -> has to stop recording source 
 		if (ispath_record) {
+			printf("pg_path_recording_stop #%dd\n", indPath);
 			pg_path_recording_stop(indPath);
 		}
 
@@ -8784,7 +8121,7 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 	}
 	// is currently reading && negative track -> stops reading 
 	else if (is_path_replay[indPath] && trackNo < 0) {
-		// printf("stop_read_path #%d (track No negative)\n", indPath);
+		 printf("stop_read_path #%d (track No negative)\n", indPath);
 
 		// stops reading 
 		pg_path_replay_trackNo_stop(indPath);
@@ -8824,15 +8161,17 @@ void pg_path_recording_stop(int indPath) {
 	}
 }
 void pg_path_replay_trackNo_start(int indPath, int trackNo) {
-	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, is_path_replay[indPath], pg_PathCurve_Params[pg_current_configuration_rank][indPath].nbRecordedFrames);
+	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, is_path_replay[indPath], 
+		//pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank));
 	if (indPath >= 1 && indPath <= PG_NB_PATHS
 		&& !is_path_replay[indPath]
 		&& pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank) > 0) {
 		is_path_replay[indPath] = true;
-		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo, pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
+		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo,
+			//pg_Path_Status[indPath].PathStatus_nbFrames(pg_current_configuration_rank), is_path_replay[indPath]);
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_record]
 			&& indPath >= 1 && indPath < PG_NB_PATHS) {
-			((bool*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
+			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
 		}
 		// first time reading: starts from beginning
 		// otherwise starts from where it is
@@ -8853,12 +8192,12 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		is_path_replay[indPath] = false;
 		paths_x[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-#if defined(PG_BEZIER_PATHS)
+
 		paths_xL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yL[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_xR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_yR[indPath] = PG_OUT_OF_SCREEN_CURSOR;
-#endif
+
 		paths_x_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y_prev[indPath] = PG_OUT_OF_SCREEN_CURSOR;
 		isBegin[indPath] = false;

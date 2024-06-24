@@ -2086,7 +2086,6 @@ void ParseScenarioLights(std::ifstream & scenarioFin, int indConfiguration) {
 	string ID;
 	string temp;
 
-#if defined(PG_LIGHTS_CONTROL_IN_PG) || defined(PG_LIGHTS_CONTROL_IN_PYTHON)
 	////////////////////////////
 	////// LIGHTS
 	// lights markup
@@ -2201,7 +2200,6 @@ void ParseScenarioLights(std::ifstream & scenarioFin, int indConfiguration) {
 	for (const auto& myPair : pg_light_param_hashMap) {
 		pg_inverse_light_param_hashMap[myPair.second] = myPair.first;
 	}
-#endif
 }
 
 void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {

@@ -31,8 +31,6 @@ https://github.com/fcaruso/GLSLParametricCurve
 
 #define PG_SIZE_QUAD_ARRAY 4  // quads made of a 4-point triangle strip
 
-// #define PG_NB_TRACKS 4   // **** ALSO TO BE CHANGED IN UPDATE, MASTER AND COMPOSITION FRAGMENT SHADER ****
-
 enum pg_FBO_Update_samplers
 {
 	pg_CA_FBO_Update_sampler = 0,
@@ -53,14 +51,9 @@ enum pg_FBO_Update_samplers
 	pg_Trk1_FBO_Update_sampler,
 	pg_Trk2_FBO_Update_sampler,
 	pg_Trk3_FBO_Update_sampler,
-#if defined(var_CATable)
-	pg_CATable_Update_sampler,
-#endif
 	pg_Camera_BGIni_FBO_Update_sampler,
 	pg_pixel_image_acc_Update_sampler,
-#if defined(WITH_BURST_MASK)
-	pg_Burst_Mask_FBO_Update_sampler,
-#endif
+	pg_CATable_Update_sampler,
 };
 enum pg_FBO_Update_attachments
 {
@@ -160,9 +153,7 @@ extern GLfloat pg_orthoWindowProjMatrix[16];
 extern GLfloat doubleProjMatrix[16];
 extern GLfloat pg_identityViewMatrix[16];
 extern GLfloat pg_identityModelMatrix[16];
-#if defined(PIERRES)
 extern GLfloat pg_homographyForTexture[9];
-#endif
 extern GLfloat modelMatrixSensor[16];
 
 /////////////////////////////////////////////////////////////////
@@ -251,15 +242,12 @@ extern int sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
 extern double sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
 
 // +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
-#if defined(PG_METAWEAR)
 #define PG_MW_NB_MAX_SENSORS 2
 struct metawear_sensor_data {
 	float mw_mss_pos[3];		// x y z
 	bool  mw_mss_pos_update;
 };
 extern struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
-#endif
-
 
 /////////////////////////////////////////////////////////////////
 // FBO INITIALIZATION
@@ -344,8 +332,6 @@ void assignSensorPositions(void);
 void assignSensorActivations(void);
 void sensor_sample_setUp_interpolation(void);
 
-#if defined(PG_METAWEAR)
 void MetawearSensorInitialization();
-#endif
 
 void MeshInitialization(void);

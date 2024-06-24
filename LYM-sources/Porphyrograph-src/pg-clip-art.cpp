@@ -395,21 +395,6 @@ void convertTextStringToClipartIndices(std::vector<int> *indClipArts, string dis
 		// indChar character code
 		char curChar = displayed_text.at(indChar);
 		int indClipArt = -1;
-#if defined(ETOILES)
-		/* TEASEER ETOiLES */
-		if (curChar >= '0' && curChar <= '9') {
-			indClipArt = curChar - '0';
-		}
-		else {
-			switch (curChar) {
-			case '.':  indClipArt = 10; break;
-			case ',':  indClipArt = 11; break;
-			case '+':  indClipArt = 12; break;
-			case '-':  indClipArt = 13; break;
-			case 'e':  indClipArt = 14; break;
-			}
-		}
-#else
 		// corresponding index of clipart (the cliparts are declared in the scenario file)
 		if (curChar >= 'A' && curChar <= 'Z') {
 			indClipArt = curChar - 'A';
@@ -421,7 +406,6 @@ void convertTextStringToClipartIndices(std::vector<int> *indClipArts, string dis
 			case '#':  indClipArt = 28; break;
 			}
 		}
-#endif
 		(*indClipArts)[indChar] = indClipArt;
 	}
 }
@@ -446,48 +430,10 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 			glMatrixOrthoEXT(GL_PROJECTION, 0, window_width, window_height, 0, -1, 1);
 			glMatrixPushEXT(GL_MODELVIEW);
 			std::string displayed_text("");
-#if defined(ETOILES)
-			int digit_rank = (*ind_Current_DisplayText) / 10;
-			// digits of the number
-			if ((*ind_Current_DisplayText) < 130) {
-				int digit_value = 0;
-				for (int curDigitRank = 0; curDigitRank < 12; curDigitRank++) {
-					if (curDigitRank >= digit_rank) {
-						digit_value = int(rand_0_1 * 10) % 10;
-					}
-					else {
-						digit_value = 0;
-					}
-					displayed_text.push_back(char('0' + digit_value));
-					if (curDigitRank == 0) {
-						displayed_text += std::string(".");
-					}
-				}
-				// exponent of the number
-				displayed_text += std::string("e-");
-				std::string exponent("");
-				int exponent_value;
-				if (digit_rank < 12) {
-					exponent_value = 6;
-				}
-				else {
-					int local_rank = (*ind_Current_DisplayText) % 10;
-					exponent_value = int(rand_0_1 * 10 + 10 * local_rank) % 100;
-				}
-				std::stringstream ss;
-				ss << std::setw(2) << std::setfill('0') << exponent_value;
-				exponent = ss.str();
-				displayed_text += exponent;
-			}
-			else {
-				displayed_text = string("               0.");
-			}
-			std::cout << "text " << displayed_text << " rank " << (*ind_Current_DisplayText) << std::endl;
-#else
+
 			// the string to display is loaded from a text file
 			int ind_current_displayed_line = max(0, (*ind_Current_DisplayText) - 10 * indLine);
 			displayed_text = DisplayTextList[ind_current_displayed_line];
-#endif
 
 			vector<int> indClipArts(displayed_text.size(), 26);
 			convertTextStringToClipartIndices(&indClipArts, displayed_text);
@@ -509,10 +455,8 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					else {
 						y_transl = pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_Y;
 					}
-#if defined(ETOILES)
-					glTranslatef(100.f + 100.f * indChar, y_transl, 0);
-#else
-						if (mobile == 2 && indChar < (unsigned int)(DisplayText_maxLen)) {
+					
+					if (mobile == 2 && indChar < (unsigned int)(DisplayText_maxLen)) {
 						DisplayText_rand_translX[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f);
 						DisplayText_rand_translY[indChar] += (rand_0_1 - 0.5f) * (1.f + float(current_scene_percent) * 10.f) + rand_0_1 * 0.2f * (1.f + float(current_scene_percent) * 10.f);
 					}
@@ -527,7 +471,7 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 					glTranslatef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_X * 1.5f
 						+ pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Translation_X * indChar + DisplayText_rand_translX[indChar],
 						y_transl + DisplayText_rand_translY[indChar], 0);
-#endif
+
 					//glRotatef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Rotation, 0, 0, 1);
 					//glScalef(pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale, pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale, 1);
 					// the clipart can be made of several sub-paths, only display the ones that are not been set to off
@@ -537,10 +481,8 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 						//if (pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_SubPath[indLayer] == true) {
 							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Colors[indLayer] 
 							//	<< " ind PATH " << indLayer << " ind CLIPART " << indClipArt << std::endl;
-#ifndef ETOILES
 						float scale = pg_ClipArts[pg_current_configuration_rank][indClipArt].pg_ClipArt_Scale;
 						glScalef(scale, scale, scale);
-#endif
 						pg_Display_One_ClipArt(indClipArt, indLayer);
 						//}
 						//else {
@@ -554,15 +496,9 @@ void pg_Display_ClipArt_Text(int *ind_Current_DisplayText, int mobile) {
 			glDisable(GL_STENCIL_TEST);
 		}
 	}
-#if defined(ETOILES)
 	if (pg_FrameNo % 3 == 0) {
 		(*ind_Current_DisplayText) = int(min(float((*ind_Current_DisplayText) + 1), float(NbDisplayTexts - 1)));
 	}
-#else
-	if (pg_FrameNo % 3 == 0) {
-		(*ind_Current_DisplayText) = int(min(float((*ind_Current_DisplayText) + 1), float(NbDisplayTexts - 1)));
-	}
-#endif
 
 	printOglError(5257);
 }
