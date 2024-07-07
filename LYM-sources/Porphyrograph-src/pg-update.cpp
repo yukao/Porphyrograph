@@ -84,7 +84,7 @@ float tang_y_prev[PG_NB_PATHS + 1];
 
 int paths_BrushID[PG_NB_PATHS + 1];
 
-float repop_ColorBG_r;
+float repop_ColorBGcolorRed;
 float repop_ColorBG_g;
 float repop_ColorBG_b;
 float repop_ColorCA_r;
@@ -2046,7 +2046,7 @@ void pg_update_shader_Update_uniforms(void) {
 	// flash BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
 		flashTrkBG_weights[1], flashTrkBG_weights[2], flashTrkBG_weights[3], flashPartBG_weight);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		// flash Trk -> CA weights
 		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
 			flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
@@ -2088,8 +2088,8 @@ void pg_update_shader_Update_uniforms(void) {
 
 	// flash CA -> BG & repop color (BG & CA)
 	glUniform4f(uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[pg_current_configuration_rank],
-		repop_ColorBG_r, repop_ColorBG_g, repop_ColorBG_b, flashCABG_weight);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		repop_ColorBGcolorRed, repop_ColorBG_g, repop_ColorBG_b, flashCABG_weight);
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 #if !defined(var_alKemi)
 		glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_current_configuration_rank],
 			repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
@@ -2262,7 +2262,7 @@ void pg_update_shader_Update_uniforms(void) {
 			track_x_transl[0], track_y_transl[0], track_x_transl[1], track_y_transl[1]);
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		// acceleration center and CA subtype
 		// in case of interpolation between CA1 and CA2 
 		if (!BrokenInterpolationVar[_CA1_CA2_weight]) {
@@ -2285,12 +2285,12 @@ void pg_update_shader_Update_uniforms(void) {
 				CAInterpolatedType = CA2Type;
 				CAInterpolatedSubType = CA2SubType;
 			}
-			// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
+			 //printf("CA1/CA2 mix: CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 		}
 	}
 
 #if !defined(PG_WITH_BLUR)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
 			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 			0.f, 0.f);
@@ -2301,7 +2301,7 @@ void pg_update_shader_Update_uniforms(void) {
 			0.f, 0.f);
 	}
 #else
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
 			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 			(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
@@ -2466,17 +2466,11 @@ void pg_update_shader_Master_uniforms(void) {
 
 		// printf("mobile cursor %d\n", (mobile_cursor ? 1 : 0));
 		glUniform2i(uniform_Master_fs_2iv_mobile_cursor_currentScene[pg_current_configuration_rank], (mobile_cursor ? 1 : 0), pg_CurrentSceneIndex);
-#if defined(var_Caverne_BackColor)
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_BGcolor]
+			|| pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
 			// high bandpass color
-			glUniform3f(uniform_Master_fs_3fv_Caverne_BackColor_rgb[pg_current_configuration_rank],
-				Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
-		}
-#endif
-
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
-			glUniform3f(uniform_Master_fs_3fv_BG_color_rgb[pg_current_configuration_rank],
-				BG_r, BG_g, BG_b);
+			glUniform3f(uniform_Master_fs_3fv_BGcolor_rgb[pg_current_configuration_rank],
+				BGcolorRed, BGcolorGreen, BGcolorBlue);
 		}
 	}
 	/*
@@ -2558,7 +2552,7 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed[pg_current_configuration_rank], pg_Part_init_pos_speed_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad[pg_current_configuration_rank], pg_Part_init_col_rad_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_acc[pg_current_configuration_rank], pg_Part_image_acc_ParticleAnimation_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glUniform1i(uniform_ParticleAnimation_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_ParticleAnimation_sampler);
 	}
 	glUniform1i(uniform_ParticleAnimation_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_ParticleAnimation_sampler);
@@ -2621,7 +2615,7 @@ void pg_ParticleAnimationPass(void) {
 
 	// 2-cycle ping-pong CA step n step n (FBO attachment 0)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_ParticleAnimation_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -2770,7 +2764,7 @@ void pg_UpdatePass(void) {
 
 	////////////////////////////////////////////////////////
 	// texture unit location
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glUniform1i(uniform_Update_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Update_sampler);
 		glUniform1i(uniform_Update_texture_fs_PreviousCA[pg_current_configuration_rank], pg_PreviousCA_FBO_Update_sampler);
 	}
@@ -2821,7 +2815,7 @@ void pg_UpdatePass(void) {
 	// texture unit binding
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -2829,7 +2823,7 @@ void pg_UpdatePass(void) {
 	}
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- previous Frame
 	glActiveTexture(GL_TEXTURE0 + pg_PreviousCA_FBO_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 		//printf("pg_FBO_Update_texID\n");
 	}
@@ -3254,7 +3248,7 @@ void pg_MixingPass(void) {
 	glUniformMatrix4fv(uniform_Mixing_vp_model[pg_current_configuration_rank], 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glUniform1i(uniform_Mixing_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Mixing_sampler);
 	}
 	glUniform1i(uniform_Mixing_texture_fs_ClipArt_render[pg_current_configuration_rank], pg_ClipArt_render_FBO_Mixing_sampler);
@@ -3273,7 +3267,7 @@ void pg_MixingPass(void) {
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// 2-cycle ping-pong CA step n + 1 (FBO attachment 0) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Mixing_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	}
 	else {
@@ -3382,7 +3376,7 @@ void pg_MasterPass(void) {
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		// texture unit locations
 		glUniform1i(uniform_Master_texture_fs_Render_curr[pg_current_configuration_rank], pg_Render_curr_FBO_Master_sampler);
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			glUniform1i(uniform_Master_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Master_sampler);
 		}
 		else {
@@ -3404,7 +3398,7 @@ void pg_MasterPass(void) {
 
 		// 2-cycle ping-pong CA step n (FBO attachment 0) -- next frame (outout from update pass)
 		glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 		}
 		else {
@@ -3641,13 +3635,8 @@ void pg_calculate_perspective_matrices(void) {
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
 	if (double_window) {
-#if defined(pg_Project_Tempete)
-		VP1perspMatrix
-			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m * 2.0f, VP1TopAt1m * 2.0f, nearPlane, farPlane);
-#else
 		VP1perspMatrix
 			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-#endif
 	}
 	else {
 		VP1perspMatrix
@@ -3690,13 +3679,9 @@ void pg_calculate_perspective_matrices(void) {
 #if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 	//////////////////////////////////////////////////////////////////////////////////
 	// left camera (right display)
-#if defined(pg_Project_Tempete)
-	VP2perspMatrix
-		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m * 2.0f, VP2TopAt1m * 2.0f, nearPlane, farPlane);
-#else
 	VP2perspMatrix
 		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m, nearPlane, farPlane);
-#endif
+
 	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m );
 
 	// Camera matrix
@@ -4061,11 +4046,10 @@ void pg_drawOneMesh(int indMeshFile) {
 				glDrawElements(GL_TRIANGLES, pg_Meshes[pg_current_configuration_rank][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
 				printOglError(698);
 
-#if defined(var_with_edges)
-				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_with_edges]) {
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_with_mesh]) {
 					// draws the polygon contours
 					// updates this variable according whether triangles or lines are shown
-					if (with_edges == 1
+					if (with_mesh == 1
 #if defined(var_MmeShanghai_brokenGlass)
 						&& indMeshFile == 0
 #endif
@@ -4079,7 +4063,7 @@ void pg_drawOneMesh(int indMeshFile) {
 						glEnable(GL_DEPTH_TEST);
 					}
 				}
-#endif
+
 				// Augmented Reality: FBO capture of Master to be displayed on a mesh
 				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes] 
 					&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_meshRenderBypass]) {
@@ -4310,11 +4294,7 @@ void pg_MeshPass(void) {
 
 			// sets viewport to single window
 			if (double_window) {
-#if defined(pg_Project_Tempete)
-				glViewport(0, window_height / 2, workingWindow_width, window_height);
-#else
 				glViewport(0, 0, workingWindow_width, window_height);
-#endif
 			}
 			else {
 				glViewport(0, 0, workingWindow_width, window_height);
@@ -4348,11 +4328,8 @@ void pg_MeshPass(void) {
 #if defined(PG_SECOND_MESH_CAMERA)
 		if (!directRenderingwithoutMeshScreen2) {
 			// sets viewport to second window
-#if defined(pg_Project_Tempete)
-			glViewport(0, 0, workingWindow_width, window_height / 2);
-#else
 			glViewport(workingWindow_width, 0, workingWindow_width, window_height);
-#endif
+
 			// duplicates the Meshs in case of double window
 
 			glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_current_configuration_rank], 1, GL_FALSE,

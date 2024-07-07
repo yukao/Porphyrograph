@@ -1915,7 +1915,7 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 	// PARTICLE COLOR UPDATING INDEPENDENTLY OF TRACK READING OR WRITING
 	///////////////////////////////////////////////////////////////////////
 	/// uses pulsed color to repop
-	repop_ColorBG_r
+	repop_ColorBGcolorRed
 		= min(1.f, pulsed_repop_colorBG[0]);
 	repop_ColorBG_g
 		= min(1.f, pulsed_repop_colorBG[1]);

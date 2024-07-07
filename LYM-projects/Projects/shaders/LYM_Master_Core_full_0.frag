@@ -101,10 +101,7 @@ layout (binding = 8) uniform sampler3D uniform_Master_texture_fs_Mask;  // mask 
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
 uniform vec4 uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen;
 uniform ivec2 uniform_Master_fs_2iv_mobile_cursor_currentScene;
-
-#if defined(var_flashchange_BGcolor_freq)
- uniform vec3 uniform_Master_fs_3fv_BG_color_rgb;
-#endif
+uniform vec3 uniform_Master_fs_3fv_BGcolor_rgb;
 
 /////////////////////////////////////
 // VIDEO FRAME COLOR OUTPUT
@@ -244,10 +241,15 @@ void main() {
   // and clamping
   outColor0 
     = vec4( clamp( MixingColor.rgb + NonEchoedColor , 0.0 , 1.0 ) , 1.0 );
-#if defined(var_flashchange_BGcolor_freq)
-  outColor0 
-    = vec4( clamp( outColor0.rgb + uniform_Master_fs_3fv_BG_color_rgb , 0.0 , 1.0 ) , 1.0 );
-#endif
+  if(uniform_Master_fs_3fv_BGcolor_rgb.r + uniform_Master_fs_3fv_BGcolor_rgb.g + uniform_Master_fs_3fv_BGcolor_rgb.b > 0) {
+    if(graylevel(outColor0) < 0.3) {
+      outColor0.rgb = clamp(uniform_Master_fs_3fv_BGcolor_rgb.rgb, 0, 1);
+    }
+    else {
+      outColor0.rgb = vec3(1) - outColor0.rgb;
+    }
+  }
+
   // masking
 #ifdef var_currentMaskTrack
   if (currentMaskTrack >= 0) {

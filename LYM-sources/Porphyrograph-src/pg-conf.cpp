@@ -98,6 +98,13 @@ vector<MeshData> pg_Meshes[PG_MAX_CONFIGURATIONS];
 // last activated Mesh
 int pg_last_activated_Mesh = 0;
 
+// BACKGROUND COLOR
+float BGcolorRed_prec;
+float BGcolorGreen_prec;
+float BGcolorBlue_prec;
+bool BGcolorFlash = false;
+bool BGcolorFlash_prec = false;
+
 // TEXTURES
 // number of Texture files
 vector<pg_TextureData> pg_Textures[PG_MAX_CONFIGURATIONS];
@@ -2854,8 +2861,9 @@ void parseScenarioFile(std::ifstream& scenarioFin, int indConfiguration) {
 					newScene.scene_interpolations[indVar].initialization_mode = pg_current_value;
 					newScene.scene_interpolations[indVar].interpolation_mode = pg_keep_value;
 				}
-				else {
-					sprintf(ErrorStr, "Error: unknown interpolation mode in scene %d (%s) parameter %d [%d] [%c]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, int(valCh), valCh); ReportError(ErrorStr); throw 50;
+				else {					
+					printf("indVar %d indP %d\n", indVar, indP);
+					sprintf(ErrorStr, "Error: unknown interpolation mode in scene %d (%s) parameter %d (%d in full) [%d] [%c]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indP + 1, indVar + 1, int(valCh), valCh); ReportError(ErrorStr); throw 50;
 				}
 
 				//if (indVar == _trkDecay && nbScenesInScenario == 12) {

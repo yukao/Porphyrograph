@@ -878,7 +878,7 @@ extern float paths_Color_r[PG_NB_PATHS + 1];
 extern float paths_Color_g[PG_NB_PATHS + 1];
 extern float paths_Color_b[PG_NB_PATHS + 1];
 extern float paths_Color_a[PG_NB_PATHS + 1];
-extern float repop_ColorBG_r;
+extern float repop_ColorBGcolorRed;
 extern float repop_ColorBG_g;
 extern float repop_ColorBG_b;
 extern float repop_ColorCA_r;

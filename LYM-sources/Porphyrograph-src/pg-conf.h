@@ -352,20 +352,17 @@ public:
 	~MeshData(void) {
 	}
 };
-class CaverneBackColor {
-	bool Caverne_BackColor;
-	float Caverne_BackColorRed;
-	float Caverne_BackColorGreen;
-	float Caverne_BackColorBlue;
-	float Caverne_BackColorRed_prec;
-	float Caverne_BackColorGreen_prec;
-	float Caverne_BackColorBlue_prec;
-	bool Caverne_BackColorFlash;
-	bool Caverne_BackColorFlash_prec;
-};
+
 // MESHES
 extern vector<MeshData> pg_Meshes[PG_MAX_CONFIGURATIONS];
 extern int pg_last_activated_Mesh;
+
+// BACKGROUND COLOR
+extern float BGcolorRed_prec;
+extern float BGcolorGreen_prec;
+extern float BGcolorBlue_prec;
+extern bool BGcolorFlash;
+extern bool BGcolorFlash_prec;
 
 float my_stof(string str);
 int my_stoi(string str);

@@ -581,7 +581,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_Caverne_Mesh_Profusion_off,
 	_Caverne_Mesh_7Solids_on,
 	_Caverne_Mesh_7Solids_off,
-	_Caverne_BackColor_onOff,
+	_BGcolor_onOff,
 #endif
 	_Mesh_mobile_onOff,
 	_Mesh_light_x,
@@ -848,7 +848,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "Caverne_Mesh_Profusion_off", _Caverne_Mesh_Profusion_off },
 	{ "Caverne_Mesh_7Solids_on", _Caverne_Mesh_7Solids_on },
 	{ "Caverne_Mesh_7Solids_off", _Caverne_Mesh_7Solids_off },
-	{ "Caverne_BackColor_onOff", _Caverne_BackColor_onOff },
+	{ "BGcolor_onOff", _BGcolor_onOff },
 #endif
 	{ "Mesh_mobile_onOff", _Mesh_mobile_onOff },
 	{ "Mesh_light_x", _Mesh_light_x },
@@ -1298,7 +1298,7 @@ void pg_initializeScenearioVariables(void) {
 	}
 
 	// particule color
-	repop_ColorBG_r = 0.f;
+	repop_ColorBGcolorRed = 0.f;
 	repop_ColorBG_g = 0.f;
 	repop_ColorBG_b = 0.f;
 	repop_ColorCA_r = 0.f;
@@ -2597,11 +2597,12 @@ void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scen
 		// do nothing / no images to display
 		else {
 		}
-#if defined(ATELIERSENFANTS)
+
 		// photo diaporama initialization
-		printf("current photo diaporama %d\n", scenario_or_gui_command_value);
-		ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, scenario_or_gui_command_value);
-#endif
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
+			//printf("current photo diaporama %d\n", scenario_or_gui_command_value);
+			ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, scenario_or_gui_command_value);
+		}
 	}
 }
 
@@ -2825,20 +2826,20 @@ void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_
 }
 
 void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
-	int playing_track = -1;
+	int replayTrack = -1;
 	// for a keystroke or a GUI, the command is the current track whatever its value
 	if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-		playing_track = currentDrawingTrack;
+		replayTrack = currentDrawingTrack;
 	}
 	// for a scenario >= 0 -> replay and -1 -> no replay
 	else if (param_input_type == _PG_SCENARIO) {
-		playing_track = scenario_or_gui_command_value;
+		replayTrack = scenario_or_gui_command_value;
 	}
 	// is not currently reading -> starts reading if it is a valid track number
-	//printf("path %d is replay %d playing_track %d\n", pathNo, is_path_replay[pathNo], playing_track);
+	//printf("path %d is replay %d replayTrack %d\n", pathNo, is_path_replay[pathNo], replayTrack);
 	if (!is_path_replay[pathNo]) {
 		// does not change anything if it is not a valid track
-		if (playing_track < 0 || playing_track >= PG_NB_TRACKS) {
+		if (replayTrack < 0 || replayTrack >= PG_NB_TRACKS) {
 			//sprintf(AuxString, "/path_replay_trackNo_%d -1", pathNo);
 			//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay unchanged (stop) invalid track\n");
@@ -2863,11 +2864,11 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 		//printf("recorded path %d : %d\n", pathNo, recorded_path[pathNo]);
 		if (recorded_path[pathNo] == true) {
 			if (tracksSync) {
-				synchr_start_path_replay_trackNo[pathNo] = playing_track;
+				synchr_start_path_replay_trackNo[pathNo] = replayTrack;
 			}
 			else {
-				printf("start replay path %d\n", pathNo);
-				pg_path_replay_trackNo_onOff(pathNo, playing_track);
+				//printf("start replay path %d\n", pathNo);
+				pg_path_replay_trackNo_onOff(pathNo, replayTrack);
 			}
 			//sprintf(AuxString, "/path_replay_trackNo_%d 1", pathNo);
 			//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
@@ -2880,15 +2881,17 @@ void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_inpu
 			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
 		}
 	}
-	// is currently reading && playing_track < 0 (scenario) or on/off command -> stops reading 
+	// is currently reading && replayTrack < 0 (scenario) or on/off command -> stops reading 
 	else {
+		//printf("1 stop replay path %d replay track %d\n", pathNo, replayTrack);
 		if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_KEYSTROKE) {
-			playing_track = -1;
+			replayTrack = -1;
 		}
-		if (playing_track == -1) {
-			pg_path_replay_trackNo_onOff(pathNo, playing_track);
-			//sprintf(AuxString,  "/path_replay_trackNo_%d -1", pathNo);
-			//pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
+		//printf("2 stop replay path %d replay track %d\n", pathNo, replayTrack);
+		if (replayTrack == -1) {
+			pg_path_replay_trackNo_onOff(pathNo, replayTrack);
+			sprintf(AuxString,  "/path_replay_trackNo_%d -1", pathNo);
+			pg_send_message_udp((char *)"i", AuxString, (char *)"udp_TouchOSC_send");
 			//printf("replay off track was currently read (%s)\n", AuxString);
 		}
 	}
@@ -3107,7 +3110,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		}
 		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
 			if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
 					&& (indVar == _CA1Type || indVar == _CA2Type ||
 						indVar == _CA1SubType || indVar == _CA2SubType)) {
 					// for CAType we choose to alternate randomly between both types, according
@@ -3184,7 +3187,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
 						&& (indVar == _CA1Type || indVar == _CA2Type ||
 							indVar == _CA1SubType || indVar == _CA2SubType)) {
 						// for CAType we choose to alternate randomly between both types, according
@@ -4357,7 +4360,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
 		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
 		for (int indTrack = 0; indTrack < PG_NB_TRACKS; indTrack++) {
 			if ((*control_function)(flashTrkCA_freq[indTrack])) {
@@ -4583,13 +4586,13 @@ void pg_flash_control(bool (*control_function)(int)) {
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashchange_BGcolor_freq]) {
 		if ((*control_function)(flashchange_BGcolor_freq)) {
 			float BG_hue = rand_0_1;
-			HSVtoRGB(BG_hue, 1.f, 1.f, &BG_r, &BG_g, &BG_b);
-			//printf("RGB %.2f -> %.2f %.2f %.2f \n", BG_hue, BG_r, BG_g, BG_b);
+			HSVtoRGB(BG_hue, 1.f, 1.f, &BGcolorRed, &BGcolorGreen, &BGcolorBlue);
+			//printf("RGB %.2f -> %.2f %.2f %.2f \n", BG_hue, BGcolorRed, BGcolorGreen, BGcolorBlue);
 		}
 		else if (flashchange_BGcolor_freq == 0) {
-			BG_r = 0.f;
-			BG_g = 0.f;
-			BG_b = 0.f;
+			BGcolorRed = 0.f;
+			BGcolorGreen = 0.f;
+			BGcolorBlue = 0.f;
 		}
 	}
 
@@ -4705,49 +4708,47 @@ void ReceiveBeat(void) {
 		}
 	}
 
-#if defined(var_Caverne_BackColor)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
-		if (Caverne_BackColor) {
-			Caverne_BackColorRed = rand_0_1;
-			Caverne_BackColorGreen = rand_0_1;
-			Caverne_BackColorBlue = rand_0_1;
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_BGcolor]) {
+		if (BGcolor) {
+			BGcolorRed = rand_0_1;
+			BGcolorGreen = rand_0_1;
+			BGcolorBlue = rand_0_1;
 			// color saturation
-			float max_col = max(Caverne_BackColorRed, max(Caverne_BackColorGreen, Caverne_BackColorBlue));
-			Caverne_BackColorRed += 1.f - max_col;
-			Caverne_BackColorGreen += 1.f - max_col;
-			Caverne_BackColorBlue += 1.f - max_col;
+			float max_col = max(BGcolorRed, max(BGcolorGreen, BGcolorBlue));
+			BGcolorRed += 1.f - max_col;
+			BGcolorGreen += 1.f - max_col;
+			BGcolorBlue += 1.f - max_col;
 			// color debrillance
-			float brillance = min(Caverne_BackColorRed, min(Caverne_BackColorGreen, Caverne_BackColorBlue));
-			if (Caverne_BackColorRed == brillance) {
-				Caverne_BackColorRed = 0.f;
+			float brillance = min(BGcolorRed, min(BGcolorGreen, BGcolorBlue));
+			if (BGcolorRed == brillance) {
+				BGcolorRed = 0.f;
 			}
-			else if (Caverne_BackColorRed != 1.f) {
-				Caverne_BackColorRed -= brillance / 2.f;
+			else if (BGcolorRed != 1.f) {
+				BGcolorRed -= brillance / 2.f;
 			}
-			if (Caverne_BackColorGreen == brillance) {
-				Caverne_BackColorGreen = 0.f;
+			if (BGcolorGreen == brillance) {
+				BGcolorGreen = 0.f;
 			}
-			else if (Caverne_BackColorGreen != 1.f) {
-				Caverne_BackColorGreen -= brillance / 2.f;
+			else if (BGcolorGreen != 1.f) {
+				BGcolorGreen -= brillance / 2.f;
 			}
-			if (Caverne_BackColorBlue == brillance) {
-				Caverne_BackColorBlue = 0.f;
+			if (BGcolorBlue == brillance) {
+				BGcolorBlue = 0.f;
 			}
-			else if (Caverne_BackColorBlue != 1.f) {
-				Caverne_BackColorBlue -= brillance / 2.f;
+			else if (BGcolorBlue != 1.f) {
+				BGcolorBlue -= brillance / 2.f;
 			}
 
 			// background flash
-			Caverne_BackColorFlash = true;
-			Caverne_BackColorFlash_prec = false;
+			BGcolorFlash = true;
+			BGcolorFlash_prec = false;
 		}
 		else {
-			Caverne_BackColorRed = 0.f;
-			Caverne_BackColorGreen = 0.f;
-			Caverne_BackColorBlue = 0.f;
+			BGcolorRed = 0.f;
+			BGcolorGreen = 0.f;
+			BGcolorBlue = 0.f;
 		}
 	}
-#endif
 
 	for (int ind = 0; ind < pg_nb_light_groups[pg_current_configuration_rank]; ind++) {
 		if (pg_light_groups[pg_current_configuration_rank][ind].get_group_hasBeatCommand()) {
@@ -5164,7 +5165,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		sprintf(AuxString, "/CA_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorCA[0] * 255), int(pulsed_repop_colorCA[1] * 255), int(pulsed_repop_colorCA[2] * 255));
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 		compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pulsed_repop_colorBG, _PG_REPOP);
-		sprintf(AuxString, "/BG_repopColor/color %02x%02x%02xFF", int(pulsed_repop_colorBG[0] * 255), int(pulsed_repop_colorBG[1] * 255), int(pulsed_repop_colorBG[2] * 255));
+		sprintf(AuxString, "/BGcolorRedepopColor/color %02x%02x%02xFF", int(pulsed_repop_colorBG[0] * 255), int(pulsed_repop_colorBG[1] * 255), int(pulsed_repop_colorBG[2] * 255));
 		pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
 
 		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
@@ -5210,7 +5211,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// flash on/off values
 	// ======================================== 
 	case _flashTrkCA_onOff: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
 			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
 			if (currentDrawingTrack >= 0 && currentDrawingTrack < PG_NB_TRACKS) {
 				if (flashTrkCA_freq[currentDrawingTrack] > 0) {
@@ -5878,7 +5879,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _CA1Type_plus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			CA1Type = (CA1Type + 1) % nb_CATypes;
 			BrokenInterpolationVar[_CA1Type] = true;
 			// printf("CA1Type %d\n", CA1Type);
@@ -5887,7 +5888,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1Type_minus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			CA1Type = (CA1Type - 1 + nb_CATypes) % nb_CATypes;
 			BrokenInterpolationVar[_CA1Type] = true;
 			// printf("CA1Type %d\n", CA1Type);
@@ -5896,7 +5897,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1SubType_plus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
 			BrokenInterpolationVar[_CA1SubType] = true;
 			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
@@ -5904,7 +5905,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1SubType_minus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
 			BrokenInterpolationVar[_CA1SubType] = true;
 			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
@@ -5912,7 +5913,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CAonOff: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			if (CA1SubType != 0) {
 				CASubTypeMem = CA1SubType;
 				CA1SubType = 0;
@@ -6027,7 +6028,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _repopCA_BW: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 			if (repop_greyCA > 0) {
 				repop_greyCA = 0.0f;
 			}
@@ -7340,7 +7341,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _Caverne_Mesh_Profusion_off: for (int indMesh = 7; indMesh < pg_nb_Mesh_files; indMesh++) { Caverne_Mesh_Profusion_Off(indMesh); }; break;
 	case _Caverne_Mesh_7Solids_on: for (int indMesh = 0; indMesh < 7; indMesh++) { Mesh_On(indMesh + 1); Mesh_mobile_Off(indMesh + 1); }; break;
 	case _Caverne_Mesh_7Solids_off: for (int indMesh = 0; indMesh < 7; indMesh++) { Mesh_Off(indMesh + 1); Mesh_mobile_Off(indMesh + 1); }; break;
-	case _Caverne_BackColor_onOff: Caverne_BackColor = !Caverne_BackColor; break;
+	case _BGcolor_onOff: BGcolor = !BGcolor; break;
 #endif
 	case _Mesh_light_x: mesh_light_x = float_arguments[0]; printf("MESH light x %.2f\n", float_arguments[0]);  break;
 	case _Mesh_light_y: mesh_light_y = float_arguments[0]; printf("MESH light y %.2f\n", float_arguments[0]);  break;
@@ -7862,12 +7863,10 @@ void pg_UpdateLightGroups_from_LightVars() {
 			|| light_strobe[indLight] != light_strobe_prec[indLight] || light_strobe_pulse[indLight] != light_strobe_pulse_prec[indLight]
 			|| ((light_grey_pulse[indLight] != 0 || light_color_pulse[indLight] != 0 || light_dimmer_pulse[indLight] != 0 || light_strobe_pulse[indLight] != 0)
 				&& (pulse_light_prec[indLight][0] != pulse[0] || pulse_light_prec[indLight][1] != pulse[1] || pulse_light_prec[indLight][2] != pulse[2]))
-#if defined(var_Caverne_BackColor)
 			// video background and light color are the same and randomly changed
-			|| Caverne_BackColorRed != Caverne_BackColorRed_prec
-			|| Caverne_BackColorGreen != Caverne_BackColorGreen_prec
-			|| Caverne_BackColorBlue != Caverne_BackColorBlue_prec
-#endif
+			|| BGcolorRed != BGcolorRed_prec
+			|| BGcolorGreen != BGcolorGreen_prec
+			|| BGcolorBlue != BGcolorBlue_prec
 			) {
 
 			float rgb_color[_rgb];
@@ -7885,27 +7884,24 @@ void pg_UpdateLightGroups_from_LightVars() {
 				light_dimmer_pulse_prec[indLight] = light_dimmer_pulse[indLight];
 				light_strobe_prec[indLight] = light_strobe[indLight];
 				light_strobe_pulse_prec[indLight] = light_strobe_pulse[indLight];
-			}
-#if defined(var_Caverne_BackColor)
-			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
-				// video background and light color are the same and randomly changed
-				if (Caverne_BackColor && pg_nb_light_groups > 0) {
-					pg_light_groups[pg_current_configuration_rank].set_color(Caverne_BackColorRed, Caverne_BackColorGreen, Caverne_BackColorBlue);
-					Caverne_BackColorRed_prec = Caverne_BackColorRed;
-					Caverne_BackColorGreen_prec = Caverne_BackColorGreen;
-					Caverne_BackColorBlue_prec = Caverne_BackColorBlue;
+				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_BGcolor]) {
+					// video background and light color are the same and randomly changed
+					if (BGcolor) {
+						float lightColor[_rgb] = { BGcolorRed, BGcolorGreen, BGcolorBlue };
+						pg_light_groups[pg_current_configuration_rank][light.light_group - 1].set_color(lightColor);
+						BGcolorRed_prec = BGcolorRed;
+						BGcolorGreen_prec = BGcolorGreen;
+						BGcolorBlue_prec = BGcolorBlue;
+					}
 				}
 			}
-#endif
 			oneLightChanged = true;
 		}
 	}
 
-#if defined(var_Caverne_BackColor)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_Caverne_BackColor]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_BGcolor]) {
 		//printf("pg_light_groups[7]->get_group_val(_dimmer) %.2f           pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(_dimmer), pg_light_groups[0].get_color()[0]);
 	}
-#endif
 	for (int indLight = 1; indLight <= PG_NB_LIGHTS; indLight++) {
 		pulse_light_prec[indLight][0] = pulse[0];
 		pulse_light_prec[indLight][1] = pulse[1];
@@ -7994,7 +7990,7 @@ void pg_update_pulsed_colors(void) {
 		pg_UpdateLightGroups_from_LightVars();
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_nb_CATypes]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
 		if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
 			|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
 			|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
@@ -8067,7 +8063,7 @@ void pg_update_pulsed_colors(void) {
 
 void pg_path_recording_onOff(int indPath) {
 	// switches between recording on/off 
-	printf("pg_path_recording_onOff(%d)\n", indPath);
+	//printf("pg_path_recording_onOff(%d)\n", indPath);
 	bool is_path_record = false;
 	if (indPath >= 1 && indPath < PG_NB_PATHS) {
 		is_path_record = !pg_Path_Status[indPath].path_isActiveRecording;
@@ -8079,7 +8075,7 @@ void pg_path_recording_onOff(int indPath) {
 			// printf("Launches recording indPath %d: is replay %d\n", indPath, is_path_replay[indPath]);
 			// printf("Replay indPath %d: %d\n", indPath, is_path_replay[indPath]);
 			if (is_path_replay[indPath]) {
-				printf("Stops Replay indPath %d: %d\n", indPath, is_path_replay[indPath]);
+				//printf("Stops Replay indPath %d: %d\n", indPath, is_path_replay[indPath]);
 				pg_path_replay_trackNo_stop(indPath);
 			}
 
@@ -8108,11 +8104,11 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 
 	// is not currently reading and positive or null track -> starts reading 
 	if (!is_path_replay[indPath] && trackNo >= 0) {
-		printf( "start_read_path #%d on track %d\n", indPath, trackNo);
+		//printf( "start_read_path #%d on track %d\n", indPath, trackNo);
 
 		// is recording source -> has to stop recording source 
 		if (ispath_record) {
-			printf("pg_path_recording_stop #%dd\n", indPath);
+			//printf("pg_path_recording_stop #%d\n", indPath);
 			pg_path_recording_stop(indPath);
 		}
 
@@ -8121,7 +8117,7 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 	}
 	// is currently reading && negative track -> stops reading 
 	else if (is_path_replay[indPath] && trackNo < 0) {
-		 printf("stop_read_path #%d (track No negative)\n", indPath);
+		//printf("stop_read_path #%d (track No negative)\n", indPath);
 
 		// stops reading 
 		pg_path_replay_trackNo_stop(indPath);
@@ -8181,7 +8177,7 @@ void pg_path_replay_trackNo_start(int indPath, int trackNo) {
 		//}
 		pg_Path_Status[indPath].path_isFirstFrame = true;
 
-		sprintf(AuxString, "/path_replay_trackNo_%d 1", indPath);
+		sprintf(AuxString, "/path_replay_trackNo_%d %d", indPath, trackNo);
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 		//printf("-> start_read_path %d ind reading %d\n", indPath, pg_Path_Status[indPath].path_indReading);
 	}
@@ -8210,7 +8206,7 @@ void pg_path_replay_trackNo_stop(int indPath) {
 		paths_RadiusY[indPath] = 0.0F;
 		// printf( "-> start_read_path\n"  );
 		((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
-		sprintf(AuxString, "/path_replay_trackNo_%d 0", indPath);
+		sprintf(AuxString, "/path_replay_trackNo_%d -1", indPath);
 		pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
 	}
 }

@@ -269,6 +269,10 @@ enum ConfigurationVarIDs {
 #define var_path_scaleY
 #define var_path_translX
 #define var_path_translY
+#define var_BGcolor
+#define var_BGcolorRed
+#define var_BGcolorGreen
+#define var_BGcolorBlue
 #define var_color_spectrum_coef
 #define var_fingers
 #define var_tactile_tablet
@@ -659,6 +663,10 @@ enum InterpVarIDs{
   _path_scaleY,
   _path_translX,
   _path_translY,
+  _BGcolor,
+  _BGcolorRed,
+  _BGcolorGreen,
+  _BGcolorBlue,
   _color_spectrum_coef,
   _fingers,
   _tactile_tablet,
@@ -1049,6 +1057,10 @@ extern float path_scaleX         ;
 extern float path_scaleY         ;
 extern float path_translX        ;
 extern float path_translY        ;
+extern bool  BGcolor             ;
+extern float BGcolorRed          ;
+extern float BGcolorGreen        ;
+extern float BGcolorBlue         ;
 extern float color_spectrum_coef ;
 extern int   fingers             ;
 extern bool  tactile_tablet      ;

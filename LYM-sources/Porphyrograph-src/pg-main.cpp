@@ -79,7 +79,7 @@ char *Input_Message_Local_Commande_String = NULL;
 char *Output_Message_String = NULL;
 
 /// OpenGL background color
-float OpenGLBGColor[4] = {0.0, 0.0, 0.0, 1.0};
+float OpenGLBGcolor[4] = {0.0, 0.0, 0.0, 1.0};
 
 /// number of frames displayed
 int Step = 0;
@@ -523,7 +523,7 @@ void  pg_init_screen_message( void ) {
 
 void OpenGLInit( void ) {
   // background color
-  glClearColor (OpenGLBGColor[0], OpenGLBGColor[1], OpenGLBGColor[2], OpenGLBGColor[3]);
+  glClearColor (OpenGLBGcolor[0], OpenGLBGcolor[1], OpenGLBGcolor[2], OpenGLBGcolor[3]);
 
   // buffer reset
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );

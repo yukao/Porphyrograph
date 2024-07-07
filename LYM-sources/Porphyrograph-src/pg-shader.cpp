@@ -218,17 +218,12 @@ GLint uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen[PG_MAX_CO
 //GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor[PG_MAX_CONFIGURATIONS] = {-1};
 //GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb[PG_MAX_CONFIGURATIONS] = {-1};
 GLint uniform_Master_fs_2iv_mobile_cursor_currentScene[PG_MAX_CONFIGURATIONS] = {-1};
-#if defined(var_Caverne_BackColor)
-GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb[PG_MAX_CONFIGURATIONS] = {-1};
-#endif
-GLint uniform_Master_fs_3fv_BG_color_rgb[PG_MAX_CONFIGURATIONS] = {-1};
+GLint uniform_Master_fs_3fv_BGcolor_rgb[PG_MAX_CONFIGURATIONS] = {-1};
 
 
 // MASTER SHADER TEXTURE IDS
 GLint uniform_Master_texture_fs_Render_curr[PG_MAX_CONFIGURATIONS] = {-1};         // previous pass output
-#if defined(var_nb_CATypes)
 GLint uniform_Master_texture_fs_CA[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong CA (FBO)
-#endif
 GLint uniform_Master_texture_fs_ClipArt_render[PG_MAX_CONFIGURATIONS] = { -1 };  // Particles
 GLint uniform_Master_texture_fs_Particle_render[PG_MAX_CONFIGURATIONS] = { -1 };  // Particles
 GLint uniform_Master_texture_fs_Trk0[PG_MAX_CONFIGURATIONS] = {-1};  // ping-pong track 0 (FBO)
@@ -585,7 +580,7 @@ void pg_loadAllShaders(void) {
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght, "uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow, "uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow", _pg_shader_Update);
-		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CA1_CA2_weight]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkCAWghts, "uniform_Update_fs_4fv_flashTrkCAWghts", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_path_data, "uniform_Update_path_data", _pg_shader_Update);
@@ -600,7 +595,7 @@ void pg_loadAllShaders(void) {
 #endif
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, "uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack", _pg_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght, "uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght", _pg_shader_Update);
-		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CA1_CA2_weight]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_repop_ColorCA, "uniform_Update_fs_3fv_repop_ColorCA", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres, "uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres", _pg_shader_Update);
@@ -628,7 +623,7 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_photo_rgb, "uniform_Update_fs_3fv_photo_rgb", _pg_shader_Update);
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_xy_transl_tracks_0_1, "uniform_Update_fs_4fv_xy_transl_tracks_0_1", _pg_shader_Update);
-		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CA1_CA2_weight]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_CAType_SubType_blurRadius, "uniform_Update_fs_4fv_CAType_SubType_blurRadius", _pg_shader_Update);
 			//printf("allocate uniform_Update_fs_4fv_CAType_SubType_blurRadius config %d\n", indConfig);
 		}
@@ -647,7 +642,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_pixel_acc, "uniform_Update_texture_fs_pixel_acc", _pg_shader_Update);  // initial background frame
 
 		// BG track FBO
-		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CA1_CA2_weight]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_texture_fs_CA, "uniform_Update_texture_fs_CA", _pg_shader_Update);         // 2-cycle ping-pong CA (FBO)
 		}
 
@@ -726,7 +721,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght, "uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght", _pg_shader_Mixing);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha, "uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha", _pg_shader_Mixing);
 
-		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CA1_CA2_weight]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_CA, "uniform_Mixing_texture_fs_CA", _pg_shader_Mixing); // ping-pong CA (FBO)
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_ClipArt_render, "uniform_Mixing_texture_fs_ClipArt_render", _pg_shader_Mixing);  // Particles (FBO)
@@ -754,17 +749,13 @@ void pg_loadAllShaders(void) {
 		//pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor, "uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor", _pg_shader_Master);
 		//pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb, "uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb", _pg_shader_Master);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_2iv_mobile_cursor_currentScene, "uniform_Master_fs_2iv_mobile_cursor_currentScene", _pg_shader_Master);
-#if defined(var_Caverne_BackColor)
-		if (pg_FullScenarioActiveVars[indConfig][_Caverne_BackColor]) {
-			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_Caverne_BackColor_rgb, "uniform_Master_fs_3fv_Caverne_BackColor_rgb", _pg_shader_Master);
-		}
-#endif
-		if (pg_FullScenarioActiveVars[indConfig][_flashchange_BGcolor_freq]) {
-			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_BG_color_rgb, "uniform_Master_fs_3fv_BG_color_rgb", _pg_shader_Master);
+		if (pg_FullScenarioActiveVars[indConfig][_BGcolor]
+			|| pg_FullScenarioActiveVars[indConfig][_flashchange_BGcolor_freq]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_fs_3fv_BGcolor_rgb, "uniform_Master_fs_3fv_BGcolor_rgb", _pg_shader_Master);
 		}
 
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_Render_curr, "uniform_Master_texture_fs_Render_curr", _pg_shader_Master); // previous pass output
-		if (pg_FullScenarioActiveVars[indConfig][_nb_CATypes]) {
+		if (pg_FullScenarioActiveVars[indConfig][_CA1_CA2_weight]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_CA, "uniform_Master_texture_fs_CA", _pg_shader_Master); // ping-pong CA (FBO)
 		}
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Master_texture_fs_ClipArt_render, "uniform_Master_texture_fs_ClipArt_render", _pg_shader_Master); // Particles

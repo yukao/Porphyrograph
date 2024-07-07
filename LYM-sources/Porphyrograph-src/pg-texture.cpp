@@ -132,14 +132,6 @@ int* pg_firstCompressedClipFramesInFolder[PG_MAX_CONFIGURATIONS] = { NULL };
 //int pg_CurrentClipFramesFile = 0;
 //int pg_CurrentClipFramesDir = -1;
 
-////////////////////////////////////////////////////////////////////
-// BG COLOR
-////////////////////////////////////////////////////////////////////
-float BG_r = 0.f;
-float BG_g = 0.f;
-float BG_b = 0.f;
-
-
 // FUNCTION FOR CLEARING A DIRECTORY
 void remove_files_in_dir(std::string *dirpath) {
 	DIR *dp = opendir(dirpath->c_str());

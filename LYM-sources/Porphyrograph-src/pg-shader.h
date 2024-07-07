@@ -229,10 +229,7 @@ extern GLint uniform_Master_fs_4fv_width_height_timeFromStart_muteRightScreen[PG
 //extern GLint uniform_Master_fs_4fv_interpolatedPaletteMedium_rgb_mobile_cursor[PG_MAX_CONFIGURATIONS];
 //extern GLint uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_Master_fs_2iv_mobile_cursor_currentScene[PG_MAX_CONFIGURATIONS];
-#if defined(var_Caverne_BackColor)
-extern GLint uniform_Master_fs_3fv_Caverne_BackColor_rgb[PG_MAX_CONFIGURATIONS];
-#endif
-extern GLint uniform_Master_fs_3fv_BG_color_rgb[PG_MAX_CONFIGURATIONS];
+extern GLint uniform_Master_fs_3fv_BGcolor_rgb[PG_MAX_CONFIGURATIONS];
 
 // MASTER SHADER TEXTURE IDS
 extern GLint uniform_Master_texture_fs_Render_curr[PG_MAX_CONFIGURATIONS];         // previous pass output

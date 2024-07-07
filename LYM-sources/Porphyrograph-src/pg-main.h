@@ -128,7 +128,7 @@ extern int   *input_message_length_stack;
 // @}
 
 /// OpenGL background color
-extern float OpenGLBGColor[4];
+extern float OpenGLBGcolor[4];
 
 int main(int argc, char **argv);
 

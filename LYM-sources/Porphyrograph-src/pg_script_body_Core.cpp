@@ -186,6 +186,10 @@ float path_scaleX          = float(1);
 float path_scaleY          = float(1);
 float path_translX         = float(0);
 float path_translY         = float(0);
+bool  BGcolor              = 0;
+float BGcolorRed           = float(0);
+float BGcolorGreen         = float(0);
+float BGcolorBlue          = float(0);
 float color_spectrum_coef  = float(1);
 int   fingers              = 1;
 bool  tactile_tablet       = 0;
@@ -573,6 +577,10 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_int,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_bool,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -1077,6 +1085,10 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{-1, -1},
@@ -1358,6 +1370,10 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&path_scaleY,
 	(void *)&path_translX,
 	(void *)&path_translY,
+	(void *)&BGcolor,
+	(void *)&BGcolorRed,
+	(void *)&BGcolorGreen,
+	(void *)&BGcolorBlue,
 	(void *)&color_spectrum_coef,
 	(void *)&fingers,
 	(void *)&tactile_tablet,
@@ -1990,6 +2006,10 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	&fingers_callBack_generic,
 	NULL,
 	NULL,
@@ -2582,6 +2602,10 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 };
 std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = { 
   "CA1_CA2_weight",
@@ -2771,6 +2795,10 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "path_scaleY",
   "path_translX",
   "path_translY",
+  "BGcolor",
+  "BGcolorRed",
+  "BGcolorGreen",
+  "BGcolorBlue",
   "color_spectrum_coef",
   "fingers",
   "tactile_tablet",
@@ -3138,6 +3166,10 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3553,6 +3585,10 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "path_scaleY",
   "path_translX",
   "path_translY",
+  "BGcolor",
+  "BGcolorRed",
+  "BGcolorGreen",
+  "BGcolorBlue",
   "color_spectrum_coef",
   "fingers",
   "tactile_tablet",
