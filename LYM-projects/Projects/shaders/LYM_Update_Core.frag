@@ -1471,7 +1471,6 @@ void pixel_out( void ) {
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
         vec2 acceleration;
-#ifdef var_pixel_image_acceleration
         // texture based acceleration shift
         if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
           float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
@@ -1490,7 +1489,6 @@ void pixel_out( void ) {
           }
         }
         else 
-#endif
         {          
           acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
         }
@@ -1565,7 +1563,6 @@ void pixel_out( void ) {
                        + usedNeighborOffset / vec2(width,height);
         vec2 acceleration;
 
-#ifdef var_pixel_image_acceleration
         // texture based acceleration shift
         if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
           float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
@@ -1584,7 +1581,6 @@ void pixel_out( void ) {
           }
         }
         else
-#endif
         {          
           acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
         }
@@ -2466,7 +2462,7 @@ void main() {
             curTrack_grayLevel =  out_gray_drawing( 3 * radiusX_beginOrEnd_radiusY_brushID.x, 0 ); 
                                  // rubber radius is made 3 times larger than regular pen
             out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * pathColor.a);
-            out_track_FBO[indCurTrack].rgb += curTrack_grayLevel * 0.1 * pathColor.rgb;
+            //out_track_FBO[indCurTrack].rgb += curTrack_grayLevel * 0.1 * pathColor.rgb;
             curTrack_color.rgb = vec3(0);
         }
         else { // normal stylus
@@ -2654,11 +2650,9 @@ void main() {
       if( rand3D(vec3(decalCoordsPOT, uniform_Update_fs_4fv_photo01Wghts_randomValues.z), repop_CA * repop_density_weight) != 0) {
         out4_CA.a = -1.0;
         out4_CA.rgb  = uniform_Update_fs_3fv_repop_ColorCA.xyz;
-#ifdef var_BG_CA_repop_color_mode
         if(BG_CA_repop_color_mode == 1) {
           out4_CA.rgb = textureDensityValue;
         }
-#endif
       }
     }
 
@@ -2689,9 +2683,7 @@ void main() {
       pixel_radius = 1;
     }
 
-#ifdef var_Pixelstep
     if(frameNo % Pixelstep == 0) {
-#endif
       pixel_out();
 
       // arrival of a new pixel
@@ -2707,7 +2699,6 @@ void main() {
         //  modifies speed according to acceleration
         vec2 acceleration;
 
-  #ifdef var_pixel_image_acceleration
         // texture based acceleration shift
         if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
           float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
@@ -2726,7 +2717,6 @@ void main() {
           }
         }
         else
-  #endif
         {          
           acceleration = multiTypeGenerativeNoise(pixelTextureCoordinatesPOT_XY, vec2(0)) - pixel_acc_center;
         }
@@ -2764,24 +2754,20 @@ void main() {
           }
         }
       }
-#ifdef var_Pixelstep
     }
     else {
       // keeps previous step value of out_track_FBO[0].rgb
     }
-#endif
   }
 
-  // pixel "ADDITION"
+  // pixel "REPOPULATION"
   if( repop_BG > 0 ) {
     if( rand3D(vec3(decalCoordsPOT, uniform_Update_fs_4fv_photo01Wghts_randomValues.w), repop_BG * repop_density_weight) != 0) {
         out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.xyz;
-#ifdef var_BG_CA_repop_color_mode
         // repopulation with the color of the density texture
         if(BG_CA_repop_color_mode == 1) {
           out_track_FBO[0].rgb = textureDensityValue;
         }
-#endif
     }
   }
 
@@ -2804,29 +2790,25 @@ void main() {
   // track decay and clear layer
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
-        if(currentScene != 18) {
-          out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
-        }
         // saturates in case of incay (instead of going to white)
-        else {
+        if(false) {
+        // if(trkDecay[indTrack] < 0) {
           vec3 decayedColor = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
-          if( trkDecay[indTrack] < 0) {
-            // saturated color, nothing to do
-            // else proportionally increase each channel
-            oderedChannels(decayedColor);
-            if(orderedColor[2] <= 1) {
-              vec3 decay = vec3(trkDecay[indTrack]);
-              decay[orderedRank[0]] = 0;
-              decay[orderedRank[1]] *= 0.5;
-              out_track_FBO[indTrack].rgb -= decay;
-            }
+          // saturated color, nothing to do
+          // else proportionally increase each channel
+          oderedChannels(decayedColor);
+          if(orderedColor[2] <= 1) {
+            vec3 decay = vec3(trkDecay[indTrack]);
+            decay[orderedRank[0]] = 0;
+            decay[orderedRank[1]] *= 0.5;
+            out_track_FBO[indTrack].rgb -= decay;
           }
-          else {
-            out_track_FBO[indTrack].rgb = decayedColor;            
-          }
+        }
+        else {
+          out_track_FBO[indTrack].rgb = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
         }
       }
+
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
       // clear layer

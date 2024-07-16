@@ -1039,26 +1039,21 @@ void pg_initializeScenearioVariables(void) {
 		/////////////////////////////////////////////////////////////////////////
 		// CONSTANT UNIFORM VARIABLES
 		// only assigned at initialization, does not change during the set
-		if (pg_FullScenarioActiveVars[indConfiguration][_part_initialization]
-			&& pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]) {
 			// only assigned at initialization, does not change during the set
-			glUseProgram(pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]);
+		glUseProgram(pg_shader_programme[indConfiguration][_pg_shader_ParticleAnimation]);
 
-			///////////////////////////////////////////////////////////////////
-			// VERTEX SHADER VARIABLE
-			glUniform2f(uniform_ParticleAnimation_vp_2fv_width_height[indConfiguration],
-				(GLfloat)workingWindow_width, (GLfloat)window_height);
-		}
+		///////////////////////////////////////////////////////////////////
+		// VERTEX SHADER VARIABLE
+		glUniform2f(uniform_ParticleAnimation_vp_2fv_width_height[indConfiguration],
+			(GLfloat)workingWindow_width, (GLfloat)window_height);
 
 		// only assigned at initialization, does not change during the set
-		if (pg_shader_programme[indConfiguration][_pg_shader_Update]) {
-			glUseProgram(pg_shader_programme[indConfiguration][_pg_shader_Update]);
+		glUseProgram(pg_shader_programme[indConfiguration][_pg_shader_Update]);
 
-			///////////////////////////////////////////////////////////////////
-			// VERTEX SHADER VARIABLE
-			glUniform2f(uniform_Update_vp_2fv_width_height[indConfiguration],
-				(GLfloat)workingWindow_width, (GLfloat)window_height);
-		}
+		///////////////////////////////////////////////////////////////////
+		// VERTEX SHADER VARIABLE
+		glUniform2f(uniform_Update_vp_2fv_width_height[indConfiguration],
+			(GLfloat)workingWindow_width, (GLfloat)window_height);
 
 		/////////////////////////////////////////////////////////////////////////
 		// INItiAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
@@ -1385,10 +1380,8 @@ void pg_initializeScenearioVariables(void) {
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(DessinButtonsPaths, DessinButtonLabelsPaths, DessinButtonValues, true, trkDecay[1]);
 
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
-			// photo diaporama initialization
-			ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, photo_diaporama);
-		}
+		// photo diaporama initialization
+		ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, photo_diaporama);
 
 		// drawing type initialization
 		ExclusiveButtonsAndLabelsOnOff(StylusvsRubberButtonsPaths, StylusvsRubberButtonLabelsPaths, StylusvsRubberButtonValues, false, CurrentCursorStylusvsRubber);
@@ -2599,10 +2592,8 @@ void photo_diaporama_callBack(pg_Parameter_Input_Type param_input_type, int scen
 		}
 
 		// photo diaporama initialization
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
-			//printf("current photo diaporama %d\n", scenario_or_gui_command_value);
-			ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, scenario_or_gui_command_value);
-		}
+		//printf("current photo diaporama %d\n", scenario_or_gui_command_value);
+		ExclusiveButtonsAndLabelsOnOff(FondButtonsPaths, FondButtonLabelsPaths, FondButtonValues, true, scenario_or_gui_command_value);
 	}
 }
 
@@ -3110,8 +3101,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		}
 		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
 			if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-				if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
-					&& (indVar == _CA1Type || indVar == _CA2Type ||
+				if ((indVar == _CA1Type || indVar == _CA2Type ||
 						indVar == _CA1SubType || indVar == _CA2SubType)) {
 					// for CAType we choose to alternate randomly between both types, according
 					// to the proximity of floor or ceiling
@@ -3187,8 +3177,7 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 		else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
 			if (scenario_or_gui_command_value.val_array != NULL) {
 				if (param_input_type == _PG_GUI_COMMAND || param_input_type == _PG_SCENARIO) {
-					if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
-						&& (indVar == _CA1Type || indVar == _CA2Type ||
+					if ((indVar == _CA1Type || indVar == _CA2Type ||
 							indVar == _CA1SubType || indVar == _CA2SubType)) {
 						// for CAType we choose to alternate randomly between both types, according
 						// to the proximity of floor or ceiling
@@ -4351,17 +4340,12 @@ void pg_flash_control(bool (*control_function)(int)) {
 		flashPixel = flashPixel_duration;
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashParticleInit_freq]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_timeToTargt]) {
-		if ((*control_function)(flashParticleInit_freq)) {
-			part_initialization = (unsigned int)(floor(rand_0_1 * pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size())) % pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size();
-			pg_ParticleTargetFrameNo = pg_FrameNo + int(part_timeToTargt);
-		}
+	if ((*control_function)(flashParticleInit_freq)) {
+		part_initialization = (unsigned int)(floor(rand_0_1 * pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size())) % pg_particle_initial_pos_speed_texID[pg_current_configuration_rank].size();
+		pg_ParticleTargetFrameNo = pg_FrameNo + int(part_timeToTargt);
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
 		for (int indTrack = 0; indTrack < PG_NB_TRACKS; indTrack++) {
 			if ((*control_function)(flashTrkCA_freq[indTrack])) {
 				flashTrkCA_weights[indTrack] = 1.0;
@@ -5047,13 +5031,6 @@ void pg_aliasScript(string address_string, string string_argument_0,
 					}
 					photo_diaporama = (photo_diaporama + 1) % (pg_nbCompressedImageDirs[pg_current_configuration_rank] - 1);
 					printf("photo_diaporama %d\n", photo_diaporama);
-					if (photo_diaporama == 2 || photo_diaporama == 9 || photo_diaporama == 11 || photo_diaporama == 16) {
-						master_scale_pulse = 0.15f;
-					}
-					else {
-						master_scale_pulse = 0.f;
-					}
-					*((float*)pg_FullScenarioVarPointers[_master_scale_pulse]) = master_scale_pulse;
 					sprintf(AuxString, "/diaporama_shortName %03d", photo_diaporama);
 					pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 					pg_launch_diaporama(0);
@@ -5211,8 +5188,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// flash on/off values
 	// ======================================== 
 	case _flashTrkCA_onOff: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_flashTrkCA_freq]) {
 			if (currentDrawingTrack >= 0 && currentDrawingTrack < PG_NB_TRACKS) {
 				if (flashTrkCA_freq[currentDrawingTrack] > 0) {
 					flashTrkCA_freq_saved[currentDrawingTrack] = flashTrkCA_freq[currentDrawingTrack];
@@ -5879,52 +5855,42 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	// +++++++++++++++++ CA TYPE AND SUBTYPE +++++++++++++++++++ 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _CA1Type_plus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			CA1Type = (CA1Type + 1) % nb_CATypes;
-			BrokenInterpolationVar[_CA1Type] = true;
-			// printf("CA1Type %d\n", CA1Type);
-			*((int*)pg_FullScenarioVarPointers[_CA1Type]) = CA1Type;
-		}
+		CA1Type = (CA1Type + 1) % nb_CATypes;
+		BrokenInterpolationVar[_CA1Type] = true;
+		// printf("CA1Type %d\n", CA1Type);
+		*((int*)pg_FullScenarioVarPointers[_CA1Type]) = CA1Type;
 		break;
 	}
 	case _CA1Type_minus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			CA1Type = (CA1Type - 1 + nb_CATypes) % nb_CATypes;
-			BrokenInterpolationVar[_CA1Type] = true;
-			// printf("CA1Type %d\n", CA1Type);
-			*((int*)pg_FullScenarioVarPointers[_CA1Type]) = CA1Type;
-		}
+		CA1Type = (CA1Type - 1 + nb_CATypes) % nb_CATypes;
+		BrokenInterpolationVar[_CA1Type] = true;
+		// printf("CA1Type %d\n", CA1Type);
+		*((int*)pg_FullScenarioVarPointers[_CA1Type]) = CA1Type;
 		break;
 	}
 	case _CA1SubType_plus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
-			BrokenInterpolationVar[_CA1SubType] = true;
-			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
-		}
+		CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
+		BrokenInterpolationVar[_CA1SubType] = true;
+		*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
 	}
 	case _CA1SubType_minus: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
-			BrokenInterpolationVar[_CA1SubType] = true;
-			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
-		}
+		CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
+		BrokenInterpolationVar[_CA1SubType] = true;
+		*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
 	}
 	case _CAonOff: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			if (CA1SubType != 0) {
-				CASubTypeMem = CA1SubType;
-				CA1SubType = 0;
-			}
-			else {
-				CA1SubType = CASubTypeMem;
-			}
-			BrokenInterpolationVar[_CA1SubType] = true;
-			printf("CA1SubType ON/OFF %d\n", CA1SubType);
-			*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
+		if (CA1SubType != 0) {
+			CASubTypeMem = CA1SubType;
+			CA1SubType = 0;
 		}
+		else {
+			CA1SubType = CASubTypeMem;
+		}
+		BrokenInterpolationVar[_CA1SubType] = true;
+		printf("CA1SubType ON/OFF %d\n", CA1SubType);
+		*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
 	}
 
@@ -6028,40 +5994,36 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _repopCA_BW: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			if (repop_greyCA > 0) {
-				repop_greyCA = 0.0f;
-			}
-			else {
-				repop_greyCA = 1.0f;
-			}
-			BrokenInterpolationVar[_repop_greyCA] = true;
-			// printf("repop color %.1f\n", repop_grey);
+		if (repop_greyCA > 0) {
+			repop_greyCA = 0.0f;
 		}
+		else {
+			repop_greyCA = 1.0f;
+		}
+		BrokenInterpolationVar[_repop_greyCA] = true;
+		// printf("repop color %.1f\n", repop_grey);
 		break;
 	}
 	case _repopPart_BW: {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
-				if (repop_greyPart > 0) {
-					repop_greyPart = 0.0f;
-				}
-				else {
-					repop_greyPart = 1.0f;
-				}
-				BrokenInterpolationVar[_repop_greyPart] = true;
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]) {
+			if (repop_greyPart > 0) {
+				repop_greyPart = 0.0f;
 			}
-			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
-				if (repop_valuePart > 0) {
-					repop_valuePart = 0.0f;
-				}
-				else {
-					repop_valuePart = 1.0f;
-				}
-				BrokenInterpolationVar[_repop_valuePart] = true;
+			else {
+				repop_greyPart = 1.0f;
 			}
-			// printf("repop color %.1f\n", repop_grey);
+			BrokenInterpolationVar[_repop_greyPart] = true;
 		}
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]) {
+			if (repop_valuePart > 0) {
+				repop_valuePart = 0.0f;
+			}
+			else {
+				repop_valuePart = 1.0f;
+			}
+			BrokenInterpolationVar[_repop_valuePart] = true;
+		}
+		// printf("repop color %.1f\n", repop_grey);
 		break;
 	}
 
@@ -7990,59 +7952,56 @@ void pg_update_pulsed_colors(void) {
 		pg_UpdateLightGroups_from_LightVars();
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
-			|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
-			|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
+	if (repop_colorCA != repop_colorCA_prec || repop_colorCA_pulse != repop_colorCA_pulse_prec
+		|| repop_greyCA != repop_greyCA_prec || repop_greyCA_pulse != repop_greyCA_pulse_prec
+		|| ((repop_greyCA_pulse != 0 || repop_colorCA_pulse != 0)
+			&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
+		compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pulsed_repop_colorCA, _PG_REPOP);
+		repop_colorCA_prec = repop_colorCA;
+		repop_colorCA_pulse_prec = repop_colorCA_pulse;
+		repop_greyCA_prec = repop_greyCA;
+		repop_greyCA_pulse_prec = repop_greyCA_pulse;
+		pulse_prec[0] = pulse[0];
+		pulse_prec[1] = pulse[1];
+		pulse_prec[2] = pulse[2];
+	}
+
+	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]
+		&& !repop_hsvPart) {
+		if (repop_colorPart != repop_colorPart_prec || repop_colorPart_pulse != repop_colorPart_pulse_prec
+			|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
+			|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
 				&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-			compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pulsed_repop_colorCA, _PG_REPOP);
-			repop_colorCA_prec = repop_colorCA;
-			repop_colorCA_pulse_prec = repop_colorCA_pulse;
-			repop_greyCA_prec = repop_greyCA;
-			repop_greyCA_pulse_prec = repop_greyCA_pulse;
+			compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
+			repop_colorPart_prec = repop_colorPart;
+			repop_colorPart_pulse_prec = repop_colorPart_pulse;
+			repop_greyPart_prec = repop_greyPart;
+			repop_greyPart_pulse_prec = repop_greyPart_pulse;
 			pulse_prec[0] = pulse[0];
 			pulse_prec[1] = pulse[1];
 			pulse_prec[2] = pulse[2];
 		}
 	}
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_colorPart]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_greyPart]
-			&& !repop_hsvPart) {
-			if (repop_colorPart != repop_colorPart_prec || repop_colorPart_pulse != repop_colorPart_pulse_prec
-				|| repop_greyPart != repop_greyPart_prec || repop_greyPart_pulse != repop_greyPart_pulse_prec
-				|| ((repop_greyPart_pulse != 0.f || repop_colorPart_pulse != 0.f)
-					&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-				compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pulsed_repop_colorPart, _PG_REPOP);
-				repop_colorPart_prec = repop_colorPart;
-				repop_colorPart_pulse_prec = repop_colorPart_pulse;
-				repop_greyPart_prec = repop_greyPart;
-				repop_greyPart_pulse_prec = repop_greyPart_pulse;
-				pulse_prec[0] = pulse[0];
-				pulse_prec[1] = pulse[1];
-				pulse_prec[2] = pulse[2];
-			}
-		}
-		else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
-			&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
-			&& repop_hsvPart) {
-			if (repop_huePart != repop_huePart_prec || repop_huePart_pulse != repop_huePart_pulse_prec
-				|| repop_satPart != repop_satPart_prec || repop_satPart_pulse != repop_satPart_pulse_prec
-				|| repop_valuePart != repop_valuePart_prec || repop_valuePart_pulse != repop_valuePart_pulse_prec
-				|| ((repop_satPart_pulse != 0.f || repop_valuePart_pulse != 0.f || repop_huePart_pulse != 0.f)
-					&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
-				compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
-				repop_huePart_prec = repop_huePart;
-				repop_huePart_pulse_prec = repop_huePart_pulse;
-				repop_satPart_prec = repop_satPart;
-				repop_satPart_pulse_prec = repop_satPart_pulse;
-				repop_valuePart_prec = repop_valuePart;
-				repop_valuePart_pulse_prec = repop_valuePart_pulse;
-				pulse_prec[0] = pulse[0];
-				pulse_prec[1] = pulse[1];
-				pulse_prec[2] = pulse[2];
-			}
+	else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_huePart]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_satPart]
+		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_repop_valuePart]
+		&& repop_hsvPart) {
+		if (repop_huePart != repop_huePart_prec || repop_huePart_pulse != repop_huePart_pulse_prec
+			|| repop_satPart != repop_satPart_prec || repop_satPart_pulse != repop_satPart_pulse_prec
+			|| repop_valuePart != repop_valuePart_prec || repop_valuePart_pulse != repop_valuePart_pulse_prec
+			|| ((repop_satPart_pulse != 0.f || repop_valuePart_pulse != 0.f || repop_huePart_pulse != 0.f)
+				&& (pulse_prec[0] != pulse[0] || pulse_prec[1] != pulse[1] || pulse_prec[2] != pulse[2]))) {
+			compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pulsed_repop_colorPart, false);
+			repop_huePart_prec = repop_huePart;
+			repop_huePart_pulse_prec = repop_huePart_pulse;
+			repop_satPart_prec = repop_satPart;
+			repop_satPart_pulse_prec = repop_satPart_pulse;
+			repop_valuePart_prec = repop_valuePart;
+			repop_valuePart_pulse_prec = repop_valuePart_pulse;
+			pulse_prec[0] = pulse[0];
+			pulse_prec[1] = pulse[1];
+			pulse_prec[2] = pulse[2];
 		}
 	}
 

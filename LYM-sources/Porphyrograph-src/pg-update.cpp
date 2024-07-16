@@ -906,10 +906,8 @@ void window_display(void) {
 			&pg_SoundTracks[pg_current_configuration_rank][currentlyPlaying_trackNo].soundtrackOnsets,
 			&pg_track_sound_peak, &pg_track_sound_onset, nbTrackSoundPeakIndex[pg_current_configuration_rank], 
 			nbTrackSoundOnsetIndex[pg_current_configuration_rank], &currentTrackSoundPeakIndex, &currentTrackSoundOnsetIndex);
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
-			if (pg_track_sound_onset) {
-				diaporama_random();
-			}
+		if (pg_track_sound_onset) {
+			diaporama_random();
 		}
 	}
 #endif
@@ -1482,15 +1480,13 @@ void pg_automatic_var_reset_or_update(void) {
 	}
 #endif
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
-		if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
-			if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
-				printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
-				pg_CurrentDiaporamaEnd = -1;
-				photo_diaporama = -1;
-				photoWeight = 0.f;
-				sprintf(AuxString, "/diaporama_shortName ---"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
-			}
+	if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
+		if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
+			printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
+			pg_CurrentDiaporamaEnd = -1;
+			photo_diaporama = -1;
+			photoWeight = 0.f;
+			sprintf(AuxString, "/diaporama_shortName ---"); pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
 		}
 	}
 
@@ -1552,11 +1548,9 @@ void pg_automatic_var_reset_or_update(void) {
 	pg_CAseed_trigger = false;
 #endif
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		// /////////////////////////
-		// particle initialization reset
-		part_initialization = -1;
-	}
+	// /////////////////////////
+	// particle initialization reset
+	part_initialization = -1;
 
 	// automatic master incay/decay
 	if (pg_master_incay_duration > 0) {
@@ -1799,8 +1793,7 @@ void pg_update_shader_var_data(void) {
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE ANIMATION SHADER UNIFORM VARIABLES
 void pg_update_shader_ParticleAnimation_uniforms(void) {
-	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]) {
+	if (!pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]) {
 		return;
 	}
 
@@ -1861,50 +1854,48 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	}
 
 	// position
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 0] = paths_x_prev_memory[indPath];
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 1] = paths_y_prev_memory[indPath];
-		}
-		for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 2] = paths_x_memory[indPath];
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 3] = paths_y_memory[indPath];
-		}
-		//printf("path data %.2f %.2f %.2f %.2f\n", paths_x_memory[1], paths_y_memory[1], paths_x_prev_memory[1], paths_y_prev_memory[1]);
-		// color, radius, beginning or end of a stroke
-		for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 0] = paths_RadiusX[indPath];
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 1] = rand_0_1;
-			path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 2] = rand_0_1;
-		}
-		//printf("path_data_ParticleAnimation %.2f %.2f %.2f %.2f\n", path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 0], 
-		//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 1],
-		//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 2],
-		//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 3]);
-		glUniform4fv(uniform_ParticleAnimation_path_data[pg_current_configuration_rank], (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_ParticleAnimation);
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 0] = paths_x_prev_memory[indPath];
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 1] = paths_y_prev_memory[indPath];
+	}
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 2] = paths_x_memory[indPath];
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 3] = paths_y_memory[indPath];
+	}
+	//printf("path data %.2f %.2f %.2f %.2f\n", paths_x_memory[1], paths_y_memory[1], paths_x_prev_memory[1], paths_y_prev_memory[1]);
+	// color, radius, beginning or end of a stroke
+	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 0] = paths_RadiusX[indPath];
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 1] = rand_0_1;
+		path_data_ParticleAnimation[indPath * PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 2] = rand_0_1;
+	}
+	//printf("path_data_ParticleAnimation %.2f %.2f %.2f %.2f\n", path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_POS * 4 + 0], 
+	//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 1],
+	//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 2],
+	//	path_data_ParticleAnimation[PG_MAX_PATH_ANIM_DATA * 4 + PG_PATH_ANIM_RAD * 4 + 3]);
+	glUniform4fv(uniform_ParticleAnimation_path_data[pg_current_configuration_rank], (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, path_data_ParticleAnimation);
 
-		// flash Trk -> Part weights
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
-			flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], flashTrkPart_weights[3]);
-		// printf("flashTrkPart_weights %.2f %.2f %.2f %.2f \n", flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], flashTrkPart_weights[3]);
+	// flash Trk -> Part weights
+	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashTrkPartWghts[pg_current_configuration_rank],
+		flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], flashTrkPart_weights[3]);
+	// printf("flashTrkPart_weights %.2f %.2f %.2f %.2f \n", flashTrkPart_weights[0], flashTrkPart_weights[1], flashTrkPart_weights[2], flashTrkPart_weights[3]);
+
+// movie size, flash camera and copy tracks
+// copy to layer above (+1) or to layer below (-1)
+
+// flash CA -> BG & repop color (BG & CA)
+	glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo[pg_current_configuration_rank],
+		repop_ColorPart_r, repop_ColorPart_g, repop_ColorPart_b, GLfloat(pg_FrameNo));
+	// clear layer, flash pixel, flash CA -> Part
+	glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed[pg_current_configuration_rank],
+		GLfloat(flashCAPart_weight), GLfloat(nb_particles), GLfloat(isClearAllLayers), *((float*)pg_FullScenarioVarPointers[_part_size]));
 
 	// movie size, flash camera and copy tracks
 	// copy to layer above (+1) or to layer below (-1)
-
-	// flash CA -> BG & repop color (BG & CA)
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_repop_Color_frameNo[pg_current_configuration_rank],
-			repop_ColorPart_r, repop_ColorPart_g, repop_ColorPart_b, GLfloat(pg_FrameNo));
-		// clear layer, flash pixel, flash CA -> Part
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_flashCAPartWght_nbPart_clear_partSizeUnpulsed[pg_current_configuration_rank],
-			GLfloat(flashCAPart_weight), GLfloat(nb_particles), GLfloat(isClearAllLayers), *((float*)pg_FullScenarioVarPointers[_part_size]));
-
-		// movie size, flash camera and copy tracks
-		// copy to layer above (+1) or to layer below (-1)
-		glUniform4f(uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH[pg_current_configuration_rank],
-			GLfloat(pg_camera_frame_width), GLfloat(pg_camera_frame_height),
-			GLfloat(pg_movie_frame_width), GLfloat(pg_movie_frame_height));
-		printOglError(511);
-	}
+	glUniform4f(uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH[pg_current_configuration_rank],
+		GLfloat(pg_camera_frame_width), GLfloat(pg_camera_frame_height),
+		GLfloat(pg_movie_frame_width), GLfloat(pg_movie_frame_height));
+	printOglError(511);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1925,23 +1916,12 @@ void pg_update_shader_Update_uniforms(void) {
 	printOglError(5198);
 
 	// pixels acceleration
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_current_configuration_rank],
-			(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
-			fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
-		//if (isClearAllLayers > 0.f) {
-		//	printf("clear all\n");
-		//}
-	}
-	else
-	{
-		glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_current_configuration_rank],
-			(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
-			0.f);
-		//if (isClearAllLayers > 0.f) {
-		//	printf("clear all\n");
-		//}
-	}
+	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_current_configuration_rank],
+		(GLfloat)isClearAllLayers, (GLfloat)isClearCA,
+		fabs(pulse_average - pulse_average_prec) * pulsed_part_Vshift);
+	//if (isClearAllLayers > 0.f) {
+	//	printf("clear all\n");
+	//}
 	printOglError(5197);
 
 #if defined(pg_Project_CAaudio)
@@ -2046,12 +2026,11 @@ void pg_update_shader_Update_uniforms(void) {
 	// flash BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_current_configuration_rank],
 		flashTrkBG_weights[1], flashTrkBG_weights[2], flashTrkBG_weights[3], flashPartBG_weight);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		// flash Trk -> CA weights
-		glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
-			flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
-		// printf("flashTrkCA_weights %.2f %.2f %.2f %.2f \n", flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
-	}
+
+// flash Trk -> CA weights
+	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_current_configuration_rank],
+		flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
+	// printf("flashTrkCA_weights %.2f %.2f %.2f %.2f \n", flashTrkCA_weights[0], flashTrkCA_weights[1], flashTrkCA_weights[2], flashTrkCA_weights[3]);
 
 	//printf("Signs %d \n", currentDrawingTrack);
 
@@ -2089,7 +2068,7 @@ void pg_update_shader_Update_uniforms(void) {
 	// flash CA -> BG & repop color (BG & CA)
 	glUniform4f(uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[pg_current_configuration_rank],
 		repop_ColorBGcolorRed, repop_ColorBG_g, repop_ColorBG_b, flashCABG_weight);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
+
 #if !defined(var_alKemi)
 		glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_current_configuration_rank],
 			repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
@@ -2099,39 +2078,31 @@ void pg_update_shader_Update_uniforms(void) {
 				repop_ColorCA_r, repop_ColorCA_g, repop_ColorCA_b);
 		}
 #endif
-	}
 
 	// clear layer, flash pixel, flash CA -> Part
 	glUniform3f(uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres[pg_current_configuration_rank],
 		(GLfloat)isClearLayer, (GLfloat)flashPixel, flashCameraTrk_threshold);
 	// photo rendering
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
-		if (photo_diaporama >= 0) {
-			glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_current_configuration_rank],
-				workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
-				workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
-			//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
-		//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
-		//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
+	if (photo_diaporama >= 0) {
+		glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_current_configuration_rank],
+			workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
+			workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
+		//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
+	//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
+	//	workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
 
-			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
-				pg_Photo_weight[0], pg_Photo_weight[1], rand_0_1, rand_0_1);
-			//glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
-			//	0.f, 1.f, rand_0_1, rand_0_1);
-			//printf("photo weight %.2f %.2f phot index %d %d\n", pg_Photo_weight[0], pg_Photo_weight[1],
-				//pg_Photo_swap_buffer_data[0].indSwappedPhoto,
-				//pg_Photo_swap_buffer_data[1].indSwappedPhoto);
-		}
-		else {
-			glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
-				0.f, 0.f, rand_0_1, rand_0_1);
-			//printf("photo weight diaporama -1 0.f 0.f\n");
-		}
+		glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
+			pg_Photo_weight[0], pg_Photo_weight[1], rand_0_1, rand_0_1);
+		//glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
+		//	0.f, 1.f, rand_0_1, rand_0_1);
+		//printf("photo weight %.2f %.2f phot index %d %d\n", pg_Photo_weight[0], pg_Photo_weight[1],
+			//pg_Photo_swap_buffer_data[0].indSwappedPhoto,
+			//pg_Photo_swap_buffer_data[1].indSwappedPhoto);
 	}
 	else {
 		glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
 			0.f, 0.f, rand_0_1, rand_0_1);
-		//printf("photo weight 0.f 0.f\n");
+		//printf("photo weight diaporama -1 0.f 0.f\n");
 	}
 
 	// clip rendering
@@ -2174,7 +2145,8 @@ void pg_update_shader_Update_uniforms(void) {
 				// the right and left levels are used for lateral mixing
 				if (clip_mix == 0) {
 					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
-						wl0 * pg_clip_status[_clipLeft].clip_level[0], wr0 * pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
+						wl0 * pg_clip_status[_clipLeft].clip_level[0], wr0 * pg_clip_status[_clipRight].clip_level[0], 
+						rand_0_1, rand_0_1);
 					glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_current_configuration_rank],
 						wl1 * pg_clip_status[_clipLeft].clip_level[1], wr1 * pg_clip_status[_clipRight].clip_level[1]);
 					//printf("neut wl0 %.2f wl1 %.2f\n", wl0, wl1);
@@ -2185,7 +2157,8 @@ void pg_update_shader_Update_uniforms(void) {
 				else if (clip_mix < 0) {
 					clip_mix = max(clip_mix, -0.5f);
 					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
-						wl0 * (1 - 2 * -clip_mix) * pg_clip_status[_clipLeft].clip_level[0], wr0 * (1 - 2 * -clip_mix) * pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
+						wl0 * (1 - 2 * -clip_mix) * pg_clip_status[_clipLeft].clip_level[0], wr0 * (1 - 2 * -clip_mix) * pg_clip_status[_clipRight].clip_level[0], 
+						rand_0_1, rand_0_1);
 					glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_current_configuration_rank],
 						wl1 * pg_clip_status[_clipLeft].clip_level[1], wr1 * pg_clip_status[_clipRight].clip_level[1]);
 					//printf("neg %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0 * (1 - 2 * -clip_mix), wl1);
@@ -2196,7 +2169,8 @@ void pg_update_shader_Update_uniforms(void) {
 				else if (clip_mix > 0) {
 					clip_mix = min(clip_mix, 0.5f);
 					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_current_configuration_rank],
-						wl0 * pg_clip_status[_clipLeft].clip_level[0], wr0 * pg_clip_status[_clipRight].clip_level[0], rand_0_1, rand_0_1);
+						wl0 * pg_clip_status[_clipLeft].clip_level[0], wr0 * pg_clip_status[_clipRight].clip_level[0], 
+						rand_0_1, rand_0_1);
 					glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_current_configuration_rank],
 						wl1 * (1 - 2 * clip_mix) * pg_clip_status[_clipLeft].clip_level[1], wr1 * (1 - 2 * clip_mix) * pg_clip_status[_clipRight].clip_level[1]);
 					//printf("pos %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0, wl1 * (1 - 2 * clip_mix));
@@ -2262,55 +2236,39 @@ void pg_update_shader_Update_uniforms(void) {
 			track_x_transl[0], track_y_transl[0], track_x_transl[1], track_y_transl[1]);
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		// acceleration center and CA subtype
-		// in case of interpolation between CA1 and CA2 
-		if (!BrokenInterpolationVar[_CA1_CA2_weight]) {
-			if (CA1_CA2_weight < 1.0 && CA1_CA2_weight > 0.0) {
-				float randVal = rand_0_1;
-				if (randVal <= CA1_CA2_weight) {
-					CAInterpolatedType = CA1Type;
-					CAInterpolatedSubType = CA1SubType;
-				}
-				else {
-					CAInterpolatedType = CA2Type;
-					CAInterpolatedSubType = CA2SubType;
-				}
-			}
-			else if (CA1_CA2_weight >= 1.0) {
+	// acceleration center and CA subtype
+	// in case of interpolation between CA1 and CA2 
+	if (!BrokenInterpolationVar[_CA1_CA2_weight]) {
+		if (CA1_CA2_weight < 1.0 && CA1_CA2_weight > 0.0) {
+			float randVal = rand_0_1;
+			if (randVal <= CA1_CA2_weight) {
 				CAInterpolatedType = CA1Type;
 				CAInterpolatedSubType = CA1SubType;
 			}
-			else if (CA1_CA2_weight <= 0.0) {
+			else {
 				CAInterpolatedType = CA2Type;
 				CAInterpolatedSubType = CA2SubType;
 			}
-			 //printf("CA1/CA2 mix: CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 		}
+		else if (CA1_CA2_weight >= 1.0) {
+			CAInterpolatedType = CA1Type;
+			CAInterpolatedSubType = CA1SubType;
+		}
+		else if (CA1_CA2_weight <= 0.0) {
+			CAInterpolatedType = CA2Type;
+			CAInterpolatedSubType = CA2SubType;
+		}
+			//printf("CA1/CA2 mix: CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 	}
 
 #if !defined(PG_WITH_BLUR)
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
-			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
-			0.f, 0.f);
-	}
-	else {
-		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
-			0.f, 0.f,
-			0.f, 0.f);
-	}
+	glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
+		GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
+		0.f, 0.f);
 #else
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
-			GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
-			(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
-	}
-	else {
-		glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
-			0.f, 0.f,
-			(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
-	}
+	glUniform4f(uniform_Update_fs_4fv_CAType_SubType_blurRadius[pg_current_configuration_rank],
+		GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
+		(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 #endif
 	printOglError(51905);
 
@@ -2356,63 +2314,62 @@ void pg_update_shader_Update_uniforms(void) {
 /////////////////////////////////////////////////////////////////////////
 // PARTICLE RENDERING SHADER UNIFORM VARIABLES
 void pg_update_shader_ParticleRender_uniforms(void) {
-	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]) {
+	if (!pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]) {
 		return;
 	}
-#if defined(TEXTURED_QUAD_PARTICLES) || defined(LINE_SPLAT_PARTICLES) 
-	glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]);
-	glUniform4f(uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio[pg_current_configuration_rank],
-		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
-		(GLfloat)particle_type,
-		pulse[2], float(workingWindow_width) / float(window_height));
-	//printf("part size gs: %.3f\n", (part_size + pulse_average * part_size_pulse * part_size));
+	if (PG_PARTICLE_TYPE == 2) {
+		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]);
+		glUniform3f(uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse[pg_current_configuration_rank],
+			(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
+			(GLfloat)particle_type, pulse[2]);
+		// printf("part radius GS %.2f\n", (part_size + pulse_average * part_size_pulse * part_size));
 
-	///////////////////////////////////////////////////////////////////////
-	bool assigned = false;
-	for (int indPath = 1; indPath < PG_NB_PATHS + 1; indPath++) {
-		// active reading
-		if (is_path_replay[indPath]) {
-			glUniform3f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[indPath], paths_y[indPath], (float)window_height);
-			assigned = true;
-			break;
+		///////////////////////////////////////////////////////////////////////
+		bool assigned = false;
+		for (int indPath = 1; indPath < PG_NB_PATHS + 1; indPath++) {
+			// active reading
+			if (is_path_replay[indPath]) {
+				glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[indPath], paths_y[indPath], (float)window_height);
+				assigned = true;
+				break;
+			}
+		}
+		if (!assigned) {
+			if (paths_x[0] >= 0 && paths_y[0] >= 0) {
+				glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[0], paths_y[0], (float)window_height);
+			}
+			else {
+				glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], -1000.f, -1000.f, (float)window_height);
+			}
 		}
 	}
-	if (!assigned) {
-		if (paths_x[0] >= 0 && paths_y[0] >= 0) {
-			glUniform3f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[0], paths_y[0], (float)window_height);
-		}
-		else {
-			glUniform3f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], -1000.f, -1000.f, (float)window_height);
-		}
-	}
-#endif
-#if defined(CURVE_PARTICLES) 
-	glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]);
-	glUniform3f(uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse[pg_current_configuration_rank],
-		(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
-		(GLfloat)particle_type, pulse[2]);
-	// printf("part radius GS %.2f\n", (part_size + pulse_average * part_size_pulse * part_size));
+	else if (PG_PARTICLE_TYPE == 0 || PG_PARTICLE_TYPE == 1) {
+		glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]);
+		glUniform4f(uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio[pg_current_configuration_rank],
+			(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
+			(GLfloat)particle_type,
+			pulse[2], float(workingWindow_width) / float(window_height));
+		//printf("part size gs: %.3f\n", (part_size + pulse_average * part_size_pulse * part_size));
 
-	///////////////////////////////////////////////////////////////////////
-	bool assigned = false;
-	for (int indPath = 1; indPath < PG_NB_PATHS + 1; indPath++) {
-		// active reading
-		if (is_path_replay[indPath]) {
-			glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[indPath], paths_y[indPath], (float)window_height);
-			assigned = true;
-			break;
+		///////////////////////////////////////////////////////////////////////
+		bool assigned = false;
+		for (int indPath = 1; indPath < PG_NB_PATHS + 1; indPath++) {
+			// active reading
+			if (is_path_replay[indPath]) {
+				glUniform3f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[indPath], paths_y[indPath], (float)window_height);
+				assigned = true;
+				break;
+			}
+		}
+		if (!assigned) {
+			if (paths_x[0] >= 0 && paths_y[0] >= 0) {
+				glUniform3f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[0], paths_y[0], (float)window_height);
+			}
+			else {
+				glUniform3f(uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], -1000.f, -1000.f, (float)window_height);
+			}
 		}
 	}
-	if (!assigned) {
-		if (paths_x[0] >= 0 && paths_y[0] >= 0) {
-			glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], paths_x[0], paths_y[0], (float)window_height);
-		}
-		else {
-			glUniform3f(uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[pg_current_configuration_rank], -1000.f, -1000.f, (float)window_height);
-		}
-	}
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2526,8 +2483,7 @@ void pg_update_shader_Mesh_uniforms(void) {
 // PASS #0: PARTICLE ANIMATION PASS
 
 void pg_ParticleAnimationPass(void) {
-	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]) {
+	if (!pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleAnimation]) {
 		return;
 	}
 
@@ -2552,9 +2508,7 @@ void pg_ParticleAnimationPass(void) {
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_pos_speed[pg_current_configuration_rank], pg_Part_init_pos_speed_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_init_col_rad[pg_current_configuration_rank], pg_Part_init_col_rad_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_acc[pg_current_configuration_rank], pg_Part_image_acc_ParticleAnimation_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glUniform1i(uniform_ParticleAnimation_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_ParticleAnimation_sampler);
-	}
+	glUniform1i(uniform_ParticleAnimation_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_pos_speed[pg_current_configuration_rank], pg_Part_pos_speed_FBO_ParticleAnimation_sampler);
 	glUniform1i(uniform_ParticleAnimation_texture_fs_Part_col_rad[pg_current_configuration_rank], pg_Part_col_rad_FBO_ParticleAnimation_sampler);
@@ -2615,12 +2569,7 @@ void pg_ParticleAnimationPass(void) {
 
 	// 2-cycle ping-pong CA step n step n (FBO attachment 0)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_ParticleAnimation_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 
 	// 2-cycle ping-pong position/speed of particles step n step n (FBO attachment 0)
 	glActiveTexture(GL_TEXTURE0 + pg_Part_pos_speed_FBO_ParticleAnimation_sampler);
@@ -2764,10 +2713,8 @@ void pg_UpdatePass(void) {
 
 	////////////////////////////////////////////////////////
 	// texture unit location
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glUniform1i(uniform_Update_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Update_sampler);
-		glUniform1i(uniform_Update_texture_fs_PreviousCA[pg_current_configuration_rank], pg_PreviousCA_FBO_Update_sampler);
-	}
+	glUniform1i(uniform_Update_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_PreviousCA[pg_current_configuration_rank], pg_PreviousCA_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Pixels[pg_current_configuration_rank], pg_Pixels_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Brushes[pg_current_configuration_rank], pg_Brushes_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Camera_frame[pg_current_configuration_rank], pg_Camera_frame_Update_sampler);
@@ -2778,19 +2725,15 @@ void pg_UpdatePass(void) {
 		glUniform1i(uniform_Update_texture_fs_RepopDensity[pg_current_configuration_rank], pg_RepopDensity_Update_sampler);
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]) {
-		glUniform1i(uniform_Update_texture_fs_Photo0[pg_current_configuration_rank], pg_Photo0_Update_sampler);
-		glUniform1i(uniform_Update_texture_fs_Photo1[pg_current_configuration_rank], pg_Photo1_Update_sampler);
-	}
+	glUniform1i(uniform_Update_texture_fs_Photo0[pg_current_configuration_rank], pg_Photo0_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Photo1[pg_current_configuration_rank], pg_Photo1_Update_sampler);
 #if PG_NB_PARALLEL_CLIPS >= 2
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]) {
 		glUniform1i(uniform_Update_texture_fs_Clip0[pg_current_configuration_rank], pg_SecondClipLeft_Update_sampler);
 		glUniform1i(uniform_Update_texture_fs_Clip1[pg_current_configuration_rank], pg_SecondClipRight_Update_sampler);
 	}
 #endif
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		glUniform1i(uniform_Update_texture_fs_Part_render[pg_current_configuration_rank], pg_Particle_render_FBO_Update_sampler);
-	}
+	glUniform1i(uniform_Update_texture_fs_Part_render[pg_current_configuration_rank], pg_Particle_render_FBO_Update_sampler);
 
 	glUniform1i(uniform_Update_texture_fs_Trk0[pg_current_configuration_rank], pg_Trk0_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk1[pg_current_configuration_rank], pg_Trk1_FBO_Update_sampler);
@@ -2815,21 +2758,11 @@ void pg_UpdatePass(void) {
 	// texture unit binding
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 	// 2-cycle ping-pong CA step n (FBO attachment 0) -- previous Frame
 	glActiveTexture(GL_TEXTURE0 + pg_PreviousCA_FBO_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-		//printf("pg_FBO_Update_texID\n");
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
+	//printf("pg_FBO_Update_texID\n");
 
 	// 2-cycle ping-pong speed/position of pixels step n step n (FBO attachment 1) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Pixels_FBO_Update_sampler);
@@ -2871,7 +2804,7 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_RepopDensity_Update_sampler);
 	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_BG_CA_repop_density]
 		&& BG_CA_repop_density >= 0
-		&& unsigned int(BG_CA_repop_density) < int(pg_RepopDensity_texture_texID[pg_current_configuration_rank].size())) {
+		&& int(BG_CA_repop_density) < int(pg_RepopDensity_texture_texID[pg_current_configuration_rank].size())) {
 		glBindTexture(GL_TEXTURE_RECTANGLE, pg_RepopDensity_texture_texID[pg_current_configuration_rank].at(BG_CA_repop_density));
 	}
 	else {
@@ -2880,9 +2813,7 @@ void pg_UpdatePass(void) {
 
 	// photo[0] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo0_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
-		&& playing_clipNoLeft >= 0
+	if (playing_clipNoLeft >= 0
 		&& playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoLeft]
 		+ pg_clip_status[_clipLeft].get_lastFrame(0) < pg_nbCompressedClipFrames[pg_current_configuration_rank]
@@ -2891,8 +2822,7 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_current_configuration_rank][pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoLeft]
 			+ pg_clip_status[_clipLeft].get_lastFrame(0)]->texBuffID);
 	}
-	else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]
-		&& photo_diaporama >= 0
+	else if (photo_diaporama >= 0
 		&& photo_diaporama < int(pg_compressedImageData[pg_current_configuration_rank].size())
 		&& pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size() > 0
 		&& pg_Photo_swap_buffer_data[0].indSwappedPhoto >= 0
@@ -2907,9 +2837,7 @@ void pg_UpdatePass(void) {
 
 	// photo[1] texture
 	glActiveTexture(GL_TEXTURE0 + pg_Photo1_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]
-		&& pg_FullScenarioActiveVars[pg_current_configuration_rank][_clipCaptFreq]
-		&& playing_clipNoRight >= 0
+	if (playing_clipNoRight >= 0
 		&& playing_clipNoRight < pg_nbClips[pg_current_configuration_rank]
 		&& pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoRight]
 		+ pg_clip_status[_clipRight].get_lastFrame(0) < pg_nbCompressedClipFrames[pg_current_configuration_rank]
@@ -2918,8 +2846,7 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_current_configuration_rank][pg_firstCompressedClipFramesInFolder[pg_current_configuration_rank][playing_clipNoRight]
 			+ pg_clip_status[_clipRight].get_lastFrame(0)]->texBuffID);
 	}
-	else if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_photo_diaporama]
-		&& photo_diaporama >= 0
+	else if (photo_diaporama >= 0
 		&& photo_diaporama < int(pg_compressedImageData[pg_current_configuration_rank].size())
 		&& pg_compressedImageData[pg_current_configuration_rank][photo_diaporama].size() > 0
 		&& pg_Photo_swap_buffer_data[1].indSwappedPhoto >= 0
@@ -2971,12 +2898,7 @@ void pg_UpdatePass(void) {
 
 	// FBO capture of particle rendering used for flashing layers with particles
 	glActiveTexture(GL_TEXTURE0 + pg_Particle_render_FBO_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
 
 	// 2-cycle ping-pong BG track step n (FBO attachment 5) -- current Frame
 	glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Update_sampler);
@@ -3076,8 +2998,7 @@ void pg_ClipArtRenderingPass(void) {
 
 // PASS #3: PARTICLE RENDERING PASS
 void pg_ParticleRenderingPass(void) {
-	if (!pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]
-		|| !pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]) {
+	if (!pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]) {
 		return;
 	}
 
@@ -3094,20 +3015,20 @@ void pg_ParticleRenderingPass(void) {
 	////////////////////////////////////////
 	// PARTICLE RENDERING    
 	////////////////////////////////////////
-#if defined(TEXTURED_QUAD_PARTICLES)
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
-#endif
+	if (PG_PARTICLE_TYPE == 0) {
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+		//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+	}
 
-		//glDisable(GL_BLEND);
-		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	//glDisable(GL_BLEND);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-		////////////////////////////////////////
-		// activate shaders and sets uniform variable values    
+	////////////////////////////////////////
+	// activate shaders and sets uniform variable values    
 	glUseProgram(pg_shader_programme[pg_current_configuration_rank][_pg_shader_ParticleRender]);
 
 	glUniformMatrix4fv(uniform_ParticleSplat_vp_proj[pg_current_configuration_rank], 1, GL_FALSE, pg_orthoWindowProjMatrix);
@@ -3120,13 +3041,14 @@ void pg_ParticleRenderingPass(void) {
 	// color/radius Particle update
 	glUniform1i(uniform_ParticleSplat_texture_vp_Part_col_rad[pg_current_configuration_rank], 1);
 
-#if defined(TEXTURED_QUAD_PARTICLES)
-	// blurred disk texture
-	glUniform1i(uniform_ParticleSplat_texture_fs_decal[pg_current_configuration_rank], 2);
-#elif defined(CURVE_PARTICLES) 
-	// comet texture
-	glUniform1i(uniform_ParticleCurve_Comet_texture_fs_decal[pg_current_configuration_rank], 2);
-#endif
+	if (PG_PARTICLE_TYPE == 2) {
+		// curve particle texture
+		glUniform1i(uniform_ParticleCurve_Curve_texture_fs_decal[pg_current_configuration_rank], 2);
+	}
+	else if (PG_PARTICLE_TYPE == 0) {
+		// blurred disk texture
+		glUniform1i(uniform_ParticleSplat_texture_fs_decal[pg_current_configuration_rank], 2);
+	}
 	printOglError(52527);
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -3140,33 +3062,34 @@ void pg_ParticleRenderingPass(void) {
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_ParticleAnimation_texID[(pg_FrameNo % 2) * PG_FBO_PARTICLEANIMATION_NBATTACHTS + pg_Part_col_rad_FBO_ParticleAnimation_attcht]);
 
-#if defined(CURVE_PARTICLES)
-	// comet texture
-	glActiveTexture(GL_TEXTURE0 + 2);
-	glBindTexture(GL_TEXTURE_2D, comet_texture_2D_texID[pg_current_configuration_rank]);
-#elif defined(TEXTURED_QUAD_PARTICLES)
-	// blurred disk texture
-	glActiveTexture(GL_TEXTURE0 + 2);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partSplat_texture]) {
-		if (partSplat_texture > 0 
-			&& partSplat_texture - 1 < int(blurredDisk_texture_2D_texID[pg_current_configuration_rank].size())) {
-			// printf("bind splat texture %d %d\n", partSplat_texture, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture - 1));
-			glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture - 1));
+	if (PG_PARTICLE_TYPE == 2) {
+		// curve particle texture
+		glActiveTexture(GL_TEXTURE0 + 2);
+		glBindTexture(GL_TEXTURE_2D, curve_particle_2D_texID[pg_current_configuration_rank]);
+	}
+	else if (PG_PARTICLE_TYPE == 0) {
+		// blurred disk texture
+		glActiveTexture(GL_TEXTURE0 + 2);
+		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_partSplat_texture]) {
+			if (partSplat_texture > 0
+				&& partSplat_texture - 1 < int(blurredDisk_texture_2D_texID[pg_current_configuration_rank].size())) {
+				// printf("bind splat texture %d %d\n", partSplat_texture, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture - 1));
+				glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(partSplat_texture - 1));
+			}
+			else {
+				//printf("no splat texture %d\n", partSplat_texture);
+				glBindTexture(GL_TEXTURE_2D, NULL_ID);
+			}
 		}
 		else {
-			//printf("no splat texture %d\n", partSplat_texture);
-			glBindTexture(GL_TEXTURE_2D, NULL_ID);
+			if (blurredDisk_texture_2D_texID[pg_current_configuration_rank].size() > 0) {
+				glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(0));
+			}
+			else {
+				glBindTexture(GL_TEXTURE_2D, NULL_ID);
+			}
 		}
 	}
-	else {
-		if (blurredDisk_texture_2D_texID[pg_current_configuration_rank].size() > 0) {
-			glBindTexture(GL_TEXTURE_2D, blurredDisk_texture_2D_texID[pg_current_configuration_rank].at(0));
-		}
-		else {
-			glBindTexture(GL_TEXTURE_2D, NULL_ID);
-		}
-	}
-#endif
 	printOglError(5259);
 
 	////////////////////////////////////////
@@ -3174,39 +3097,42 @@ void pg_ParticleRenderingPass(void) {
 	// vertex buffer for a patch, made of 4 points: 4 x 3 floats
 	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
 
-#if defined(CURVE_PARTICLES)
-	// patch vertices for curve particles fed into tesselation shader
-	glPatchParameteri(GL_PATCH_VERTICES, (PG_PARTICLE_CURVE_DEGREE + 1));  // number of vertices in each patch
-#endif
+	if (PG_PARTICLE_TYPE == 2) {
+		// patch vertices for curve particles fed into tesselation shader
+		glPatchParameteri(GL_PATCH_VERTICES, (PG_PARTICLE_CURVE_DEGREE + 1));  // number of vertices in each patch
+	}
 
 	// Index buffer for indexed rendering
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
 
-#if defined(CURVE_PARTICLES)
-	// Draw the patches !
-	glDrawElements(
-		GL_PATCHES,      // mode
-		nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1),    // count
-		GL_UNSIGNED_INT,   // type
-		(void*)0           // element array buffer offset
-	);
-#else
-	// Draw the patches !
-	glDrawElements(
-		GL_POINTS,      // mode
-		nb_particles,    // count
-		GL_UNSIGNED_INT,   // type
-		(void*)0           // element array buffer offset
-	);
-#endif
+	if (PG_PARTICLE_TYPE == 2) {
+		// Draw the patches !
+		glDrawElements(
+			GL_PATCHES,      // mode
+			nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1),    // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+		);
+	}
+	else {
+		// Draw the patches !
+		glDrawElements(
+			GL_POINTS,      // mode
+			nb_particles,    // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+		);
+	}
+
 	// unbinds VBO
 	glBindVertexArray(0);
 	glDisableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-#if defined(TEXTURED_QUAD_PARTICLES)
-	glDisable(GL_BLEND);
-#endif
+	// quad texture with transparency
+	if (PG_PARTICLE_TYPE == 0) {
+		glDisable(GL_BLEND);
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -3248,9 +3174,7 @@ void pg_MixingPass(void) {
 	glUniformMatrix4fv(uniform_Mixing_vp_model[pg_current_configuration_rank], 1, GL_FALSE, pg_identityModelMatrix);
 
 	// texture unit location
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glUniform1i(uniform_Mixing_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Mixing_sampler);
-	}
+	glUniform1i(uniform_Mixing_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_ClipArt_render[pg_current_configuration_rank], pg_ClipArt_render_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Particle_render[pg_current_configuration_rank], pg_Particle_render_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Render_prec[pg_current_configuration_rank], pg_Render_prec_FBO_Mixing_sampler);
@@ -3267,12 +3191,7 @@ void pg_MixingPass(void) {
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// 2-cycle ping-pong CA step n + 1 (FBO attachment 0) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Mixing_sampler);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-	}
+	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 
 	// ClipArt GPU step n
 	glActiveTexture(GL_TEXTURE0 + pg_ClipArt_render_FBO_Mixing_sampler);
@@ -3376,12 +3295,7 @@ void pg_MasterPass(void) {
 		glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		// texture unit locations
 		glUniform1i(uniform_Master_texture_fs_Render_curr[pg_current_configuration_rank], pg_Render_curr_FBO_Master_sampler);
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			glUniform1i(uniform_Master_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Master_sampler);
-		}
-		else {
-			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-		}
+		glUniform1i(uniform_Master_texture_fs_CA[pg_current_configuration_rank], pg_CA_FBO_Master_sampler);
 
 		glUniform1i(uniform_Master_texture_fs_ClipArt_render[pg_current_configuration_rank], pg_ClipArt_render_FBO_Master_sampler);
 		glUniform1i(uniform_Master_texture_fs_Particle_render[pg_current_configuration_rank], pg_Particle_render_FBO_Master_sampler);
@@ -3398,12 +3312,7 @@ void pg_MasterPass(void) {
 
 		// 2-cycle ping-pong CA step n (FBO attachment 0) -- next frame (outout from update pass)
 		glActiveTexture(GL_TEXTURE0 + pg_CA_FBO_Master_sampler);
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_CA1_CA2_weight]) {
-			glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
-		}
-		else {
-			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-		}
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * PG_FBO_UPDATE_NBATTACHTS + pg_CA_FBO_Update_attcht]);
 
 		// ClipArt GPU step n 
 		glActiveTexture(GL_TEXTURE0 + pg_ClipArt_render_FBO_Master_sampler);
@@ -3416,12 +3325,7 @@ void pg_MasterPass(void) {
 
 		// Particles step n 
 		glActiveTexture(GL_TEXTURE0 + pg_Particle_render_FBO_Master_sampler);
-		if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_part_initialization]) {
-			glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
-		}
-		else {
-			glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
-		}
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Particle_render_texID);
 
 		// 2-cycle ping-pong track 0 step n (FBO attachment 3) -- next frame (outout from update pass)
 		glActiveTexture(GL_TEXTURE0 + pg_Trk0_FBO_Master_sampler);
@@ -4566,7 +4470,7 @@ void pg_draw_scene(DrawingMode mode) {
 		//////////////////////////////////////
 		// particle pass #3
 		pg_ParticleRenderingPass();
-		printOglError(683);
+		printOglError(684);
 
 		//////////////////////////////////////
 		// mesh pass #2b

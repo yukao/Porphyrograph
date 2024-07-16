@@ -1,6 +1,6 @@
 // CONFIGURATION CONSTANTS
-// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
-// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers,nb lights
+// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27
+// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers,nb lights,quad splat curve
 constexpr auto double_window                  = false     ;
 constexpr auto wide_screen                    = false     ;
 constexpr auto window_width                   = 1920      ;
@@ -21,12 +21,13 @@ constexpr auto nb_particles                   = 200000    ;
 constexpr auto nb_CATypes                     = 7         ;
 #define PG_NB_TRACKS                   4         
 #define PG_NB_PATHS                    12        
-constexpr auto project_name                   = "Song";
+constexpr auto project_name                   = "Ada";
 #define PG_MAX_CONFIGURATIONS          10        
 #define PG_NB_CA_PARAMS                8         
 #define PG_NB_MASTER_MASKS             6         
 #define PG_NB_CLIPART_LAYERS           8         
 #define PG_NB_LIGHTS                   8         
+#define PG_PARTICLE_TYPE               0         
 #define var_double_window
 #define var_wide_screen
 #define var_window_width
@@ -53,6 +54,7 @@ constexpr auto project_name                   = "Song";
 #define var_PG_NB_MASTER_MASKS
 #define var_PG_NB_CLIPART_LAYERS
 #define var_PG_NB_LIGHTS
+#define var_PG_PARTICLE_TYPE
 enum ConfigurationVarIDs {
   _double_window = 0,
   _wide_screen,
@@ -80,6 +82,7 @@ enum ConfigurationVarIDs {
   _PG_NB_MASTER_MASKS,
   _PG_NB_CLIPART_LAYERS,
   _PG_NB_LIGHTS,
+  _PG_PARTICLE_TYPE,
   _MaxConfigurationVarIDs};
 // FULL SCENARIO VARIABLES
 #define var_CA1_CA2_weight

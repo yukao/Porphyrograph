@@ -175,7 +175,7 @@ extern GLint uniform_ParticleSplat_vp_3fv_trackReplay_xy_height[PG_MAX_CONFIGURA
 extern GLint uniform_ParticleSplat_texture_vp_Part_pos_speed[PG_MAX_CONFIGURATIONS];				 // Particle position/speed update
 extern GLint uniform_ParticleSplat_texture_vp_Part_col_rad[PG_MAX_CONFIGURATIONS];          // Particle color/radius update
 
-#if defined(CURVE_PARTICLES) 
+// CURVE PARTICLES
 extern GLint uniform_ParticleCurve_vp_model[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleCurve_vp_view[PG_MAX_CONFIGURATIONS];
 extern GLint uniform_ParticleCurve_vp_proj[PG_MAX_CONFIGURATIONS];
@@ -185,15 +185,12 @@ extern GLint uniform_ParticleCurve_vp_3fv_trackReplay_xy_height[PG_MAX_CONFIGURA
 // PARTICLE SHADER TEXTURE IDS
 extern GLint uniform_ParticleCurve_texture_vp_Part_pos_speed[PG_MAX_CONFIGURATIONS];				 // Particle position/speed update
 extern GLint uniform_ParticleCurve_texture_vp_Part_col_rad[PG_MAX_CONFIGURATIONS];          // Particle color/radius update
-#endif
-#if defined(CURVE_PARTICLES)
+
 // color texture
-extern GLint uniform_ParticleCurve_Comet_texture_fs_decal[PG_MAX_CONFIGURATIONS];  // comet texture
-#endif
-#if defined(TEXTURED_QUAD_PARTICLES)
+extern GLint uniform_ParticleCurve_Curve_texture_fs_decal[PG_MAX_CONFIGURATIONS];  // comet texture
+
 // color texture
 extern GLint uniform_ParticleSplat_texture_fs_decal[PG_MAX_CONFIGURATIONS];  // blurred disk texture
-#endif
 
 /////////////////////////////////////////////////////////////////////////
 // MIXING SHADER

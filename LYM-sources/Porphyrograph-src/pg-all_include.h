@@ -234,18 +234,7 @@ using std::ifstream;
 // NB CA SUB-TYPES
 #define PG_NB_CA_SUBTYPES 20
 
-// CURVE VS SPLAT PARTICLES
-#if defined(pg_Project_Dasein)
-#define CURVE_PARTICLES
-#elif defined(pg_Project_Voluspa) || defined(pg_Project_CAaudio) || defined(pg_Project_araKnit)
-#define LINE_SPLAT_PARTICLES
-#else
-#define TEXTURED_QUAD_PARTICLES
-#endif
-
-#if defined(CURVE_PARTICLES)
 #define PG_PARTICLE_CURVE_DEGREE 3
-#endif
 
 // CLIPS
 // different clips on right and left screens

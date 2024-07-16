@@ -785,23 +785,21 @@ void parseConfigurationFile(std::ifstream& confFin, int indConfiguration) {
 				}
 			}
 		}
-		if (pg_FullScenarioActiveVars[indConfiguration][_part_initialization]) {
-			if (ind_shader_type == _pg_shader_ParticleAnimation
-				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
-					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
-				sprintf(ErrorStr, "Error: active shader file for Particle Animation is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-					pg_Shader_File_Names[indConfiguration][ind_shader_type].c_str(), indConfiguration, pg_ConfigurationFileNames[indConfiguration].c_str(),
-					pg_Shader_nbStages[indConfiguration][ind_shader_type]); ReportError(ErrorStr); throw(6778);
-				printf("Particle aniation shader, ");
-			}
-			if (ind_shader_type == _pg_shader_ParticleRender
-				&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
-					|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
-				sprintf(ErrorStr, "Error: active shader file for Particle Rendering is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-					pg_Shader_File_Names[indConfiguration][ind_shader_type].c_str(), indConfiguration, pg_ConfigurationFileNames[indConfiguration].c_str(),
-					pg_Shader_nbStages[indConfiguration][ind_shader_type]); ReportError(ErrorStr); throw(6778);
-				printf("Particle aniation shader, ");
-			}
+		if (ind_shader_type == _pg_shader_ParticleAnimation
+			&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
+			sprintf(ErrorStr, "Error: active shader file for Particle Animation is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indConfiguration][ind_shader_type].c_str(), indConfiguration, pg_ConfigurationFileNames[indConfiguration].c_str(),
+				pg_Shader_nbStages[indConfiguration][ind_shader_type]); ReportError(ErrorStr); throw(6778);
+			printf("Particle aniation shader, ");
+		}
+		if (ind_shader_type == _pg_shader_ParticleRender
+			&& (pg_Shader_nbStages[indConfiguration][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indConfiguration][ind_shader_type] == "NULL")) {
+			sprintf(ErrorStr, "Error: active shader file for Particle Rendering is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indConfiguration][ind_shader_type].c_str(), indConfiguration, pg_ConfigurationFileNames[indConfiguration].c_str(),
+				pg_Shader_nbStages[indConfiguration][ind_shader_type]); ReportError(ErrorStr); throw(6778);
+			printf("Particle aniation shader, ");
 		}
 		if (pg_FullScenarioActiveVars[indConfiguration][_sensor_layout]) {
 			if (ind_shader_type == _pg_shader_Sensor

@@ -134,12 +134,6 @@ enum eVertexBufferObject
 	pg_VBOParticleTexCoords,
 	pg_VBOpartRadius,
 	pg_VBOParticleColors,
-
-#if definedCURVE_PARTICLES
-	pg_VBOParticleTexCoords,
-	pg_VBOpartRadius,
-	pg_VBOParticleColors,
-#endif
 	pg_EAOParticle,
 	pg_EABQuad,
 	pg_EABQuadMaster,
@@ -206,11 +200,11 @@ public:
 extern MotionPose** pg_motionPoses[PG_MAX_CONFIGURATIONS];
 
 // particle curves
-#if defined(CURVE_PARTICLES)
 extern GLfloat *pg_Particle_control_points;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
-#endif
+
+// particle splat or geometry
 extern GLfloat *pg_Particle_vertices;
 extern GLfloat *pg_Particle_radius;
 extern GLfloat *pg_Particle_colors;
@@ -282,15 +276,10 @@ extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for m
 //extern GLuint pg_Particle_Pos_Texture_texID;
 //extern GLfloat *pg_Particle_Pos_Texture;
 
-#if defined(CURVE_PARTICLES)
-// comet texture
-extern GLuint comet_texture_2D_texID[PG_MAX_CONFIGURATIONS];
-#endif
-#if defined(TEXTURED_QUAD_PARTICLES)
+// CURVE PARTICLES TEXTURE
+extern GLuint curve_particle_2D_texID[PG_MAX_CONFIGURATIONS];
 // blurred disk texture
 extern std::vector<GLuint> blurredDisk_texture_2D_texID[PG_MAX_CONFIGURATIONS];
-#endif
-
 
 //////////////////
 // FUNCTIONS

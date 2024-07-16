@@ -284,14 +284,12 @@ bool pg_loadAllTextures(void) {
 					}
 				}
 			}
-#if defined(CURVE_PARTICLES)
 			if (texture.texture_usage == Texture_curve_particle
 				&& texture.texture_Dimension == 2) {
-				comet_texture_2D_texID[indConfiguration] = texture.texture_texID;
+				curve_particle_2D_texID[indConfiguration] = texture.texture_texID;
 			}
-#endif
-#if defined(TEXTURED_QUAD_PARTICLES)
-			if (texture.texture_usage == Texture_splat_particle && texture.texture_Dimension == 2) {
+			if (texture.texture_usage == Texture_splat_particle 
+				&& texture.texture_Dimension == 2) {
 				blurredDisk_texture_2D_texID[indConfiguration].push_back(texture.texture_texID);
 				//printf("splat texture %d\n", texture.texture_texID);
 				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (splat), ";
@@ -299,7 +297,6 @@ bool pg_loadAllTextures(void) {
 					sprintf(ErrorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", blurredDisk_texture_2D_texID[indConfiguration].size(), texture.texture_Rank); ReportError(ErrorStr); throw 336;
 				}
 			}
-#endif
 		}
 		// and checks that the textures were provided
 		if (pg_FullScenarioActiveVars[indConfiguration][_sensor_layout]) {
@@ -335,18 +332,18 @@ bool pg_loadAllTextures(void) {
 				sprintf(ErrorStr, "Error: mesh texture not provided  for configuration %d scenario %s (mesh #%d and texture rank %d, check texture list with mesh usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str(), indMeshFile, pg_Meshes[indConfiguration][indMeshFile].pg_Mesh_TextureRank); ReportError(ErrorStr); throw 336;
 			}
 		}
-#if defined(CURVE_PARTICLES)
-		if (comet_texture_2D_texID[indConfiguration] == NULL_ID) {
-			sprintf(ErrorStr, "Error: curve particles texture not provided for configuration %d scenario %s, check texture list with curve_particle usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
+		if (PG_PARTICLE_TYPE == 2) {
+			if (curve_particle_2D_texID[indConfiguration] == NULL_ID) {
+				sprintf(ErrorStr, "Error: curve particles texture not provided for configuration %d scenario %s, check texture list with curve_particle usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
+			}
 		}
-#endif
-#if defined(TEXTURED_QUAD_PARTICLES)
-		if (blurredDisk_texture_2D_texID[indConfiguration].size() == 0) {
-			sprintf(ErrorStr, "Error: splat particles texture not provided for configuration %d scenario %s, check texture list with splat_particle usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
+		else if (PG_PARTICLE_TYPE == 0) {
+			if (blurredDisk_texture_2D_texID[indConfiguration].size() == 0) {
+				sprintf(ErrorStr, "Error: splat particles texture not provided for configuration %d scenario %s, check texture list with splat_particle usage!\n", indConfiguration, pg_ScenarioFileNames[indConfiguration].c_str()); ReportError(ErrorStr); throw 336;
+			}
 		}
-#endif
-		pg_loadTexture2D(&texDataScreenFont, GL_RGB8, GL_LUMINANCE,
-			GL_UNSIGNED_BYTE, GL_LINEAR);
+
+		pg_loadTexture2D(&texDataScreenFont, GL_RGB8, GL_LUMINANCE, GL_UNSIGNED_BYTE, GL_LINEAR);
 		printOglError(6);
 
 		//////////////////////////////////////////////////////////////

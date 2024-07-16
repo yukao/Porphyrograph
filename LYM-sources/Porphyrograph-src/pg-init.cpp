@@ -105,15 +105,12 @@ int* pg_nb_MotionPoses[PG_MAX_CONFIGURATIONS] = { NULL };
 MotionPose** pg_motionPoses[PG_MAX_CONFIGURATIONS] = { NULL };
 float** pg_interpolation_weight_MotionPose[PG_MAX_CONFIGURATIONS] = { NULL };
 
-// particle curves
-#if defined(CURVE_PARTICLES)
+// CURVE PARTICLES
 GLfloat *pg_Particle_control_points;
+
 GLfloat *pg_Particle_radius;
 GLfloat *pg_Particle_colors;
-#endif
 GLfloat *pg_Particle_vertices;
-GLfloat *pg_Particle_radius;
-GLfloat *pg_Particle_colors;
 unsigned int *pg_Particle_indices;
 
 //////////////////////////////////////////////////////////////////////
@@ -122,14 +119,10 @@ unsigned int *pg_Particle_indices;
 //GLuint pg_Particle_Pos_Texture_texID = 0;
 //GLfloat *pg_Particle_Pos_Texture = NULL;
 
-#if defined(CURVE_PARTICLES)
-// comet texture
-GLuint comet_texture_2D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
-#endif
-#if defined(TEXTURED_QUAD_PARTICLES)
+// CURVE PARTICLES TEXTIRE
+GLuint curve_particle_2D_texID[PG_MAX_CONFIGURATIONS] = { NULL_ID };
 // blurred disk texture
 std::vector<GLuint>  blurredDisk_texture_2D_texID[PG_MAX_CONFIGURATIONS];
-#endif
 
 /////////////////////////////////////////////////////////////////
 // FBO INITIALIZATION
@@ -1119,65 +1112,67 @@ void pg_initGeometry_quads(void) {
 	// initializes the arrays that contains the positions and the indices of the particles
 	pg_initParticlePosition_Texture();
 
-#if defined(CURVE_PARTICLES)
-	// vertex buffer objects and vertex array
-	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
-	// vertices
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticle]);
-	glBufferData(GL_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * 3 * sizeof(float), pg_Particle_control_points, GL_STATIC_DRAW);
-	// radius
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
-	glBufferData(GL_ARRAY_BUFFER, nb_particles * 1 * sizeof(float), pg_Particle_radius, GL_STATIC_DRAW);
-	// color
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
-	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
-#endif
-	// vertex buffer objects and vertex array
-	glBindVertexArray(pg_vaoID[pg_VAOParticle]);
-	// vertices
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticle]);
-	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_vertices, GL_STATIC_DRAW);
-	// radius
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
-	glBufferData(GL_ARRAY_BUFFER, nb_particles * 1 * sizeof(float), pg_Particle_radius, GL_STATIC_DRAW);
-	// color
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
-	glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
+	if (PG_PARTICLE_TYPE == 2) {
+		// vertex buffer objects and vertex array
+		glBindVertexArray(pg_vaoID[pg_VAOParticle]);
+		// vertices
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticle]);
+		glBufferData(GL_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * 3 * sizeof(float), pg_Particle_control_points, GL_STATIC_DRAW);
+		// radius
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
+		glBufferData(GL_ARRAY_BUFFER, nb_particles * 1 * sizeof(float), pg_Particle_radius, GL_STATIC_DRAW);
+		// color
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
+		glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
+	}
+	else {
+		// vertex buffer objects and vertex array
+		glBindVertexArray(pg_vaoID[pg_VAOParticle]);
+		// vertices
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticle]);
+		glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_vertices, GL_STATIC_DRAW);
+		// radius
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
+		glBufferData(GL_ARRAY_BUFFER, nb_particles * 1 * sizeof(float), pg_Particle_radius, GL_STATIC_DRAW);
+		// color
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
+		glBufferData(GL_ARRAY_BUFFER, nb_particles * 3 * sizeof(float), pg_Particle_colors, GL_STATIC_DRAW);
+	}
 
 	// vertex positions are location 0
 	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticle]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 	glEnableVertexAttribArray(0);
 
-	// radius is location 1
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
-	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1);
-	// color is location 2
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(2);
-#if definedCURVE_PARTICLES
-								  // radius is location 1
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
-	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(1); 
-								  // color is location 2
-	glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-	glEnableVertexAttribArray(2); 
-#endif
+	if (PG_PARTICLE_TYPE == 2) {
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
+		glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+		glEnableVertexAttribArray(1);
+		// color is location 2
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+		glEnableVertexAttribArray(2);
 
-#if defined(CURVE_PARTICLES)
-	 // vertex indices for indexed rendering 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
-		pg_Particle_indices, GL_STATIC_DRAW);
-#endif
-	// vertex indices for indexed rendering 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * sizeof(unsigned int),
-		pg_Particle_indices, GL_STATIC_DRAW);
+		// vertex indices for indexed rendering 
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
+			pg_Particle_indices, GL_STATIC_DRAW);
+	}
+	else {
+		// radius is location 1
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOpartRadius]);
+		glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+		glEnableVertexAttribArray(1);
+		// color is location 2
+		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_VBOParticleColors]);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+		glEnableVertexAttribArray(2);
+
+		// vertex indices for indexed rendering 
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_EAOParticle]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_particles * sizeof(unsigned int),
+			pg_Particle_indices, GL_STATIC_DRAW);
+	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -1810,103 +1805,105 @@ bool pg_ReadAllDisplayMessages(string basefilename) {
 // PARTICLES INITIALIZATION
 
 void pg_initParticlePosition_Texture( void ) {
-#if defined(CURVE_PARTICLES)
-	// the control point position contain column and row of the control point coordinates
+	if (PG_PARTICLE_TYPE == 2) {
+		// the control point position contain column and row of the control point coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader
-	pg_Particle_control_points = new float[nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * 3];
-	pg_Particle_indices = new unsigned int[nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1)];
+		pg_Particle_control_points = new float[nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1) * 3];
+		pg_Particle_indices = new unsigned int[nb_particles * (PG_PARTICLE_CURVE_DEGREE + 1)];
 
-	pg_Particle_radius = new float[nb_particles * 1];
-	pg_Particle_colors = new float[nb_particles * 3];
+		pg_Particle_radius = new float[nb_particles * 1];
+		pg_Particle_colors = new float[nb_particles * 3];
 
-	// the used width is a multiple of (PG_PARTICLE_CURVE_DEGREE + 1) so that each set of control
-	// point coordinates is on a single line
-	int width_used = workingWindow_width - workingWindow_width % (PG_PARTICLE_CURVE_DEGREE + 1);
+		// the used width is a multiple of (PG_PARTICLE_CURVE_DEGREE + 1) so that each set of control
+		// point coordinates is on a single line
+		int width_used = workingWindow_width - workingWindow_width % (PG_PARTICLE_CURVE_DEGREE + 1);
 
-	for (int indParticle = 0; indParticle < nb_particles; indParticle++) {
-		int ind_index = indParticle * (PG_PARTICLE_CURVE_DEGREE + 1);
-		int ind_radius = indParticle;
-		int ind_color = indParticle * 3;
-		int ind_point = ind_index * 3;
+		for (int indParticle = 0; indParticle < nb_particles; indParticle++) {
+			int ind_index = indParticle * (PG_PARTICLE_CURVE_DEGREE + 1);
+			int ind_radius = indParticle;
+			int ind_color = indParticle * 3;
+			int ind_point = ind_index * 3;
 
-		// col 
-		pg_Particle_control_points[ind_point + 0] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + 0) % width_used);
-		// row
-		pg_Particle_control_points[ind_point + 1] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + 0) / width_used);
-		pg_Particle_control_points[ind_point + 2] = 0.f;
-
-		//// u 
-		//pg_Particle_texCoords[ind_point + 0] = 0.f;
-		//// v
-		//pg_Particle_texCoords[ind_point + 1] = 0.f;
-
-		// radius
-		pg_Particle_radius[ind_radius + 0] = 1.f;
-
-		// color r g b a
-		pg_Particle_colors[ind_color + 0] = 1.f;
-		pg_Particle_colors[ind_color + 1] = 1.f;
-		pg_Particle_colors[ind_color + 2] = 1.f;
-
-		pg_Particle_indices[ind_index] = ind_index;
-
-		ind_point += 3;
-		ind_index++;
-		for (int indControlPoint = 0; indControlPoint < PG_PARTICLE_CURVE_DEGREE; indControlPoint++) {
 			// col 
-			pg_Particle_control_points[ind_point + 0] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + indControlPoint + 1) % width_used);
+			pg_Particle_control_points[ind_point + 0] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + 0) % width_used);
 			// row
-			pg_Particle_control_points[ind_point + 1] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + indControlPoint + 1) / width_used);
+			pg_Particle_control_points[ind_point + 1] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + 0) / width_used);
 			pg_Particle_control_points[ind_point + 2] = 0.f;
 
 			//// u 
-			//if (indControlPoint == 0) {
-			//	pg_Particle_texCoords[ind_point + 0] = 0.f;
-			//}
-			//else {
-			//	pg_Particle_texCoords[ind_point + 0] = 1.f;
-			//}
+			//pg_Particle_texCoords[ind_point + 0] = 0.f;
 			//// v
 			//pg_Particle_texCoords[ind_point + 1] = 0.f;
+
+			// radius
+			pg_Particle_radius[ind_radius + 0] = 1.f;
+
+			// color r g b a
+			pg_Particle_colors[ind_color + 0] = 1.f;
+			pg_Particle_colors[ind_color + 1] = 1.f;
+			pg_Particle_colors[ind_color + 2] = 1.f;
 
 			pg_Particle_indices[ind_index] = ind_index;
 
 			ind_point += 3;
 			ind_index++;
+			for (int indControlPoint = 0; indControlPoint < PG_PARTICLE_CURVE_DEGREE; indControlPoint++) {
+				// col 
+				pg_Particle_control_points[ind_point + 0] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + indControlPoint + 1) % width_used);
+				// row
+				pg_Particle_control_points[ind_point + 1] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + indControlPoint + 1) / width_used);
+				pg_Particle_control_points[ind_point + 2] = 0.f;
+
+				//// u 
+				//if (indControlPoint == 0) {
+				//	pg_Particle_texCoords[ind_point + 0] = 0.f;
+				//}
+				//else {
+				//	pg_Particle_texCoords[ind_point + 0] = 1.f;
+				//}
+				//// v
+				//pg_Particle_texCoords[ind_point + 1] = 0.f;
+
+				pg_Particle_indices[ind_index] = ind_index;
+
+				ind_point += 3;
+				ind_index++;
+			}
 		}
 	}
-#endif
-	// the vertices position contain column and row of the vertices coordinates
-	// inside the texture of initial positions so that the coordinates contained in this
-	// texture can be retrieved in the vertex shader
-	pg_Particle_vertices = new float[nb_particles * 3];
-	pg_Particle_radius = new float[nb_particles * 1];
-	pg_Particle_colors = new float[nb_particles * 3];
-	pg_Particle_indices = new unsigned int[nb_particles];
+	else {
+		// the vertices position contain column and row of the vertices coordinates
+		// inside the texture of initial positions so that the coordinates contained in this
+		// texture can be retrieved in the vertex shader
+		pg_Particle_vertices = new float[nb_particles * 3];
+		pg_Particle_radius = new float[nb_particles * 1];
+		pg_Particle_colors = new float[nb_particles * 3];
+		pg_Particle_indices = new unsigned int[nb_particles];
 
-	for (int indParticle = 0; indParticle < nb_particles; indParticle++) {
-		int ind_point = indParticle * 3;
-		int ind_radius = indParticle;
-		int ind_color = indParticle * 3;
-		int ind_index = indParticle;
+		for (int indParticle = 0; indParticle < nb_particles; indParticle++) {
+			int ind_point = indParticle * 3;
+			int ind_radius = indParticle;
+			int ind_color = indParticle * 3;
+			int ind_index = indParticle;
 
-		// col 
-		pg_Particle_vertices[ind_point + 0] = float(indParticle % workingWindow_width);
-		// row
-		pg_Particle_vertices[ind_point + 1] = float(indParticle / workingWindow_width);
-		pg_Particle_vertices[ind_point + 2] = 0.f;
+			// col 
+			pg_Particle_vertices[ind_point + 0] = float(indParticle % workingWindow_width);
+			// row
+			pg_Particle_vertices[ind_point + 1] = float(indParticle / workingWindow_width);
+			pg_Particle_vertices[ind_point + 2] = 0.f;
 
-		// radius
-		pg_Particle_radius[ind_radius + 0] = 1.f;
+			// radius
+			pg_Particle_radius[ind_radius + 0] = 1.f;
 
-		// color r g b a
-		pg_Particle_colors[ind_color + 0] = 1.f;
-		pg_Particle_colors[ind_color + 1] = 1.f;
-		pg_Particle_colors[ind_color + 2] = 1.f;
+			// color r g b a
+			pg_Particle_colors[ind_color + 0] = 1.f;
+			pg_Particle_colors[ind_color + 1] = 1.f;
+			pg_Particle_colors[ind_color + 2] = 1.f;
 
-		// indices
-		pg_Particle_indices[ind_index] = ind_index;
+			// indices
+			pg_Particle_indices[ind_index] = ind_index;
+		}
 	}
 }
 
