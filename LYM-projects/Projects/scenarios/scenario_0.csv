@@ -1,8 +1,0 @@
-RANK,0
-VERBATIM,repop_hsvPart
-TYPE,bool
-ID,repop_hsvPart
-FUNCTION,NULL
-GUI,repop_hsvPart
-SHADER,*
-PULSE,*
