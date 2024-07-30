@@ -373,9 +373,7 @@ void pg_listAllClipArts(void) {
 		for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
 			std::cout << "    " << indConfiguration << ": ";
 			for (ClipArt& aClipArt : pg_ClipArts[indConfiguration]) {
-				if (pg_FullScenarioActiveVars[indConfiguration][_path_replay_trackNo] && pg_FullScenarioActiveVars[indConfiguration][_path_record]) {
-					std::cout << aClipArt.pg_ClipArt_fileNames << " (" << aClipArt.pg_nb_paths_in_ClipArt << " paths), ";
-				}
+				std::cout << aClipArt.pg_ClipArt_fileNames << " (" << aClipArt.pg_nb_paths_in_ClipArt << " paths), ";
 			}
 			std::cout << std::endl;
 		}

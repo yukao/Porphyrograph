@@ -1,89 +1,3 @@
-// CONFIGURATION CONSTANTS
-// RANK,0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27
-// VERBATIM,double window,wide screen,window width,window height,window x,window y,minimal interframe latency,time scale,initial time,message pixel length,trace output frame number,trace time,first frame number,last frame number,max mouse recording frames (for track drawing reording),max network message length,nb of particles,nb types of CA,nb of tracks,nb of paths,projet name,nb of configs,nb CA parameters,nb Master Masks,nb ClipArt layers,nb lights,quad splat curve
-constexpr auto double_window                  = false     ;
-constexpr auto wide_screen                    = false     ;
-constexpr auto window_width                   = 1920      ;
-constexpr auto window_height                  = 1080      ;
-constexpr auto window_x                       = 0         ;
-constexpr auto window_y                       = 0         ;
-constexpr auto minimal_interframe_latency     = 0.01      ;
-constexpr auto time_scale                     = 1         ;
-constexpr auto initial_time                   = 0         ;
-constexpr auto message_pixel_length           = 128       ;
-constexpr auto trace_output_frame_number      = false     ;
-constexpr auto trace_time                     = false     ;
-constexpr auto first_frame_number             = 0         ;
-constexpr auto last_frame_number              = 1000000   ;
-constexpr auto max_mouse_recording_frames     = 16384     ;
-constexpr auto max_network_message_length     = 65535     ;
-constexpr auto nb_particles                   = 200000    ;
-constexpr auto nb_CATypes                     = 7         ;
-#define PG_NB_TRACKS                   4         
-#define PG_NB_PATHS                    12        
-constexpr auto project_name                   = "Ada";
-#define PG_MAX_CONFIGURATIONS          10        
-#define PG_NB_CA_PARAMS                8         
-#define PG_NB_MASTER_MASKS             6         
-#define PG_NB_CLIPART_LAYERS           8         
-#define PG_NB_LIGHTS                   8         
-#define PG_PARTICLE_TYPE               0         
-#define var_double_window
-#define var_wide_screen
-#define var_window_width
-#define var_window_height
-#define var_window_x
-#define var_window_y
-#define var_minimal_interframe_latency
-#define var_time_scale
-#define var_initial_time
-#define var_message_pixel_length
-#define var_trace_output_frame_number
-#define var_trace_time
-#define var_first_frame_number
-#define var_last_frame_number
-#define var_max_mouse_recording_frames
-#define var_max_network_message_length
-#define var_nb_particles
-#define var_nb_CATypes
-#define var_PG_NB_TRACKS
-#define var_PG_NB_PATHS
-#define var_project_name
-#define var_PG_MAX_CONFIGURATIONS
-#define var_PG_NB_CA_PARAMS
-#define var_PG_NB_MASTER_MASKS
-#define var_PG_NB_CLIPART_LAYERS
-#define var_PG_NB_LIGHTS
-#define var_PG_PARTICLE_TYPE
-enum ConfigurationVarIDs {
-  _double_window = 0,
-  _wide_screen,
-  _window_width,
-  _window_height,
-  _window_x,
-  _window_y,
-  _minimal_interframe_latency,
-  _time_scale,
-  _initial_time,
-  _message_pixel_length,
-  _trace_output_frame_number,
-  _trace_time,
-  _first_frame_number,
-  _last_frame_number,
-  _max_mouse_recording_frames,
-  _max_network_message_length,
-  _nb_particles,
-  _nb_CATypes,
-  _PG_NB_TRACKS,
-  _PG_NB_PATHS,
-  _project_name,
-  _PG_MAX_CONFIGURATIONS,
-  _PG_NB_CA_PARAMS,
-  _PG_NB_MASTER_MASKS,
-  _PG_NB_CLIPART_LAYERS,
-  _PG_NB_LIGHTS,
-  _PG_PARTICLE_TYPE,
-  _MaxConfigurationVarIDs};
 // FULL SCENARIO VARIABLES
 #define var_CA1_CA2_weight
 #define var_CA1SubType
@@ -95,7 +9,6 @@ enum ConfigurationVarIDs {
 #define var_CAParams
 #define var_CAParams_pulse
 #define var_CAstep
-#define var_repop_CA
 #define var_flashCABG_freq
 #define var_flashCameraTrkBeat
 #define var_flashCameraTrkBright
@@ -170,6 +83,8 @@ enum ConfigurationVarIDs {
 #define var_playing_secondClipNameRight
 #define var_activeClipArts
 #define var_moving_messages
+#define var_ClipArt_layer_color_preset
+#define var_ClipArt_layer_color_preset_pulse
 #define var_ClipArt_width
 #define var_ClipArt_width_pulse
 #define var_ClipArt_stroke_color_preset
@@ -334,6 +249,7 @@ enum ConfigurationVarIDs {
 #define var_Part_repop_density
 #define var_repop_BG
 #define var_repop_BG_pulse
+#define var_repop_CA
 #define var_repop_CA_pulse
 #define var_repop_colorBG
 #define var_repop_colorBG_pulse
@@ -372,12 +288,26 @@ enum ConfigurationVarIDs {
 #define var_clearCA
 #define var_clearLayer
 #define var_cursorSize
+#define var_double_window
+#define var_first_frame_number
+#define var_last_frame_number
 #define var_freeze
+#define var_initial_time
 #define var_invertAllLayers
 #define var_master
+#define var_minimal_interframe_latency
 #define var_mute_second_screen
+#define var_nb_CATypes
+#define var_particle_geometry
+#define var_project_name
 #define var_reset_camera
 #define var_take_snapshots
+#define var_time_scale
+#define var_trace_output_frame_number
+#define var_trace_time
+#define var_window_x
+#define var_window_y
+#define var_wide_screen
 #define var_CAdecay
 #define var_CAdecay_pulse
 #define var_echo
@@ -416,8 +346,6 @@ enum ConfigurationVarIDs {
 #define var_track_x_transl_pulse
 #define var_track_y_transl
 #define var_track_y_transl_pulse
-#define var_ClipArt_layer_color_preset
-#define var_ClipArt_layer_color_preset_pulse
 #define var_activeMeshes
 #define var_mobileMeshes
 #define var_mesh_homography
@@ -463,6 +391,25 @@ enum ConfigurationVarIDs {
 #define var_farPlane
 #define var_augmentedReality
 #define var_meshRenderBypass
+#define var_mesh_anime_speed
+#define var_mesh_motion_speed
+#define var_mesh_anime
+#define var_mesh_motion
+#define var_mesh_color
+#define var_mesh_grey
+#define var_mesh_palette
+#define var_light_level
+#define var_mesh_expand
+#define var_mesh_expand_pulse
+#define var_mesh_explode
+#define var_mesh_rotation
+#define var_mesh_rotation_pulse
+#define var_mesh_translation_X
+#define var_mesh_translation_X_pulse
+#define var_mesh_translation_Y
+#define var_mesh_translation_Y_pulse
+#define var_mesh_scale
+#define var_mesh_scale_pulse
 #define var_MIDIwithBeat
 #define var_MIDIwithColor
 #define var_MIDIwithBrush
@@ -489,7 +436,6 @@ enum InterpVarIDs{
   _CAParams,
   _CAParams_pulse,
   _CAstep,
-  _repop_CA,
   _flashCABG_freq,
   _flashCameraTrkBeat,
   _flashCameraTrkBright,
@@ -564,6 +510,8 @@ enum InterpVarIDs{
   _playing_secondClipNameRight,
   _activeClipArts,
   _moving_messages,
+  _ClipArt_layer_color_preset,
+  _ClipArt_layer_color_preset_pulse,
   _ClipArt_width,
   _ClipArt_width_pulse,
   _ClipArt_stroke_color_preset,
@@ -728,6 +676,7 @@ enum InterpVarIDs{
   _Part_repop_density,
   _repop_BG,
   _repop_BG_pulse,
+  _repop_CA,
   _repop_CA_pulse,
   _repop_colorBG,
   _repop_colorBG_pulse,
@@ -766,12 +715,26 @@ enum InterpVarIDs{
   _clearCA,
   _clearLayer,
   _cursorSize,
+  _double_window,
+  _first_frame_number,
+  _last_frame_number,
   _freeze,
+  _initial_time,
   _invertAllLayers,
   _master,
+  _minimal_interframe_latency,
   _mute_second_screen,
+  _nb_CATypes,
+  _particle_geometry,
+  _project_name,
   _reset_camera,
   _take_snapshots,
+  _time_scale,
+  _trace_output_frame_number,
+  _trace_time,
+  _window_x,
+  _window_y,
+  _wide_screen,
   _CAdecay,
   _CAdecay_pulse,
   _echo,
@@ -810,8 +773,6 @@ enum InterpVarIDs{
   _track_x_transl_pulse,
   _track_y_transl,
   _track_y_transl_pulse,
-  _ClipArt_layer_color_preset,
-  _ClipArt_layer_color_preset_pulse,
   _activeMeshes,
   _mobileMeshes,
   _mesh_homography,
@@ -857,6 +818,25 @@ enum InterpVarIDs{
   _farPlane,
   _augmentedReality,
   _meshRenderBypass,
+  _mesh_anime_speed,
+  _mesh_motion_speed,
+  _mesh_anime,
+  _mesh_motion,
+  _mesh_color,
+  _mesh_grey,
+  _mesh_palette,
+  _light_level,
+  _mesh_expand,
+  _mesh_expand_pulse,
+  _mesh_explode,
+  _mesh_rotation,
+  _mesh_rotation_pulse,
+  _mesh_translation_X,
+  _mesh_translation_X_pulse,
+  _mesh_translation_Y,
+  _mesh_translation_Y_pulse,
+  _mesh_scale,
+  _mesh_scale_pulse,
   _MIDIwithBeat,
   _MIDIwithColor,
   _MIDIwithBrush,
@@ -883,7 +863,6 @@ extern bool  CATable             ;
 extern float CAParams            [(PG_NB_CA_PARAMS+1)];
 extern float CAParams_pulse      [(PG_NB_CA_PARAMS+1)];
 extern int   CAstep              ;
-extern float repop_CA            ;
 extern int   flashCABG_freq      ;
 extern int   flashCameraTrkBeat  ;
 extern float flashCameraTrkBright;
@@ -958,6 +937,8 @@ extern string playing_secondClipNameLeft;
 extern string playing_secondClipNameRight;
 extern int   activeClipArts      ;
 extern float moving_messages     ;
+extern float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
+extern float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
 extern float ClipArt_width       ;
 extern float ClipArt_width_pulse ;
 extern float ClipArt_stroke_color_preset;
@@ -1122,6 +1103,7 @@ extern int   Part_repop_color_mode;
 extern int   Part_repop_density  ;
 extern float repop_BG            ;
 extern float repop_BG_pulse      ;
+extern float repop_CA            ;
 extern float repop_CA_pulse      ;
 extern float repop_colorBG       ;
 extern float repop_colorBG_pulse ;
@@ -1160,12 +1142,26 @@ extern bool  clearAllLayers      ;
 extern bool  clearCA             ;
 extern bool  clearLayer          ;
 extern int   cursorSize          ;
+extern bool  double_window       ;
+extern int   first_frame_number  ;
+extern int   last_frame_number   ;
 extern bool  freeze              ;
+extern float initial_time        ;
 extern bool  invertAllLayers     ;
 extern float master              ;
+extern float minimal_interframe_latency;
 extern bool  mute_second_screen  ;
+extern int   nb_CATypes          ;
+extern int   particle_geometry   ;
+extern string project_name        ;
 extern bool  reset_camera        ;
 extern bool  take_snapshots      ;
+extern float time_scale          ;
+extern bool  trace_output_frame_number;
+extern bool  trace_time          ;
+extern int   window_x            ;
+extern int   window_y            ;
+extern bool  wide_screen         ;
 extern float CAdecay             ;
 extern float CAdecay_pulse       ;
 extern float echo                ;
@@ -1204,8 +1200,6 @@ extern float track_x_transl      [PG_NB_TRACKS];
 extern float track_x_transl_pulse[PG_NB_TRACKS];
 extern float track_y_transl      [PG_NB_TRACKS];
 extern float track_y_transl_pulse[PG_NB_TRACKS];
-extern float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
-extern float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
 extern int   activeMeshes        ;
 extern int   mobileMeshes        ;
 extern bool  mesh_homography     ;
@@ -1251,6 +1245,25 @@ extern float nearPlane           ;
 extern float farPlane            ;
 extern bool  augmentedReality    ;
 extern bool  meshRenderBypass    ;
+extern float mesh_anime_speed    ;
+extern float mesh_motion_speed   ;
+extern int   mesh_anime          ;
+extern int   mesh_motion         ;
+extern float mesh_color          ;
+extern float mesh_grey           ;
+extern int   mesh_palette        ;
+extern float light_level         ;
+extern float mesh_expand         ;
+extern float mesh_expand_pulse   ;
+extern float mesh_explode        ;
+extern float mesh_rotation       ;
+extern float mesh_rotation_pulse ;
+extern float mesh_translation_X  ;
+extern float mesh_translation_X_pulse;
+extern float mesh_translation_Y  ;
+extern float mesh_translation_Y_pulse;
+extern float mesh_scale          ;
+extern float mesh_scale_pulse    ;
 extern bool  MIDIwithBeat        ;
 extern bool  MIDIwithColor       ;
 extern bool  MIDIwithBrush       ;
@@ -1273,4 +1286,7 @@ extern int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2];
 extern void * pg_FullScenarioVarPointers[_MaxInterpVarIDs];
 extern std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs];
 extern std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs];
+extern void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue);
+extern void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int);
+extern PulseTypes ScenarioVarPulse[_MaxInterpVarIDs];
 void pg_FullScenarioArrayVarInit();

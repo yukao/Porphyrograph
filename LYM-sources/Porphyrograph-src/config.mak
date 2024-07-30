@@ -5,7 +5,7 @@ mandir=/usr/local/man
 MAKE=make
 CXX=g++
 TARGET_KERNEL=UNIX
-LDFLAGS=-Wall -L. -L./lib -L/usr/local/lib -L/sw/lib -L/usr/X11R6/lib -L./../lib 
-LDLIBS=  -lGL  -lGLU -lglut -lm -lpthread -lstdc++ -lopencv_core -lopencv_imgproc -lopencv_highgui -lGLEW 
-OPTFLAGS= -I. -I./include -I/sw/include -I/usr/include -I/usr/include/glm -I/usr/X11R6/include  -I/usr/X11R6/include/X11  -I/usr/local/include -g -O3 -DCPU_ENDIAN=unknown 
-SRC_PATH=/mnt/c/home/LYM-sources/Porphyrograph-src
+LDFLAGS= -L. -L./lib -L/usr/local/lib  -L/usr/X11R6/lib -L./../lib 
+LDLIBS= -lX11 -lusb-1.0 -lportaudio -lGLU -lglut -lGLX -lm -lpthread -lstdc++ -lOpenGL -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_video -lopencv_videoio -lopencv_imgcodecs -lopencv_calib3d -lsndfile -lGLEW 
+OPTFLAGS= -I. -I./include -I./include/extern -I./include/oscpp -I./include/pg_scripts -I/usr/include/glm -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/include/GL -I/usr/include/glib-2.0 -I/usr/include/opencv4 -I/usr/include -I/usr/include/x86_64-linux-gnu -I/usr/local/include/glm -I/usr/X11R6/include  -I/usr/X11R6/include/X11  -I/usr/local/include -g -O3 -std=c++17 -DCPU_ENDIAN=unknown 
+SRC_PATH=/home/tam/Documents/Programming/Porphyrograph/src

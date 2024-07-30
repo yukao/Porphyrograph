@@ -27,11 +27,11 @@
 #include "pg-all_include.h"
 
 typedef  char *     Pchar;
-std::array<char, max_network_message_length> UDP_buffer;
-std::unique_ptr<UDP_Transport> udp_transport(newUDP_Transport());
+std::array<char, PG_MAX_NETWROK_MESSAGE_LENGTH> pg_UDP_buffer;
+std::unique_ptr<pg_UDP_Transprt> pg_udp_transport(pg_newUDP_Transport());
 
 // string splitting into string vector by single char
-vector<std::string> split_string(string str, char token) {
+vector<std::string> pg_split_string(string str, char token) {
 	vector<std::string>result;
 	while (str.size()) {
 		int index = str.find(token);
@@ -72,7 +72,7 @@ pg_IPClient::pg_IPClient( void ) {
   last_IP_message_time = 0;
 
   // output message format
-  send_format = Plain;
+  send_format = pg_enum_UDP_Plain;
 
   // console trace
   IP_message_trace = false;
@@ -101,7 +101,7 @@ pg_IPClient::~pg_IPClient(void) {
 	output_pattern_stack = NULL;
 
 #if defined(WIN32)
-	//if (send_format != OSC) {
+	//if (send_format != pg_enum_UDP_OSC) {
 		closesocket(SocketToRemoteServer);
 	//}
 	//else {
@@ -126,7 +126,7 @@ void pg_IPClient::InitClient(void) {
 	hints.ai_socktype = SOCK_DGRAM; // UDP stream sockets
 	int err = getaddrinfo(Remote_server_IP.c_str(), Remote_server_port_string, &hints, &result);
 	if (err != 0) {
-		sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
+		sprintf(pg_errorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); pg_ReportError(pg_errorStr);
 	}
 	else {
 		char                    hname[1024];
@@ -140,7 +140,7 @@ void pg_IPClient::InitClient(void) {
 			0                            // No flags given
 		);
 		if (err != 0) {
-			sprintf(ErrorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); ReportError(ErrorStr);
+			sprintf(pg_errorStr, "Error: unknown remote host IP '%s (%d)'!", Remote_server_IP.c_str(), err); pg_ReportError(pg_errorStr);
 		}
 		else {
 			/* get server IP address (no check if input is IP address or DNS name */
@@ -159,11 +159,11 @@ void pg_IPClient::InitClient(void) {
 
 			SocketToRemoteServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 			if (SocketToRemoteServer < 0) {
-				sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
+				sprintf(pg_errorStr, "Error: cannot open socket to remote server!"); pg_ReportError(pg_errorStr);
 			}
 			err = connect(SocketToRemoteServer, result->ai_addr, int(result->ai_addrlen));
 			if (err == -1) {
-				sprintf(ErrorStr, "Error: cannot open socket to remote server!"); ReportError(ErrorStr);
+				sprintf(pg_errorStr, "Error: cannot open socket to remote server!"); pg_ReportError(pg_errorStr);
 			}
 			// listen(SocketToRemoteServer, 200);
 		}
@@ -196,7 +196,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 	if (output_message_stack[current_depth_output_stack - 1][0] == '#') {
 		// splits the argument separated by space chars
 		std::vector<std::string> message_arguments;
-		message_arguments = split_string(output_message_stack[current_depth_output_stack - 1], ' ');
+		message_arguments = pg_split_string(output_message_stack[current_depth_output_stack - 1], ' ');
 
 		// sends OSC message through OSC bundle
 		// message that begins by an OSC address #/aaaa/aaa 
@@ -244,7 +244,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 						.closeBundle();
 					break;
 				default:
-					sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", output_pattern_stack[current_depth_output_stack - 1][0], output_message_stack[current_depth_output_stack - 1].c_str()); ReportError(ErrorStr);
+					sprintf(pg_errorStr, "Error: unknown OSC pattern element %c for output message %s!", output_pattern_stack[current_depth_output_stack - 1][0], output_message_stack[current_depth_output_stack - 1].c_str()); pg_ReportError(pg_errorStr);
 					break;
 				}
 			}
@@ -258,7 +258,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 	else if (output_message_stack[current_depth_output_stack - 1][0] == '/') {
 		// splits the argument separated by space chars
 		std::vector<std::string> message_arguments;
-		message_arguments = split_string(output_message_stack[current_depth_output_stack - 1], ' ');
+		message_arguments = pg_split_string(output_message_stack[current_depth_output_stack - 1], ' ');
 
 		// message that begins by an OSC address /aaaa/aaa 
 		// msg with more than one argument
@@ -295,7 +295,7 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 							.closeMessage();
 						break;
 					default:
-						sprintf(ErrorStr, "Error: unknown OSC pattern element %c for output message %s!", output_pattern_stack[current_depth_output_stack - 1][0], output_message_stack[current_depth_output_stack - 1].c_str()); ReportError(ErrorStr);
+						sprintf(pg_errorStr, "Error: unknown OSC pattern element %c for output message %s!", output_pattern_stack[current_depth_output_stack - 1][0], output_message_stack[current_depth_output_stack - 1].c_str()); pg_ReportError(pg_errorStr);
 						break;
 					}
 				}
@@ -614,14 +614,14 @@ size_t pg_IPClient::makePacket(void* buffer, size_t size)
 					}
 					else {
 						// error: does not process message of more than one argument for the moment
-						sprintf(ErrorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size); ReportError(ErrorStr);
+						sprintf(pg_errorStr, "Error: OSC output message with more than one argument can only be from 2 to 20 float arguments %s (size %d)!", output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size); pg_ReportError(pg_errorStr);
 					}
 				}
 			}
 			// pattern and argument size match
 			// error : pattern and message size differ
 			else {
-				sprintf(ErrorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %lu)!", output_pattern_stack[current_depth_output_stack - 1].c_str(), output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size, message_arguments.size() - 1); ReportError(ErrorStr);
+				sprintf(pg_errorStr, "Error: OSC pattern and message size differ %s / %s (pattern size %d message size %lu)!", output_pattern_stack[current_depth_output_stack - 1].c_str(), output_message_stack[current_depth_output_stack - 1].c_str(), pattern_size, message_arguments.size() - 1); pg_ReportError(pg_errorStr);
 			}
 			// error : pattern and message size differ
 		}
@@ -650,14 +650,14 @@ void pg_IPClient::sendIPmessages(void) {
 		// printf( "sendUDPmessage %d\n" , current_depth_output_stack );
 
 		// if the elapsed time since the last message is lower than the maximal delay
-		double current_time = RealTime();
+		double current_time = pg_RealTime();
 		if (((current_time - last_IP_message_time) / 1000.) < maximal_IP_message_delay) {
 			if (IP_message_trace) {
 				printf("send message [%s, %s]\n", output_message_stack[current_depth_output_stack - 1].c_str(), output_pattern_stack[current_depth_output_stack - 1].c_str());
 			}
 
 			// records the emission time
-			last_IP_message_time = RealTime();
+			last_IP_message_time = pg_RealTime();
 
 			// sends the message
 			int length;
@@ -665,48 +665,48 @@ void pg_IPClient::sendIPmessages(void) {
 			// emitted packet size
 			int rc = 0;
 
-			// Plain format
+			// pg_enum_UDP_Plain format
 			// formats the command
 			// pads the length to a multiple of 4
-			if (send_format == Plain) {
-				strncpy(Output_Message_String, output_message_stack[current_depth_output_stack - 1].c_str(), max_network_message_length - 1);
+			if (send_format == pg_enum_UDP_Plain) {
+				strncpy(pg_output_message_string, output_message_stack[current_depth_output_stack - 1].c_str(), PG_MAX_NETWROK_MESSAGE_LENGTH - 1);
 
-				length = int(strlen(Output_Message_String));
+				length = int(strlen(pg_output_message_string));
 				int inchar;
 				for (inchar = length; inchar < length + (12 - length % 4) - 1;
 					inchar++) {
-					Output_Message_String[inchar] = ' ';
+					pg_output_message_string[inchar] = ' ';
 				}
 				// pure data
-				Output_Message_String[length + (12 - length % 4) - 2] = ';';
-				Output_Message_String[length + (12 - length % 4) - 1] = '\x0a';
-				Output_Message_String[length + (12 - length % 4)] = 0;
+				pg_output_message_string[length + (12 - length % 4) - 2] = ';';
+				pg_output_message_string[length + (12 - length % 4) - 1] = '\x0a';
+				pg_output_message_string[length + (12 - length % 4)] = 0;
 				localCommandLineLength = length + (12 - length % 4);
 				// pure data
 
-				rc = send(SocketToRemoteServer, Output_Message_String, localCommandLineLength, 0);
+				rc = send(SocketToRemoteServer, pg_output_message_string, localCommandLineLength, 0);
 				//(struct sockaddr *) &remoteServAddr, 
 				//sizeof(remoteServAddr));
 				if (rc != localCommandLineLength) {
-					sprintf(ErrorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", Output_Message_String, rc, localCommandLineLength); ReportError(ErrorStr); // close(SocketToRemoteServer); throw 273;
+					sprintf(pg_errorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", pg_output_message_string, rc, localCommandLineLength); pg_ReportError(pg_errorStr); // close(SocketToRemoteServer); throw 273;
 				}
 				if (rc > 0 && IP_message_trace) {
 					printf("Network client: send string [%s] (%d bytes)\n",
-						Output_Message_String, (int)strlen(Output_Message_String));
+						pg_output_message_string, (int)strlen(pg_output_message_string));
 				}
 			}
 			// OSC format
-			else if(send_format == OSC) {
-				const size_t packetSize = makePacket(Output_Message_String, max_network_message_length);
+			else if(send_format == pg_enum_UDP_OSC) {
+				const size_t packetSize = makePacket(pg_output_message_string, PG_MAX_NETWROK_MESSAGE_LENGTH);
 
-				rc = send(SocketToRemoteServer, Output_Message_String, (int)packetSize, 0);
+				rc = send(SocketToRemoteServer, pg_output_message_string, (int)packetSize, 0);
 				//(struct sockaddr *) &remoteServAddr, 
 				//sizeof(remoteServAddr));
 				if (rc != (int)packetSize) {
-					sprintf(ErrorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", Output_Message_String, rc, (int)packetSize); ReportError(ErrorStr); // close(SocketToRemoteServer); throw 273;
+					sprintf(pg_errorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", pg_output_message_string, rc, (int)packetSize); pg_ReportError(pg_errorStr); // close(SocketToRemoteServer); throw 273;
 				}
 				if (rc > 0 && IP_message_trace) {
-					printf("Network client: send string [%s] (%d bytes)\n",Output_Message_String, (int)packetSize);
+					printf("Network client: send string [%s] (%d bytes)\n",pg_output_message_string, (int)packetSize);
 				}
 			}
 
@@ -729,7 +729,7 @@ void pg_IPClient::sendIPmessages(void) {
 	// messages are sent by bursts to avoir overflowing the client with more messages than it can process at a time
 }
 
-void pg_IPClient::storeIP_output_message(char *commandLine, char *pattern) {
+void pg_IPClient::storeIP_output_message(char* commandLine, char* pattern) {
 
 	// printf( "commandLine %s %d\n" , commandLine , current_depth_output_stack );
 	if (SocketToRemoteServer < 0) {
@@ -749,8 +749,8 @@ void pg_IPClient::storeIP_output_message(char *commandLine, char *pattern) {
 		//printf("msg storage stack size %d (%s,%s)\n", current_depth_output_stack, commandLine, pattern);
 	}
 	else {
-		sprintf(ErrorStr, "Error: UDP output message stack overflow %d %d (%s) to IP %s:%d!", 
-			current_depth_output_stack, max_depth_output_stack, commandLine, Remote_server_IP.c_str(), Remote_server_port); ReportError(ErrorStr);
+		sprintf(pg_errorStr, "Error: UDP output message stack overflow %d %d (%s) to IP %s:%d!", 
+			current_depth_output_stack, max_depth_output_stack, commandLine, Remote_server_IP.c_str(), Remote_server_port); pg_ReportError(pg_errorStr);
 		current_depth_output_stack = 0;
 	}
 }
@@ -781,7 +781,7 @@ pg_IPServer::pg_IPServer( void ) {
   current_depth_input_stack = 0;
  
   // received message format
-  receive_format = Plain;
+  receive_format = pg_enum_UDP_Plain;
 
   // acknowledgement of received message x
   last_received_IP_message_number = INT_MAX;
@@ -832,7 +832,7 @@ void pg_IPServer::InitServer(void) {
 	SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if (SocketToLocalServer < 0) {
-		sprintf(ErrorStr, "Error: cannot open socket to local server!"); ReportError(ErrorStr);
+		sprintf(pg_errorStr, "Error: cannot open socket to local server!"); pg_ReportError(pg_errorStr);
 	}
 	else {
 		int SocketToLocalServerFlags;
@@ -843,7 +843,7 @@ void pg_IPServer::InitServer(void) {
 		SocketToLocalServerFlags |= O_NONBLOCK;
 		int ret = fcntl(SocketToLocalServer, F_SETFL, SocketToLocalServerFlags);
 		if (ret < 0) {
-			sprintf(ErrorStr, "Error: local server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
+			sprintf(pg_errorStr, "Error: local server cannot set flag to non-blocking: %s!", strerror(errno)); pg_ReportError(pg_errorStr);
 		}
 	}
 #else
@@ -851,14 +851,14 @@ void pg_IPServer::InitServer(void) {
 	SocketToLocalServer = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	if (SocketToLocalServer < 0) {
-		sprintf(ErrorStr, "Error: udp server cannot open socket to local server!"); ReportError(ErrorStr);
+		sprintf(pg_errorStr, "Error: udp server cannot open socket to local server!"); pg_ReportError(pg_errorStr);
 	}
 	else {
 		// Read the socket's flags
 		unsigned long onoff = 1;
 
 		if (ioctlsocket(SocketToLocalServer, FIONBIO, &onoff) != 0) {
-			sprintf(ErrorStr, "Error: udp server cannot set flag to non-blocking: %s!", strerror(errno)); ReportError(ErrorStr);
+			sprintf(pg_errorStr, "Error: udp server cannot set flag to non-blocking: %s!", strerror(errno)); pg_ReportError(pg_errorStr);
 		}
 	}
 #endif
@@ -871,7 +871,7 @@ void pg_IPServer::InitServer(void) {
 	int rc = bind(SocketToLocalServer, (struct sockaddr*)&localServAddr,
 		sizeof(localServAddr));
 	if (rc < 0) {
-		sprintf(ErrorStr, "Error: cannot bind local port number %d!", Local_server_port); ReportError(ErrorStr);
+		sprintf(pg_errorStr, "Error: cannot bind local port number %d!", Local_server_port); pg_ReportError(pg_errorStr);
 		return;
 	}
 
@@ -900,12 +900,12 @@ void pg_IPServer::IP_InputStackInitialization(void) {
 }
 
 
-UDP_Transport* newUDP_Transport()
+pg_UDP_Transprt* pg_newUDP_Transport()
 {
-	return new UDP_Transport;
+	return new pg_UDP_Transprt;
 }
 
-int UDP_Transport::transport_recv(SOCKET serverSocket, void* buffer, size_t size_max) {
+int pg_UDP_Transprt::transport_recv(SOCKET serverSocket, void* buffer, size_t size_max) {
 	int n = recv(serverSocket, m_buffer, size_max, 0);
 	if (n > 0) {
 		std::memcpy(buffer, m_buffer, n);
@@ -940,41 +940,41 @@ int pg_IPServer::handlePacket(const OSCPP::Server::Packet& packet) {
 		// Get argument stream
 		OSCPP::Server::ArgStream args(msg.args());
 		// copies the address
-		strcpy(Input_Message_Local_Commande_String, msg.address());
+		strcpy(pg_input_message_local_command_string, msg.address());
 
 		int argc = args.size();
 		//printf("OSC message with %d arguments\n", argc);
 		int indParam = 0;
 		while (!args.atEnd()) {
 			indParam++;
-			strcat(Input_Message_Local_Commande_String, " ");
+			strcat(pg_input_message_local_command_string, " ");
 			char tag = args.tag();
 			if (tag == 'i') {
 				sprintf(argument, "%d", args.int32());
 				//printf("i argument #%d [%s]\n", indParam, argument);
-				strcat(Input_Message_Local_Commande_String, argument);
+				strcat(pg_input_message_local_command_string, argument);
 			}
 			else if (tag == 'f') {
 					// printf("f argument #%d [%s] at %d %d\n", indParam + 1 , argument , indChar , sizeof( float ) ); 
 				sprintf(argument, "%.5f", args.float32());
 				//printf("f argument #%d [%s]\n", indParam, argument);
-				strcat(Input_Message_Local_Commande_String, argument);
+				strcat(pg_input_message_local_command_string, argument);
 			}
 			else if (tag == 's') {
 				const char* argtString = args.string();
 				// printf("s argument #%d [%s] at %d\n", indParam + 1 , message + indChar , indChar );
 				if ((*argtString) != '\"') {
-					strcat(Input_Message_Local_Commande_String, "\"");
-					strcat(Input_Message_Local_Commande_String, argtString);
-					strcat(Input_Message_Local_Commande_String, "\"");
+					strcat(pg_input_message_local_command_string, "\"");
+					strcat(pg_input_message_local_command_string, argtString);
+					strcat(pg_input_message_local_command_string, "\"");
 				}
 				else {
-					strcat(Input_Message_Local_Commande_String, argtString);
+					strcat(pg_input_message_local_command_string, argtString);
 				}
 				//printf("s argument #%d [%s]\n", indParam, argtString);
 			}
 			else {
-				sprintf(ErrorStr, "Error: unknown OSC pattern element %c in received message!", tag); ReportError(ErrorStr);
+				sprintf(pg_errorStr, "Error: unknown OSC pattern element %c in received message!", tag); pg_ReportError(pg_errorStr);
 			}
 		}
 		return argc;
@@ -986,62 +986,62 @@ void pg_IPServer::receiveIPMessages(void) {
 	// initializes the stack in which message strings are stored
 	current_depth_input_stack = 0;
 
-	// Plain message handling
-	if (receive_format != OSC) {
+	// pg_enum_UDP_Plain message handling
+	if (receive_format != pg_enum_UDP_OSC) {
 		if (SocketToLocalServer < 0) {
 			return;
 		}
 
 		// string initialization to 0
-		memset(Input_Message_String, 0x0, max_network_message_length);
-		memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
+		memset(pg_input_message_string, 0x0, PG_MAX_NETWROK_MESSAGE_LENGTH);
+		memset(pg_input_message_local_command_string, 0x0, PG_MAX_NETWROK_MESSAGE_LENGTH);
 
 		// receive message
-		int n = recv(SocketToLocalServer, Input_Message_String, max_network_message_length, 0);
+		int n = recv(SocketToLocalServer, pg_input_message_string, PG_MAX_NETWROK_MESSAGE_LENGTH, 0);
 
 		while (n > 0) {
 
 			///////////////////////////////////////////////////////
 			// Plain format (string)
-			if (receive_format == Plain) {
+			if (receive_format == pg_enum_UDP_Plain) {
 				if (IP_message_trace) {
 					printf("udp server: receive plain message [%s]\n",
-						Input_Message_String);
+						pg_input_message_string);
 				}
-				// argc should be updated later for string message (non OSC)
-				storeIP_input_messages_and_removes_duplicates(Input_Message_String, 1);
+				// argc should be updated later for string message (non pg_enum_UDP_OSC)
+				storeIP_input_messages_and_removes_duplicates(pg_input_message_string, 1);
 			}
 
-			memset(Input_Message_String, 0x0, max_network_message_length);
-			n = recv(SocketToLocalServer, Input_Message_String, max_network_message_length, 0);
+			memset(pg_input_message_string, 0x0, PG_MAX_NETWROK_MESSAGE_LENGTH);
+			n = recv(SocketToLocalServer, pg_input_message_string, PG_MAX_NETWROK_MESSAGE_LENGTH, 0);
 		}
 	}
-	// OSC message handling
+	// pg_enum_UDP_OSC message handling
 	else {
 		if (SocketToLocalServer < 0) {
 			return;
 		}
 
 		// string initialization to 0
-		memset(Input_Message_String, 0x0, max_network_message_length);
-		memset(Input_Message_Local_Commande_String, 0x0, max_network_message_length);
+		memset(pg_input_message_string, 0x0, PG_MAX_NETWROK_MESSAGE_LENGTH);
+		memset(pg_input_message_local_command_string, 0x0, PG_MAX_NETWROK_MESSAGE_LENGTH);
 
 		// receive message
-		int size = udp_transport->transport_recv(SocketToLocalServer, UDP_buffer.data(), UDP_buffer.size());
+		int size = pg_udp_transport->transport_recv(SocketToLocalServer, pg_UDP_buffer.data(), pg_UDP_buffer.size());
 
 		while (size > 0) {
 			///////////////////////////////////////////////////////
-			// OSC format (string)
-			if (receive_format == OSC) {
+			// pg_enum_UDP_OSC format (string)
+			if (receive_format == pg_enum_UDP_OSC) {
 				if (IP_message_trace) {
-					printf("udp server: receive OSC message [%s]\n", UDP_buffer.data());
+					printf("udp server: receive OSC message [%s]\n", pg_UDP_buffer.data());
 				}
-				int argc = handlePacket(OSCPP::Server::Packet(UDP_buffer.data(), size));
-				storeIP_input_messages_and_removes_duplicates(Input_Message_Local_Commande_String, argc);
+				int argc = handlePacket(OSCPP::Server::Packet(pg_UDP_buffer.data(), size));
+				storeIP_input_messages_and_removes_duplicates(pg_input_message_local_command_string, argc);
 			}
 
-			memset(Input_Message_String, 0x0, max_network_message_length);
-			size = udp_transport->transport_recv(SocketToLocalServer, UDP_buffer.data(), UDP_buffer.size());
+			memset(pg_input_message_string, 0x0, PG_MAX_NETWROK_MESSAGE_LENGTH);
+			size = pg_udp_transport->transport_recv(SocketToLocalServer, pg_UDP_buffer.data(), pg_UDP_buffer.size());
 		}
 
 	}
@@ -1052,7 +1052,7 @@ void pg_IPServer::receiveIPMessages(void) {
 }
 
 void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, int argc) {
-	if (/* receive_format != OSC && */ SocketToLocalServer < 0) {
+	if (/* receive_format != pg_enum_UDP_OSC && */ SocketToLocalServer < 0) {
 		return;
 	}
 
@@ -1069,7 +1069,7 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 	//printf( "new message [%s] current_depth_input_stack %d\n" , messString ,
 	//	  current_depth_input_stack );
 
-	// duplicates removal for OSC message formats
+	// duplicates removal for pg_enum_UDP_OSC message formats
 	// checks whether it has a duplicate and replaces it if there is one
 	if (*messString == '/' && *(messString + 1) != '_' && OSC_duplicate_removal) {
 		for (int ind_mess = 0; ind_mess < current_depth_input_stack; ind_mess++) {
@@ -1094,7 +1094,7 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 		current_depth_input_stack++;
 	}
 	else {
-		sprintf(ErrorStr, "Error: UDP input message stack overflow %d %d!", current_depth_input_stack, depth_input_stack); ReportError(ErrorStr);
+		sprintf(pg_errorStr, "Error: UDP input message stack overflow %d %d!", current_depth_input_stack, depth_input_stack); pg_ReportError(pg_errorStr);
 		// for( int ind_mess = 0 ; ind_mess < depth_input_stack - 1  ; ind_mess++ ) {
 		//   printf( "message [%s]\n" ,  input_message_stack[ ind_mess ].c_str() );
 		// }
@@ -1104,7 +1104,7 @@ void pg_IPServer::storeIP_input_messages_and_removes_duplicates(char *message, i
 void pg_IPServer::ProcessFilteredInputMessages(void) {
 	string messString;
 
-	if (/* receive_format != OSC && */ SocketToLocalServer < 0) {
+	if (/* receive_format != pg_enum_UDP_OSC && */ SocketToLocalServer < 0) {
 		return;
 	}
 
@@ -1119,7 +1119,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 		}
 
 		///////////////////////////////////////
-		// OSC message format
+		// pg_enum_UDP_OSC message format
 		// skips first chars before first /
 		if (messString.find('/', 0) != string::npos){
 
@@ -1168,7 +1168,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 
 
 			if (messString != "") {
-				sprintf(ErrorStr, "Error: OSC maximal parameter count too low (%d vs %d)!", indOSCParam, PG_MAX_OSC_ARGUMENTS); ReportError(ErrorStr);
+				sprintf(pg_errorStr, "Error: OSC maximal parameter count too low (%d vs %d)!", indOSCParam, PG_MAX_OSC_ARGUMENTS); pg_ReportError(pg_errorStr);
 			}
 
 			//printf("Alias command %s size %d :\n" , OSC_address.c_str(), indOSCParam);
@@ -1186,8 +1186,30 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 			pg_aliasScript(OSC_address, OSC_arguments[0], OSC_float_arguments, nb_arguments);
 		}
 		else {
-			sprintf(ErrorStr, "Error: incorrect external message syntax %s!", messString.c_str()); ReportError(ErrorStr); break;
+			sprintf(pg_errorStr, "Error: incorrect external message syntax %s!", messString.c_str()); pg_ReportError(pg_errorStr); break;
 		}
+	}
+}
+
+void pg_send_message_udp(char* pattern, char* message, char* targetHostid) {
+	pg_IPClient* targetHost = NULL;
+	for (pg_IPClient& client : pg_IP_Clients) {
+		if (strcmp(targetHostid, client.id.c_str()) == 0) {
+			// char msg[512];
+			// sprintf(msg, "send_message_udp %s %s %d size (curr %d tot %d)\n", message, pattern, targetHost, targetHost->current_depth_output_stack, targetHost->max_depth_output_stack);
+			client.storeIP_output_message(message, pattern);
+		}
+	}
+	if (!targetHost) {
+		// printf( "UDP client unknown %s\n" , targetHostid );
+		return;
+	}
+}
+
+void pg_send_message_udp(char* pattern, char* message, pg_IPClient* targetHost) {
+	if (targetHost) {
+		// printf("send_message_udp %s %s %d\n", message, pattern, targetHost);
+		targetHost->storeIP_output_message(message, pattern);
 	}
 }
 

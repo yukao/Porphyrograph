@@ -1,20 +1,20 @@
-/*! \file pg-update.h
- * 
- * 
- *     File pg-update.h
- * 
+/*! \file pg-audio.h
+ *
+ *
+ *     File pg-audio.h
+ *
  *
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this program; if not, write to the Free
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
@@ -103,36 +103,55 @@ private:
 
 typedef struct
 {
-    SNDFILE*              sound_file;
+    SNDFILE* sound_file;
     SF_INFO               sound_file_info;
     double                sound_file_StartReadingTime;
 } callback_data_s;
 
+// sound track playing
+extern int pg_currentlyPlaying_trackNo;
+extern bool pg_soundTrack_on;
+
+// movie soundtrack passes over an onset or a peak before next frame
+extern bool pg_track_sound_onset;
+extern bool pg_track_sound_peak;
+
+// soundtracks
+class SoundTrack {
+public:
+    string soundtrackFileName;
+    string soundtrackShortName;
+    string soundtrackPeaksFileName;
+    string soundtrackOnsetsFileName;
+    float soundtrackOnsetsAndPeasksOffset;
+    vector<float> soundtrackPeaks;
+    vector<float> soundtrackOnsets;
+    SoundTrack(void) {
+        soundtrackFileName = "";
+        soundtrackShortName = "";
+        soundtrackPeaksFileName = "";
+        soundtrackOnsetsFileName = "";
+        soundtrackOnsetsAndPeasksOffset = 0.f;
+    }
+    ~SoundTrack(void) {
+    }
+};
+extern vector<SoundTrack> pg_SoundTracks[PG_MAX_SCENARIOS];
+extern int pg_currentTrackSoundPeakIndex;
+extern int pg_nbTrackSoundPeakIndex[PG_MAX_SCENARIOS];
+extern int pg_currentTrackSoundOnsetIndex;
+extern int pg_nbTrackSoundOnsetIndex[PG_MAX_SCENARIOS];
+
 /*******************************************************************/
-int audio_main(void);
+void pg_listAllSoundtracks(void);
 
-extern pa_AudioOut pa_sound_data;
-extern ScopedPaHandler *paInit;
-extern callback_data_s soundfile_data;
+void PlayTrack(int trackNo, double timeFromStart);
+void StopTrack(void);
 
-extern PaStream* pa_stream;
-
-#define CHECK(x) { if(!(x)) { \
-fprintf(stderr, "%s:%i: failure at: %s\n", __FILE__, __LINE__, #x); \
-_exit(1); } }
-
-int paStreamCallback(
-	const void* input, void* output,
-	unsigned long frameCount,
-	const PaStreamCallbackTimeInfo* timeInfo,
-	PaStreamCallbackFlags statusFlags,
-	void* userData);
-
-//bool portAudioOpen();
-std::string freadStr(FILE* f, size_t len);
-void readFmtChunk(uint32_t chunkLen);
-void OpenWavFileAndReadHeader(char* tackFileName);
-void audio_main(int argc, char** argv);
-
+void soundTrackonOff();
+void soundTrackvolume(float vol);
+void pg_checkAudioStream();
+void pg_pa_closeStream(void);
+void pg_pa_openSoundData(void);
 
 #endif

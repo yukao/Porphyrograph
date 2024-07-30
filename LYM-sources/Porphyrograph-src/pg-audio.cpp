@@ -34,8 +34,23 @@
  */
 
 pa_AudioOut pa_sound_data;
-ScopedPaHandler *paInit;
+ScopedPaHandler* paInit;
 callback_data_s soundfile_data;
+
+// sound track playing
+int pg_currentlyPlaying_trackNo = -1;
+bool pg_soundTrack_on = true;
+
+// movie soundtrack passes over an onset or a peak before next frame
+bool pg_track_sound_onset = false;
+bool pg_track_sound_peak = false;
+
+// soundtracks
+vector<SoundTrack> pg_SoundTracks[PG_MAX_SCENARIOS];
+int pg_currentTrackSoundPeakIndex = 0;
+int pg_nbTrackSoundPeakIndex[PG_MAX_SCENARIOS] = { 0 };
+int pg_currentTrackSoundOnsetIndex = 0;
+int pg_nbTrackSoundOnsetIndex[PG_MAX_SCENARIOS] = { 0 };
 
 pa_AudioOut::pa_AudioOut() : pa_myStream(0), left_phase(0), right_phase(0)
 {
@@ -43,7 +58,7 @@ pa_AudioOut::pa_AudioOut() : pa_myStream(0), left_phase(0), right_phase(0)
     is_streaming = false;
 }
 
-bool pa_AudioOut::pa_openMyStream(PaDeviceIndex index, int *channelCount, int *sampleRate)
+bool pa_AudioOut::pa_openMyStream(PaDeviceIndex index, int* channelCount, int* sampleRate)
 {
     PaStreamParameters outputParameters;
 
@@ -176,7 +191,7 @@ bool pa_AudioOut::pa_checkAudioStream() {
         // error
         else if (Pa_IsStreamActive(pa_myStream) < 0) {
             printf("Error paBadStreamPtr %d\n", paBadStreamPtr);
-            sprintf(ErrorStr, "Error audio streaming %d", Pa_IsStreamActive(pa_myStream)); ReportError(ErrorStr); throw 561;
+            sprintf(pg_errorStr, "Error audio streaming %d", Pa_IsStreamActive(pa_myStream)); pg_ReportError(pg_errorStr); throw 561;
         }
     }
     return false;
@@ -190,8 +205,8 @@ bool pa_AudioOut::pa_is_streaming() {
 void pa_AudioOut::paStreamFinishedMethod()
 {
     is_streaming = false;
-    printf("Stream Completed: at %f\n", RealTime() - soundfile_data.sound_file_StartReadingTime);
- }
+    printf("Stream Completed: at %f\n", pg_RealTime() - soundfile_data.sound_file_StartReadingTime);
+}
 
 /*
     * This routine is called by portaudio when playback is done.
@@ -199,4 +214,209 @@ void pa_AudioOut::paStreamFinishedMethod()
 void pa_AudioOut::paStreamFinished(void* userData)
 {
     return ((pa_AudioOut*)userData)->paStreamFinishedMethod();
+}
+
+void pg_listAllSoundtracks(void) {
+    printf("Listing Soundtracks:\n");
+    for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
+        std::cout << "    " << indConfiguration << ": ";
+        for (SoundTrack& soundtrack : pg_SoundTracks[indConfiguration]) {
+            std::cout << soundtrack.soundtrackFileName << " (" << soundtrack.soundtrackShortName << "), ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void PlayTrack(int indTrack, double timeFromStart) {
+    if (!pg_SoundTracks[pg_ind_scenario].empty()) {
+        bool new_track = (indTrack >= 0 && pg_currentlyPlaying_trackNo != indTrack % pg_SoundTracks[pg_ind_scenario].size());
+        //std::cout << "new track ind: " << indTrack << " pg_currentlyPlaying_trackNo:" << pg_currentlyPlaying_trackNo << " nb of tracks:" << 
+        // pg_SoundTracks[pg_ind_scenario].size() << std::endl;
+
+        if (new_track) {
+            // std::cout << "pg_cwd: " << pg_cwd << std::endl;
+            int previouslyPlayingSoundtrackNo = pg_currentlyPlaying_trackNo;
+            pg_currentlyPlaying_trackNo = indTrack % pg_SoundTracks[pg_ind_scenario].size();
+            std::cout << "Playing soundtrack name: " << pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName << std::endl;
+            sprintf(pg_AuxString, "/soundtrack_fileName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName.c_str());
+
+            // PureData play
+            pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
+
+            // portaudio play
+            if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < int(pg_SoundTracks[pg_ind_scenario].size()))
+                || pa_sound_data.pa_is_streaming()) {
+                printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][previouslyPlayingSoundtrackNo].soundtrackFileName).c_str());
+                pa_sound_data.pa_stopMyStream();
+                pa_sound_data.pa_closeMyStream();
+            }
+            printf("Opening Wav file (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str());
+            /* Open the soundfile */
+            soundfile_data.sound_file = sf_open((char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str(),
+                SFM_READ, &soundfile_data.sound_file_info);
+            if (sf_error(soundfile_data.sound_file) != SF_ERR_NO_ERROR) {
+                fprintf(stderr, "%s\n", sf_strerror(soundfile_data.sound_file));
+                sprintf(pg_errorStr, "Wav file not opened (%s)!", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str()); pg_ReportError(pg_errorStr);
+                return;
+            }
+
+            // opening stream
+            int channelCount;
+            int sampleRate;
+            if (pa_sound_data.pa_openMyStream(Pa_GetDefaultOutputDevice(), &channelCount, &sampleRate)) {
+                printf("portaudio stream opened %d ch at %d Hz\n", channelCount, sampleRate);
+            }
+            else {
+                fprintf(stderr, "Error number: %d\n", paInit->result());
+                fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+                sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); throw 100;
+            }
+
+            // starting stream
+            if (pa_sound_data.pa_startMyStream()) {
+                printf("portaudio stream started\n");
+            }
+            else {
+                fprintf(stderr, "Error number: %d\n", paInit->result());
+                fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+                sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); throw 100;
+            }
+
+            pg_track_sound_onset = false;
+            pg_track_sound_peak = false;
+            pg_currentTrackSoundPeakIndex = 0;
+            pg_currentTrackSoundOnsetIndex = 0;
+
+            if (pg_currentlyPlaying_trackNo >= 0
+                && int(pg_SoundTracks[pg_ind_scenario].size()) > pg_currentlyPlaying_trackNo) {
+                pg_nbTrackSoundPeakIndex[pg_ind_scenario]
+                    = pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackPeaks.size();
+            }
+            else {
+                pg_nbTrackSoundPeakIndex[pg_ind_scenario] = 0;
+            }
+            if (pg_currentlyPlaying_trackNo >= 0
+                && int(pg_SoundTracks[pg_ind_scenario].size()) > pg_currentlyPlaying_trackNo) {
+                pg_nbTrackSoundOnsetIndex[pg_ind_scenario]
+                    = pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackOnsets.size();
+            }
+            else {
+                pg_nbTrackSoundOnsetIndex[pg_ind_scenario] = 0;
+            }
+            printf("pg_nbTrackSoundPeakIndex %d pg_nbTrackSoundOnsetIndex %d\n",
+                pg_nbTrackSoundPeakIndex[pg_ind_scenario], pg_nbTrackSoundOnsetIndex[pg_ind_scenario]);
+
+        }
+
+        // start position seeking
+        if (timeFromStart > 0) {
+            if (sf_seek(soundfile_data.sound_file, sf_count_t(timeFromStart * soundfile_data.sound_file_info.samplerate), SEEK_SET) == -1) {
+                sprintf(pg_errorStr, "Seek error in file (%s)!", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str()); pg_ReportError(pg_errorStr);
+            }
+            soundfile_data.sound_file_StartReadingTime
+                = pg_RealTime() - pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackOnsetsAndPeasksOffset - timeFromStart;
+        }
+        else {
+            soundfile_data.sound_file_StartReadingTime
+                = pg_RealTime() - pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackOnsetsAndPeasksOffset;
+        }
+
+#if defined(PG_WITH_JUCE)
+        sprintf(pg_AuxString, "/JUCE_open_track \"%s\"",
+            (pg_cwd + pg_soundtracks_directory + pg_SoundTracks[pg_currentlyPlaying_trackNo]->soundtrackFileName).c_str());
+        pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_SoundJUCE_send");
+        pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
+#endif
+
+        //sprintf(pg_AuxString, "/soundtrack_shortName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].trackShortName.c_str());
+        //pg_send_message_udp((char *)"s", pg_AuxString, (char *)"udp_TouchOSC_send");
+        sprintf(pg_AuxString, "/track_shortName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackShortName.c_str());
+        pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+
+        //printf("soundtrack #%d %s\n", pg_currentlyPlaying_trackNo, pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName.c_str());
+        //pg_BrokenInterpolationVar[_playing_soundtrackNo][pg_ind_scenario] = true;
+        pg_currentlyPlaying_trackNo = indTrack;
+    }
+}
+
+void StopTrack(void) {
+    sprintf(pg_AuxString, "/soundtrack_fileName %s", (char*)"");
+    pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
+
+    if (pa_sound_data.pa_is_streaming()) {
+        pa_sound_data.pa_closeMyStream();
+    }
+
+#if defined(PG_WITH_JUCE)
+    sprintf(pg_AuxString, "/JUCE_open_track \"%s\"", (char*)"void");
+    pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_SoundJUCE_send");
+    pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
+#endif
+
+    //sprintf(pg_AuxString, "/soundtrack_shortName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].trackShortName.c_str());
+    //pg_send_message_udp((char *)"s", pg_AuxString, (char *)"udp_TouchOSC_send");
+    sprintf(pg_AuxString, "/track_shortName %s", "void");
+    pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+
+    //printf("No soundtrack\n");
+    //pg_BrokenInterpolationVar[_playing_soundtrackNo][pg_ind_scenario] = true;
+    pg_currentlyPlaying_trackNo = -1;
+}
+
+// tests whether the soundtrack is finished reading
+void pg_checkAudioStream() {
+    pa_sound_data.pa_checkAudioStream();
+    //printf("soundtrack current time %f\n", pg_RealTime() - soundfile_data.sound_file_StartReadingTime);
+}
+
+void soundTrackvolume(float vol) {
+    sprintf(pg_AuxString, "/soundtrack_onOff %.5f", vol);
+    pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+    printf("Command: soundtrack: %s\n", pg_AuxString);
+
+#if defined(PG_WITH_JUCE)
+    if (vol > 0) {
+        pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
+    }
+    else {
+        pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
+    }
+#endif
+
+    sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
+    pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+    //sprintf(pg_AuxString, "/soundtrack_volume %.5f", vol);
+    //pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+}
+
+void soundTrackonOff() {
+    sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
+    pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
+    printf("Command: soundtrack: %s\n", pg_AuxString);
+#if defined(PG_WITH_JUCE)
+    if (pg_soundTrack_on) {
+        pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
+    }
+    else {
+        pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
+    }
+#endif
+    sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
+    pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+    //sprintf(pg_AuxString, "/soundtrack_volume %.5f", float(int(pg_soundTrack_on)));
+    //pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+}
+
+void pg_pa_closeStream(void) {
+    pa_sound_data.pa_closeMyStream();
+    delete paInit;
+}
+
+void pg_pa_openSoundData(void) {
+    paInit = new ScopedPaHandler();
+    if (paInit->result() != paNoError) {
+        fprintf(stderr, "Error number: %d\n", paInit->result());
+        fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+    }
 }

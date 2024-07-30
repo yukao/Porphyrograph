@@ -9,7 +9,6 @@ bool  CATable              = 0;
 float CAParams            [(PG_NB_CA_PARAMS+1)];
 float CAParams_pulse      [(PG_NB_CA_PARAMS+1)];
 int   CAstep               = 1;
-float repop_CA             = float(0);
 int   flashCABG_freq       = 0;
 int   flashCameraTrkBeat   = 0;
 float flashCameraTrkBright = float(1);
@@ -84,6 +83,8 @@ string playing_secondClipNameLeft = "NULL";
 string playing_secondClipNameRight = "NULL";
 int   activeClipArts       = 0;
 float moving_messages      = float(0);
+float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
+float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
 float ClipArt_width        = float(0.1);
 float ClipArt_width_pulse  = float(0);
 float ClipArt_stroke_color_preset = float(-1);
@@ -242,12 +243,13 @@ int   pixel_image_acceleration = -1;
 int   pixel_mode           = 1;
 float pixel_radius         = float(0.000142);
 float pixel_radius_pulse   = float(0.999858);
-int   BG_CA_repop_color_mode = 1;
-int   BG_CA_repop_density  = 0;
-int   Part_repop_color_mode = 1;
+int   BG_CA_repop_color_mode = 0;
+int   BG_CA_repop_density  = -1;
+int   Part_repop_color_mode = 0;
 int   Part_repop_density   = -1;
 float repop_BG             = float(0);
 float repop_BG_pulse       = float(0);
+float repop_CA             = float(0);
 float repop_CA_pulse       = float(0);
 float repop_colorBG        = float(0.4286);
 float repop_colorBG_pulse  = float(-0.2);
@@ -286,12 +288,26 @@ bool  clearAllLayers       = 0;
 bool  clearCA              = 0;
 bool  clearLayer           = 0;
 int   cursorSize           = 2;
+bool  double_window        = 0;
+int   first_frame_number   = 0;
+int   last_frame_number    = 1000000;
 bool  freeze               = 0;
+float initial_time         = float(0);
 bool  invertAllLayers      = 0;
 float master               = float(1);
+float minimal_interframe_latency = float(0.01);
 bool  mute_second_screen   = 0;
+int   nb_CATypes           = 7;
+int   particle_geometry    = 0;
+string project_name         = "Song";
 bool  reset_camera         = 0;
 bool  take_snapshots       = 1;
+float time_scale           = float(1);
+bool  trace_output_frame_number = 0;
+bool  trace_time           = 0;
+int   window_x             = 0;
+int   window_y             = 0;
+bool  wide_screen          = 0;
 float CAdecay              = float(0.05401);
 float CAdecay_pulse        = float(0.80344);
 float echo                 = float(0.9996);
@@ -324,14 +340,12 @@ float blurRadius_2         = float(3);
 int   currentDrawingTrack  = 1;
 int   currentMaskTrack     = -1;
 int   currentPhotoTrack    = 2;
-int   currentVideoTrack    = 2/0;
-bool  slow_track_translation = 0/0;
+int   currentVideoTrack    = 2;
+bool  slow_track_translation = 0;
 float track_x_transl      [PG_NB_TRACKS];
 float track_x_transl_pulse[PG_NB_TRACKS];
 float track_y_transl      [PG_NB_TRACKS];
 float track_y_transl_pulse[PG_NB_TRACKS];
-float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
-float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
 int   activeMeshes         = 0;
 int   mobileMeshes         = 0;
 bool  mesh_homography      = 0;
@@ -377,6 +391,25 @@ float nearPlane            = float(1);
 float farPlane             = float(50);
 bool  augmentedReality     = 1;
 bool  meshRenderBypass     = 0;
+float mesh_anime_speed     = float(1);
+float mesh_motion_speed    = float(0.25);
+int   mesh_anime           = 0;
+int   mesh_motion          = 0;
+float mesh_color           = float(0);
+float mesh_grey            = float(0);
+int   mesh_palette         = 0;
+float light_level          = float(0);
+float mesh_expand          = float(0);
+float mesh_expand_pulse    = float(0);
+float mesh_explode         = float(0);
+float mesh_rotation        = float(0);
+float mesh_rotation_pulse  = float(0);
+float mesh_translation_X   = float(4);
+float mesh_translation_X_pulse = float(0);
+float mesh_translation_Y   = float(1);
+float mesh_translation_Y_pulse = float(0);
+float mesh_scale           = float(1);
+float mesh_scale_pulse     = float(0);
 bool  MIDIwithBeat         = 0;
 bool  MIDIwithColor        = 0;
 bool  MIDIwithBrush        = 0;
@@ -403,7 +436,6 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_int,
-	_pg_float,
 	_pg_int,
 	_pg_int,
 	_pg_float,
@@ -482,26 +514,9 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_bool,
 	_pg_float,
 	_pg_float,
 	_pg_bool,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_bool,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_bool,
@@ -512,88 +527,11 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_int,
-	_pg_int,
-	_pg_int,
-	_pg_bool,
-	_pg_bool,
-	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_bool,
-	_pg_bool,
-	_pg_bool,
-	_pg_bool,
-	_pg_int,
-	_pg_bool,
-	_pg_bool,
-	_pg_float,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_bool,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_int,
 	_pg_bool,
 	_pg_float,
+	_pg_float,
 	_pg_int,
-	_pg_int,
-	_pg_float,
-	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -609,6 +547,102 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_bool,
+	_pg_bool,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_bool,
+	_pg_int,
+	_pg_bool,
+	_pg_bool,
+	_pg_float,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_bool,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -640,6 +674,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_int,
+	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -681,10 +716,24 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_bool,
 	_pg_int,
 	_pg_bool,
+	_pg_int,
+	_pg_int,
+	_pg_bool,
+	_pg_float,
+	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_bool,
+	_pg_int,
+	_pg_int,
+	_pg_string,
+	_pg_bool,
 	_pg_bool,
 	_pg_float,
 	_pg_bool,
 	_pg_bool,
+	_pg_int,
+	_pg_int,
 	_pg_bool,
 	_pg_float,
 	_pg_float,
@@ -724,8 +773,6 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_float,
-	_pg_float,
 	_pg_int,
 	_pg_int,
 	_pg_bool,
@@ -771,6 +818,25 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_bool,
 	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_int,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_bool,
 	_pg_bool,
 	_pg_bool,
@@ -797,7 +863,6 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{1, (PG_NB_CA_PARAMS+1)},
 	{1, (PG_NB_CA_PARAMS+1)},
-	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -873,6 +938,8 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{1, (PG_NB_CLIPART_LAYERS+1)},
+	{1, (PG_NB_CLIPART_LAYERS+1)},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1089,6 +1156,49 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{-1, -1},
@@ -1104,23 +1214,12 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
-	{-1, -1},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{1, (PG_NB_CLIPART_LAYERS+1)},
-	{1, (PG_NB_CLIPART_LAYERS+1)},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1193,7 +1292,6 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&CAParams,
 	(void *)&CAParams_pulse,
 	(void *)&CAstep,
-	(void *)&repop_CA,
 	(void *)&flashCABG_freq,
 	(void *)&flashCameraTrkBeat,
 	(void *)&flashCameraTrkBright,
@@ -1268,6 +1366,8 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&playing_secondClipNameRight,
 	(void *)&activeClipArts,
 	(void *)&moving_messages,
+	(void *)&ClipArt_layer_color_preset,
+	(void *)&ClipArt_layer_color_preset_pulse,
 	(void *)&ClipArt_width,
 	(void *)&ClipArt_width_pulse,
 	(void *)&ClipArt_stroke_color_preset,
@@ -1432,6 +1532,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&Part_repop_density,
 	(void *)&repop_BG,
 	(void *)&repop_BG_pulse,
+	(void *)&repop_CA,
 	(void *)&repop_CA_pulse,
 	(void *)&repop_colorBG,
 	(void *)&repop_colorBG_pulse,
@@ -1470,12 +1571,26 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&clearCA,
 	(void *)&clearLayer,
 	(void *)&cursorSize,
+	(void *)&double_window,
+	(void *)&first_frame_number,
+	(void *)&last_frame_number,
 	(void *)&freeze,
+	(void *)&initial_time,
 	(void *)&invertAllLayers,
 	(void *)&master,
+	(void *)&minimal_interframe_latency,
 	(void *)&mute_second_screen,
+	(void *)&nb_CATypes,
+	(void *)&particle_geometry,
+	(void *)&project_name,
 	(void *)&reset_camera,
 	(void *)&take_snapshots,
+	(void *)&time_scale,
+	(void *)&trace_output_frame_number,
+	(void *)&trace_time,
+	(void *)&window_x,
+	(void *)&window_y,
+	(void *)&wide_screen,
 	(void *)&CAdecay,
 	(void *)&CAdecay_pulse,
 	(void *)&echo,
@@ -1514,8 +1629,6 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&track_x_transl_pulse,
 	(void *)&track_y_transl,
 	(void *)&track_y_transl_pulse,
-	(void *)&ClipArt_layer_color_preset,
-	(void *)&ClipArt_layer_color_preset_pulse,
 	(void *)&activeMeshes,
 	(void *)&mobileMeshes,
 	(void *)&mesh_homography,
@@ -1561,6 +1674,25 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&farPlane,
 	(void *)&augmentedReality,
 	(void *)&meshRenderBypass,
+	(void *)&mesh_anime_speed,
+	(void *)&mesh_motion_speed,
+	(void *)&mesh_anime,
+	(void *)&mesh_motion,
+	(void *)&mesh_color,
+	(void *)&mesh_grey,
+	(void *)&mesh_palette,
+	(void *)&light_level,
+	(void *)&mesh_expand,
+	(void *)&mesh_expand_pulse,
+	(void *)&mesh_explode,
+	(void *)&mesh_rotation,
+	(void *)&mesh_rotation_pulse,
+	(void *)&mesh_translation_X,
+	(void *)&mesh_translation_X_pulse,
+	(void *)&mesh_translation_Y,
+	(void *)&mesh_translation_Y_pulse,
+	(void *)&mesh_scale,
+	(void *)&mesh_scale_pulse,
 	(void *)&MIDIwithBeat,
 	(void *)&MIDIwithColor,
 	(void *)&MIDIwithBrush,
@@ -1793,6 +1925,14 @@ void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenari
 void mobileMeshes_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	mobileMeshes_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
 }
+void mesh_anime_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void mesh_anime_speed_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	mesh_anime_speed_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void mesh_motion_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void mesh_motion_speed_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	mesh_motion_speed_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
 void MIDIwithBeat_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void MIDIwithBeat_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	MIDIwithBeat_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
@@ -1818,7 +1958,6 @@ void MIDIwithStroke_callBack_generic(pg_Parameter_Input_Type param_input_type, S
 	MIDIwithStroke_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
 }
 void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { 
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1901,6 +2040,8 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	&playing_clipNameRight_callBack_generic,
 	&playing_secondClipNameLeft_callBack_generic,
 	&playing_secondClipNameRight_callBack_generic,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2080,6 +2221,7 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	&repop_huePart_callBack_generic,
 	NULL,
 	&repop_satPart_callBack_generic,
@@ -2104,6 +2246,18 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	&clearAllLayers_callBack_generic,
 	&clearCA_callBack_generic,
 	&clearLayer_callBack_generic,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2196,6 +2350,25 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	&mesh_anime_speed_callBack_generic,
+	&mesh_motion_speed_callBack_generic,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	&MIDIwithBeat_callBack_generic,
 	&MIDIwithColor_callBack_generic,
 	&MIDIwithBrush_callBack_generic,
@@ -2213,6 +2386,7 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 };
 void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int) = { 
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2606,6 +2780,38 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 };
 std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = { 
   "CA1_CA2_weight",
@@ -2618,7 +2824,6 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "CAParams",
   "CAParams_pulse",
   "CAstep",
-  "repop_CA",
   "flashCABG_freq",
   "flashCameraTrkBeat",
   "flashCameraTrkBright",
@@ -2693,6 +2898,8 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "playing_secondClipNameRight",
   "activeClipArts",
   "moving_messages",
+  "ClipArt_layer_color_preset",
+  "ClipArt_layer_color_preset_pulse",
   "ClipArt_width",
   "ClipArt_width_pulse",
   "ClipArt_stroke_color_preset",
@@ -2857,6 +3064,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "Part_repop_density",
   "repop_BG",
   "repop_BG_pulse",
+  "repop_CA",
   "repop_CA_pulse",
   "repop_colorBG",
   "repop_colorBG_pulse",
@@ -2895,12 +3103,26 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "clearCA",
   "clearLayer",
   "cursorSize",
+  "double_window",
+  "first_frame_number",
+  "last_frame_number",
   "freeze",
+  "initial_time",
   "invertAllLayers",
   "master",
+  "minimal_interframe_latency",
   "mute_second_screen",
+  "nb_CATypes",
+  "particle_geometry",
+  "project_name",
   "reset_camera",
   "take_snapshots",
+  "time_scale",
+  "trace_output_frame_number",
+  "trace_time",
+  "window_x",
+  "window_y",
+  "wide_screen",
   "CAdecay",
   "CAdecay_pulse",
   "echo",
@@ -2939,8 +3161,6 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "track_x_transl_pulse",
   "track_y_transl",
   "track_y_transl_pulse",
-  "ClipArt_layer_color_preset",
-  "ClipArt_layer_color_preset_pulse",
   "activeMeshes",
   "mobileMeshes",
   "photo_homography",
@@ -2986,6 +3206,25 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "farPlane",
   "augmentedReality",
   "meshRenderBypass",
+  "mesh_anime_speed",
+  "mesh_motion_speed",
+  "mesh_anime",
+  "mesh_motion",
+  "mesh_color",
+  "mesh_grey",
+  "mesh_palette",
+  "light_level",
+  "mesh_expand",
+  "mesh_expand_pulse",
+  "mesh_explode",
+  "mesh_rotation",
+  "mesh_rotation_pulse",
+  "mesh_translation_X",
+  "mesh_translation_X_pulse",
+  "mesh_translation_Y",
+  "mesh_translation_Y_pulse",
+  "mesh_scale",
+  "mesh_scale_pulse",
   "MIDIwithBeat",
   "MIDIwithColor",
   "MIDIwithBrush",
@@ -3013,7 +3252,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3087,6 +3325,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -3252,6 +3492,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_special,
   _pg_pulsed_none,
@@ -3275,6 +3516,20 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3334,7 +3589,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_differential,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3380,6 +3634,24 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_uniform,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_uniform,
+  _pg_pulsed_none,
+  _pg_pulsed_uniform,
+  _pg_pulsed_none,
+  _pg_pulsed_uniform,
+  _pg_pulsed_none,
+  _pg_pulsed_uniform,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3408,7 +3680,6 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "CAParams",
   "CAParams_pulse",
   "CAstep",
-  "repop_CA",
   "flashCABG_freq",
   "flashCameraTrkBeat",
   "flashCameraTrkBright",
@@ -3483,6 +3754,8 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "playing_secondClipNameRight",
   "activeClipArts",
   "moving_messages",
+  "ClipArt_layer_color_preset",
+  "ClipArt_layer_color_preset_pulse",
   "ClipArt_width",
   "ClipArt_width_pulse",
   "ClipArt_stroke_color_preset",
@@ -3647,6 +3920,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "Part_repop_density",
   "repop_BG",
   "repop_BG_pulse",
+  "repop_CA",
   "repop_CA_pulse",
   "repop_colorBG",
   "repop_colorBG_pulse",
@@ -3685,12 +3959,26 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "clearCA",
   "clearLayer",
   "cursorSize",
+  "double_window",
+  "first_frame_number",
+  "last_frame_number",
   "freeze",
+  "initial_time",
   "invertAllLayers",
   "master",
+  "minimal_interframe_latency",
   "mute_second_screen",
+  "nb_CATypes",
+  "particle_geometry",
+  "project_name",
   "reset_camera",
   "take_snapshots",
+  "time_scale",
+  "trace_output_frame_number",
+  "trace_time",
+  "window_x",
+  "window_y",
+  "wide_screen",
   "CAdecay",
   "CAdecay_pulse",
   "echo",
@@ -3729,8 +4017,6 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "track_x_transl_pulse",
   "track_y_transl",
   "track_y_transl_pulse",
-  "ClipArt_layer_color_preset",
-  "ClipArt_layer_color_preset_pulse",
   "activeMeshes",
   "mobileMeshes",
   "mesh_homography",
@@ -3776,6 +4062,25 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "farPlane",
   "augmentedReality",
   "meshRenderBypass",
+  "mesh_anime_speed",
+  "mesh_motion_speed",
+  "mesh_anime",
+  "mesh_motion",
+  "mesh_color",
+  "mesh_grey",
+  "mesh_palette",
+  "light_level",
+  "mesh_expand",
+  "mesh_expand_pulse",
+  "mesh_explode",
+  "mesh_rotation",
+  "mesh_rotation_pulse",
+  "mesh_translation_X",
+  "mesh_translation_X_pulse",
+  "mesh_translation_Y",
+  "mesh_translation_Y_pulse",
+  "mesh_scale",
+  "mesh_scale_pulse",
   "MIDIwithBeat",
   "MIDIwithColor",
   "MIDIwithBrush",
@@ -3826,6 +4131,22 @@ void pg_FullScenarioArrayVarInit() {
 	master_mask_opacity[4] = float(1);
 	master_mask_opacity[5] = float(1);
 	master_mask_opacity[6] = float(1);
+	ClipArt_layer_color_preset[1] = float(-1);
+	ClipArt_layer_color_preset[2] = float(-1);
+	ClipArt_layer_color_preset[3] = float(-1);
+	ClipArt_layer_color_preset[4] = float(-1);
+	ClipArt_layer_color_preset[5] = float(-1);
+	ClipArt_layer_color_preset[6] = float(-1);
+	ClipArt_layer_color_preset[7] = float(-1);
+	ClipArt_layer_color_preset[8] = float(-1);
+	ClipArt_layer_color_preset_pulse[1] = float(0);
+	ClipArt_layer_color_preset_pulse[2] = float(0);
+	ClipArt_layer_color_preset_pulse[3] = float(0);
+	ClipArt_layer_color_preset_pulse[4] = float(0);
+	ClipArt_layer_color_preset_pulse[5] = float(0);
+	ClipArt_layer_color_preset_pulse[6] = float(0);
+	ClipArt_layer_color_preset_pulse[7] = float(0);
+	ClipArt_layer_color_preset_pulse[8] = float(0);
 	part_path_follow[0] = 0;
 	part_path_follow[1] = 0;
 	part_path_follow[2] = 0;
@@ -3924,22 +4245,6 @@ void pg_FullScenarioArrayVarInit() {
 	track_y_transl_pulse[1] = float(0);
 	track_y_transl_pulse[2] = float(0);
 	track_y_transl_pulse[3] = float(0);
-	ClipArt_layer_color_preset[1] = float(-1);
-	ClipArt_layer_color_preset[2] = float(-1);
-	ClipArt_layer_color_preset[3] = float(-1);
-	ClipArt_layer_color_preset[4] = float(-1);
-	ClipArt_layer_color_preset[5] = float(-1);
-	ClipArt_layer_color_preset[6] = float(-1);
-	ClipArt_layer_color_preset[7] = float(-1);
-	ClipArt_layer_color_preset[8] = float(-1);
-	ClipArt_layer_color_preset_pulse[1] = float(0);
-	ClipArt_layer_color_preset_pulse[2] = float(0);
-	ClipArt_layer_color_preset_pulse[3] = float(0);
-	ClipArt_layer_color_preset_pulse[4] = float(0);
-	ClipArt_layer_color_preset_pulse[5] = float(0);
-	ClipArt_layer_color_preset_pulse[6] = float(0);
-	ClipArt_layer_color_preset_pulse[7] = float(0);
-	ClipArt_layer_color_preset_pulse[8] = float(0);
 	light_color[1] = float(0);
 	light_color[2] = float(0);
 	light_color[3] = float(0);

@@ -1,8 +1,8 @@
 
-if(pg_current_configuration_rank == 0) {
+if(pg_ind_scenario == 0) {
 
-    if (pg_shader_programme[0][_pg_shader_ParticleAnimation]) {
-      glUseProgram(pg_shader_programme[0][_pg_shader_ParticleAnimation]);
+    if (pg_shader_programme[0][pg_enum_shader_ParticleAnimation]) {
+      glUseProgram(pg_shader_programme[0][pg_enum_shader_ParticleAnimation]);
       ParticleAnimation_scenario_var_data[0][0] = (GLfloat)noiseParticleScale * (1.f + pulse_average * noiseParticleScale_pulse);
       ParticleAnimation_scenario_var_data[0][1] = (GLfloat)part_acc * (1.f + pulse_average * part_acc_pulse);
       ParticleAnimation_scenario_var_data[0][2] = (GLfloat)part_damp * (1.f + pulse_average * part_damp_pulse);
@@ -53,8 +53,8 @@ if(pg_current_configuration_rank == 0) {
       glUniform1fv(uniform_ParticleAnimation_scenario_var_data[0], 47, ParticleAnimation_scenario_var_data[0]);
     }
 
-    if (pg_shader_programme[0][_pg_shader_Update]) {
-      glUseProgram(pg_shader_programme[0][_pg_shader_Update]);
+    if (pg_shader_programme[0][pg_enum_shader_Update]) {
+      glUseProgram(pg_shader_programme[0][pg_enum_shader_Update]);
       Update_scenario_var_data[0][0] = (GLfloat)CAcolorSpread;
       Update_scenario_var_data[0][1] = (GLfloat)CAParams[1] * (1.f + pulse_average * CAParams_pulse[1]);
       Update_scenario_var_data[0][2] = (GLfloat)CAParams[2] * (1.f + pulse_average * CAParams_pulse[2]);
@@ -65,67 +65,67 @@ if(pg_current_configuration_rank == 0) {
       Update_scenario_var_data[0][7] = (GLfloat)CAParams[7] * (1.f + pulse_average * CAParams_pulse[7]);
       Update_scenario_var_data[0][8] = (GLfloat)CAParams[8] * (1.f + pulse_average * CAParams_pulse[8]);
       Update_scenario_var_data[0][9] = (GLfloat)CAstep;
-      Update_scenario_var_data[0][10] = (GLfloat)repop_CA * (1.f + pulse_average * repop_CA_pulse);
-      Update_scenario_var_data[0][11] = (GLfloat)camera_gamma * (1.f + pulse_average * camera_gamma_pulse);
-      Update_scenario_var_data[0][12] = (GLfloat)cameraCumul;
-      Update_scenario_var_data[0][13] = (GLfloat)cameraGamma;
-      Update_scenario_var_data[0][14] = (GLfloat)cameraSobel * (1.f + pulse_average * cameraSobel_pulse);
-      Update_scenario_var_data[0][15] = (GLfloat)cameraThreshold * (1.f + pulse_average * cameraThreshold_pulse);
-      Update_scenario_var_data[0][16] = (GLfloat)cameraWeight * (1.f + pulse_average * cameraWeight_pulse);
-      Update_scenario_var_data[0][17] = (GLfloat)invertCamera;
-      Update_scenario_var_data[0][18] = (GLfloat)invertMovie;
-      Update_scenario_var_data[0][19] = (GLfloat)movie_gamma * (1.f + pulse_average * movie_gamma_pulse);
-      Update_scenario_var_data[0][20] = (GLfloat)movie_threshold * (1.f + pulse_average * movie_threshold_pulse);
-      Update_scenario_var_data[0][21] = (GLfloat)movieSobel * (1.f + pulse_average * movieSobel_pulse);
-      Update_scenario_var_data[0][22] = (GLfloat)movieWeight * (1.f + pulse_average * movieWeight_pulse);
-      Update_scenario_var_data[0][23] = (GLfloat)invertPhoto;
-      Update_scenario_var_data[0][24] = (GLfloat)photo_contrast;
-      Update_scenario_var_data[0][25] = (GLfloat)photo_gamma * (1.f + pulse_average * photo_gamma_pulse);
-      Update_scenario_var_data[0][26] = (GLfloat)photo_hue * (1.f + pulse_average * photo_hue_pulse);
-      Update_scenario_var_data[0][27] = (GLfloat)photo_rot;
-      Update_scenario_var_data[0][28] = (GLfloat)photo_satur * (1.f + pulse_average * photo_satur_pulse);
-      Update_scenario_var_data[0][29] = (GLfloat)photo_scaleX;
-      Update_scenario_var_data[0][30] = (GLfloat)photo_scaleY;
-      Update_scenario_var_data[0][31] = (GLfloat)photo_threshold * (1.f + pulse_average * photo_threshold_pulse);
-      Update_scenario_var_data[0][32] = (GLfloat)photo_transl_x;
-      Update_scenario_var_data[0][33] = (GLfloat)photo_transl_y;
-      Update_scenario_var_data[0][34] = (GLfloat)photo_value * (1.f + pulse_average * photo_value_pulse);
-      Update_scenario_var_data[0][35] = (GLfloat)photoSobel * (1.f + pulse_average * photoSobel_pulse);
-      Update_scenario_var_data[0][36] = (GLfloat)photoWeight * (1.f + pulse_average * photoWeight_pulse);
-      Update_scenario_var_data[0][37] = (GLfloat)video_contrast * (1.f + pulse_average * video_contrast_pulse);
-      Update_scenario_var_data[0][38] = (GLfloat)video_gamma * (1.f + pulse_average * video_gamma_pulse);
-      Update_scenario_var_data[0][39] = (GLfloat)video_hue * (1.f + pulse_average * video_hue_pulse);
-      Update_scenario_var_data[0][40] = (GLfloat)video_satur * (1.f + pulse_average * video_satur_pulse);
-      Update_scenario_var_data[0][41] = (GLfloat)video_threshold * (1.f + pulse_average * video_threshold_pulse);
-      Update_scenario_var_data[0][42] = (GLfloat)video_value * (1.f + pulse_average * video_value_pulse);
-      Update_scenario_var_data[0][43] = (GLfloat)video_white * (1.f + pulse_average * video_white_pulse);
-      Update_scenario_var_data[0][44] = (GLfloat)noiseType;
-      Update_scenario_var_data[0][45] = (GLfloat)noiseLineScale;
-      Update_scenario_var_data[0][46] = (GLfloat)noiseAngleScale;
-      Update_scenario_var_data[0][47] = (GLfloat)noiseCenterX;
-      Update_scenario_var_data[0][48] = (GLfloat)noiseCenterY;
-      Update_scenario_var_data[0][49] = (GLfloat)path_replay_trackNo[1];
-      Update_scenario_var_data[0][50] = (GLfloat)path_replay_trackNo[2];
-      Update_scenario_var_data[0][51] = (GLfloat)path_replay_trackNo[3];
-      Update_scenario_var_data[0][52] = (GLfloat)path_replay_trackNo[4];
-      Update_scenario_var_data[0][53] = (GLfloat)path_replay_trackNo[5];
-      Update_scenario_var_data[0][54] = (GLfloat)path_replay_trackNo[6];
-      Update_scenario_var_data[0][55] = (GLfloat)path_replay_trackNo[7];
-      Update_scenario_var_data[0][56] = (GLfloat)path_replay_trackNo[8];
-      Update_scenario_var_data[0][57] = (GLfloat)path_replay_trackNo[9];
-      Update_scenario_var_data[0][58] = (GLfloat)path_replay_trackNo[10];
-      Update_scenario_var_data[0][59] = (GLfloat)path_replay_trackNo[11];
-      Update_scenario_var_data[0][60] = (GLfloat)Pixelstep;
-      Update_scenario_var_data[0][61] = (GLfloat)noiseUpdateScale * (1.f + pulse_average * noiseUpdateScale_pulse);
-      Update_scenario_var_data[0][62] = (GLfloat)pixel_acc * (1.f + pulse_average * pixel_acc_pulse);
-      Update_scenario_var_data[0][63] = (GLfloat)pixel_acc_shiftX * (1.f + pulse_average * pixel_acc_shiftX_pulse);
-      Update_scenario_var_data[0][64] = (GLfloat)pixel_acc_shiftY * (1.f + pulse_average * pixel_acc_shiftY_pulse);
-      Update_scenario_var_data[0][65] = (GLfloat)pixel_image_acceleration;
-      Update_scenario_var_data[0][66] = (GLfloat)pixel_mode;
-      Update_scenario_var_data[0][67] = (GLfloat)pixel_radius * (1.f + pulse_average * pixel_radius_pulse);
-      Update_scenario_var_data[0][68] = (GLfloat)BG_CA_repop_color_mode;
-      Update_scenario_var_data[0][69] = (GLfloat)BG_CA_repop_density;
-      Update_scenario_var_data[0][70] = (GLfloat)repop_BG * (1.f + pulse_average * repop_BG_pulse);
+      Update_scenario_var_data[0][10] = (GLfloat)camera_gamma * (1.f + pulse_average * camera_gamma_pulse);
+      Update_scenario_var_data[0][11] = (GLfloat)cameraCumul;
+      Update_scenario_var_data[0][12] = (GLfloat)cameraGamma;
+      Update_scenario_var_data[0][13] = (GLfloat)cameraSobel * (1.f + pulse_average * cameraSobel_pulse);
+      Update_scenario_var_data[0][14] = (GLfloat)cameraThreshold * (1.f + pulse_average * cameraThreshold_pulse);
+      Update_scenario_var_data[0][15] = (GLfloat)cameraWeight * (1.f + pulse_average * cameraWeight_pulse);
+      Update_scenario_var_data[0][16] = (GLfloat)invertCamera;
+      Update_scenario_var_data[0][17] = (GLfloat)invertMovie;
+      Update_scenario_var_data[0][18] = (GLfloat)movie_gamma * (1.f + pulse_average * movie_gamma_pulse);
+      Update_scenario_var_data[0][19] = (GLfloat)movie_threshold * (1.f + pulse_average * movie_threshold_pulse);
+      Update_scenario_var_data[0][20] = (GLfloat)movieSobel * (1.f + pulse_average * movieSobel_pulse);
+      Update_scenario_var_data[0][21] = (GLfloat)movieWeight * (1.f + pulse_average * movieWeight_pulse);
+      Update_scenario_var_data[0][22] = (GLfloat)invertPhoto;
+      Update_scenario_var_data[0][23] = (GLfloat)photo_contrast;
+      Update_scenario_var_data[0][24] = (GLfloat)photo_gamma * (1.f + pulse_average * photo_gamma_pulse);
+      Update_scenario_var_data[0][25] = (GLfloat)photo_hue * (1.f + pulse_average * photo_hue_pulse);
+      Update_scenario_var_data[0][26] = (GLfloat)photo_rot;
+      Update_scenario_var_data[0][27] = (GLfloat)photo_satur * (1.f + pulse_average * photo_satur_pulse);
+      Update_scenario_var_data[0][28] = (GLfloat)photo_scaleX;
+      Update_scenario_var_data[0][29] = (GLfloat)photo_scaleY;
+      Update_scenario_var_data[0][30] = (GLfloat)photo_threshold * (1.f + pulse_average * photo_threshold_pulse);
+      Update_scenario_var_data[0][31] = (GLfloat)photo_transl_x;
+      Update_scenario_var_data[0][32] = (GLfloat)photo_transl_y;
+      Update_scenario_var_data[0][33] = (GLfloat)photo_value * (1.f + pulse_average * photo_value_pulse);
+      Update_scenario_var_data[0][34] = (GLfloat)photoSobel * (1.f + pulse_average * photoSobel_pulse);
+      Update_scenario_var_data[0][35] = (GLfloat)photoWeight * (1.f + pulse_average * photoWeight_pulse);
+      Update_scenario_var_data[0][36] = (GLfloat)video_contrast * (1.f + pulse_average * video_contrast_pulse);
+      Update_scenario_var_data[0][37] = (GLfloat)video_gamma * (1.f + pulse_average * video_gamma_pulse);
+      Update_scenario_var_data[0][38] = (GLfloat)video_hue * (1.f + pulse_average * video_hue_pulse);
+      Update_scenario_var_data[0][39] = (GLfloat)video_satur * (1.f + pulse_average * video_satur_pulse);
+      Update_scenario_var_data[0][40] = (GLfloat)video_threshold * (1.f + pulse_average * video_threshold_pulse);
+      Update_scenario_var_data[0][41] = (GLfloat)video_value * (1.f + pulse_average * video_value_pulse);
+      Update_scenario_var_data[0][42] = (GLfloat)video_white * (1.f + pulse_average * video_white_pulse);
+      Update_scenario_var_data[0][43] = (GLfloat)noiseType;
+      Update_scenario_var_data[0][44] = (GLfloat)noiseLineScale;
+      Update_scenario_var_data[0][45] = (GLfloat)noiseAngleScale;
+      Update_scenario_var_data[0][46] = (GLfloat)noiseCenterX;
+      Update_scenario_var_data[0][47] = (GLfloat)noiseCenterY;
+      Update_scenario_var_data[0][48] = (GLfloat)path_replay_trackNo[1];
+      Update_scenario_var_data[0][49] = (GLfloat)path_replay_trackNo[2];
+      Update_scenario_var_data[0][50] = (GLfloat)path_replay_trackNo[3];
+      Update_scenario_var_data[0][51] = (GLfloat)path_replay_trackNo[4];
+      Update_scenario_var_data[0][52] = (GLfloat)path_replay_trackNo[5];
+      Update_scenario_var_data[0][53] = (GLfloat)path_replay_trackNo[6];
+      Update_scenario_var_data[0][54] = (GLfloat)path_replay_trackNo[7];
+      Update_scenario_var_data[0][55] = (GLfloat)path_replay_trackNo[8];
+      Update_scenario_var_data[0][56] = (GLfloat)path_replay_trackNo[9];
+      Update_scenario_var_data[0][57] = (GLfloat)path_replay_trackNo[10];
+      Update_scenario_var_data[0][58] = (GLfloat)path_replay_trackNo[11];
+      Update_scenario_var_data[0][59] = (GLfloat)Pixelstep;
+      Update_scenario_var_data[0][60] = (GLfloat)noiseUpdateScale * (1.f + pulse_average * noiseUpdateScale_pulse);
+      Update_scenario_var_data[0][61] = (GLfloat)pixel_acc * (1.f + pulse_average * pixel_acc_pulse);
+      Update_scenario_var_data[0][62] = (GLfloat)pixel_acc_shiftX * (1.f + pulse_average * pixel_acc_shiftX_pulse);
+      Update_scenario_var_data[0][63] = (GLfloat)pixel_acc_shiftY * (1.f + pulse_average * pixel_acc_shiftY_pulse);
+      Update_scenario_var_data[0][64] = (GLfloat)pixel_image_acceleration;
+      Update_scenario_var_data[0][65] = (GLfloat)pixel_mode;
+      Update_scenario_var_data[0][66] = (GLfloat)pixel_radius * (1.f + pulse_average * pixel_radius_pulse);
+      Update_scenario_var_data[0][67] = (GLfloat)BG_CA_repop_color_mode;
+      Update_scenario_var_data[0][68] = (GLfloat)BG_CA_repop_density;
+      Update_scenario_var_data[0][69] = (GLfloat)repop_BG * (1.f + pulse_average * repop_BG_pulse);
+      Update_scenario_var_data[0][70] = (GLfloat)repop_CA * (1.f + pulse_average * repop_CA_pulse);
       Update_scenario_var_data[0][71] = (GLfloat)camera_BG_subtr;
       Update_scenario_var_data[0][72] = (GLfloat)freeze;
       Update_scenario_var_data[0][73] = (GLfloat)CAdecay + pulse_average * CAdecay_pulse;
@@ -139,8 +139,8 @@ if(pg_current_configuration_rank == 0) {
       glUniform1fv(uniform_Update_scenario_var_data[0], 81, Update_scenario_var_data[0]);
     }
 
-    if (pg_shader_programme[0][_pg_shader_Mixing]) {
-      glUseProgram(pg_shader_programme[0][_pg_shader_Mixing]);
+    if (pg_shader_programme[0][pg_enum_shader_Mixing]) {
+      glUseProgram(pg_shader_programme[0][pg_enum_shader_Mixing]);
       Mixing_scenario_var_data[0][0] = (GLfloat)echo * (1.f + pulse_average * echo_pulse);
       Mixing_scenario_var_data[0][1] = (GLfloat)echoNeg * (1.f + pulse_average * echoNeg_pulse);
       Mixing_scenario_var_data[0][2] = (GLfloat)CAMixingWeight + pulse_average * CAMixingWeight_pulse;
@@ -153,12 +153,12 @@ if(pg_current_configuration_rank == 0) {
       glUniform1fv(uniform_Mixing_scenario_var_data[0], 9, Mixing_scenario_var_data[0]);
     }
 
-    if (pg_shader_programme[0][_pg_shader_ParticleRender]) {
-      glUseProgram(pg_shader_programme[0][_pg_shader_ParticleRender]);
+    if (pg_shader_programme[0][pg_enum_shader_ParticleRender]) {
+      glUseProgram(pg_shader_programme[0][pg_enum_shader_ParticleRender]);
     }
 
-    if (pg_shader_programme[0][_pg_shader_Master]) {
-      glUseProgram(pg_shader_programme[0][_pg_shader_Master]);
+    if (pg_shader_programme[0][pg_enum_shader_Master]) {
+      glUseProgram(pg_shader_programme[0][pg_enum_shader_Master]);
       Master_scenario_var_data[0][0] = (GLfloat)master_crop_width;
       Master_scenario_var_data[0][1] = (GLfloat)master_crop_x;
       Master_scenario_var_data[0][2] = (GLfloat)master_crop_y;

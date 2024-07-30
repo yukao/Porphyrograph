@@ -35,11 +35,11 @@ ShadersDir = "./Projects/shaders/"
 # command to regenerate cpp files + shaders: to be called after each change of variables in the scenario
 
 # number of configuration and for each the number of scenes and the names of the scenes
-Nb_Configurations = 0
+Nb_Scenarios = 0
 nb_scenes = []
 scene_names = [[]]
 
-Configuration_InputCsv_names = []
+Header_Input_name = ""
 Scenario_InputCsv_names = []
 FullScenario_InputCsv_name = ""
 OutputScenario_OutputCsv_name = ""
@@ -87,14 +87,16 @@ full_varID_from_index = {}
 full_nb_vars = 0
 
 # header variable lines to access their value
-config_ids = None
-config_types = None
-config_initial_values = None
+# config_ids = None
+# config_types = None
+# config_initial_values = None
 
 # ordinary scenario: dictionaries of scenario variables + memory of rank inside scenario
 scenario_vars_specs_dict = []
 varID_from_index = {}
 nb_vars = []
+
+header_const_dict = dict()
 
 scenario_vars_columns_list = []
 out_scenario_footer = []
@@ -119,150 +121,174 @@ PG_confGenerator.py: A program for generating shader file & C++ code for Porphyr
 ##################################################################
 # READS THE CONFIGURATION VARIABLES FROM THE CSV CONFIGURATION FILE 
 ##################################################################
-def const_configuration_var_value(var_ID) :
-	global config_ids
-	global config_types
-	global config_initial_values
-
-	for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
-		if(config_type == "const" and config_id == var_ID) :
-			return int(config_init)
-	return -1
-
-def read_configuration_vars(configurationFileName) :
-	global ScriptHeader
-	global config_ids
-	global config_types
-	global config_initial_values
+def read_headerConst(header_fileName) :
+	global header_const_dict
 
 	try:
-		Configuration_InputCsv = open(configurationFileName, "rt")
+		headerIn = open(header_fileName, "rt")
 	except IOError:
-		print("Configuration generator: File not found:", configurationFileName, " or path is incorrect")
+		print("Configuration generator: File not found:", header_fileName, " or path is incorrect")
+	for line in headerIn:
+		fields = re.split(r"[ \t;=]+", line.rstrip('\n'))
+		if(len(fields) >= 4) :
+			if(fields[0] == "constexpr") :
+				header_const_dict[fields[2]] = fields[3]
+				# print(fields[2], fields[3])
 
-	# print("Configuration generator: read variables in configuration file", configurationFileName)
+	# print(header_const_dict)
 
-	readCSV = csv.reader(Configuration_InputCsv, delimiter=',')
-	line = next(readCSV) 
-	# print "line1 ", line 
 
-	mode = COMMENT
-	value = 0
-	while (True) :
-		if(line[0] == "RANK") :
-			# variable rank -> comment
-			ScriptHeader.write("// CONFIGURATION CONSTANTS\n")
-			ScriptHeader.write("// " + space_char.join(map(str, line)) + "\n")
-			line = next(readCSV)
+def header_const_value(var_ID) :
+	# global config_ids
+	# global config_types
+	# global config_initial_values
+	global header_const_dict
 
-			# variable verbatim
-			# -> nb of variables 
-			nb_variables = len(line) - 1
-			# print("Configuration generator: configuration variables:", int(nb_variables))
-			# -> comment in the header file
-			ScriptHeader.write("// " + space_char.join(map(str, line)) + "\n")
-			line = next(readCSV)
+	for header_var_ID in header_const_dict.keys() :
+		if(var_ID == header_var_ID) :
+			return int(header_const_dict[header_var_ID])
+		elif(var_ID == "("+header_var_ID+"+1)") :
+			return( int(header_const_dict[header_var_ID]) + 1)
+			
+	# for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
+	# 	if(config_type == "const" and config_id == var_ID) :
+	# 		return int(config_init)
+	return -1
 
-			# variable types (used for declarations)
-			if(line[0] != "TYPE") :
-				print("Configuration generator: TYPE line expected not [",line[0],"]!")
-				print("Configuration generator: End of configuration generation\n\n")
-				sys.exit(0)
-			config_types = line[1:]
-			line = next(readCSV)
+# def read_configuration_vars(configurationFileName) :
+# 	global ScriptHeader
+# 	global config_ids
+# 	global config_types
+# 	global config_initial_values
 
-			# variable strings (used for alias commands from PD 
-			# and for variable & initial values declarations)
-			if(line[0] != "ID") :
-				print("Configuration generator: ID line expected not [",line[0],"]!")
-				print("Configuration generator: End of configuration generation\n\n")
-				sys.exit(0)			
-			config_ids = line[1:]
-			line = next(readCSV)
+# 	try:
+# 		Configuration_InputCsv = open(configurationFileName, "rt")
+# 	except IOError:
+# 		print("Configuration generator: File not found:", configurationFileName, " or path is incorrect")
 
-		elif(line[0] == "initial_values") :
-			# initial values
-			line = next(readCSV)
-			config_initial_values = line[1:]
+# 	# print("Configuration generator: read variables in configuration file", configurationFileName)
 
-			#closing tag
-			line = next(readCSV)
+# 	readCSV = csv.reader(Configuration_InputCsv, delimiter=',')
+# 	line = next(readCSV) 
+# 	# print "line1 ", line 
 
-			#next line
-			line = next(readCSV)
+# 	mode = COMMENT
+# 	value = 0
+# 	while (True) :
+# 		if(line[0] == "RANK") :
+# 			# variable rank -> comment
+# 			ScriptHeader.write("// CONFIGURATION CONSTANTS\n")
+# 			ScriptHeader.write("// " + space_char.join(map(str, line)) + "\n")
+# 			line = next(readCSV)
+
+# 			# variable verbatim
+# 			# -> nb of variables 
+# 			nb_variables = len(line) - 1
+# 			# print("Configuration generator: configuration variables:", int(nb_variables))
+# 			# -> comment in the header file
+# 			ScriptHeader.write("// " + space_char.join(map(str, line)) + "\n")
+# 			line = next(readCSV)
+
+# 			# variable types (used for declarations)
+# 			if(line[0] != "TYPE") :
+# 				print("Configuration generator: TYPE line expected not [",line[0],"]!")
+# 				print("Configuration generator: End of configuration generation\n\n")
+# 				sys.exit(0)
+# 			config_types = line[1:]
+# 			line = next(readCSV)
+
+# 			# variable strings (used for alias commands from PD 
+# 			# and for variable & initial values declarations)
+# 			if(line[0] != "ID") :
+# 				print("Configuration generator: ID line expected not [",line[0],"]!")
+# 				print("Configuration generator: End of configuration generation\n\n")
+# 				sys.exit(0)			
+# 			config_ids = line[1:]
+# 			line = next(readCSV)
+
+# 		elif(line[0] == "initial_values") :
+# 			# initial values
+# 			line = next(readCSV)
+# 			config_initial_values = line[1:]
+
+# 			#closing tag
+# 			line = next(readCSV)
+
+# 			#next line
+# 			line = next(readCSV)
 		
-			############################### configuration variable declarations
-			# extern configuration variable declaration in the header file
-			for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
-				if(config_type == "sign") :
-					config_type = "float"
-				elif(config_type == "path") :
-					config_type = "bool"
-				if(config_type == "bool"):
-					if(config_init != "0") :
-						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "true"))
-					else :
-						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "false"))
-				elif(config_type == "string") :
-					ScriptHeader.write("constexpr auto %-30s = \"%s\";\n" % (config_id, config_init))
-				elif(config_type == "const") :
-					ScriptHeader.write("#define %-30s %-10s\n" % (config_id, config_init))
-				else :
-					ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, config_init))
+# 			############################### configuration variable declarations
+# 			# extern configuration variable declaration in the header file
+# 			for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
+# 				if(config_type == "sign") :
+# 					config_type = "float"
+# 				elif(config_type == "path") :
+# 					config_type = "bool"
+# 				if(config_type == "bool"):
+# 					if(config_init != "0") :
+# 						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "true"))
+# 					else :
+# 						ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, "false"))
+# 				elif(config_type == "string") :
+# 					ScriptHeader.write("constexpr auto %-30s = \"%s\";\n" % (config_id, config_init))
+# 				elif(config_type == "const") :
+# 					ScriptHeader.write("#define %-30s %-10s\n" % (config_id, config_init))
+# 				else :
+# 					ScriptHeader.write("constexpr auto %-30s = %-10s;\n" % (config_id, config_init))
 			
-			############################### constant declarations
-			# number of scene variables
-			for config_id in config_ids :
-				ScriptHeader.write("#define var_%s\n" % config_id)
-			ScriptHeader.write("enum ConfigurationVarIDs {\n")
-			# scene variable initialization
-			ScriptHeader.write("  _%s = 0," % config_ids[0] + "\n")
-			for config_id in config_ids[1:] :
-				ScriptHeader.write("  _%s," % config_id + "\n")
-				# print("Configuration generator:   _%s,", config_ids
+# 			############################### constant declarations
+# 			# number of scene variables
+# 			for config_id in config_ids :
+# 				ScriptHeader.write("#define var_%s\n" % config_id)
+# 			ScriptHeader.write("enum ConfigurationVarIDs {\n")
+# 			# scene variable initialization
+# 			ScriptHeader.write("  _%s = 0," % config_ids[0] + "\n")
+# 			for config_id in config_ids[1:] :
+# 				ScriptHeader.write("  _%s," % config_id + "\n")
+# 				# print("Configuration generator:   _%s,", config_ids
 			
-			ScriptHeader.write("  _MaxConfigurationVarIDs};\n")
-			Configuration_InputCsv.close()
-			return()
+# 			ScriptHeader.write("  _MaxConfigurationVarIDs};\n")
+# 			Configuration_InputCsv.close()
+# 			return()
 
-		else :
-			#next line
-			line = next(readCSV)
+# 		else :
+# 			#next line
+# 			line = next(readCSV)
 
-	Configuration_InputCsv.close()
-	return()
+# 	Configuration_InputCsv.close()
+# 	return()
 
-def configurationVarValue(var_ID) :
-	global config_ids
-	global config_types
-	global config_initial_values
+# def header_const_value(var_ID) :
+# 	global config_ids
+# 	global config_types
+# 	global config_initial_values
 
-	for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
-		if(var_ID == config_id) :
-			if(config_type == "const") :
-				return( int(config_init) )
-			elif(config_type == "int") :
-				return( int(config_init) )
-			elif(config_type == "float") :
-				return( float(config_init) )
-			else :
-				return( config_init )
-		elif(var_ID == "("+config_id+"+1)") :
-			if(config_type == "const") :
-				return( int(config_init) + 1)
-			elif(config_type == "int") :
-				return( int(config_init) + 1)
-			elif(config_type == "float") :
-				return( float(config_init) + 1)
-			else :
-				return( config_init )
-	print("Unknown variable range value:", var_ID)
-	return(0)
+# 	for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
+# 		if(var_ID == config_id) :
+# 			if(config_type == "const") :
+# 				return( int(config_init) )
+# 			elif(config_type == "int") :
+# 				return( int(config_init) )
+# 			elif(config_type == "float") :
+# 				return( float(config_init) )
+# 			else :
+# 				return( config_init )
+# 		elif(var_ID == "("+config_id+"+1)") :
+# 			if(config_type == "const") :
+# 				return( int(config_init) + 1)
+# 			elif(config_type == "int") :
+# 				return( int(config_init) + 1)
+# 			elif(config_type == "float") :
+# 				return( float(config_init) + 1)
+# 			else :
+# 				return( config_init )
+# 	print("Unknown variable range value:", var_ID)
+# 	return(0)
 
 ##################################################################
 # READS THE SHADER FILE NAMES FROM THE CSV CONFIGURATION FILE 
 ##################################################################
-def read_configuration_shader_names(configurationFileName, indConfiguration) :
+def read_scenario_shader_names(local_scenario_footer, indScenario) :
 	global ParticleAnimation_InputShader_name
 	global Update_InputShader_name
 	global ParticleRendering_InputShader_name
@@ -275,74 +301,71 @@ def read_configuration_shader_names(configurationFileName, indConfiguration) :
 	global ParticleRendering_OutputShader_name
 	global Master_OutputShader_name
 
-	try:
-		Configuration_InputCsv = open(configurationFileName, "rt")
-	except IOError:
-		print("Configuration generator: File not found:", configurationFileName, " or path is incorrect")
-
-	# print("Configuration generator: read shaders in configuration file", configurationFileName, "index", indConfiguration)
-	readCSV = csv.reader(Configuration_InputCsv, delimiter=',')
-	line = next(readCSV) 
+	line_index = 0
+	line = local_scenario_footer[line_index] 
 	# print "line1 ", line 
 
 	mode = COMMENT
 	value = 0
-	while (True) :
+	while (line_index < len(local_scenario_footer)) :
 		if(line[0] == "ParticleAnimation") :
 			if(line[1] != "NULL") :
 				ParticleAnimation_InputShader_name.append(line[1]+".frag")
-				ParticleAnimation_OutputShader_name.append(line[1]+"_full_"+str(indConfiguration)+".frag")
+				ParticleAnimation_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
 			else :
 				ParticleAnimation_InputShader_name.append("NULL")
 				ParticleAnimation_OutputShader_name.append("NULL")
-			line = next(readCSV)
+			line_index += 1
+			line = local_scenario_footer[line_index] 
 
 		elif(line[0] == "Update") :
 			# print("Configuration generator: Update shader")
 			if(line[1] != "NULL") :
 				Update_InputShader_name.append(line[1]+".frag")
-				Update_OutputShader_name.append(line[1]+"_full_"+str(indConfiguration)+".frag")
+				Update_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
 			else :
 				Update_InputShader_name.append("NULL")
 				Update_OutputShader_name.append("NULL")
-			line = next(readCSV)
+			line_index += 1
+			line = local_scenario_footer[line_index] 
 
 		elif(line[0] == "ParticleRender") :
 			if(line[1] != "NULL") :
 				ParticleRendering_InputShader_name.append(line[1]+".frag")
-				ParticleRendering_OutputShader_name.append(line[1]+"_full_"+str(indConfiguration)+".frag")
+				ParticleRendering_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
 			else :
 				ParticleRendering_InputShader_name.append("NULL")
 				ParticleRendering_OutputShader_name.append("NULL")
-			line = next(readCSV)
+			line_index += 1
+			line = local_scenario_footer[line_index] 
 
 		elif(line[0] == "Mixing") :
 			if(line[1] != "NULL") :
 				Mixing_InputShader_name.append(line[1]+".frag")
-				Mixing_OutputShader_name.append(line[1]+"_full_"+str(indConfiguration)+".frag")
+				Mixing_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
 			else :
 				Mixing_InputShader_name.append("NULL")
 				Mixing_OutputShader_name.append("NULL")
-			line = next(readCSV)
+			line_index += 1
+			line = local_scenario_footer[line_index] 
 
 		elif(line[0] == "Master") :
 			if(line[1] != "NULL") :
 				Master_InputShader_name.append(line[1]+".frag")
-				Master_OutputShader_name.append(line[1]+"_full_"+str(indConfiguration)+".frag")
+				Master_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
 			else :
 				Master_InputShader_name.append("NULL")
 				Master_OutputShader_name.append("NULL")
-			line = next(readCSV)
+			line_index += 1
+			line = local_scenario_footer[line_index] 
 
 		elif(line[0] == "/shader_files") :
-			Configuration_InputCsv.close()
 			return()
 
 		else :
 			#next line
-			line = next(readCSV)
-
-	Configuration_InputCsv.close()
+			line_index += 1
+			line = local_scenario_footer[line_index] 
 	return()
 
 ##################################################################
@@ -357,12 +380,12 @@ def expect_tag(line_scenario, tag_string) :
 def check_tag(line_scenario, tag_string) :
 	return (line_scenario[0] == tag_string)
 
-def read_scenario_variables(scenarioCSV, indConfiguration) :
+def read_scenario_variables(scenarioCSV, indScenario) :
 	global full_scenario_vars_specs_dict
 	global full_varID_from_index
 	global scenario_vars_specs_dict
 	global varID_from_index
-	global Nb_Configurations
+	global Nb_Scenarios
 	global nb_vars
 	global full_nb_vars
 
@@ -426,7 +449,7 @@ def read_scenario_variables(scenarioCSV, indConfiguration) :
 
 	# dictionaries of scenario variable definition
 	# build dictionary for the variable of the full scenario
-	if(indConfiguration == -1) :
+	if(indScenario == -1) :
 		full_scenario_vars_specs_dict = dict()
 		full_varID_from_index = dict()
 		ind_var = 0
@@ -440,7 +463,7 @@ def read_scenario_variables(scenarioCSV, indConfiguration) :
 		print("full scenario, nb vars:", nb_loc_variables)
 		full_nb_vars = nb_loc_variables
 
-	elif(indConfiguration < Nb_Configurations) :
+	elif(indScenario < Nb_Scenarios) :
 		local_scenario_vars_specs_dict = {}
 		varID_from_index = dict()
 		ind_var = 0
@@ -453,15 +476,15 @@ def read_scenario_variables(scenarioCSV, indConfiguration) :
 		
 		# -> nb of loc_variables 
 		nb_loc_variables = len(loc_variable_IDs)
-		print("scenario #"+str(indConfiguration)+", nb vars:", nb_loc_variables)
+		print("scenario #"+str(indScenario)+", nb vars:", nb_loc_variables)
 		nb_vars.append(nb_loc_variables)
 
 	return
 
-def var_index_in_scenario(var_ID, indConfig) :
+def var_index_in_scenario(var_ID, indScenario) :
 	global scenario_vars_specs_dict
-	if var_ID in scenario_vars_specs_dict[indConfig] :
-		return scenario_vars_specs_dict[indConfig][var_ID][0]
+	if var_ID in scenario_vars_specs_dict[indScenario] :
+		return scenario_vars_specs_dict[indScenario][var_ID][0]
 	else :
 		return -1
 
@@ -475,7 +498,7 @@ def var_index_in_full_scenario(var_ID) :
 ##################################################################
 # READS THE SCENARIO VARIABLES FROM THE CSV SCENARIO FILE 
 ##################################################################
-def read_scenario_scenes(readCSV, indConfiguration) :
+def read_scenario_scenes(readCSV, indScenario) :
 	global nb_scenes
 	global scene_names
 
@@ -497,8 +520,8 @@ def read_scenario_scenes(readCSV, indConfiguration) :
 		line_scene_header = next(readCSV)
 		if(line_scene_header[0] == "scene") :
 			# scene name and duration
-			scene_names[indConfiguration].append(line_scene_header[1])
-			print("Configuration generator: scene", loc_nb_scenes + 1, ": ", scene_names[indConfiguration][loc_nb_scenes])
+			scene_names[indScenario].append(line_scene_header[1])
+			print("Configuration generator: scene", loc_nb_scenes + 1, ": ", scene_names[indScenario][loc_nb_scenes])
 
 			# scene comments
 			line_comments1 = next(readCSV)
@@ -520,7 +543,7 @@ def read_scenario_scenes(readCSV, indConfiguration) :
 
 			# stores the columns of the vars for this scene (only starts from the second column)
 			one_scene_var_value_column_list =[]
-			for idx, head, comm1, comm2, val_init, val_fin, interp in zip(range(1, nb_vars[indConfiguration] + 1), line_scene_header[1:], line_comments1[1:], line_comments2[1:], line_initial_values[1:], line_final_values[1:], line_interpolations[1:]) :
+			for idx, head, comm1, comm2, val_init, val_fin, interp in zip(range(1, nb_vars[indScenario] + 1), line_scene_header[1:], line_comments1[1:], line_comments2[1:], line_initial_values[1:], line_final_values[1:], line_interpolations[1:]) :
 					one_scene_var_value_column_list.append([idx, head, comm1, comm2, val_init, val_fin, interp])
 
 			# append the values of this scene to the preceding scenes
@@ -544,10 +567,12 @@ def read_scenario_scenes(readCSV, indConfiguration) :
 		except StopIteration:
 			break
 
+	read_scenario_shader_names(local_out_scenario_footer, indScenario)
+
 	out_scenario_footer.append(local_out_scenario_footer)
 	scenario_vars_columns_list.append(local_scenario_vars_columns_list)
 	nb_scenes.append(loc_nb_scenes)
-	print("Configuration generator: scenes:", nb_scenes[indConfiguration])
+	print("Configuration generator: scenes:", nb_scenes[indScenario])
 
 ##################################################################
 # GENERATES THE NEW SCENARIO ACCORDING TO THE FULL SCENARIO TEMPLATE
@@ -557,7 +582,7 @@ def post_reading_scenarios() :
 	global full_scenario_vars_specs_dict
 	global scenario_vars_specs_dict
 
-	global Nb_Configurations
+	global Nb_Scenarios
 
 	global scenario_active_vars
 
@@ -573,22 +598,22 @@ def post_reading_scenarios() :
 	# CHECKS THE COMPLETENESS OF THE FULL SCENARIO
 	# creates a dict with all the variables in the local scenarios which are
 	# not inside the full scenario
-	for indConfiguration in range(Nb_Configurations) :
-		for var_ID in scenario_vars_specs_dict[indConfiguration] :
+	for indScenario in range(Nb_Scenarios) :
+		for var_ID in scenario_vars_specs_dict[indScenario] :
 			if(var_ID != "" and var_index_in_full_scenario(var_ID) < 0) :
-				print("Unknown variable:", var_ID, ", specs:", scenario_vars_specs_dict[indConfiguration][var_ID])
-				scenario_unknown_vars_specs_dict[var_ID] = [indConfiguration] + scenario_vars_specs_dict[indConfiguration][var_ID]
+				print("Unknown variable:", var_ID, ", specs:", scenario_vars_specs_dict[indScenario][var_ID])
+				scenario_unknown_vars_specs_dict[var_ID] = [indScenario] + scenario_vars_specs_dict[indScenario][var_ID]
 
 	# and exists if all the variables are not inside the full scenario, 
 	# so that they can be added there
 	if(len(scenario_unknown_vars_specs_dict) != 0) :
 		# print(scenario_unknown_vars_specs_dict)
-		unknown_vars_scenario_name = Scenario_InputCsv_names[indConfiguration]
+		unknown_vars_scenario_name = Scenario_InputCsv_names[indScenario]
 		path = re.findall(r'^(.*[/\\])[^/\\\.]+\.csv$', unknown_vars_scenario_name)
 		if(path != []) :
-			unknown_vars_scenario_name = path[0] + f'''scenario_{indConfiguration}.csv'''
+			unknown_vars_scenario_name = path[0] + f'''scenario_{indScenario}.csv'''
 		else :
-			unknown_vars_scenario_name = f'''scenario_{indConfiguration}.csv'''
+			unknown_vars_scenario_name = f'''scenario_{indScenario}.csv'''
 
 		try:
 			unknown_vars_scenario_fileCsv = open(unknown_vars_scenario_name, "wt", newline='')
@@ -629,51 +654,51 @@ def post_reading_scenarios() :
 		sys.exit(0)
 
 	# TAKES NOTE OF THE CONFIGURATIONS IN WHICH THE VARIABLES ARE KNOWN
-	# creates a vector of Nb_Configurations boobleans indicating whether or not 
+	# creates a vector of Nb_Scenarios boobleans indicating whether or not 
 	# a variable of the full scenario is in one of the configurations
 	for var_ID in full_scenario_vars_specs_dict:
-		# initializes with Nb_Configurations False (variable in no scenario) of size configurationVarValue("PG_MAX_CONFIGURATIONS")
-		scenario_active_vars[var_ID] = [False] * configurationVarValue("PG_MAX_CONFIGURATIONS")
-		# print("initializes False (variable in no scenario) of size ", configurationVarValue (PG_MAX_CONFIGURATIONS), ".")
+		# initializes with Nb_Scenarios False (variable in no scenario)
+		scenario_active_vars[var_ID] = [False] * Nb_Scenarios
+		# print("initializes False (variable in no scenario) of size ", Nb_Scenarios, ".")
 
 	# checks the presence of the vars in one of the scenarios
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
-		for indConfiguration in range(Nb_Configurations):
-			if(var_index_in_scenario(var_ID, indConfiguration) >= 0) :
-				scenario_active_vars[var_ID][indConfiguration] = True
+		for indScenario in range(Nb_Scenarios):
+			if(var_index_in_scenario(var_ID, indScenario) >= 0) :
+				scenario_active_vars[var_ID][indScenario] = True
 
 				# checks that the parameters in the local scenario are the same as in the full scenario
 				# variable is already known, checks that it is coherent with what is already stored
 				# [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
-				local_specs = scenario_vars_specs_dict[indConfiguration][var_ID]
+				local_specs = scenario_vars_specs_dict[indScenario][var_ID]
 
 				if(local_specs[2] != full_specs[2]) :
 					print("Configuration generator: var",var_ID,"has inconsistent types in full scenario",	FullScenario_InputCsv_name,\
-						"(",full_specs[2],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[2],")!")
+						"(",full_specs[2],") and in scenario",Scenario_InputCsv_names[indScenario],"(",local_specs[2],")!")
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				if(local_specs[3] != full_specs[3]) :
 					print("Configuration generator: var",var_ID,"has inconsistent callBacks in scenario",FullScenario_InputCsv_name,\
-						"(",full_specs[3],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[3],")!")
+						"(",full_specs[3],") and in scenario",Scenario_InputCsv_names[indScenario],"(",local_specs[3],")!")
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				if(local_specs[5] != full_specs[5]) :
 					print("Configuration generator: var",var_ID,"has inconsistent target shaders in scenario",FullScenario_InputCsv_name,\
-						"(",full_specs[5],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[5],")!")
+						"(",full_specs[5],") and in scenario",Scenario_InputCsv_names[indScenario],"(",local_specs[5],")!")
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				if(local_specs[6] != full_specs[6]) :
 					print("Configuration generator: var",var_ID,"has inconsistent pulsing modes in scenario",FullScenario_InputCsv_name,\
-						"(",full_specs[6],") and in scenario",Scenario_InputCsv_names[indConfiguration],"(",local_specs[6],")!")
+						"(",full_specs[6],") and in scenario",Scenario_InputCsv_names[indScenario],"(",local_specs[6],")!")
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 	# generates new scenarios in which the variables are ranked in the same order as in the full scenario
 	# these scenarios are the ones which will be loaded by pg
-	for indConfiguration in range(Nb_Configurations):
+	for indScenario in range(Nb_Scenarios):
 		new_scenario_name = OutputScenario_OutputCsv_name
 		path = re.findall(r'^(.*[/\\])([^/\\\.]+)\.csv$', new_scenario_name)
-		file_rank = indConfiguration + 1
+		file_rank = indScenario + 1
 		if(path != []) :
 			new_scenario_name = path[0][0] + f'''{path[0][1]}_{file_rank}.csv'''
 		else :
@@ -695,7 +720,7 @@ def post_reading_scenarios() :
 		varInitial = []
 		# [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
 		for var_ID, full_specs in full_scenario_vars_specs_dict.items():
-			if(scenario_active_vars[var_ID][indConfiguration] == True) :
+			if(scenario_active_vars[var_ID][indScenario] == True) :
 				varVerbatim.append(full_specs[1])
 				varType.append(full_specs[2])
 				varCallBack.append(full_specs[3])
@@ -703,7 +728,7 @@ def post_reading_scenarios() :
 				varShader.append(full_specs[5])
 				varPulse.append(full_specs[6])
 				# initial value taken for scenario
-				local_specs = scenario_vars_specs_dict[indConfiguration][var_ID]
+				local_specs = scenario_vars_specs_dict[indScenario][var_ID]
 				varInitial.append(local_specs[7])
 				varID.append(var_ID)
 
@@ -731,7 +756,7 @@ def post_reading_scenarios() :
 		##################################################################
 		CSVwriter.writerow(["scenario"])
 		# scans all the scenes of the current scenario
-		for scene_columns in scenario_vars_columns_list[indConfiguration] :
+		for scene_columns in scenario_vars_columns_list[indScenario] :
 			# scans all the columns
 			rank_in_new_scenario = 0
 			sceneHead = ["scene"]
@@ -742,12 +767,12 @@ def post_reading_scenarios() :
 			sceneInterp = []
 			for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 				# the var of the full scenario is inside the current scene
-				if(scenario_active_vars[var_ID][indConfiguration] == True) :
+				if(scenario_active_vars[var_ID][indScenario] == True) :
 					# index of the variable inside the current scenario to retrieve its scene values 
 					# (except the first line which is depending on the rank of the variable in the new scenario)
-					var_index = var_index_in_scenario(var_ID, indConfiguration)
+					var_index = var_index_in_scenario(var_ID, indScenario)
 					if(var_index < 0 or var_index >= len(scene_columns)) :
-						print("Configuration generator: var",var_ID,"scenes not found in scenario",Scenario_InputCsv_names[indConfiguration],"(config: ",indConfiguration,")!")
+						print("Configuration generator: var",var_ID,"scenes not found in scenario",Scenario_InputCsv_names[indScenario],"(config: ",indScenario,")!")
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 
@@ -781,7 +806,7 @@ def post_reading_scenarios() :
 		##################################################################
 		# WRITES THE FOOTER
 		##################################################################
-		for out_scenario_footer_line in out_scenario_footer[indConfiguration]:
+		for out_scenario_footer_line in out_scenario_footer[indScenario]:
 			CSVwriter.writerow(out_scenario_footer_line)
 
 		output_scenario_fileCsv.close()
@@ -790,7 +815,7 @@ def post_reading_scenarios() :
 # WRITES A TOUCHOSC FILE WITH ALL THE SCENES FOR ALL THE CONFIGURATIONS 
 ##################################################################
 def WriteTouchOSCScene() :
-	global Nb_Configurations
+	global Nb_Scenarios
 	global nb_scenes
 	global scene_names
 
@@ -799,19 +824,19 @@ def WriteTouchOSCScene() :
 
 	button_height = 70
 	TouchOSCScene.write(AutomaticSceneGeneration_strings.scene_head_string.format('group_ID_0'))
-	TouchOSCScene.write(AutomaticSceneGeneration_strings.configuration_radio_label_string.format('configuration_radio_ID_0', (button_height + 20) * Nb_Configurations, Nb_Configurations, 'configuration_label_ID_0'))
+	TouchOSCScene.write(AutomaticSceneGeneration_strings.configuration_radio_label_string.format('configuration_radio_ID_0', (button_height + 20) * Nb_Scenarios, Nb_Scenarios, 'configuration_label_ID_0'))
 	current_height = 10
-	for indConfig in range(Nb_Configurations) :
-		if(nb_scenes[indConfig] <= 8) :
-			button_width = (1800 / nb_scenes[indConfig]) - 30
+	for indScenario in range(Nb_Scenarios) :
+		if(nb_scenes[indScenario] <= 8) :
+			button_width = (1800 / nb_scenes[indScenario]) - 30
 		else :
 			button_width = (1800 / 8) - 30
 		current_width = 120
-		for indScene in range(nb_scenes[indConfig]) :
-			TouchOSCScene.write(AutomaticSceneGeneration_strings.button_string.format('button_ID' + '_' + str(indConfig) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indConfig][indScene],scene_buttons_colors[indConfig % 7][0]/255.0,scene_buttons_colors[indConfig % 7][1]/255.0,scene_buttons_colors[indConfig % 7][2]/255.0))
-			TouchOSCScene.write(AutomaticSceneGeneration_strings.label_string.format('label_ID' + '_' + str(indConfig) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indConfig][indScene]))
+		for indScene in range(nb_scenes[indScenario]) :
+			TouchOSCScene.write(AutomaticSceneGeneration_strings.button_string.format('button_ID' + '_' + str(indScenario) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indScenario][indScene],scene_buttons_colors[indScenario % 7][0]/255.0,scene_buttons_colors[indScenario % 7][1]/255.0,scene_buttons_colors[indScenario % 7][2]/255.0))
+			TouchOSCScene.write(AutomaticSceneGeneration_strings.label_string.format('label_ID' + '_' + str(indScenario) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indScenario][indScene]))
 			current_width += button_width + 30
-			if(indScene > 0 and indScene < nb_scenes[indConfig] - 1 and (indScene + 1) % 8 == 0) :
+			if(indScene > 0 and indScene < nb_scenes[indScenario] - 1 and (indScene + 1) % 8 == 0) :
 				current_height += button_height + 20
 				current_width = 120
 		current_height += button_height + 20
@@ -873,7 +898,7 @@ def write_script_header_and_body() :
 		ScriptHeader.write("  _%s,\n" % var_ID)
 		# print("Configuration generator:   _%s,", scenario_var_ids
 	ScriptHeader.write("  _MaxInterpVarIDs};\n")
-	# OLD: ScriptHeader.write("#define _NbConfigurations %d\n" % Nb_Configurations)
+	# OLD: ScriptHeader.write("#define _NbConfigurations %d\n" % Nb_Scenarios)
 
 	############################### scenario variable declarations
 	# interpolation cancelation variable declaration
@@ -917,6 +942,9 @@ def write_script_header_and_body() :
 	ScriptHeader.write("extern void * pg_FullScenarioVarPointers[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("extern std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs];\n")
+	ScriptHeader.write("extern void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue);\n")
+	ScriptHeader.write("extern void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int);\n")
+	ScriptHeader.write("extern PulseTypes ScenarioVarPulse[_MaxInterpVarIDs];\n")
 	ScriptHeader.write("void pg_FullScenarioArrayVarInit();\n")
 
 	# scenario variable types declarations
@@ -1063,14 +1091,15 @@ def write_script_header_and_body() :
 	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
 		index_range = scenario_to_cpp_range(full_specs[2])
 		type_string = full_specs[2]
+		# print(var_ID, index_range, type_string)
 		if(index_range != []) :
 			val_init = full_specs[7].split('/')
-			nb_expected_vals = configurationVarValue(index_range[1]) - int(index_range[0])
+			nb_expected_vals = header_const_value(index_range[1]) - int(index_range[0])
 			if(len(val_init) != nb_expected_vals) :
 				print("Configuration generator: Array variable", var_ID, "expects", nb_expected_vals, " initial value (of type [",type_string,"])", "not" , len(val_init))
 				print("Configuration generator: End of configuration generation\n\n")
 				sys.exit(0)
-			for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+			for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 				if(type_string.startswith("string")) :
 					ScriptBody.write("	{0}[{1}] = \"{2}\";\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
 				elif(type_string.startswith("float")) :
@@ -1079,16 +1108,16 @@ def write_script_header_and_body() :
 					ScriptBody.write("	{0}[{1}] = {2};\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
 	ScriptBody.write("}\n")
 
-	ShaderBodyDecl.write("GLint uniform_ParticleAnimation_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
-	ShaderBodyDecl.write("GLint uniform_Update_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
-	ShaderBodyDecl.write("GLint uniform_Mixing_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
-	ShaderBodyDecl.write("GLint uniform_ParticleRender_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
-	ShaderBodyDecl.write("GLint uniform_Master_scenario_var_data[%d] = {0};\n" % Nb_Configurations)
-	ShaderBodyDecl.write("float *ParticleAnimation_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-	ShaderBodyDecl.write("float *Update_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-	ShaderBodyDecl.write("float *Mixing_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-	ShaderBodyDecl.write("float *ParticleRender_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-	ShaderBodyDecl.write("float *Master_scenario_var_data[" + str(Nb_Configurations) + "];\n")
+	ShaderBodyDecl.write("GLint uniform_ParticleAnimation_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
+	ShaderBodyDecl.write("GLint uniform_Update_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
+	ShaderBodyDecl.write("GLint uniform_Mixing_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
+	ShaderBodyDecl.write("GLint uniform_ParticleRender_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
+	ShaderBodyDecl.write("GLint uniform_Master_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
+	ShaderBodyDecl.write("float *ParticleAnimation_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+	ShaderBodyDecl.write("float *Update_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+	ShaderBodyDecl.write("float *Mixing_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+	ShaderBodyDecl.write("float *ParticleRender_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+	ShaderBodyDecl.write("float *Master_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
 
 
 	ScriptHeader.close() 
@@ -1097,7 +1126,7 @@ def write_script_header_and_body() :
 ###############################################################################
 # WRITE SHADER HEADER BODY AND BINDING AND C++ UPDATE
 ###############################################################################
-def write_binding_vars_header_and_body(indConfiguration) :
+def write_binding_vars_header_and_body(indScenario) :
 	# shader input file names (as many of each type as pairs of configuration/scenario files)
 	global ParticleAnimation_InputShader_name
 	global Update_InputShader_name
@@ -1113,7 +1142,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 	global Master_OutputShader_name
 
 
-	global Nb_Configurations
+	global Nb_Scenarios
 	global Scenario_InputCsv_names
 
 	global ShaderHeader_name
@@ -1132,48 +1161,48 @@ def write_binding_vars_header_and_body(indConfiguration) :
 	global scenario_active_vars
 
 	try:
-		Update_InputShader = open(ShadersDir+Update_InputShader_name[indConfiguration], "rt")
+		Update_InputShader = open(ShadersDir+Update_InputShader_name[indScenario], "rt")
 	except IOError:
-		print("Configuration generator: Update_InputShader File not found:", ShadersDir+Update_InputShader_name[indConfiguration], " or path is incorrect")
+		print("Configuration generator: Update_InputShader File not found:", ShadersDir+Update_InputShader_name[indScenario], " or path is incorrect")
 	try:
-		Update_OutputShader = open(ShadersDir+Update_OutputShader_name[indConfiguration], "wt")
+		Update_OutputShader = open(ShadersDir+Update_OutputShader_name[indScenario], "wt")
 	except IOError:
-		print("Configuration generator: Update_OutputShader File not opened:", ShadersDir+Update_OutputShader_name[indConfiguration], " or path is incorrect")
+		print("Configuration generator: Update_OutputShader File not opened:", ShadersDir+Update_OutputShader_name[indScenario], " or path is incorrect")
 	try:
-		Mixing_InputShader = open(ShadersDir+Mixing_InputShader_name[indConfiguration], "rt")
+		Mixing_InputShader = open(ShadersDir+Mixing_InputShader_name[indScenario], "rt")
 	except IOError:
-		print("Configuration generator: Mixing_InputShader File not found:", ShadersDir+Mixing_InputShader_name[indConfiguration], " or path is incorrect")
+		print("Configuration generator: Mixing_InputShader File not found:", ShadersDir+Mixing_InputShader_name[indScenario], " or path is incorrect")
 	try:
-		Mixing_OutputShader = open(ShadersDir+Mixing_OutputShader_name[indConfiguration], "wt")
+		Mixing_OutputShader = open(ShadersDir+Mixing_OutputShader_name[indScenario], "wt")
 	except IOError:
-		print("Configuration generator: Mixing_OutputShader File not opened:", ShadersDir+Mixing_OutputShader_name[indConfiguration], " or path is incorrect")
+		print("Configuration generator: Mixing_OutputShader File not opened:", ShadersDir+Mixing_OutputShader_name[indScenario], " or path is incorrect")
 	try:
-		Master_InputShader = open(ShadersDir+Master_InputShader_name[indConfiguration], "rt")
+		Master_InputShader = open(ShadersDir+Master_InputShader_name[indScenario], "rt")
 	except IOError:
-		print("Configuration generator: Master_InputShader File not found:", ShadersDir+Master_InputShader_name[indConfiguration], " or path is incorrect")
+		print("Configuration generator: Master_InputShader File not found:", ShadersDir+Master_InputShader_name[indScenario], " or path is incorrect")
 	try:
-		Master_OutputShader = open(ShadersDir+Master_OutputShader_name[indConfiguration], "wt")
+		Master_OutputShader = open(ShadersDir+Master_OutputShader_name[indScenario], "wt")
 	except IOError:
-		print("Configuration generator: Master_OutputShader File not opened:", ShadersDir+Master_OutputShader_name[indConfiguration], " or path is incorrect")
+		print("Configuration generator: Master_OutputShader File not opened:", ShadersDir+Master_OutputShader_name[indScenario], " or path is incorrect")
 
 	# GLSL OPTIONAL PARTICLE SHADER INPUT AND OUTPUT FILES
-	if(ParticleAnimation_InputShader_name[indConfiguration] != "NULL") :
+	if(ParticleAnimation_InputShader_name[indScenario] != "NULL") :
 		try:
-			ParticleAnimation_InputShader = open(ShadersDir+ParticleAnimation_InputShader_name[indConfiguration], "rt")
+			ParticleAnimation_InputShader = open(ShadersDir+ParticleAnimation_InputShader_name[indScenario], "rt")
 		except IOError:
-			print("Configuration generator: ParticleAnimation_InputShader File not found:", ShadersDir+ParticleAnimation_InputShader_name[indConfiguration], " or path is incorrect")
+			print("Configuration generator: ParticleAnimation_InputShader File not found:", ShadersDir+ParticleAnimation_InputShader_name[indScenario], " or path is incorrect")
 		try:
-			ParticleAnimation_OutputShader = open(ShadersDir+ParticleAnimation_OutputShader_name[indConfiguration], "wt")
+			ParticleAnimation_OutputShader = open(ShadersDir+ParticleAnimation_OutputShader_name[indScenario], "wt")
 		except IOError:
-			print("Configuration generator: ParticleAnimation_OutputShader File not opened:", ShadersDir+ParticleAnimation_OutputShader_name[indConfiguration], " or path is incorrect")
+			print("Configuration generator: ParticleAnimation_OutputShader File not opened:", ShadersDir+ParticleAnimation_OutputShader_name[indScenario], " or path is incorrect")
 		try:
-			ParticleRendering_InputShader = open(ShadersDir+ParticleRendering_InputShader_name[indConfiguration], "rt")
+			ParticleRendering_InputShader = open(ShadersDir+ParticleRendering_InputShader_name[indScenario], "rt")
 		except IOError:
-			print("Configuration generator: ParticleRendering_InputShader File not found:", ShadersDir+ParticleRendering_InputShader_name[indConfiguration], " or path is incorrect")
+			print("Configuration generator: ParticleRendering_InputShader File not found:", ShadersDir+ParticleRendering_InputShader_name[indScenario], " or path is incorrect")
 		try:
-			ParticleRendering_OutputShader = open(ShadersDir+ParticleRendering_OutputShader_name[indConfiguration], "wt")
+			ParticleRendering_OutputShader = open(ShadersDir+ParticleRendering_OutputShader_name[indScenario], "wt")
 		except IOError:
-			print("Configuration generator: ParticleRendering_OutputShader File not opened:", ShadersDir+ParticleRendering_OutputShader_name[indConfiguration], " or path is incorrect")
+			print("Configuration generator: ParticleRendering_OutputShader File not opened:", ShadersDir+ParticleRendering_OutputShader_name[indScenario], " or path is incorrect")
 
 	##################################################################
 	# SHADER VARIABLES
@@ -1221,7 +1250,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 		pulsing_mode = full_specs[6]
 		# all vars in full scenario are taken not only active ones. 
 		# active_var_in_config = scenario_active_vars[var_ID]
-		# if(target_shader_list != "*" and active_var_in_config[indConfiguration] == True) :
+		# if(target_shader_list != "*" and active_var_in_config[indScenario] == True) :
 		if(target_shader_list != "*") :
 			# "*" nothing is done, the variable is not a shader parameter or the variable is not in the scenario of this configuration
 			if(re.search(r'ParticleAnimation_fs', target_shader_list) != None) :
@@ -1234,20 +1263,20 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + ";\n"
 				elif(type_string.startswith("bool")) :
-					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "bool	  " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("int")) :
-					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "int		" + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("float")) :
-					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "float	 " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown particle animation shader parameter type [%s]" % type_string)
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 				
 				if(ParticleAnimation_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data[%d];\n" % Nb_Configurations)
-					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]) {\n")
-					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", _pg_shader_ParticleAnimation);\n")
+					ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data[%d];\n" % Nb_Scenarios)
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", pg_enum_shader_ParticleAnimation);\n")
 					ShaderBodyBind.write("    }\n")
 				
 				if(type_string == "bool" or type_string == "path") :
@@ -1257,17 +1286,17 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + " = uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
 				elif(type_string.startswith("bool")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "] > 0 ? true : false);\n";
 						ParticleAnimation_fs_index  += 1
 					ParticleAnimation_fs_index  -= 1
 				elif(type_string.startswith("int")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
 						ParticleAnimation_fs_index  += 1
 					ParticleAnimation_fs_index  -= 1
 				elif(type_string.startswith("float")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						ParticleAnimation_body_glsl = ParticleAnimation_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "]);\n";
 						ParticleAnimation_fs_index  += 1
 					ParticleAnimation_fs_index  -= 1
@@ -1277,7 +1306,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      ParticleAnimation_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleAnimation_fs_index) + "] = "
+					ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      ParticleAnimation_scenario_var_data["+str(indScenario)+"][" + str(ParticleAnimation_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1291,9 +1320,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
-					ParticleAnimation_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      ParticleAnimation_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleAnimation_fs_index) + "] = "
+					ParticleAnimation_fs_index -= int(header_const_value(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
+						ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      ParticleAnimation_scenario_var_data["+str(indScenario)+"][" + str(ParticleAnimation_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1321,20 +1350,20 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					Update_head_glsl = Update_head_glsl + "float	 " + var_ID + ";\n"
 				elif(type_string.startswith("bool")) :
-					Update_head_glsl = Update_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Update_head_glsl = Update_head_glsl + "bool	  " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("int")) :
-					Update_head_glsl = Update_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Update_head_glsl = Update_head_glsl + "int		" + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("float")) :
-					Update_head_glsl = Update_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Update_head_glsl = Update_head_glsl + "float	 " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown update shader parameter type [%s]" % type_string)
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(Update_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_Update_scenario_var_data[%d];\n" % Nb_Configurations);
-					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]) {\n")
-					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", _pg_shader_Update);\n")
+					ShaderHeader.write("extern GLint uniform_Update_scenario_var_data[%d];\n" % Nb_Scenarios);
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", pg_enum_shader_Update);\n")
 					ShaderBodyBind.write("    }\n")
 
 				if(type_string == "bool" or type_string == "path") :
@@ -1344,17 +1373,17 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					Update_body_glsl = Update_body_glsl + "  " + var_ID + " = uniform_Update_scenario_var_data[" + str(Update_fs_index) + "];\n"
 				elif(type_string.startswith("bool")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Update_body_glsl = Update_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Update_scenario_var_data[" + str(Update_fs_index) + "] > 0 ? true : false);\n";
 						Update_fs_index  += 1
 					Update_fs_index  -= 1
 				elif(type_string.startswith("int")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Update_body_glsl = Update_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_Update_scenario_var_data[" + str(Update_fs_index) + "]);\n";
 						Update_fs_index  += 1
 					Update_fs_index  -= 1
 				elif(type_string.startswith("float")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Update_body_glsl = Update_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Update_scenario_var_data[" + str(Update_fs_index) + "]);\n";
 						Update_fs_index  += 1
 					Update_fs_index  -= 1
@@ -1364,7 +1393,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					Update_bindingString_cpp = Update_bindingString_cpp + "      Update_scenario_var_data["+str(indConfiguration)+"][" + str(Update_fs_index) + "] = "
+					Update_bindingString_cpp = Update_bindingString_cpp + "      Update_scenario_var_data["+str(indScenario)+"][" + str(Update_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1378,9 +1407,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
-					Update_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Update_bindingString_cpp = Update_bindingString_cpp + "      Update_scenario_var_data["+str(indConfiguration)+"][" + str(Update_fs_index) + "] = "
+					Update_fs_index -= int(header_const_value(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
+						Update_bindingString_cpp = Update_bindingString_cpp + "      Update_scenario_var_data["+str(indScenario)+"][" + str(Update_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Update_bindingString_cpp = Update_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1408,20 +1437,20 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					Mixing_head_glsl = Mixing_head_glsl + "float	 " + var_ID + ";\n"
 				elif(type_string.startswith("bool")) :
-					Mixing_head_glsl = Mixing_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Mixing_head_glsl = Mixing_head_glsl + "bool	  " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("int")) :
-					Mixing_head_glsl = Mixing_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Mixing_head_glsl = Mixing_head_glsl + "int		" + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("float")) :
-					Mixing_head_glsl = Mixing_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Mixing_head_glsl = Mixing_head_glsl + "float	 " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown mixing shader parameter type [%s]" % type_string)
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(Mixing_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_Mixing_scenario_var_data[%d];\n" % Nb_Configurations)
-					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]) {\n")
-					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", _pg_shader_Mixing);\n")
+					ShaderHeader.write("extern GLint uniform_Mixing_scenario_var_data[%d];\n" % Nb_Scenarios)
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", pg_enum_shader_Mixing);\n")
 					ShaderBodyBind.write("    }\n")
 				
 				if(type_string == "bool" or type_string == "path") :
@@ -1431,17 +1460,17 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					Mixing_body_glsl = Mixing_body_glsl + "  " + var_ID + " = uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n"
 				elif(type_string.startswith("bool")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Mixing_body_glsl = Mixing_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "] > 0 ? true : false);\n";
 						Mixing_fs_index  += 1
 					Mixing_fs_index  -= 1
 				elif(type_string.startswith("int")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Mixing_body_glsl = Mixing_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "]);\n";
 						Mixing_fs_index  += 1
 					Mixing_fs_index  -= 1
 				elif(type_string.startswith("float")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Mixing_body_glsl = Mixing_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "]);\n";
 						Mixing_fs_index  += 1
 					Mixing_fs_index  -= 1
@@ -1451,7 +1480,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Mixing_fs_index) + "] = "
+					Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      Mixing_scenario_var_data["+str(indScenario)+"][" + str(Mixing_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1465,9 +1494,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
-					Mixing_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      Mixing_scenario_var_data["+str(indConfiguration)+"][" + str(Mixing_fs_index) + "] = "
+					Mixing_fs_index -= int(header_const_value(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
+						Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      Mixing_scenario_var_data["+str(indScenario)+"][" + str(Mixing_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Mixing_bindingString_cpp = Mixing_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1496,20 +1525,20 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + ";\n"
 				elif(type_string.startswith("bool")) :
-					ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "bool	  " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("int")) :
-					ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "int		" + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("float")) :
-					ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					ParticleRender_head_glsl = ParticleRender_head_glsl + "float	 " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown particle shader parameter type [%s]" % type_string)
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(ParticleRender_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data[%d];\n" % Nb_Configurations)
-					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Particle]) {\n")
-					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", _pg_shader_Particle);\n")
+					ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data[%d];\n" % Nb_Scenarios)
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Particle]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", pg_enum_shader_Particle);\n")
 					ShaderBodyBind.write("    }\n")
 				
 				if(type_string == "bool" or type_string == "path") :
@@ -1519,17 +1548,17 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + " = uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
 				elif(type_string.startswith("bool")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "] > 0 ? true : false);\n";
 						ParticleRender_fs_index  += 1
 					ParticleRender_fs_index  -= 1
 				elif(type_string.startswith("int")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = int(uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n";
 						ParticleRender_fs_index  += 1
 					ParticleRender_fs_index  -= 1
 				elif(type_string.startswith("float")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						ParticleRender_body_glsl = ParticleRender_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "]);\n";
 						ParticleRender_fs_index  += 1
 					ParticleRender_fs_index  -= 1
@@ -1539,7 +1568,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
+					ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      ParticleRender_scenario_var_data["+str(indScenario)+"][" + str(ParticleRender_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1553,9 +1582,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
-					ParticleRender_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      ParticleRender_scenario_var_data["+str(indConfiguration)+"][" + str(ParticleRender_fs_index) + "] = "
+					ParticleRender_fs_index -= int(header_const_value(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
+						ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      ParticleRender_scenario_var_data["+str(indScenario)+"][" + str(ParticleRender_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1583,20 +1612,20 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					Master_head_glsl = Master_head_glsl + "float	 " + var_ID + ";\n"
 				elif(type_string.startswith("bool")) :
-					Master_head_glsl = Master_head_glsl + "bool	  " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Master_head_glsl = Master_head_glsl + "bool	  " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("int")) :
-					Master_head_glsl = Master_head_glsl + "int		" + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Master_head_glsl = Master_head_glsl + "int		" + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				elif(type_string.startswith("float")) :
-					Master_head_glsl = Master_head_glsl + "float	 " + var_ID + "[" + str(configurationVarValue(index_range[1])) + "];\n"
+					Master_head_glsl = Master_head_glsl + "float	 " + var_ID + "[" + str(header_const_value(index_range[1])) + "];\n"
 				else :
 					print("Configuration generator: Unknown master shader parameter type [%s]" % type_string)
 					print("Configuration generator: End of configuration generation\n\n")
 					sys.exit(0)
 
 				if(Master_fs_index == 0) :
-					ShaderHeader.write("extern GLint uniform_Master_scenario_var_data[%d];\n" % Nb_Configurations)
-					ShaderBodyBind.write("    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]) {\n")
-					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indConfiguration)+",  uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", _pg_shader_Master);\n")
+					ShaderHeader.write("extern GLint uniform_Master_scenario_var_data[%d];\n" % Nb_Scenarios)
+					ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]) {\n")
+					ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", pg_enum_shader_Master);\n")
 					ShaderBodyBind.write("    }\n")
 				
 				if(type_string == "bool" or type_string == "path") :
@@ -1606,17 +1635,17 @@ def write_binding_vars_header_and_body(indConfiguration) :
 				elif(type_string == "float") :
 					Master_body_glsl = Master_body_glsl + "  " + var_ID + " = uniform_Master_scenario_var_data[" + str(Master_fs_index) + "];\n"
 				elif(type_string.startswith("bool")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Master_body_glsl = Master_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "] > 0 ? true : false);\n";
 						Master_fs_index  += 1
 					Master_fs_index  -= 1
 				elif(type_string.startswith("int")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Master_body_glsl = Master_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "]);\n";
 						Master_fs_index  += 1
 					Master_fs_index  -= 1
 				elif(type_string.startswith("float")) :
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
 						Master_body_glsl = Master_body_glsl + "  " + var_ID + "[" + str(index) + "] = (uniform_Master_scenario_var_data[" + str(Master_fs_index) + "]);\n";
 						Master_fs_index  += 1
 					Master_fs_index  -= 1
@@ -1626,7 +1655,7 @@ def write_binding_vars_header_and_body(indConfiguration) :
 					sys.exit(0)
 				
 				if(not re.findall(r'\[', type_string)) :
-					Master_bindingString_cpp = Master_bindingString_cpp + "      Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
+					Master_bindingString_cpp = Master_bindingString_cpp + "      Master_scenario_var_data["+str(indScenario)+"][" + str(Master_fs_index) + "] = "
 					if(pulsing_mode == "*") :
 						Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + ";\n"
 					elif(pulsing_mode == "pulsed_absolute") :
@@ -1640,9 +1669,9 @@ def write_binding_vars_header_and_body(indConfiguration) :
 						print("Configuration generator: End of configuration generation\n\n")
 						sys.exit(0)
 				else:
-					Master_fs_index -= int(configurationVarValue(index_range[1])) - 1 - int(index_range[0])
-					for index in range(int(index_range[0]), configurationVarValue(index_range[1])) :
-						Master_bindingString_cpp = Master_bindingString_cpp + "      Master_scenario_var_data["+str(indConfiguration)+"][" + str(Master_fs_index) + "] = "
+					Master_fs_index -= int(header_const_value(index_range[1])) - 1 - int(index_range[0])
+					for index in range(int(index_range[0]), header_const_value(index_range[1])) :
+						Master_bindingString_cpp = Master_bindingString_cpp + "      Master_scenario_var_data["+str(indScenario)+"][" + str(Master_fs_index) + "] = "
 						if(pulsing_mode == "*") :
 							Master_bindingString_cpp = Master_bindingString_cpp + "(GLfloat)" + var_ID + "[" + str(index) + "];\n"
 						elif(pulsing_mode == "pulsed_absolute") :
@@ -1664,56 +1693,56 @@ def write_binding_vars_header_and_body(indConfiguration) :
 	# once the variables have been scanned, C++ and glsl tables are created to pass the values from CPU to GPU. There is a table per shader.
 	if(ParticleAnimation_fs_index > 0) :
 		ParticleAnimation_head_glsl = ParticleAnimation_head_glsl + "uniform float uniform_ParticleAnimation_scenario_var_data[" + str(ParticleAnimation_fs_index) + "];\n"
-		ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      glUniform1fv(uniform_ParticleAnimation_scenario_var_data["+str(indConfiguration)+"], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data["+str(indConfiguration)+"]);\n"
-		ShaderHeader.write("extern float *ParticleAnimation_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-		ShaderBodyBind.write("	ParticleAnimation_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
+		ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      glUniform1fv(uniform_ParticleAnimation_scenario_var_data["+str(indScenario)+"], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data["+str(indScenario)+"]);\n"
+		ShaderHeader.write("extern float *ParticleAnimation_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+		ShaderBodyBind.write("	ParticleAnimation_scenario_var_data["+str(indScenario)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 		
 	if(Update_fs_index > 0) :
 		Update_head_glsl = Update_head_glsl + "uniform float uniform_Update_scenario_var_data[" + str(Update_fs_index) + "];\n"
-		Update_bindingString_cpp = Update_bindingString_cpp + "      glUniform1fv(uniform_Update_scenario_var_data["+str(indConfiguration)+"], " + str(Update_fs_index) + ", Update_scenario_var_data["+str(indConfiguration)+"]);\n"
-		ShaderHeader.write("extern float *Update_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-		ShaderBodyBind.write("	Update_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(Update_fs_index) + "];\n")
+		Update_bindingString_cpp = Update_bindingString_cpp + "      glUniform1fv(uniform_Update_scenario_var_data["+str(indScenario)+"], " + str(Update_fs_index) + ", Update_scenario_var_data["+str(indScenario)+"]);\n"
+		ShaderHeader.write("extern float *Update_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+		ShaderBodyBind.write("	Update_scenario_var_data["+str(indScenario)+"]  = new float[" + str(Update_fs_index) + "];\n")
 
 	if(Mixing_fs_index > 0) :
 		Mixing_head_glsl = Mixing_head_glsl + "uniform float uniform_Mixing_scenario_var_data[" + str(Mixing_fs_index) + "];\n"
-		Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      glUniform1fv(uniform_Mixing_scenario_var_data["+str(indConfiguration)+"], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data["+str(indConfiguration)+"]);\n"
-		ShaderHeader.write("extern float *Mixing_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-		ShaderBodyBind.write("	Mixing_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(Mixing_fs_index) + "];\n")
+		Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      glUniform1fv(uniform_Mixing_scenario_var_data["+str(indScenario)+"], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data["+str(indScenario)+"]);\n"
+		ShaderHeader.write("extern float *Mixing_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+		ShaderBodyBind.write("	Mixing_scenario_var_data["+str(indScenario)+"]  = new float[" + str(Mixing_fs_index) + "];\n")
 
 	if(ParticleRender_fs_index > 0) :
 		ParticleRender_head_glsl = ParticleRender_head_glsl + "uniform float uniform_ParticleRender_scenario_var_data[" + str(ParticleRender_fs_index) + "];\n"
-		ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      glUniform1fv(uniform_ParticleRender_scenario_var_data["+str(indConfiguration)+"], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data["+str(indConfiguration)+"]);\n"
-		ShaderHeader.write("extern float *ParticleRender_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-		ShaderBodyBind.write("	ParticleRender_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
+		ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      glUniform1fv(uniform_ParticleRender_scenario_var_data["+str(indScenario)+"], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data["+str(indScenario)+"]);\n"
+		ShaderHeader.write("extern float *ParticleRender_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+		ShaderBodyBind.write("	ParticleRender_scenario_var_data["+str(indScenario)+"]  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 
 	if(Master_fs_index > 0) :
 		Master_head_glsl = Master_head_glsl + "uniform float uniform_Master_scenario_var_data[" + str(Master_fs_index) + "];\n"
-		Master_bindingString_cpp = Master_bindingString_cpp + "      glUniform1fv(uniform_Master_scenario_var_data["+str(indConfiguration)+"], " + str(Master_fs_index) + ", Master_scenario_var_data["+str(indConfiguration)+"]);\n"
-		ShaderHeader.write("extern float *Master_scenario_var_data[" + str(Nb_Configurations) + "];\n")
-		ShaderBodyBind.write("	Master_scenario_var_data["+str(indConfiguration)+"]  = new float[" + str(Master_fs_index) + "];\n")
+		Master_bindingString_cpp = Master_bindingString_cpp + "      glUniform1fv(uniform_Master_scenario_var_data["+str(indScenario)+"], " + str(Master_fs_index) + ", Master_scenario_var_data["+str(indScenario)+"]);\n"
+		ShaderHeader.write("extern float *Master_scenario_var_data[" + str(Nb_Scenarios) + "];\n")
+		ShaderBodyBind.write("	Master_scenario_var_data["+str(indScenario)+"]  = new float[" + str(Master_fs_index) + "];\n")
 
 	# draws the bindings grouped by shader in the draw.cpp file
 
-	UpdateBody.write("\nif(pg_current_configuration_rank == "+str(indConfiguration)+") {\n")
+	UpdateBody.write("\nif(pg_ind_scenario == "+str(indScenario)+") {\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
 	UpdateBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]) {\n" )
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Update]);\n" + Update_bindingString_cpp)
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]) {\n" )
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]);\n" + Update_bindingString_cpp)
 	UpdateBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Mixing]);\n" + Mixing_bindingString_cpp)
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]);\n" + Mixing_bindingString_cpp)
 	UpdateBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleRender]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
 	UpdateBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indConfiguration)+"][_pg_shader_Master]);\n" + Master_bindingString_cpp)
+	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]) {\n")
+	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]);\n" + Master_bindingString_cpp)
 	UpdateBody.write("    }\n")
 
 	UpdateBody.write("}\n")
@@ -1776,8 +1805,8 @@ def write_binding_vars_header_and_body(indConfiguration) :
 # MAIN SUB
 ##################################################################
 def main(main_args) :
-	global Nb_Configurations
-	global Configuration_InputCsv_names
+	global Nb_Scenarios
+	global Header_Input_name
 	global Scenario_InputCsv_names
 	global FullScenario_InputCsv_name
 	global OutputScenario_OutputCsv_name
@@ -1814,7 +1843,7 @@ def main(main_args) :
 	# ARGUMENTS
 	##################################################################
 	try:
-		opts, args = getopt.getopt(main_args,"n:c:f:o:s:",["nb_configurations=","configuration=", "full_scenario=", "output_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "update_body_out="])
+		opts, args = getopt.getopt(main_args,"n:c:f:o:s:",["nb_scenarios=","header=", "full_scenario=", "output_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "update_body_out="])
 	except getopt.GetoptError:
 		print(USAGE)
 		print("Configuration generator: End of configuration generation\n\n")
@@ -1822,10 +1851,10 @@ def main(main_args) :
 	for opt, arg in opts:
 
 		# CSV PARAMETER INPUT FILES
-		if opt in ("-n", "--nb_configurations"):
-			Nb_Configurations = int(arg)
-		elif opt in ("-c", "--configuration"):
-			Configuration_InputCsv_names = re.split(r",", arg)
+		if opt in ("-n", "--nb_scenarios"):
+			Nb_Scenarios = int(arg)
+		elif opt in ("-c", "--header"):
+			Header_Input_name = arg
 		elif opt in ("-f", "--full_scenario"):
 			FullScenario_InputCsv_name = arg
 		elif opt in ("-o", "--output_scenario"):
@@ -1905,12 +1934,8 @@ def main(main_args) :
 
 	###############################################################################
 	# CSV PARAMETER INPUT FILES
-	if(len(Configuration_InputCsv_names) != Nb_Configurations) :
-		print("Configuration generator: Expected number of configuration files incorrect: ",len(Configuration_InputCsv_names)," instead of ", Nb_Configurations)
-		print("Configuration generator: End of configuration generation\n\n")
-		sys.exit(0)
-	if(len(Scenario_InputCsv_names) != Nb_Configurations) :
-		print("Configuration generator: Expected number of scenario files incorrect: ",len(Scenario_InputCsv_names)," instead of ", Nb_Configurations)
+	if(len(Scenario_InputCsv_names) != Nb_Scenarios) :
+		print("Configuration generator: Expected number of scenario files incorrect: ",len(Scenario_InputCsv_names)," instead of ", Nb_Scenarios)
 		print("Configuration generator: End of configuration generation\n\n")
 		sys.exit(0)
 
@@ -1926,11 +1951,8 @@ def main(main_args) :
 	# each configuration file is used for shader files
 	# the headers of the same shader files across several 
 	# configuration files can be different (they depend on each scenario)
-	read_configuration_vars(Configuration_InputCsv_names[0])
-
-	# all the configuration files are used to load the shader file names
-	for configurationFileName, indConfig in zip(Configuration_InputCsv_names, range(Nb_Configurations)) :
-		read_configuration_shader_names(configurationFileName, indConfig)
+	# read_configuration_vars(Header_Input_name[0])
+	read_headerConst(Header_Input_name)
 
 	##################################################################
 	# READS THE FULL SCENARIO AND MEMORIZES THE HEADER
@@ -1949,16 +1971,16 @@ def main(main_args) :
 	# READS THE CSV SCENARIO FILE
 	##################################################################
 	scenario_vars_columns_list = []
-	for scenarioFileName, indConfig in zip(Scenario_InputCsv_names, range(Nb_Configurations)) :
+	for scenarioFileName, indScenario in zip(Scenario_InputCsv_names, range(Nb_Scenarios)) :
 		try:
 			input_scenario_fileCsv = open(scenarioFileName, "rt")
 		except IOError:
-			print("Input scenario File (configuration: ", indConfig, ") not found:", scenarioFileName, " or path is incorrect")
+			print("Input scenario File (configuration: ", indScenario, ") not found:", scenarioFileName, " or path is incorrect")
 		readScenarioCSV = csv.reader(input_scenario_fileCsv, delimiter=',')
-		read_scenario_variables(readScenarioCSV, indConfig)
-		read_scenario_scenes(readScenarioCSV, indConfig)
+		read_scenario_variables(readScenarioCSV, indScenario)
+		read_scenario_scenes(readScenarioCSV, indScenario)
 		input_scenario_fileCsv.close()
-		# print(indConfig)
+		# print(indScenario)
 	post_reading_scenarios()
 
 	#####################################################
@@ -1974,8 +1996,8 @@ def main(main_args) :
 	###############################################################################
 	# WRITE SHADER HEADER BODY AND BINDING AND C++ UPDATE
 	###############################################################################
-	for indConfig in range(Nb_Configurations) :
-	 	write_binding_vars_header_and_body(indConfig)
+	for indScenario in range(Nb_Scenarios) :
+	 	write_binding_vars_header_and_body(indScenario)
 
 	UpdateBody.close()
 

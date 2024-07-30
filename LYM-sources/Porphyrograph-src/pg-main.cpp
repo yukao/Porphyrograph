@@ -42,97 +42,84 @@
 ///////////////////////////////////////////////////////////////
 
 // displayed window
-pg_Window     *CurrentWindow = NULL;
-bool           windowDisplayed = false;
+pg_WindowData *pg_CurrentWindow = NULL;
+bool           pg_windowDisplayed = false;
 
-int tablet_prec_x = 0;
-int tablet_prec_y = 0;
+int			   pg_NbConfigurations = 1;
 
 // the width of the working window
 // half of the display in case of double window (doubling is made in the Master shader in this case)
 // full display otherwise
-int workingWindow_width = 1024;
-int workingWindow_width_powerOf2 = 1024;
-float workingWindow_width_powerOf2_ratio = 1.f;
-bool muteRightScreen = false;
+int pg_workingWindow_width = 1920;
+int pg_workingWindow_width_powerOf2 = 2048;
+float pg_workingWindow_width_powerOf2_ratio = 1.f;
+bool pg_muteRightScreen = false;
 
 // the smallest powers of 2 for width and height
-int window_width_powerOf2 = 1024;
-int window_height_powerOf2 = 1024;
-float window_width_powerOf2_ratio = 1.f;
-float window_height_powerOf2_ratio = 1.f;
+int pg_window_width_powerOf2 = 2048;
+int pg_window_height_powerOf2 = 2048;
+float pg_window_width_powerOf2_ratio = 1.f;
+float pg_window_height_powerOf2_ratio = 1.f;
 
-int rightWindowVMargin = 0;
+int pg_rightWindowVMargin = 0;
 
 /// screen message drawing
-string ScreenMessage;
-GLfloat messageTransparency;
-bool NewScreenMessage = false;
-bool ScreenMessageInitialized = false;
+GLfloat pg_messageTransparency;
+bool pg_newScreenMessage = false;
 
 /// Error string
-char *ErrorStr = NULL;
+char *pg_errorStr = NULL;
 
 // Input network message string
-char *Input_Message_String = NULL;
-char *Input_Message_Local_Commande_String = NULL;
-char *Output_Message_String = NULL;
+char *pg_input_message_string = NULL;
+char *pg_input_message_local_command_string = NULL;
+char *pg_output_message_string = NULL;
 
 /// OpenGL background color
-float OpenGLBGcolor[4] = {0.0, 0.0, 0.0, 1.0};
+float pg_OpenGLBGcolor[4] = {0.0, 0.0, 0.0, 1.0};
 
 /// number of frames displayed
-int Step = 0;
+int pg_nbFramesDisplayed = 0;
 /// current internal time for animations
 double pg_CurrentClockTime = 0.;
-double PrecedingClockTime = 0.;
+double pg_PrecedingClockTime = 0.;
 /// initial time (in case of real timescale)
-double InitialRealTime = 0.;
-/// last image swap
-float LastImageSwap = 0.0f;
+double pg_InitialRealTime = 0.;
 /// last frame wall time
-double LastScreenMessageDecayTime = 0.;
-int LastDisplayFrame = 0;
-double LastDisplayFrameTime = 0;
-int FramePerSecond = 0;
-bool DisplayFramePerSecond = false;
+double pg_LastScreenMessageDecayTime = 0.;
+int pg_LastDisplayFrame = 0;
+double pg_LastDisplayFrameTime = 0;
+int pg_FramePerSecond = 0;
+bool pg_DisplayFramePerSecond = false;
 
 /// current mouse location
-int CurrentMousePos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, CurrentMousePos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-int Pulsed_CurrentMousePos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, Pulsed_CurrentMousePos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-float LastCursorPositionUpdate[PG_NB_CURSORS_MAX] = { -1.f };
+int pg_CurrentCursorPos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, pg_CurrentCursorPos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+int pg_Pulsed_CurrentCursorPos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, pg_Pulsed_CurrentCursorPos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+float pg_LastCursorPositionUpdate[PG_NB_CURSORS_MAX] = { -1.f };
 
-float paths_x_forGPU[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, paths_y_forGPU[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-float paths_x_forGPU_prev[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, paths_y_forGPU_prev[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-float paths_x_forGPU_last_pos_time[PG_NB_CURSORS_MAX] = { -1 };
-float paths_x_begin_position[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, paths_y_begin_position[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-int CurrentCursorHooverPos_x, CurrentCursorHooverPos_y;
-int CurrentCursorStylusvsRubber = pg_Stylus;
+int pg_CurrentStylusHooverPos_x, pg_CurrentStylusHooverPos_y;
+int pg_CurrentStylus_StylusvsRubber = pg_Stylus;
 // current tablet pen pressure and orientation
-float tabletPressureRadius = 0.0f;
-float tabletAzimutRadius = 0.0f;
-float tabletInclinationRadius = 0.0f;
-
-/// motion while button is down
-float LinearMotionStep = 0;
+float pg_CurrentStylusPresuse = 0.0f;
+float pg_CurrentStylusAzimut = 0.0f;
+float pg_CurrentStylusInclination = 0.0f;
 
 /// log file
 FILE    *pg_csv_log_file;
 
 // date string for output files
-std::stringstream  date_stringStream;
-
+std::stringstream  pg_date_stringStream;
 
 // frame number 
-int      pg_FrameNo;
-int      pg_ConfigurationFrameNo;
+long      pg_FrameNo;
+long      pg_ConfigurationFrameNo;
 // frame number when to reach particle target
-int      pg_ParticleTargetFrameNo;
+long      pg_ParticleTargetFrameNo;
 // last frame with camera parameter change
-int      pg_LastCameraParameterChange_Frame;
+long      pg_LastCameraParameterChange_Frame;
 
-// glut initialized
-bool glut_initialized = false;
+// +++++++++++++++++++++++ Aux Var +++++++++++++++++++++++++++++++++
+char pg_AuxString[1024];
 
 int argc; char **argv;
 
@@ -142,14 +129,14 @@ int main(int argcMain, char** argvMain) {
 	argv = argvMain;
 
 	// error message and input buffer memory
-	ErrorStr = new char[1024];
+	pg_errorStr = new char[1024];
 
 	// current date/time based on current system
 	time_t now = time(0);
 	tm* ltm = localtime(&now);
 
-	// initialisation of cwd
-	cwd = GetCurrentWorkingDir();
+	// initialisation of pg_cwd
+	pg_cwd = pg_GetCurrentWorkingDir();
 
 	// print various components of tm structure.
 	//std::cout << "Year: "<< 1900 + ltm->tm_year << std::endl;
@@ -159,7 +146,7 @@ int main(int argcMain, char** argvMain) {
 	//std::cout << 1 + ltm->tm_min << ":";
 	//std::cout << 1 + ltm->tm_sec << std::endl;
 
-	date_stringStream
+	pg_date_stringStream
 		<< std::setfill('0') << std::setw(2) << 1 + ltm->tm_mon << "-"
 		<< std::setfill('0') << std::setw(2) << ltm->tm_mday << "-"
 		<< std::setfill('0') << std::setw(2) << (1900 + ltm->tm_year) << "_"
@@ -168,7 +155,7 @@ int main(int argcMain, char** argvMain) {
 		<< ltm->tm_year - 100 << std::flush;
 
 	// new window
-	CurrentWindow = new pg_Window();
+	pg_CurrentWindow = new pg_WindowData();
 
 	// print all command line arguments
 	std::cout << "name of program: " << argv[0] << '\n';
@@ -180,44 +167,32 @@ int main(int argcMain, char** argvMain) {
 	// loading the configuration file
 	// the configuration file name must be terminated by ".csv" or ".txt"
 	// possibly the first argument with such an extension
-	if (argc % 2 == 1) {
-		pg_NbConfigurations = int((argc - 1) / 2);
-		if (pg_NbConfigurations > PG_MAX_CONFIGURATIONS) {
-			sprintf(ErrorStr, "Porphyrograph: should have maximally %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", PG_MAX_CONFIGURATIONS, (argc - 1) / 2); ReportError(ErrorStr); throw(6678);
-		}
-		else {
-			printf("Porphyrograph: % d associated configuration and scenario file(s) (<conf.csv> <scenario.csv>) + ", (argc - 1) / 2);
-		}
-		pg_Shader_File_Names = new string * [pg_NbConfigurations];
-		pg_Shader_Stages = new GLenum * *[pg_NbConfigurations];
-		pg_Shader_nbStages = new int* [pg_NbConfigurations];
-		pg_shader_programme = new unsigned int* [pg_NbConfigurations];
-		pg_ConfigurationFileNames = new string[pg_NbConfigurations];
-		pg_ScenarioFileNames = new string[pg_NbConfigurations];
-
-		pg_initPaths();
-
-		for (int ind = 1; ind < argc; ind += 2) {
-			pg_shader_programme[(ind - 1) / 2] = new unsigned int[_pg_shader_TotalNbTypes];
-			for (int ind_shader_type = 0; ind_shader_type < _pg_shader_TotalNbTypes; ind_shader_type++) {
-				pg_shader_programme[(ind - 1) / 2][ind_shader_type] = 0;
-			}
-		}
-		for (int ind = 1; ind < argc; ind += 2) {
-			if (strstr(argv[ind], ".csv")) {
-				pg_ConfigurationFileNames[(ind - 1) / 2] = string(argv[ind]);
-				pg_LoadConfigurationFile(argv[ind], (ind - 1) / 2);
-			}
-		}
-		for (int ind = 1; ind < argc; ind += 2) {
-			if (strstr(argv[ind + 1], ".csv")) {
-				pg_ScenarioFileNames[(ind - 1) / 2] = string(argv[ind + 1]);
-				pg_LoadScenarioFile(argv[ind + 1], (ind - 1) / 2);
-			}
-		}
+	pg_NbConfigurations = int(argc - 1);
+	if (pg_NbConfigurations > PG_MAX_SCENARIOS) {
+		sprintf(pg_errorStr, "Porphyrograph: should have maximally %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", PG_MAX_SCENARIOS, (argc - 1) / 2); pg_ReportError(pg_errorStr); throw(6678);
 	}
 	else {
-		sprintf(ErrorStr, "Porphyrograph: should have an odd number of arguments Porphyrograph.exe (<conf.csv> <scenario.csv>)+"); ReportError(ErrorStr); throw(6678);
+		printf("Porphyrograph: %d associated scenario file(s) (<scenario.csv>)\n", (argc - 1));
+	}
+	pg_Shader_File_Names = new string * [pg_NbConfigurations];
+	pg_Shader_Stages = new GLenum * *[pg_NbConfigurations];
+	pg_Shader_nbStages = new int* [pg_NbConfigurations];
+	pg_shader_programme = new unsigned int* [pg_NbConfigurations];
+	pg_ScenarioFileNames = new string[pg_NbConfigurations];
+
+	pg_initPaths();
+
+	for (int ind = 1; ind < argc; ind++) {
+		pg_shader_programme[(ind - 1)] = new unsigned int[pg_enum_shader_TotalNbTypes];
+		for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
+			pg_shader_programme[(ind - 1)][ind_shader_type] = 0;
+		}
+	}
+	for (int ind = 1; ind < argc; ind++) {
+		if (strstr(argv[ind], ".csv")) {
+			pg_ScenarioFileNames[(ind - 1)] = string(argv[ind]);
+			pg_LoadScenarioFile(argv[ind], (ind - 1));
+		}
 	}
 
 	///////////////////////////////////////////////
@@ -232,26 +207,26 @@ int main(int argcMain, char** argvMain) {
 	pg_logFirstLineSceneVariables();
 	printf("%s\n", applicationName.c_str());
 
-	std::cout << "Date: [" << date_stringStream.str() << "]" << std::endl;
+	std::cout << "Date: [" << pg_date_stringStream.str() << "]" << std::endl;
 
 	// printf( "Glut initialization\n" );
 	// glut parameters initialization 
 	glutInit(&argc, argv);
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
 		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
 	}
 	else {
 		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS); // 
 	}
 
-	initGlutWindows();
-	printOglError(474);
+	pg_initGLutWindows();
+	pg_printOglError(474);
 
 	// OpenGL initialization (clear buffer)
-	OpenGLInit();
+	pg_OpenGLInit();
 	// cursor shape selection
-	CursorInit();
-	printOglError(475);
+	pg_CursorInit();
+	pg_printOglError(475);
 
 	// initializations before rendering
 
@@ -259,43 +234,43 @@ int main(int argcMain, char** argvMain) {
 	pg_FullScenarioArrayVarInit();
 
 	// sensor initialization
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
-		SensorInitialization();
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
+		pg_SensorInitialization();
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
 		// mesh initialization
-		MeshInitialization();
+		pg_meshInitialization();
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_pg_metawear]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_pg_metawear]) {
 		if (pg_metawear) {
-			MetawearSensorInitialization();
+			pg_MetawearSensorInitialization();
 		}
 	}
 
 	// matrices, geometry, shaders and FBOs
 	pg_initRenderingMatrices();
-	printOglError(31);
+	pg_printOglError(31);
 
 	// buiilds the quads to be rendered
 	pg_initGeometry_quads();
-	printOglError(32);
+	pg_printOglError(32);
 	
 	// loads the shaders
 	pg_loadAllShaders();
-	printOglError(33);
+	pg_printOglError(33);
 
 	// initializes the FBOS
 	pg_initFBOTextureImagesAndRendering();
-	printOglError(34);
+	pg_printOglError(34);
 
 	// textures loading
 	pg_loadAllTextures();
-	printOglError(36);
+	pg_printOglError(36);
 
 	// meshes loading
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeMeshes]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
 		pg_loadAllMeshes();
 	}
 
@@ -308,7 +283,7 @@ int main(int argcMain, char** argvMain) {
 	/////////////////////////////////////////////////////////////////////////
 	// ClipArt GPU INITIALIZATION
 	// loads the ClipArts and lists them
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
 		pg_loadAllClipArts();
 		pg_listAllClipArts();
 	}
@@ -341,66 +316,66 @@ int main(int argcMain, char** argvMain) {
 
 	// applies all callbacks
 	pg_initializationCallBacks();
-	printOglError(467);
+	pg_printOglError(467);
 
 	// camera frame capture initialization
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_cameraCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
 		pg_openCameraCaptureAndLoadFrame();
 	}
 
 	// video intialization: loads the movie of the intial configuration
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_movieCaptFreq]) {
-		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_current_configuration_rank].size())
-			&& playing_movieNo != currentlyPlaying_movieNo) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_movieCaptFreq]) {
+		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_ind_scenario].size())
+			&& playing_movieNo != pg_currentlyPlaying_movieNo) {
 			pg_movie_frame.setTo(Scalar(0, 0, 0));
 
-			currentlyPlaying_movieNo = playing_movieNo;
+			pg_currentlyPlaying_movieNo = playing_movieNo;
 
 			// texture ID initialization (should not be inside a thread)
 			if (pg_movie_texture_texID == NULL_ID) {
 				glGenTextures(1, &pg_movie_texture_texID);
 			}
 
-			is_movieLoading = true;
+			pg_is_movieLoading = true;
 			printf("Loading movie %s\n",
-					pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName.c_str());
-			sprintf(AuxString, "/movie_shortName %s", pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoShortName.c_str());
-			pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+					pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoFileName.c_str());
+			sprintf(pg_AuxString, "/movie_shortName %s", pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoShortName.c_str());
+			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 
-			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_current_configuration_rank][currentlyPlaying_movieNo].videoFileName);
+			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoFileName);
 		}
 	}
 
 	// clip intialization for Left Clip
-	if (playing_clipNoLeft >= 0 && playing_clipNoLeft < pg_nbClips[pg_current_configuration_rank] && playing_clipNoLeft != pg_clip_status[_clipLeft].getCurrentlyPlaying_clipNo(0)) {
-		pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(0, playing_clipNoLeft);
-		sprintf(AuxString, "/clip_shortName_0 %03d", playing_clipNoLeft);
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+	if (pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(0)) {
+		pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoLeft);
+		sprintf(pg_AuxString, "/clip_shortName_0 %03d", pg_playing_clipNoLeft);
+		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
-	if (playing_secondClipNoLeft >= 0 && playing_secondClipNoLeft < pg_nbClips[pg_current_configuration_rank] && playing_secondClipNoLeft != pg_clip_status[_clipLeft].getCurrentlyPlaying_clipNo(1)) {
-		pg_clip_status[_clipLeft].setCurrentlyPlaying_clipNo(1, playing_secondClipNoLeft);
-		sprintf(AuxString, "/clip2_shortName_0 %03d", playing_secondClipNoLeft);
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+	if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(1)) {
+		pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoLeft);
+		sprintf(pg_AuxString, "/clip2_shortName_0 %03d", pg_playing_secondClipNoLeft);
+		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
 #endif
 		// clip intialization for Right Clip
-	if (playing_clipNoRight >= 0 && playing_clipNoRight < pg_nbClips[pg_current_configuration_rank] && playing_clipNoRight != pg_clip_status[_clipRight].getCurrentlyPlaying_clipNo(0)) {
-		pg_clip_status[_clipRight].setCurrentlyPlaying_clipNo(0, playing_clipNoRight);
-		sprintf(AuxString, "/clip_shortName_1 %03d", playing_clipNoRight);
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+	if (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(0)) {
+		pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoRight);
+		sprintf(pg_AuxString, "/clip_shortName_1 %03d", pg_playing_clipNoRight);
+		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
 #if PG_NB_PARALLEL_CLIPS >= 2
-	if (playing_secondClipNoRight >= 0 && playing_secondClipNoRight < pg_nbClips[pg_current_configuration_rank] && playing_secondClipNoRight != pg_clip_status[_clipRight].getCurrentlyPlaying_clipNo(1)) {
-		pg_clip_status[_clipRight].setCurrentlyPlaying_clipNo(1, playing_secondClipNoRight);
-		sprintf(AuxString, "/clip2_shortName_1 %03d", playing_secondClipNoRight);
-		pg_send_message_udp((char*)"s", AuxString, (char*)"udp_TouchOSC_send");
+	if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(1)) {
+		pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoRight);
+		sprintf(pg_AuxString, "/clip2_shortName_1 %03d", pg_playing_secondClipNoRight);
+		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
 #endif
 
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
-	printOglError(37);
+	pg_printOglError(37);
 
 	/////////////////////////////////////////////////////////////////////////
 	// USB INITIALIZATION
@@ -417,17 +392,17 @@ int main(int argcMain, char** argvMain) {
 }
 
 
-void initGlutWindows(void) {
-	printf("GLUT size %dx%d\n", window_width, window_height);
+void pg_initGLutWindows(void) {
+	printf("GLUT size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
-	glutInitWindowSize(window_width, window_height);
-	glutInitWindowPosition(my_window_x, my_window_y);
+	glutInitWindowSize(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+	glutInitWindowPosition(window_x, window_y);
 
-	CurrentWindow->glutID = glutCreateWindow(" ");
+	pg_CurrentWindow->glutID = glutCreateWindow(" ");
 
 	// window resize
-	printf("Window size %dx%d\n", window_width, window_height);
-	glutReshapeWindow(window_width, window_height);
+	printf("Window size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+	glutReshapeWindow(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
 	// glutFullScreen();                      // Switch into full screen
 
@@ -479,51 +454,50 @@ void initGlutWindows(void) {
 
 	// window selection
 	// glut win activation
-	glutSetWindow(CurrentWindow->glutID);
+	glutSetWindow(pg_CurrentWindow->glutID);
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// callback procedures for window reshape
-	glutReshapeFunc(&window_reshape);
+	glutReshapeFunc(&pg_window_reshape);
 	// keyboard events handling
-	glutKeyboardFunc(&window_key_browse);
+	glutKeyboardFunc(&pg_window_key_browse);
 	// special keys handling
-	glutSpecialFunc(&window_special_key_browse);
+	glutSpecialFunc(&pg_window_special_key_browse);
 
 #if defined(PG_WACOM_TABLET)
 	// wacom tablet handling
-	glutWacomTabletCursorFunc(&window_PG_WACOM_TABLET_browse);
+	glutWacomTabletCursorFunc(&pg_window_PG_WACOM_TABLET_browse);
 #else  // mouse clicks handling
-	glutMouseFunc(&window_mouseFunc_browse);
+	glutMouseFunc(&pg_window_mouseFunc_browse);
 	// mouse drags handling
-	glutMotionFunc(&window_motionFunc_browse);
+	glutMotionFunc(&pg_window_motionFunc_browse);
 	// passive selection
-	//if( CurrentWindow->mouse_passive_selection ) {
-	glutPassiveMotionFunc(&window_passiveMotionFunc_browse);
+	//if( pg_CurrentWindow->mouse_passive_selection ) {
+	glutPassiveMotionFunc(&pg_window_passiveMotionFunc_browse);
 #endif
 
 	// window visibility
 	glutVisibilityFunc(NULL);
 	// idle update
 	glutTimerFunc(int(minimal_interframe_latency * 1000),
-		&window_idle_browse, Step);
-	glutDisplayFunc(&window_display);
+		&pg_window_idle_browse, pg_nbFramesDisplayed);
+	glutDisplayFunc(&pg_window_display);
 
 }
 
 void  pg_init_screen_message( void ) {
   // screen message initialization
-  ScreenMessage = "";
-  messageTransparency = 1.0;
-  NewScreenMessage = false;
-  ScreenMessageInitialized = false;
-  LastScreenMessageDecayTime = pg_CurrentClockTime;
+  pg_screenMessage = "";
+  pg_messageTransparency = 1.0;
+  pg_newScreenMessage = false;
+  pg_LastScreenMessageDecayTime = pg_CurrentClockTime;
 }
 
-void OpenGLInit( void ) {
+void pg_OpenGLInit( void ) {
   // background color
-  glClearColor (OpenGLBGcolor[0], OpenGLBGcolor[1], OpenGLBGcolor[2], OpenGLBGcolor[3]);
+  glClearColor (pg_OpenGLBGcolor[0], pg_OpenGLBGcolor[1], pg_OpenGLBGcolor[2], pg_OpenGLBGcolor[3]);
 
   // buffer reset
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -540,21 +514,21 @@ void OpenGLInit( void ) {
 
 }
 
-void CursorInit( void ) {
+void pg_CursorInit( void ) {
   glutSetCursor(GLUT_CURSOR_NONE);
 }
 
 void pg_init_scene(void) {
 	if (argc <= 1) {
-		sprintf(ErrorStr, "Porphyrograph: not enough arguments"); ReportError(ErrorStr);
-		sprintf(ErrorStr, "Usage: Porphyrograph [configuration.conf]"); ReportError(ErrorStr); throw 100;
+		sprintf(pg_errorStr, "Porphyrograph: not enough arguments"); pg_ReportError(pg_errorStr);
+		sprintf(pg_errorStr, "Usage: Porphyrograph [configuration.conf]"); pg_ReportError(pg_errorStr); throw 100;
 	}
 
 	// log file
 	if (!pg_csv_file_name.empty()) {
 		printf("Open csv log file %s\n", pg_csv_file_name.c_str());
 		if ((pg_csv_log_file = fopen(pg_csv_file_name.c_str(), "wb")) == NULL) {
-			sprintf(ErrorStr, "File %s not opened!", pg_csv_file_name.c_str()); ReportError(ErrorStr); throw 152;
+			sprintf(pg_errorStr, "File %s not opened!", pg_csv_file_name.c_str()); pg_ReportError(pg_errorStr); throw 152;
 		}
 	}
 	else {
@@ -572,17 +546,17 @@ void pg_init_scene(void) {
 	pg_LastCameraParameterChange_Frame = pg_FrameNo;
 
 	// intial real time
-	InitialRealTime = RealTime() + initial_time;
+	pg_InitialRealTime = pg_RealTime() + initial_time;
 
 	// initial scenario time: well before current time to be over
-	InitialScenarioTime = InitialRealTime - 1000000.f;
-	AbsoluteInitialScenarioTime = InitialRealTime - 1000000.f;
+	pg_InitialScenarioTime = pg_InitialRealTime - 1000000.f;
+	pg_AbsoluteInitialScenarioTime = pg_InitialRealTime - 1000000.f;
 
 	// current time initialization: internal time
-	pg_CurrentClockTime = RealTime();
-	PrecedingClockTime = pg_CurrentClockTime;
+	pg_CurrentClockTime = pg_RealTime();
+	pg_PrecedingClockTime = pg_CurrentClockTime;
 
-	//printf("Initial time %.2f (real time %.5f)\n", pg_CurrentClockTime, InitialRealTime);
+	//printf("Initial time %.2f (real time %.5f)\n", pg_CurrentClockTime, pg_InitialRealTime);
 
 	// random seed initialization
 	srand(clock());
@@ -591,30 +565,28 @@ void pg_init_scene(void) {
 	pg_init_screen_message();
 
 	// reads the text messages in the text file
-	pg_ReadAllDisplayMessages(pg_MessageFile[pg_current_configuration_rank]);
+	pg_ReadAllDisplayMessages(pg_MessageFile[pg_ind_scenario]);
 	
 #if defined(var_Novak_flight_on)
 	// ------ flight initialization  ------------- //
 	Novak_flight_init_control_points();
 #endif
 
-	DMX_light_initialization();
-
-	printf("Open portaudio\n");
-	paInit = new ScopedPaHandler();
-	if (paInit->result() != paNoError) {
-		fprintf(stderr, "Error number: %d\n", paInit->result());
-		fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
+		pg_DMX_light_initialization();
 	}
 
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_sensor_layout]) {
+	printf("Open portaudio\n");
+	pg_pa_openSoundData();
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////////
 		// SENSORS INITIALIZATION
 		// copies the grid layout
-		assignSensorPositions();
+		pg_assignSensorPositions();
 
 		// copies the single central activation
-		assignSensorActivations();
+		pg_assignSensorActivations();
 	}
 
 	/////////////////////////////////////////////////////////////////////////
@@ -626,67 +598,66 @@ void pg_init_scene(void) {
 	if (err != 0) {
 		/* Tell the user that we could not find a usable */
 		/* WinSock DLL.                                  */
-		sprintf(ErrorStr, "could not find a usable WinSock DLL!"); ReportError(ErrorStr); throw 207;
+		sprintf(pg_errorStr, "could not find a usable WinSock DLL!"); pg_ReportError(pg_errorStr); throw 207;
 	}
 #endif
 
 	// server initialization
-	for (pg_IPServer &server : IP_Servers) {
+	for (pg_IPServer &server : pg_IP_Servers) {
 		server.InitServer();
 	}
 	// client initialization
-	for (pg_IPClient &client : IP_Clients) {
+	for (pg_IPClient &client : pg_IP_Clients) {
 		// printf( "Client %d initialization\n" , ind );
 		  //std::cout << "client->Remote_server_IP: " << ind << " " << client->Remote_server_IP << "\n";
 		  //std::cout << "client->Remote_server_port: " << client->Remote_server_port << "\n";
 		client.InitClient();
-		// printf( "Client name %s\n" , IP_Clients[ ind ]->id );
+		// printf( "Client name %s\n" , pg_IP_Clients[ ind ]->id );
 	}
-	Input_Message_String = new char[max_network_message_length];
-	Input_Message_Local_Commande_String = new char[max_network_message_length];
-	Output_Message_String = new char[max_network_message_length];
+	pg_input_message_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
+	pg_input_message_local_command_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
+	pg_output_message_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
 	// printf( "End of scene initialization\n" );
-
-	//test_hull();
-	//exit(0);
 }
 
 bool pg_shutdown = false;
 
 void pg_quit(void) {
 	//  save the svg paths before quitting (could perhaps be generalized)
-	pg_draw_scene(_Svg);
+	pg_draw_scene(pg_enum_render_Svg);
 
+	// script only available for WIN32
+#ifdef _WIN32
 	// script
-	if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_activeClipArts]) {
-		if (pi_script_1.hProcess != NULL) {
-			TerminateProcess(pi_script_1.hProcess, 0);
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
+		if (pg_pi_script_1.hProcess != NULL) {
+			TerminateProcess(pg_pi_script_1.hProcess, 0);
 		}
 	}
+#endif
 
 	// lights off the LED
 	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
 
 #if defined(PG_RENOISE)
-	sprintf(AuxString, "/renoise/transport/stop"); pg_send_message_udp((char*)"", AuxString, (char*)"udp_RN_send");
+	sprintf(pg_AuxString, "/renoise/transport/stop"); pg_send_message_udp((char*)"", pg_AuxString, (char*)"udp_RN_send");
 #endif
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/disconnect 1", (char*)"udp_PD_send");
 	pg_send_message_udp((char*)"f", (char*)"/quit 1", (char*)"udp_TouchOSC_send");
 
 	// soundtrack on
-	soundTrack_on = false;
+	pg_soundTrack_on = false;
 	pg_send_message_udp((char*)"f", (char*)"/stopsoundtrack 0", (char*)"udp_PD_send");
-	sprintf(AuxString, "/soundtrack_onOff %d", soundTrack_on);
-	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_PD_send");
-	printf("Main: soundtrack: %s\n", AuxString);
-	pa_sound_data.pa_closeMyStream();
+	sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
+	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
+	printf("Main: soundtrack: %s\n", pg_AuxString);
+	pg_pa_closeStream();
 	printf("close portaudio\n");
-	delete paInit;
-	sprintf(AuxString, "/soundtrack_onOff %d", !soundTrack_on);
-	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
-	sprintf(AuxString, "/soundtrack_volume %d", 0);
-	pg_send_message_udp((char*)"i", AuxString, (char*)"udp_TouchOSC_send");
+	sprintf(pg_AuxString, "/soundtrack_onOff %d", !pg_soundTrack_on);
+	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+	sprintf(pg_AuxString, "/soundtrack_volume %d", 0);
+	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
 #if defined(PG_WITH_JUCE)
 	// soundtrack off
 	pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
@@ -697,7 +668,7 @@ void pg_quit(void) {
 	//pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
 
 	// sends all the remaining messages
-	for (pg_IPClient& client : IP_Clients) {
+	for (pg_IPClient& client : pg_IP_Clients) {
 		client.sendIPmessages();
 	}
 
@@ -738,23 +709,23 @@ void pg_quit(void) {
 	// release global parameters
 	// release the common variables in PG_EnvironmentNode. (Must be relased before releaseSceneObjects()
 	// printf("releasewindows\n");
-	delete CurrentWindow;
-	CurrentWindow = NULL;
+	delete pg_CurrentWindow;
+	pg_CurrentWindow = NULL;
 
 	// printf("releaseUDP\n");
-	IP_Servers.clear();
+	pg_IP_Servers.clear();
 
-	IP_Clients.clear();
+	pg_IP_Clients.clear();
 
-	if (ErrorStr) {
-		delete[] ErrorStr;
-		ErrorStr = NULL;
+	if (pg_errorStr) {
+		delete[] pg_errorStr;
+		pg_errorStr = NULL;
 	}
 
 	exit(1);
 }
 
-void window_key_browse(unsigned char key, int x, int y)
+void pg_window_key_browse(unsigned char key, int x, int y)
 {
   switch (key) {
   case KEY_ESC:
@@ -767,135 +738,135 @@ void window_key_browse(unsigned char key, int x, int y)
   }
 }
 
-void window_special_key_browse(int key, int x, int y) {
+void pg_window_special_key_browse(int key, int x, int y) {
   // use standard key processing (non-platform dependent)
   pg_process_special_key( key );
 }
 
-void MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
+void pg_MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
 	*mappedX = x;
 	*mappedY = y;
 }
 
 #if defined(PG_WACOM_TABLET)
-void window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
+void pg_window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
 	int mappedX = x;
 	int mappedY = y;
 
-	//printf("window_PG_WACOM_TABLET_browse xy %d %d press; %.2f cursor: %d\n", x, y, press, cursor);
+	//printf("pg_window_PG_WACOM_TABLET_browse xy %d %d press; %.2f cursor: %d\n", x, y, press, cursor);
 
-	MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
+	pg_MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
 
 	//printf("remapped xy %d %d\n", mappedX, mappedY);
 
 	// drawing
-	if (press > 0.05 && mappedX >= 2 && mappedX < workingWindow_width - 2 && mappedY >= 2 && mappedY < window_height - 2) {
+	if (press > 0.05 && mappedX >= 2 && mappedX < pg_workingWindow_width - 2 && mappedY >= 2 && mappedY < PG_WINDOW_HEIGHT - 2) {
 		//printf("pen writing %d %d\n", mappedX, mappedY);
-		CurrentMousePos_x[0] = mappedX;
-		CurrentMousePos_y[0] = mappedY;
+		pg_CurrentCursorPos_x[0] = mappedX;
+		pg_CurrentCursorPos_y[0] = mappedY;
 
 		// visual feedback on a drawing interface on the tablet, if there is one
-		float x_tab = float(CurrentMousePos_x[0]) / workingWindow_width;
-		float y_tab = float(CurrentMousePos_y[0]) / window_height;
-		sprintf(AuxString, "/pen_xy %.2f %.2f", x_tab, y_tab); pg_send_message_udp((char*)"ff", (char*)AuxString, (char*)"udp_TouchOSC_send");
+		float x_tab = float(pg_CurrentCursorPos_x[0]) / pg_workingWindow_width;
+		float y_tab = float(pg_CurrentCursorPos_y[0]) / PG_WINDOW_HEIGHT;
+		sprintf(pg_AuxString, "/pen_xy %.2f %.2f", x_tab, y_tab); pg_send_message_udp((char*)"ff", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 
-		if (CurrentCursorStylusvsRubber == pg_Stylus || CurrentCursorStylusvsRubber == pg_Rubber) {
-			CurrentCursorHooverPos_x = PG_OUT_OF_SCREEN_CURSOR;
-			CurrentCursorHooverPos_y = PG_OUT_OF_SCREEN_CURSOR;
+		if (pg_CurrentStylus_StylusvsRubber == pg_Stylus || pg_CurrentStylus_StylusvsRubber == pg_Rubber) {
+			pg_CurrentStylusHooverPos_x = PG_OUT_OF_SCREEN_CURSOR;
+			pg_CurrentStylusHooverPos_y = PG_OUT_OF_SCREEN_CURSOR;
 		}
 		else {
-			CurrentCursorHooverPos_x = mappedX; 
-			CurrentCursorHooverPos_y = mappedY;
+			pg_CurrentStylusHooverPos_x = mappedX; 
+			pg_CurrentStylusHooverPos_y = mappedY;
 		}
 	}	
 	// hoovering
 	else {
 		// standard hoovering
 		//printf("pen hoovering %d %d\n", mappedX, mappedY);
-		CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
-		CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
-		CurrentCursorHooverPos_x = mappedX; //  int(x / 1024. * workingWindow_width);
-		CurrentCursorHooverPos_y = mappedY; // int(y / 768. * window_height);
+		pg_CurrentCursorPos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
+		pg_CurrentCursorPos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
+		pg_CurrentStylusHooverPos_x = mappedX; //  int(x / 1024. * pg_workingWindow_width);
+		pg_CurrentStylusHooverPos_y = mappedY; // int(y / 768. * PG_WINDOW_HEIGHT);
 	}
 
-	tabletPressureRadius = press;
-	tabletAzimutRadius = az;
-	tabletInclinationRadius = incl;
+	pg_CurrentStylusPresuse = press;
+	pg_CurrentStylusAzimut = az;
+	pg_CurrentStylusInclination = incl;
 	//printf("press %.2f az %.2f incl %.2f cursor %d\n", press, az, incl, cursor);
 
 	// verify these values received from wacom tablet
 	if (cursor == 1 || cursor == 7) {
-		CurrentCursorStylusvsRubber = pg_Stylus;
+		pg_CurrentStylus_StylusvsRubber = pg_Stylus;
 	}
 	else if (cursor == 2 || cursor == 8) {
-		CurrentCursorStylusvsRubber = pg_Rubber;
+		pg_CurrentStylus_StylusvsRubber = pg_Rubber;
 	}
 	//else if (cursor == 7) { // tablette enfants
 	//	// use the interface to switch between stylus and rubber
 	//}
-	//printf("window_PG_WACOM_TABLET_browse xy %d %d cursor: %d\n", x, y, CurrentCursorStylusvsRubber);
+	//printf("pg_window_PG_WACOM_TABLET_browse xy %d %d cursor: %d\n", x, y, pg_CurrentStylus_StylusvsRubber);
 
 
 	//printf("Porphyrograph pt [%d,%d] press %.3f az %.3f alt %.3f twist %d\n" , 
 		  //x, y, press, az, incl, twist );
 }
 #else
-void window_mouseFunc_browse(int button, int state, int x, int y) {
+void pg_window_mouseFunc_browse(int button, int state, int x, int y) {
 	 printf( "click button %d (%d,%d)\n" , button , x , y );
 	int mappedX = x;
 	int mappedY = y;
 
-	MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
+	pg_MouseCoordinatesRemapping(x, y, &mappedX, &mappedY);
 
-	CurrentMousePos_x[0] = mappedX;
-	CurrentMousePos_y[0] = mappedY;
-	CurrentCursorHooverPos_x = mappedX;
-	CurrentCursorHooverPos_y = mappedY;
+	pg_CurrentCursorPos_x[0] = mappedX;
+	pg_CurrentCursorPos_y[0] = mappedY;
+	pg_CurrentStylusHooverPos_x = mappedX;
+	pg_CurrentStylusHooverPos_y = mappedY;
 	if (button == 0 || button == 7) {
-		CurrentCursorStylusvsRubber = pg_Stylus;
+		pg_CurrentStylus_StylusvsRubber = pg_Stylus;
 	}
 	else if (button == 2) {
-		CurrentCursorStylusvsRubber = pg_Rubber;
+		pg_CurrentStylus_StylusvsRubber = pg_Rubber;
 	}
 }
 
-void window_motionFunc_browse(int x, int y) {
+void pg_window_motionFunc_browse(int x, int y) {
 	 printf( "active button (%d,%d)\n" , x , y );
-	CurrentMousePos_x[0] = x;
-	CurrentMousePos_y[0] = y;
-	CurrentCursorHooverPos_x = x;
-	CurrentCursorHooverPos_y = y;
+	pg_CurrentCursorPos_x[0] = x;
+	pg_CurrentCursorPos_y[0] = y;
+	pg_CurrentStylusHooverPos_x = x;
+	pg_CurrentStylusHooverPos_y = y;
 }
 
-void window_passiveMotionFunc_browse(int x, int y) {
+void pg_window_passiveMotionFunc_browse(int x, int y) {
 	 printf( "passive button (%d,%d)\n" , x , y );
-    CurrentMousePos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
-    CurrentMousePos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
-    CurrentCursorHooverPos_x = x;
-    CurrentCursorHooverPos_y = y;
+    pg_CurrentCursorPos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
+    pg_CurrentCursorPos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
+    pg_CurrentStylusHooverPos_x = x;
+    pg_CurrentStylusHooverPos_y = y;
   // freeglut (PG): glutGetModifiers() called outside an input callback/int
 }
 #endif
 
-void window_idle_browse( void ) {
-  window_idle_browse( 0 );
+void pg_window_idle_browse( void ) {
+  pg_window_idle_browse( 0 );
 }
 
-void window_idle_browse(int step) {
-	 //printf("begin window_idle_browse\n");
-	// fprintf( pg_csv_log_file, "%.10f begin Time #\n" , RealTime() );
+void pg_window_idle_browse(int step) {
+	 //printf("begin pg_window_idle_browse\n");
+	// fprintf( pg_csv_log_file, "%.10f begin Time #\n" , pg_RealTime() );
 	//printf("cameraWeight %.3f\n", cameraWeight);
 
 	// -------------------- idle function recall ------------------------- //
 	glutTimerFunc(int(minimal_interframe_latency * 1000),
-		&window_idle_browse, Step);
+		&pg_window_idle_browse, pg_nbFramesDisplayed);
 
-	Step = step;
+	pg_nbFramesDisplayed = step;
 
 	// -------------------- scene update ------------------------- //
 	// update is only made if at least window is displayed
-	if (windowDisplayed) {
-		windowDisplayed = false;
+	if (pg_windowDisplayed) {
+		pg_windowDisplayed = false;
 
 		// frame count
 		pg_FrameNo++;
@@ -911,16 +882,16 @@ void window_idle_browse(int step) {
 
 		// resends variables after a while at the beginning 
 		if (pg_FrameNo == 100) {
-			resend_all_variables = true;
-			resend_all_light_variables = true;
+			pg_resend_all_variables = true;
+			pg_resend_all_light_variables = true;
 			// sends color presets
-			InterfaceInitializations();
+			pg_InterfaceInitializations();
 		}
 
 
 		// current clock time
-		PrecedingClockTime = pg_CurrentClockTime;
-		pg_CurrentClockTime = RealTime();
+		pg_PrecedingClockTime = pg_CurrentClockTime;
+		pg_CurrentClockTime = pg_RealTime();
 		if (trace_time) {
 			printf(" Time #%.2f\n", pg_CurrentClockTime);
 		}
@@ -929,45 +900,45 @@ void window_idle_browse(int step) {
 		pg_displaySceneVariables();
 
 		// FPS computation
-		if (pg_FrameNo % 100 == 0 && pg_CurrentClockTime != LastDisplayFrameTime) {
-			FramePerSecond = (int)((pg_FrameNo - LastDisplayFrame) / (pg_CurrentClockTime - LastDisplayFrameTime));
-			LastDisplayFrame = pg_FrameNo;
-			LastDisplayFrameTime = pg_CurrentClockTime;
+		if (pg_FrameNo % 100 == 0 && pg_CurrentClockTime != pg_LastDisplayFrameTime) {
+			pg_FramePerSecond = (int)((pg_FrameNo - pg_LastDisplayFrame) / (pg_CurrentClockTime - pg_LastDisplayFrameTime));
+			pg_LastDisplayFrame = pg_FrameNo;
+			pg_LastDisplayFrameTime = pg_CurrentClockTime;
 			char mess[50];
 
-			if (DisplayFramePerSecond) {
-				sprintf(mess, "%d FPS", FramePerSecond);
+			if (pg_DisplayFramePerSecond) {
+				sprintf(mess, "%d FPS", pg_FramePerSecond);
 				pg_writeMessageOnScreen(string(mess));
-				printf("%s\n", ScreenMessage.c_str());
+				printf("%s\n", pg_screenMessage.c_str());
 			}
 		}
 
 		// decays window message brightness
-		if (messageTransparency > 0.0) {
-			messageTransparency -= 0.4f * float(pg_CurrentClockTime - LastScreenMessageDecayTime);
-			LastScreenMessageDecayTime = pg_CurrentClockTime;
+		if (pg_messageTransparency > 0.0) {
+			pg_messageTransparency -= 0.4f * float(pg_CurrentClockTime - pg_LastScreenMessageDecayTime);
+			pg_LastScreenMessageDecayTime = pg_CurrentClockTime;
 
-			// printf( "Message opacity %.2f mess %s\n" , messageTransparency , ScreenMessage.c_str() );
+			// printf( "Message opacity %.2f mess %s\n" , pg_messageTransparency , pg_screenMessage.c_str() );
 		}
 
 		// if message brightness becomes null, the message is erased
-		if (messageTransparency <= 0.0) {
-			ScreenMessage = "";
-			messageTransparency = 0.0;
-			LastScreenMessageDecayTime = pg_CurrentClockTime;
+		if (pg_messageTransparency <= 0.0) {
+			pg_screenMessage = "";
+			pg_messageTransparency = 0.0;
+			pg_LastScreenMessageDecayTime = pg_CurrentClockTime;
 		}
-		printOglError(300);
+		pg_printOglError(300);
 
-		// printf( "Window %s\n" , CurrentWindow->id );
+		// printf( "Window %s\n" , pg_CurrentWindow->id );
 		pg_screenMessage_update();
 
 		// updates diaporama
-		if (photo_diaporama >= 0 && photo_diaporama < pg_nbCompressedImageDirs[pg_current_configuration_rank]) {
+		if (photo_diaporama >= 0 && photo_diaporama < pg_nbCompressedImageDirs[pg_ind_scenario]) {
 			// printf("pg_update_diaporama\n");
 			pg_update_diaporama();
 		}
 
-		printOglError(467);
+		pg_printOglError(467);
 
 		// last image No display
 		if (pg_FrameNo > last_frame_number) {
@@ -976,93 +947,93 @@ void window_idle_browse(int step) {
 		}
 
 		// beat in case of internal beat
-		if (auto_beat && pg_CurrentClockTime > lastBeatTime + double(auto_beat_duration)) {
+		if (auto_beat && pg_CurrentClockTime > pg_lastBeatTime + double(auto_beat_duration)) {
 			float arguments[PG_MAX_OSC_ARGUMENTS];
 			pg_BeatNo++;
-			lastBeatTime += double(auto_beat_duration);
-			if (lastBeatTime > pg_CurrentClockTime + double(auto_beat_duration)
-				|| lastBeatTime < pg_CurrentClockTime) {
-				lastBeatTime = pg_CurrentClockTime;
+			pg_lastBeatTime += double(auto_beat_duration);
+			if (pg_lastBeatTime > pg_CurrentClockTime + double(auto_beat_duration)
+				|| pg_lastBeatTime < pg_CurrentClockTime) {
+				pg_lastBeatTime = pg_CurrentClockTime;
 			}
 			memset(arguments, 0, PG_MAX_OSC_ARGUMENTS * sizeof(float)); // make sure the struct is empty
 			arguments[0] = (float)pg_BeatNo;
 			pg_aliasScript("beat", "f", arguments, 0);
 		}
 
-		// pulse in case of internal pulse
+		// pg_audio_pulse in case of internal pg_audio_pulse
 		if (auto_pulse) {
-			pulse[0] = float(PerlinNoise(seed_pulsePerlinNoise[0], seed_pulsePerlinNoise[1], pg_FrameNo) * sound_volume + sound_min);
-			pulse[1] = float(PerlinNoise(seed_pulsePerlinNoise[2], seed_pulsePerlinNoise[3], pg_FrameNo) * sound_volume + sound_min);
-			pulse[2] = float(PerlinNoise(seed_pulsePerlinNoise[4], seed_pulsePerlinNoise[5], pg_FrameNo) * sound_volume + sound_min);
-			// not used currently  pulse_attack = PerlinNoise(x, y, pg_FrameNo) * sound_volume + sound_min;
-			sprintf(AuxString, "/pulse_low %.2f", pulse[0]);
-			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/pulse_medium %.2f", pulse[1]);
-			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/pulse_high %.2f", pulse[2]);
-			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
+			pg_audio_pulse[0] = float(pg_PerlinNoise(pg_seed_pulsePerlinNoise[0], pg_seed_pulsePerlinNoise[1], pg_FrameNo) * sound_volume + sound_min);
+			pg_audio_pulse[1] = float(pg_PerlinNoise(pg_seed_pulsePerlinNoise[2], pg_seed_pulsePerlinNoise[3], pg_FrameNo) * sound_volume + sound_min);
+			pg_audio_pulse[2] = float(pg_PerlinNoise(pg_seed_pulsePerlinNoise[4], pg_seed_pulsePerlinNoise[5], pg_FrameNo) * sound_volume + sound_min);
+			// not used currently  pulse_attack = pg_PerlinNoise(x, y, pg_FrameNo) * sound_volume + sound_min;
+			sprintf(pg_AuxString, "/pulse_low %.2f", pg_audio_pulse[0]);
+			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(pg_AuxString, "/pulse_medium %.2f", pg_audio_pulse[1]);
+			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(pg_AuxString, "/pulse_high %.2f", pg_audio_pulse[2]);
+			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
 
-			pulse_average_prec = pulse_average;
-			pulse_average = (pulse[0] + pulse[1] + pulse[2]) / 3.f;
+			pg_audio_pulse_average_prec = pulse_average;
+			pulse_average = (pg_audio_pulse[0] + pg_audio_pulse[1] + pg_audio_pulse[2]) / 3.f;
 
-			sprintf(AuxString, "/pulse %.2f", pulse_average);
-			pg_send_message_udp((char*)"f", AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(AuxString, "/pen_color/color %02x%02x%02xFF", int(pulsed_pen_color[0] * 255), int(pulsed_pen_color[1] * 255), int(pulsed_pen_color[2] * 255));
-			pg_send_message_udp((char*)"s", (char*)AuxString, (char*)"udp_TouchOSC_send");
-			//printf("%s\n", AuxString);
+			sprintf(pg_AuxString, "/pg_audio_pulse %.2f", pulse_average);
+			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(pg_AuxString, "/pen_color/color %02x%02x%02xFF", int(pg_pulsed_pen_color[0] * 255), int(pg_pulsed_pen_color[1] * 255), int(pg_pulsed_pen_color[2] * 255));
+			pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+			//printf("%s\n", pg_AuxString);
 		}
 
 		// continous flashes
 		// in case the flash frequency (flashPixel_freq, flashTrkCA_freq, flashCABG_freq)
 		// is equal to (PG_LOOP_SIZE + 1), whatever the value, flashes are emitted at every frame (or on beats if we reach an onset for the video or the movie)
-		pg_flash_control(flash_continuous_generation);
+		pg_flash_control(pg_flash_continuous_generation);
 
 		// UDP messages IN/OUT
-		for (pg_IPServer &server : IP_Servers) {
+		for (pg_IPServer &server : pg_IP_Servers) {
 			server.receiveIPMessages();
 		}
-		for (pg_IPClient &client : IP_Clients) {
+		for (pg_IPClient &client : pg_IP_Clients) {
 			client.sendIPmessages();
 		}
 
-		if (pg_nb_light_groups[pg_current_configuration_rank] > 0) {
-			// light automation management
-			pg_light_automation_update();
-			// DMX message management
-			if (pg_oneLightGroup_Changed()) {
-				pg_StoreDMXValues_AllLightGroups();
-				pg_SendDMX();
-				pg_Reset_LightGroup_Changed();
-				pg_lightGUI_all_values_and_pulse_update();
+		// only for DMX
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
+			if (pg_nb_light_groups[pg_ind_scenario] > 0) {
+				// light automation management
+				pg_light_automation_update();
+				// DMX message management
+				if (pg_oneLightGroup_Changed()) {
+					pg_StoreDMXValues_AllLightGroups();
+					pg_SendDMX();
+					pg_Reset_LightGroup_Changed();
+					pg_lightGUI_all_values_and_pulse_update();
+				}
 			}
 		}
 	}
 
 	// defines the global variables associated with the current window
-	// glutSetWindow( CurrentWindow->glutID );
+	// glutSetWindow( pg_CurrentWindow->glutID );
 
 	// -------------------- window redisplay ------------------------- //
-	// fprintf( pg_csv_log_file, "%.10f glutPostRedisplay Time #\n" , RealTime() );
+	// fprintf( pg_csv_log_file, "%.10f glutPostRedisplay Time #\n" , pg_RealTime() );
 	glutPostRedisplay();
 
-	// fprintf( pg_csv_log_file, "%.10f end Time #\n\n" , RealTime() );
-	Step++;
-	 //printf("end window_idle_browse\n");
+	// fprintf( pg_csv_log_file, "%.10f end Time #\n\n" , pg_RealTime() );
+	pg_nbFramesDisplayed++;
+	 //printf("end pg_window_idle_browse\n");
 }
 
 //////////////////////////////////
 // window reshape
 //////////////////////////////////
-void window_reshape(GLsizei width, GLsizei height) {
-	//window_height = height;
-	//window_width = width;
-	// glutPositionWindow(my_window_x + window_width - width, my_window_y);
-	glutReshapeWindow(window_width, window_height);
+void pg_window_reshape(GLsizei width, GLsizei height) {
+	glutReshapeWindow(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
-	//  printf("reshape main win %d %d %d\n" , window_width , window_height , width , height );
-	printf( "Resize Window %dx%d\n" , window_width , window_height );
+	//  printf("reshape main win %d %d %d\n" , PG_WINDOW_WIDTH , PG_WINDOW_HEIGHT , width , height );
+	printf( "Resize Window %dx%d\n" , PG_WINDOW_WIDTH , PG_WINDOW_HEIGHT );
 
-	setWindowDimensions();
+	pg_setWindowDimensions();
 	pg_initRenderingMatrices();
 
 #ifndef PG_WACOM_TABLET
@@ -1073,3 +1044,20 @@ void window_reshape(GLsizei width, GLsizei height) {
 }
 
 
+//////////////////////////////////////////////////////////////
+// MISC LIB FUNCTIONS
+//////////////////////////////////////////////////////////////
+void pg_snapshot(char* type) {
+	if (strcmp(type, "svg") == 0) {
+		pg_draw_scene(pg_enum_render_Svg);
+	}
+	else if (strcmp(type, "png") == 0) {
+		pg_draw_scene(pg_enum_render_Png);
+	}
+	else if (strcmp(type, "jpg") == 0) {
+		pg_draw_scene(pg_enum_render_Jpg);
+	}
+	else {
+		sprintf(pg_errorStr, "Incorrect screenshot type (%s): expected svg or png or jpg!", type); pg_ReportError(pg_errorStr);
+	}
+}

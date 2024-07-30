@@ -2125,27 +2125,25 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 				}
 			}
 
-			if (pg_FullScenarioActiveVars[pg_current_configuration_rank][_path_replay_trackNo]) {
-				// tactile drawing above first track
-				if (pathNo > 0) {
-					// tells the shader that it should be drawn on the current drawing track
-					if (path_replay_trackNo[pathNo] < 0) {
-						path_replay_trackNo[pathNo] = currentDrawingTrack;
-					}
-
-					//stroke_geometry_calculation(pathNo, CurrentMousePos_x[cursorNo], CurrentMousePos_y[cursorNo]);
-					//printf("new cursor position %d path %d: %d %d replay %d\n", cursorNo, pathNo, CurrentMousePos_x[cursorNo], CurrentMousePos_y[cursorNo], int(is_path_replay[pathNo]));
-
-					// management of brush radius (w/wo possible interpolation)
-					paths_RadiusX[pathNo]
-						= pen_radius + pulse_average * pen_radius_pulse;
-					paths_RadiusY[pathNo]
-						= pen_radius + pulse_average * pen_radius_pulse;
-					paths_Color_r[pathNo] = min(1.f, pulsed_pen_color[0]);
-					paths_Color_g[pathNo] = min(1.f, pulsed_pen_color[1]);
-					paths_Color_b[pathNo] = min(1.f, pulsed_pen_color[2]);
-					paths_Color_a[pathNo] = min(1.f, pen_color_a);
+			// tactile drawing above first track
+			if (pathNo > 0) {
+				// tells the shader that it should be drawn on the current drawing track
+				if (path_replay_trackNo[pathNo] < 0) {
+					path_replay_trackNo[pathNo] = currentDrawingTrack;
 				}
+
+				//stroke_geometry_calculation(pathNo, CurrentMousePos_x[cursorNo], CurrentMousePos_y[cursorNo]);
+				//printf("new cursor position %d path %d: %d %d replay %d\n", cursorNo, pathNo, CurrentMousePos_x[cursorNo], CurrentMousePos_y[cursorNo], int(is_path_replay[pathNo]));
+
+				// management of brush radius (w/wo possible interpolation)
+				paths_RadiusX[pathNo]
+					= pen_radius + pulse_average * pen_radius_pulse;
+				paths_RadiusY[pathNo]
+					= pen_radius + pulse_average * pen_radius_pulse;
+				paths_Color_r[pathNo] = min(1.f, pulsed_pen_color[0]);
+				paths_Color_g[pathNo] = min(1.f, pulsed_pen_color[1]);
+				paths_Color_b[pathNo] = min(1.f, pulsed_pen_color[2]);
+				paths_Color_a[pathNo] = min(1.f, pen_color_a);
 			}
 		}
 
@@ -2233,12 +2231,9 @@ void Path_Status::load_svg_path(char *fileName,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale, 
 	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
 	if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-		if (pg_FullScenarioActiveVars[indConfiguration][_path_replay_trackNo]
-			&& pg_FullScenarioActiveVars[indConfiguration][_path_record]) {
-			is_path_replay[pathNo] = false;
-			((int *)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
-			((bool *)pg_FullScenarioVarPointers[_path_record])[pathNo] = false;
-		}
+		is_path_replay[pathNo] = false;
+		((int *)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
+		((bool *)pg_FullScenarioVarPointers[_path_record])[pathNo] = false;
 		recorded_path[pathNo] = true;
 		paths_x[pathNo] = PG_OUT_OF_SCREEN_CURSOR;
 		paths_y[pathNo] = PG_OUT_OF_SCREEN_CURSOR;

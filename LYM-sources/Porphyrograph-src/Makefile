@@ -27,12 +27,12 @@ VERSION=1.0.3
 
 VPATH=$(SRC_PATH)
 
-CPPFLAGS=-D CRITON -D LINUX
+CPPFLAGS=-D CORE -D LINUX
 
-CXXFLAGS= $(OPTFLAGS) $(CPPFLAGS) -Wall -I$(SRC_PATH) 
+CXXFLAGS= $(OPTFLAGS) $(CPPFLAGS) -I$(SRC_PATH) 
 LDFLAGS+= -g 
 
-PROG=PG_Criton$(EXESUF)
+PROG=PG
 
 #---------------------------------------------
 #-----Dirs------------------------------------
@@ -40,9 +40,9 @@ PROG=PG_Criton$(EXESUF)
 
 ########### TERMPORARY DIRECTORIES
 # temporary storage of object files
-local_libdir = ../obj_Criton
+local_libdir = ./obj
 # temporary storage of binary files
-local_execdir = ../bin
+local_execdir = ./bin
 # temporary file to store errors and warning
 error_file = ./.make_error
 
@@ -55,21 +55,43 @@ SRC_BASE = pg-conf.cpp \
       pg-main.cpp \
       pg-script.cpp \
       pg-shader.cpp \
-      pg-stroke.cpp \
-      pg-SVG_GPU.cpp \
       pg-texture.cpp \
+      pg-audio.cpp \
+      pg-mesh.cpp \
+      pg-update.cpp \
+      pg-clipArt.cpp \
+      pg-sensor.cpp \
+      pg-color.cpp \
+      pg-callBack.cpp \
+      pg-flash.cpp \
+      pg-gui.cpp \
+      pg-media.cpp \
+      pg-messages.cpp \
+      pg-path.cpp \
+      pg-scenarioDyn.cpp \
       pg-udp.cpp 
 
-HDR_BASE = config.h pg-all_include.h \
-      pg-conf.h \
+HDR_BASE = config.h \
+		pg-conf.h \
       pg-init.h \
       pg-main.h \
       pg-script.h \
-      pg-shader.h  \
-      pg-stroke.h \
-      pg-SVG_GPU.h \
+      pg-shader.h \
       pg-texture.h \
-      pg-udp.h
+      pg-audio.h \
+      pg-mesh.h \
+      pg-update.h \
+      pg-clipArt.h \
+      pg-sensor.h \
+      pg-color.h \
+      pg-callBack.h \
+      pg-flash.h \
+      pg-gui.h \
+      pg-media.h \
+      pg-messages.h \
+      pg-path.h \
+      pg-scenarioDyn.h \
+      pg-udp.h 
 
 #---------------------------------------------
 #-----Compile and link------------------------
@@ -80,43 +102,43 @@ OBJ_FILES = $(SRC_BASE:%.cpp=$(local_libdir)/%.o)
 
 NB_LINE = -1
 
-PG_Criton$(EXESUF): $(local_execdir)/PG_Criton
-
 all: $(PROG)
 
-$(local_libdir)/%.o : $(SRC_PATH)/%.cpp $(SRC_PATH)/$(HDR_BASE)
+PG: $(local_execdir)/PG
+
+$(local_libdir)/%.o : %.cpp 
 	@echo " " > $(error_file)
 	@echo -n "CC $* "
-	-@$(CXX) $(CXXFLAGS) -c -o $(local_libdir)/$*.o $*.cpp 2>> $(error_file)
+	$(CXX) $(CXXFLAGS) -o $@ -c $< 2>> $(error_file)
 	@cat $(error_file)
 	@test `cat $(error_file) | grep -E "^(\./|/)?([^:]*:)+[0-9]+: err" | wc -l` -eq 0
 
-$(local_execdir)/PG_Criton: create_dir $(OBJ_FILES)
+$(local_execdir)/PG: create_dir $(OBJ_FILES)
 	@echo
 	@echo "Changing to object files directory"
-	@cd ../obj_Criton
+	@cd $(local_libdir)
 	@echo
-	-@$(CXX) $(LDFLAGS) -o $@ $(OBJ_FILES) $(LDLIBS) 2> $(error_file)
-	@echo LD PG_Criton
+	$(CXX) $(LDFLAGS) -o $@ $(OBJ_FILES) $(LDLIBS) 2> $(error_file)
+	@echo LD PG
 	@cat $(error_file)
 	@test `cat $(error_file) | wc -l` -eq 0 
 	@rm -f $(error_file)
 
 create_dir:
 	@echo "Creating object files directory"
-	@mkdir -p ../obj_Criton
+	@mkdir -p $(local_libdir)/
 	@echo "Creating binary directory"
 	@mkdir -p $(local_execdir)/
 	@echo
 
 install:  all
-	install -m755 $(local_execdir)/PG_Criton $(prefix)/bin/PG_Criton
+	install -m755 $(local_execdir)/PG $(prefix)/bin/PG
 
 install-man:
 # ifneq ($(CONFIG_WIN32),yes)
-# 	if [ -f $(SRC_PATH)/doc/PG_Criton.1 ] ; then \
+# 	if [ -f $(SRC_PATH)/doc/PG.1 ] ; then \
 # 	    install -d $(mandir)/man1 ; \
-# 	    install -m 644 $(SRC_PATH)/doc/PG_Criton.1 $(mandir)/man1 ; \
+# 	    install -m 644 $(SRC_PATH)/doc/PG.1 $(mandir)/man1 ; \
 # 	fi
 # endif
 
@@ -130,14 +152,16 @@ depend:
 
 clean:
 	@echo "Cleaning temporary files"
-	-@rm -f $(OBJ_FILES) $(error_file)
-
+	-@rm -rf $(local_libdir) $(error_file)
+	
+mrproper: clean
+	@echo "Cleaning binary"
+	-@rm -rf $(local_execdir)  $(SRC_PATH)/include/pg_scripts/%.h
+	
 dist:
-	rm -rf PG_Criton-$(VERSION) PG_Criton-$(VERSION).tar.gz bin obj_Criton
-	mkdir PG_Criton-$(VERSION) bin obj_Criton
-	cp -rf $(SUBMISSIONS) PG_Criton-$(VERSION)
-	cp -f Makefile.archive PG_Criton-$(VERSION)/Makefile
-	tar zcf PG_Criton-$(VERSION).tgz bin obj_Criton PG_Criton-$(VERSION) 
-
-# DO NOT DELETE
+	rm -rf pgnew-$(VERSION) pgnew-$(VERSION).tar.gz bin obj
+	mkdir pgnew-$(VERSION) bin obj
+	cp -rf $(SUBMISSIONS) pgnew-$(VERSION)
+	cp -f Makefile.archive pgnew-$(VERSION)/Makefile
+	tar zcf pgnew-$(VERSION).tgz bin obj pgnew-$(VERSION) 
 

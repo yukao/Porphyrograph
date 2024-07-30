@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_voluspa"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_araknit", "Porphyrograph_core_araknit.vcxproj", "{15D2B474-190D-4532-B11D-DF2557452820}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Light", "Porphyrograph_core_Light.vcxproj", "{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Porphyrograph_core_Core", "Porphyrograph_core_Core.vcxproj", "{6C8EC3A3-8B8F-4B95-92E3-F4275A221CCD}"
 EndProject
 Global
@@ -53,22 +51,6 @@ Global
 		{15D2B474-190D-4532-B11D-DF2557452820}.Release|Win32.ActiveCfg = Release|Win32
 		{15D2B474-190D-4532-B11D-DF2557452820}.Release|Win32.Build.0 = Release|Win32
 		{15D2B474-190D-4532-B11D-DF2557452820}.Release|x64.ActiveCfg = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug DLL|Win32.ActiveCfg = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug DLL|Win32.Build.0 = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug DLL|x64.ActiveCfg = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug DLL|x64.Build.0 = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug|Win32.Build.0 = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug|x64.ActiveCfg = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Debug|x64.Build.0 = Debug|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release DLL|Win32.ActiveCfg = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release DLL|Win32.Build.0 = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release DLL|x64.ActiveCfg = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release DLL|x64.Build.0 = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release|Win32.ActiveCfg = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release|Win32.Build.0 = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release|x64.ActiveCfg = Release|Win32
-		{CE4FDFCF-5DAA-40B1-8730-927B2489D0CA}.Release|x64.Build.0 = Release|Win32
 		{6C8EC3A3-8B8F-4B95-92E3-F4275A221CCD}.Debug DLL|Win32.ActiveCfg = Debug|Win32
 		{6C8EC3A3-8B8F-4B95-92E3-F4275A221CCD}.Debug DLL|Win32.Build.0 = Debug|Win32
 		{6C8EC3A3-8B8F-4B95-92E3-F4275A221CCD}.Debug DLL|x64.ActiveCfg = Debug|Win32

@@ -535,5 +535,5 @@ void pg_CATable_values(GLuint textureID, GLubyte * data_table, int width, int he
 		GL_UNSIGNED_BYTE,  // Image data type
 		data_table);        // The actual image data itself
 
-	printOglError(4);
+	pg_printOglError(4);
 }
