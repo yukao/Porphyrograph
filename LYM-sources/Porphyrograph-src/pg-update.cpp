@@ -437,7 +437,7 @@ void pg_window_display(void) {
 //// current sample choice
 //int pg_sample_choice[ PG_NB_SENSORS];
 //// all possible sensor layouts
-//int pg_sensor_sample_setUps[ PG_NB_MAX_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
+//int pg_sensor_sample_setUps[ PG_NB_MAX_SENSOR_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
 //  {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25},
 //   {26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50},
 //   {51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75}};
@@ -446,8 +446,8 @@ void pg_window_display(void) {
 void pg_readSensors(void) {
 	bool sensorOn[PG_NB_SENSORS] = { false };
 
-	bool sampleOn[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] = { false };
-	int sampleToSensorPointer[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] = { 0 };
+	bool sampleOn[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] = { false };
+	int sampleToSensorPointer[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] = { 0 };
 
 	GLubyte pixelColor[3 * PG_NB_SENSORS] = { 0 };
 
@@ -456,7 +456,7 @@ void pg_readSensors(void) {
 	}
 	
 	// marks all the samples as unread
-	for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
+	for (int indSample = 0; indSample < PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
 		sampleOn[indSample] = false;
 		sampleToSensorPointer[indSample] = -1;
 	}
@@ -524,21 +524,21 @@ void pg_readSensors(void) {
 
 		// the sample has been triggered and has not yet reached 90% of its playing duration
 		if (pg_sample_play_start[pg_sample_choice[indSens]] > 0.0
-			&& pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]] <= 0.9 * BEAT_DURATION) {
+			&& pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]] <= 0.9 * sensor_beat_duration) {
 			// set the value to the initial value until 0.9 so that there is one visual feedback per loop
 			pg_sensorLevel[indSens] = (pg_sample_play_volume[pg_sample_choice[indSens]]
-				* float((pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]]) / BEAT_DURATION));
+				* float((pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]]) / sensor_beat_duration));
 		}
 	}
 	pg_printOglError(689);
 
 	///////////////////////////////////////////////
 	// MANAGING THE SAMPLE SEVEL
-	for (int indSetup = 0; indSetup < PG_NB_MAX_SAMPLE_SETUPS; indSetup++) {
+	for (int indSetup = 0; indSetup < PG_NB_MAX_SENSOR_SAMPLE_SETUPS; indSetup++) {
 		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 			int indSample = pg_sensor_sample_setUps[indSetup][indSens];
 			if (pg_sample_play_start[indSample] > 0
-				&& pg_CurrentClockTime - pg_sample_play_start[indSample] > BEAT_DURATION) {
+				&& pg_CurrentClockTime - pg_sample_play_start[indSample] > sensor_beat_duration) {
 #if defined(PG_RENOISE)
 				// Renoise message format && message posting
 				sprintf(pg_AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
@@ -1313,98 +1313,99 @@ void pg_update_shader_Update_uniforms(void) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clip_mix]
 		&& photo_diaporama < 0) {
 		// clip weights 
-#if PG_NB_PARALLEL_CLIPS >= 2
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			// 4 clips play
-			if ((pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario])
-				|| (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario])
-				|| (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario])
-				|| (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario])) {
-				glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_ind_scenario],
-					float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario],
-					float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario]);
-				float wl0 = 0.f; // weight of first left clip
-				float wr0 = 0.f; // weight of first right clip
-				float wl1 = 0.f; // weight of second left clip
-				float wr1 = 0.f; // weight of second right clip
-				// valid first left clip
-				if (pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario]) {
-					wl0 = 1.f;
-				}
-				// valid first right clip
-				if (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario]) {
-					wr0 = 1.f;
-				}
-				// valid second left clip
-				if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario]) {
-					wl1 = 1.f;
-				}
-				// valid second right clip
-				if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario]) {
-					wr1 = 1.f;
-				}
-				//printf("wl0 %.2f wl1 %.2f\n", wl0, wl1);
-				// mixing fader in the middle
-				// first and second clips are mixed fully
-				// the right and left levels are used for lateral mixing
-				if (clip_mix == 0) {
-					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
-						wl0 * pg_all_clip_status[pg_enum_clipLeft].clip_level[0], wr0 * pg_all_clip_status[pg_enum_clipRight].clip_level[0], 
-						rand_0_1, rand_0_1);
-					glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_ind_scenario],
-						wl1 * pg_all_clip_status[pg_enum_clipLeft].clip_level[1], wr1 * pg_all_clip_status[pg_enum_clipRight].clip_level[1]);
-					//printf("neut wl0 %.2f wl1 %.2f\n", wl0, wl1);
-				}
-				// second clips are mixed fully
-				// first clip progressively decrease
-				// the right and left levels are used for lateral mixing
-				else if (clip_mix < 0) {
-					clip_mix = max(clip_mix, -0.5f);
-					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
-						wl0 * (1 - 2 * -clip_mix) * pg_all_clip_status[pg_enum_clipLeft].clip_level[0], wr0 * (1 - 2 * -clip_mix) * pg_all_clip_status[pg_enum_clipRight].clip_level[0], 
-						rand_0_1, rand_0_1);
-					glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_ind_scenario],
-						wl1 * pg_all_clip_status[pg_enum_clipLeft].clip_level[1], wr1 * pg_all_clip_status[pg_enum_clipRight].clip_level[1]);
-					//printf("neg %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0 * (1 - 2 * -clip_mix), wl1);
-				}
-				// first clips are mixed fully
-				// second lip progressively decrease
-				// the right and left levels are used for lateral mixing
-				else if (clip_mix > 0) {
-					clip_mix = min(clip_mix, 0.5f);
-					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
-						wl0 * pg_all_clip_status[pg_enum_clipLeft].clip_level[0], wr0 * pg_all_clip_status[pg_enum_clipRight].clip_level[0], 
-						rand_0_1, rand_0_1);
-					glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_ind_scenario],
-						wl1 * (1 - 2 * clip_mix) * pg_all_clip_status[pg_enum_clipLeft].clip_level[1], wr1 * (1 - 2 * clip_mix) * pg_all_clip_status[pg_enum_clipRight].clip_level[1]);
-					//printf("pos %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0, wl1 * (1 - 2 * clip_mix));
-				}
-			}
-		}
-#else
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			// 2 clips play
-			if ((pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario])
-				|| (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario])) {
-				glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_ind_scenario],
-					float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario],
-					float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario]);
-				//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
-				//	pg_workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
-				//	pg_workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
-				if (!(pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario])) {
-					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
-						0.0, pg_all_clip_status[pg_enum_clipRight].clip_level[0], rand_0_1, rand_0_1);
-					//printf("clip weights %.2f %.2f\n", 0.0, pg_all_clip_status[pg_enum_clipRight].clip_level[0]);
-				}
-				else if (!(pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario])) {
-					glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
-						pg_all_clip_status[pg_enum_clipLeft].clip_level1[1], 0.0, rand_0_1, rand_0_1);
-					//printf("clip weights %.2f %.2f\n", pg_all_clip_status[pg_enum_clipLeft].clip_level1[1], 0.0);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				// 4 clips play
+				if ((pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario])
+					|| (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario])
+					|| (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario])
+					|| (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario])) {
+					glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_ind_scenario],
+						float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario],
+						float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario]);
+					float wl0 = 0.f; // weight of first left clip
+					float wr0 = 0.f; // weight of first right clip
+					float wl1 = 0.f; // weight of second left clip
+					float wr1 = 0.f; // weight of second right clip
+					// valid first left clip
+					if (pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario]) {
+						wl0 = 1.f;
+					}
+					// valid first right clip
+					if (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario]) {
+						wr0 = 1.f;
+					}
+					// valid second left clip
+					if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario]) {
+						wl1 = 1.f;
+					}
+					// valid second right clip
+					if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario]) {
+						wr1 = 1.f;
+					}
+					//printf("wl0 %.2f wl1 %.2f\n", wl0, wl1);
+					// mixing fader in the middle
+					// first and second clips are mixed fully
+					// the right and left levels are used for lateral mixing
+					if (clip_mix == 0) {
+						glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
+							wl0 * pg_all_clip_status[pg_enum_clipLeft].clip_level[0], wr0 * pg_all_clip_status[pg_enum_clipRight].clip_level[0],
+							rand_0_1, rand_0_1);
+						glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_ind_scenario],
+							wl1 * pg_all_clip_status[pg_enum_clipLeft].clip_level[1], wr1 * pg_all_clip_status[pg_enum_clipRight].clip_level[1]);
+						//printf("neut wl0 %.2f wl1 %.2f\n", wl0, wl1);
+					}
+					// second clips are mixed fully
+					// first clip progressively decrease
+					// the right and left levels are used for lateral mixing
+					else if (clip_mix < 0) {
+						clip_mix = max(clip_mix, -0.5f);
+						glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
+							wl0 * (1 - 2 * -clip_mix) * pg_all_clip_status[pg_enum_clipLeft].clip_level[0], wr0 * (1 - 2 * -clip_mix) * pg_all_clip_status[pg_enum_clipRight].clip_level[0],
+							rand_0_1, rand_0_1);
+						glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_ind_scenario],
+							wl1 * pg_all_clip_status[pg_enum_clipLeft].clip_level[1], wr1 * pg_all_clip_status[pg_enum_clipRight].clip_level[1]);
+						//printf("neg %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0 * (1 - 2 * -clip_mix), wl1);
+					}
+					// first clips are mixed fully
+					// second lip progressively decrease
+					// the right and left levels are used for lateral mixing
+					else if (clip_mix > 0) {
+						clip_mix = min(clip_mix, 0.5f);
+						glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
+							wl0 * pg_all_clip_status[pg_enum_clipLeft].clip_level[0], wr0 * pg_all_clip_status[pg_enum_clipRight].clip_level[0],
+							rand_0_1, rand_0_1);
+						glUniform2f(uniform_Update_fs_2fv_clip01Wghts[pg_ind_scenario],
+							wl1 * (1 - 2 * clip_mix) * pg_all_clip_status[pg_enum_clipLeft].clip_level[1], wr1 * (1 - 2 * clip_mix) * pg_all_clip_status[pg_enum_clipRight].clip_level[1]);
+						//printf("pos %.2f wl0 %.2f wl1 %.2f\n", clip_mix, wl0, wl1 * (1 - 2 * clip_mix));
+					}
 				}
 			}
 		}
-#endif
+		else {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				// 2 clips play
+				if ((pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario])
+					|| (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario])) {
+					glUniform4f(uniform_Update_fs_4fv_photo01_wh[pg_ind_scenario],
+						float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario],
+						float(clip_crop_width[pg_ind_scenario]) / clip_image_width[pg_ind_scenario], float(clip_crop_height[pg_ind_scenario]) / clip_image_height[pg_ind_scenario]);
+					//printf("photo WH %.2fx%.2f %.2fx%.2f\n",
+					//	pg_workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio,
+					//	pg_workingWindow_width_powerOf2_ratio, window_height_powerOf2_ratio);
+					if (!(pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario])) {
+						glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
+							0.0, pg_all_clip_status[pg_enum_clipRight].clip_level[0], rand_0_1, rand_0_1);
+						//printf("clip weights %.2f %.2f\n", 0.0, pg_all_clip_status[pg_enum_clipRight].clip_level[0]);
+					}
+					else if (!(pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario])) {
+						glUniform4f(uniform_Update_fs_4fv_photo01Wghts_randomValues[pg_ind_scenario],
+							pg_all_clip_status[pg_enum_clipLeft].clip_level[1], 0.0, rand_0_1, rand_0_1);
+						//printf("clip weights %.2f %.2f\n", pg_all_clip_status[pg_enum_clipLeft].clip_level1[1], 0.0);
+					}
+				}
+			}
+		}
 	}
 
 	//printf("camera movie weight %.2f %.2f\n",
@@ -1922,12 +1923,12 @@ void pg_UpdatePass(void) {
 
 	glUniform1i(uniform_Update_texture_fs_Photo0[pg_ind_scenario], pg_enum_Photo0_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Photo1[pg_ind_scenario], pg_enum_Photo1_Update_sampler);
-#if PG_NB_PARALLEL_CLIPS >= 2
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-		glUniform1i(uniform_Update_texture_fs_Clip0[pg_ind_scenario], pg_enum_SecondClipLeft_Update_sampler);
-		glUniform1i(uniform_Update_texture_fs_Clip1[pg_ind_scenario], pg_enum_SecondClipRight_Update_sampler);
+	if (PG_NB_PARALLEL_CLIPS >= 2) {
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+			glUniform1i(uniform_Update_texture_fs_Clip0[pg_ind_scenario], pg_enum_SecondClipLeft_Update_sampler);
+			glUniform1i(uniform_Update_texture_fs_Clip1[pg_ind_scenario], pg_enum_SecondClipRight_Update_sampler);
+		}
 	}
-#endif
 	glUniform1i(uniform_Update_texture_fs_Part_render[pg_ind_scenario], pg_enum_Particle_render_FBO_Update_sampler);
 
 	glUniform1i(uniform_Update_texture_fs_Trk0[pg_ind_scenario], pg_enum_Trk0_FBO_Update_sampler);
@@ -2055,41 +2056,41 @@ void pg_UpdatePass(void) {
 		glBindTexture(GL_TEXTURE_2D, NULL_ID);
 	}
 
-#if PG_NB_PARALLEL_CLIPS >= 2
-	// clip[0] texture
+	if (PG_NB_PARALLEL_CLIPS >= 2) {
+		// clip[0] texture
 	// second clips on left and right
-	glActiveTexture(GL_TEXTURE0 + pg_enum_SecondClipLeft_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]
-		&& pg_playing_secondClipNoLeft >= 0
-		&& pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario]
-		&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoLeft]
-		+ pg_all_clip_status[pg_enum_clipLeft].get_lastFrame(1) < pg_nbCompressedClipFrames[pg_ind_scenario]
-		&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoLeft]
-		+ pg_all_clip_status[pg_enum_clipLeft].get_lastFrame(1) >= 0) {
-		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_ind_scenario][pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoLeft]
-			+ pg_all_clip_status[pg_enum_clipLeft].get_lastFrame(1)]->texBuffID);
-	}
-	else {
-		glBindTexture(GL_TEXTURE_2D, NULL_ID);
-	}
+		glActiveTexture(GL_TEXTURE0 + pg_enum_SecondClipLeft_Update_sampler);
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]
+			&& pg_playing_secondClipNoLeft >= 0
+			&& pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario]
+			&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoLeft]
+			+ pg_all_clip_status[pg_enum_clipLeft].get_lastFrame(1) < pg_nbCompressedClipFrames[pg_ind_scenario]
+			&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoLeft]
+			+ pg_all_clip_status[pg_enum_clipLeft].get_lastFrame(1) >= 0) {
+			glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_ind_scenario][pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoLeft]
+				+ pg_all_clip_status[pg_enum_clipLeft].get_lastFrame(1)]->texBuffID);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_2D, NULL_ID);
+		}
 
-	// clip[1] texture
-	glActiveTexture(GL_TEXTURE0 + pg_enum_SecondClipRight_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]
-		&& pg_playing_secondClipNoRight >= 0
-		&& pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario]
-		&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoRight]
-		+ pg_all_clip_status[pg_enum_clipRight].get_lastFrame(1) < pg_nbCompressedClipFrames[pg_ind_scenario]
-		&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoRight]
-		+ pg_all_clip_status[pg_enum_clipRight].get_lastFrame(1) >= 0) {
-		glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_ind_scenario][pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoRight]
-			+ pg_all_clip_status[pg_enum_clipRight].get_lastFrame(1)]->texBuffID);
+		// clip[1] texture
+		glActiveTexture(GL_TEXTURE0 + pg_enum_SecondClipRight_Update_sampler);
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]
+			&& pg_playing_secondClipNoRight >= 0
+			&& pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario]
+			&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoRight]
+			+ pg_all_clip_status[pg_enum_clipRight].get_lastFrame(1) < pg_nbCompressedClipFrames[pg_ind_scenario]
+			&& pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoRight]
+			+ pg_all_clip_status[pg_enum_clipRight].get_lastFrame(1) >= 0) {
+			glBindTexture(GL_TEXTURE_2D, pg_ClipFrames_buffer_data[pg_ind_scenario][pg_firstCompressedClipFramesInFolder[pg_ind_scenario][pg_playing_secondClipNoRight]
+				+ pg_all_clip_status[pg_enum_clipRight].get_lastFrame(1)]->texBuffID);
+		}
+		else {
+			//printf("null second photo texture\n");
+			glBindTexture(GL_TEXTURE_2D, NULL_ID);
+		}
 	}
-	else {
-		//printf("null second photo texture\n");
-		glBindTexture(GL_TEXTURE_2D, NULL_ID);
-	}
-#endif
 
 	// FBO capture of particle rendering used for flashing layers with particles
 	glActiveTexture(GL_TEXTURE0 + pg_enum_Particle_render_FBO_Update_sampler);
@@ -2294,7 +2295,7 @@ void pg_ParticleRenderingPass(void) {
 
 	if (particle_geometry == 2) {
 		// patch vertices for curve particles fed into tesselation shader
-		glPatchParameteri(GL_PATCH_VERTICES, (PG_PARTICLE_CURVE_DEGREE + 1));  // number of vertices in each patch
+		glPatchParameteri(GL_PATCH_VERTICES, (part_curve_degree + 1));  // number of vertices in each patch
 	}
 
 	// Index buffer for indexed rendering
@@ -2304,7 +2305,7 @@ void pg_ParticleRenderingPass(void) {
 		// Draw the patches !
 		glDrawElements(
 			GL_PATCHES,      // mode
-			PG_NB_PARTICLES * (PG_PARTICLE_CURVE_DEGREE + 1),    // count
+			PG_NB_PARTICLES * (part_curve_degree + 1),    // count
 			GL_UNSIGNED_INT,   // type
 			(void*)0           // element array buffer offset
 		);

@@ -51,27 +51,27 @@ bool pg_sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 int pg_sample_choice[PG_NB_SENSORS];
 #ifndef pg_Project_CAaudio
 // all possible sensor layouts
-int pg_sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
+int pg_sensor_sample_setUps[PG_NB_MAX_SENSOR_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 },
 { 16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 },
 { 32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47 } };
 // sample start playing time for muting after 1 cycle
-double pg_sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
+double pg_sample_play_start[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1.,
 -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1.,
 -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1. };
-float pg_sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
+float pg_sample_play_volume[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 #else
 // all possible sensor layouts
-int pg_sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS] =
+int pg_sensor_sample_setUps[PG_NB_MAX_SENSOR_SAMPLE_SETUPS][PG_NB_SENSORS] =
 { { 0 }, { 1 }, { 2 } };
 // sample start playing time for muting after 1 cycle
-double pg_sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
+double pg_sample_play_start[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { -1.f, -1.f, -1.f };
-float pg_sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS] =
+float pg_sample_play_volume[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] =
 { 0.0, 0.0, 0.0 };
 #endif
 
@@ -96,7 +96,7 @@ void pg_SensorInitialization(void) {
 	sprintf(pg_AuxString, "/renoise/transport/start"); pg_send_message_udp((char*)"", pg_AuxString, (char*)"udp_RN_send");
 #endif
 
-	for (int indSample = 0; indSample < PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
+	for (int indSample = 0; indSample < PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
 #if defined(PG_RENOISE)
 		// Renoise message format && message posting
 		sprintf(pg_AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
@@ -144,7 +144,7 @@ void pg_assignSensorActivations(void) {
 }
 
 void pg_sensor_sample_setUp_interpolation(void) {
-	float indSetUp = std::max(0.0f, std::min(sensor_sample_setUp, (float)(PG_NB_MAX_SAMPLE_SETUPS - 1)));
+	float indSetUp = std::max(0.0f, std::min(sensor_sample_setUp, (float)(PG_NB_MAX_SENSOR_SAMPLE_SETUPS - 1)));
 
 	float sensor_sample_setUp_integerPart = floor(indSetUp);
 	float sensor_sample_setUp_floatPart = indSetUp - sensor_sample_setUp_integerPart;

@@ -352,26 +352,26 @@ int main(int argcMain, char** argvMain) {
 		sprintf(pg_AuxString, "/clip_shortName_0 %03d", pg_playing_clipNoLeft);
 		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
-#if PG_NB_PARALLEL_CLIPS >= 2
-	if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(1)) {
-		pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoLeft);
-		sprintf(pg_AuxString, "/clip2_shortName_0 %03d", pg_playing_secondClipNoLeft);
-		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+	if (PG_NB_PARALLEL_CLIPS >= 2) {
+		if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(1)) {
+			pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoLeft);
+			sprintf(pg_AuxString, "/clip2_shortName_0 %03d", pg_playing_secondClipNoLeft);
+			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
 	}
-#endif
-		// clip intialization for Right Clip
+	// clip intialization for Right Clip
 	if (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(0)) {
 		pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoRight);
 		sprintf(pg_AuxString, "/clip_shortName_1 %03d", pg_playing_clipNoRight);
 		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
-#if PG_NB_PARALLEL_CLIPS >= 2
-	if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(1)) {
-		pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoRight);
-		sprintf(pg_AuxString, "/clip2_shortName_1 %03d", pg_playing_secondClipNoRight);
-		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+	if (PG_NB_PARALLEL_CLIPS >= 2) {
+		if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(1)) {
+			pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoRight);
+			sprintf(pg_AuxString, "/clip2_shortName_1 %03d", pg_playing_secondClipNoRight);
+			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
 	}
-#endif
 
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");

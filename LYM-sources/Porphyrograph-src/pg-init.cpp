@@ -474,25 +474,25 @@ void pg_initGeometry_quads(void) {
 		/////////////////////////////////////////////////////////////////////
 	// QUADS FOR SENSORS
 	// point positions and texture coordinates
-		pg_quadSensor_points[0] = (float)-PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[1] = (float)PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[3] = (float)PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[4] = (float)-PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[6] = (float)-PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[7] = (float)-PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[9] = (float)-PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[10] = (float)PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[12] = (float)PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[13] = (float)PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[15] = (float)PG_SENSOR_GEOMETRY_WIDTH;
-		pg_quadSensor_points[16] = (float)-PG_SENSOR_GEOMETRY_WIDTH;
+		pg_quadSensor_points[0] = (float)-sensor_geometry_width;
+		pg_quadSensor_points[1] = (float)sensor_geometry_width;
+		pg_quadSensor_points[3] = (float)sensor_geometry_width;
+		pg_quadSensor_points[4] = (float)-sensor_geometry_width;
+		pg_quadSensor_points[6] = (float)-sensor_geometry_width;
+		pg_quadSensor_points[7] = (float)-sensor_geometry_width;
+		pg_quadSensor_points[9] = (float)-sensor_geometry_width;
+		pg_quadSensor_points[10] = (float)sensor_geometry_width;
+		pg_quadSensor_points[12] = (float)sensor_geometry_width;
+		pg_quadSensor_points[13] = (float)sensor_geometry_width;
+		pg_quadSensor_points[15] = (float)sensor_geometry_width;
+		pg_quadSensor_points[16] = (float)-sensor_geometry_width;
 
-		pg_quadSensor_texCoords[1] = (float)PG_SENSOR_TEXTURE_WIDTH;
-		pg_quadSensor_texCoords[2] = (float)PG_SENSOR_TEXTURE_WIDTH;
-		pg_quadSensor_texCoords[7] = (float)PG_SENSOR_TEXTURE_WIDTH;
-		pg_quadSensor_texCoords[8] = (float)PG_SENSOR_TEXTURE_WIDTH;
-		pg_quadSensor_texCoords[9] = (float)PG_SENSOR_TEXTURE_WIDTH;
-		pg_quadSensor_texCoords[10] = (float)PG_SENSOR_TEXTURE_WIDTH;
+		pg_quadSensor_texCoords[1] = (float)sensor_texture_width;
+		pg_quadSensor_texCoords[2] = (float)sensor_texture_width;
+		pg_quadSensor_texCoords[7] = (float)sensor_texture_width;
+		pg_quadSensor_texCoords[8] = (float)sensor_texture_width;
+		pg_quadSensor_texCoords[9] = (float)sensor_texture_width;
+		pg_quadSensor_texCoords[10] = (float)sensor_texture_width;
 
 		///////////////////////////////////////////////////////////////////////////////////////
 		// vertex buffer objects and vertex array
@@ -525,7 +525,7 @@ void pg_initGeometry_quads(void) {
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 		glEnableVertexAttribArray(1);
 
-		// printf("Sensor size  %d\n" , PG_SENSOR_GEOMETRY_WIDTH );
+		// printf("Sensor size  %d\n" , sensor_geometry_width );
 
 		pg_printOglError(23);
 
@@ -708,7 +708,7 @@ void pg_initGeometry_quads(void) {
 		glBindVertexArray(pg_vaoID[pg_enum_VAOParticle]);
 		// vertices
 		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_enum_VBOParticle]);
-		glBufferData(GL_ARRAY_BUFFER, PG_NB_PARTICLES * (PG_PARTICLE_CURVE_DEGREE + 1) * 3 * sizeof(float), pg_Particle_control_points, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, PG_NB_PARTICLES * (part_curve_degree + 1) * 3 * sizeof(float), pg_Particle_control_points, GL_STATIC_DRAW);
 		// radius
 		glBindBuffer(GL_ARRAY_BUFFER, pg_vboID[pg_enum_VBOpartRadius]);
 		glBufferData(GL_ARRAY_BUFFER, PG_NB_PARTICLES * 1 * sizeof(float), pg_Particle_radius, GL_STATIC_DRAW);
@@ -746,7 +746,7 @@ void pg_initGeometry_quads(void) {
 
 		// vertex indices for indexed rendering 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_enum_EAOParticle]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, PG_NB_PARTICLES * (PG_PARTICLE_CURVE_DEGREE + 1) * sizeof(unsigned int),
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, PG_NB_PARTICLES * (part_curve_degree + 1) * sizeof(unsigned int),
 			pg_Particle_indices, GL_STATIC_DRAW);
 	}
 	else {
@@ -990,26 +990,26 @@ void pg_initParticlePosition_Texture( void ) {
 		// the control point position contain column and row of the control point coordinates
 	// inside the texture of initial positions so that the coordinates contained in this
 	// texture can be retrieved in the vertex shader
-		pg_Particle_control_points = new float[PG_NB_PARTICLES * (PG_PARTICLE_CURVE_DEGREE + 1) * 3];
-		pg_Particle_indices = new unsigned int[PG_NB_PARTICLES * (PG_PARTICLE_CURVE_DEGREE + 1)];
+		pg_Particle_control_points = new float[PG_NB_PARTICLES * (part_curve_degree + 1) * 3];
+		pg_Particle_indices = new unsigned int[PG_NB_PARTICLES * (part_curve_degree + 1)];
 
 		pg_Particle_radius = new float[PG_NB_PARTICLES * 1];
 		pg_Particle_colors = new float[PG_NB_PARTICLES * 3];
 
-		// the used width is a multiple of (PG_PARTICLE_CURVE_DEGREE + 1) so that each set of control
+		// the used width is a multiple of (part_curve_degree + 1) so that each set of control
 		// point coordinates is on a single line
-		int width_used = pg_workingWindow_width - pg_workingWindow_width % (PG_PARTICLE_CURVE_DEGREE + 1);
+		int width_used = pg_workingWindow_width - pg_workingWindow_width % (part_curve_degree + 1);
 
 		for (int indParticle = 0; indParticle < PG_NB_PARTICLES; indParticle++) {
-			int ind_index = indParticle * (PG_PARTICLE_CURVE_DEGREE + 1);
+			int ind_index = indParticle * (part_curve_degree + 1);
 			int ind_radius = indParticle;
 			int ind_color = indParticle * 3;
 			int ind_point = ind_index * 3;
 
 			// col 
-			pg_Particle_control_points[ind_point + 0] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + 0) % width_used);
+			pg_Particle_control_points[ind_point + 0] = float((indParticle * (part_curve_degree + 1) + 0) % width_used);
 			// row
-			pg_Particle_control_points[ind_point + 1] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + 0) / width_used);
+			pg_Particle_control_points[ind_point + 1] = float((indParticle * (part_curve_degree + 1) + 0) / width_used);
 			pg_Particle_control_points[ind_point + 2] = 0.f;
 
 			//// u 
@@ -1029,11 +1029,11 @@ void pg_initParticlePosition_Texture( void ) {
 
 			ind_point += 3;
 			ind_index++;
-			for (int indControlPoint = 0; indControlPoint < PG_PARTICLE_CURVE_DEGREE; indControlPoint++) {
+			for (int indControlPoint = 0; indControlPoint < part_curve_degree; indControlPoint++) {
 				// col 
-				pg_Particle_control_points[ind_point + 0] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + indControlPoint + 1) % width_used);
+				pg_Particle_control_points[ind_point + 0] = float((indParticle * (part_curve_degree + 1) + indControlPoint + 1) % width_used);
 				// row
-				pg_Particle_control_points[ind_point + 1] = float((indParticle * (PG_PARTICLE_CURVE_DEGREE + 1) + indControlPoint + 1) / width_used);
+				pg_Particle_control_points[ind_point + 1] = float((indParticle * (part_curve_degree + 1) + indControlPoint + 1) / width_used);
 				pg_Particle_control_points[ind_point + 2] = 0.f;
 
 				//// u 

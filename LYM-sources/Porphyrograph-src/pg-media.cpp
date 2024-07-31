@@ -1159,9 +1159,9 @@ void pg_update_clip_camera_and_movie_frame(void) {
 			&& (// grabs according to camera capture frequence
 				(cameraCaptFreq > 0 && pg_FrameNo % int(60.0 / cameraCaptFreq) == 0)
 				// grabs at the beginning, otherwise the program is stuck if no camera frame reading takes place
-				|| (pg_FrameNo >= PG_CAMERA_REST_DELAY && pg_FrameNo <= PG_CAMERA_REST_DELAY + 1000 && pg_FrameNo % 3 == 0))
+				|| (pg_FrameNo >= camera_rest_delay && pg_FrameNo <= camera_rest_delay + 1000 && pg_FrameNo % 3 == 0))
 			// a delay has to be let for camera to digest new parameter values
-			&& (pg_FrameNo - pg_LastCameraParameterChange_Frame) > PG_CAMERA_REST_DELAY
+			&& (pg_FrameNo - pg_LastCameraParameterChange_Frame) > camera_rest_delay
 			// the camera weight is positive
 			&& cameraWeight > 0)
 			|| (reset_camera || pg_initialSecondBGCapture == 1)) {
@@ -1395,8 +1395,7 @@ int pg_clip_status::get_nextFrameAndUpdate(int indClipRank) {
 						sprintf(pg_AuxString, "/clip_percent_right %d", int(lastFrame[indClipRank] / float(initialNbFrames) * 100.f)); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 					}
 				}
-#if PG_NB_PARALLEL_CLIPS >= 2
-				else if (indClipRank == 1) {
+				else if (indClipRank == 1 && PG_NB_PARALLEL_CLIPS >= 2) {
 					if (sideLR == pg_enum_clipLeft) {
 						sprintf(pg_AuxString, "/clip2_percent_left %d", int(lastFrame[indClipRank] / float(initialNbFrames) * 100.f)); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 					}
@@ -1404,7 +1403,6 @@ int pg_clip_status::get_nextFrameAndUpdate(int indClipRank) {
 						sprintf(pg_AuxString, "/clip2_percent_right %d", int(lastFrame[indClipRank] / float(initialNbFrames) * 100.f)); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 					}
 				}
-#endif
 			}
 		}
 	}
@@ -1598,18 +1596,18 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				playing_clipNameLeft = pg_clip_tracks[pg_ind_scenario][pg_playing_clipNoLeft].get_name();
 				//printf("Play left clip %d at %d fps, is playing %d nb frames %d\n", pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_all_clip_status[clipSide].clip_play[indClipRank]), pg_clip_tracks[pg_ind_scenario][pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank)].get_initialNbFrames());
 			}
-#if PG_NB_PARALLEL_CLIPS >= 2
 			else {
-				pg_playing_secondClipNoLeft = clipNo;
-				sprintf(pg_AuxString, "/clip2_shortName_0 %s", pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoLeft].get_name().c_str());
-				pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-				sprintf(pg_AuxString, "/clip2_play_0 %d", pg_playing_secondClipNoLeft);
-				pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-				//printf("Play second left clip %d at %d fps, is playing %d\n", pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_all_clip_status[clipSide].clip_play[indClipRank]));
-				(*((string*)pg_FullScenarioVarPointers[_playing_secondClipNameLeft])) = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoLeft].get_name();
-				playing_secondClipNameLeft = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoLeft].get_name();
+				if (PG_NB_PARALLEL_CLIPS >= 2) {
+					pg_playing_secondClipNoLeft = clipNo;
+					sprintf(pg_AuxString, "/clip2_shortName_0 %s", pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoLeft].get_name().c_str());
+					pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+					sprintf(pg_AuxString, "/clip2_play_0 %d", pg_playing_secondClipNoLeft);
+					pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+					//printf("Play second left clip %d at %d fps, is playing %d\n", pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_all_clip_status[clipSide].clip_play[indClipRank]));
+					(*((string*)pg_FullScenarioVarPointers[_playing_secondClipNameLeft])) = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoLeft].get_name();
+					playing_secondClipNameLeft = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoLeft].get_name();
+				}
 			}
-#endif
 		}
 		else {
 			if (indClipRank == 0) {
@@ -1622,18 +1620,18 @@ void pg_play_clip_no(int indClipRank, int clipSide, int clipNo) {
 				(*((string*)pg_FullScenarioVarPointers[_playing_clipNameRight])) = pg_clip_tracks[pg_ind_scenario][pg_playing_clipNoRight].get_name();
 				playing_clipNameRight = pg_clip_tracks[pg_ind_scenario][pg_playing_clipNoRight].get_name();
 			}
-#if PG_NB_PARALLEL_CLIPS >= 2
 			else {
-				pg_playing_secondClipNoRight = pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank);
-				sprintf(pg_AuxString, "/clip2_shortName_1 %s", pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoRight].get_name().c_str());
-				pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-				sprintf(pg_AuxString, "/clip2_play_1 %d", pg_playing_secondClipNoRight);
-				pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-				//printf("Play second right clip %d at %d fps, is playing %d\n", pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_all_clip_status[clipSide].clip_play[indClipRank]));
-				(*((string*)pg_FullScenarioVarPointers[_playing_secondClipNameRight])) = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoRight].get_name();
-				playing_secondClipNameRight = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoRight].get_name();
+				if (PG_NB_PARALLEL_CLIPS >= 2) {
+					pg_playing_secondClipNoRight = pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank);
+					sprintf(pg_AuxString, "/clip2_shortName_1 %s", pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoRight].get_name().c_str());
+					pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+					sprintf(pg_AuxString, "/clip2_play_1 %d", pg_playing_secondClipNoRight);
+					pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+					//printf("Play second right clip %d at %d fps, is playing %d\n", pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(indClipRank), int(clipCaptFreq), int(pg_all_clip_status[clipSide].clip_play[indClipRank]));
+					(*((string*)pg_FullScenarioVarPointers[_playing_secondClipNameRight])) = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoRight].get_name();
+					playing_secondClipNameRight = pg_clip_tracks[pg_ind_scenario][pg_playing_secondClipNoRight].get_name();
+				}
 			}
-#endif
 		}
 
 		pg_all_clip_status[clipSide].reset_clip(indClipRank);

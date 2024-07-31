@@ -153,6 +153,7 @@
 #define var_noiseParticleScale_pulse
 #define var_part_acc
 #define var_part_acc_pulse
+#define var_part_curve_degree
 #define var_part_damp
 #define var_part_damp_pulse
 #define var_part_damp_targtRad
@@ -277,6 +278,9 @@
 #define var_script_1
 #define var_pg_metawear
 #define var_sensor_activation
+#define var_sensor_beat_duration
+#define var_sensor_texture_width
+#define var_sensor_geometry_width
 #define var_sensor_layout
 #define var_sensor_sample_setUp
 #define var_sensor_vol
@@ -298,6 +302,10 @@
 #define var_minimal_interframe_latency
 #define var_mute_second_screen
 #define var_nb_CATypes
+#define var_nb_CASubTypes
+#define var_nb_pixel_modes
+#define var_nb_camera_cumul_modes
+#define var_camera_rest_delay
 #define var_particle_geometry
 #define var_project_name
 #define var_reset_camera
@@ -580,6 +588,7 @@ enum InterpVarIDs{
   _noiseParticleScale_pulse,
   _part_acc,
   _part_acc_pulse,
+  _part_curve_degree,
   _part_damp,
   _part_damp_pulse,
   _part_damp_targtRad,
@@ -704,6 +713,9 @@ enum InterpVarIDs{
   _script_1,
   _pg_metawear,
   _sensor_activation,
+  _sensor_beat_duration,
+  _sensor_texture_width,
+  _sensor_geometry_width,
   _sensor_layout,
   _sensor_sample_setUp,
   _sensor_vol,
@@ -725,6 +737,10 @@ enum InterpVarIDs{
   _minimal_interframe_latency,
   _mute_second_screen,
   _nb_CATypes,
+  _nb_CASubTypes,
+  _nb_pixel_modes,
+  _nb_camera_cumul_modes,
+  _camera_rest_delay,
   _particle_geometry,
   _project_name,
   _reset_camera,
@@ -1007,6 +1023,7 @@ extern float noiseParticleScale  ;
 extern float noiseParticleScale_pulse;
 extern float part_acc            ;
 extern float part_acc_pulse      ;
+extern int   part_curve_degree   ;
 extern float part_damp           ;
 extern float part_damp_pulse     ;
 extern float part_damp_targtRad  ;
@@ -1131,6 +1148,9 @@ extern float repop_path_pulse    ;
 extern string script_1            ;
 extern bool  pg_metawear         ;
 extern int   sensor_activation   ;
+extern float sensor_beat_duration;
+extern int   sensor_texture_width;
+extern int   sensor_geometry_width;
 extern int   sensor_layout       ;
 extern float sensor_sample_setUp ;
 extern float sensor_vol          ;
@@ -1152,6 +1172,10 @@ extern float master              ;
 extern float minimal_interframe_latency;
 extern bool  mute_second_screen  ;
 extern int   nb_CATypes          ;
+extern int   nb_CASubTypes       ;
+extern int   nb_pixel_modes      ;
+extern int   nb_camera_cumul_modes;
+extern int   camera_rest_delay   ;
 extern int   particle_geometry   ;
 extern string project_name        ;
 extern bool  reset_camera        ;

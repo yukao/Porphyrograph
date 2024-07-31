@@ -605,9 +605,8 @@ void playing_clipNameRight_callBack(pg_Parameter_Input_Type param_input_type, st
 		}
 	}
 }
-#if PG_NB_PARALLEL_CLIPS >= 2
 void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq] && PG_NB_PARALLEL_CLIPS >= 2) {
 		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_ind_scenario]; ind_clip++) {
@@ -634,7 +633,7 @@ void playing_secondClipNameLeft_callBack(pg_Parameter_Input_Type param_input_typ
 }
 
 void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq] && PG_NB_PARALLEL_CLIPS >= 2) {
 		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
 			if (scenario_or_gui_command_value != "NULL" && scenario_or_gui_command_value != "") {
 				for (int ind_clip = 0; ind_clip < pg_nbClips[pg_ind_scenario]; ind_clip++) {
@@ -659,7 +658,6 @@ void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_ty
 		}
 	}
 }
-#endif
 
 #if defined(var_Caverne_Mesh_Profusion)
 void extern_movieNo_callBack(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {

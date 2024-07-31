@@ -42,6 +42,7 @@
     <ClInclude Include="..\Porphyrograph-src\include\pg-conf.h" />
     <ClInclude Include="..\Porphyrograph-src\include\pg-flash.h" />
     <ClInclude Include="..\Porphyrograph-src\include\pg-gui.h" />
+    <ClInclude Include="..\Porphyrograph-src\include\pg-header.h" />
     <ClInclude Include="..\Porphyrograph-src\include\pg-init.h" />
     <ClInclude Include="..\Porphyrograph-src\include\pg-light.h" />
     <ClInclude Include="..\Porphyrograph-src\include\pg-main.h" />
@@ -57,7 +58,6 @@
     <ClInclude Include="..\Porphyrograph-src\include\pg-udp.h" />
     <ClInclude Include="..\Porphyrograph-src\include\pg-update.h" />
     <ClInclude Include="..\Porphyrograph-src\pg-template.hpp" />
-    <ClInclude Include="..\Porphyrograph-src\pg_header.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6C8EC3A3-8B8F-4B95-92E3-F4275A221CCD}</ProjectGuid>

@@ -19,12 +19,12 @@ extern bool pg_sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
 // current sample choice
 extern int pg_sample_choice[PG_NB_SENSORS];
 // all possible sensor layouts
-extern int pg_sensor_sample_setUps[PG_NB_MAX_SAMPLE_SETUPS][PG_NB_SENSORS];
+extern int pg_sensor_sample_setUps[PG_NB_MAX_SENSOR_SAMPLE_SETUPS][PG_NB_SENSORS];
 // sample start playing time for muting after 1 cycle
-extern double pg_sample_play_start[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
+extern double pg_sample_play_start[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS];
 
 extern float pg_sensorLevel[PG_NB_SENSORS];
-extern float pg_sample_play_volume[PG_NB_MAX_SAMPLE_SETUPS * PG_NB_SENSORS];
+extern float pg_sample_play_volume[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS];
 
 // current sensor
 extern int pg_currentSensor;

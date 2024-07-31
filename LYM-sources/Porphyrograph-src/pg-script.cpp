@@ -259,40 +259,28 @@ enum pg_OSC_addresses_hashMap_IDs
 	_clip_nudge_touch_release,
 	_clip_cue_onOff,
 	_clip_cue_jump,
-#if PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_cue_jump,
-#endif
 	_clip_cue_call,
 	_clip_fx,
 	_clip_fx_std,
 	_clip_equalizer,
-#if PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_equalizer,
-#endif
 	_clip_sample,
 	_clip_sample_range,
-#if PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_sample,
-#endif
 	_clip_sample_shift,
 	_clip_new,
-#if PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_new,
-#endif
 	_clip_fader,
-#if PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_fader,
-#endif
 	_clip_autoplay_left,
 	_clip_autoplay_right,
 	_clip_play_left,
 	_clip_play_right,
-#if PG_NB_PARALLEL_CLIPS >= 2
 	_clip2_autoplay_left,
 	_clip2_autoplay_right,
 	_clip2_play_left,
 	_clip2_play_right,
-#endif
 	_resend_all,
 	_resend_all_light,
 	_configurationNo,
@@ -528,38 +516,28 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "clip_nudge_touch_release", _clip_nudge_touch_release },
 	{ "clip_cue_onOff", _clip_cue_onOff },
 	{ "clip_cue_jump", _clip_cue_jump },
-#if PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_cue_jump", _clip2_cue_jump },
-#endif
 	{ "clip_cue_call", _clip_cue_call },
 	{ "clip_fx", _clip_fx },
 	{ "clip_fx_std", _clip_fx_std },
 	{ "clip_equalizer", _clip_equalizer },
-#if PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_equalizer", _clip2_equalizer },
-#endif
 	{ "clip_sample", _clip_sample },
 	{ "clip_sample_range", _clip_sample_range },
-#if PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_sample", _clip2_sample },
-#endif
 	{ "clip_sample_shift", _clip_sample_shift },
 	{ "clip_new", _clip_new },
-#if PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_new", _clip2_new },
 	{ "clip_fader", _clip_fader },
 	{ "clip2_fader", _clip2_fader },
-#endif
 	{ "clip_autoplay_left", _clip_autoplay_left },
 	{ "clip_autoplay_right", _clip_autoplay_right },
 	{ "clip_play_left", _clip_play_left },
 	{ "clip_play_right", _clip_play_right },
-#if PG_NB_PARALLEL_CLIPS >= 2
 	{ "clip2_autoplay_left", _clip_autoplay_left },
 	{ "clip2_autoplay_right", _clip_autoplay_right },
 	{ "clip2_play_left", _clip_play_left },
 	{ "clip2_play_right", _clip_play_right },
-#endif
 	{ "resend_all", _resend_all },
 	{ "resend_all_light", _resend_all_light },
 	{ "configurationNo", _configurationNo },
@@ -1902,7 +1880,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _cameraCumul_plus: {
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
-			cameraCumul = (cameraCumul + 1) % PG_NB_CAMERA_CUMUL_MODES;
+			cameraCumul = (cameraCumul + 1) % nb_camera_cumul_modes;
 			pg_BrokenInterpolationVar[_cameraCumul] = true;
 		}
 		break;
@@ -1953,7 +1931,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		// +++++++++++++++++ PIXEL MODE +++++++++++++++++++ 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 	case _pixel_mode_plus: {
-		pixel_mode = (pixel_mode + 1) % PG_NB_PIXEL_MODES;
+		pixel_mode = (pixel_mode + 1) % nb_pixel_modes;
 		pg_BrokenInterpolationVar[_pixel_mode] = true;
 		break;
 	}
@@ -1976,13 +1954,13 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _CA1SubType_plus: {
-		CA1SubType = (CA1SubType + 1) % PG_NB_CA_SUBTYPES;
+		CA1SubType = (CA1SubType + 1) % nb_CASubTypes;
 		pg_BrokenInterpolationVar[_CA1SubType] = true;
 		*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
 	}
 	case _CA1SubType_minus: {
-		CA1SubType = (CA1SubType - 1 + PG_NB_CA_SUBTYPES) % PG_NB_CA_SUBTYPES;
+		CA1SubType = (CA1SubType - 1 + nb_CASubTypes) % nb_CASubTypes;
 		pg_BrokenInterpolationVar[_CA1SubType] = true;
 		*((int*)pg_FullScenarioVarPointers[_CA1SubType]) = CA1SubType;
 		break;
@@ -2018,8 +1996,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
 			if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
 				sensor_sample_setUp = (sensor_sample_setUp + 1);
-				if (sensor_sample_setUp >= PG_NB_MAX_SAMPLE_SETUPS) {
-					sensor_sample_setUp -= PG_NB_MAX_SAMPLE_SETUPS;
+				if (sensor_sample_setUp >= PG_NB_MAX_SENSOR_SAMPLE_SETUPS) {
+					sensor_sample_setUp -= PG_NB_MAX_SENSOR_SAMPLE_SETUPS;
 				}
 				pg_BrokenInterpolationVar[_sensor_sample_setUp] = true;
 				pg_sensor_sample_setUp_interpolation();
@@ -3089,21 +3067,21 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#if PG_NB_PARALLEL_CLIPS >= 2
 						   // NEW SELECTED CLIP IN CASE OF TWO DECKS ON EACH SIDE
 	case _clip2_sample: {
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
-			int clip_no = int(float_arguments[1]);
-			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
-				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
-				pg_play_clip_no(1, clipSide, clip_no);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				int clipSide = int(float_arguments[0]);
+				int clip_no = int(float_arguments[1]);
+				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
+					clip_no = clip_no % pg_nbClips[pg_ind_scenario];
+					pg_play_clip_no(1, clipSide, clip_no);
 
+				}
 			}
 		}
 		break;
 	}
-#endif
 					  // LEFT OR RIGHT CLIP FADE IN/OUT
 	case _clip_fader: {
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
@@ -3114,17 +3092,17 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_fader: {
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
-			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-				// pg_all_clip_status[clipSide].clip_level[1] = float_arguments[1];
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				int clipSide = int(float_arguments[0]);
+				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
+					// pg_all_clip_status[clipSide].clip_level[1] = float_arguments[1];
+				}
 			}
 		}
 		break;
 	}
-#endif
 					 // CLIP PLAY STOP
 	case _clip_autoplay_left: {
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
@@ -3156,38 +3134,44 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_autoplay_left: {
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			pg_all_clip_status[pg_enum_clipLeft].clip_autoplay[1] = (float_arguments[0] == 1.f);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				pg_all_clip_status[pg_enum_clipLeft].clip_autoplay[1] = (float_arguments[0] == 1.f);
+			}
 		}
 		break;
 	}
 	case _clip2_autoplay_right: {
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			pg_all_clip_status[pg_enum_clipRight].clip_autoplay[1] = (float_arguments[0] == 1.f);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				pg_all_clip_status[pg_enum_clipRight].clip_autoplay[1] = (float_arguments[0] == 1.f);
+			}
 		}
 		break;
 	}
 	case _clip2_play_left: {
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			pg_all_clip_status[pg_enum_clipLeft].clip_play[1] = (float_arguments[0] == 1.f);
-			if (pg_all_clip_status[pg_enum_clipLeft].clip_play[1]) {
-				pg_all_clip_status[pg_enum_clipLeft].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				pg_all_clip_status[pg_enum_clipLeft].clip_play[1] = (float_arguments[0] == 1.f);
+				if (pg_all_clip_status[pg_enum_clipLeft].clip_play[1]) {
+					pg_all_clip_status[pg_enum_clipLeft].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
+				}
 			}
 		}
 		break;
 	}
 	case _clip2_play_right: {
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			pg_all_clip_status[pg_enum_clipRight].clip_play[1] = (float_arguments[0] == 1.f);
-			if (pg_all_clip_status[pg_enum_clipRight].clip_play[1]) {
-				pg_all_clip_status[pg_enum_clipRight].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				pg_all_clip_status[pg_enum_clipRight].clip_play[1] = (float_arguments[0] == 1.f);
+				if (pg_all_clip_status[pg_enum_clipRight].clip_play[1]) {
+					pg_all_clip_status[pg_enum_clipRight].set_lastPlayedFrameTime(1, pg_CurrentClockTime);
+				}
 			}
 		}
 		break;
 	}
-#endif
 
 						  // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 						  // +++++++++++++++++ SET-UP ++++++++++++++++++++++++++++++++ 

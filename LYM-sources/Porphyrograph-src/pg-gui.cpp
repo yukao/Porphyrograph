@@ -109,17 +109,16 @@ void pg_displaySceneVariables(void) {
 			sprintf(pg_AuxString, "/clip_play_right %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_play(0)));
 			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
 
-#if PG_NB_PARALLEL_CLIPS >= 2
-			// clip intialization for Second Clip
-			sprintf(pg_AuxString, "/clip2_autoplay_left %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_autoplay(1)));
-			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(pg_AuxString, "/clip2_play_left %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_play(1)));
-			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(pg_AuxString, "/clip2_autoplay_right %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_autoplay(1)));
-			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-			sprintf(pg_AuxString, "/clip2_play_right %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_play(1)));
-			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-#endif
+			if (PG_NB_PARALLEL_CLIPS >= 2) {			// clip intialization for Second Clip
+				sprintf(pg_AuxString, "/clip2_autoplay_left %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_autoplay(1)));
+				pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(pg_AuxString, "/clip2_play_left %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_play(1)));
+				pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(pg_AuxString, "/clip2_autoplay_right %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_autoplay(1)));
+				pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+				sprintf(pg_AuxString, "/clip2_play_right %d", int(pg_all_clip_status[pg_enum_clipLeft].get_clip_play(1)));
+				pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+			}
 		}
 		for (int pathNo = 1; pathNo < PG_NB_PATHS; pathNo++) {
 			sprintf(pg_AuxString, "/path_replay_trackNo_%d %d", pathNo, path_replay_trackNo[pathNo]);

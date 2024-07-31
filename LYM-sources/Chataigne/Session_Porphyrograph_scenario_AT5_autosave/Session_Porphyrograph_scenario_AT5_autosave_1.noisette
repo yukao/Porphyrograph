@@ -48290,8 +48290,7 @@
             0
           ],
           "viewZoom": 1.0
-        },
-        "editing": true
+        }
       },
       {
         "parameters": [
@@ -56783,7 +56782,8 @@
                       "value": "",
                       "controlAddress": "/inputValue"
                     }
-                  ]
+                  ],
+                  "editorIsCollapsed": true
                 },
                 "mapping": {
                   "niceName": "Mapping",
@@ -81850,6 +81850,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -81881,15 +81885,15 @@
                           "parameters": [
                             {
                               "value": [
-                                7.134147167205811,
-                                0.0
+                                36.73913192749023,
+                                0.112500011920929
                               ],
                               "controlAddress": "/anchor1"
                             },
                             {
                               "value": [
-                                -7.134147167205811,
-                                0.0
+                                -113.2608642578125,
+                                -0.387499988079071
                               ],
                               "controlAddress": "/anchor2"
                             }
@@ -82012,6 +82016,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -82043,15 +82051,15 @@
                           "parameters": [
                             {
                               "value": [
-                                7.134147167205811,
-                                0.0
+                                33.04347991943359,
+                                0.75
                               ],
                               "controlAddress": "/anchor1"
                             },
                             {
                               "value": [
-                                -7.134147167205811,
-                                0.0
+                                -116.9565200805664,
+                                0.25
                               ],
                               "controlAddress": "/anchor2"
                             }
@@ -82172,6 +82180,10 @@
                     {
                       "value": 300.0,
                       "controlAddress": "/length"
+                    },
+                    {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
                     },
                     {
                       "value": [
@@ -82336,6 +82348,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -82496,6 +82512,10 @@
                     {
                       "value": 300.0,
                       "controlAddress": "/length"
+                    },
+                    {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
                     },
                     {
                       "value": [
@@ -82660,6 +82680,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -82691,15 +82715,15 @@
                           "parameters": [
                             {
                               "value": [
-                                7.134147167205811,
-                                0.0
+                                103.4782638549805,
+                                -0.1875
                               ],
                               "controlAddress": "/anchor1"
                             },
                             {
                               "value": [
-                                -7.134147167205811,
-                                0.0
+                                -46.52173614501953,
+                                -0.6875
                               ],
                               "controlAddress": "/anchor2"
                             }
@@ -82822,6 +82846,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -82853,15 +82881,15 @@
                           "parameters": [
                             {
                               "value": [
-                                7.134147167205811,
-                                0.0
+                                91.08695983886719,
+                                0.7916666269302368
                               ],
                               "controlAddress": "/anchor1"
                             },
                             {
                               "value": [
-                                -7.134147167205811,
-                                0.0
+                                -58.91304016113281,
+                                0.2916666269302368
                               ],
                               "controlAddress": "/anchor2"
                             }
@@ -82982,6 +83010,10 @@
                     {
                       "value": 300.0,
                       "controlAddress": "/length"
+                    },
+                    {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
                     },
                     {
                       "value": [
@@ -83146,6 +83178,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -83308,6 +83344,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -83468,6 +83508,10 @@
                     {
                       "value": 300.0,
                       "controlAddress": "/length"
+                    },
+                    {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
                     },
                     {
                       "value": [
@@ -83670,6 +83714,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -83830,6 +83878,10 @@
                     {
                       "value": 300.0,
                       "controlAddress": "/length"
+                    },
+                    {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
                     },
                     {
                       "value": [
@@ -83994,6 +84046,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -84154,6 +84210,10 @@
                     {
                       "value": 300.0,
                       "controlAddress": "/length"
+                    },
+                    {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
                     },
                     {
                       "value": [
@@ -84318,6 +84378,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -84480,6 +84544,10 @@
                       "controlAddress": "/length"
                     },
                     {
+                      "value": 110.120002746582,
+                      "controlAddress": "/position"
+                    },
+                    {
                       "value": [
                         0.0,
                         1.0
@@ -84635,7 +84703,8 @@
             0
           ],
           "viewZoom": 1.0
-        }
+        },
+        "editing": true
       },
       {
         "parameters": [

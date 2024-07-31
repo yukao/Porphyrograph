@@ -198,68 +198,21 @@ using std::ifstream;
 // light DMX command in porphyrograph
 #include <controller_library.h>
 
-
-// maximal number of arguments for an OSC command
-#define PG_MAX_OSC_ARGUMENTS 96
-
-// REST DELAY FOR CAMERA AFTER CHANGE OF PARAMETERS
-#define PG_CAMERA_REST_DELAY 240
-
-// NB OF POSSIBLE CURSORS THROUGH HAND INTERFACE
-#define PG_NB_CURSORS_MAX 5
-
-// NB NOISE TYPES
-#define PG_NB_NOISE_TYPES 4
-// regular Perlin noise
-// sun ray Perlin noise
-// camera noise
-// video noise
-
 #if defined(pg_Project_Criton)
 #define PG_WITH_JUCE
 #endif
 
-#define PG_NB_CAMERA_CUMUL_MODES 4
-// no cumul
-// add
-// stamp
-// xor
-
-// NB PIXELS MODES
-#define PG_NB_PIXEL_MODES 3
-// no pixels
-// pixels
-// firework
-
-
-// NB CA SUB-TYPES
-#define PG_NB_CA_SUBTYPES 20
-
-#define PG_PARTICLE_CURVE_DEGREE 3
-
-// CLIPS
-// different clips on right and left screens
-#define PG_NB_PARALLEL_CLIPS 2
 
 // SENSORS
 #if defined(pg_Project_CAaudio)
-#define BEAT_DURATION (0.1f)
 #define PG_PUREDATA_SOUND
 #endif
 
-#define PG_NB_SENSORS 16
-#define PG_NB_MAX_SENSOR_ACTIVATIONS 6
-#define BEAT_DURATION (1.0f)
 #define PG_RENOISE
 
 #if defined(pg_Project_Tempete)
 #define PG_SECOND_MESH_CAMERA
 #endif
-
-#define PG_SENSOR_TEXTURE_WIDTH 100
-#define PG_SENSOR_GEOMETRY_WIDTH 10
-#define PG_NB_MAX_SENSOR_LAYOUTS 4
-#define PG_NB_MAX_SAMPLE_SETUPS 3
 
 #define     NULL_ID   0
 
@@ -279,7 +232,7 @@ using std::ifstream;
 
 enum pg_Parameter_Input_Type { pg_enum_PG_KEYSTROKE = 0, pg_enum_PG_GUI_COMMAND, pg_enum_PG_SCENARIO, pg_enum_PG_INPUT_VOID };
 class ScenarioValue;
-#include "pg_header.h"
+#include "pg-header.h"
 #if defined(CORE)
 #include "pg_script_header_Core.h"
 #endif

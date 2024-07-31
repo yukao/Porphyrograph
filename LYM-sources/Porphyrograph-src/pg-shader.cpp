@@ -118,7 +118,7 @@ GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY
 #endif
 GLint uniform_Update_fs_4fv_photo01_wh[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_4fv_photo01Wghts_randomValues[PG_MAX_SCENARIOS] = {-1};
-#if defined(var_clipCaptFreq) && PG_NB_PARALLEL_CLIPS >= 2
+#if defined(var_clipCaptFreq)
 GLint uniform_Update_fs_2fv_clip01Wghts[PG_MAX_SCENARIOS] = {-1};
 #endif
 GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H[PG_MAX_SCENARIOS] = {-1};
@@ -600,11 +600,11 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01_wh, "uniform_Update_fs_4fv_photo01_wh", pg_enum_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_photo01Wghts_randomValues, "uniform_Update_fs_4fv_photo01Wghts_randomValues", pg_enum_shader_Update);
 
-#if PG_NB_PARALLEL_CLIPS >= 2
-		if (pg_FullScenarioActiveVars[indConfig][_clipCaptFreq]) {
-			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_clip01Wghts, "uniform_Update_fs_2fv_clip01Wghts", pg_enum_shader_Update);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {
+			if (pg_FullScenarioActiveVars[indConfig][_clipCaptFreq]) {
+				pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_2fv_clip01Wghts, "uniform_Update_fs_2fv_clip01Wghts", pg_enum_shader_Update);
+			}
 		}
-#endif
 		if (pg_FullScenarioActiveVars[indConfig][_cameraCaptFreq]) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H, "uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H", pg_enum_shader_Update);
 		}
