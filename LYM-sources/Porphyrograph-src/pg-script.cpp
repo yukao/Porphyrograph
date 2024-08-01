@@ -184,12 +184,10 @@ enum pg_OSC_addresses_hashMap_IDs
 	_partExit_mode_0,
 	_partExit_mode_1,
 	_partExit_mode_2,
-#if defined(PG_WITH_BLUR)
 	_is_blur_1,
 	_is_blur_1_plus,
 	_is_blur_1_plus_plus,
 	_is_blur_2,
-#endif
 	_cameraCumul_plus,
 	_pen_brush_plus,
 	_pen_brush_minus,
@@ -227,7 +225,6 @@ enum pg_OSC_addresses_hashMap_IDs
 	_pen_colorPreset_minus,
 	_pen_colorPreset_plus,
 	_pen_colorPreset,
-#if defined(pg_Project_CAaudio)
 	_CAseed_dot_center,
 	_CAseed_dot,
 	_CAseed_h_line,
@@ -239,7 +236,6 @@ enum pg_OSC_addresses_hashMap_IDs
 	_CAseed_loc,
 	_CAseed_loc_plus,
 	_CAseed_trigger,
-#endif
 	_movie_loop_onOff,
 	_movie_plus,
 	_movie_minus,
@@ -294,11 +290,9 @@ enum pg_OSC_addresses_hashMap_IDs
 	_interpolation_duration,
 	_master_decay,
 	_master_incay,
-#if defined(pg_Project_Criton)
 	_JUCE_loop_track,
 	_JUCE_exit,
 	_fftLevel8,
-#endif
 	_ClipArt_1_onOff,
 	_ClipArt_2_onOff,
 	_ClipArt_3_onOff,
@@ -342,13 +336,11 @@ enum pg_OSC_addresses_hashMap_IDs
 	_ClipArt_black_color,
 	_ClipArt_translations,
 	_Mesh_onOff,
-#if defined(var_Caverne_Mesh_Profusion)
 	_Caverne_Mesh_Profusion_on,
 	_Caverne_Mesh_Profusion_off,
 	_Caverne_Mesh_7Solids_on,
 	_Caverne_Mesh_7Solids_off,
 	_BGcolor_onOff,
-#endif
 	_Mesh_mobile_onOff,
 	_Mesh_light_x,
 	_Mesh_light_y,
@@ -441,12 +433,10 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "partExit_mode_0", _partExit_mode_0 },
 	{ "partExit_mode_1", _partExit_mode_1 },
 	{ "partExit_mode_2", _partExit_mode_2 },
-#if defined(PG_WITH_BLUR)
 	{ "is_blur_1", _is_blur_1 },
 	{ "is_blur_1_plus", _is_blur_1_plus },
 	{ "is_blur_1_plus_plus", _is_blur_1_plus_plus },
 	{ "is_blur_2", _is_blur_2 },
-#endif
 	{ "cameraCumul_plus", _cameraCumul_plus },
 	{ "pen_brush_plus", _pen_brush_plus },
 	{ "pen_brush_minus", _pen_brush_minus },
@@ -484,7 +474,6 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "pen_colorPreset_minus", _pen_colorPreset_minus },
 	{ "pen_colorPreset_plus", _pen_colorPreset_plus },
 	{ "pen_colorPreset", _pen_colorPreset },
-#if defined(pg_Project_CAaudio)
 	{ "CAseed_dot_center", _CAseed_dot_center },
 	{ "CAseed_dot", _CAseed_dot },
 	{ "CAseed_h_line", _CAseed_h_line },
@@ -496,7 +485,6 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "CAseed_loc", _CAseed_loc },
 	{ "CAseed_loc_plus", _CAseed_loc_plus },
 	{ "CAseed_trigger", _CAseed_trigger },
-#endif
 	{ "movie_loop_onOff", _movie_loop_onOff },
 	{ "movie_plus", _movie_plus },
 	{ "movie_minus", _movie_minus },
@@ -551,11 +539,9 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "interpolation_duration", _interpolation_duration },
 	{ "master_decay", _master_decay },
 	{ "master_incay", _master_incay },
-#if defined(pg_Project_Criton)
 	{ "JUCE_loop_track", _JUCE_loop_track },
 	{ "JUCE_exit", _JUCE_exit },
 	{ "fftLevel8", _fftLevel8 },
-#endif
 	{ "ClipArt_1_onOff", _ClipArt_1_onOff },
 	{ "ClipArt_2_onOff", _ClipArt_2_onOff },
 	{ "ClipArt_3_onOff", _ClipArt_3_onOff },
@@ -599,13 +585,11 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "ClipArt_black_color", _ClipArt_black_color },
 	{ "ClipArt_translations", _ClipArt_translations },
 	{ "Mesh_onOff", _Mesh_onOff },
-#if defined(var_Caverne_Mesh_Profusion)
 	{ "Caverne_Mesh_Profusion_on", _Caverne_Mesh_Profusion_on },
 	{ "Caverne_Mesh_Profusion_off", _Caverne_Mesh_Profusion_off },
 	{ "Caverne_Mesh_7Solids_on", _Caverne_Mesh_7Solids_on },
 	{ "Caverne_Mesh_7Solids_off", _Caverne_Mesh_7Solids_off },
 	{ "BGcolor_onOff", _BGcolor_onOff },
-#endif
 	{ "Mesh_mobile_onOff", _Mesh_mobile_onOff },
 	{ "Mesh_light_x", _Mesh_light_x },
 	{ "Mesh_light_y", _Mesh_light_y },
@@ -3219,9 +3203,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 	case _setup_plus: {
-		if (float_arguments[0] > 0) {
-			pg_scene_plus(1);
-		}
+		pg_scene_plus(1);
 		break;
 	}
 	case _interpolation_duration: {

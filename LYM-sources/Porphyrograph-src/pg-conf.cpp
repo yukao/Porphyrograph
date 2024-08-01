@@ -28,7 +28,7 @@
  */
 // \{
 
-const char *pg_UDPMessageFormatString[pg_enum_Empty_UDPMessageFormat + 1] = { "Plain" , "pg_enum_UDP_OSC" , "pg_enum_Empty_UDPMessageFormat" };
+const char *pg_UDPMessageFormatString[pg_enum_Empty_UDPMessageFormat + 1] = { "Plain" , "OSC" , "Empty_UDPMessageFormat" };
 
 /////////////////////////////////////////////////////
 // global variable for screenshot file name
@@ -1418,6 +1418,7 @@ void pg_parseScenarioUDP(std::ifstream& scenarioFin, int indConfiguration) {
 			sstream >> server.id;
 			sstream >> server.Local_server_port;
 			sstream >> ID;
+			server.receive_format = pg_enum_Empty_UDPMessageFormat;
 			for (int ind = 0; ind < pg_enum_Empty_UDPMessageFormat; ind++) {
 				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
 					server.receive_format = (pg_UDPMessageFormat)ind;
@@ -1483,6 +1484,7 @@ void pg_parseScenarioUDP(std::ifstream& scenarioFin, int indConfiguration) {
 			sstream >> client.Remote_server_IP;
 			sstream >> client.Remote_server_port;
 			sstream >> ID;
+			client.send_format = pg_enum_Empty_UDPMessageFormat;
 			for (int ind = 0; ind < pg_enum_Empty_UDPMessageFormat; ind++) {
 				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
 					client.send_format = (pg_UDPMessageFormat)ind;
@@ -1498,6 +1500,7 @@ void pg_parseScenarioUDP(std::ifstream& scenarioFin, int indConfiguration) {
 			// std::cout << "OSC_trace: " << client.IP_message_trace << "\n";
 			//std::cout << "client.id: " << client.id << "\n";
 			//std::cout << "client.Remote_server_IP: " << client.Remote_server_IP << "\n";
+			//std::cout << "client.Remote_server_port: " << client.Remote_server_port << "\n";
 			//std::cout << "client.Remote_server_port: " << client.Remote_server_port << "\n";
 			pg_IP_Clients.push_back(client);
 		}

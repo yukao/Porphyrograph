@@ -647,7 +647,7 @@ void pg_IPClient::sendIPmessages(void) {
 	int nb_sent_messages = 0;
 	// messages are sent by bursts to avoir overflowing the client with more messages than it can process at a time
 	while (current_depth_output_stack > 0 && ++nb_sent_messages < 50) {
-		// printf( "sendUDPmessage %d\n" , current_depth_output_stack );
+		 //printf( "sendUDPmessage %d\n" , current_depth_output_stack );
 
 		// if the elapsed time since the last message is lower than the maximal delay
 		double current_time = pg_RealTime();
@@ -691,8 +691,8 @@ void pg_IPClient::sendIPmessages(void) {
 					sprintf(pg_errorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", pg_output_message_string, rc, localCommandLineLength); pg_ReportError(pg_errorStr); // close(SocketToRemoteServer); throw 273;
 				}
 				if (rc > 0 && IP_message_trace) {
-					printf("Network client: send string [%s] (%d bytes)\n",
-						pg_output_message_string, (int)strlen(pg_output_message_string));
+					printf("Network client: send string [%s] (%d bytes) to %s (%s:%d)\n",
+						pg_output_message_string, (int)strlen(pg_output_message_string), this->id.c_str(), this->Remote_server_IP.c_str(), this->Remote_server_port);
 				}
 			}
 			// OSC format
@@ -706,7 +706,7 @@ void pg_IPClient::sendIPmessages(void) {
 					sprintf(pg_errorStr, "Error: udp client: data incompletely sent [%s] (%d/%d)!", pg_output_message_string, rc, (int)packetSize); pg_ReportError(pg_errorStr); // close(SocketToRemoteServer); throw 273;
 				}
 				if (rc > 0 && IP_message_trace) {
-					printf("Network client: send string [%s] (%d bytes)\n",pg_output_message_string, (int)packetSize);
+					printf("Network client: send OSC [%s] (%d bytes)\n",pg_output_message_string, (int)packetSize);
 				}
 			}
 
@@ -1143,7 +1143,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 				OSC_address = messString.substr(0, tagLength);
 				messString = messString.substr(tagLength + 1, string::npos);;
 
-				// printf( "OSC parameters %s\n" );
+				//printf("OSC parameters %d %d\n", indOSCParam, PG_MAX_OSC_ARGUMENTS);
 				while (indOSCParam < PG_MAX_OSC_ARGUMENTS
 					&& messString != "") {
 					// computes the length of the message tag
@@ -1182,7 +1182,7 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 				}
 				//printf("arg %d %.5f, ", ind, OSC_float_arguments[ind]);
 			}
-			//printf("\n");
+			//printf("%s %s %.2f %d\n", OSC_address.c_str(), OSC_arguments[0].c_str(), OSC_float_arguments[0], nb_arguments);
 			pg_aliasScript(OSC_address, OSC_arguments[0], OSC_float_arguments, nb_arguments);
 		}
 		else {
@@ -1192,15 +1192,15 @@ void pg_IPServer::ProcessFilteredInputMessages(void) {
 }
 
 void pg_send_message_udp(char* pattern, char* message, char* targetHostid) {
-	pg_IPClient* targetHost = NULL;
+	bool found = false;
 	for (pg_IPClient& client : pg_IP_Clients) {
 		if (strcmp(targetHostid, client.id.c_str()) == 0) {
-			// char msg[512];
-			// sprintf(msg, "send_message_udp %s %s %d size (curr %d tot %d)\n", message, pattern, targetHost, targetHost->current_depth_output_stack, targetHost->max_depth_output_stack);
+			//printf("send_message_udp %s %s %s\n", message, pattern, targetHostid);
 			client.storeIP_output_message(message, pattern);
+			found = true;
 		}
 	}
-	if (!targetHost) {
+	if (!found) {
 		// printf( "UDP client unknown %s\n" , targetHostid );
 		return;
 	}
