@@ -6,8 +6,8 @@ int   CA2SubType           = 0;
 int   CA2Type              = 0;
 bool  CAcolorSpread        = 1;
 bool  CATable              = 0;
-float CAParams            [(PG_NB_CA_PARAMS+1)];
-float CAParams_pulse      [(PG_NB_CA_PARAMS+1)];
+float CAParams            [(PG_NB_CA_PARAMS+1)] = {0.f, 0.393673f, 0.102449f, 0.53551f, 0.165306f, 0.196939f, 0.322857f, 0.307143f, 0.f, };
+float CAParams_pulse      [(PG_NB_CA_PARAMS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
 int   CAstep               = 1;
 int   flashCABG_freq       = 0;
 int   flashCameraTrkBeat   = 0;
@@ -26,16 +26,16 @@ float flashPhotoTrkBright  = float(1);
 float flashPhotoTrkLength  = float(0);
 int   flashPixel_duration  = 1;
 int   flashPixel_freq      = 0;
-int   flashTrkBG_freq     [PG_NB_TRACKS];
-int   flashTrkCA_freq     [PG_NB_TRACKS];
-int   flashTrkPart_freq   [PG_NB_TRACKS];
+int   flashTrkBG_freq     [PG_NB_TRACKS] = {0, 0, 0, 0, };
+int   flashTrkCA_freq     [PG_NB_TRACKS] = {0, 0, 0, 0, };
+int   flashTrkPart_freq   [PG_NB_TRACKS] = {0, 0, 0, 0, };
 float master_crop_width    = float(0);
 float master_crop_x        = float(0);
 float master_crop_y        = float(1920);
 float master_mask          = float(0);
 float master_mask_offsetX  = float(0);
 float master_mask_offsetY  = float(0);
-float master_mask_opacity [(PG_NB_MASTER_MASKS+1)];
+float master_mask_opacity [(PG_NB_MASTER_MASKS+1)] = {0.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, };
 float master_mask_scale    = float(1);
 float master_mask_scale_ratio = float(1);
 float master_offsetX       = float(0);
@@ -83,8 +83,8 @@ string playing_secondClipNameLeft = "NULL";
 string playing_secondClipNameRight = "NULL";
 int   activeClipArts       = 0;
 float moving_messages      = float(0);
-float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
-float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
+float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)] = {0.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, };
+float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
 float ClipArt_width        = float(0.1);
 float ClipArt_width_pulse  = float(0);
 float ClipArt_stroke_color_preset = float(-1);
@@ -176,14 +176,14 @@ int   partStroke_mode      = 0;
 float pulsed_part_Hshift   = float(0);
 float pulsed_part_Vshift   = float(0);
 bool  tracksSync           = 0;
-bool  part_path_follow    [PG_NB_PATHS];
-bool  part_path_repop     [PG_NB_PATHS];
-bool  part_path_repulse   [PG_NB_PATHS];
+bool  part_path_follow    [PG_NB_PATHS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+bool  part_path_repop     [PG_NB_PATHS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+bool  part_path_repulse   [PG_NB_PATHS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 int   path_group           = 1;
-bool  path_record         [PG_NB_PATHS];
+bool  path_record         [PG_NB_PATHS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 bool  path_replay_loop     = 1;
 float path_replay_speed    = float(1);
-int   path_replay_trackNo [PG_NB_PATHS];
+int   path_replay_trackNo [PG_NB_PATHS] = {0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 float path_scaleX          = float(1);
 float path_scaleY          = float(1);
 float path_translX         = float(0);
@@ -324,8 +324,8 @@ float echoNeg              = float(0.9783);
 float echoNeg_pulse        = float(0);
 float partDecay            = float(0);
 float partDecay_pulse      = float(0);
-float trkDecay            [PG_NB_TRACKS];
-float trkDecay_pulse      [PG_NB_TRACKS];
+float trkDecay            [PG_NB_TRACKS] = {0.00273f, 0.001f, 0.f, 0.f, };
+float trkDecay_pulse      [PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
 float CAMasterWeight       = float(0);
 float CAMasterWeight_pulse = float(0);
 float CAMixingWeight       = float(0);
@@ -339,10 +339,10 @@ float PartMasterWeight_pulse = float(0);
 float PartMixingWeight     = float(0);
 float PartMixingWeight_pulse = float(0);
 float SecondMasterMixingWeight = float(0);
-float trackMasterWeight   [PG_NB_TRACKS];
-float trackMasterWeight_pulse[PG_NB_TRACKS];
-float trackMixingWeight   [PG_NB_TRACKS];
-float trackMixingWeight_pulse[PG_NB_TRACKS];
+float trackMasterWeight   [PG_NB_TRACKS] = {1.f, 1.f, 1.f, 1.f, };
+float trackMasterWeight_pulse[PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
+float trackMixingWeight   [PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
+float trackMixingWeight_pulse[PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
 float blurRadius_1         = float(10);
 float blurRadius_2         = float(3);
 int   currentDrawingTrack  = 1;
@@ -350,10 +350,10 @@ int   currentMaskTrack     = -1;
 int   currentPhotoTrack    = 2;
 int   currentVideoTrack    = 2;
 bool  slow_track_translation = 0;
-float track_x_transl      [PG_NB_TRACKS];
-float track_x_transl_pulse[PG_NB_TRACKS];
-float track_y_transl      [PG_NB_TRACKS];
-float track_y_transl_pulse[PG_NB_TRACKS];
+float track_x_transl      [PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
+float track_x_transl_pulse[PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
+float track_y_transl      [PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
+float track_y_transl_pulse[PG_NB_TRACKS] = {0.f, 0.f, 0.f, 0.f, };
 int   activeMeshes         = 0;
 int   mobileMeshes         = 0;
 bool  mesh_homography      = 0;
@@ -425,14 +425,15 @@ bool  MIDIwithCameraFlash  = 0;
 bool  MIDIwithPhotoFlash   = 0;
 bool  MIDIwithStroke       = 0;
 bool  MIDIwithDiaporama    = 0;
-float light_color         [(PG_NB_LIGHTS+1)];
-float light_color_pulse   [(PG_NB_LIGHTS+1)];
-float light_grey          [(PG_NB_LIGHTS+1)];
-float light_grey_pulse    [(PG_NB_LIGHTS+1)];
-float light_dimmer        [(PG_NB_LIGHTS+1)];
-float light_dimmer_pulse  [(PG_NB_LIGHTS+1)];
-float light_strobe        [(PG_NB_LIGHTS+1)];
-float light_strobe_pulse  [(PG_NB_LIGHTS+1)];
+float light_color         [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_color_pulse   [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_grey          [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_grey_pulse    [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_dimmer        [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_dimmer_pulse  [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_strobe        [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+float light_strobe_pulse  [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
+int   currentLightScene    = -1;
 VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = { 
 	_pg_float,
 	_pg_int,
@@ -868,6 +869,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_int,
 };
 int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = { 
 	{-1, -1},
@@ -1304,6 +1306,7 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{1, (PG_NB_LIGHTS+1)},
 	{1, (PG_NB_LIGHTS+1)},
 	{1, (PG_NB_LIGHTS+1)},
+	{-1, -1},
 };
 void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = { 
 	(void *)&CA1_CA2_weight,
@@ -1740,6 +1743,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&light_dimmer_pulse,
 	(void *)&light_strobe,
 	(void *)&light_strobe_pulse,
+	(void *)&currentLightScene,
 };
 void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void flashCameraTrkLength_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1988,6 +1992,10 @@ void MIDIwithPhotoFlash_callBack_generic(pg_Parameter_Input_Type param_input_typ
 void MIDIwithStroke_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
 void MIDIwithStroke_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	MIDIwithStroke_callBack(param_input_type, double_to_bool(scenario_or_gui_command_value.val_num));
+}
+void currentLightScene_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
+void currentLightScene_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	currentLightScene_callBack(param_input_type, int(scenario_or_gui_command_value.val_num));
 }
 void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue) = { 
 	NULL,
@@ -2424,6 +2432,7 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	&currentLightScene_callBack_generic,
 };
 void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int) = { 
 	NULL,
@@ -2611,6 +2620,7 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	&path_replay_trackNo_callBack_generic,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -3296,6 +3306,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "light_dimmer_pulse",
   "light_strobe",
   "light_strobe_pulse",
+  "currentLightScene",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = { 
   _pg_pulsed_none,
@@ -3731,6 +3742,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
 };
 std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = { 
@@ -4168,217 +4180,5 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "light_dimmer_pulse",
   "light_strobe",
   "light_strobe_pulse",
+  "currentLightScene",
 };
-void pg_FullScenarioArrayVarInit() {
-	CAParams[1] = float(0.393673);
-	CAParams[2] = float(0.102449);
-	CAParams[3] = float(0.53551);
-	CAParams[4] = float(0.165306);
-	CAParams[5] = float(0.196939);
-	CAParams[6] = float(0.322857);
-	CAParams[7] = float(0.307143);
-	CAParams[8] = float(0);
-	CAParams_pulse[1] = float(0);
-	CAParams_pulse[2] = float(0);
-	CAParams_pulse[3] = float(0);
-	CAParams_pulse[4] = float(0);
-	CAParams_pulse[5] = float(0);
-	CAParams_pulse[6] = float(0);
-	CAParams_pulse[7] = float(0);
-	CAParams_pulse[8] = float(0);
-	flashTrkBG_freq[1] = 0;
-	flashTrkBG_freq[2] = 0;
-	flashTrkBG_freq[3] = 0;
-	flashTrkCA_freq[0] = 0;
-	flashTrkCA_freq[1] = 0;
-	flashTrkCA_freq[2] = 0;
-	flashTrkCA_freq[3] = 0;
-	flashTrkPart_freq[0] = 0;
-	flashTrkPart_freq[1] = 0;
-	flashTrkPart_freq[2] = 0;
-	flashTrkPart_freq[3] = 0;
-	master_mask_opacity[1] = float(1);
-	master_mask_opacity[2] = float(1);
-	master_mask_opacity[3] = float(1);
-	master_mask_opacity[4] = float(1);
-	master_mask_opacity[5] = float(1);
-	master_mask_opacity[6] = float(1);
-	ClipArt_layer_color_preset[1] = float(-1);
-	ClipArt_layer_color_preset[2] = float(-1);
-	ClipArt_layer_color_preset[3] = float(-1);
-	ClipArt_layer_color_preset[4] = float(-1);
-	ClipArt_layer_color_preset[5] = float(-1);
-	ClipArt_layer_color_preset[6] = float(-1);
-	ClipArt_layer_color_preset[7] = float(-1);
-	ClipArt_layer_color_preset[8] = float(-1);
-	ClipArt_layer_color_preset_pulse[1] = float(0);
-	ClipArt_layer_color_preset_pulse[2] = float(0);
-	ClipArt_layer_color_preset_pulse[3] = float(0);
-	ClipArt_layer_color_preset_pulse[4] = float(0);
-	ClipArt_layer_color_preset_pulse[5] = float(0);
-	ClipArt_layer_color_preset_pulse[6] = float(0);
-	ClipArt_layer_color_preset_pulse[7] = float(0);
-	ClipArt_layer_color_preset_pulse[8] = float(0);
-	part_path_follow[0] = 0;
-	part_path_follow[1] = 0;
-	part_path_follow[2] = 0;
-	part_path_follow[3] = 0;
-	part_path_follow[4] = 0;
-	part_path_follow[5] = 0;
-	part_path_follow[6] = 0;
-	part_path_follow[7] = 0;
-	part_path_follow[8] = 0;
-	part_path_follow[9] = 0;
-	part_path_follow[10] = 0;
-	part_path_follow[11] = 0;
-	part_path_repop[0] = 0;
-	part_path_repop[1] = 0;
-	part_path_repop[2] = 0;
-	part_path_repop[3] = 0;
-	part_path_repop[4] = 0;
-	part_path_repop[5] = 0;
-	part_path_repop[6] = 0;
-	part_path_repop[7] = 0;
-	part_path_repop[8] = 0;
-	part_path_repop[9] = 0;
-	part_path_repop[10] = 0;
-	part_path_repop[11] = 0;
-	part_path_repulse[0] = 0;
-	part_path_repulse[1] = 0;
-	part_path_repulse[2] = 0;
-	part_path_repulse[3] = 0;
-	part_path_repulse[4] = 0;
-	part_path_repulse[5] = 0;
-	part_path_repulse[6] = 0;
-	part_path_repulse[7] = 0;
-	part_path_repulse[8] = 0;
-	part_path_repulse[9] = 0;
-	part_path_repulse[10] = 0;
-	part_path_repulse[11] = 0;
-	path_record[1] = 0;
-	path_record[2] = 0;
-	path_record[3] = 0;
-	path_record[4] = 0;
-	path_record[5] = 0;
-	path_record[6] = 0;
-	path_record[7] = 0;
-	path_record[8] = 0;
-	path_record[9] = 0;
-	path_record[10] = 0;
-	path_record[11] = 0;
-	path_replay_trackNo[1] = -1;
-	path_replay_trackNo[2] = -1;
-	path_replay_trackNo[3] = -1;
-	path_replay_trackNo[4] = -1;
-	path_replay_trackNo[5] = -1;
-	path_replay_trackNo[6] = -1;
-	path_replay_trackNo[7] = -1;
-	path_replay_trackNo[8] = -1;
-	path_replay_trackNo[9] = -1;
-	path_replay_trackNo[10] = -1;
-	path_replay_trackNo[11] = -1;
-	trkDecay[0] = float(0.00273);
-	trkDecay[1] = float(0.001);
-	trkDecay[2] = float(0);
-	trkDecay[3] = float(0);
-	trkDecay_pulse[0] = float(0);
-	trkDecay_pulse[1] = float(0);
-	trkDecay_pulse[2] = float(0);
-	trkDecay_pulse[3] = float(0);
-	trackMasterWeight[0] = float(1);
-	trackMasterWeight[1] = float(1);
-	trackMasterWeight[2] = float(1);
-	trackMasterWeight[3] = float(1);
-	trackMasterWeight_pulse[0] = float(0);
-	trackMasterWeight_pulse[1] = float(0);
-	trackMasterWeight_pulse[2] = float(0);
-	trackMasterWeight_pulse[3] = float(0);
-	trackMixingWeight[0] = float(0);
-	trackMixingWeight[1] = float(0);
-	trackMixingWeight[2] = float(0);
-	trackMixingWeight[3] = float(0);
-	trackMixingWeight_pulse[0] = float(0);
-	trackMixingWeight_pulse[1] = float(0);
-	trackMixingWeight_pulse[2] = float(0);
-	trackMixingWeight_pulse[3] = float(0);
-	track_x_transl[0] = float(0);
-	track_x_transl[1] = float(0);
-	track_x_transl[2] = float(0);
-	track_x_transl[3] = float(0);
-	track_x_transl_pulse[0] = float(0);
-	track_x_transl_pulse[1] = float(0);
-	track_x_transl_pulse[2] = float(0);
-	track_x_transl_pulse[3] = float(0);
-	track_y_transl[0] = float(0);
-	track_y_transl[1] = float(0);
-	track_y_transl[2] = float(0);
-	track_y_transl[3] = float(0);
-	track_y_transl_pulse[0] = float(0);
-	track_y_transl_pulse[1] = float(0);
-	track_y_transl_pulse[2] = float(0);
-	track_y_transl_pulse[3] = float(0);
-	light_color[1] = float(0);
-	light_color[2] = float(0);
-	light_color[3] = float(0);
-	light_color[4] = float(0);
-	light_color[5] = float(0);
-	light_color[6] = float(0);
-	light_color[7] = float(0);
-	light_color[8] = float(0);
-	light_color_pulse[1] = float(0);
-	light_color_pulse[2] = float(0);
-	light_color_pulse[3] = float(0);
-	light_color_pulse[4] = float(0);
-	light_color_pulse[5] = float(0);
-	light_color_pulse[6] = float(0);
-	light_color_pulse[7] = float(0);
-	light_color_pulse[8] = float(0);
-	light_grey[1] = float(0);
-	light_grey[2] = float(0);
-	light_grey[3] = float(0);
-	light_grey[4] = float(0);
-	light_grey[5] = float(0);
-	light_grey[6] = float(0);
-	light_grey[7] = float(0);
-	light_grey[8] = float(0);
-	light_grey_pulse[1] = float(0);
-	light_grey_pulse[2] = float(0);
-	light_grey_pulse[3] = float(0);
-	light_grey_pulse[4] = float(0);
-	light_grey_pulse[5] = float(0);
-	light_grey_pulse[6] = float(0);
-	light_grey_pulse[7] = float(0);
-	light_grey_pulse[8] = float(0);
-	light_dimmer[1] = float(0);
-	light_dimmer[2] = float(0);
-	light_dimmer[3] = float(0);
-	light_dimmer[4] = float(0);
-	light_dimmer[5] = float(0);
-	light_dimmer[6] = float(0);
-	light_dimmer[7] = float(0);
-	light_dimmer[8] = float(0);
-	light_dimmer_pulse[1] = float(0);
-	light_dimmer_pulse[2] = float(0);
-	light_dimmer_pulse[3] = float(0);
-	light_dimmer_pulse[4] = float(0);
-	light_dimmer_pulse[5] = float(0);
-	light_dimmer_pulse[6] = float(0);
-	light_dimmer_pulse[7] = float(0);
-	light_dimmer_pulse[8] = float(0);
-	light_strobe[1] = float(0);
-	light_strobe[2] = float(0);
-	light_strobe[3] = float(0);
-	light_strobe[4] = float(0);
-	light_strobe[5] = float(0);
-	light_strobe[6] = float(0);
-	light_strobe[7] = float(0);
-	light_strobe[8] = float(0);
-	light_strobe_pulse[1] = float(0);
-	light_strobe_pulse[2] = float(0);
-	light_strobe_pulse[3] = float(0);
-	light_strobe_pulse[4] = float(0);
-	light_strobe_pulse[5] = float(0);
-	light_strobe_pulse[6] = float(0);
-	light_strobe_pulse[7] = float(0);
-	light_strobe_pulse[8] = float(0);
-}

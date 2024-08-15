@@ -39,7 +39,6 @@
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
 unsigned int** pg_shader_programme;
-unsigned int pg_ind_scenario = 0;
 std::unordered_map<int, std::string> pg_stringShaderTypes = {
 	{ pg_enum_shader_ParticleAnimation, "ParticleAnimation" },
 	{ pg_enum_shader_Update, "Update" },
@@ -113,14 +112,10 @@ GLint uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack[PG_MAX_SCENARIOS]
 GLint uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_3fv_repop_ColorCA[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres[PG_MAX_SCENARIOS] = {-1};
-#if defined(var_flashPhotoTrkBeat) && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 GLint uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY[PG_MAX_SCENARIOS] = {-1};
-#endif
 GLint uniform_Update_fs_4fv_photo01_wh[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_4fv_photo01Wghts_randomValues[PG_MAX_SCENARIOS] = {-1};
-#if defined(var_clipCaptFreq)
 GLint uniform_Update_fs_2fv_clip01Wghts[PG_MAX_SCENARIOS] = {-1};
-#endif
 GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius[PG_MAX_SCENARIOS] = {-1};
@@ -202,6 +197,7 @@ GLint uniform_Mixing_texture_fs_Trk3[PG_MAX_SCENARIOS] = {-1};  // ping-pong tra
 GLint uniform_Mixing_texture_fs_Render_prec[PG_MAX_SCENARIOS] = {-1};  // preceding snapshot
 GLint uniform_Mixing_texture_fs_Screen_Font[PG_MAX_SCENARIOS] = {-1};  // message Font
 GLint uniform_Mixing_texture_fs_Screen_Message[PG_MAX_SCENARIOS] = {-1};  // message string
+GLint uniform_Mixing_texture_fs_Mask[PG_MAX_SCENARIOS] = { -1 };  // mask for master output
 
 /////////////////////////////////////////////////////////////////////////
 // MASTER SHADER
@@ -451,14 +447,8 @@ void pg_loadAllShaders(void) {
 						std::cout << "geom, ";
 						break;
 					case GL_FRAGMENT_SHADER:
-						if (shader_type != pg_enum_shader_Sensor && shader_type != pg_enum_shader_ClipArt && shader_type != pg_enum_shader_Mesh) {
-							fileShaderName = pg_Shader_File_Names[indConfig][shader_type] + "_full_" + std::to_string(indConfig) + ".frag";
-							std::cout << "_full_" + std::to_string(indConfig) + ".frag, ";
-						}
-						else {
-							fileShaderName = pg_Shader_File_Names[indConfig][shader_type] + "_full.frag";
-							std::cout << "frag, ";
-						}
+						fileShaderName = pg_Shader_File_Names[indConfig][shader_type] + "_full.frag";
+						std::cout << "_full.frag, ";
 						break;
 					default:
 						fileShaderName = "";
@@ -712,6 +702,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Render_prec, "uniform_Mixing_texture_fs_Render_prec", pg_enum_shader_Mixing);  // preceding snapshot for echo
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Screen_Font, "uniform_Mixing_texture_fs_Screen_Font", pg_enum_shader_Mixing);  // message Font
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Screen_Message, "uniform_Mixing_texture_fs_Screen_Message", pg_enum_shader_Mixing);  // message string
+		pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_texture_fs_Mask, "uniform_Mixing_texture_fs_Mask", pg_enum_shader_Mixing);  // mask for master output
 
 		////////////////////////////////////////////////////////////////////////////////
 		// MASTER SHADER parameters bindings

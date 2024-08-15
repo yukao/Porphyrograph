@@ -392,9 +392,9 @@ void pg_update_pulsed_colors(void) {
 	// LIGHT PULSED COLOR
 	// blending the two closest palettes of the pulsed Repop color
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
-		if (pg_FrameNo % 10 == 0) {
+		//if (pg_FrameNo % 10 == 0) {
 			pg_UpdateLightGroups_from_LightVars();
-		}
+		//}
 	}
 
 	if (repop_colorCA != pg_repop_colorCA_prec || repop_colorCA_pulse != pg_repop_colorCA_pulse_prec

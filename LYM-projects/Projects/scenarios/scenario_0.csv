@@ -1,8 +1,8 @@
-RANK,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
-VERBATIM,photo scale,mask scale,mask contrast,soundtrack weight,with_edges,directRenderingwithoutMeshScreen1,broken glass,White left mesh color,White left mesh color,White left mesh color,master color weight,master weight left,photo weight left,White right mesh color,White right mesh color,White right mesh color,color weight right,master weight right,photo weight right,White left mesh color
-TYPE,float,float,float,float,bool,bool,int,float,float,float,float,float,float,float,float,float,float,float,float,float
-ID,photo_scale,mask_scale,mask_contrast,soundtrack_weight,with_edges,directRenderingwithoutMeshScreen1,MmeShanghai_brokenGlass,MS_WHITE_LEFT_r,MS_WHITE_LEFT_g,MS_WHITE_LEFT_b,MS_WHITE_LEFT_color_weight,MS_WHITE_LEFT_master_weight,MS_WHITE_LEFT_photo_weight,MS_WHITE_RIGHT_r,MS_WHITE_RIGHT_g,MS_WHITE_RIGHT_b,MS_WHITE_RIGHT_color_weight,MS_WHITE_RIGHT_master_weight,MS_WHITE_RIGHT_photo_weight,MS_BLACK
-FUNCTION,NULL,NULL,NULL,soundtrack_weight_callBack,NULL,NULL,MmeShanghai_brokenGlass_callBack,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
-GUI,photo_scale,mask_scale,mask_contrast,soundtrack_weight,with_edges,directRenderingwithoutMeshScreen1,MmeShanghai_brokenGlass,MS_WHITE_LEFT_r,MS_WHITE_LEFT_g,MS_WHITE_LEFT_b,MS_WHITE_LEFT_color_weight,MS_WHITE_LEFT_master_weight,MS_WHITE_LEFT_photo_weight,MS_WHITE_RIGHT_r,MS_WHITE_RIGHT_g,MS_WHITE_RIGHT_b,MS_WHITE_RIGHT_color_weight,MS_WHITE_RIGHT_master_weight,MS_WHITE_RIGHT_photo_weight,MS_BLACK
-SHADER,Update_fs,Update_fs,Update_fs,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*
-PULSE,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*
+RANK,0
+VERBATIM,current light scene
+TYPE,int
+ID,currentLightScene
+FUNCTION,currentLightScene_callBack
+GUI,currentLightScene
+SHADER,*
+PULSE,*

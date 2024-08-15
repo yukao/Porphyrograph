@@ -7,46 +7,92 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 460
 
-#define var_camera_BG_subtr
-bool	  camera_BG_subtr;
-#define var_CAdecay
-float	 CAdecay;
-#define var_trkDecay_0
-float	 trkDecay_0;
-#define var_trkDecay_1
-float	 trkDecay_1;
-#define var_trkDecay_2
-float	 trkDecay_2;
-#define var_trkDecay_3
-float	 trkDecay_3;
-#define var_currentDrawingTrack
-int		currentDrawingTrack;
-#define var_currentVideoTrack
-int		currentVideoTrack;
-#define var_currentPhotoTrack
-int		currentPhotoTrack;
-#define var_path_replay_trackNo_1
-int		path_replay_trackNo_1;
-#define var_path_replay_trackNo_2
-int		path_replay_trackNo_2;
-#define var_path_replay_trackNo_3
-int		path_replay_trackNo_3;
-#define var_path_replay_trackNo_4
-int		path_replay_trackNo_4;
-#define var_path_replay_trackNo_5
-int		path_replay_trackNo_5;
-#define var_path_replay_trackNo_6
-int		path_replay_trackNo_6;
-#define var_path_replay_trackNo_7
-int		path_replay_trackNo_7;
-#define var_path_replay_trackNo_8
-int		path_replay_trackNo_8;
-#define var_path_replay_trackNo_9
-int		path_replay_trackNo_9;
-#define var_path_replay_trackNo_10
-int		path_replay_trackNo_10;
-#define var_path_replay_trackNo_11
-int		path_replay_trackNo_11;
+#define var_CAcolorSpread
+bool	  CAcolorSpread;
+#define var_CAParams
+float	 CAParams[9];
+#define var_CAstep
+int		CAstep;
+#define var_camera_gamma
+float	 camera_gamma;
+#define var_cameraCumul
+int		cameraCumul;
+#define var_cameraGamma
+float	 cameraGamma;
+#define var_cameraSobel
+float	 cameraSobel;
+#define var_cameraThreshold
+float	 cameraThreshold;
+#define var_cameraWeight
+float	 cameraWeight;
+#define var_invertCamera
+bool	  invertCamera;
+#define var_invertMovie
+bool	  invertMovie;
+#define var_movie_gamma
+float	 movie_gamma;
+#define var_movie_threshold
+float	 movie_threshold;
+#define var_movieSobel
+float	 movieSobel;
+#define var_movieWeight
+float	 movieWeight;
+#define var_invertPhoto
+bool	  invertPhoto;
+#define var_photo_contrast
+float	 photo_contrast;
+#define var_photo_gamma
+float	 photo_gamma;
+#define var_photo_hue
+float	 photo_hue;
+#define var_photo_rot
+float	 photo_rot;
+#define var_photo_satur
+float	 photo_satur;
+#define var_photo_scaleX
+float	 photo_scaleX;
+#define var_photo_scaleY
+float	 photo_scaleY;
+#define var_photo_threshold
+float	 photo_threshold;
+#define var_photo_transl_x
+float	 photo_transl_x;
+#define var_photo_transl_y
+float	 photo_transl_y;
+#define var_photo_value
+float	 photo_value;
+#define var_photoSobel
+float	 photoSobel;
+#define var_photoWeight
+float	 photoWeight;
+#define var_video_contrast
+float	 video_contrast;
+#define var_video_gamma
+float	 video_gamma;
+#define var_video_hue
+float	 video_hue;
+#define var_video_satur
+float	 video_satur;
+#define var_video_threshold
+float	 video_threshold;
+#define var_video_value
+float	 video_value;
+#define var_video_white
+float	 video_white;
+#define var_noiseType
+int		noiseType;
+#define var_noiseLineScale
+float	 noiseLineScale;
+#define var_noiseAngleScale
+float	 noiseAngleScale;
+#define var_noiseCenterX
+float	 noiseCenterX;
+#define var_noiseCenterY
+float	 noiseCenterY;
+#define var_path_replay_trackNo
+int		path_replay_trackNo[12];
+#define var_Pixelstep
+int		Pixelstep;
 #define var_noiseUpdateScale
 float	 noiseUpdateScale;
 #define var_pixel_acc
@@ -55,123 +101,35 @@ float	 pixel_acc;
 float	 pixel_acc_shiftX;
 #define var_pixel_acc_shiftY
 float	 pixel_acc_shiftY;
-#define var_pixel_radius
-float	 pixel_radius;
+#define var_pixel_image_acceleration
+int		pixel_image_acceleration;
 #define var_pixel_mode
 int		pixel_mode;
-#define var_repop_CA
-float	 repop_CA;
-#define var_repop_BG
-float	 repop_BG;
-#define var_BG_CA_repop_density
-int		BG_CA_repop_density;
+#define var_pixel_radius
+float	 pixel_radius;
 #define var_BG_CA_repop_color_mode
 int		BG_CA_repop_color_mode;
-#define var_cameraGamma
-float	 cameraGamma;
-#define var_camera_gamma
-float	 camera_gamma;
-#define var_activeClipArts
-int		activeClipArts;
-#define var_cameraThreshold
-float	 cameraThreshold;
-#define var_cameraWeight
-float	 cameraWeight;
-#define var_cameraSobel
-float	 cameraSobel;
-#define var_movieWeight
-float	 movieWeight;
-#define var_movieSobel
-float	 movieSobel;
-#define var_invertMovie
-bool	  invertMovie;
-#define var_invertCamera
-bool	  invertCamera;
-#define var_invertPhoto
-bool	  invertPhoto;
-#define var_video_satur
-float	 video_satur;
-#define var_video_satur_pulse
-float	 video_satur_pulse;
-#define var_video_value
-float	 video_value;
-#define var_movie_gamma
-float	 movie_gamma;
-#define var_movie_threshold
-float	 movie_threshold;
-#define var_video_gamma
-float	 video_gamma;
-#define var_video_threshold
-float	 video_threshold;
-#define var_video_contrast
-float	 video_contrast;
-#define var_photoWeight
-float	 photoWeight;
-#define var_photo_satur
-float	 photo_satur;
-#define var_photo_satur_pulse
-float	 photo_satur_pulse;
-#define var_photo_value
-float	 photo_value;
-#define var_photo_value_pulse
-float	 photo_value_pulse;
-#define var_photo_gamma
-float	 photo_gamma;
-#define var_photo_gamma_pulse
-float	 photo_gamma_pulse;
-#define var_photo_threshold
-float	 photo_threshold;
-#define var_photoSobel
-float	 photoSobel;
-#define var_photo_scaleX
-float	 photo_scaleX;
-#define var_photo_scaleY
-float	 photo_scaleY;
-#define var_photo_rot
-float	 photo_rot;
-#define var_photo_transl_x
-float	 photo_transl_x;
-#define var_photo_transl_y
-float	 photo_transl_y;
-#define var_mask_scale
-float	 mask_scale;
-#define var_photo_contrast
-float	 photo_contrast;
-#define var_mask_contrast
-float	 mask_contrast;
-#define var_CAParams1
-float	 CAParams1;
-#define var_CAParams2
-float	 CAParams2;
-#define var_CAParams3
-float	 CAParams3;
-#define var_CAParams4
-float	 CAParams4;
-#define var_CAParams5
-float	 CAParams5;
-#define var_CAParams6
-float	 CAParams6;
-#define var_CAParams7
-float	 CAParams7;
-#define var_CAParams8
-float	 CAParams8;
-#define var_cameraCumul
-int		cameraCumul;
-#define var_CAstep
-int		CAstep;
-#define var_Pixelstep
-int		Pixelstep;
-#define var_CAcolorSpread
-bool	  CAcolorSpread;
+#define var_BG_CA_repop_density
+int		BG_CA_repop_density;
+#define var_repop_BG
+float	 repop_BG;
+#define var_repop_CA
+float	 repop_CA;
+#define var_camera_BG_subtr
+bool	  camera_BG_subtr;
 #define var_freeze
 bool	  freeze;
-#define var_video_white
-float	 video_white;
-#define var_video_hue
-float	 video_hue;
-#define var_photo_hue
-float	 photo_hue;
-uniform float uniform_Update_scenario_var_data[82];
+#define var_CAdecay
+float	 CAdecay;
+#define var_trkDecay
+float	 trkDecay[4];
+#define var_currentDrawingTrack
+int		currentDrawingTrack;
+#define var_currentPhotoTrack
+int		currentPhotoTrack;
+#define var_currentVideoTrack
+int		currentVideoTrack;
+uniform float uniform_Update_scenario_var_data[81];
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -395,6 +353,12 @@ vec4 randomCA2;
 float repop_density_weight = 1;
 vec3 textureDensityValue = vec3(0);
 
+///////////////////////////////////////
+// photo or clip images
+vec3 photoOriginal = vec3( 0.0 );
+vec3 clipOriginal = vec3( 0.0 );
+
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // VARYINGS
@@ -418,7 +382,7 @@ uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
 
-uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
+uniform vec4 uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -460,9 +424,9 @@ layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Trk2;      
 #if PG_NB_TRACKS >= 4
 layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_Trk3;          // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
-layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
-layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
+// layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -644,18 +608,18 @@ float Line( float x1 , float y1 ,
 float payoffCalc( float state1 , float state2) {
   if(state1==1.0) {
     if (state2==1.0) {
-      return CAParams1;
+      return CAParams[1];
     }
     else {
-      return CAParams3;
+      return CAParams[3];
     }
   }
   else {
     if (state2==1.0) {
-      return CAParams2;
+      return CAParams[2];
     }
     else {
-      return CAParams4;
+      return CAParams[4];
     }
   }
 }
@@ -959,11 +923,11 @@ void CA_out( vec4 currentCA ) {
     uint newState = 0;
 
     // CAParams optimal values from Composites/soundinitiative²
-/*     float CAParams1 = 0.480315;
-    float CAParams2 = 0.511811;
-    float CAParams3 = 0.637795;
-    float CAParams4 = 0.472441;
-    float CAParams5 = 0.244094;
+/*     float CAParams[1] = 0.480315;
+    float CAParams[2] = 0.511811;
+    float CAParams[3] = 0.637795;
+    float CAParams[4] = 0.472441;
+    float CAParams[5] = 0.244094;
  */
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
@@ -979,9 +943,9 @@ void CA_out( vec4 currentCA ) {
       uint state = int(clamp(currentCA.a,0,nbStates));
       newState = state;
       // parameters CA thresholds
-      // CAParams1: px - X duplication from X+Y (randomCA.x)
-      // CAParams2: py - Y duplication from Y+Z (randomCA.y)
-      // CAParams3: pz - Z duplication from Z+X (randomCA.z)
+      // CAParams[1]: px - X duplication from X+Y (randomCA.x)
+      // CAParams[2]: py - Y duplication from Y+Z (randomCA.y)
+      // CAParams[3]: pz - Z duplication from Z+X (randomCA.z)
 
       // empty cell: replication or migration from neighboring cells
       if( state ==  0 ) { // empty
@@ -990,7 +954,7 @@ void CA_out( vec4 currentCA ) {
         // has a neighboring X and a neighboring Y slot
         for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
           if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 2 
-              && randomCA.y < CAParams1) {
+              && randomCA.y < CAParams[1]) {
             newState = 1; // new X
           }
         }
@@ -1001,7 +965,7 @@ void CA_out( vec4 currentCA ) {
           int firstindex = clamp(int(randomCA.z * 8),0,8);
           for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
             if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 6 
-                && randomCA.w < CAParams2) {
+                && randomCA.w < CAParams[2]) {
               newState = 2; // new Y
             }
           }
@@ -1013,7 +977,7 @@ void CA_out( vec4 currentCA ) {
           int firstindex = clamp(int(randomCA2.x * 8),0,8);
           for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
             if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 3 
-                && randomCA2.y < CAParams3) {
+                && randomCA2.y < CAParams[3]) {
               newState = 3; // new Z
             }
           }
@@ -1032,11 +996,11 @@ void CA_out( vec4 currentCA ) {
           }
         }
       }
-      // CAParams5: px - X/Y/Z degradation (randomCA.w)
+      // CAParams[5]: px - X/Y/Z degradation (randomCA.w)
       // randomCA2.x choice of a first neighbor
       // degradation or migration of X
-      else if( randomCA.x < CAParams4 
-        || nbNeighbors < 8 * CAParams5 ) { 
+      else if( randomCA.x < CAParams[4] 
+        || nbNeighbors < 8 * CAParams[5] ) { 
         newState = 0; 
       }
 
@@ -1064,12 +1028,12 @@ void CA_out( vec4 currentCA ) {
   // parameter values: 0.314  0.606 0.354 0.409
   else if( CAType == CA_DISLOCATION ) {
     // CAParams optimal values from effe
-/*     float CAParams1 = 0.393673;
-    float CAParams2 = 0.102449;
-    float CAParams3 = 0.53551;
-    float CAParams4 = 0.165306;
-    float CAParams5 = 0.196939;
-    float CAParams6 = 0.322857;
+/*     float CAParams[1] = 0.393673;
+    float CAParams[2] = 0.102449;
+    float CAParams[3] = 0.53551;
+    float CAParams[4] = 0.165306;
+    float CAParams[5] = 0.196939;
+    float CAParams[6] = 0.322857;
  */
     int nbSurroundingNewBorders =
       (neighborValues[0].a == 1? 1:0) +
@@ -1180,11 +1144,11 @@ void CA_out( vec4 currentCA ) {
           newState = 1; // new border
         }
         else if( nbSurroundingOldBorders == 1 
-                && randomCA.y < CAParams2 ) {
+                && randomCA.y < CAParams[2] ) {
           // prolongs the border
           newState = 2; // old border
         }
-        else if( nbSurroundingNewBorders >= CAParams1 * 8.0  ) {
+        else if( nbSurroundingNewBorders >= CAParams[1] * 8.0  ) {
           // creates a nucleus
           newState = 3; // nucleus
         }
@@ -1192,7 +1156,7 @@ void CA_out( vec4 currentCA ) {
       // new border growth: new border pushed by old border
       else if( state ==  1 ) {
         newState = 1; // stays a border
-        if( nbSurroundingNewBorders >= CAParams5 * 10.0 ) {
+        if( nbSurroundingNewBorders >= CAParams[5] * 10.0 ) {
           newState = 3; //makes a nucleus
         }
         // found an old border at indexOld
@@ -1204,7 +1168,7 @@ void CA_out( vec4 currentCA ) {
       // border growth: old border pulled by new border
       else if( state ==  2 ) {
         newState = 2; // stays old border
-        if( nbSurroundingOldBorders >= CAParams6 * 10.0 ) {
+        if( nbSurroundingOldBorders >= CAParams[6] * 10.0 ) {
           newState = 0; //makes a hole
         }
         else if( indexNew >= 0 ) {
@@ -1215,11 +1179,11 @@ void CA_out( vec4 currentCA ) {
       else if( state ==  3 ) {
         newState = 3; // stays a nucleus
         if( nbSurroundingOldBorders + nbSurroundingNewBorders 
-             >= CAParams4 * 16.0 ) {
+             >= CAParams[4] * 16.0 ) {
           newState = 0; //makes a hole
         }
         else 
-          if( randomCA.y < CAParams3 ) {
+          if( randomCA.y < CAParams[3] ) {
           newState = 1; // becomes a border
         }
       }
@@ -1334,7 +1298,7 @@ void CA_out( vec4 currentCA ) {
         // prey birth probability if preys are in neighborhood
         if( nbSurroundingPreys > 0
             && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams1 ) {
+               < CAParams[1] ) {
           newState = 2; // becomes a prey
         }
         // else {
@@ -1346,7 +1310,7 @@ void CA_out( vec4 currentCA ) {
         // predator birth probability if full predators are in neighborhood
         if( nbSurroundingFullPredators > 0
             && pow( randomCA.x , nbSurroundingFullPredators ) 
-               < CAParams2 ) {
+               < CAParams[2] ) {
           newState = 3; // becomes a hungry predator
         }
         // else {
@@ -1358,7 +1322,7 @@ void CA_out( vec4 currentCA ) {
         // death probability if hungry predators are in neighborhood
         if( nbSurroundingHungryPredators > 0
             && pow( randomCA.x , nbSurroundingHungryPredators ) 
-               < CAParams3 ) {
+               < CAParams[3] ) {
           newState = 1; // dead prey
         }
         // else {
@@ -1370,11 +1334,11 @@ void CA_out( vec4 currentCA ) {
         // probability of eating if preys are in the neighborhood
         if( nbSurroundingPreys > 0
             && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams3 ) {
+               < CAParams[3] ) {
           newState = 4; // survives in state full
         }
         else { // dies with a certain probability
-          if( randomCA.x < CAParams4 ) {
+          if( randomCA.x < CAParams[4] ) {
             newState = 0;  // dead predator
           }
           // else {
@@ -1385,7 +1349,7 @@ void CA_out( vec4 currentCA ) {
       // full predator 
       else if( state == 4 ) {
         // probability of becoming hungry
-        if( randomCA.x < CAParams5 ) {
+        if( randomCA.x < CAParams[5] ) {
           newState = 3; // becomes hungry
         }
         // else { 
@@ -1420,10 +1384,10 @@ void CA_out( vec4 currentCA ) {
     // NE has N E & Center...
     // the payoff for each neighbor is calculated for these 3 neighbors
     // 3 payoffs: 
-    //     . CAParams1 Cooperation
-    //     . CAParams2 Defect (with Coop)
-    //     . CAParams3 Coop (with Defect)
-    //     . CAParams4 double defect
+    //     . CAParams[1] Cooperation
+    //     . CAParams[2] Defect (with Coop)
+    //     . CAParams[3] Coop (with Defect)
+    //     . CAParams[4] double defect
     // 2 states 1: coop - 2: defect
 // first state is state of player, second state is state of partner
 
@@ -1516,11 +1480,11 @@ void CA_out( vec4 currentCA ) {
       // otherwise dies or adopts opposite behavior with a certain probability
       // ****** payoffCalc uses parameters 1 to 4
       else if( CASubType == 2 ) {
-        if( sumPayoff > 24 * CAParams5 ) { // ****** payoffCalc uses parameters 1 to 4
+        if( sumPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
           newState = int(neighborValues[indMax].a);
         }
         else {
-          if( randomCA.z > CAParams6 ) { // ****** payoffCalc uses parameters 1 to 4
+          if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
             newState = 3 - int(neighborValues[indMax].a);
           }
           else {
@@ -1532,20 +1496,20 @@ void CA_out( vec4 currentCA ) {
       // otherwise if alive dies or stays as it is with a certain probability
       // if dead copies most succesful neighbor with a certain probability
       else if( CASubType == 3 ) {
-        if( maxPayoff > 24 * CAParams5 ) { // ****** payoffCalc uses parameters 1 to 4
+        if( maxPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
           newState = int(neighborValues[indMax].a);
         }
         else {
           // alive and adopts opposite behavior
           if( neighborValues[indMax].a > 0 ) {
-              if( randomCA.z > CAParams6 ) { // ****** payoffCalc uses parameters 1 to 4
+              if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
                 newState = 3 - int(neighborValues[indMax].a);
               }
               // or stays in its current state
           }
           //dead
           else {
-              if( randomCA.z > CAParams7 ) {
+              if( randomCA.z > CAParams[7] ) {
                 newState = int(neighborValues[indMax].a);
               }
               // or stays dead
@@ -1555,8 +1519,8 @@ void CA_out( vec4 currentCA ) {
       // VARIANT 4 : adopts behavior of most successful neighbor if it is above a certain minimal value
       // or the opposite behavior with a given probability
       else if( CASubType == 4 ) {
-        if( sumPayoff > 24 * CAParams5 ) {
-          if( randomCA.z > CAParams6 ) {
+        if( sumPayoff > 24 * CAParams[5] ) {
+          if( randomCA.z > CAParams[6] ) {
              newState = int(neighborValues[indMax].a);
           }
           else {
@@ -1564,7 +1528,7 @@ void CA_out( vec4 currentCA ) {
           }
         }
         else {
-          if( randomCA.z > 1 - CAParams7 ) {
+          if( randomCA.z > 1 - CAParams[7] ) {
              newState = int(neighborValues[indMax].a);
           }
           else {
@@ -1629,7 +1593,6 @@ void pixel_out( void ) {
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
         vec2 acceleration;
-#ifdef var_pixel_image_acceleration
         // texture based acceleration shift
         if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
           float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
@@ -1648,7 +1611,6 @@ void pixel_out( void ) {
           }
         }
         else 
-#endif
         {          
           acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
         }
@@ -1723,7 +1685,6 @@ void pixel_out( void ) {
                        + usedNeighborOffset / vec2(width,height);
         vec2 acceleration;
 
-#ifdef var_pixel_image_acceleration
         // texture based acceleration shift
         if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
           float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
@@ -1742,7 +1703,6 @@ void pixel_out( void ) {
           }
         }
         else
-#endif
         {          
           acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
         }
@@ -2007,6 +1967,69 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
   return 0.f;
 }
 
+
+#if defined(var_photoSobel)
+// Sobel on photo or clip
+void Sobel(int currentPhotoSource, int currentClipSource, vec2 coordsImageScaled) {
+  if( photoSobel > 0 && ((currentPhotoSource > 0) || (currentClipSource > 0))) {
+    vec3 samplerSobel;
+    // sobel
+    vec3 sobelX = vec3(0.0);
+    vec3 sobelY = vec3(0.0);
+    vec3 samplerClipSobel;
+    // sobel
+    vec3 sobelClipX = vec3(0.0);
+    vec3 sobelClipY = vec3(0.0);
+
+    // samples the center pixel and its Moore neighborhood
+    for( int i = 0 ; i < 9 ; i++ ) {
+      switch(currentPhotoSource) {
+        case 1:
+          samplerSobel = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        case 2:
+          samplerSobel = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        default:
+          break;
+      }
+      switch(currentClipSource) {
+        case 1:
+          samplerClipSobel = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        case 2:
+          samplerClipSobel = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+          break;
+        default:
+          break;
+      }
+      if(i < 8) {
+        sobelX += sobelMatrixX_0[i] * samplerSobel;
+        sobelY += sobelMatrixY_0[i] * samplerSobel;
+        sobelClipX += sobelMatrixX_0[i] * samplerClipSobel;
+        sobelClipY += sobelMatrixY_0[i] * samplerClipSobel;
+      }
+    }
+
+    samplerSobel = photoOriginal;
+    sobelX = mix( samplerSobel , sobelX , photoSobel );
+    sobelY = mix( samplerSobel , sobelY , photoSobel );
+    samplerClipSobel = clipOriginal;
+    sobelClipX = mix( samplerClipSobel , sobelClipX , photoSobel );
+    sobelClipY = mix( samplerClipSobel , sobelClipY , photoSobel );
+
+    vec3 photo_sobel_result = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+    vec3 clip_sobel_result = clamp( sqrt( sobelClipX * sobelClipX + sobelClipY * sobelClipY ) , 0.0 , 1.0 );
+    if(currentPhotoSource > 0) {
+        photoOriginal = photo_sobel_result;
+    }
+    if(currentClipSource > 0) {
+        clipOriginal = clip_sobel_result;
+    }
+  }
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 // MAIN OF UPDATE PASS
@@ -2014,100 +2037,95 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
 ////////////////////////////////////////////////////////////////////
 
 void main() {
-  camera_BG_subtr = (uniform_Update_scenario_var_data[0] > 0 ? true : false);
-  CAdecay = uniform_Update_scenario_var_data[1];
-  trkDecay_0 = uniform_Update_scenario_var_data[2];
-  trkDecay_1 = uniform_Update_scenario_var_data[3];
-  trkDecay_2 = uniform_Update_scenario_var_data[4];
-  trkDecay_3 = uniform_Update_scenario_var_data[5];
-  currentDrawingTrack = int(uniform_Update_scenario_var_data[6]);
-  currentVideoTrack = int(uniform_Update_scenario_var_data[7]);
-  currentPhotoTrack = int(uniform_Update_scenario_var_data[8]);
-  path_replay_trackNo_1 = int(uniform_Update_scenario_var_data[9]);
-  path_replay_trackNo_2 = int(uniform_Update_scenario_var_data[10]);
-  path_replay_trackNo_3 = int(uniform_Update_scenario_var_data[11]);
-  path_replay_trackNo_4 = int(uniform_Update_scenario_var_data[12]);
-  path_replay_trackNo_5 = int(uniform_Update_scenario_var_data[13]);
-  path_replay_trackNo_6 = int(uniform_Update_scenario_var_data[14]);
-  path_replay_trackNo_7 = int(uniform_Update_scenario_var_data[15]);
-  path_replay_trackNo_8 = int(uniform_Update_scenario_var_data[16]);
-  path_replay_trackNo_9 = int(uniform_Update_scenario_var_data[17]);
-  path_replay_trackNo_10 = int(uniform_Update_scenario_var_data[18]);
-  path_replay_trackNo_11 = int(uniform_Update_scenario_var_data[19]);
-  noiseUpdateScale = uniform_Update_scenario_var_data[20];
-  pixel_acc = uniform_Update_scenario_var_data[21];
-  pixel_acc_shiftX = uniform_Update_scenario_var_data[22];
-  pixel_acc_shiftY = uniform_Update_scenario_var_data[23];
-  pixel_radius = uniform_Update_scenario_var_data[24];
-  pixel_mode = int(uniform_Update_scenario_var_data[25]);
-  repop_CA = uniform_Update_scenario_var_data[26];
-  repop_BG = uniform_Update_scenario_var_data[27];
-  BG_CA_repop_density = int(uniform_Update_scenario_var_data[28]);
-  BG_CA_repop_color_mode = int(uniform_Update_scenario_var_data[29]);
-  cameraGamma = uniform_Update_scenario_var_data[30];
-  camera_gamma = uniform_Update_scenario_var_data[31];
-  activeClipArts = int(uniform_Update_scenario_var_data[32]);
-  cameraThreshold = uniform_Update_scenario_var_data[33];
-  cameraWeight = uniform_Update_scenario_var_data[34];
-  cameraSobel = uniform_Update_scenario_var_data[35];
-  movieWeight = uniform_Update_scenario_var_data[36];
-  movieSobel = uniform_Update_scenario_var_data[37];
-  invertMovie = (uniform_Update_scenario_var_data[38] > 0 ? true : false);
-  invertCamera = (uniform_Update_scenario_var_data[39] > 0 ? true : false);
-  invertPhoto = (uniform_Update_scenario_var_data[40] > 0 ? true : false);
-  video_satur = uniform_Update_scenario_var_data[41];
-  video_satur_pulse = uniform_Update_scenario_var_data[42];
-  video_value = uniform_Update_scenario_var_data[43];
-  movie_gamma = uniform_Update_scenario_var_data[44];
-  movie_threshold = uniform_Update_scenario_var_data[45];
-  video_gamma = uniform_Update_scenario_var_data[46];
-  video_threshold = uniform_Update_scenario_var_data[47];
-  video_contrast = uniform_Update_scenario_var_data[48];
-  photoWeight = uniform_Update_scenario_var_data[49];
-  photo_satur = uniform_Update_scenario_var_data[50];
-  photo_satur_pulse = uniform_Update_scenario_var_data[51];
-  photo_value = uniform_Update_scenario_var_data[52];
-  photo_value_pulse = uniform_Update_scenario_var_data[53];
-  photo_gamma = uniform_Update_scenario_var_data[54];
-  photo_gamma_pulse = uniform_Update_scenario_var_data[55];
-  photo_threshold = uniform_Update_scenario_var_data[56];
-  photoSobel = uniform_Update_scenario_var_data[57];
-  photo_scaleX = uniform_Update_scenario_var_data[58];
-  photo_scaleY = uniform_Update_scenario_var_data[59];
-  photo_rot = uniform_Update_scenario_var_data[60];
-  photo_transl_x = uniform_Update_scenario_var_data[61];
-  photo_transl_y = uniform_Update_scenario_var_data[62];
-  mask_scale = uniform_Update_scenario_var_data[63];
-  photo_contrast = uniform_Update_scenario_var_data[64];
-  mask_contrast = uniform_Update_scenario_var_data[65];
-  CAParams1 = uniform_Update_scenario_var_data[66];
-  CAParams2 = uniform_Update_scenario_var_data[67];
-  CAParams3 = uniform_Update_scenario_var_data[68];
-  CAParams4 = uniform_Update_scenario_var_data[69];
-  CAParams5 = uniform_Update_scenario_var_data[70];
-  CAParams6 = uniform_Update_scenario_var_data[71];
-  CAParams7 = uniform_Update_scenario_var_data[72];
-  CAParams8 = uniform_Update_scenario_var_data[73];
-  cameraCumul = int(uniform_Update_scenario_var_data[74]);
-  CAstep = int(uniform_Update_scenario_var_data[75]);
-  Pixelstep = int(uniform_Update_scenario_var_data[76]);
-  CAcolorSpread = (uniform_Update_scenario_var_data[77] > 0 ? true : false);
-  freeze = (uniform_Update_scenario_var_data[78] > 0 ? true : false);
-  video_white = uniform_Update_scenario_var_data[79];
-  video_hue = uniform_Update_scenario_var_data[80];
-  photo_hue = uniform_Update_scenario_var_data[81];
-
-  //////////////////////////
-  // TRACK DECAY
-  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+  CAcolorSpread = (uniform_Update_scenario_var_data[0] > 0 ? true : false);
+  CAParams[1] = (uniform_Update_scenario_var_data[1]);
+  CAParams[2] = (uniform_Update_scenario_var_data[2]);
+  CAParams[3] = (uniform_Update_scenario_var_data[3]);
+  CAParams[4] = (uniform_Update_scenario_var_data[4]);
+  CAParams[5] = (uniform_Update_scenario_var_data[5]);
+  CAParams[6] = (uniform_Update_scenario_var_data[6]);
+  CAParams[7] = (uniform_Update_scenario_var_data[7]);
+  CAParams[8] = (uniform_Update_scenario_var_data[8]);
+  CAstep = int(uniform_Update_scenario_var_data[9]);
+  camera_gamma = uniform_Update_scenario_var_data[10];
+  cameraCumul = int(uniform_Update_scenario_var_data[11]);
+  cameraGamma = uniform_Update_scenario_var_data[12];
+  cameraSobel = uniform_Update_scenario_var_data[13];
+  cameraThreshold = uniform_Update_scenario_var_data[14];
+  cameraWeight = uniform_Update_scenario_var_data[15];
+  invertCamera = (uniform_Update_scenario_var_data[16] > 0 ? true : false);
+  invertMovie = (uniform_Update_scenario_var_data[17] > 0 ? true : false);
+  movie_gamma = uniform_Update_scenario_var_data[18];
+  movie_threshold = uniform_Update_scenario_var_data[19];
+  movieSobel = uniform_Update_scenario_var_data[20];
+  movieWeight = uniform_Update_scenario_var_data[21];
+  invertPhoto = (uniform_Update_scenario_var_data[22] > 0 ? true : false);
+  photo_contrast = uniform_Update_scenario_var_data[23];
+  photo_gamma = uniform_Update_scenario_var_data[24];
+  photo_hue = uniform_Update_scenario_var_data[25];
+  photo_rot = uniform_Update_scenario_var_data[26];
+  photo_satur = uniform_Update_scenario_var_data[27];
+  photo_scaleX = uniform_Update_scenario_var_data[28];
+  photo_scaleY = uniform_Update_scenario_var_data[29];
+  photo_threshold = uniform_Update_scenario_var_data[30];
+  photo_transl_x = uniform_Update_scenario_var_data[31];
+  photo_transl_y = uniform_Update_scenario_var_data[32];
+  photo_value = uniform_Update_scenario_var_data[33];
+  photoSobel = uniform_Update_scenario_var_data[34];
+  photoWeight = uniform_Update_scenario_var_data[35];
+  video_contrast = uniform_Update_scenario_var_data[36];
+  video_gamma = uniform_Update_scenario_var_data[37];
+  video_hue = uniform_Update_scenario_var_data[38];
+  video_satur = uniform_Update_scenario_var_data[39];
+  video_threshold = uniform_Update_scenario_var_data[40];
+  video_value = uniform_Update_scenario_var_data[41];
+  video_white = uniform_Update_scenario_var_data[42];
+  noiseType = int(uniform_Update_scenario_var_data[43]);
+  noiseLineScale = uniform_Update_scenario_var_data[44];
+  noiseAngleScale = uniform_Update_scenario_var_data[45];
+  noiseCenterX = uniform_Update_scenario_var_data[46];
+  noiseCenterY = uniform_Update_scenario_var_data[47];
+  path_replay_trackNo[1] = int(uniform_Update_scenario_var_data[48]);
+  path_replay_trackNo[2] = int(uniform_Update_scenario_var_data[49]);
+  path_replay_trackNo[3] = int(uniform_Update_scenario_var_data[50]);
+  path_replay_trackNo[4] = int(uniform_Update_scenario_var_data[51]);
+  path_replay_trackNo[5] = int(uniform_Update_scenario_var_data[52]);
+  path_replay_trackNo[6] = int(uniform_Update_scenario_var_data[53]);
+  path_replay_trackNo[7] = int(uniform_Update_scenario_var_data[54]);
+  path_replay_trackNo[8] = int(uniform_Update_scenario_var_data[55]);
+  path_replay_trackNo[9] = int(uniform_Update_scenario_var_data[56]);
+  path_replay_trackNo[10] = int(uniform_Update_scenario_var_data[57]);
+  path_replay_trackNo[11] = int(uniform_Update_scenario_var_data[58]);
+  Pixelstep = int(uniform_Update_scenario_var_data[59]);
+  noiseUpdateScale = uniform_Update_scenario_var_data[60];
+  pixel_acc = uniform_Update_scenario_var_data[61];
+  pixel_acc_shiftX = uniform_Update_scenario_var_data[62];
+  pixel_acc_shiftY = uniform_Update_scenario_var_data[63];
+  pixel_image_acceleration = int(uniform_Update_scenario_var_data[64]);
+  pixel_mode = int(uniform_Update_scenario_var_data[65]);
+  pixel_radius = uniform_Update_scenario_var_data[66];
+  BG_CA_repop_color_mode = int(uniform_Update_scenario_var_data[67]);
+  BG_CA_repop_density = int(uniform_Update_scenario_var_data[68]);
+  repop_BG = uniform_Update_scenario_var_data[69];
+  repop_CA = uniform_Update_scenario_var_data[70];
+  camera_BG_subtr = (uniform_Update_scenario_var_data[71] > 0 ? true : false);
+  freeze = (uniform_Update_scenario_var_data[72] > 0 ? true : false);
+  CAdecay = uniform_Update_scenario_var_data[73];
+  trkDecay[0] = (uniform_Update_scenario_var_data[74]);
+  trkDecay[1] = (uniform_Update_scenario_var_data[75]);
+  trkDecay[2] = (uniform_Update_scenario_var_data[76]);
+  trkDecay[3] = (uniform_Update_scenario_var_data[77]);
+  currentDrawingTrack = int(uniform_Update_scenario_var_data[78]);
+  currentPhotoTrack = int(uniform_Update_scenario_var_data[79]);
+  currentVideoTrack = int(uniform_Update_scenario_var_data[80]);
 
   //////////////////////////
   // variables 
   // frame number
-  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
+  frameNo = int(round(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.x));
 
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
+  Cursor = uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.y;
 
   // pixels position speed update parameters
   pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
@@ -2141,6 +2159,9 @@ void main() {
   if( BG_CA_repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
     textureDensityValue = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).rgb;
     repop_density_weight = graylevel(textureDensityValue);
+  }
+  else {
+    repop_density_weight = 1;
   }
 
   ///////////////////////////////////////////////////
@@ -2238,145 +2259,75 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
-  vec3 photoOriginal = vec3( 0.0 );
-  vec3 clipOriginal = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
   vec2 coordsImageScaled = vec2( 0.0 );
   int currentPhotoSource = 0;
   int currentClipSource = 0;
   vec2 photo_scale = vec2(1);
-#if defined(var_photo_scaleX) && defined(var_photo_scaleY)
   photo_scale = vec2(photo_scaleX, photo_scaleY);
-#endif
-#if defined(var_photoWeight)
   if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy 
+      + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - vec2(1)) / photo_scale;
     // coordsImageScaled = coordsImage;
     photoOriginal = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled ).rgb;
     // color inversion
-#if defined(var_invertPhoto)
+#if defined(var_photoSobel)
+    Sobel(1,-1, coordsImageScaled);
+#endif
     if( invertPhoto) {
         photoOriginal = vec3(1) - photoOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photoOriginal;
-    currentPhotoSource = 1;
   }
-  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 && decalCoords.x >= width) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
-    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
-    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
-    // coordsImageScaled = coordsImage;
-    photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
-    // color inversion
-#if defined(var_invertPhoto)
-    if( invertPhoto) {
-        photoOriginal = vec3(1) - photoOriginal;
-    }
-#endif
-    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
-    currentPhotoSource = 2;
-  }
-  if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0) {
+  else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - vec2(1)) / photo_scale;
     // coordsImageScaled = coordsImage;
     clipOriginal = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled ).rgb;
     // color inversion
-#if defined(var_invertPhoto)
+#if defined(var_photoSobel)
+    Sobel(-1,1, coordsImageScaled);
+#endif
    if( invertPhoto) {
         clipOriginal = vec3(1) - clipOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clipOriginal;
-    currentClipSource = 1;
   }
-  if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0  && decalCoords.x >= width) {
+
+  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0) {
+    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw 
+      + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
+    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
+    // coordsImageScaled = coordsImage;
+    photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
+    // color inversion
+#if defined(var_photoSobel)
+    Sobel(2, -1, coordsImageScaled);
+#endif
+    if( invertPhoto) {
+        photoOriginal = vec3(1) - photoOriginal;
+    }
+    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
+  }
+  else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0) {
     coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
     // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
     coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
     // coordsImageScaled = coordsImage;
     clipOriginal = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled ).rgb;
     // color inversion
-#if defined(var_invertPhoto)
+#if defined(var_photoSobel)
+    Sobel(-1, 2, coordsImageScaled);
+#endif
     if( invertPhoto) {
         clipOriginal = vec3(1) - clipOriginal;
     }
-#endif
     photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clipOriginal;
-    currentClipSource = 2;
   }
-#endif
-
-#if defined(var_photoSobel)
-  // Sobel on photo
-  if( photoSobel > 0 ) {
-      vec3 samplerSobel;
-      // sobel
-      vec3 sobelX = vec3(0.0);
-      vec3 sobelY = vec3(0.0);
-      vec3 samplerClipSobel;
-      // sobel
-      vec3 sobelClipX = vec3(0.0);
-      vec3 sobelClipY = vec3(0.0);
-
-      // samples the center pixel and its Moore neighborhood
-      for( int i = 0 ; i < 9 ; i++ ) {
-        switch(currentPhotoSource) {
-          case 1:
-            samplerSobel = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-          case 2:
-            samplerSobel = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-        }
-        switch(currentClipSource) {
-          case 1:
-            samplerClipSobel = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-          case 2:
-            samplerClipSobel = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-            break;
-        }
-        if(i < 8) {
-          sobelX += sobelMatrixX_0[i] * samplerSobel;
-          sobelY += sobelMatrixY_0[i] * samplerSobel;
-          sobelClipX += sobelMatrixX_0[i] * samplerClipSobel;
-          sobelClipY += sobelMatrixY_0[i] * samplerClipSobel;
-        }
-      }
-
-      samplerSobel = photoOriginal;
-      sobelX = mix( samplerSobel , sobelX , photoSobel );
-      sobelY = mix( samplerSobel , sobelY , photoSobel );
-      samplerClipSobel = clipOriginal;
-      sobelClipX = mix( samplerClipSobel , sobelClipX , photoSobel );
-      sobelClipY = mix( samplerClipSobel , sobelClipY , photoSobel );
-
-      vec3 photo_sobel_result = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
-      vec3 clip_sobel_result = clamp( sqrt( sobelClipX * sobelClipX + sobelClipY * sobelClipY ) , 0.0 , 1.0 );
-      photocolor = vec3(0);
-      switch(currentPhotoSource) {
-        case 1:
-          photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photo_sobel_result;
-          break;
-        case 2:
-          photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photo_sobel_result;
-          break;
-      }
-      switch(currentClipSource) {
-        case 1:
-          photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clip_sobel_result;
-          break;
-        case 2:
-          photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clip_sobel_result;
-          break;
-      }
-  }
-#endif
 
 #if defined(var_photo_value)
   photocolor *= vec3(photo_value);
@@ -2438,6 +2389,7 @@ void main() {
     photocolor *= uniform_Update_fs_3fv_photo_rgb;
   }
 #endif
+  // photocolor = texture(uniform_Update_texture_fs_Photo1, vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * vec2(1920,1080)  ).rgb;
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -2460,12 +2412,37 @@ void main() {
      cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
                * cameraWH;
  */
+ 
+/* // FlowingForms
+   cameraCoord = vec2(0.7 * (decalCoordsPOT.x + 0.15), 0.7 * (1. - decalCoordsPOT.y + 0.15) ) * cameraWH;
+*/
+
   // cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-              // added for wide angle lens that covers more than the drawing surface
-               * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
-  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
-               * movieWH;
+  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) );
+  // two images in case of double screen
+/*  if(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.w != 0) {
+    cameraCoord.x *= 2.;
+    if(cameraCoord.x >= 1) {
+      cameraCoord.x -= 1.;
+    }
+  }
+*/
+  // Zoom on camera
+  #ifdef var_cameraZoom
+    cameraCoord = (cameraCoord - vec2(0.5,0.5)) / cameraZoom +vec2(0.5,0.5);
+  #endif
+  // added for wide angle lens that covers more than the drawing surface
+  cameraCoord =  cameraCoord * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y );
+  // two images in case of double screen
+/*  if(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.w != 0) {
+    movieCoord.x *= 2.;
+    if(movieCoord.x >= 1) {
+      movieCoord.x -= 1.;
+    }
+  }
+*/  // from PoT coordinates to movie texture coordina
+  movieCoord *= movieWH;
 
   // image reading
   cameraOriginal = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
@@ -2585,6 +2562,9 @@ void main() {
   videoWeight += movieWeight;
 #endif
 
+  // videocolor = movieImage;
+  // videoWeight = 1.;
+
   // video_satur
   //  public-domain function by Darel Rex Finley
 #ifdef var_video_satur
@@ -2642,21 +2622,6 @@ void main() {
   vec4 flashToCACumul = vec4(0.0);
 
   /////////////////////////////////////
-  // builds a path_replay_trackNo vector so that it can be used in the for loop
-  #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo_1,path_replay_trackNo_2,
-                                      path_replay_trackNo_3);
-  #endif
-  #if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo_4,path_replay_trackNo_5,
-                                      path_replay_trackNo_6,path_replay_trackNo_7);
-  #endif
-  #if PG_NB_PATHS == 11
-  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo_8,path_replay_trackNo_9,
-                                      path_replay_trackNo_10,path_replay_trackNo_11);
-  #endif
-
-  /////////////////////////////////////
   // TRACK indTrack between 1 and PG_NB_TRACKS - 1 + track 0 in the end
   for( int indTrack = 1 ; indTrack <= PG_NB_TRACKS ; indTrack++ ) {
     // track 0 is processed last
@@ -2674,24 +2639,11 @@ void main() {
       if( indPath == 0 && currentDrawingTrack == indCurTrack ) {
         pathStroke = DRAWING_BEZIER;
       }
-#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
       // path drawing on current track
-      else if( indPath > 0 && indPath < 4 && path_replay_trackNo03[indPath - 1] == indCurTrack ) {
+      else if( indPath > 0 && path_replay_trackNo[indPath] == indCurTrack ) {
         pathStroke = DRAWING_BEZIER;
       }
-#endif
-#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
-      // path drawing on current track
-      else if( indPath >= 4 && path_replay_trackNo47[indPath - 4] == indCurTrack ) {
-        pathStroke = DRAWING_BEZIER;
-      }
-#endif
-#if PG_NB_PATHS == 11
-      // path drawing on current track
-      else if( indPath >= 8 && path_replay_trackNo811[indPath - 8] == indCurTrack ) {
-        pathStroke = DRAWING_BEZIER;
-      }
-#endif
+
       // drawing occurs
       if( pathStroke > 0 ) {
         BezierControlX = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];
@@ -2712,6 +2664,7 @@ void main() {
             curTrack_grayLevel =  out_gray_drawing( 3 * radiusX_beginOrEnd_radiusY_brushID.x, 0 ); 
                                  // rubber radius is made 3 times larger than regular pen
             out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * pathColor.a);
+            //out_track_FBO[indCurTrack].rgb += curTrack_grayLevel * 0.1 * pathColor.rgb;
             curTrack_color.rgb = vec3(0);
         }
         else { // normal stylus
@@ -2739,7 +2692,9 @@ void main() {
     /////////////////
     // TRACK video
     bool videoOn = false;
-    if( currentVideoTrack == indCurTrack) {
+    if( currentVideoTrack == indCurTrack 
+      && (videoWeight > 0 || flashCameraTrkWght > 0)) {
+      out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
       if( videoWeight > 0) {
         videoOn = true;
 #ifdef var_cameraCumul
@@ -2773,6 +2728,7 @@ void main() {
       }
       if( flashCameraTrkWght > 0 
         && graylevel(cameraOriginal) > flashCameraTrkWght ) { // flash camera
+        videoOn = true;
         // video image copy when there is a flash video
         flashToCACumul.rgb = cameraImage;
         flashToBGCumul.rgb = cameraImage;
@@ -2782,8 +2738,15 @@ void main() {
 
     /////////////////
     // TRACK photo
-    if(currentPhotoTrack == indCurTrack) {
-#if defined(var_photoWeight)
+    float photoCumulWgth = photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
+        + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
+        + uniform_Update_fs_2fv_clip01Wghts.x 
+        + uniform_Update_fs_2fv_clip01Wghts.y);
+    if(currentPhotoTrack == indCurTrack 
+      && (photoCumulWgth > 0 || flashPhotoTrkWght > 0)) {
+      if(!videoOn) {
+        out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
+      }
       // visible photo
       if(photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
         + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
@@ -2805,23 +2768,6 @@ void main() {
             out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
         }
       }
-      // no photo
-      // this has been commented because if there is no photo and no video on the
-      // same track as drawing, the drawing is erased
-      // else {
-      //   if(currentVideoTrack == indCurTrack) {
-      //     // no photo and no video on the same track
-      //     // and no drawing has occurred
-      //     // resets to O so that the last photo or video image does not last forever
-      //     if(!videoOn) {
-      //       out_track_FBO[indCurTrack].rgb = vec3( 0.0 );
-      //     }
-      //     else {
-      //       // nothing to do video or drawing has already been copied
-      //     }
-      //   }
-      // }
-#endif
       if( flashPhotoTrkWght > 0 
           && graylevel(photocolor) > flashPhotoTrkWght ) { // flash photo
         // photo image copy when there is a flash photo
@@ -2829,7 +2775,6 @@ void main() {
         flashToCACumul.a = 1;
       }
     }
-
 
     // non BG track flash on BG track (only concerns tracks >= 1)
     if( indCurTrack != 0 ) {
@@ -2864,7 +2809,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
+  flashToCACumul += uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.z
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track
@@ -2880,7 +2825,8 @@ void main() {
   // CA LAYER: CA "SPREADING" UPDATE
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
-  if( CA_on_off && (frameNo % CAstep == 0) ) {
+  // if( CA_on_off && (frameNo % CAstep == 0) ) 
+  {
     out4_CA = vec4(0.0);
     vec4 currentCA = out_attachment_FBO[pg_FBO_fs_CA_attacht]; // RGB: CA color ALPHA: CA state (ALPHA negative 
               // when first time writing on CA for skipping the first frame for CA update)
@@ -2897,7 +2843,7 @@ void main() {
       // currentCA.rgb = vec3(1,0,0);
     }
 
-     // calculates the new state of the automaton
+    // calculates the new state of the automaton
     CA_out( currentCA );
 
 
@@ -2906,11 +2852,9 @@ void main() {
       if( rand3D(vec3(decalCoordsPOT, uniform_Update_fs_4fv_photo01Wghts_randomValues.z), repop_CA * repop_density_weight) != 0) {
         out4_CA.a = -1.0;
         out4_CA.rgb  = uniform_Update_fs_3fv_repop_ColorCA.xyz;
-#ifdef var_BG_CA_repop_color_mode
         if(BG_CA_repop_color_mode == 1) {
           out4_CA.rgb = textureDensityValue;
         }
-#endif
       }
     }
 
@@ -2941,9 +2885,7 @@ void main() {
       pixel_radius = 1;
     }
 
-#ifdef var_Pixelstep
     if(frameNo % Pixelstep == 0) {
-#endif
       pixel_out();
 
       // arrival of a new pixel
@@ -2959,7 +2901,6 @@ void main() {
         //  modifies speed according to acceleration
         vec2 acceleration;
 
-  #ifdef var_pixel_image_acceleration
         // texture based acceleration shift
         if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
           float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
@@ -2978,7 +2919,6 @@ void main() {
           }
         }
         else
-  #endif
         {          
           acceleration = multiTypeGenerativeNoise(pixelTextureCoordinatesPOT_XY, vec2(0)) - pixel_acc_center;
         }
@@ -3016,24 +2956,20 @@ void main() {
           }
         }
       }
-#ifdef var_Pixelstep
     }
     else {
       // keeps previous step value of out_track_FBO[0].rgb
     }
-#endif
   }
 
-  // pixel "ADDITION"
+  // pixel "REPOPULATION"
   if( repop_BG > 0 ) {
     if( rand3D(vec3(decalCoordsPOT, uniform_Update_fs_4fv_photo01Wghts_randomValues.w), repop_BG * repop_density_weight) != 0) {
         out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.xyz;
-#ifdef var_BG_CA_repop_color_mode
         // repopulation with the color of the density texture
         if(BG_CA_repop_color_mode == 1) {
           out_track_FBO[0].rgb = textureDensityValue;
         }
-#endif
     }
   }
 
@@ -3056,29 +2992,25 @@ void main() {
   // track decay and clear layer
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
-        if(currentScene != 18) {
-          out_track_FBO[indTrack].rgb 
-               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
-        }
         // saturates in case of incay (instead of going to white)
-        else {
+        if(false) {
+        // if(trkDecay[indTrack] < 0) {
           vec3 decayedColor = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
-          if( trkDecay[indTrack] < 0) {
-            // saturated color, nothing to do
-            // else proportionally increase each channel
-            oderedChannels(decayedColor);
-            if(orderedColor[2] <= 1) {
-              vec3 decay = vec3(trkDecay[indTrack]);
-              decay[orderedRank[0]] = 0;
-              decay[orderedRank[1]] *= 0.5;
-              out_track_FBO[indTrack].rgb -= decay;
-            }
+          // saturated color, nothing to do
+          // else proportionally increase each channel
+          oderedChannels(decayedColor);
+          if(orderedColor[2] <= 1) {
+            vec3 decay = vec3(trkDecay[indTrack]);
+            decay[orderedRank[0]] = 0;
+            decay[orderedRank[1]] *= 0.5;
+            out_track_FBO[indTrack].rgb -= decay;
           }
-          else {
-            out_track_FBO[indTrack].rgb = decayedColor;            
-          }
+        }
+        else {
+          out_track_FBO[indTrack].rgb = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
         }
       }
+
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
       // clear layer

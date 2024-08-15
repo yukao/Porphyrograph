@@ -46,6 +46,7 @@ pg_WindowData *pg_CurrentWindow = NULL;
 bool           pg_windowDisplayed = false;
 
 int			   pg_NbConfigurations = 1;
+unsigned int pg_ind_scenario = 0;
 
 // the width of the working window
 // half of the display in case of double window (doubling is made in the Master shader in this case)
@@ -229,9 +230,6 @@ int main(int argcMain, char** argvMain) {
 	pg_printOglError(475);
 
 	// initializations before rendering
-
-	// initialization of all the array variables from full scenario with scenario initial values
-	pg_FullScenarioArrayVarInit();
 
 	// sensor initialization
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {

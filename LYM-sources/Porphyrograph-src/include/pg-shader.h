@@ -202,6 +202,7 @@ extern GLint uniform_Mixing_texture_fs_Trk3[PG_MAX_SCENARIOS];  // ping-pong tra
 extern GLint uniform_Mixing_texture_fs_Render_prec[PG_MAX_SCENARIOS];  // preceding snapshot
 extern GLint uniform_Mixing_texture_fs_Screen_Font[PG_MAX_SCENARIOS];  // message Font
 extern GLint uniform_Mixing_texture_fs_Screen_Message[PG_MAX_SCENARIOS];  // message string
+extern GLint uniform_Mixing_texture_fs_Mask[PG_MAX_SCENARIOS];  // mask for master output
 
 /////////////////////////////////////////////////////////////////////////
 // MASTER SHADER

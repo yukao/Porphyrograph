@@ -71,6 +71,7 @@ enum pg_FBO_Mixing_samplers { pg_enum_CA_FBO_Mixing_sampler = 0,
 	pg_enum_Trk1_FBO_Mixing_sampler,
 	pg_enum_Trk2_FBO_Mixing_sampler,
 	pg_enum_Trk3_FBO_Mixing_sampler,
+	pg_enum_Mask_FBO_Mixing_sampler,
 };
 enum pg_FBO_Master_samplers { pg_enum_Render_curr_FBO_Master_sampler = 0,
 	pg_enum_CA_FBO_Master_sampler,

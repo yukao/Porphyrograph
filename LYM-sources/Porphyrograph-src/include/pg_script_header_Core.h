@@ -433,6 +433,7 @@
 #define var_light_dimmer_pulse
 #define var_light_strobe
 #define var_light_strobe_pulse
+#define var_currentLightScene
 enum InterpVarIDs{ 
   _CA1_CA2_weight = 0,
   _CA1SubType,
@@ -868,6 +869,7 @@ enum InterpVarIDs{
   _light_dimmer_pulse,
   _light_strobe,
   _light_strobe_pulse,
+  _currentLightScene,
   _MaxInterpVarIDs};
 extern float CA1_CA2_weight      ;
 extern int   CA1SubType          ;
@@ -1303,6 +1305,7 @@ extern float light_dimmer        [(PG_NB_LIGHTS+1)];
 extern float light_dimmer_pulse  [(PG_NB_LIGHTS+1)];
 extern float light_strobe        [(PG_NB_LIGHTS+1)];
 extern float light_strobe_pulse  [(PG_NB_LIGHTS+1)];
+extern int   currentLightScene   ;
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };
 enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs];
@@ -1313,4 +1316,3 @@ extern std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs];
 extern void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue);
 extern void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int);
 extern PulseTypes ScenarioVarPulse[_MaxInterpVarIDs];
-void pg_FullScenarioArrayVarInit();

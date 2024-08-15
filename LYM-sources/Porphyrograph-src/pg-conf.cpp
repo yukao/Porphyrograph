@@ -1176,8 +1176,7 @@ void pg_parseScenarioLights(std::ifstream & scenarioFin, int indConfiguration) {
 		string a_light_tilt;
 		string a_light_hue;
 
-		std::getline(scenarioFin, line);
-		// std::cout << "scene: " << line << "\n";
+		 //std::cout << "scene: " << line << "\n";
 		pg_stringstreamStoreLine(&sstream, &line);
 		sstream >> ID; // "light"
 		sstream >> a_light_name; // light ID

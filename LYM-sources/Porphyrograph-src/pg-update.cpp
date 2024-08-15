@@ -126,7 +126,7 @@ int pg_interface_light_group = 0;
 // corresponds to all the parameters associated with DMX light channels
 // key constants are from enum pg_light_command_hashMap_IDs
 std::unordered_map<int, std::string> pg_light_param_hashMap = {
-	{ pg_enum_dimmer, "dimmer" },
+	{ pg_enum_light_dimmer, "dimmer" },
 	{ pg_enum_light_strobe, "strobe" },
 	{ pg_enum_light_zoom, "zoom" },
 	{ pg_enum_light_pan, "pan" },
@@ -799,7 +799,6 @@ void pg_automatic_var_reset_or_update(void) {
 		pg_flashPartCA_weight = 0;
 	}
 
-#if defined(var_master_scale) && defined(var_master_offsetX) && defined(var_photo_gamma) && defined(var_photo_satur) && defined(var_photo_threshold)
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_master_scale]
 		&& pg_FullScenarioActiveVars[pg_ind_scenario][_master_offsetX]
 		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_gamma]
@@ -828,7 +827,6 @@ void pg_automatic_var_reset_or_update(void) {
 			}
 		}
 	}
-#endif
 
 	////////////////////////////
 	// flash camera reset
@@ -842,7 +840,7 @@ void pg_automatic_var_reset_or_update(void) {
 			//printf("end of flash camera weight %.3f\n", pg_flashCameraTrk_weight);
 		}
 	}
-#if defined(var_flashPhotoTrkBeat)  && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
+
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBeat]
 		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBright]
 		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkLength]
@@ -863,7 +861,6 @@ void pg_automatic_var_reset_or_update(void) {
 			}
 		}
 	}
-#endif
 
 	if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
 		if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
@@ -1584,7 +1581,6 @@ void pg_update_shader_Mixing_uniforms(void) {
 		glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mixing]);
 
 		// CA weight
-#if defined(var_flashPhotoTrkBeat)  && defined(var_flashPhotoTrkBright) && defined(var_flashPhotoTrkLength) && defined(var_flashPhotoChangeBeat)
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBeat]
 			&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBright]
 			&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkLength]
@@ -1592,13 +1588,10 @@ void pg_update_shader_Mixing_uniforms(void) {
 			glUniform3f(uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght[pg_ind_scenario],
 				(GLfloat)PG_WINDOW_HEIGHT, pg_flashCameraTrk_weight, pg_flashPhotoTrk_weight);
 		}
-		else
-#else
-		{
+		else {
 			glUniform3f(uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght[pg_ind_scenario],
 				(GLfloat)PG_WINDOW_HEIGHT, pg_flashCameraTrk_weight, 0.f);
 		}
-#endif
 
 		// TEXT TRANSPARENCY
 		glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha[pg_ind_scenario],
@@ -2383,6 +2376,8 @@ void pg_MixingPass(void) {
 	glUniform1i(uniform_Mixing_texture_fs_Trk2[pg_ind_scenario], pg_enum_Trk2_FBO_Mixing_sampler);
 	glUniform1i(uniform_Mixing_texture_fs_Trk3[pg_ind_scenario], pg_enum_Trk3_FBO_Mixing_sampler);
 
+	glUniform1i(uniform_Mixing_texture_fs_Mask[pg_ind_scenario], pg_enum_Mask_FBO_Mixing_sampler);
+
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// 2-cycle ping-pong CA step n + 1 (FBO attachment 0) -- next frame (outout from update pass)
@@ -2421,6 +2416,17 @@ void pg_MixingPass(void) {
 	// 2-cycle ping-pong track 3 step n + 1 (FBO attachment 6) -- next frame (outout from update pass)
 	glActiveTexture(GL_TEXTURE0 + pg_enum_Trk3_FBO_Mixing_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[((pg_FrameNo + 1) % 2) * pg_enum_FBO_Update_nbAttachts + pg_enum_Trk3_FBO_Update_attacht]);
+
+	// Master mask texture
+	glActiveTexture(GL_TEXTURE0 + pg_enum_Mask_FBO_Mixing_sampler);
+	if (nb_layers_master_mask[pg_ind_scenario] > 0) {
+		//printf("multilayer mask texture %d (%d layers)\n", pg_Master_Multilayer_Mask_texID[pg_ind_scenario], nb_layers_master_mask[pg_ind_scenario]);
+		glBindTexture(GL_TEXTURE_3D, pg_Master_Multilayer_Mask_texID[pg_ind_scenario]);
+	}
+	else {
+		//printf("single layer mask texture %d\n", pg_Master_Mask_texID[pg_ind_scenario]);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_Master_Mask_texID[pg_ind_scenario]);
+	}
 
 	// draw points from the currently bound VAO with current in-use shader
 	// glDrawArrays (GL_TRIANGLES, 0, 3 * PG_SIZE_QUAD_ARRAY);

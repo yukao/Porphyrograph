@@ -276,13 +276,11 @@ void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 		}
 	}
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-#if defined(var_textureFrontier_wmin) && defined(var_textureFrontier_wmax) && defined(var_textureFrontier_hmin) && defined(var_textureFrontier_hmax) && defined(var_textureFrontier_wmin_width) && defined(var_textureFrontier_wmax_width) and defined(var_textureFrontier_hmin_width) && defined(var_textureFrontier_hmax_width) && defined(var_textureScale_w) && defined(var_textureScale_h) && defined(var_textureTranslate_w) && defined(var_textureTranslate_h)
 	if (pg_FullScenarioActiveVars[indConfiguration][_textureFrontier_wmin]) {
 		if (pg_Meshes[indConfiguration].empty()) {
 			sprintf(pg_errorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); pg_ReportError(pg_errorStr); throw 100;
 		}
 	}
-#endif
 }
 
 // the linearization for OpenGL replaces indices associated with each face in obj format

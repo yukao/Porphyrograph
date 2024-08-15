@@ -602,7 +602,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "take_snapshot", _take_snapshot },
 	{ "path_replay_stopAll", _path_replay_stopAll },
 	{ "path_replay_playAll", _path_replay_playAll },
-	{ "pg_clear_path_group", _clear_path_group },
+	{ "clear_path_group", _clear_path_group },
 	{ "mw_mss_pos", _mw_mss_pos },
 	{ "cameraWB_R_plus", _cameraWB_R_plus },
 	{ "cameraWB_B_plus", _cameraWB_B_plus },
@@ -630,12 +630,12 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "BottomLeftKeystone", _BottomLeftKeystone },
 	{ "BottomRightKeystone", _BottomRightKeystone },
 	{ "ZeroLight", _ZeroLight },
-	{ "pg_flashPixel", _flashPixel },
+	{ "flashPixel", _flashPixel },
 	{ "flashTrkPart", _flashTrkPart },
 	{ "flashTrkCA", _flashTrkCA },
 	{ "flashCABG", _flashCABG },
 	{ "flashCAPart", _flashCAPart },
-	{ "pg_flashMaster", _flashMaster },
+	{ "flashMaster", _flashMaster },
 	{ "NextRecordReplayPath", _NextRecordReplayPath },
 };
 
@@ -912,14 +912,12 @@ void pg_aliasScript(string address_string, string string_argument_0,
 				touchOSC_tab_command_ending_length, touchOSC_tab_command_ending))) {
 			// OKAY this is a tab change in touchOSC
 		}
-#ifdef DMX
 		// OSC message for lighting
 		else if (address_string.length() > DMX_command_beginning_length
 			&& (0 == address_string.compare(0, DMX_command_beginning_length, DMX_command_beginning))
 			&& pg_nb_light_groups[pg_ind_scenario] > 0) {
 			pg_osc_light_command(address_string, float_arguments, nb_arguments);
 		}
-#endif
 		// OSC message for sensors
 		else if ((address_string.length() >= MSS_sensor_command_beginning.length()
 			&& (0 == address_string.compare(0, MSS_sensor_command_beginning.length(), MSS_sensor_command_beginning)))
@@ -2653,8 +2651,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		break;
 	}
 #endif
-									// TEMPO BENDING
-#if defined(var_clipCaptFreq) and defined(var_clip_nudge_factor)
+	// TEMPO BENDING
 	case _clip_nudge: {
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]
 			&& pg_FullScenarioActiveVars[pg_ind_scenario][_clip_nudge_factor]) {
@@ -2698,9 +2695,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		}
 		break;
 	}
-#endif
-
-								  // CUE MANAGEMENT
+    // CUE MANAGEMENT
 	case _clip_cue_onOff: {
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);

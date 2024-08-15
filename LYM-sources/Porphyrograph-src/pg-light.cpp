@@ -349,40 +349,43 @@ void pg_Reset_allLightGroups_Changed(void) {
 // all the values have to be set so that the unchanged values are not set to 0
 void pg_StoreDMXValues_AllLightGroups(void) {
 	for (int ind_group = 1; ind_group <= pg_nb_light_groups[pg_ind_scenario]; ind_group++) {
-		int ind_light = 0;
-		for (Light& light : pg_Lights[pg_ind_scenario]) {
+		for(unsigned int ind_light = 1; ind_light <= pg_Lights[pg_ind_scenario].size(); ind_light++) {
+			Light& light = pg_Lights[pg_ind_scenario].at(ind_light - 1);
+			//printf("group %d light %d index %d dimmer onOff %d index in group %d dimmer Master %.2f val %.2f\n", ind_group, light.light_group, ind_light,
+			//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_dimmer),
+			//	light.index_in_group, pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_master(pg_enum_light_dimmer),
+			//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_dimmer, light.index_in_group));
 			if (light.light_group == ind_group) {
-				float null3[3] = { 0.f };
-				//printf("store DMX group %d Light %d\n", ind_group, ind_light);
-				pg_StoreDMX(ind_light,
-					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_dimmer) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_dimmer, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+				pg_StoreDMX(ind_light - 1,
+					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_dimmer) == true ?
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_dimmer, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_strobe) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_strobe, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_strobe, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_zoom) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_zoom, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_zoom, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_pan) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_pan, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f), // onOff stops animation but does not reset to 0
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_pan, light.index_in_group) : 0.f), // onOff stops animation but does not reset to 0
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_tilt) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_tilt, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),  // onOff stops animation but does not reset to 0
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_tilt, light.index_in_group) : 0.f),  // onOff stops animation but does not reset to 0
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_hue) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_hue, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_hue, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_red) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_red, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_red, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_green) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_green, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_green, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_blue) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_blue, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f),
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_blue, light.index_in_group) : 0.f),
 					(pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_onOff(pg_enum_light_grey) == true ?
-						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_grey, pg_Lights[pg_ind_scenario][ind_light].index_in_group) : 0.f));
-				//printf("store DMX group %d Light %d h rgb grey %.2f %.2f %.2f %.2f %.2f\n", ind_group, ind_light,
-				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_hue, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_red, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_green, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_blue, pg_Lights[ind_light]->index_in_group),
-				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_grey, pg_Lights[ind_light]->index_in_group));
+						pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_grey, light.index_in_group) : 0.f));
+				//printf("store DMX group %d Light %d str rgb %.2f %.2f %.2f %.2f grey %.2f dim %.2f (index in group %d)\n\n", ind_group, ind_light,
+				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_strobe, light.index_in_group),
+				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_red, light.index_in_group),
+				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_green, light.index_in_group),
+				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_blue, light.index_in_group),
+				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_grey, light.index_in_group),
+				//	pg_light_groups[pg_ind_scenario][ind_group - 1].get_group_val(pg_enum_light_dimmer, light.index_in_group),
+				//	light.index_in_group);
 			}
-			ind_light++;
 		}
 	}
 }
@@ -785,9 +788,9 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				}
 				else {
 					switch (pg_inverse_light_param_hashMap[address_tags[2]]) {
-					case pg_enum_dimmer:
-						//printf("sets dimmer pg_audio_pulse for light group %d %.2f\n", light_group, float_arguments[0]);
-						pg_light_groups[pg_ind_scenario][light_group - 1].set_group_val_pulse(pg_enum_dimmer, float_arguments[0]);
+					case pg_enum_light_dimmer:
+						printf("sets dimmer pg_audio_pulse for light group %d %.2f\n", light_group, float_arguments[0]);
+						pg_light_groups[pg_ind_scenario][light_group - 1].set_group_val_pulse(pg_enum_light_dimmer, float_arguments[0]);
 						break;
 					case pg_enum_light_strobe:
 						//printf("sets strobe for light group %d %.2f\n", light_group, float_arguments[0]);
@@ -872,7 +875,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 			else if (pg_nb_light_groups[pg_ind_scenario] > 0) {
 				if (int(float_arguments[0]) < pg_nb_light_groups[pg_ind_scenario]) {
 					pg_interface_light_group = int(float_arguments[0]);
-					//printf("light_group command (%s) %d!", address_string.c_str(), pg_interface_light_group); 
+					printf("light_group command (%s) %d!", address_string.c_str(), pg_interface_light_group); 
 					// interface control values updating according to the current light group focus
 					// update for all the parameters
 					pg_lightGUI_all_values_and_pulse_update();
@@ -891,7 +894,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				sprintf(pg_errorStr, "light channel_value command (%s) expects %d arguments not %d!", address_string.c_str(), 3, nb_arguments); pg_ReportError(pg_errorStr);
 			}
 			else {
-				//printf("Store DMX channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
+				printf("Store DMX channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
 				pg_StoreDMX(int(float_arguments[0]), float_arguments[1], int(float_arguments[2]), false);
 				pg_SendDMX();
 			}
@@ -902,7 +905,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				sprintf(pg_errorStr, "light channel_fine_value command (%s) expects %d arguments not %d!", address_string.c_str(), 3, nb_arguments); pg_ReportError(pg_errorStr);
 			}
 			else {
-				//printf("Store DMX *fine* channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
+				printf("Store DMX *fine* channel/val/port %d %.2f %d\n", int(float_arguments[0]), float_arguments[1], int(float_arguments[2]));
 				pg_StoreDMX(int(float_arguments[0]), float_arguments[1], int(float_arguments[2]), true);
 				pg_SendDMX();
 			}
@@ -965,7 +968,7 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 				float max_val = float_arguments[5];
 				double speed_val = double(float_arguments[6]);
 				if (light_group <= pg_nb_light_groups[pg_ind_scenario] && light_group > 0) {
-					printf("%s loop for light group %d oOff %d curve %d // %d  vals min max speed %.3f %.3f %.3f\n", command.c_str(), light_group, on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
+					//printf("%s loop for light group %d oOff %d curve %d // %d  vals min max speed %.3f %.3f %.3f\n", command.c_str(), light_group, on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
 					pg_light_groups[pg_ind_scenario][light_group - 1].set_group_loop(pg_inverse_light_param_hashMap[command], on_off, curve_type, parallel_vs_alternate, min_val, max_val, speed_val);
 				}
 			}
@@ -998,17 +1001,6 @@ void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OS
 }
 
 void pg_UpdateLightGroups_from_LightVars() {
-	bool oneLightChanged = false;
-	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_light_grey]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_dimmer]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_strobe]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_grey_pulse]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_color_pulse]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_dimmer_pulse]
-		|| !pg_FullScenarioActiveVars[pg_ind_scenario][_light_strobe_pulse]) {
-		return;
-	}
 	for (int indLight = 1; indLight <= min(int(PG_NB_LIGHTS), int(pg_Lights[pg_ind_scenario].size())); indLight++) {
 		if (light_grey[indLight] != pg_light_grey_prec[indLight] || light_grey_pulse[indLight] != pg_light_grey_pulse_prec[indLight]
 			|| light_color[indLight] != pg_light_color_prec[indLight] || light_color_pulse[indLight] != pg_light_color_pulse_prec[indLight]
@@ -1024,11 +1016,23 @@ void pg_UpdateLightGroups_from_LightVars() {
 
 			float rgb_color[pg_enum_rgb];
 			Light light = pg_Lights[pg_ind_scenario][indLight - 1];
-			if (light.light_group < pg_nb_light_groups[pg_ind_scenario]) {
-				pg_compute_pulsed_palette_color(light_color[indLight], light_color_pulse[indLight], light_grey[indLight], light_grey_pulse[indLight], rgb_color, pg_enum_LIGHT_COLOR);
+			if (light.light_group <= pg_nb_light_groups[pg_ind_scenario]) {
+				if (light_color[indLight] >= 0) {
+					pg_compute_pulsed_palette_color(light_color[indLight], light_color_pulse[indLight], light_grey[indLight],
+						light_grey_pulse[indLight], rgb_color, pg_enum_LIGHT_COLOR);
+				}
+				else {
+					rgb_color[0] = 0.f;
+					rgb_color[1] = 0.f;
+					rgb_color[2] = 0.f;
+				}
 				pg_light_groups[pg_ind_scenario][light.light_group - 1].set_color(rgb_color);
-				pg_light_groups[pg_ind_scenario][light.light_group - 1].set_group_val(pg_enum_dimmer, light_dimmer[indLight] * (1.f + pulse_average * light_dimmer_pulse[indLight]));
-				pg_light_groups[pg_ind_scenario][light.light_group - 1].set_group_val(pg_enum_light_strobe, light_strobe[indLight] * (1.f + pulse_average * light_strobe_pulse[indLight]));
+				pg_light_groups[pg_ind_scenario][light.light_group - 1].set_group_val(pg_enum_light_dimmer, 
+					light_dimmer[indLight] * (1.f + pulse_average * light_dimmer_pulse[indLight]));
+				//printf("light 1: dimmer %.2f group %d val %.2f\n", light_dimmer[1], light.light_group, 
+				//	light_dimmer[indLight] * (1.f + pulse_average * light_dimmer_pulse[indLight]));
+				pg_light_groups[pg_ind_scenario][light.light_group - 1].set_group_val(pg_enum_light_strobe,
+					light_strobe[indLight] * (1.f + pulse_average * light_strobe_pulse[indLight]));
 				pg_light_color_prec[indLight] = light_color[indLight];
 				pg_light_color_pulse_prec[indLight] = light_color_pulse[indLight];
 				pg_light_grey_prec[indLight] = light_grey[indLight];
@@ -1048,12 +1052,12 @@ void pg_UpdateLightGroups_from_LightVars() {
 					}
 				}
 			}
-			oneLightChanged = true;
+			pg_light_groups[pg_ind_scenario][light.light_group - 1].set_changed_since_last_DMX_update();
 		}
 	}
 
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_BGcolor]) {
-		//printf("pg_light_groups[7]->get_group_val(pg_enum_dimmer) %.2f pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(pg_enum_dimmer), pg_light_groups[0].get_color()[0]);
+		//printf("pg_light_groups[7]->get_group_val(pg_enum_light_dimmer) %.2f pg_light_groups[0].get_color()[0] %.2f\n", pg_light_groups[7]->get_group_val(pg_enum_light_dimmer), pg_light_groups[0].get_color()[0]);
 	}
 	for (int indLight = 1; indLight <= PG_NB_LIGHTS; indLight++) {
 		pg_pulse_light_prec[indLight][0] = pg_audio_pulse[0];

@@ -769,14 +769,14 @@ void clearLayer_callBack(pg_Parameter_Input_Type param_input_type, bool scenario
 		pg_lastClearSceneIndex = pg_CurrentSceneIndex;
 	}
 }
-#if defined(var_currentLightScene)
 void currentLightScene_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
 	if ((param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) && scenario_or_gui_command_value >= 0) {
-		sprintf(pg_AuxString, "/light_control/light_scene_start %d", int(currentLightScene) - 1);
-		pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_Python_send");
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_currentLightScene]) {
+			sprintf(pg_AuxString, "/light_control/light_scene_start %d", int(currentLightScene) - 1);
+			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_Python_send");
+		}
 	}
 }
-#endif
 
 void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {

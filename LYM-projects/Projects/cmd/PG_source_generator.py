@@ -149,6 +149,8 @@ def header_const_value(var_ID) :
 			return int(header_const_dict[header_var_ID])
 		elif(var_ID == "("+header_var_ID+"+1)") :
 			return( int(header_const_dict[header_var_ID]) + 1)
+		elif(re.match(r"[0-9]+", var_ID)) :
+			return( int(var_ID) )
 			
 	# for config_id, config_type, config_init in zip(config_ids, config_types, config_initial_values):
 	# 	if(config_type == "const" and config_id == var_ID) :
@@ -311,7 +313,7 @@ def read_scenario_shader_names(local_scenario_footer, indScenario) :
 		if(line[0] == "ParticleAnimation") :
 			if(line[1] != "NULL") :
 				ParticleAnimation_InputShader_name.append(line[1]+".frag")
-				ParticleAnimation_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
+				ParticleAnimation_OutputShader_name.append(line[1]+"_full.frag")
 			else :
 				ParticleAnimation_InputShader_name.append("NULL")
 				ParticleAnimation_OutputShader_name.append("NULL")
@@ -322,7 +324,7 @@ def read_scenario_shader_names(local_scenario_footer, indScenario) :
 			# print("Configuration generator: Update shader")
 			if(line[1] != "NULL") :
 				Update_InputShader_name.append(line[1]+".frag")
-				Update_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
+				Update_OutputShader_name.append(line[1]+"_full.frag")
 			else :
 				Update_InputShader_name.append("NULL")
 				Update_OutputShader_name.append("NULL")
@@ -332,7 +334,7 @@ def read_scenario_shader_names(local_scenario_footer, indScenario) :
 		elif(line[0] == "ParticleRender") :
 			if(line[1] != "NULL") :
 				ParticleRendering_InputShader_name.append(line[1]+".frag")
-				ParticleRendering_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
+				ParticleRendering_OutputShader_name.append(line[1]+"_full.frag")
 			else :
 				ParticleRendering_InputShader_name.append("NULL")
 				ParticleRendering_OutputShader_name.append("NULL")
@@ -342,7 +344,7 @@ def read_scenario_shader_names(local_scenario_footer, indScenario) :
 		elif(line[0] == "Mixing") :
 			if(line[1] != "NULL") :
 				Mixing_InputShader_name.append(line[1]+".frag")
-				Mixing_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
+				Mixing_OutputShader_name.append(line[1]+"_full.frag")
 			else :
 				Mixing_InputShader_name.append("NULL")
 				Mixing_OutputShader_name.append("NULL")
@@ -352,7 +354,7 @@ def read_scenario_shader_names(local_scenario_footer, indScenario) :
 		elif(line[0] == "Master") :
 			if(line[1] != "NULL") :
 				Master_InputShader_name.append(line[1]+".frag")
-				Master_OutputShader_name.append(line[1]+"_full_"+str(indScenario)+".frag")
+				Master_OutputShader_name.append(line[1]+"_full.frag")
 			else :
 				Master_InputShader_name.append("NULL")
 				Master_OutputShader_name.append("NULL")
@@ -869,7 +871,9 @@ def scenario_to_cpp_range(scenario_type) :
 		return []
 	elif(scenario_type.startswith("bool") or scenario_type.startswith("int") or scenario_type.startswith("float")) :
 		indices = re.findall(r'.*\[([0-9]+)\.\.([^/[]+)\]$', scenario_type)
+		# print(indices)
 		if(len(indices) == 1 and len(indices[0]) == 2) :
+			# print(indices[0][0], indices[0][1])
 			return [indices[0][0], indices[0][1]]
 	print("Configuration generator: Unknown scenario variable type ", scenario_type)
 	print("Configuration generator: End of configuration generation\n\n")
@@ -922,7 +926,33 @@ def write_script_header_and_body() :
 			else :
 				ScriptBody.write("%-5s %-20s = %s;\n" % (type_string , var_ID, full_specs[7]))
 		else :
-			ScriptBody.write("%-5s %-20s[%s];\n" % (type_string , var_ID, index_range[1]))
+			val_init = full_specs[7].split('/')
+			nb_expected_vals = header_const_value(index_range[1]) - int(index_range[0])
+			if(len(val_init) != nb_expected_vals) :
+				print("Configuration generator: Array variable", var_ID, "expects", nb_expected_vals, " initial value (of type [",type_string,"])", "not" , len(val_init))
+				print("Configuration generator: End of configuration generation\n\n")
+				sys.exit(0)
+			initial_value = ""
+			for index in range(0, int(index_range[0])) :
+				if(type_string.startswith("string")) :
+					initial_value = initial_value + "\"\", "
+				elif(type_string.startswith("float")) :
+					initial_value = initial_value + "0.f, "
+				else :
+					initial_value = initial_value + "0, "
+			for index in range(int(index_range[0]), header_const_value(index_range[1])) :
+				value = val_init[index - int(index_range[0])]
+				if(type_string.startswith("string")) :
+					initial_value = initial_value + value + ", "
+				elif(type_string.startswith("float")) :
+					if(value.find(".") != -1) :
+						initial_value = initial_value + value + "f, "
+					else :
+						initial_value = initial_value + value + ".f, "
+				else :
+					initial_value = initial_value + value + ", "
+			ScriptBody.write("%-5s %-20s[%s] = %s;\n" % (type_string , var_ID, index_range[1], "{"+initial_value+"}"))
+
 
 	# extern scenario variable declaration in the header file
 	# full_scenario_vars_specs_dict: [ind_var, varVerbatim, varType, varCallBack, varGUI, varShader, varPulse, varInitial]
@@ -945,7 +975,6 @@ def write_script_header_and_body() :
 	ScriptHeader.write("extern void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue);\n")
 	ScriptHeader.write("extern void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int);\n")
 	ScriptHeader.write("extern PulseTypes ScenarioVarPulse[_MaxInterpVarIDs];\n")
-	ScriptHeader.write("void pg_FullScenarioArrayVarInit();\n")
 
 	# scenario variable types declarations
 	ScriptBody.write("VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = { \n")
@@ -1085,28 +1114,6 @@ def write_script_header_and_body() :
 	for var_ID in full_scenario_vars_specs_dict:
 		ScriptBody.write("  \""+var_ID+"\",\n")
 	ScriptBody.write("};\n")
-
-	# initialization of array variables with initial values
-	ScriptBody.write("void pg_FullScenarioArrayVarInit() {\n")
-	for var_ID, full_specs in full_scenario_vars_specs_dict.items():
-		index_range = scenario_to_cpp_range(full_specs[2])
-		type_string = full_specs[2]
-		# print(var_ID, index_range, type_string)
-		if(index_range != []) :
-			val_init = full_specs[7].split('/')
-			nb_expected_vals = header_const_value(index_range[1]) - int(index_range[0])
-			if(len(val_init) != nb_expected_vals) :
-				print("Configuration generator: Array variable", var_ID, "expects", nb_expected_vals, " initial value (of type [",type_string,"])", "not" , len(val_init))
-				print("Configuration generator: End of configuration generation\n\n")
-				sys.exit(0)
-			for index in range(int(index_range[0]), header_const_value(index_range[1])) :
-				if(type_string.startswith("string")) :
-					ScriptBody.write("	{0}[{1}] = \"{2}\";\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
-				elif(type_string.startswith("float")) :
-					ScriptBody.write("	{0}[{1}] = float({2});\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
-				else :
-					ScriptBody.write("	{0}[{1}] = {2};\n".format(var_ID, str(index), val_init[index - int(index_range[0])]))
-	ScriptBody.write("}\n")
 
 	ShaderBodyDecl.write("GLint uniform_ParticleAnimation_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
 	ShaderBodyDecl.write("GLint uniform_Update_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)

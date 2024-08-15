@@ -9,23 +9,19 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #define PG_NB_TRACKS 4
 
-#define var_CAMixingWeight
-float	 CAMixingWeight;
-#define var_PartMixingWeight
-float	 PartMixingWeight;
-#define var_trackMixingWeight_0
-float	 trackMixingWeight_0;
-#define var_trackMixingWeight_1
-float	 trackMixingWeight_1;
-#define var_trackMixingWeight_2
-float	 trackMixingWeight_2;
-#define var_trackMixingWeight_3
-float	 trackMixingWeight_3;
 #define var_echo
 float	 echo;
 #define var_echoNeg
 float	 echoNeg;
-uniform float uniform_Mixing_scenario_var_data[8];
+#define var_CAMixingWeight
+float	 CAMixingWeight;
+#define var_ClipArtMixingWeight
+float	 ClipArtMixingWeight;
+#define var_PartMixingWeight
+float	 PartMixingWeight;
+#define var_trackMixingWeight
+float	 trackMixingWeight[4];
+uniform float uniform_Mixing_scenario_var_data[9];
 
 // Main shader.
 
@@ -48,21 +44,22 @@ uniform vec3 uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha;
 /////////////////////////////////////
 // INPUT
 layout (binding = 0) uniform samplerRect uniform_Mixing_texture_fs_CA; // 2-cycle ping-pong Update pass CA step n + 1 (FBO attachment 0)
-layout (binding = 1) uniform samplerRect uniform_Mixing_texture_fs_Part_render; // Particles step n
-layout (binding = 2) uniform samplerRect uniform_Mixing_texture_fs_Render_prec;  // preceding snapshot for echo
+layout (binding = 1) uniform samplerRect uniform_Mixing_texture_fs_ClipArt_render; // ClipArt step n
+layout (binding = 2) uniform samplerRect uniform_Mixing_texture_fs_Particle_render; // Particles step n
+layout (binding = 3) uniform samplerRect uniform_Mixing_texture_fs_Render_prec;  // preceding snapshot for echo
 // FONT
-layout (binding = 3) uniform samplerRect uniform_Mixing_texture_fs_Screen_Font;
-layout (binding = 4) uniform samplerRect uniform_Mixing_texture_fs_Screen_Message;
+layout (binding = 4) uniform samplerRect uniform_Mixing_texture_fs_Screen_Font;
+layout (binding = 5) uniform samplerRect uniform_Mixing_texture_fs_Screen_Message;
 // pos FBO
-layout (binding = 5) uniform samplerRect uniform_Mixing_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 track step n + 1 (FBO attachment 3)
+layout (binding = 6) uniform samplerRect uniform_Mixing_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 track step n + 1 (FBO attachment 6)
 #if PG_NB_TRACKS >= 2
-layout (binding = 6) uniform samplerRect uniform_Mixing_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n + 1 (FBO attachment 4)
+layout (binding = 7) uniform samplerRect uniform_Mixing_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n + 1 (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 7) uniform samplerRect uniform_Mixing_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n + 1 (FBO attachment 5)
+layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n + 1 (FBO attachment 8)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n + 1 (FBO attachment 6)
+layout (binding = 9) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n + 1 (FBO attachment 9)
 #endif
 
 /////////////////////////////////////
@@ -70,14 +67,15 @@ layout (binding = 8) uniform samplerRect uniform_Mixing_texture_fs_Trk3;  // 2-c
 out vec4 outColor0;
 
 void main() {
-  CAMixingWeight = uniform_Mixing_scenario_var_data[0];
-  PartMixingWeight = uniform_Mixing_scenario_var_data[1];
-  trackMixingWeight_0 = uniform_Mixing_scenario_var_data[2];
-  trackMixingWeight_1 = uniform_Mixing_scenario_var_data[3];
-  trackMixingWeight_2 = uniform_Mixing_scenario_var_data[4];
-  trackMixingWeight_3 = uniform_Mixing_scenario_var_data[5];
-  echo = uniform_Mixing_scenario_var_data[6];
-  echoNeg = uniform_Mixing_scenario_var_data[7];
+  echo = uniform_Mixing_scenario_var_data[0];
+  echoNeg = uniform_Mixing_scenario_var_data[1];
+  CAMixingWeight = uniform_Mixing_scenario_var_data[2];
+  ClipArtMixingWeight = uniform_Mixing_scenario_var_data[3];
+  PartMixingWeight = uniform_Mixing_scenario_var_data[4];
+  trackMixingWeight[0] = (uniform_Mixing_scenario_var_data[5]);
+  trackMixingWeight[1] = (uniform_Mixing_scenario_var_data[6]);
+  trackMixingWeight[2] = (uniform_Mixing_scenario_var_data[7]);
+  trackMixingWeight[3] = (uniform_Mixing_scenario_var_data[8]);
 
   float height = uniform_Mixing_fs_3fv_height_flashCameraTrkWght_flashPhotoTrkWght.x;
 
@@ -110,7 +108,8 @@ void main() {
     }
   }
 
-  vec4 particle_color = texture(uniform_Mixing_texture_fs_Part_render, decalCoords);
+  vec4 ClipArt_color = texture(uniform_Mixing_texture_fs_ClipArt_render, decalCoords);
+  vec4 particle_color = texture(uniform_Mixing_texture_fs_Particle_render, decalCoords);
  
    vec4 track0_color = texture(uniform_Mixing_texture_fs_Trk0, decalCoords);
 #if PG_NB_TRACKS >= 2
@@ -126,17 +125,20 @@ void main() {
   ////////////////////////////////////////////////////////////////////
   // mix of current layers according to composition weights
   vec3 localColor
-    = vec3(track0_color.rgb) * trackMixingWeight_0
-#if PG_NB_TRACKS >= 2 && defined(var_trackMixingWeight_1)
-    + vec3(track1_color.rgb) * trackMixingWeight_1
+    = vec3(track0_color.rgb) * trackMixingWeight[0]
+#if PG_NB_TRACKS >= 2
+    + vec3(track1_color.rgb) * trackMixingWeight[1]
 #endif
-#if PG_NB_TRACKS >= 3 && defined(var_trackMixingWeight_2)
-    + vec3(track2_color.rgb) * trackMixingWeight_2
+#if PG_NB_TRACKS >= 3
+    + vec3(track2_color.rgb) * trackMixingWeight[2]
 #endif
-#if PG_NB_TRACKS >= 4 && defined(var_trackMixingWeight_3)
-    + vec3(track3_color.rgb) * trackMixingWeight_3
+#if PG_NB_TRACKS >= 4
+    + vec3(track3_color.rgb) * trackMixingWeight[3]
 #endif
     + CA_color.rgb * CAMixingWeight
+#if defined(var_ClipArtMixingWeight)
+    + ClipArt_color.rgb * ClipArtMixingWeight * ClipArt_color.a
+#endif
 #if defined(var_PartMixingWeight)
     + particle_color.rgb * PartMixingWeight * particle_color.a
 #endif
