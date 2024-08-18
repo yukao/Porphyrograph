@@ -70,49 +70,49 @@ void pg_initializeScenearioVariables(void) {
 
 	/////////////////////////////////////////////////////////////////////////
 	// VARIABLE INTITIALIZATION FOR EACH CONFIGURATION
-	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
+	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
 		/////////////////////////////////////////////////////////////////////////
 		// CONSTANT UNIFORM VARIABLES
 		// only assigned at initialization, does not change during the set
 			// only assigned at initialization, does not change during the set
-		glUseProgram(pg_shader_programme[indConfiguration][pg_enum_shader_ParticleAnimation]);
+		glUseProgram(pg_shader_programme[indScenario][pg_enum_shader_ParticleAnimation]);
 
 		///////////////////////////////////////////////////////////////////
 		// VERTEX SHADER VARIABLE
-		glUniform2f(uniform_ParticleAnimation_vp_2fv_width_height[indConfiguration],
+		glUniform2f(uniform_ParticleAnimation_vp_2fv_width_height[indScenario],
 			(GLfloat)pg_workingWindow_width, (GLfloat)PG_WINDOW_HEIGHT);
 
 		// only assigned at initialization, does not change during the set
-		glUseProgram(pg_shader_programme[indConfiguration][pg_enum_shader_Update]);
+		glUseProgram(pg_shader_programme[indScenario][pg_enum_shader_Update]);
 
 		///////////////////////////////////////////////////////////////////
 		// VERTEX SHADER VARIABLE
-		glUniform2f(uniform_Update_vp_2fv_width_height[indConfiguration],
+		glUniform2f(uniform_Update_vp_2fv_width_height[indScenario],
 			(GLfloat)pg_workingWindow_width, (GLfloat)PG_WINDOW_HEIGHT);
 
 		/////////////////////////////////////////////////////////////////////////
 		// INItiAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
-		for (int indP = 0; indP < pg_ScenarioVarNb[indConfiguration]; indP++) {
-			int indVar = pg_ConfigScenarioVarRank[indConfiguration][indP];
-			if (pg_FullScenarioActiveVars[indConfiguration][indVar]) {
+		for (int indP = 0; indP < pg_ScenarioVarNb[indScenario]; indP++) {
+			int indVar = pg_ConfigScenarioVarRank[indScenario][indP];
+			if (pg_FullScenarioActiveVars[indScenario][indVar]) {
 				if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 					if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
-						*((float*)pg_FullScenarioVarPointers[indVar]) = float(pg_InitialValuesInterpVar[indConfiguration][indVar].val_num);
+						*((float*)pg_FullScenarioVarPointers[indVar]) = float(pg_InitialValuesInterpVar[indScenario][indVar].val_num);
 					}
 					else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
-						*((int*)pg_FullScenarioVarPointers[indVar]) = int(pg_InitialValuesInterpVar[indConfiguration][indVar].val_num);
+						*((int*)pg_FullScenarioVarPointers[indVar]) = int(pg_InitialValuesInterpVar[indScenario][indVar].val_num);
 					}
 					else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
-						*((bool*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indConfiguration][indVar].val_num != 0);
+						*((bool*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indScenario][indVar].val_num != 0);
 					}
 					else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
-						*((int*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indConfiguration][indVar].val_num > 0 ? 1 : (pg_InitialValuesInterpVar[indConfiguration][indVar].val_num < 0 ? -1 : 0));
+						*((int*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indScenario][indVar].val_num > 0 ? 1 : (pg_InitialValuesInterpVar[indScenario][indVar].val_num < 0 ? -1 : 0));
 					}
 					else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
-						*((bool*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indConfiguration][indVar].val_num > 0);
+						*((bool*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indScenario][indVar].val_num > 0);
 					}
 					else if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
-						*((string*)pg_FullScenarioVarPointers[indVar]) = pg_InitialValuesInterpVar[indConfiguration][indVar].val_string;
+						*((string*)pg_FullScenarioVarPointers[indVar]) = pg_InitialValuesInterpVar[indScenario][indVar].val_string;
 					}
 					else {
 						sprintf(pg_errorStr, "Incorrect variable type (%d) for scenario variable #%d!", pg_FullScenarioVarTypes[indVar], indVar); pg_ReportError(pg_errorStr);
@@ -122,19 +122,19 @@ void pg_initializeScenearioVariables(void) {
 				else {
 					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
 						if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
-							((float*)pg_FullScenarioVarPointers[indVar])[index] = float(pg_InitialValuesInterpVar[indConfiguration][indVar].val_array[index]);
+							((float*)pg_FullScenarioVarPointers[indVar])[index] = float(pg_InitialValuesInterpVar[indScenario][indVar].val_array[index]);
 						}
 						else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
-							((int*)pg_FullScenarioVarPointers[indVar])[index] = int(pg_InitialValuesInterpVar[indConfiguration][indVar].val_array[index]);
+							((int*)pg_FullScenarioVarPointers[indVar])[index] = int(pg_InitialValuesInterpVar[indScenario][indVar].val_array[index]);
 						}
 						else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
-							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indConfiguration][indVar].val_array[index] != 0);
+							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] != 0);
 						}
 						else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
-							((int*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indConfiguration][indVar].val_array[index] > 0 ? 1 : (pg_InitialValuesInterpVar[indConfiguration][indVar].val_array[index] < 0 ? -1 : 0));
+							((int*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] > 0 ? 1 : (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] < 0 ? -1 : 0));
 						}
 						else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
-							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indConfiguration][indVar].val_array[index] > 0);
+							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] > 0);
 						}
 						else {
 							sprintf(pg_errorStr, "Incorrect variable type (%d) for scenario variable #%d!", pg_FullScenarioVarTypes[indVar], indVar); pg_ReportError(pg_errorStr);

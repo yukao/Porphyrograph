@@ -218,9 +218,9 @@ void pa_AudioOut::paStreamFinished(void* userData)
 
 void pg_listAllSoundtracks(void) {
     printf("Listing Soundtracks:\n");
-    for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-        std::cout << "    " << indConfiguration << ": ";
-        for (SoundTrack& soundtrack : pg_SoundTracks[indConfiguration]) {
+    for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+        std::cout << "    " << indScenario << ": ";
+        for (SoundTrack& soundtrack : pg_SoundTracks[indScenario]) {
             std::cout << soundtrack.soundtrackFileName << " (" << soundtrack.soundtrackShortName << "), ";
         }
         std::cout << std::endl;

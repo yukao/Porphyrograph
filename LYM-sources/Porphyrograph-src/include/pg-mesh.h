@@ -29,6 +29,8 @@
 #ifndef PG_MESH_H
 #define PG_MESH_H
 
+#define PG_MAX_ANIMATION_POSES 7
+
 class Bone {
 public:
     // bone ID
@@ -162,7 +164,7 @@ public:
 	vector<unsigned int> mesh_vao;
 	vector<array<float, 3>> mesh_barycenter;
 	vector<unsigned int> mesh_index_vbo;
-	MeshData(int indConfiguration) {
+	MeshData(int indScenario) {
 		pg_Mesh_fileNames = "";
 		// geometrical transformations
 		pg_Mesh_Scale = 1.f;
@@ -194,7 +196,7 @@ public:
 		mesh_barycenter = {};
 		mesh_index_vbo = {};
 #if defined(var_Caverne_Mesh_Profusion)
-		if (pg_FullScenarioActiveVars[indConfiguration][_Caverne_Mesh_Profusion]) {
+		if (pg_FullScenarioActiveVars[indScenario][_Caverne_Mesh_Profusion]) {
 			pg_CaverneActveMesh = false;
 			if (indFile < 7) {
 				pg_CaverneMeshWakeupTime = float(rand_0_1 * 10.);
@@ -207,7 +209,7 @@ public:
 		}
 #endif
 #if defined(var_MmeShanghai_brokenGlass)
-		if (pg_FullScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
+		if (pg_FullScenarioActiveVars[indScenario][_MmeShanghai_brokenGlass]) {
 			pg_MmeShanghai_MeshSubParts = NULL;
 			pg_MmeShanghai_NbMeshSubParts = 0;
 			pg_MmeShanghai_MeshSubPart_FileNames = NULL;
@@ -237,14 +239,6 @@ public:
 	}
 };
 
-#define PG_MAX_ANIMATION_POSES 7
-extern int* pg_nb_bones[PG_MAX_SCENARIOS];
-extern Bone** pg_tabBones[PG_MAX_SCENARIOS];
-extern int* pg_nb_AnimationPoses[PG_MAX_SCENARIOS];
-extern int* pg_nb_LibraryPoses[PG_MAX_SCENARIOS];
-extern float** pg_interpolation_weight_AnimationPose[PG_MAX_SCENARIOS];
-extern float** pg_interpolation_weight_MotionPose[PG_MAX_SCENARIOS];
-extern int* pg_nb_MotionPoses[PG_MAX_SCENARIOS];
 class MotionPose {
 public:
 	float pose_Mesh_Translation_X;
@@ -266,24 +260,68 @@ public:
 	~MotionPose() {
 	}
 };
-extern MotionPose** pg_motionPoses[PG_MAX_SCENARIOS];
+
+class MeshAnimationData {
+public:
+	// animation
+	double pg_mesh_startAnime;
+	double pg_mesh_anime_precTime;
+	int pg_mesh_precedingAnime;
+	bool pg_mesh_positiveChange;
+	bool pg_mesh_negativeChange;
+
+	// motion
+	double pg_mesh_startMotion;
+	double pg_mesh_motion_precTime;
+	int pg_mesh_precedingMotion;
+
+	// bones & animation
+	int pg_nb_bones;
+	Bone* pg_tabBones;
+	int pg_nb_LibraryPoses;
+	int pg_nb_AnimationPoses;
+	float* pg_interpolation_weight_AnimationPose;
+	int pg_nb_MotionPoses;
+	MotionPose* pg_motionPoses;
+	float* pg_interpolation_weight_MotionPose;
+	MeshAnimationData() {
+		// animation
+		pg_mesh_startAnime = -1;
+		pg_mesh_anime_precTime = -1;
+		pg_mesh_precedingAnime = -1;
+		pg_mesh_positiveChange = false;
+		pg_mesh_negativeChange = false;
+
+		// motion 
+		pg_mesh_startMotion = -1;
+		pg_mesh_motion_precTime = -1;
+		pg_mesh_precedingMotion = -1;
+
+		// bones & animation
+		pg_nb_bones = 0;
+		pg_tabBones = NULL;
+		pg_nb_AnimationPoses = 0;
+		pg_nb_LibraryPoses = 0;
+		pg_nb_MotionPoses = 0;
+		pg_interpolation_weight_AnimationPose = new float[PG_MAX_ANIMATION_POSES];
+		pg_interpolation_weight_MotionPose = new float[PG_MAX_ANIMATION_POSES];
+		for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
+			pg_interpolation_weight_AnimationPose[indPose] = 0.f;
+			pg_interpolation_weight_MotionPose[indPose] = 0.f;
+		}
+		pg_motionPoses = new MotionPose[PG_MAX_ANIMATION_POSES]();
+	}
+	~MeshAnimationData(void) {
+	}
+};
 
 // MESHES
 extern vector<MeshData> pg_Meshes[PG_MAX_SCENARIOS];
+extern vector<MeshAnimationData> pg_Mesh_Animations[PG_MAX_SCENARIOS];
 
 // mesh anim data
-extern double *pg_mesh_startAnime[PG_MAX_SCENARIOS];
-extern double *pg_mesh_anime_precTime[PG_MAX_SCENARIOS];
-extern int *pg_mesh_precedingAnime[PG_MAX_SCENARIOS];
-extern bool* pg_mesh_positiveChange[PG_MAX_SCENARIOS];
-extern bool* pg_mesh_negativeChange[PG_MAX_SCENARIOS];
 #define _lastMesh_Anime 6
 #define _lastMesh_Motion 6
-
-// mesh motion data
-extern double* pg_mesh_startMotion[PG_MAX_SCENARIOS];
-extern double* pg_mesh_motion_precTime[PG_MAX_SCENARIOS];
-extern int* pg_mesh_precedingMotion[PG_MAX_SCENARIOS];
 
 // mesh data
 extern GLfloat *pg_mesh_vertexBuffer;
@@ -298,7 +336,7 @@ extern GLfloat pg_mesh_light_x;
 extern GLfloat pg_mesh_light_y;
 extern GLfloat pg_mesh_light_z;
 
-void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration);
+void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indScenario);
 void pg_copyMeshData(int indObjectInMesh, GLfloat* vertexBufferIni, GLfloat* texCoordBufferIni, GLfloat* normalBufferIni,
 	GLint* boneIndexBufferIni, GLfloat* boneWeightBufferIni,
 	GLuint* indexPointBufferIni, GLuint* indexTexCoordBufferIni, GLuint* indexNormalBufferIni,
@@ -307,13 +345,13 @@ void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryP
 void pg_count_faces_mesh_obj(FILE* file, int* meshNo,
 	int **nbVerticesInEachMesh, int **nbTextCoordsInEachMesh, int **nbNormalsInEachMesh,
 	int **nbFacesInEachMesh);
-void pg_parseArmatureObj(FILE* file, char* line, char* tag, char* id, int indMeshFile, int indConfiguration);
-void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc, int indMeshFile, int indConfiguration);
+void pg_parseArmatureObj(FILE* file, char* line, char* tag, char* id, int indMeshFile, int indScenario);
+void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc, int indMeshFile, int indScenario);
 void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
-int *nbFacesInEachMesh, int indConfiguration);
-void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfiguration);
-void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfiguration);
+int *nbFacesInEachMesh, int indScenario);
+void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indScenario);
+void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indScenario);
 void pg_loadAllMeshes(void);
 #if defined(var_MmeShanghai_brokenGlass)
 void pg_loadMeshSubParts(string meshPart_fileName, bool* ObjectsInSubPart, int nbObjectsInMesh);
@@ -332,6 +370,4 @@ void pg_meshOff(int indImage);
 void pg_meshMobileOnOff(int indImage);
 void pg_meshMobileOff(int indImage);
 void pg_meshMobileOn(int indImage);
-
-void pg_meshInitialization(void);
 #endif

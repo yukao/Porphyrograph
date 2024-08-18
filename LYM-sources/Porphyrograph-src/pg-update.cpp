@@ -270,7 +270,7 @@ void pg_window_display(void) {
 
 			// visible mesh
 			if (visible) {
-				if (pg_tabBones[indMeshFile] != NULL) {
+				if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones != NULL) {
 					//printf("updage anim & bones mesh %d\n", indMeshFile);
 					pg_update_bone_anim(indMeshFile);
 					pg_update_bones(indMeshFile);
@@ -1033,7 +1033,7 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	// pen paths positions
 	for (int indPath = 0; indPath < (PG_NB_PATHS + 1); indPath++) {
 #if defined(var_Novak_flight_on)
-		if (pg_FullScenarioActiveVars[indConfiguration][_Novak_flight_on]
+		if (pg_FullScenarioActiveVars[indScenario][_Novak_flight_on]
 			&& indPath > 0) {
 			pg_paths_currentDynPoint[indPath].pg_paths_x_prev_memory = pg_paths_currentDynPoint[indPath].pg_paths_x_memory;
 			pg_paths_currentDynPoint[indPath].pg_paths_x_memory = cur_Novak_flight_2D_points[indPath].x;
@@ -3178,7 +3178,7 @@ void pg_drawOneMesh(int indMeshFile) {
 		} // submeshes
 
 		// armature rendering
-		if (pg_tabBones[indMeshFile] != NULL && false) {
+		if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones != NULL && false) {
 			glDisable(GL_DEPTH_TEST);
 			//printf("render armature mesh #%d\n", indMeshFile);
 				// updates this variable according whether triangles or lines are shown

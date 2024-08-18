@@ -158,8 +158,8 @@ public:
 	}
 	// calls to pg_loadClipFrames should be immediately followed by pg_toGPUClipFrames
 	// due to global storage variables pg_imgPhotoCompressedFormat, pg_imgPhotoCompressedBitmap, pg_imgPhotoBGRInit, pg_imgPhotoRGB;
-	bool pg_loadClipFrames(string* fileName, int width, int height, int indConfiguration);
-	bool pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indConfiguration);
+	bool pg_loadClipFrames(string* fileName, int width, int height, int indScenario);
+	bool pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int indScenario);
 };
 extern ClipFramesData** pg_ClipFrames_buffer_data[PG_MAX_SCENARIOS];
 
@@ -246,7 +246,7 @@ void pg_writejpg(cv::String imageFileName);
 void pg_writepng(cv::String imageFileName);
 
 // loading a dds format under its compressed form (contrary to other formats (png, jpg) which are decompressed)
-bool pg_load_compressed_photo(string *fileName, int width, int height, int indConfiguration);
+bool pg_load_compressed_photo(string *fileName, int width, int height, int indScenario);
 
 // TEXTURE LOADING
 bool pg_loadTexture3D(pg_TextureData* texData,
@@ -258,10 +258,10 @@ bool pg_loadTexture2D(pg_TextureData* texData,
 
 
 // particle initialization from photography
-bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indConfiguration); // 2 texture IDs one for pos/speed, the other one for color/radius
+bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indScenario); // 2 texture IDs one for pos/speed, the other one for color/radius
 
 // particle acceleration shift from photography
-bool pg_storeParticleAccelerationfromImage(string fileName, int indConfiguration);
+bool pg_storeParticleAccelerationfromImage(string fileName, int indScenario);
 
 // VIDEO FRAME AND CAPTURE INITIALIZATION (CAMERA AND MOVIE)
 void pg_initMovieFrameTexture(Mat *video_frame);

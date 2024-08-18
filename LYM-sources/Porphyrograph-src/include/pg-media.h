@@ -278,8 +278,8 @@ public:
 	~PhotoData(void) {
 	}
 	// calls to pg_loadPhoto should be immediately followed by pg_toGPUPhoto
-	// due to global storage variables pg_imgPhotoCompressedFormat[indConfiguration], pg_imgPhotoCompressedBitmap[indConfiguration], pg_imgPhotoBGRInit[indConfiguration], pg_imgPhotoRGB[indConfiguration];
-	bool pg_loadPhoto(bool invert, int width, int height, bool verbose, int indConfiguration);
+	// due to global storage variables pg_imgPhotoCompressedFormat[indScenario], pg_imgPhotoCompressedBitmap[indScenario], pg_imgPhotoBGRInit[indScenario], pg_imgPhotoRGB[indScenario];
+	bool pg_loadPhoto(bool invert, int width, int height, bool verbose, int indScenario);
 	bool pg_toGPUPhoto(bool is_rectangle,
 		GLint components,
 		GLenum datatype, GLenum texturefilter, int iindConfiguration);
@@ -358,8 +358,8 @@ void pg_loadCameraFrame(bool initial_capture, int IPCam_no);
 void pg_diaporama_random(void);
 void pg_initDiaporamas(void);
 bool pg_loadAllDiaporamas(void);
-void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_entry);
-void pg_AddFilesToDiaporamas(int indConfiguration, fs::directory_entry dir_entry);
+void pg_AddDirectoryToDiaporamas(int indScenario, fs::directory_entry dir_entry);
+void pg_AddFilesToDiaporamas(int indScenario, fs::directory_entry dir_entry);
 bool pg_reloadAllDiaporamas(int currentConfig, bool with_trace);
 bool pg_addNewDiaporamas(int current_config, bool with_trace);
 void pg_diaporama_slide(int slideNo);

@@ -472,7 +472,7 @@ extern int ClipArt_stroke_color_swap;
 extern float				interframe_delay;
 
 void pg_initializeNVPathRender(void);
-void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile, int indConfiguration);
+void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile, int indScenario);
 void pg_Display_All_ClipArt(int activeFiles);
 float pg_Translate_ClipArt_Text(int indDisplayText);
 void pg_Display_ClipArt_Text(int* indActiveDisplayText, int mobile);

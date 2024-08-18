@@ -215,7 +215,7 @@ extern string pg_shaders_directory;
 
 
 
-void pg_saveInitialTimesAndDurations(int indConfiguration);
+void pg_saveInitialTimesAndDurations(int indScenario);
 
 void pg_setWindowDimensions(void);
 
@@ -225,11 +225,11 @@ void pg_completeToFullPath(string& dir_or_filename);
 int pg_varID_to_rank(string var_ID, int indConfig);
 void pg_parseScenarioFile(std::ifstream& scenarioFin, int fileRank);
 void pg_LoadScenarioFile(const char* scenarioFileName, int fileRank);
-void pg_parseScenarioClipArt(std::ifstream & scenarioFin, int indConfiguration);
-void pg_parseScenarioSVGPaths(std::ifstream& scenarioFin, int indConfiguration);
-void pg_parseScenarioSoundtracks(std::ifstream& scenarioFin, int indConfiguration);
-void pg_parseScenarioClipsAndPhotos(std::ifstream& scenarioFin, int indConfiguration);
-void pg_parseScenarioVideos(std::ifstream& scenarioFin, int indConfiguration);
+void pg_parseScenarioClipArt(std::ifstream & scenarioFin, int indScenario);
+void pg_parseScenarioSVGPaths(std::ifstream& scenarioFin, int indScenario);
+void pg_parseScenarioSoundtracks(std::ifstream& scenarioFin, int indScenario);
+void pg_parseScenarioClipsAndPhotos(std::ifstream& scenarioFin, int indScenario);
+void pg_parseScenarioVideos(std::ifstream& scenarioFin, int indScenario);
 
 void pg_stringstreamStoreLine(std::stringstream* sstream, std::string* line);
 

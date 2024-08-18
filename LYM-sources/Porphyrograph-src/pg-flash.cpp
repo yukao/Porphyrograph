@@ -304,9 +304,9 @@ void pg_flash_control(bool (*control_function)(int)) {
 					//printf("ind Mesh %d chosen library pose %d \n", indMeshFile, chosen_mesh_LibraryPose);
 					// all the weights are set to zero except the first pose weight
 					for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
-						pg_interpolation_weight_AnimationPose[indMeshFile][indPose] = 0.f;
+						pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 					}
-					pg_interpolation_weight_AnimationPose[indMeshFile][0] = 1.f;
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = 1.f;
 				}
 			}
 		}

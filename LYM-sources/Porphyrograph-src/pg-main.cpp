@@ -236,11 +236,6 @@ int main(int argcMain, char** argvMain) {
 		pg_SensorInitialization();
 	}
 
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
-		// mesh initialization
-		pg_meshInitialization();
-	}
-
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_pg_metawear]) {
 		if (pg_metawear) {
 			pg_MetawearSensorInitialization();

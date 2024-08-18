@@ -119,41 +119,41 @@ vector<VideoTrack> pg_VideoTracks[PG_MAX_SCENARIOS];
 void  pg_initDiaporamas(void) {
 	///////////////////////////////////////////////
 	// NULL INITIALIZATIONS
-	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-		pg_nbCompressedImagesPerFolder[indConfiguration].clear();
-		pg_compressedImageData[indConfiguration].clear();
-		pg_nbCompressedImages[indConfiguration] = 0;
-		pg_nbCompressedImageDirs[indConfiguration] = 0;
-		pg_compressedImageDirsNames[indConfiguration].clear();
-		pg_compressedImageFilesNames[indConfiguration].clear();
+	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+		pg_nbCompressedImagesPerFolder[indScenario].clear();
+		pg_compressedImageData[indScenario].clear();
+		pg_nbCompressedImages[indScenario] = 0;
+		pg_nbCompressedImageDirs[indScenario] = 0;
+		pg_compressedImageDirsNames[indScenario].clear();
+		pg_compressedImageFilesNames[indScenario].clear();
 	}
 }
 bool  pg_loadAllDiaporamas(void) {
 	bool valret = true;
 
 	printf("Load Diaporamas:\n");
-	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-		std::cout << "    " << indConfiguration << ": ";
+	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+		std::cout << "    " << indScenario << ": ";
 
 		////////////////////////////////////////////
 		// LOADS IMAGES FROM FOLDERS
-		std::cout << pg_ImageDirectory[indConfiguration] << " (";
+		std::cout << pg_ImageDirectory[indScenario] << " (";
 		// scans a diaporama
-		if (fs::is_directory(pg_ImageDirectory[indConfiguration])) {
-			auto dirIter = fs::directory_iterator(pg_ImageDirectory[indConfiguration]);
+		if (fs::is_directory(pg_ImageDirectory[indScenario])) {
+			auto dirIter = fs::directory_iterator(pg_ImageDirectory[indScenario]);
 			for (auto& dir_entry : dirIter)
 			{
 				if (dir_entry.is_directory()) {
-					pg_AddDirectoryToDiaporamas(indConfiguration, dir_entry);
+					pg_AddDirectoryToDiaporamas(indScenario, dir_entry);
 				}
 			}
 		}
-		if (pg_nbCompressedImageDirs[indConfiguration] <= 0) {
+		if (pg_nbCompressedImageDirs[indScenario] <= 0) {
 			std::cout << "0 images) ";
 			std::cout << std::endl;
 		}
 		else {
-			std::cout << pg_nbCompressedImages[indConfiguration] << " images from " << pg_nbCompressedImageDirs[indConfiguration] << " folders), ";
+			std::cout << pg_nbCompressedImages[indScenario] << " images from " << pg_nbCompressedImageDirs[indScenario] << " folders), ";
 		}
 		std::cout << std::endl;
 	}
@@ -167,9 +167,9 @@ bool  pg_loadAllDiaporamas(void) {
 	}
 	return valret;
 }
-void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_entry) {
+void pg_AddDirectoryToDiaporamas(int indScenario, fs::directory_entry dir_entry) {
 	auto subDirIter = fs::directory_iterator(dir_entry);
-	++pg_nbCompressedImageDirs[indConfiguration];
+	++pg_nbCompressedImageDirs[indScenario];
 	vector<string>dir_fileNames;
 	vector<PhotoData>dir_photoData;
 	// scans image files inside a diaporama
@@ -178,7 +178,7 @@ void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_e
 	for (auto& subdir_entry : subDirIter) {
 		if (subdir_entry.is_regular_file()) {
 			PhotoData photoData;
-			++pg_nbCompressedImages[indConfiguration];
+			++pg_nbCompressedImages[indScenario];
 			dir_photoData.push_back(photoData);
 
 			// allocates a texture ID for the image
@@ -190,10 +190,10 @@ void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_e
 			//printf("Subdir photo %s ID %d\n", subdir_entry.path().string().c_str(), dir_photoData[nbImagesInDir].texBuffID);
 
 			// loads the images with a size that corresponds to the screen size
-			dir_photoData[nbImagesInDir].pg_loadPhoto(true, pg_workingWindow_width_powerOf2, pg_window_height_powerOf2, false, indConfiguration);
+			dir_photoData[nbImagesInDir].pg_loadPhoto(true, pg_workingWindow_width_powerOf2, pg_window_height_powerOf2, false, indScenario);
 
 			// loads the compressed image into GPU
-			dir_photoData[nbImagesInDir].pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
+			dir_photoData[nbImagesInDir].pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indScenario);
 
 			pg_printOglError(8);
 
@@ -201,32 +201,32 @@ void pg_AddDirectoryToDiaporamas(int indConfiguration, fs::directory_entry dir_e
 			++nbImagesInDir;
 		}
 	}
-	pg_compressedImageFilesNames[indConfiguration].push_back(dir_fileNames);
-	pg_compressedImageData[indConfiguration].push_back(dir_photoData);
-	pg_compressedImageDirsNames[indConfiguration].push_back(dir_entry.path().string());
-	pg_nbCompressedImagesPerFolder[indConfiguration].push_back(nbImagesInDir);
+	pg_compressedImageFilesNames[indScenario].push_back(dir_fileNames);
+	pg_compressedImageData[indScenario].push_back(dir_photoData);
+	pg_compressedImageDirsNames[indScenario].push_back(dir_entry.path().string());
+	pg_nbCompressedImagesPerFolder[indScenario].push_back(nbImagesInDir);
 }
-void pg_AddFilesToDiaporamas(int indConfiguration, fs::directory_entry dir_entry) {
-	auto it = find(pg_compressedImageDirsNames[indConfiguration].begin(), pg_compressedImageDirsNames[indConfiguration].end(),
+void pg_AddFilesToDiaporamas(int indScenario, fs::directory_entry dir_entry) {
+	auto it = find(pg_compressedImageDirsNames[indScenario].begin(), pg_compressedImageDirsNames[indScenario].end(),
 		dir_entry.path().string());
 	// If element was found 
 	int dir_rank = -1;
-	if (it != pg_compressedImageDirsNames[indConfiguration].end())
+	if (it != pg_compressedImageDirsNames[indScenario].end())
 	{
 		// calculating the index 
-		dir_rank = it - pg_compressedImageDirsNames[indConfiguration].begin();
+		dir_rank = it - pg_compressedImageDirsNames[indScenario].begin();
 	}
 
 	auto subDirIter = fs::directory_iterator(dir_entry);
-	vector<string>dir_fileNames = pg_compressedImageFilesNames[indConfiguration][dir_rank];
+	vector<string>dir_fileNames = pg_compressedImageFilesNames[indScenario][dir_rank];
 	// scans image files inside a diaporama
-	int nbImagesInDir = pg_nbCompressedImagesPerFolder[indConfiguration][dir_rank];
+	int nbImagesInDir = pg_nbCompressedImagesPerFolder[indScenario][dir_rank];
 	for (auto& subdir_entry : subDirIter) {
 		if (subdir_entry.is_regular_file()) {
 			// file is not found
 			if (std::find(dir_fileNames.begin(), dir_fileNames.end(), subdir_entry.path().string())
 				== dir_fileNames.end()) {
-				++pg_nbCompressedImages[indConfiguration];
+				++pg_nbCompressedImages[indScenario];
 				PhotoData curPhotoData;
 
 				// allocates a texture ID for the image
@@ -237,22 +237,22 @@ void pg_AddFilesToDiaporamas(int indConfiguration, fs::directory_entry dir_entry
 				curPhotoData.PhotoName = subdir_entry.path().string();
 
 				// loads the images with a size that corresponds to the screen size
-				curPhotoData.pg_loadPhoto(true, pg_workingWindow_width_powerOf2, pg_window_height_powerOf2, false, indConfiguration);
+				curPhotoData.pg_loadPhoto(true, pg_workingWindow_width_powerOf2, pg_window_height_powerOf2, false, indScenario);
 
 				// loads the compressed image into GPU
-				curPhotoData.pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indConfiguration);
+				curPhotoData.pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indScenario);
 				// printf("texture ID indCompressedImage %d\n", dir_photoData[indCompressedImage]->texBuffID);
 
-				pg_compressedImageData[indConfiguration][dir_rank].push_back(curPhotoData);
+				pg_compressedImageData[indScenario][dir_rank].push_back(curPhotoData);
 
 				pg_printOglError(8);
 
-				pg_compressedImageFilesNames[indConfiguration][dir_rank].push_back(subdir_entry.path().string());
+				pg_compressedImageFilesNames[indScenario][dir_rank].push_back(subdir_entry.path().string());
 				++nbImagesInDir;
 			}
 		}
 	}
-	pg_nbCompressedImagesPerFolder[indConfiguration][dir_rank] = nbImagesInDir;
+	pg_nbCompressedImagesPerFolder[indScenario][dir_rank] = nbImagesInDir;
 }
 int rankInVector(string* element, vector<string>* vec) {
 	int count = 0;

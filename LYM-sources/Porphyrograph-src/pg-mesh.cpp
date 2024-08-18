@@ -41,31 +41,13 @@ GLfloat pg_mesh_light_x = 0.56f;
 GLfloat pg_mesh_light_y = 0.35f;
 GLfloat pg_mesh_light_z = 3.f;
 
-// mesh anim data
-double *pg_mesh_startAnime[PG_MAX_SCENARIOS] = { NULL };
-double *pg_mesh_anime_precTime[PG_MAX_SCENARIOS] = { NULL };
-int *pg_mesh_precedingAnime[PG_MAX_SCENARIOS] = { NULL };
-double* pg_mesh_startMotion[PG_MAX_SCENARIOS] = { NULL };
-double* pg_mesh_motion_precTime[PG_MAX_SCENARIOS] = { NULL };
-int* pg_mesh_precedingMotion[PG_MAX_SCENARIOS] = { NULL };
-bool* pg_mesh_positiveChange[PG_MAX_SCENARIOS] = { NULL };
-bool* pg_mesh_negativeChange[PG_MAX_SCENARIOS] = { NULL };
 int pg_chosen_mesh_LibraryPose1 = 0;
 int pg_chosen_mesh_LibraryPose2 = 0;
 int pg_chosen_mesh_LibraryPose3 = 0;
 
 // MESHES
 vector<MeshData> pg_Meshes[PG_MAX_SCENARIOS];
-
-// bones et animation
-int* pg_nb_bones[PG_MAX_SCENARIOS] = { NULL };
-Bone** pg_tabBones[PG_MAX_SCENARIOS] = { NULL };
-int* pg_nb_LibraryPoses[PG_MAX_SCENARIOS] = { NULL };
-int* pg_nb_AnimationPoses[PG_MAX_SCENARIOS] = { NULL };
-float** pg_interpolation_weight_AnimationPose[PG_MAX_SCENARIOS] = { NULL };
-int* pg_nb_MotionPoses[PG_MAX_SCENARIOS] = { NULL };
-MotionPose** pg_motionPoses[PG_MAX_SCENARIOS] = { NULL };
-float** pg_interpolation_weight_MotionPose[PG_MAX_SCENARIOS] = { NULL };
+vector<MeshAnimationData> pg_Mesh_Animations[PG_MAX_SCENARIOS];
 
 GLfloat** modelMatrixMeshes;
 
@@ -75,63 +57,7 @@ GLfloat** modelMatrixMeshes;
 // MESH FILE PARSING
 //////////////////////////////////////////////////////////////////
 
-void pg_meshInitialization(void) {
-	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-		if (pg_FullScenarioActiveVars[indConfiguration][_activeMeshes]) {
-			pg_nb_bones[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-			pg_tabBones[indConfiguration] = new Bone * [pg_Meshes[indConfiguration].size()];
-			pg_nb_AnimationPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-			pg_nb_LibraryPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-			pg_interpolation_weight_AnimationPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
-			for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
-				pg_tabBones[indConfiguration][ind] = NULL;
-				pg_nb_AnimationPoses[indConfiguration][ind] = 0;
-				pg_nb_LibraryPoses[indConfiguration][ind] = 0;
-				pg_interpolation_weight_AnimationPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
-				for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-					pg_interpolation_weight_AnimationPose[indConfiguration][ind][indPose] = 0.f;
-				}
-			}
-
-			pg_nb_MotionPoses[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-			pg_interpolation_weight_MotionPose[indConfiguration] = new float* [pg_Meshes[indConfiguration].size()];
-			for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
-				pg_nb_MotionPoses[indConfiguration][ind] = 0;
-				pg_interpolation_weight_MotionPose[indConfiguration][ind] = new float[PG_MAX_ANIMATION_POSES];
-				for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-					pg_interpolation_weight_MotionPose[indConfiguration][ind][indPose] = 0.f;
-				}
-			}
-			pg_motionPoses[indConfiguration] = new MotionPose * [pg_Meshes[indConfiguration].size()];
-			for (unsigned int ind = 0; ind < pg_Meshes[indConfiguration].size(); ind++) {
-				pg_motionPoses[indConfiguration][ind] = new MotionPose[PG_MAX_ANIMATION_POSES]();
-			}
-
-			// animation variable pointers
-			pg_mesh_startAnime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-			pg_mesh_anime_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-			pg_mesh_precedingAnime[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-			pg_mesh_positiveChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
-			pg_mesh_negativeChange[indConfiguration] = new bool[pg_Meshes[indConfiguration].size()];
-			for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
-				pg_mesh_startAnime[indConfiguration][indMesh] = -1;
-				pg_mesh_anime_precTime[indConfiguration][indMesh] = -1;
-				pg_mesh_positiveChange[indConfiguration][indMesh] = false;
-				pg_mesh_precedingAnime[indConfiguration][indMesh] = false;
-			}
-			// motion variable pointers
-			pg_mesh_startMotion[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-			pg_mesh_motion_precTime[indConfiguration] = new double[pg_Meshes[indConfiguration].size()];
-			pg_mesh_precedingMotion[indConfiguration] = new int[pg_Meshes[indConfiguration].size()];
-			for (unsigned int indMesh = 0; indMesh < pg_Meshes[indConfiguration].size(); indMesh++) {
-				pg_mesh_startMotion[indConfiguration][indMesh] = -1;
-				pg_mesh_motion_precTime[indConfiguration][indMesh] = -1;
-			}
-		}
-	}
-}
-
-void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
+void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indScenario) {
 	std::stringstream  sstream;
 	string line;
 	string ID;
@@ -157,7 +83,8 @@ void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
 			// adds a new mesh
-			MeshData aMesh(indConfiguration);
+			MeshData aMesh(indScenario);
+			MeshAnimationData aMeshAnimationData;
 
 			if (ID.compare("mesh") != 0) {
 				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"mesh\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
@@ -257,7 +184,7 @@ void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 			//	aMesh.pg_Mesh_Rotation_angle);
 			// the rank of the mesh textures applied to this mesh
 #if defined(var_MmeShanghai_brokenGlass)
-			if (pg_FullScenarioActiveVars[indConfiguration][_MmeShanghai_brokenGlass]) {
+			if (pg_FullScenarioActiveVars[indScenario][_MmeShanghai_brokenGlass]) {
 				sstream >> aMesh.pg_MmeShanghai_NbMeshSubParts;
 				aMesh.pg_MmeShanghai_MeshSubPart_FileNames = new string[aMesh.pg_MmeShanghai_NbMeshSubParts];
 				aMesh.pg_MmeShanghai_MeshSubParts = new bool* [aMesh.pg_MmeShanghai_NbMeshSubParts];
@@ -269,15 +196,16 @@ void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indConfiguration) {
 				}
 			}
 #endif
-			pg_Meshes[indConfiguration].push_back(aMesh);
+			pg_Meshes[indScenario].push_back(aMesh);
+			pg_Mesh_Animations[indScenario].push_back(aMeshAnimationData);
 		}
 		else {
 			sprintf(pg_errorStr, "Error: incorrect configuration file unexpected mesh definition at \"%s\"", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
 		}
 	}
 	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-	if (pg_FullScenarioActiveVars[indConfiguration][_textureFrontier_wmin]) {
-		if (pg_Meshes[indConfiguration].empty()) {
+	if (pg_FullScenarioActiveVars[indScenario][_textureFrontier_wmin]) {
+		if (pg_Meshes[indScenario].empty()) {
 			sprintf(pg_errorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); pg_ReportError(pg_errorStr); throw 100;
 		}
 	}
@@ -523,7 +451,7 @@ void pg_count_faces_mesh_obj(FILE *file, int *meshNo,
 	}
 }
 
-void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfiguration) {
+void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indScenario) {
 	///////////////////////////////////////////////////////////
 	// vertex buffer objects and vertex array for the mesh
 	unsigned int mesh_points_vbo;
@@ -537,55 +465,55 @@ void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfi
 	glGenBuffers(1, &mesh_points_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		3 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		3 * 3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		pg_mesh_vertexBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_texCoords_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_texCoords_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		2 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		2 * 3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		pg_mesh_texCoordBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_normals_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_normals_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		3 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		3 * 3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		pg_mesh_normalBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_boneIndex_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneIndex_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		4 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLint),
+		4 * 3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLint),
 		pg_mesh_boneIndexBuffer,
 		GL_STATIC_DRAW);
 
 	glGenBuffers(1, &mesh_boneWeight_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_boneWeight_vbo);
 	glBufferData(GL_ARRAY_BUFFER,
-		4 * 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
+		4 * 3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLfloat),
 		pg_mesh_boneWeightBuffer,
 		GL_STATIC_DRAW);
 
-	glGenBuffers(1, &(pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo[indObjectInMesh]));
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo[indObjectInMesh]);
+	glGenBuffers(1, &(pg_Meshes[indScenario][indMeshFile].mesh_index_vbo[indObjectInMesh]));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[indScenario][indMeshFile].mesh_index_vbo[indObjectInMesh]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLuint),
+		3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * sizeof(GLuint),
 		pg_mesh_indexBuffer,
 		GL_STATIC_DRAW);
 
 	//printf("Index Buffer mesh %d: ", indMeshFile);
-	//for (int ind = 0; ind < 3 * pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]; ind++) {
+	//for (int ind = 0; ind < 3 * pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]; ind++) {
 	//	printf("%d ", pg_mesh_indexBuffer[ind]);
 	//}
 	//printf("\n");
 
 	// VAO
-	pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh] = 0;
-	glGenVertexArrays(1, &(pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh]));
-	glBindVertexArray(pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh]);
+	pg_Meshes[indScenario][indMeshFile].mesh_vao[indObjectInMesh] = 0;
+	glGenVertexArrays(1, &(pg_Meshes[indScenario][indMeshFile].mesh_vao[indObjectInMesh]));
+	glBindVertexArray(pg_Meshes[indScenario][indMeshFile].mesh_vao[indObjectInMesh]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_points_vbo);
 	// vertex positions are at location 0
@@ -615,8 +543,8 @@ void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfi
 
 	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_ind_scenario][indMeshFile].mesh_index_vbo[indObjectInMesh]);
 
-	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indObjectInMesh , pg_Meshes[indConfiguration][indMeshFile].mesh_vao[indObjectInMesh],
-	// pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo[indObjectInMesh], pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile);
+	//printf("Transferred Mesh %d/%d vao ID %d vbo ID %d nbfaces %d\n" , indMeshFile, indObjectInMesh , pg_Meshes[indScenario][indMeshFile].mesh_vao[indObjectInMesh],
+	// pg_Meshes[indScenario][indMeshFile].mesh_index_vbo[indObjectInMesh], pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile);
 	glBindVertexArray(0); // Disable our Vertex Buffer Object
 
 	pg_printOglError(23);
@@ -627,9 +555,16 @@ void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indConfi
 	free(pg_mesh_boneIndexBuffer);
 	free(pg_mesh_boneWeightBuffer);
 	free(pg_mesh_indexBuffer);
+
+	pg_mesh_vertexBuffer = NULL;
+	pg_mesh_texCoordBuffer = NULL;
+	pg_mesh_normalBuffer = NULL;
+	pg_mesh_boneIndexBuffer = NULL;
+	pg_mesh_boneWeightBuffer = NULL;
+	pg_mesh_indexBuffer = NULL;
 }
 
-void pg_parseArmatureObj(FILE* file, char * line, char * tag, char * id, int indMeshFile, int indConfiguration) {
+void pg_parseArmatureObj(FILE* file, char * line, char * tag, char * id, int indMeshFile, int indScenario) {
 	int nbBonesLoc = 0;
 
 	// next tag
@@ -637,17 +572,17 @@ void pg_parseArmatureObj(FILE* file, char * line, char * tag, char * id, int ind
 
 	//printf("VH Armature level %d tag %s nb bones %d line %s\n", 1, tag, nbBonesLoc, line);
 	while (strcmp(tag, "transl") == 0) {
-		pg_parseOneBoneObj(file, 1, line, tag, id, &nbBonesLoc, indMeshFile, indConfiguration);
+		pg_parseOneBoneObj(file, 1, line, tag, id, &nbBonesLoc, indMeshFile, indScenario);
 	}
 }
 
-void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int * nbBonesLoc, int indMeshFile, int indConfiguration) {
+void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int * nbBonesLoc, int indMeshFile, int indScenario) {
 	//printf("VH Bone object level %d tag %s nb bones %d line %s\n", level, tag, *nbBonesLoc, line);
 	while (strcmp(tag, "transl") == 0) {
 		float w, x, y, z;
 
 		// Scan for Bones in this mesh
-		if ((*nbBonesLoc) >= pg_nb_bones[indConfiguration][indMeshFile]) {
+		if ((*nbBonesLoc) >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones) {
 			printf("Error: Excessive number of Bones\n");
 			throw 0;
 		}
@@ -657,9 +592,9 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 		// stores the translation values
 		fgets(line, 512, file);
 		sscanf(line, "%f %f %f", &x, &y, &z);
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].boneInitialTranslationMatrix
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneInitialTranslationMatrix
 			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].boneAnimationTranslationMatrix
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneAnimationTranslationMatrix
 			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
 
 		// initialRotation tag
@@ -670,9 +605,9 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 		sscanf(line, "%f %f %f %f", &w, &x, &y, &z);
 		glm::quat initialRotation
 			= glm::quat(w, x, y, z);
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].boneInitialRotationMatrix
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneInitialRotationMatrix
 			= glm::mat4_cast(initialRotation);
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].boneAnimationRotationMatrix
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneAnimationRotationMatrix
 			= glm::mat4_cast(initialRotation);
 
 		// bone
@@ -680,7 +615,7 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 		char boneID[256];
 		sscanf(line, "%s %256s",
 			tag, boneID);
-		if (pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].id != string(boneID)) {
+		if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].id != string(boneID)) {
 			printf("Error: Incorrect Bone ID\n");
 			throw 0;
 		}
@@ -688,27 +623,27 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 		// length
 		fgets(line, 512, file);
 		sscanf(line, "%f",
-			&(pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].length));
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].points[2 * 3 + 1] = pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].length;
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].points[5 * 3 + 1] = pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].length;
+			&(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length));
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points[2 * 3 + 1] = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length;
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points[5 * 3 + 1] = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length;
 
 		///////////////////////////////////////////////////////////
 		// vertex buffer objects and vertex array for the bones
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vbo = 0;
-		glGenBuffers(1, &(pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vbo));
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo = 0;
+		glGenBuffers(1, &(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo));
 
-		pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vao = 0;
-		glGenVertexArrays(1, &(pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vao));
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao = 0;
+		glGenVertexArrays(1, &(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao));
 
 		// vertex buffer objects and vertex array
-		glBindBuffer(GL_ARRAY_BUFFER, pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo);
 		glBufferData(GL_ARRAY_BUFFER,
 			2 * 3 * 3 * sizeof(float),
-			pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].points,
+			pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points,
 			GL_STATIC_DRAW);
 
-		glBindVertexArray(pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vao);
-		glBindBuffer(GL_ARRAY_BUFFER, pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].vbo);
+		glBindVertexArray(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao);
+		glBindBuffer(GL_ARRAY_BUFFER, pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
 		glEnableVertexAttribArray(0);
 
@@ -722,17 +657,17 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 		if (strcmp(boneID, "NULL") != 0) {
 			bool parentfound = false;
 			for (int ind = 0; ind < (*nbBonesLoc); ind++) {
-				if (pg_tabBones[indConfiguration][indMeshFile][ind].id == string(boneID)) {
-					pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].parentBone = pg_tabBones[indConfiguration][indMeshFile] + ind;
-					if (!pg_tabBones[indConfiguration][indMeshFile][ind].daughterBone) {
-						pg_tabBones[indConfiguration][indMeshFile][ind].daughterBone = pg_tabBones[indConfiguration][indMeshFile] + (*nbBonesLoc);
+				if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].id == string(boneID)) {
+					pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].parentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + ind;
+					if (!pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone) {
+						pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
 					}
 					else {
-						Bone* currentBone = pg_tabBones[indConfiguration][indMeshFile][ind].daughterBone;
+						Bone* currentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone;
 						while (currentBone->sisterBone) {
 							currentBone = currentBone->sisterBone;
 						}
-						currentBone->sisterBone = pg_tabBones[indConfiguration][indMeshFile] + (*nbBonesLoc);
+						currentBone->sisterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
 					}
 					parentfound = true;
 					break;
@@ -740,18 +675,18 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 			}
 			if (!parentfound) {
 				printf("Parent of bone %s (%s) not found!\n",
-					pg_tabBones[indConfiguration][indMeshFile][(*nbBonesLoc)].id.c_str(), id);
+					pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].id.c_str(), id);
 			}
 		}
 		// no parent chains with the root node
 		else {
 			// it is not the root node
 			if ((*nbBonesLoc) > 0) {
-				Bone* currentBone = pg_tabBones[indConfiguration][indMeshFile];
+				Bone* currentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones;
 				while (currentBone->sisterBone) {
 					currentBone = currentBone->sisterBone;
 				}
-				currentBone->sisterBone = pg_tabBones[indConfiguration][indMeshFile] + (*nbBonesLoc);
+				currentBone->sisterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
 			}
 		}
 
@@ -763,7 +698,7 @@ void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, 
 
 		// daughter bone
 		if (strcmp(tag, "transl") == 0) {
-			pg_parseOneBoneObj(file, level + 1, line, tag, id, nbBonesLoc, indMeshFile, indConfiguration);
+			pg_parseOneBoneObj(file, level + 1, line, tag, id, nbBonesLoc, indMeshFile, indScenario);
 			if (strcmp(tag, "end") == 0) { strcpy(tag, "end"); return; }
 
 			// if empty line: end of file
@@ -787,7 +722,7 @@ void pg_copy_mesh_data_and_ship_to_GPU(int indMeshFile, int indObjectInMesh, GLf
 	GLint* boneIndexBufferIni, GLfloat* boneWeightBufferIni,
 	GLuint* indexPointBufferIni, GLuint* indexTexCoordBufferIni, GLuint* indexNormalBufferIni, int nbFacesInThisMesh, 
 	int * nbVertexTot, int * nbCoordTexTot, int * nbNormalTot, int nbVertices, int nbTexCoords, int nbNormals, vector <string> mesh_IDs_current_mesh,
-	int indConfiguration) {
+	int indScenario) {
 	pg_copyMeshData(indObjectInMesh, vertexBufferIni, texCoordBufferIni, normalBufferIni,
 		boneIndexBufferIni, boneWeightBufferIni,
 		indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
@@ -795,7 +730,7 @@ void pg_copy_mesh_data_and_ship_to_GPU(int indMeshFile, int indObjectInMesh, GLf
 
 	//printf("Parsed mesh %d %s Vertices %d texCoords %d normals %d faces %d\n",
 	//	indObjectInMesh, mesh_IDs_current_mesh[indObjectInMesh].c_str(), nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh], nbFacesInEachMesh[indObjectInMesh]);
-	pg_transferMeshDataToGPU(indMeshFile, indObjectInMesh, indConfiguration);
+	pg_transferMeshDataToGPU(indMeshFile, indObjectInMesh, indScenario);
 
 	(*nbVertexTot) += nbVertices;
 	(*nbCoordTexTot) += nbTexCoords;
@@ -807,7 +742,7 @@ void pg_copy_mesh_data_and_ship_to_GPU(int indMeshFile, int indObjectInMesh, GLf
 // OBJ file parsing (Alias Wavefront ASCII format)
 void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 	int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
-	int *nbFacesInEachMesh, int indConfiguration) {
+	int *nbFacesInEachMesh, int indScenario) {
 	char    tag[256];
 	char    tag2[256];
 	char    meshString[1024];
@@ -864,23 +799,23 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 	if (str.find(string("Bones")) != string::npos) {
 		// line with bone number
 		if (!fgets(line, 256, file)) { return; }
-		sscanf(line, "%s %d", tag, &(pg_nb_bones[indConfiguration][indMeshFile]));
-		pg_tabBones[indConfiguration][indMeshFile] = new Bone[pg_nb_bones[indConfiguration][indMeshFile]];
+		sscanf(line, "%s %d", tag, &(pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones));
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones = new Bone[pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones];
 		//printf("VH %d bones to parse\n", pg_nb_bones[indMeshFile]);
 
-		if (pg_nb_bones[indConfiguration][indMeshFile] > 0) {
+		if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones > 0) {
 			// bone ID line
 			if (!fgets(line, 256, file)) { return; }
 			sscanf(line, "%s", tag);
 			int nbBonesLoc = 0;
 			while (strcmp(tag, "bone") == 0) {
-				if (nbBonesLoc >= pg_nb_bones[indConfiguration][indMeshFile]) {
+				if (nbBonesLoc >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones) {
 					printf("Error: Excessive number of bones in object\n");
 					throw 0;
 				}
 				char boneID[256];
 				sscanf(line, "%s %256s", tag, boneID);
-				pg_tabBones[indConfiguration][indMeshFile][nbBonesLoc].id = string(boneID);
+				pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[nbBonesLoc].id = string(boneID);
 				nbBonesLoc++;
 
 				if (!fgets(line, 512, file)) { return; }
@@ -888,21 +823,21 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 			}
 		}
 
-		pg_parseArmatureObj(file, line, tag, id, indMeshFile, indConfiguration);
-		printf("Armature ind Mesh %d Nb bones %d\n", indMeshFile, pg_nb_bones[indConfiguration][indMeshFile]);
+		pg_parseArmatureObj(file, line, tag, id, indMeshFile, indScenario);
+		printf("Armature ind Mesh %d Nb bones %d\n", indMeshFile, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones);
 
-		pg_nb_LibraryPoses[indConfiguration][indMeshFile] = 0;
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses = 0;
 		// possible list of poses
 		if (strcmp(tag, "POSES") == 0) {
-			sscanf(line, "%s %d", tag, &(pg_nb_LibraryPoses[indConfiguration][indMeshFile]));
-			printf("Nb poses %d\n", pg_nb_LibraryPoses[indConfiguration][indMeshFile]);
+			sscanf(line, "%s %d", tag, &(pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses));
+			printf("Nb poses %d\n", pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses);
 
 			// allocates the pose keyframe transformations (quaternion for rotation, and 3D vector for translation)
-			for (int indBone = 0; indBone < pg_nb_bones[indConfiguration][indMeshFile]; indBone++) {
-				pg_tabBones[indConfiguration][indMeshFile][indBone].boneLibraryPoseRotationQuat = new glm::quat[pg_nb_LibraryPoses[indConfiguration][indMeshFile]];
-				pg_tabBones[indConfiguration][indMeshFile][indBone].boneLibraryPoseTranslationVector = new glm::vec3[pg_nb_LibraryPoses[indConfiguration][indMeshFile]];
-				pg_tabBones[indConfiguration][indMeshFile][indBone].boneAnimationPoseRotationQuat = new glm::quat[PG_MAX_ANIMATION_POSES];
-				pg_tabBones[indConfiguration][indMeshFile][indBone].boneAnimationPoseTranslationVector = new glm::vec3[PG_MAX_ANIMATION_POSES];
+			for (int indBone = 0; indBone < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
+				pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].boneLibraryPoseRotationQuat = new glm::quat[pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses];
+				pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].boneLibraryPoseTranslationVector = new glm::vec3[pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses];
+				pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].boneAnimationPoseRotationQuat = new glm::quat[PG_MAX_ANIMATION_POSES];
+				pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].boneAnimationPoseTranslationVector = new glm::vec3[PG_MAX_ANIMATION_POSES];
 			}
 
 			// reads the keyframes for the bones, 
@@ -914,7 +849,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 				int indPose = -1;
 				int indFrame = -1;
 				sscanf(line, "%s %d", tag, &indPose);
-				if (indPose < pg_nb_LibraryPoses[indConfiguration][indMeshFile] && indPose == nbPoses) {
+				if (indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses && indPose == nbPoses) {
 					//printf("scanning pose #%d\n", indPose);
 					// first transformation (or next pose or next object if no transformation given)
 					if (!fgets(line, 256, file)) { return; }
@@ -924,16 +859,16 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 						float val1 = 0.f, val2 = 0.f, val3 = 0.f, val4 = 1.f;
 						sscanf(line, "%s %s %f %f %f %f", tag, tag2, &val1, &val2, &val3, &val4);
 						bool found = false;
-						for (int indBone = 0; indBone < pg_nb_bones[indConfiguration][indMeshFile]; indBone++) {
-							if (pg_tabBones[indConfiguration][indMeshFile][indBone].id == string(tag)) {
+						for (int indBone = 0; indBone < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
+							if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].id == string(tag)) {
 								if (strcmp(tag2, "transl") == 0) {
-									pg_tabBones[indConfiguration][indMeshFile][indBone].boneLibraryPoseTranslationVector[indPose]
+									pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].boneLibraryPoseTranslationVector[indPose]
 										= glm::vec3(val1, val2, val3);
 									//printf("transl mesh #%d, bone #%d,%s %.4f %.4f %.4f\n", indMeshFile, indBone, pg_tabBones[indMeshFile][indBone].id.c_str(), val1, val2, val3);
 								}
 								else if (strcmp(tag2, "rot") == 0) {
 									// CAUTION: W is the first coordinate in the quat constructor
-									pg_tabBones[indConfiguration][indMeshFile][indBone].boneLibraryPoseRotationQuat[indPose]
+									pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[indBone].boneLibraryPoseRotationQuat[indPose]
 										= glm::quat(val4, val1, val2, val3);
 									//printf("rot mesh #%d, bone #%d,%s %.4f %.4f %.4f %.4f\n", indMeshFile, indBone, pg_tabBones[indMeshFile][indBone].id.c_str(), val1, val2, val3, val4);
 								}
@@ -956,7 +891,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 					}
 				}
 				else {
-					printf("Error: incorrect pose number %d maximum for this mesh %d expected rank %d\n", indPose, pg_nb_LibraryPoses[indConfiguration][indMeshFile], nbPoses - 1);
+					printf("Error: incorrect pose number %d maximum for this mesh %d expected rank %d\n", indPose, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses, nbPoses - 1);
 					throw 0;
 				}
 				nbPoses++;
@@ -1028,7 +963,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 			barycenter[1] /= nbVerticesMeshIni[indObjectInMesh];
 			barycenter[2] /= nbVerticesMeshIni[indObjectInMesh];
 		}
-		pg_Meshes[indConfiguration][indMeshFile].mesh_barycenter[indObjectInMesh] = barycenter;
+		pg_Meshes[indScenario][indMeshFile].mesh_barycenter[indObjectInMesh] = barycenter;
 		//printf("Object %d/%d barycenter %.2f %.2f %.2f\n", indMeshFile, indObjectInMesh, barycenter[0], barycenter[1], barycenter[2]);
 
 		if (nbVerticesMeshIni[indObjectInMesh] != nbVerticesInEachMesh[indObjectInMesh]) {
@@ -1063,9 +998,9 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 				printf("Error: Incorrect vertex index in bone weights %d (not int %d-%d)\n", indVertex, 0, nbVerticesMeshIni[indObjectInMesh] - 1);
 				throw 0;
 			}
-			if (indBone1 < -1 || indBone1 >= pg_nb_bones[indConfiguration][indMeshFile]|| indBone2 < -1 || indBone2 >= pg_nb_bones[indConfiguration][indMeshFile]
-				|| indBone3 < -1 || indBone3 >= pg_nb_bones[indConfiguration][indMeshFile] || indBone4 < -1 || indBone4 >= pg_nb_bones[indConfiguration][indMeshFile]) {
-				printf("Error: Incorrect vertex index in bone weights %d/%d/%d/%d (not int %d-%d)\n", indBone1, indBone2, indBone3, indBone4, -1, pg_nb_bones[indConfiguration][indMeshFile] - 1);
+			if (indBone1 < -1 || indBone1 >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones|| indBone2 < -1 || indBone2 >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones
+				|| indBone3 < -1 || indBone3 >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones || indBone4 < -1 || indBone4 >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones) {
+				printf("Error: Incorrect vertex index in bone weights %d/%d/%d/%d (not int %d-%d)\n", indBone1, indBone2, indBone3, indBone4, -1, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones - 1);
 				throw 0;
 			}
 			//printf("vw %s %d %d %f %d %f %d %f %d % f\n",
@@ -1184,7 +1119,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
 					nbFacesMeshIni[indObjectInMesh], &nbVertexTot, &nbCoordTexTot, &nbNormalTot,
 					nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh],
-					mesh_IDs_current_mesh, indConfiguration);
+					mesh_IDs_current_mesh, indScenario);
 
 				if (indObjectInMesh != nbMeshObjects - 1) {
 					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indObjectInMesh, nbMeshObjects - 1);
@@ -1224,7 +1159,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 					indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
 					nbFacesMeshIni[indObjectInMesh], &nbVertexTot, &nbCoordTexTot, &nbNormalTot,
 					nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh],
-					mesh_IDs_current_mesh, indConfiguration);
+					mesh_IDs_current_mesh, indScenario);
 
 				if (indObjectInMesh != nbMeshObjects - 1) {
 					printf("Error: Mesh counted number and mesh parsed number discrepancy %d/%d\n", indObjectInMesh, nbMeshObjects - 1);
@@ -1275,7 +1210,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 			indexPointBufferIni, indexTexCoordBufferIni, indexNormalBufferIni,
 			nbFacesMeshIni[indObjectInMesh], &nbVertexTot, &nbCoordTexTot, &nbNormalTot,
 			nbVerticesMeshIni[indObjectInMesh], nbTexCoordsMeshIni[indObjectInMesh], nbNormalsMeshIni[indObjectInMesh],
-			mesh_IDs_current_mesh, indConfiguration);
+			mesh_IDs_current_mesh, indScenario);
 		(indObjectInMesh)++;
 
 		// temporary storage of values of vertex positions, texCoords, and normals, and indices of faces
@@ -1290,7 +1225,7 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 
 // OBJ file parsing (Alias Wavefront ASCII format)
 // nbMeshObjectsInFile: number of mesh objects inside the obj file
-void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfiguration) {
+void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indScenario) {
 	int *nbVerticesPerMesh = NULL;
 	int *nbTexCoordsPerMesh = NULL;
 	int *nbNormalsPerMesh = NULL;
@@ -1309,18 +1244,18 @@ void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigu
 	//printf("Loading %s\n", mesh_file_name.c_str());
 	int nbMeshObjectsInFile = 0;
 	pg_count_faces_mesh_obj(fileMesh, &nbMeshObjectsInFile, &nbVerticesPerMesh,
-		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile));
+		&nbTexCoordsPerMesh, &nbNormalsPerMesh, &(pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile));
 	//printf("File mesh %s has %d objects\n", mesh_file_name.c_str(), nbMeshObjectsInFile);
 	if (nbMeshObjectsInFile > 0) {
 		for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
 			//printf("   Object %d Nb faces %d vertices %d tex coord %d normals %d\n", ind,
-			//	pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile[ind], nbVerticesPerMesh[ind],
+			//	pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile[ind], nbVerticesPerMesh[ind],
 			//	nbTexCoordsPerMesh[ind], nbNormalsPerMesh[ind]);
 		}
 	}
 	else {
 		//printf("File mesh withouth objects\n");
-		pg_Meshes[indConfiguration][indMeshFile].pg_nbObjectsPerMeshFile = 0;
+		pg_Meshes[indScenario][indMeshFile].pg_nbObjectsPerMeshFile = 0;
 		exit(0);
 	}
 
@@ -1328,15 +1263,15 @@ void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigu
 	// vertex buffer objects and vertex array for the mesh
 	array<float, 3> a = { 0.f };
 	for (int ind = 0; ind < nbMeshObjectsInFile; ind++) {
-		pg_Meshes[indConfiguration][indMeshFile].mesh_vao.push_back(NULL_ID);
-		pg_Meshes[indConfiguration][indMeshFile].mesh_index_vbo.push_back(NULL_ID);
-		pg_Meshes[indConfiguration][indMeshFile].mesh_barycenter.push_back(a);
+		pg_Meshes[indScenario][indMeshFile].mesh_vao.push_back(NULL_ID);
+		pg_Meshes[indScenario][indMeshFile].mesh_index_vbo.push_back(NULL_ID);
+		pg_Meshes[indScenario][indMeshFile].mesh_barycenter.push_back(a);
 	}
 
-	pg_Meshes[indConfiguration][indMeshFile].pg_nbObjectsPerMeshFile = nbMeshObjectsInFile;
+	pg_Meshes[indScenario][indMeshFile].pg_nbObjectsPerMeshFile = nbMeshObjectsInFile;
 	rewind(fileMesh);
 	pg_parseMeshObj(fileMesh, indMeshFile, nbMeshObjectsInFile, nbVerticesPerMesh,
-		nbTexCoordsPerMesh, nbNormalsPerMesh, pg_Meshes[indConfiguration][indMeshFile].pg_nbFacesPerMeshFile, indConfiguration);
+		nbTexCoordsPerMesh, nbNormalsPerMesh, pg_Meshes[indScenario][indMeshFile].pg_nbFacesPerMeshFile, indScenario);
 	fclose(fileMesh);
 
 	free(nbVerticesPerMesh);
@@ -1349,12 +1284,12 @@ void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indConfigu
 // point positions and texture coordinates
 void pg_loadAllMeshes(void) {
 	std::cout << "Loading meshes: " << std::endl;
-	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-		std::cout << "    " << indConfiguration << ": ";
+	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+		std::cout << "    " << indScenario << ": ";
 		int nbMeshObjects = 0;
 		int indMeshFile = 0;
-		for (MeshData &aMesh : pg_Meshes[indConfiguration]) {
-			pg_load_mesh_objects(aMesh.pg_Mesh_fileNames, indMeshFile, indConfiguration);
+		for (MeshData &aMesh : pg_Meshes[indScenario]) {
+			pg_load_mesh_objects(aMesh.pg_Mesh_fileNames, indMeshFile, indScenario);
 			nbMeshObjects += aMesh.pg_nbObjectsPerMeshFile;
 			std::cout << aMesh.pg_Mesh_fileNames << " (" << aMesh.pg_nbObjectsPerMeshFile << " objects), ";
 			//printf("Loaded %d mesh objects \n", nbMeshObjects);
@@ -1470,7 +1405,7 @@ void pg_render_one_bone(Bone* bone, glm::mat4 parentModelMatrix) {
 
 void pg_render_bones(glm::mat4 modelMatrix, int indMeshFile) {
 	// calls rendering on the root bone (the first in the table of bones)
-	pg_render_one_bone(pg_tabBones[pg_ind_scenario][indMeshFile], modelMatrix);
+	pg_render_one_bone(pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones, modelMatrix);
 }
 
 
@@ -1479,10 +1414,10 @@ void pg_render_bones(glm::mat4 modelMatrix, int indMeshFile) {
 //////////////////////////////////////////////////////////////////
 void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose, int mesh_AnimationPose) {
 	if (indMeshFile < int(pg_Meshes[pg_ind_scenario].size())
-		&& chosen_mesh_LibraryPose < pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile] 
+		&& chosen_mesh_LibraryPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses 
 		&& mesh_AnimationPose < PG_MAX_ANIMATION_POSES) {
-		for (int indBone = 0; indBone < pg_nb_bones[pg_ind_scenario][indMeshFile]; indBone++) {
-			Bone* curBone = &pg_tabBones[pg_ind_scenario][indMeshFile][indBone];
+		for (int indBone = 0; indBone < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
+			Bone* curBone = &pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones[indBone];
 			curBone->boneAnimationPoseRotationQuat[mesh_AnimationPose] = curBone->boneLibraryPoseRotationQuat[chosen_mesh_LibraryPose];
 			curBone->boneAnimationPoseTranslationVector[mesh_AnimationPose] = curBone->boneLibraryPoseTranslationVector[chosen_mesh_LibraryPose];
 		}
@@ -1490,7 +1425,7 @@ void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryP
 	else {
 		sprintf(pg_errorStr, "Error: incorrect mesh index %d (max %d) library pose index %d (max %d)  animation pose index %d (max %d) !",
 			indMeshFile, pg_Meshes[pg_ind_scenario].size(), chosen_mesh_LibraryPose, 
-			pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile], 
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses, 
 			mesh_AnimationPose, PG_MAX_ANIMATION_POSES); pg_ReportError(pg_errorStr);
 	}
 }
@@ -1499,67 +1434,67 @@ void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryP
 void pg_update_bone_anim(int indMeshFile) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_anime]) {
 		if (mesh_anime < 0) {
-			pg_mesh_anime_precTime[pg_ind_scenario][indMeshFile] = pg_CurrentClockTime;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_anime_precTime = pg_CurrentClockTime;
 		}
-		bool new_anim = mesh_anime != pg_mesh_precedingAnime[pg_ind_scenario][indMeshFile];
+		bool new_anim = mesh_anime != pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_precedingAnime;
 		if (new_anim) {
-			pg_mesh_startAnime[pg_ind_scenario][indMeshFile] = pg_CurrentClockTime;
-			pg_mesh_precedingAnime[pg_ind_scenario][indMeshFile] = mesh_anime;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime = pg_CurrentClockTime;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_precedingAnime = mesh_anime;
 		}
 		switch (mesh_anime) {
 			// frozen
 		case 0: {
-			pg_mesh_startAnime[pg_ind_scenario][indMeshFile] += pg_CurrentClockTime - pg_mesh_anime_precTime[pg_ind_scenario][indMeshFile];
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime += pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_anime_precTime;
 		}
 			  break;
 			  // binary 0 - n
 		case 1: {
 			if (new_anim) {
 				pg_chosen_mesh_LibraryPose1 = 0;
-				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
+				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
-				pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses = min(2, PG_MAX_ANIMATION_POSES);
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startAnime[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][0];
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime) * mesh_anime_speed) + 1.f) / 2.f);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0];
 			break;
 		}
 			  // binary n1 / n2
 		case 2: {
 			if (new_anim) {
-				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
-				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
+				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
+				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
-				pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses = min(2, PG_MAX_ANIMATION_POSES);
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			float Pose0 = float((sin((pg_CurrentClockTime - pg_mesh_startAnime[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][0] = Pose0;
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][1] = 1.f - Pose0;
+			float Pose0 = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime) * mesh_anime_speed) + 1.f) / 2.f);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = Pose0;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[1] = 1.f - Pose0;
 			break;
 		}
 			  // ternary n1 / n2 / n3
 		case 3: {
 			if (new_anim) {
-				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
-				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
-				pg_chosen_mesh_LibraryPose3 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
+				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
+				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
+				pg_chosen_mesh_LibraryPose3 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose3, 2);
-				pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] = min(3, PG_MAX_ANIMATION_POSES);
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses = min(3, PG_MAX_ANIMATION_POSES);
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			float pose = float((sin((pg_CurrentClockTime - pg_mesh_startAnime[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
+			float pose = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime) * mesh_anime_speed) + 1.f) / 2.f);
 			float Pose1, Pose2, Pose3;
 			if (pose < 1.f / 3.f) {
 				Pose1 = 3.f * pose;
@@ -1576,133 +1511,133 @@ void pg_update_bone_anim(int indMeshFile) {
 				Pose2 = 1.f - 3.f * (1.f - pose);
 				Pose3 = 1.f - Pose2;
 			}
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][0] = Pose1;
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][1] = Pose2;
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][2] = Pose3;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = Pose1;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[1] = Pose2;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[2] = Pose3;
 			break;
 		}
 			  // binary rand(n) / rand(n')
 		case 4: {
 			if (new_anim) {
-				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
-				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = false;
-				pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] = false;
+				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
+				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = false;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange = false;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
-				pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses = min(2, PG_MAX_ANIMATION_POSES);
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			float Pose0 = float((sin((pg_CurrentClockTime - pg_mesh_startAnime[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-			if (Pose0 > 1.f - 0.01f && pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] == false) {
-				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
+			float Pose0 = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime) * mesh_anime_speed) + 1.f) / 2.f);
+			if (Pose0 > 1.f - 0.01f && pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange == false) {
+				pg_chosen_mesh_LibraryPose2 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
 				//printf("pose %.2f new anim1 %d anim2 %d\n", Pose0, pg_chosen_mesh_LibraryPose1, pg_chosen_mesh_LibraryPose2);
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = true;
-				pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] = false;
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = true;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange = false;
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			if (Pose0 < 0.01f && pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] == false) {
-				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
+			if (Pose0 < 0.01f && pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange == false) {
+				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				//printf("pose %.2f anim1 %d new anim2 %d\n", Pose0, pg_chosen_mesh_LibraryPose1, pg_chosen_mesh_LibraryPose2);
-				pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] = true;
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = false;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange = true;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = false;
 				for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][0] = Pose0;
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][1] = 1.f - Pose0;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = Pose0;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[1] = 1.f - Pose0;
 			break;
 		}
 			  // binary n1 / n2 wo interpolation
 		case 5: {
-			float pose = float((sin((pg_CurrentClockTime - pg_mesh_startAnime[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-			if (new_anim || (pose > 1.f - 0.01f && pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] == false)) {
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = true;
-				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]) % pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile];
+			float pose = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime) * mesh_anime_speed) + 1.f) / 2.f);
+			if (new_anim || (pose > 1.f - 0.01f && pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange == false)) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = true;
+				pg_chosen_mesh_LibraryPose1 = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
-				pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] = min(1, PG_MAX_ANIMATION_POSES);
-				pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][pg_chosen_mesh_LibraryPose1] = 1.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses = min(1, PG_MAX_ANIMATION_POSES);
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[pg_chosen_mesh_LibraryPose1] = 1.f;
 			}
-			if (pose < 0.01f && pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] == true) {
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = false;
+			if (pose < 0.01f && pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange == true) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = false;
 			}
 			break;
 		}
 			  // fingers counting
 		case _lastMesh_Anime: {
 			if (new_anim) {
-				pg_chosen_mesh_LibraryPose1 = min(7, pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]);
-				pg_chosen_mesh_LibraryPose2 = min(8, pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]);
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = false;
-				pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] = false;
+				pg_chosen_mesh_LibraryPose1 = min(7, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses);
+				pg_chosen_mesh_LibraryPose2 = min(8, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses);
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = false;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange = false;
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
-				pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses = min(2, PG_MAX_ANIMATION_POSES);
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			float Pose0 = float((sin((pg_CurrentClockTime - pg_mesh_startAnime[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-			if (Pose0 > 1.f - 0.01f && pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] == false) {
+			float Pose0 = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startAnime) * mesh_anime_speed) + 1.f) / 2.f);
+			if (Pose0 > 1.f - 0.01f && pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange == false) {
 				pg_chosen_mesh_LibraryPose2 = (pg_chosen_mesh_LibraryPose2 + 1);
-				if (pg_chosen_mesh_LibraryPose2 > min(12, pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile])) {
-					pg_chosen_mesh_LibraryPose2 = min(7, pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]);
+				if (pg_chosen_mesh_LibraryPose2 > min(12, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses)) {
+					pg_chosen_mesh_LibraryPose2 = min(7, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses);
 				}
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose2, 1);
 				//printf("pose %.2f new anim1 %d anim2 %d\n", Pose0, pg_chosen_mesh_LibraryPose1, pg_chosen_mesh_LibraryPose2);
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = true;
-				pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] = false;
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = true;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange = false;
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			if (Pose0 < 0.01f && pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] == false) {
+			if (Pose0 < 0.01f && pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange == false) {
 				pg_chosen_mesh_LibraryPose1 = (pg_chosen_mesh_LibraryPose1 + 1);
-				if (pg_chosen_mesh_LibraryPose1 > min(12, pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile])) {
-					pg_chosen_mesh_LibraryPose1 = min(7, pg_nb_LibraryPoses[pg_ind_scenario][indMeshFile]);
+				if (pg_chosen_mesh_LibraryPose1 > min(12, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses)) {
+					pg_chosen_mesh_LibraryPose1 = min(7, pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses);
 				}
 				pg_copyLibraryPoseToAnimationPose(indMeshFile, pg_chosen_mesh_LibraryPose1, 0);
 				//printf("pose %.2f anim1 %d new anim2 %d\n", Pose0, pg_chosen_mesh_LibraryPose1, pg_chosen_mesh_LibraryPose2);
-				pg_mesh_negativeChange[pg_ind_scenario][indMeshFile] = true;
-				pg_mesh_positiveChange[pg_ind_scenario][indMeshFile] = false;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_negativeChange = true;
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_positiveChange = false;
 				for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-					pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 				}
 			}
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][0] = Pose0;
-			pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][1] = 1.f - Pose0;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = Pose0;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[1] = 1.f - Pose0;
 			break;
 		}
 		}
-		pg_mesh_anime_precTime[pg_ind_scenario][indMeshFile] = pg_CurrentClockTime;
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_anime_precTime = pg_CurrentClockTime;
 	}
 }
 
 void pg_update_bones(int indMeshFile) {
 	// calls rendering on the root bone (the first in the table of bones)
-	for (int indBone = 0; indBone < pg_nb_bones[pg_ind_scenario][indMeshFile]; indBone++) {
-		Bone* curBone = &pg_tabBones[pg_ind_scenario][indMeshFile][indBone];
+	for (int indBone = 0; indBone < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
+		Bone* curBone = &pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones[indBone];
 
 		// rotation interpolation for poses
-		if (pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] > 0) {
+		if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses > 0) {
 			glm::quat animQuat(1.0, 0.0, 0.0, 0.0);
 			float weight_sum = 0.f;
-			for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				weight_sum += pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose];
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+				weight_sum += pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose];
 				if (indPose == 0) {
 					animQuat = curBone->boneAnimationPoseRotationQuat[0];
 				}
 				else {
-					if (pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] > 0 && weight_sum > 0) {
+					if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] > 0 && weight_sum > 0) {
 						animQuat = glm::mix(animQuat,
-							curBone->boneAnimationPoseRotationQuat[indPose], pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] / weight_sum);
+							curBone->boneAnimationPoseRotationQuat[indPose], pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] / weight_sum);
 					}
 				}
 			}
@@ -1714,18 +1649,18 @@ void pg_update_bones(int indMeshFile) {
 
 		// only root bone(s) have variable translations
 		if (curBone->parentBone == NULL) {
-			if (pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile] > 0) {
+			if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses > 0) {
 				glm::vec3 animTransl(0);
 				float weight_sum = 0.f;
-				for (int indPose = 0; indPose < pg_nb_AnimationPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-					weight_sum += pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose];
+				for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_AnimationPoses; indPose++) {
+					weight_sum += pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose];
 					if (indPose == 0) {
 						animTransl = curBone->boneAnimationPoseTranslationVector[0];
 					}
 					else {
-						if (pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] > 0 && weight_sum > 0) {
+						if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] > 0 && weight_sum > 0) {
 							animTransl = glm::mix(animTransl,
-								curBone->boneAnimationPoseTranslationVector[indPose], pg_interpolation_weight_AnimationPose[pg_ind_scenario][indMeshFile][indPose] / weight_sum);
+								curBone->boneAnimationPoseTranslationVector[indPose], pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] / weight_sum);
 						}
 					}
 				}
@@ -1781,196 +1716,196 @@ void pg_update_motion(int indMeshFile) {
 	//pg_Mesh_Scale[indMesh] = mesh_scale + mesh_scale_pulse * (pulse_average - 0.5f);
 
 	if (mesh_motion < 0) {
-		pg_mesh_motion_precTime[pg_ind_scenario][indMeshFile] = pg_CurrentClockTime;
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_motion_precTime = pg_CurrentClockTime;
 	}
-	bool new_motion = mesh_motion != pg_mesh_precedingMotion[pg_ind_scenario][indMeshFile];
+	bool new_motion = mesh_motion != pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_precedingMotion;
 	bool with_motion = false;
 	if (new_motion) {
-		pg_mesh_startMotion[pg_ind_scenario][indMeshFile] = pg_CurrentClockTime;
-		pg_mesh_precedingMotion[pg_ind_scenario][indMeshFile] = mesh_motion;
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion = pg_CurrentClockTime;
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_precedingMotion = mesh_motion;
 	}
 	switch (mesh_motion) {
 		// frozen
 	case 0: {
-		pg_mesh_startMotion[pg_ind_scenario][indMeshFile] += pg_CurrentClockTime - pg_mesh_motion_precTime[pg_ind_scenario][indMeshFile];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion += pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_motion_precTime;
 	}
 		  break;
 		  // binary n1 / n2 // clapping hands
 	case 1: {
 		if (new_motion) {
-			pg_nb_MotionPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-			for (int indPose = 0; indPose < pg_nb_MotionPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses; indPose++) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X = 30.f * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X = 5.f * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 4) * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X = 30.f * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X = 5.f * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle = float(PI / 4) * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
 		}
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startMotion[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion) * mesh_anime_speed) + 1.f) / 2.f);
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0];
 		with_motion = true;
 		break;
 	}
 	case 2: {
 		if (new_motion) {
-			pg_nb_MotionPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-			for (int indPose = 0; indPose < pg_nb_MotionPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses; indPose++) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 30.f : -5.f);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 5.f : -30.f);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 4);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 30.f : -5.f);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 5.f : -30.f);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle = float(PI / 4);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_Z;
 		}
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startMotion[pg_ind_scenario][indMeshFile]) * mesh_anime_speed) + 1.f) / 2.f);
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion) * mesh_anime_speed) + 1.f) / 2.f);
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0];
 		with_motion = true;
 		break;
 	}
 	case 3: {
 		if (new_motion) {
-			pg_nb_MotionPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-			for (int indPose = 0; indPose < pg_nb_MotionPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses; indPose++) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle = float(-PI / 6);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 6);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z = 1.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z = 1.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle = float(-PI / 6);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle = float(PI / 6);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z = 1.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z = 1.f;
 		}
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startMotion[pg_ind_scenario][indMeshFile]) * mesh_motion_speed) + 1.f) / 2.f);
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion) * mesh_motion_speed) + 1.f) / 2.f);
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0];
 		with_motion = true;
 		break;
 	}
 	case 4: {
 		if (new_motion) {
-			pg_nb_MotionPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-			for (int indPose = 0; indPose < pg_nb_MotionPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses; indPose++) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y = mesh_translation_Y;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
 		}
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startMotion[pg_ind_scenario][indMeshFile]) * mesh_motion_speed) + 1.f) / 2.f);
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion) * mesh_motion_speed) + 1.f) / 2.f);
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0];
 		with_motion = true;
 		break;
 	}
 	case 5: {
 		if (new_motion) {
-			pg_nb_MotionPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-			for (int indPose = 0; indPose < pg_nb_MotionPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses; indPose++) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle = float(-PI / 6);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle = float(PI / 6);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y = 1.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y = 1.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z = 0.f;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle = float(-PI / 6);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle = float(PI / 6);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y = 1.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y = 1.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z = 0.f;
 		}
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startMotion[pg_ind_scenario][indMeshFile]) * mesh_motion_speed) + 1.f) / 2.f);
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion) * mesh_motion_speed) + 1.f) / 2.f);
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0];
 		with_motion = true;
 		break;
 	}
 	case _lastMesh_Motion: {
 		if (new_motion) {
-			pg_nb_MotionPoses[pg_ind_scenario][indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
-			for (int indPose = 0; indPose < pg_nb_MotionPoses[pg_ind_scenario][indMeshFile]; indPose++) {
-				pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][indPose] = 0.f;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses = min(2, PG_MAX_ANIMATION_POSES);
+			for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MotionPoses; indPose++) {
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale = mesh_scale;
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
-			pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale = mesh_scale;
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
+			pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z = max(0.1f, float(rand_0_1));
 		}
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] = float((sin((pg_CurrentClockTime - pg_mesh_startMotion[pg_ind_scenario][indMeshFile]) * mesh_motion_speed) + 1.f) / 2.f);
-		pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] = 1.f - pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0];
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] = float((sin((pg_CurrentClockTime - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_startMotion) * mesh_motion_speed) + 1.f) / 2.f);
+		pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] = 1.f - pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0];
 		with_motion = true;
 		break;
 	}
 	}
-	pg_mesh_motion_precTime[pg_ind_scenario][indMeshFile] = pg_CurrentClockTime;
+	pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_mesh_motion_precTime = pg_CurrentClockTime;
 
 	// updates the rotation and translations of the mesh from the motion poses and interpolation coeficients
 	if (with_motion) {
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_X = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_X
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_X;
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Y = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Translation_Y
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Translation_Y;
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_angle = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_angle
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_angle;
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Scale = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Scale
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Scale;
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_X = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_X
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_X;
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Y = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Y
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Y;
-		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Z = pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][0] * pg_motionPoses[pg_ind_scenario][indMeshFile][0].pose_Mesh_Rotation_Z
-			+ pg_interpolation_weight_MotionPose[pg_ind_scenario][indMeshFile][1] * pg_motionPoses[pg_ind_scenario][indMeshFile][1].pose_Mesh_Rotation_Z;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_X = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_X
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_X;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Y = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Translation_Y
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Translation_Y;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_angle = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_angle
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_angle;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Scale = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Scale
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Scale;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_X = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_X
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_X;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Y = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Y
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Y;
+		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Z = pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[0] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[0].pose_Mesh_Rotation_Z
+			+ pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_MotionPose[1] * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_motionPoses[1].pose_Mesh_Rotation_Z;
 	}
 	else {
 		pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);

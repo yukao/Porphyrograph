@@ -162,18 +162,18 @@ float    pg_ScanFloatString(int* p_c,
 }
 
 void pg_BezierSubdivideAboveLength(glm::vec2 controlPoints[4], int pathNo, int* indFrame, float path_r_color, float path_g_color, float path_b_color,
-	float path_radius, bool with_color__brush_radius_from_scenario, float* path_length, double p_secondsforwidth, int indConfiguration) {
+	float path_radius, bool with_color__brush_radius_from_scenario, float* path_length, double p_secondsforwidth, int indScenario) {
 	float curveLength = pg_Bezier_length(controlPoints, 20);
 	if (curveLength < 1) {
 		// copies current fixed parameters
 		if (with_color__brush_radius_from_scenario) {
-			pg_Path_Status[pathNo].setFrameValues(indConfiguration, *indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, path_radius, path_radius);
+			pg_Path_Status[pathNo].setFrameValues(indScenario, *indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, path_radius, path_radius);
 			//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 		}
 		*path_length += curveLength;
-		pg_Path_Status[pathNo].setFramePositionsTimeStamp(indConfiguration, *indFrame, controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y,
+		pg_Path_Status[pathNo].setFramePositionsTimeStamp(indScenario, *indFrame, controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y,
 			controlPoints[2].x, controlPoints[2].y, controlPoints[3].x, controlPoints[3].y, *path_length / pg_workingWindow_width * p_secondsforwidth);
-		pg_Path_Status[pathNo].pushFrame(indConfiguration);
+		pg_Path_Status[pathNo].pushFrame(indScenario);
 		(*indFrame)++;
 	}
 	else {
@@ -196,9 +196,9 @@ void pg_BezierSubdivideAboveLength(glm::vec2 controlPoints[4], int pathNo, int* 
 		controlPointsCurve2[0] = controlPointsCurve1[3];
 
 		pg_BezierSubdivideAboveLength(controlPointsCurve1, pathNo, indFrame, path_r_color, path_g_color, path_b_color,
-			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indConfiguration);
+			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indScenario);
 		pg_BezierSubdivideAboveLength(controlPointsCurve2, pathNo, indFrame, path_r_color, path_g_color, path_b_color,
-			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indConfiguration);
+			path_radius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indScenario);
 	}
 }
 
@@ -207,7 +207,7 @@ void pg_BezierSubdivideAboveLength(glm::vec2 controlPoints[4], int pathNo, int* 
 //////////////////////////////////////////////////////////////////
 void Path_Status::load_svg_path(char* fileName,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale,
-	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
+	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indScenario) {
 	if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
 		pg_is_path_replay[pathNo] = false;
 		((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
@@ -235,12 +235,12 @@ void Path_Status::load_svg_path(char* fileName,
 
 		// loads track
 		readsvg(fileName, pathRadius, path_r_color, path_g_color, path_b_color,
-			readSpeedScale, path_ID, p_with_color__brush_radius_from_scenario, secondsforwidth, indConfiguration);
+			readSpeedScale, path_ID, p_with_color__brush_radius_from_scenario, secondsforwidth, indScenario);
 	}
 }
 
 void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
-	float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indConfiguration) {
+	float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indScenario) {
 	string         val;
 	float          ClipArt_translation[2] = { 0.0 , 0.0 };
 	float          ClipArt_rotation[3] = { 0.0, 0.0 , 0.0 };
@@ -354,8 +354,8 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 				path_isActiveRecording = false;
 				path_indReading = -1;
 				path_initialTimeReading = 0.0f;
-				setCurveValues(indConfiguration, readSpeedScale, init_time, fin_time);
-				emptyFrame(indConfiguration);
+				setCurveValues(indScenario, readSpeedScale, init_time, fin_time);
+				emptyFrame(indScenario);
 
 				// reads until the end of the file to capture the path and its initial and final time
 				do {
@@ -364,7 +364,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 						double it;
 						sstream.str(line.substr(found + strlen(" initial_time=\"")));
 						sstream >> it;
-						set_path_curve_initialTimeRecording(indConfiguration, it);
+						set_path_curve_initialTimeRecording(indScenario, it);
 					}
 
 					found = line.find(" final_time=\"", 0);
@@ -372,7 +372,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 						double ft;
 						sstream.str(line.substr(found + strlen(" final_time=\"")));
 						sstream >> ft;
-						set_path_curve_finalTimeRecording(indConfiguration, ft);
+						set_path_curve_finalTimeRecording(indScenario, ft);
 					}
 
 					found = line.find(" id=\"", 0);
@@ -467,7 +467,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 
 						//printf("load path colors\n");
 						int nbRecordedColors = 0;
-						LoadPathColorsFromXML(string_path_colors, &nbRecordedColors, indConfiguration);
+						LoadPathColorsFromXML(string_path_colors, &nbRecordedColors, indScenario);
 						//printf("recorded colors %d / %d\n", nbRecordedColors, nbRecordedTimeStamps);
 						if (nbRecordedColors != nbRecordedTimeStamps) {
 							sprintf(pg_errorStr, "XML path loading error: incorrect number of color frames %d vs time stamps %d!", nbRecordedColors, nbRecordedTimeStamps); pg_ReportError(pg_errorStr); throw 152;
@@ -475,7 +475,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 
 						//printf("load path brushes\n");
 						int nbRecordedBrushes = 0;
-						LoadPathBrushesFromXML(string_path_brushes, &nbRecordedBrushes, indConfiguration);
+						LoadPathBrushesFromXML(string_path_brushes, &nbRecordedBrushes, indScenario);
 						//printf("recorded brushes %d / %d\n", nbRecordedBrushes, nbRecordedTimeStamps);
 						if (nbRecordedBrushes != nbRecordedTimeStamps) {
 							sprintf(pg_errorStr, "XML path loading error: incorrect number of brush frames %d vs time stamps %d!", nbRecordedBrushes, nbRecordedTimeStamps); pg_ReportError(pg_errorStr); throw 152;
@@ -486,7 +486,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 						int nbPointsInPath = pg_LoadPathPointsFromXML((char*)string_path_points.c_str(),
 							&M_transf, pathRadius, path_r_color, path_g_color, path_b_color,
 							precedingCurrentPoint, currentPoint, true, p_with_color__brush_radius_from_scenario, &path_length, secondsforwidth,
-							&nbRecordedTimeStamps, indConfiguration);
+							&nbRecordedTimeStamps, indScenario);
 						// printf("path points loaded\n");
 						if (nbPointsInPath < 1) {
 							sprintf(pg_errorStr, "XML path loading error: empty XML path %d!", nbPointsInPath); pg_ReportError(pg_errorStr); throw 152;
@@ -497,7 +497,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 								// the timestamps are retimed to match the actual number of points in the path
 								double current_finalTimeRecording = getFrameTimeStamp(pg_ind_scenario, nbPointsInPath - 1);
 								if (current_finalTimeRecording > 0) {
-									double time_ratio = get_path_curve_finalTimeRecording(indConfiguration) / current_finalTimeRecording;
+									double time_ratio = get_path_curve_finalTimeRecording(indScenario) / current_finalTimeRecording;
 									for (int indFrame = 0; indFrame < nbPointsInPath; indFrame++) {
 										setFrameTimeStamp(pg_ind_scenario, indFrame, getTmpTimeStamp(indFrame) * time_ratio);
 									}
@@ -520,7 +520,7 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 										setFrameValues(pg_ind_scenario, indFrame, path_r_color, path_g_color, path_b_color, 1.0, 0, pathRadius, pathRadius);
 									}
 									else {
-										copyFrameValues(indConfiguration, nbRecordedTimeStamps - 1, indFrame);
+										copyFrameValues(indScenario, nbRecordedTimeStamps - 1, indFrame);
 									}
 								}
 							}
@@ -530,23 +530,23 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 								setFrameTimeStamp(pg_ind_scenario, indFrame, getTmpTimeStamp(indFrame));
 							}
 						}
-						if (PathStatus_nbFrames(indConfiguration) != nbPointsInPath) {
-							sprintf(pg_errorStr, "XML path loading error Nb 1: unexpected frame number of frames %d after reading XML path of %d points!", PathStatus_nbFrames(indConfiguration), nbPointsInPath); pg_ReportError(pg_errorStr); throw 152;
+						if (PathStatus_nbFrames(indScenario) != nbPointsInPath) {
+							sprintf(pg_errorStr, "XML path loading error Nb 1: unexpected frame number of frames %d after reading XML path of %d points!", PathStatus_nbFrames(indScenario), nbPointsInPath); pg_ReportError(pg_errorStr); throw 152;
 						}
-						//set_path_curve_nbRecordedFrames(indConfiguration, nbPointsInPath);
+						//set_path_curve_nbRecordedFrames(indScenario, nbPointsInPath);
 					}
 					else {
 						int nbPointsInPath = 0;
 						nbPointsInPath = pg_LoadPathPointsFromXML((char*)string_path_points.c_str(), &M_transf, pathRadius, path_r_color, path_g_color, path_b_color,
-							precedingCurrentPoint, currentPoint, false, true, &path_length, secondsforwidth, &nbRecordedTimeStamps, indConfiguration);
-						if (PathStatus_nbFrames(indConfiguration) != nbPointsInPath) {
-							sprintf(pg_errorStr, "XML path loading error Nb2: unexpected frame number of frames %d after reading XML path of %d points!", PathStatus_nbFrames(indConfiguration), nbPointsInPath); pg_ReportError(pg_errorStr); throw 152;
+							precedingCurrentPoint, currentPoint, false, true, &path_length, secondsforwidth, &nbRecordedTimeStamps, indScenario);
+						if (PathStatus_nbFrames(indScenario) != nbPointsInPath) {
+							sprintf(pg_errorStr, "XML path loading error Nb2: unexpected frame number of frames %d after reading XML path of %d points!", PathStatus_nbFrames(indScenario), nbPointsInPath); pg_ReportError(pg_errorStr); throw 152;
 						}
 						//printf("End of point loading (without path data (color, radius,, time stamps...)) nbRecordedFrames: %d, lentgh: %.2f\n",
-						//PathStatus_nbFrames(indConfiguration), path_length);
+						//PathStatus_nbFrames(indScenario), path_length);
 						// calculation of time stamps according to the length and the speed (uniform speed)
-						set_path_curve_initialTimeRecording(indConfiguration, 0.);
-						set_path_curve_finalTimeRecording(indConfiguration, path_length / pg_workingWindow_width * secondsforwidth);
+						set_path_curve_initialTimeRecording(indScenario, 0.);
+						set_path_curve_finalTimeRecording(indScenario, path_length / pg_workingWindow_width * secondsforwidth);
 					}
 					break;
 				}
@@ -560,17 +560,17 @@ void Path_Status::readsvg(char* fileName, float pathRadius, float path_r_color, 
 	double interFrameDuration = 1.f / 60.f;
 	if (!timeStamps_loaded) {
 		//printf("Load uniformspeed time stamps\n");
-		if (PathStatus_nbFrames(indConfiguration) > 0 &&
-			get_path_curve_finalTimeRecording(indConfiguration) > get_path_curve_initialTimeRecording(indConfiguration)) {
-			interFrameDuration = (get_path_curve_finalTimeRecording(indConfiguration) - get_path_curve_initialTimeRecording(indConfiguration))
-				/ PathStatus_nbFrames(indConfiguration);
+		if (PathStatus_nbFrames(indScenario) > 0 &&
+			get_path_curve_finalTimeRecording(indScenario) > get_path_curve_initialTimeRecording(indScenario)) {
+			interFrameDuration = (get_path_curve_finalTimeRecording(indScenario) - get_path_curve_initialTimeRecording(indScenario))
+				/ PathStatus_nbFrames(indScenario);
 		}
-		for (int indPoint = 0; indPoint < PathStatus_nbFrames(indConfiguration); indPoint++) {
-			setFrameTimeStamp(indConfiguration, indPoint, indPoint * interFrameDuration + get_path_curve_initialTimeRecording(indConfiguration));
+		for (int indPoint = 0; indPoint < PathStatus_nbFrames(indScenario); indPoint++) {
+			setFrameTimeStamp(indScenario, indPoint, indPoint * interFrameDuration + get_path_curve_initialTimeRecording(indScenario));
 		}
 	}
-	//printf("ind Path %d Nb Frames %d int time %.3f fin time %.3f frameDuration %.3f\n", pathNo, PathStatus_nbFrames(indConfiguration),
-	//	get_path_curve_initialTimeRecording(indConfiguration), get_path_curve_finalTimeRecording(indConfiguration), interFrameDuration);
+	//printf("ind Path %d Nb Frames %d int time %.3f fin time %.3f frameDuration %.3f\n", pathNo, PathStatus_nbFrames(indScenario),
+	//	get_path_curve_initialTimeRecording(indScenario), get_path_curve_finalTimeRecording(indScenario), interFrameDuration);
 }
 
 
@@ -578,7 +578,7 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 	glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
 	float precedingCurrentPoint[2], float  currentPoint[2],
 	bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario,
-	float* path_length, double p_secondsforwidth, int* p_nbRecordedTimeStamps, int indConfiguration) {
+	float* path_length, double p_secondsforwidth, int* p_nbRecordedTimeStamps, int indScenario) {
 	// current char in string
 	int            curChar = ' ';
 	int            indChar = 0;
@@ -592,7 +592,7 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 	// length of the full curve
 	*path_length = 0.f;
 	if (!withRecordingOfStrokeParameters) {
-		setFrameTimeStamp(indConfiguration, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
+		setFrameTimeStamp(indScenario, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
 	}
 
 	//std::cout << glm::to_string(*p_M_transf) << std::endl;
@@ -657,67 +657,67 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 					&& indFrame > 0) {
 					// copies current fixed parameters
 					if (!withRecordingOfStrokeParameters) {
-						setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color,
+						setFrameValues(indScenario, indFrame, path_r_color, path_g_color, path_b_color,
 							1.f, 0, pathRadius, pathRadius);
 						//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 					}
 					// shifts parameters one value ahead due to additional point
 					else {
 						//printf("move is to a point different from the preceding current point at frame #%d\n", indFrame);
-						for (int indFrameAux = PathStatus_nbFrames(indConfiguration) - 1; indFrameAux >= indFrame; indFrameAux--) {
+						for (int indFrameAux = PathStatus_nbFrames(indScenario) - 1; indFrameAux >= indFrame; indFrameAux--) {
 							if (with_color__brush_radius_from_scenario) {
-								setFrameValues(indConfiguration, indFrameAux, path_r_color, path_g_color, path_b_color,
+								setFrameValues(indScenario, indFrameAux, path_r_color, path_g_color, path_b_color,
 									1.f, 0, pathRadius, pathRadius);
 							}
 							else {
-								copyFrameValues(indConfiguration, indFrameAux, indFrameAux + 1);
-								copyFrameTimeStamp(indConfiguration, indFrameAux, indFrameAux + 1);
+								copyFrameValues(indScenario, indFrameAux, indFrameAux + 1);
+								copyFrameTimeStamp(indScenario, indFrameAux, indFrameAux + 1);
 							}
 						}
 						*p_nbRecordedTimeStamps += 1;
 					}
 					vec0 = (*p_M_transf) * glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1);
-					setFramePositionsCurrentPrevious(indConfiguration, indFrame, vec0.x, vec0.y,
+					setFramePositionsCurrentPrevious(indScenario, indFrame, vec0.x, vec0.y,
 						PG_OUT_OF_SCREEN_CURSOR, PG_OUT_OF_SCREEN_CURSOR);
 					// printf("src move to %d %f %f\n" , indFrame ,
 					// 	     pg_Path_Pos_x[ pathNo ][ indFrame ] , 
 					// 	     pg_Path_Pos_y[ pathNo ][ indFrame ]);
 
 					if (!withRecordingOfStrokeParameters) {
-						setFrameTimeStamp(indConfiguration, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
+						setFrameTimeStamp(indScenario, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
 					}
 					// otherwise keep the same timeStamp
 
 					// adds a new frame 
-					pushFrame(indConfiguration);
+					pushFrame(indScenario);
 					indFrame++;
 					//printf("End of point and path data loading: nbRecordedFrames %d, lentgh: %.2f\n", nbRecordedFrames, path_length);
 				}
 
 				// move from out of screen point to the current point
 				if (!withRecordingOfStrokeParameters || with_color__brush_radius_from_scenario) {
-					setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
-					setFrameTimeStamp(indConfiguration, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
+					setFrameValues(indScenario, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
+					setFrameTimeStamp(indScenario, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
 					//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 				}
 				vec0 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
-				setFramePositionsCurrentPrevious(indConfiguration, indFrame, PG_OUT_OF_SCREEN_CURSOR, PG_OUT_OF_SCREEN_CURSOR, vec0.x, vec0.y);
+				setFramePositionsCurrentPrevious(indScenario, indFrame, PG_OUT_OF_SCREEN_CURSOR, PG_OUT_OF_SCREEN_CURSOR, vec0.x, vec0.y);
 				// printf("src move to %d %f %f\n" , indFrame ,
 				// 	     pg_Path_Pos_x[ pathNo ][ indFrame ] , 
 				// 	     pg_Path_Pos_y[ pathNo ][ indFrame ]);
 
 				if (!withRecordingOfStrokeParameters) {
-					setFrameTimeStamp(indConfiguration, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
+					setFrameTimeStamp(indScenario, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
 				}
 				else {
-					setFrameTimeStamp(indConfiguration, indFrame, getTmpTimeStamp((unsigned int)indFrame));
+					setFrameTimeStamp(indScenario, indFrame, getTmpTimeStamp((unsigned int)indFrame));
 				}
 
 				precedingCurrentPoint[0] = currentPoint[0];
 				precedingCurrentPoint[1] = currentPoint[1];
 
 				// adds a new frame
-				pushFrame(indConfiguration);
+				pushFrame(indScenario);
 				indFrame++;
 				//}
 			}
@@ -790,10 +790,10 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 					// no work on time stamp calculation: recorded curve
 					if (withRecordingOfStrokeParameters) {
 						if (with_color__brush_radius_from_scenario) {
-							setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
+							setFrameValues(indScenario, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
 							//printf("color %.2f %.2f %.2f\n", path_r_color, path_g_color, path_b_color);
 						}
-						setFramePositions(indConfiguration, indFrame, controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y,
+						setFramePositions(indScenario, indFrame, controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y,
 							controlPoints[2].x, controlPoints[2].y, controlPoints[3].x, controlPoints[3].y);
 
 						// curve length addtion
@@ -801,7 +801,7 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 						*path_length += curveLength;
 
 						// adds the frames because they were not added while reading the time stamps
-						pushFrame(indConfiguration);
+						pushFrame(indScenario);
 						indFrame++;
 					}
 					// Inkscape based path edition: the time stamps should be calculated from lenght and the 
@@ -810,11 +810,11 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 						//std::cout << glm::to_string(glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1)) << std::endl;
 						// if( indFrame < 5 ) {
 							//printf("src curve to %d %f %f\n" , indFrame ,
-								//pg_PathCurveFrame_Data[indConfiguration][pathNo][indFrame].path_Pos_x, pg_PathCurveFrame_Data[indConfiguration][pathNo][indFrame].path_Pos_y);
+								//pg_PathCurveFrame_Data[indScenario][pathNo][indFrame].path_Pos_x, pg_PathCurveFrame_Data[indScenario][pathNo][indFrame].path_Pos_y);
 						// }
 
 						pg_BezierSubdivideAboveLength(controlPoints, pathNo, &indFrame, path_r_color, path_g_color, path_b_color,
-							pathRadius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indConfiguration);
+							pathRadius, with_color__brush_radius_from_scenario, path_length, p_secondsforwidth, indScenario);
 					}
 				}
 
@@ -907,38 +907,38 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 
 				// copies current fixed parameters
 				if (!withRecordingOfStrokeParameters || with_color__brush_radius_from_scenario) {
-					setFrameValues(indConfiguration, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
+					setFrameValues(indScenario, indFrame, path_r_color, path_g_color, path_b_color, 1.f, 0, pathRadius, pathRadius);
 				}
 				vec0 = (*p_M_transf) * glm::vec4(precedingCurrentPoint[0], precedingCurrentPoint[1], 0, 1);
 				glm::vec4 vec1 = (*p_M_transf) * glm::vec4(currentPoint[0], currentPoint[1], 0, 1);
-				setFramePositionsCurrentPrevious(indConfiguration, indFrame, vec0.x, vec0.y, vec1.x, vec1.y);
+				setFramePositionsCurrentPrevious(indScenario, indFrame, vec0.x, vec0.y, vec1.x, vec1.y);
 
 				// left tangent of current point is preceding point
 				// and right tangent of preceding point is the current point
-				setFramePositionsLeftRightCopy(indConfiguration, indFrame);
+				setFramePositionsLeftRightCopy(indScenario, indFrame);
 
 				// curve length addtion
-				glm::vec2 precPoint(getFramePositionX_prev(indConfiguration, indFrame), getFramePositionY_prev(indConfiguration, indFrame));
-				glm::vec2 curPoint(getFramePositionX(indConfiguration, indFrame), getFramePositionY(indConfiguration, indFrame));
+				glm::vec2 precPoint(getFramePositionX_prev(indScenario, indFrame), getFramePositionY_prev(indScenario, indFrame));
+				glm::vec2 curPoint(getFramePositionX(indScenario, indFrame), getFramePositionY(indScenario, indFrame));
 				*path_length += glm::distance(precPoint, curPoint);
 
 				if (!withRecordingOfStrokeParameters) {
-					setFrameTimeStamp(indConfiguration, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
+					setFrameTimeStamp(indScenario, indFrame, *path_length / pg_workingWindow_width * p_secondsforwidth);
 				}
 				else {
-					setFrameTimeStamp(indConfiguration, indFrame, getTmpTimeStamp((unsigned int)indFrame));
+					setFrameTimeStamp(indScenario, indFrame, getTmpTimeStamp((unsigned int)indFrame));
 				}
 
 				//printf("new line to %d %.2f %.2f - %.2f %.2f\n" , indFrame, vec0.x, vec0.y, vec1.x, vec1.y);
 				//printf("new line to %d %.2f %.2f - %.2f %.2f\n", indFrame,
-				//	getFramePositionX(indConfiguration, indFrame), getFramePositionY(indConfiguration, indFrame),
-				//	getFramePositionX_prev(indConfiguration, indFrame), getFramePositionY_prev(indConfiguration, indFrame));
+				//	getFramePositionX(indScenario, indFrame), getFramePositionY(indScenario, indFrame),
+				//	getFramePositionX_prev(indScenario, indFrame), getFramePositionY_prev(indScenario, indFrame));
 
 				precedingCurrentPoint[0] = currentPoint[0];
 				precedingCurrentPoint[1] = currentPoint[1];
 
 				// adds the frames because they were not added while reading the time stamps
-				pushFrame(indConfiguration);
+				pushFrame(indScenario);
 				indFrame++;
 				//}
 			}
@@ -965,7 +965,7 @@ int Path_Status::pg_LoadPathPointsFromXML(char* pathString,
 	return indFrame;
 }
 
-void Path_Status::LoadPathColorsFromXML(string pathString, int* nbRecordedFrames, int indConfiguration) {
+void Path_Status::LoadPathColorsFromXML(string pathString, int* nbRecordedFrames, int indScenario) {
 	std::stringstream  sstream;
 	sstream.clear();
 	std::replace(pathString.begin(), pathString.end(), ',', ' ');
@@ -973,13 +973,13 @@ void Path_Status::LoadPathColorsFromXML(string pathString, int* nbRecordedFrames
 	unsigned int indFrame = 0;
 	float r, g, b, a;
 	while (sstream >> r && sstream >> g && sstream >> b && sstream >> a) {
-		setFrameColor(indConfiguration, indFrame, r, g, b, a);
+		setFrameColor(indScenario, indFrame, r, g, b, a);
 		++indFrame;
 	}
 	*nbRecordedFrames = indFrame;
 }
 
-void Path_Status::LoadPathBrushesFromXML(string pathString, int* nbRecordedFrames, int indConfiguration) {
+void Path_Status::LoadPathBrushesFromXML(string pathString, int* nbRecordedFrames, int indScenario) {
 	std::stringstream  sstream;
 	sstream.clear();
 	std::replace(pathString.begin(), pathString.end(), ',', ' ');
@@ -988,7 +988,7 @@ void Path_Status::LoadPathBrushesFromXML(string pathString, int* nbRecordedFrame
 	int br;
 	float rx, ry;
 	while (sstream >> br && sstream >> rx && sstream >> ry) {
-		setFrameBrushRadius(indConfiguration, indFrame, br, rx, ry);
+		setFrameBrushRadius(indScenario, indFrame, br, rx, ry);
 		++indFrame;
 	}
 	*nbRecordedFrames = indFrame;
@@ -2503,9 +2503,9 @@ void pg_writesvg(cv::String imageFileName) {
 
 void pg_listAllSVG_paths(void) {
 	printf("Listing SVG paths:\n");
-	for (int indConfiguration = 0; indConfiguration < pg_NbConfigurations; indConfiguration++) {
-		std::cout << "    " << indConfiguration << ": ";
-		for (SVG_scenarioPathCurve& curve : pg_SVG_scenarioPathCurves[indConfiguration]) {
+	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+		std::cout << "    " << indScenario << ": ";
+		for (SVG_scenarioPathCurve& curve : pg_SVG_scenarioPathCurves[indScenario]) {
 			std::cout << curve.path_fileName << " (" << curve.path_no << ", "
 				<< curve.path_group << "), ";
 		}

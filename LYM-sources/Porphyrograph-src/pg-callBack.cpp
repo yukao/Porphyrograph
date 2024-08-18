@@ -292,14 +292,14 @@ void fingers_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_
 void mesh_anime_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
 		for (int indMesh = 0; indMesh < int(pg_Meshes[pg_ind_scenario].size()); indMesh++) {
-			pg_mesh_startAnime[pg_ind_scenario][indMesh] = pg_CurrentClockTime;
+			pg_Mesh_Animations[pg_ind_scenario][indMesh].pg_mesh_startAnime = pg_CurrentClockTime;
 		}
 	}
 }
 void mesh_motion_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
 		for (int indMesh = 0; indMesh < int(pg_Meshes[pg_ind_scenario].size()); indMesh++) {
-			pg_mesh_startMotion[pg_ind_scenario][indMesh] = pg_CurrentClockTime;
+			pg_Mesh_Animations[pg_ind_scenario][indMesh].pg_mesh_startMotion = pg_CurrentClockTime;
 		}
 	}
 }
