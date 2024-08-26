@@ -31,9 +31,6 @@ scene_buttons_colors = [[188, 40, 255],[155, 0, 130],[0, 0, 255],[0, 255, 0],[25
 	
 space_char = ','
 
-# number of configuration and for each the number of scenes and the names of the scenes
-Nb_Scenarios = 0
-
 Header_Input_name = ""
 FullScenario_InputCsv_name = ""
 
@@ -44,12 +41,6 @@ ScriptHeader = None
 
 ScriptBody_name = ""
 ScriptBody = None
-
-ShaderHeader_name = ""
-ShaderHeader = None
-
-ShaderBodyDecl_name = ""
-ShaderBodyDecl = None
 
 ShaderBodyBind_name = ""
 ShaderBodyBind = None
@@ -253,7 +244,6 @@ def scenario_to_cpp_range(scenario_type) :
 def write_script_header_and_body() :
 	global ScriptHeader
 	global ScriptBodywrite_script_header_and_body
-	global ShaderBodyDecl
 
 	global full_scenario_vars_specs_dict
 
@@ -272,7 +262,6 @@ def write_script_header_and_body() :
 		ScriptHeader.write("  _%s,\n" % var_ID)
 		# print("CPP code generator:   _%s,", scenario_var_ids
 	ScriptHeader.write("  _MaxInterpVarIDs};\n")
-	# OLD: ScriptHeader.write("#define _NbConfigurations %d\n" % Nb_Scenarios)
 
 	############################### scenario variable declarations
 	# interpolation cancelation variable declaration
@@ -485,18 +474,6 @@ def write_script_header_and_body() :
 		ScriptBody.write("  \""+var_ID+"\",\n")
 	ScriptBody.write("};\n")
 
-	ShaderBodyDecl.write("GLint uniform_ParticleAnimation_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
-	ShaderBodyDecl.write("GLint uniform_Update_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
-	ShaderBodyDecl.write("GLint uniform_Mixing_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
-	ShaderBodyDecl.write("GLint uniform_ParticleRender_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
-	ShaderBodyDecl.write("GLint uniform_Master_scenario_var_data[%d] = {0};\n" % Nb_Scenarios)
-	ShaderBodyDecl.write("float *ParticleAnimation_scenario_var_data;\n")
-	ShaderBodyDecl.write("float *Update_scenario_var_data;\n")
-	ShaderBodyDecl.write("float *Mixing_scenario_var_data;\n")
-	ShaderBodyDecl.write("float *ParticleRender_scenario_var_data;\n")
-	ShaderBodyDecl.write("float *Master_scenario_var_data;\n")
-
-
 	ScriptHeader.close() 
 	ScriptBody.close() 
 
@@ -504,9 +481,6 @@ def write_script_header_and_body() :
 # WRITE SHADER HEADER BODY AND BINDING AND C++ UPDATE
 ###############################################################################
 def write_binding_vars_header_and_body() :
-	global ShaderHeader_name
-	global ShaderHeader
-
 	global ShaderBodyBind_name
 	global ShaderBodyBind
 
@@ -735,68 +709,26 @@ def write_binding_vars_header_and_body() :
 				Master_fs_index += 1
 
 	#############################
-	# BINDS THE TABLES WITH SHADER UNIFORMS
-	ShaderHeader.write("extern GLint uniform_ParticleAnimation_scenario_var_data["+str(Nb_Scenarios)+"];\n")
-	for indScenario in range(Nb_Scenarios) :
-		ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]) {\n")
-		ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_ParticleAnimation_scenario_var_data, \"uniform_ParticleAnimation_scenario_var_data\", pg_enum_shader_ParticleAnimation);\n")
-		ShaderBodyBind.write("    }\n")
-
-	ShaderHeader.write("extern GLint uniform_Mixing_scenario_var_data["+str(Nb_Scenarios)+"];\n")
-	for indScenario in range(Nb_Scenarios) :
-		ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]) {\n")
-		ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_Mixing_scenario_var_data, \"uniform_Mixing_scenario_var_data\", pg_enum_shader_Mixing);\n")
-		ShaderBodyBind.write("    }\n")
-
-	ShaderHeader.write("extern GLint uniform_Update_scenario_var_data["+str(Nb_Scenarios)+"];\n");
-	for indScenario in range(Nb_Scenarios) :
-		ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]) {\n")
-		ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_Update_scenario_var_data, \"uniform_Update_scenario_var_data\", pg_enum_shader_Update);\n")
-		ShaderBodyBind.write("    }\n")
-
-	ShaderHeader.write("extern GLint uniform_ParticleRender_scenario_var_data["+str(Nb_Scenarios)+"];\n")
-	for indScenario in range(Nb_Scenarios) :
-		ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]) {\n")
-		ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_ParticleRender_scenario_var_data, \"uniform_ParticleRender_scenario_var_data\", pg_enum_shader_ParticleRender);\n")
-		ShaderBodyBind.write("    }\n")
-			
-	ShaderHeader.write("extern GLint uniform_Master_scenario_var_data["+str(Nb_Scenarios)+"];\n")
-	for indScenario in range(Nb_Scenarios) :
-		ShaderBodyBind.write("    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]) {\n")
-		ShaderBodyBind.write("    	pg_allocateBindAndCheckUniform("+str(indScenario)+",  uniform_Master_scenario_var_data, \"uniform_Master_scenario_var_data\", pg_enum_shader_Master);\n")
-		ShaderBodyBind.write("    }\n")
-
-	#############################
 	# SEND TABLE DATA TO SHADERS
 	# once the variables have been scanned, C++ and glsl tables are created to pass the values from CPU to GPU. There is a table per shader.
 	if(ParticleAnimation_fs_index > 0) :
-		for indScenario in range(Nb_Scenarios) :
-			ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "      glUniform1fv(uniform_ParticleAnimation_scenario_var_data["+str(indScenario)+"], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data);\n"
-		ShaderHeader.write("extern float *ParticleAnimation_scenario_var_data;\n")
+		ParticleAnimation_bindingString_cpp = ParticleAnimation_bindingString_cpp + "  glUniform1fv(uniform_ParticleAnimation_scenario_var_data[pg_ind_scenario], " + str(ParticleAnimation_fs_index) + ", ParticleAnimation_scenario_var_data);\n"
 		ShaderBodyBind.write("	ParticleAnimation_scenario_var_data  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 		
 	if(Update_fs_index > 0) :
-		for indScenario in range(Nb_Scenarios) :
-			Update_bindingString_cpp = Update_bindingString_cpp + "      glUniform1fv(uniform_Update_scenario_var_data["+str(indScenario)+"], " + str(Update_fs_index) + ", Update_scenario_var_data);\n"
-		ShaderHeader.write("extern float *Update_scenario_var_data;\n")
+		Update_bindingString_cpp = Update_bindingString_cpp + "  glUniform1fv(uniform_Update_scenario_var_data[pg_ind_scenario], " + str(Update_fs_index) + ", Update_scenario_var_data);\n"
 		ShaderBodyBind.write("	Update_scenario_var_data  = new float[" + str(Update_fs_index) + "];\n")
 
 	if(Mixing_fs_index > 0) :
-		for indScenario in range(Nb_Scenarios) :
-			Mixing_bindingString_cpp = Mixing_bindingString_cpp + "      glUniform1fv(uniform_Mixing_scenario_var_data["+str(indScenario)+"], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data);\n"
-		ShaderHeader.write("extern float *Mixing_scenario_var_data;\n")
+		Mixing_bindingString_cpp = Mixing_bindingString_cpp + "  glUniform1fv(uniform_Mixing_scenario_var_data[pg_ind_scenario], " + str(Mixing_fs_index) + ", Mixing_scenario_var_data);\n"
 		ShaderBodyBind.write("	Mixing_scenario_var_data  = new float[" + str(Mixing_fs_index) + "];\n")
 
 	if(ParticleRender_fs_index > 0) :
-		for indScenario in range(Nb_Scenarios) :
-			ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "      glUniform1fv(uniform_ParticleRender_scenario_var_data["+str(indScenario)+"], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data);\n"
-		ShaderHeader.write("extern float *ParticleRender_scenario_var_data;\n")
+		ParticleRender_bindingString_cpp = ParticleRender_bindingString_cpp + "  glUniform1fv(uniform_ParticleRender_scenario_var_data[pg_ind_scenario], " + str(ParticleRender_fs_index) + ", ParticleRender_scenario_var_data);\n"
 		ShaderBodyBind.write("	ParticleRender_scenario_var_data  = new float[" + str(ParticleAnimation_fs_index) + "];\n")
 
 	if(Master_fs_index > 0) :
-		for indScenario in range(Nb_Scenarios) :
-			Master_bindingString_cpp = Master_bindingString_cpp + "      glUniform1fv(uniform_Master_scenario_var_data["+str(indScenario)+"], " + str(Master_fs_index) + ", Master_scenario_var_data);\n"
-		ShaderHeader.write("extern float *Master_scenario_var_data;\n")
+		Master_bindingString_cpp = Master_bindingString_cpp + "  glUniform1fv(uniform_Master_scenario_var_data[pg_ind_scenario], " + str(Master_fs_index) + ", Master_scenario_var_data);\n"
 		ShaderBodyBind.write("	Master_scenario_var_data  = new float[" + str(Master_fs_index) + "];\n")
 
 	#############################
@@ -812,30 +744,26 @@ def write_binding_vars_header_and_body() :
 		RenderBody.write(ParticleRender_tableFillingString_cpp + "\n")
 	if(Master_tableFillingString_cpp != "") :
 		RenderBody.write(Master_tableFillingString_cpp + "\n")
-	for indScenario in range(Nb_Scenarios) :
-		RenderBody.write("if(pg_ind_scenario == "+str(indScenario)+") {")
 
-		RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]) {\n")
-		RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
-		RenderBody.write("    }\n")
+	RenderBody.write("\nif (pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleAnimation]) {\n")
+	RenderBody.write("  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
+	RenderBody.write("}\n")
 
-		RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]) {\n" )
-		RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]);\n" + Update_bindingString_cpp)
-		RenderBody.write("    }\n")
+	RenderBody.write("\nif (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]) {\n" )
+	RenderBody.write("  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]);\n" + Update_bindingString_cpp)
+	RenderBody.write("}\n")
 
-		RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]) {\n")
-		RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]);\n" + Mixing_bindingString_cpp)
-		RenderBody.write("    }\n")
+	RenderBody.write("\nif (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mixing]) {\n")
+	RenderBody.write("  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mixing]);\n" + Mixing_bindingString_cpp)
+	RenderBody.write("}\n")
 
-		RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]) {\n")
-		RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
-		RenderBody.write("    }\n")
+	RenderBody.write("\nif (pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleRender]) {\n")
+	RenderBody.write("  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
+	RenderBody.write("}\n")
 
-		RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]) {\n")
-		RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]);\n" + Master_bindingString_cpp)
-		RenderBody.write("    }\n")
-
-		RenderBody.write("}\n")
+	RenderBody.write("\nif (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Master]) {\n")
+	RenderBody.write("  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Master]);\n" + Master_bindingString_cpp)
+	RenderBody.write("}\n")
 
 ##################################################################
 # MAIN SUB
@@ -844,8 +772,6 @@ def main(main_args) :
 	global Header_Input_name
 	global FullScenario_InputCsv_name
 
-	global Nb_Scenarios
-
 	global scenario_vars_columns_list
 
 	global ScriptHeader_name
@@ -853,12 +779,6 @@ def main(main_args) :
 
 	global ScriptBody_name
 	global ScriptBody
-
-	global ShaderHeader_name
-	global ShaderHeader
-
-	global ShaderBodyDecl_name
-	global ShaderBodyDecl
 
 	global ShaderBodyBind_name
 	global ShaderBodyBind
@@ -872,7 +792,7 @@ def main(main_args) :
 	# ARGUMENTS
 	##################################################################
 	try:
-		opts, args = getopt.getopt(main_args,"n:c:f:",["nb_scenarios=","header=", "full_scenario=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "render_body_out="])
+		opts, args = getopt.getopt(main_args,"c:f:",["header=", "full_scenario=", "script_header_out=", "script_body_out=", "shader_body_bind_out=", "render_body_out="])
 	except getopt.GetoptError:
 		print(USAGE)
 		print("CPP code generator: End of code generation\n\n")
@@ -880,9 +800,7 @@ def main(main_args) :
 	for opt, arg in opts:
 
 		# ARGTS
-		if opt in ("-n", "--nb_scenarios"):
-			Nb_Scenarios = int(arg)
-		elif opt in ("-c", "--header"):
+		if opt in ("-c", "--header"):
 			Header_Input_name = arg
 		elif opt in ("-f", "--full_scenario"):
 			FullScenario_InputCsv_name = arg
@@ -891,10 +809,6 @@ def main(main_args) :
 			ScriptHeader_name = arg
 		elif opt in ("--script_body_out"):
 			ScriptBody_name = arg
-		elif opt in ("--shader_header_out"):
-			ShaderHeader_name = arg
-		elif opt in ("--shader_body_decl_out"):
-			ShaderBodyDecl_name = arg
 		elif opt in ("--shader_body_bind_out"):
 			ShaderBodyBind_name = arg
 		elif opt in ("--render_body_out"):
@@ -913,14 +827,6 @@ def main(main_args) :
 		ScriptBody = open(ScriptBody_name, "wt")
 	except IOError:
 		print("CPP code generator: File not found:", ScriptBody_name, " or path is incorrect")
-	try:
-		ShaderHeader = open(ShaderHeader_name, "wt")
-	except IOError:
-		print("CPP code generator: File not found:", ShaderHeader_name, " or path is incorrect")
-	try:
-		ShaderBodyDecl = open(ShaderBodyDecl_name, "wt")
-	except IOError:
-		print("CPP code generator: File not found:", ShaderBodyDecl_name, " or path is incorrect")
 	try:
 		ShaderBodyBind = open(ShaderBodyBind_name, "wt")
 	except IOError:

@@ -171,28 +171,27 @@ Master_scenario_var_data[29] = (GLfloat)trackMasterWeight[2] + pulse_average * t
 Master_scenario_var_data[30] = (GLfloat)trackMasterWeight[3] + pulse_average * trackMasterWeight_pulse[3];
 Master_scenario_var_data[31] = (GLfloat)currentMaskTrack;
 
-if(pg_ind_scenario == 0) {
-    if (pg_shader_programme[0][pg_enum_shader_ParticleAnimation]) {
-      glUseProgram(pg_shader_programme[0][pg_enum_shader_ParticleAnimation]);
-      glUniform1fv(uniform_ParticleAnimation_scenario_var_data[0], 47, ParticleAnimation_scenario_var_data);
-    }
 
-    if (pg_shader_programme[0][pg_enum_shader_Update]) {
-      glUseProgram(pg_shader_programme[0][pg_enum_shader_Update]);
-      glUniform1fv(uniform_Update_scenario_var_data[0], 81, Update_scenario_var_data);
-    }
+if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleAnimation]) {
+  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleAnimation]);
+  glUniform1fv(uniform_ParticleAnimation_scenario_var_data[pg_ind_scenario], 47, ParticleAnimation_scenario_var_data);
+}
 
-    if (pg_shader_programme[0][pg_enum_shader_Mixing]) {
-      glUseProgram(pg_shader_programme[0][pg_enum_shader_Mixing]);
-      glUniform1fv(uniform_Mixing_scenario_var_data[0], 9, Mixing_scenario_var_data);
-    }
+if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]) {
+  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]);
+  glUniform1fv(uniform_Update_scenario_var_data[pg_ind_scenario], 81, Update_scenario_var_data);
+}
 
-    if (pg_shader_programme[0][pg_enum_shader_ParticleRender]) {
-      glUseProgram(pg_shader_programme[0][pg_enum_shader_ParticleRender]);
-    }
+if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mixing]) {
+  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mixing]);
+  glUniform1fv(uniform_Mixing_scenario_var_data[pg_ind_scenario], 9, Mixing_scenario_var_data);
+}
 
-    if (pg_shader_programme[0][pg_enum_shader_Master]) {
-      glUseProgram(pg_shader_programme[0][pg_enum_shader_Master]);
-      glUniform1fv(uniform_Master_scenario_var_data[0], 32, Master_scenario_var_data);
-    }
+if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleRender]) {
+  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleRender]);
+}
+
+if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Master]) {
+  glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Master]);
+  glUniform1fv(uniform_Master_scenario_var_data[pg_ind_scenario], 32, Master_scenario_var_data);
 }

@@ -26,16 +26,6 @@
 #ifndef PG_SHADER_H
 #define PG_SHADER_H
 
-#if defined(CORE)
-#include "pg_shader_header_Core.h"
-#endif
-#if defined(pg_Project_Voluspa)
-#include "pg_shader_header_voluspa.h"
-#endif
-#if defined(pg_Project_araKnit)
-#include "pg_shader_header_araknit.h"
-#endif
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // CONSTs
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +46,18 @@ enum ShaderFileTypes { pg_enum_shader_ParticleAnimation = 0,
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXPORTED VARIABLES
 ////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+/////////////////////////////////////////////////////////////
+// tables connecting scenario, cpp and glsl variables
+extern GLint uniform_ParticleAnimation_scenario_var_data[PG_MAX_SCENARIOS];
+extern GLint uniform_Mixing_scenario_var_data[PG_MAX_SCENARIOS];
+extern GLint uniform_Update_scenario_var_data[PG_MAX_SCENARIOS];
+extern GLint uniform_ParticleRender_scenario_var_data[PG_MAX_SCENARIOS];
+extern GLint uniform_Master_scenario_var_data[PG_MAX_SCENARIOS];
+extern float* ParticleAnimation_scenario_var_data;
+extern float* Update_scenario_var_data;
+extern float* Mixing_scenario_var_data;
+extern float* Master_scenario_var_data;
 
 extern unsigned int ** pg_shader_programme;
 

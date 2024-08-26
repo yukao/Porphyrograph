@@ -24,19 +24,24 @@
  */
 
 #include "pg-all_include.h"
-#if defined(CORE)
-#include "pg_shader_body_decl_Core.cpp"
-#endif
-#if defined(pg_Project_Voluspa)
-#include "pg_shader_body_decl_voluspa.cpp"
-#endif
-#if defined(pg_Project_araKnit)
-#include "pg_shader_body_decl_araknit.cpp"
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARS
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////
+// tables connecting scenario, cpp and glsl variables
+GLint uniform_ParticleAnimation_scenario_var_data[PG_MAX_SCENARIOS] = { 0 };
+GLint uniform_Update_scenario_var_data[PG_MAX_SCENARIOS] = { 0 };
+GLint uniform_Mixing_scenario_var_data[PG_MAX_SCENARIOS] = { 0 };
+GLint uniform_ParticleRender_scenario_var_data[PG_MAX_SCENARIOS] = { 0 };
+GLint uniform_Master_scenario_var_data[PG_MAX_SCENARIOS] = { 0 };
+float* ParticleAnimation_scenario_var_data;
+float* Update_scenario_var_data;
+float* Mixing_scenario_var_data;
+float* ParticleRender_scenario_var_data;
+float* Master_scenario_var_data;
+
 
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
@@ -496,6 +501,24 @@ void pg_loadAllShaders(void) {
 
 	////////////////////////////////////////
 	// binding and allocating tables in shaders
+
+	for (int indConfig = 0; indConfig < pg_NbScenarios; indConfig++) {
+		if (pg_shader_programme[indConfig][pg_enum_shader_ParticleAnimation]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleAnimation_scenario_var_data, "uniform_ParticleAnimation_scenario_var_data", pg_enum_shader_ParticleAnimation);
+		}
+		if (pg_shader_programme[indConfig][pg_enum_shader_Mixing]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Mixing_scenario_var_data, "uniform_Mixing_scenario_var_data", pg_enum_shader_Mixing);
+		}
+		if (pg_shader_programme[indConfig][pg_enum_shader_Update]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_scenario_var_data, "uniform_Update_scenario_var_data", pg_enum_shader_Update);
+		}
+		if (pg_shader_programme[indConfig][pg_enum_shader_ParticleRender]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_ParticleRender_scenario_var_data, "uniform_ParticleRender_scenario_var_data", pg_enum_shader_ParticleRender);
+		}
+		if (pg_shader_programme[indConfig][pg_enum_shader_Master]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Master_scenario_var_data, "uniform_Master_scenario_var_data", pg_enum_shader_Master);
+		}
+	}
 
 #if defined(CORE)
 #include "pg_shader_body_bind_Core.cpp"
