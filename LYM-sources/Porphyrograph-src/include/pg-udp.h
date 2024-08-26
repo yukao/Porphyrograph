@@ -31,14 +31,19 @@
 typedef int SOCKET;
 #endif // !_WIN32
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define _SpaceChar(c) (c == ' ' || c == '\n' || c == 13 || c == '\t')
 #define _Num(c) (c >= '0' && c <= '9')
 
-// string splitting into string vector by single char
-vector<string> pg_split_string(string str, char token);
-
 // alternate plain/pg_enum_UDP_OSC message format
 enum pg_UDPMessageFormat{ pg_enum_UDP_Plain = 0, pg_enum_UDP_OSC , pg_enum_Empty_UDPMessageFormat };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UDP CLIENT AND SERVER MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class pg_UDP_Transprt
 {
@@ -175,6 +180,27 @@ public:
 	void ProcessFilteredInputMessages(void);
 };
 
-pg_UDP_Transprt* pg_newUDP_Transport();
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// UDP servers and clients
+extern vector<pg_IPServer>		pg_IP_Servers;
+extern vector<pg_IPClient>		pg_IP_Clients;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// string splitting into string vector by single char
+vector<string> pg_split_string(string str, char token);
+
+void pg_parseScenario_UDP(std::ifstream& scenarioFin, int indScenario);
+void pg_aliasScript_UDP(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar);
+
+// GUI DISPLAY & LOG FILE LOGGING
+void pg_send_message_udp(char* pattern, char* message, char* targetHostid);
+void pg_send_message_udp(char* pattern, char* message, pg_IPClient* targetHost);
 
 #endif

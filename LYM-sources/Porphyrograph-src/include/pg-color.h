@@ -24,9 +24,17 @@
 #ifndef PG_COLOR_H
 #define PG_COLOR_H
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 enum pg_ColorTarget { pg_enum_PEN_COLOR = 0, pg_enum_REPOP_COLOR, pg_enum_CLIP_ART_COLOR, pg_enum_LIGHT_COLOR };
  
- ////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// COLOR AND COLOR PRESETS MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////
 // COLOR PRESETS
 // pen palettes presets
 class Color {
@@ -69,7 +77,6 @@ public:
 	~ColorPreset(void) {
 	}
 };
-extern vector<ColorPreset> pg_ColorPresets[PG_MAX_SCENARIOS];
 
 ////////////////////////////////////////////
 // COLOR PALETTES
@@ -85,37 +92,36 @@ public:
 	~Palette(void) {
 	}
 };
-extern vector<Palette> pg_Palettes[PG_MAX_SCENARIOS];
 
-extern float pg_light_color_prec[PG_NB_LIGHTS + 1];
-extern float pg_light_grey_prec[PG_NB_LIGHTS + 1];
-extern float pg_light_dimmer_prec[PG_NB_LIGHTS + 1];
-extern float pg_light_strobe_prec[PG_NB_LIGHTS + 1];
-// addition of color for light based on palette
-extern float pg_light_color_pulse_prec[PG_NB_LIGHTS + 1];
-extern float pg_light_grey_pulse_prec[PG_NB_LIGHTS + 1];
-extern float pg_light_dimmer_pulse_prec[PG_NB_LIGHTS + 1];
-extern float pg_light_strobe_pulse_prec[PG_NB_LIGHTS + 1];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// predefined colors
+extern vector<ColorPreset> pg_ColorPresets[PG_MAX_SCENARIOS];
+// palettes made of 3 colors corresponding to low/medium/high pitch sound
+extern vector<Palette> pg_Palettes[PG_MAX_SCENARIOS];
 
 // ++++++++++++++++++++++ MUSIC CONTROL ++++++++++++++++++++ 
 // music control inputs received at each frame
 // addition of color based on palette for pen
 extern float pg_pulsed_pen_color[4];
-// addition of color based on palette for particles
+
+// color based on palette for BG, CA and particles
 extern float pg_pulsed_repop_colorBG[3];
 extern float pg_pulsed_repop_colorCA[3];
 extern float pg_pulsed_repop_colorPart[3];
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////
-// Cuurent palette after interpolation
-extern float pen_bandpass_3color_palette[3][3];
-
-
-
+// Cuurent palette after interpolation based on sound
 void pg_compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], pg_ColorTarget color_target);
+void pg_compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_pulse, float value, float value_pulse, float pulsed_color[3], bool is_pen_color);
 void pg_HSVtoRGB(float h, float s, float v, float* r, float* g, float* b);
 void pg_RGBtoHSV(float r, float g, float b, float* h, float* s, float* v);
-void pg_compute_pulsed_HSV_color(float hue, float hue_pulse, float sat, float sat_pulse, float value, float value_pulse, float pulsed_color[3], bool is_pen_color);
 void pg_update_pulsed_colors(void);
 
 #endif

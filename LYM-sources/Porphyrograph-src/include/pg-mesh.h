@@ -29,7 +29,19 @@
 #ifndef PG_MESH_H
 #define PG_MESH_H
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define PG_MAX_ANIMATION_POSES 7
+
+ // mesh anim data
+#define _lastMesh_Anime 6
+#define _lastMesh_Motion 6
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// BONE MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Bone {
 public:
@@ -111,6 +123,10 @@ public:
     ~Bone(void) {
     }
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class MeshData {
 public:
@@ -239,6 +255,10 @@ public:
 	}
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// ARMATURE POSE AND ANIMATION MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class MotionPose {
 public:
 	float pose_Mesh_Translation_X;
@@ -312,62 +332,47 @@ public:
 		pg_motionPoses = new MotionPose[PG_MAX_ANIMATION_POSES]();
 	}
 	~MeshAnimationData(void) {
+		free(pg_interpolation_weight_AnimationPose);
+		pg_interpolation_weight_AnimationPose = NULL;
+		free(pg_interpolation_weight_MotionPose);
+		pg_interpolation_weight_MotionPose = NULL;
 	}
 };
 
-// MESHES
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// MESHES AND ANIMS
 extern vector<MeshData> pg_Meshes[PG_MAX_SCENARIOS];
 extern vector<MeshAnimationData> pg_Mesh_Animations[PG_MAX_SCENARIOS];
-
-// mesh anim data
-#define _lastMesh_Anime 6
-#define _lastMesh_Motion 6
-
-// mesh data
-extern GLfloat *pg_mesh_vertexBuffer;
-extern GLfloat *pg_mesh_texCoordBuffer;
-extern GLfloat *pg_mesh_normalBuffer;
-extern GLuint  *pg_mesh_indexBuffer;
-extern GLint* pg_mesh_boneIndexBuffer;
-extern GLfloat* pg_mesh_boneWeightBuffer;
 
 // mesh lighting
 extern GLfloat pg_mesh_light_x;
 extern GLfloat pg_mesh_light_y;
 extern GLfloat pg_mesh_light_z;
 
-void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indScenario);
-void pg_copyMeshData(int indObjectInMesh, GLfloat* vertexBufferIni, GLfloat* texCoordBufferIni, GLfloat* normalBufferIni,
-	GLint* boneIndexBufferIni, GLfloat* boneWeightBufferIni,
-	GLuint* indexPointBufferIni, GLuint* indexTexCoordBufferIni, GLuint* indexNormalBufferIni,
-	int nbFacesInThisMesh);
-void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose, int mesh_AnimationPose);
-void pg_count_faces_mesh_obj(FILE* file, int* meshNo,
-	int **nbVerticesInEachMesh, int **nbTextCoordsInEachMesh, int **nbNormalsInEachMesh,
-	int **nbFacesInEachMesh);
-void pg_parseArmatureObj(FILE* file, char* line, char* tag, char* id, int indMeshFile, int indScenario);
-void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc, int indMeshFile, int indScenario);
-void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
-int *nbVerticesInEachMesh, int *nbTextCoordsInEachMesh, int *nbNormalsInEachMesh,
-int *nbFacesInEachMesh, int indScenario);
-void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indScenario);
-void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indScenario);
-void pg_loadAllMeshes(void);
-#if defined(var_MmeShanghai_brokenGlass)
-void pg_loadMeshSubParts(string meshPart_fileName, bool* ObjectsInSubPart, int nbObjectsInMesh);
+#if defined(var_Caverne_Mesh_Profusion)
+void Caverne_Mesh_Profusion_On(int indImage);
+void Caverne_Mesh_Profusion_Off(int indImage);
 #endif
 
-void pg_render_one_bone(Bone* bone, glm::mat4 parentModelMatrix);
-void pg_render_bones(glm::mat4 modelMatrix, int indMeshFile);
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// bone animaton & motion
 void pg_update_bone_anim(int indMeshFile);
 void pg_update_bones(int indMeshFile);
-void pg_update_motion(int indMeshFile); 
+void pg_update_motion(int indMeshFile);
 
-void pg_meshOnOff(int indImage);
-void pg_meshOn(int indImage);
-void pg_meshOff(int indImage);
-void pg_meshMobileOnOff(int indImage);
-void pg_meshMobileOff(int indImage);
-void pg_meshMobileOn(int indImage);
+void pg_render_bones(glm::mat4 modelMatrix, int indMeshFile);
+
+void pg_parseScenario_Meshes(std::ifstream& scenarioFin, int indScenario);
+// loads meshes in GPU
+void pg_loadAllMeshes(void);
+
+void pg_aliasScript_Mesh(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar);
+
 #endif

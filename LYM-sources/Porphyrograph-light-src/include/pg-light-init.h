@@ -31,7 +31,8 @@ https://github.com/fcaruso/GLSLParametricCurve
 
 #define PG_SIZE_QUAD_ARRAY 4  // quads made of a 4-point triangle strip
 
-enum pg_FBO_Update_samplers { pg_enum_CA_FBO_Update_sampler = 0,
+enum pg_FBO_Update_samplers {
+	pg_enum_CA_FBO_Update_sampler = 0,
 	pg_enum_PreviousCA_FBO_Update_sampler,
 	pg_enum_Pixels_FBO_Update_sampler,
 	pg_enum_Brushes_Update_sampler,
@@ -53,7 +54,8 @@ enum pg_FBO_Update_samplers { pg_enum_CA_FBO_Update_sampler = 0,
 	pg_enum_pixel_image_acc_Update_sampler,
 	pg_enum_CATable_Update_sampler,
 };
-enum pg_FBO_Update_attachments { pg_enum_CA_FBO_Update_attacht = 0,
+enum pg_FBO_Update_attachments {
+	pg_enum_CA_FBO_Update_attacht = 0,
 	pg_enum_Pixels_FBO_Update_attacht,
 	pg_enum_Trk0_FBO_Update_attacht,
 	pg_enum_Trk1_FBO_Update_attacht,
@@ -61,7 +63,8 @@ enum pg_FBO_Update_attachments { pg_enum_CA_FBO_Update_attacht = 0,
 	pg_enum_Trk3_FBO_Update_attacht,
 	pg_enum_FBO_Update_nbAttachts
 };
-enum pg_FBO_Mixing_samplers { pg_enum_CA_FBO_Mixing_sampler = 0,
+enum pg_FBO_Mixing_samplers {
+	pg_enum_CA_FBO_Mixing_sampler = 0,
 	pg_enum_ClipArt_render_FBO_Mixing_sampler,
 	pg_enum_Particle_render_FBO_Mixing_sampler,
 	pg_enum_Render_prec_FBO_Mixing_sampler,
@@ -73,7 +76,8 @@ enum pg_FBO_Mixing_samplers { pg_enum_CA_FBO_Mixing_sampler = 0,
 	pg_enum_Trk3_FBO_Mixing_sampler,
 	pg_enum_Mask_FBO_Mixing_sampler,
 };
-enum pg_FBO_Master_samplers { pg_enum_Render_curr_FBO_Master_sampler = 0,
+enum pg_FBO_Master_samplers {
+	pg_enum_Render_curr_FBO_Master_sampler = 0,
 	pg_enum_CA_FBO_Master_sampler,
 	pg_enum_ClipArt_render_FBO_Master_sampler,
 	pg_enum_Particle_render_FBO_Master_sampler,
@@ -84,7 +88,8 @@ enum pg_FBO_Master_samplers { pg_enum_Render_curr_FBO_Master_sampler = 0,
 	pg_enum_Mask_FBO_Master_sampler,
 };
 
-enum pg_FBO_ParticleAnimation_samplers { pg_enum_Part_init_pos_speed_ParticleAnimation_sampler = 0,
+enum pg_FBO_ParticleAnimation_samplers {
+	pg_enum_Part_init_pos_speed_ParticleAnimation_sampler = 0,
 	pg_enum_Part_init_col_rad_ParticleAnimation_sampler,
 	pg_enum_Part_image_acc_ParticleAnimation_sampler,
 	pg_enum_CA_FBO_ParticleAnimation_sampler,
@@ -102,20 +107,23 @@ enum pg_FBO_ParticleAnimation_samplers { pg_enum_Part_init_pos_speed_ParticleAni
 };
 
 
-enum pg_FBO_ParticleAnimation_attachments { pg_enum_Part_pos_speed_FBO_ParticleAnimation_attacht = 0,
+enum pg_FBO_ParticleAnimation_attachments {
+	pg_enum_Part_pos_speed_FBO_ParticleAnimation_attacht = 0,
 	pg_enum_Part_col_rad_FBO_ParticleAnimation_attacht,
 	pg_enum_Part_Target_pos_col_rad_FBO_ParticleAnimation_attacht,
 	pg_enum_FBO_ParticleAnimation_nbAttachts
 };
 #endif
 
-enum eVertexArrayObject { pg_enum_VAOParticle,
+enum eVertexArrayObject {
+	pg_enum_VAOParticle,
 	pg_enum_VAOQuad,
 	pg_enum_VAOQuadMaster,
 	pg_enum_VAOCount
 };
 
-enum eVertexBufferObject { pg_enum_VBOParticle,
+enum eVertexBufferObject {
+	pg_enum_VBOParticle,
 	pg_enum_VBOParticleTexCoords,
 	pg_enum_VBOpartRadius,
 	pg_enum_VBOParticleColors,
@@ -133,6 +141,9 @@ extern GLfloat pg_doubleProjMatrix[16];
 extern GLfloat pg_identityViewMatrix[16];
 extern GLfloat pg_identityModelMatrix[16];
 extern GLfloat pg_homographyForTexture[9];
+
+// DRAW BUFFER COLOR ATTACHMENTS
+extern GLuint enumDrawBuffersEntries[16];
 
 /////////////////////////////////////////////////////////////////
 // GEOMETRY
@@ -152,15 +163,15 @@ extern float pg_quadMaster_texCoords[];
 extern unsigned int pg_quadMaster_indices[PG_SIZE_QUAD_ARRAY];
 
 // particle curves
-extern GLfloat *pg_Particle_control_points;
-extern GLfloat *pg_Particle_radius;
-extern GLfloat *pg_Particle_colors;
+extern GLfloat* pg_Particle_control_points;
+extern GLfloat* pg_Particle_radius;
+extern GLfloat* pg_Particle_colors;
 
 // particle splat or geometry
-extern GLfloat *pg_Particle_vertices;
-extern GLfloat *pg_Particle_radius;
-extern GLfloat *pg_Particle_colors;
-extern unsigned int *pg_Particle_indices;
+extern GLfloat* pg_Particle_vertices;
+extern GLfloat* pg_Particle_radius;
+extern GLfloat* pg_Particle_colors;
+extern unsigned int* pg_Particle_indices;
 
 //////////////////////////////////////////////////////////////////////
 // SENSORS
@@ -241,7 +252,7 @@ double pg_PerlinNoise(double x, double y, double z);
 // opengl error
 int pg_printOglError(int no);
 // error report
-void pg_ReportError(char *errorString);
+void pg_ReportError(char* errorString);
 
 // current directory
 std::string pg_GetCurrentWorkingDir(void);

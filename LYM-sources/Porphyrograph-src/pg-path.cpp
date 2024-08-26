@@ -23,7 +23,18 @@
 
 #include "pg-all_include.h"
 
- // SVG paths from scenario
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// replay based on inital time recording
+#define PG_SYNC_REPLAY 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// SVG paths from scenario
 vector<SVG_scenarioPathCurve>	 pg_SVG_scenarioPathCurves[PG_MAX_SCENARIOS];
 int						 pg_nb_SVG_path_groups[PG_MAX_SCENARIOS] = { 0 };
 int						 pg_current_SVG_path_group = 1;
@@ -51,9 +62,26 @@ bool pg_is_path_replay[PG_NB_PATHS + 1];
 // +++++++++++++++++++++ SETUP +++++++++++++++++++++++++++
 double pg_LastTrackRecordingChangeClockTime = 0;
 
-////////////////////////////////////////////////////////////////
-// SPLINES
-////////////////////////////////////////////////////////////////
+/// current mouse location
+int pg_CurrentCursorPos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, pg_CurrentCursorPos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+int pg_Pulsed_CurrentCursorPos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, pg_Pulsed_CurrentCursorPos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
+float pg_LastCursorPositionUpdate[PG_NB_CURSORS_MAX] = { -1.f };
+
+int pg_CurrentStylusHooverPos_x, pg_CurrentStylusHooverPos_y;
+int pg_CurrentStylus_StylusvsRubber = pg_Stylus;
+// current tablet pen pressure and orientation
+float pg_CurrentStylusPresuse = 0.0f;
+float pg_CurrentStylusAzimut = 0.0f;
+float pg_CurrentStylusInclination = 0.0f;
+
+/// last frame wall time
+double pg_LastScreenMessageDecayTime = 0.;
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTILS: BEZIER CURVES
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void pg_ScaleVec2(vec2* pOut_result, vec2* p0, float c0) {
 	pOut_result->x = c0 * p0->x;
 	pOut_result->y = c0 * p0->y;
@@ -64,8 +92,51 @@ void pg_AddScaledVec2_Self(vec2* pOut_result, vec2* p0, float c0) {
 	pOut_result->y += c0 * p0->y;
 }
 
-//////////////////////////////////////////////////////////////////
-// INITIALIZATION OF THE TABLES THAT CONTAIN THE STROKE PARAMETERS
+/////////////////////////////////////////////////////////////////////////////////
+// Function that take input as Control Point x_coordinates and
+// Control Point y_coordinates and draw bezier curve
+void pg_cubicBezier(glm::vec2 control_points[4], glm::vec2* curve_point, float alphaBezier) {
+	(*curve_point).x = float(pow(1 - alphaBezier, 3) * control_points[0].x + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].x
+		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].x + pow(alphaBezier, 3) * control_points[3].x);
+	(*curve_point).y = float(pow(1 - alphaBezier, 3) * control_points[0].y + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].y
+		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].y + pow(alphaBezier, 3) * control_points[3].y);
+}
+void pg_cubicBezier(glm::vec3 control_points[4], glm::vec3* curve_point, float alphaBezier) {
+	(*curve_point).x = float(pow(1 - alphaBezier, 3) * control_points[0].x + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].x
+		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].x + pow(alphaBezier, 3) * control_points[3].x);
+	(*curve_point).y = float(pow(1 - alphaBezier, 3) * control_points[0].y + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].y
+		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].y + pow(alphaBezier, 3) * control_points[3].y);
+	(*curve_point).z = float(pow(1 - alphaBezier, 3) * control_points[0].z + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].z
+		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].z + pow(alphaBezier, 3) * control_points[3].z);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// Function that take input as Control Point x_coordinates and
+// Control Point y_coordinates and calculates the length
+// of the Bezier curve
+float pg_Bezier_length(glm::vec2 control_points[4], int nb_steps) {
+	if (nb_steps <= 0) {
+		sprintf(pg_errorStr, "Bezier length calculation must be made with positive steps %d!", nb_steps); pg_ReportError(pg_errorStr);
+	}
+	float returned_length = 0.f;
+	glm::vec2 precPoint(0, 0);
+	glm::vec2 curPoint(0, 0);
+	pg_cubicBezier(control_points, &precPoint, 0.f);
+	// polygon-based length calculation
+	for (int ind = 1; ind <= nb_steps; ind++) {
+		float alpha = float(ind) / float(nb_steps);
+		pg_cubicBezier(control_points, &curPoint, alpha);
+		returned_length += glm::distance(precPoint, curPoint);
+		precPoint = curPoint;
+	}
+	return returned_length;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// INITIALIZATION OF THE DEFAULT STROKE PARAMETERS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
 //////////////////////////////////////////////////////////////////
 // called ones for all the paths
 void pg_initPaths(void) {
@@ -75,9 +146,10 @@ void pg_initPaths(void) {
 	}
 }
 
-//////////////////////////////////////////////////////////////////
-// LOADS A TRACK FROM A PATH STRING
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// LOAD BEZIER-BASED PATHS IN SVG FORMAT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 long pg_ScanIntegerString(int* p_c,
 	int withTrailingSpaceChars,
 	char* charstring, int* ind) {
@@ -202,9 +274,7 @@ void pg_BezierSubdivideAboveLength(glm::vec2 controlPoints[4], int pathNo, int* 
 	}
 }
 
-//////////////////////////////////////////////////////////////////
-// LOADS A TRACK FROM A ClipArt FILE
-//////////////////////////////////////////////////////////////////
+// LOADS A PATH FROM A SVG FILE
 void Path_Status::load_svg_path(char* fileName,
 	float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale,
 	string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indScenario) {
@@ -1013,9 +1083,10 @@ void Path_Status::LoadPathTimeStampsFromXML(string pathString, int* nbRecordedFr
 	//printf("\n");
 }
 
-//////////////////////////////////////////////////////////////////
-// BEZIER PATH CONVEX HULL 
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// BEZIER CURVE CONVEX HULL AND BOUNDING BOX FOR OPTIMIZING GPU PATH DRAWING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool pg_pointEquals(glm::vec2* p, glm::vec2* q) {
 	return p->x == q->x && p->y == q->y;
 };
@@ -1026,24 +1097,6 @@ bool pg_left_oriented(glm::vec2* p1, glm::vec2* p2, glm::vec2* candidate) {
 	if (det < 0) return false; // right oriented
 	// select the farthest point in case of colinearity
 	return glm::distance(*p1, *candidate) > glm::distance(*p1, *p2);
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-// Function that take input as Control Point x_coordinates and
-// Control Point y_coordinates and draw bezier curve
-void pg_cubicBezier(glm::vec2 control_points[4], glm::vec2* curve_point, float alphaBezier) {
-	(*curve_point).x = float(pow(1 - alphaBezier, 3) * control_points[0].x + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].x
-		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].x + pow(alphaBezier, 3) * control_points[3].x);
-	(*curve_point).y = float(pow(1 - alphaBezier, 3) * control_points[0].y + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].y
-		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].y + pow(alphaBezier, 3) * control_points[3].y);
-}
-void pg_cubicBezier(glm::vec3 control_points[4], glm::vec3* curve_point, float alphaBezier) {
-	(*curve_point).x = float(pow(1 - alphaBezier, 3) * control_points[0].x + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].x
-		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].x + pow(alphaBezier, 3) * control_points[3].x);
-	(*curve_point).y = float(pow(1 - alphaBezier, 3) * control_points[0].y + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].y
-		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].y + pow(alphaBezier, 3) * control_points[3].y);
-	(*curve_point).z = float(pow(1 - alphaBezier, 3) * control_points[0].z + 3 * alphaBezier * pow(1 - alphaBezier, 2) * control_points[1].z
-		+ 3 * pow(alphaBezier, 2) * (1 - alphaBezier) * control_points[2].z + pow(alphaBezier, 3) * control_points[3].z);
 }
 
 #if defined(var_Novak_flight_on)
@@ -1381,27 +1434,6 @@ void pg_Bezier_boundingBox_expanded_by_radius(glm::vec2 control_points[4],
 	(*boundingBox).w = max_y + 1.5f * radius;
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-// Function that take input as Control Point x_coordinates and
-// Control Point y_coordinates and calculates the length
-// of the Bezier curve
-float pg_Bezier_length(glm::vec2 control_points[4], int nb_steps) {
-	if (nb_steps <= 0) {
-		sprintf(pg_errorStr, "Bezier length calculation must be made with positive steps %d!", nb_steps); pg_ReportError(pg_errorStr);
-	}
-	float returned_length = 0.f;
-	glm::vec2 precPoint(0, 0);
-	glm::vec2 curPoint(0, 0);
-	pg_cubicBezier(control_points, &precPoint, 0.f);
-	// polygon-based length calculation
-	for (int ind = 1; ind <= nb_steps; ind++) {
-		float alpha = float(ind) / float(nb_steps);
-		pg_cubicBezier(control_points, &curPoint, alpha);
-		returned_length += glm::distance(precPoint, curPoint);
-		precPoint = curPoint;
-	}
-	return returned_length;
-}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Function that take input as Control Point x_coordinates and
@@ -1436,19 +1468,12 @@ void pg_build_Bezier_bounding_box(int pathNo) {
 		pg_paths_currentDynPoint[pathNo].pg_paths_RadiusX * 1.1f, &(pg_BezierBox[pathNo]));
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// BEZIER CURVE PARAMS CALCULATION FROM PEN POSITIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // scene update
-//////////////////////////////////////////////////////////////////
-// REPLAY PATHS  
-//////////////////////////////////////////////////////////////////
-
-// replays a path with the same duration
-// however since the time stamps are not saved in the ClipArt file, the 
-// is uniform and does not match the exact initial speed 
-// to make it better synchronized, it would be necessary
-// to store the time stamp of each curve inside the ClipArt file
-#define PG_SYNC_REPLAY 
-
 // calculation of tangents from successive locations of the pen
 void pg_stroke_Bezier_geometry_calculation(int pathNo, int curr_position_x, int curr_position_y) {
 	pg_paths_currentDynPoint[pathNo].pg_paths_time_prev_prev = pg_paths_currentDynPoint[pathNo].pg_paths_time_prev;
@@ -1616,6 +1641,124 @@ void pg_stroke_Bezier_geometry_calculation(int pathNo, int curr_position_x, int 
 			pg_paths_currentDynPoint[pathNo].pg_paths_isEnd = false;
 		}
 		pg_LastCursorPositionUpdate[pathNo] = float(pg_CurrentClockTime);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// METAWEAR SENSOR TRAJECTORY FROM RECEIVED DATA
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+void pg_path_replay_trackNo_start(int indPath, int trackNo);
+// outputs the trace of a metawear sensor
+void pg_play_metawear_trajectory(int pathNo, int sensorNo) {
+	if (!pg_is_path_replay[pathNo]) {
+		pg_is_path_replay[pathNo] = true;
+		// path 1 (senosr 1 sensorNo 0) and 2 (sensor 2 sensorNo 1) replays on currentDrawingTrack + 1
+		pg_path_replay_trackNo_start(pathNo, currentDrawingTrack + 1);
+		path_replay_trackNo[pathNo] = currentDrawingTrack + 1;
+		//printf("start replay path %d (sensor %d) on track %d\n", pathNo, pathNo, path_replay_trackNo[pathNo]);
+	}
+	pg_stroke_Bezier_geometry_calculation(pathNo, int(pg_mw_sensors[sensorNo].mw_mss_pos[0]), int(pg_mw_sensors[sensorNo].mw_mss_pos[1]));
+	//printf("new sensor position %d path %d: %.1f %.1f replay %d\n", sensorNo, pathNo, 
+	//	(pg_mw_sensors[sensorNo].mw_mss_pos[0]), (pg_mw_sensors[sensorNo].mw_mss_pos[1]), int(pg_is_path_replay[pathNo]));
+	pg_mw_sensors[sensorNo].mw_mss_pos_update = false;
+
+	// management of brush radius (w/wo possible interpolation)
+	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusX = pen_radius;
+	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusY = pen_radius;
+	// management of brush radius (w/wo possible interpolation)
+	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusX = pen_radius * pen_radius_replay
+		* (1.f + pulse_average * pen_radius_replay_pulse);
+	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusY = pen_radius * pen_radius_replay
+		* (1.f + pulse_average * pen_radius_replay_pulse);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// REPLAY PATHS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// replays a path with the same duration
+// however since the time stamps are not saved in the ClipArt file, the 
+// is uniform and does not match the exact initial speed 
+// to make it better synchronized, it would be necessary
+// to store the time stamp of each curve inside the ClipArt file
+
+void pg_path_recording_start(int indPath) {
+	if (indPath >= 1 && indPath < PG_NB_PATHS) {
+		((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = true;
+		if (indPath >= 1 && indPath <= PG_NB_PATHS) {
+			pg_Path_Status[indPath].path_isActiveRecording = true;
+			PathCurve_Data& curve = pg_Path_Status[indPath].getCurrentCurve(pg_ind_scenario);
+			curve.PathCurve_Data_init();
+			// printf("start recording track %d\n",indPath);
+		}
+	}
+}
+
+void pg_path_recording_stop(int indPath) {
+	if (indPath >= 1 && indPath < PG_NB_PATHS) {
+		((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = false;
+		if (indPath >= 1 && indPath <= PG_NB_PATHS
+			&& pg_Path_Status[indPath].path_isActiveRecording == true) {
+			pg_Path_Status[indPath].path_isActiveRecording = false;
+			sprintf(pg_AuxString, "/path_record_%d 0", indPath);
+			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+}
+void pg_path_replay_trackNo_stop(int indPath) {
+	if (indPath >= 1 && indPath <= PG_NB_PATHS
+		&& pg_is_path_replay[indPath]) {
+		pg_is_path_replay[indPath] = false;
+		pg_paths_currentDynPoint[indPath].pg_paths_x = PG_OUT_OF_SCREEN_CURSOR;
+		pg_paths_currentDynPoint[indPath].pg_paths_y = PG_OUT_OF_SCREEN_CURSOR;
+
+		pg_paths_currentDynPoint[indPath].pg_paths_xL = PG_OUT_OF_SCREEN_CURSOR;
+		pg_paths_currentDynPoint[indPath].pg_paths_yL = PG_OUT_OF_SCREEN_CURSOR;
+		pg_paths_currentDynPoint[indPath].pg_paths_xR = PG_OUT_OF_SCREEN_CURSOR;
+		pg_paths_currentDynPoint[indPath].pg_paths_yR = PG_OUT_OF_SCREEN_CURSOR;
+
+		pg_paths_currentDynPoint[indPath].pg_paths_x_prev = PG_OUT_OF_SCREEN_CURSOR;
+		pg_paths_currentDynPoint[indPath].pg_paths_y_prev = PG_OUT_OF_SCREEN_CURSOR;
+		pg_paths_currentDynPoint[indPath].pg_paths_isBegin = false;
+		pg_paths_currentDynPoint[indPath].pg_paths_isEnd = false;
+		pg_paths_currentDynPoint[indPath].pg_paths_Color_r = 0.0F;
+		pg_paths_currentDynPoint[indPath].pg_paths_Color_g = 0.0F;
+		pg_paths_currentDynPoint[indPath].pg_paths_Color_b = 0.0F;
+		pg_paths_currentDynPoint[indPath].pg_paths_Color_a = 1.0F;
+		pg_paths_currentDynPoint[indPath].pg_paths_RadiusX = 0.0F;
+		pg_paths_currentDynPoint[indPath].pg_paths_RadiusY = 0.0F;
+		// printf( "-> start_read_path\n"  );
+		((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
+		sprintf(pg_AuxString, "/path_replay_trackNo_%d -1", indPath);
+		pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+	}
+}
+
+
+void pg_path_replay_trackNo_start(int indPath, int trackNo) {
+	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, pg_is_path_replay[indPath], 
+		//pg_Path_Status[indPath].PathStatus_nbFrames(pg_ind_scenario));
+	if (indPath >= 1 && indPath <= PG_NB_PATHS
+		&& !pg_is_path_replay[indPath]
+		&& pg_Path_Status[indPath].PathStatus_nbFrames(pg_ind_scenario) > 0) {
+		pg_is_path_replay[indPath] = true;
+		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo,
+			//pg_Path_Status[indPath].PathStatus_nbFrames(pg_ind_scenario), pg_is_path_replay[indPath]);
+		if (indPath >= 1 && indPath < PG_NB_PATHS) {
+			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
+		}
+		// first time reading: starts from beginning
+		// otherwise starts from where it is
+		//if (pg_Path_Status[indPath].path_indReading < 0) {
+		// restarts from beginning, not from where it was
+		pg_Path_Status[indPath].path_indReading = 0;
+		//}
+		pg_Path_Status[indPath].path_isFirstFrame = true;
+
+		sprintf(pg_AuxString, "/path_replay_trackNo_%d %d", indPath, trackNo);
+		pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+		//printf("-> start_read_path %d ind reading %d\n", indPath, pg_Path_Status[indPath].path_indReading);
 	}
 }
 
@@ -1996,30 +2139,6 @@ void pg_replay_one_path(int pathNo, double theTime) {
 	pg_Path_Status[pathNo].path_indPreviousReading = indFrameReading;
 }
 
-// outputs the trace of a metawear sensor
-void pg_play_metawear_trajectory(int pathNo, int sensorNo) {
-	if (!pg_is_path_replay[pathNo]) {
-		pg_is_path_replay[pathNo] = true;
-		// path 1 (senosr 1 sensorNo 0) and 2 (sensor 2 sensorNo 1) replays on currentDrawingTrack + 1
-		pg_path_replay_trackNo_start(pathNo, currentDrawingTrack + 1);
-		path_replay_trackNo[pathNo] = currentDrawingTrack + 1;
-		//printf("start replay path %d (sensor %d) on track %d\n", pathNo, pathNo, path_replay_trackNo[pathNo]);
-	}
-	pg_stroke_Bezier_geometry_calculation(pathNo, int(pg_mw_sensors[sensorNo].mw_mss_pos[0]), int(pg_mw_sensors[sensorNo].mw_mss_pos[1]));
-	//printf("new sensor position %d path %d: %.1f %.1f replay %d\n", sensorNo, pathNo, 
-	//	(pg_mw_sensors[sensorNo].mw_mss_pos[0]), (pg_mw_sensors[sensorNo].mw_mss_pos[1]), int(pg_is_path_replay[pathNo]));
-	pg_mw_sensors[sensorNo].mw_mss_pos_update = false;
-
-	// management of brush radius (w/wo possible interpolation)
-	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusX = pen_radius;
-	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusY = pen_radius;
-	// management of brush radius (w/wo possible interpolation)
-	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusX = pen_radius * pen_radius_replay
-		* (1.f + pulse_average * pen_radius_replay_pulse);
-	pg_paths_currentDynPoint[pathNo].pg_paths_RadiusY = pen_radius * pen_radius_replay
-		* (1.f + pulse_average * pen_radius_replay_pulse);
-}
-
 // PATHS REPLAY
 void pg_replay_paths(double theTime) {
 	for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
@@ -2085,10 +2204,7 @@ void pg_replay_paths(double theTime) {
 	}
 }
 
-
-//////////////////////////////////////////////////////////////////
 // PEN STROKE AND PATH REPLAY  
-//////////////////////////////////////////////////////////////////
 void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 	// change colors according to music pg_audio_pulse
 	pg_update_pulsed_colors();
@@ -2407,10 +2523,9 @@ void pg_update_pulsed_colors_and_replay_paths(double theTime) {
 	}
 }
 
-
-//////////////////////////////////////////////////////////////////
-// WRITES TRACKS TO A ClipArt FILE
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// WRITES A PATH AS A SVG FILE
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_writesvg(cv::String imageFileName) {
 	FILE* fileClipArt;
@@ -2500,10 +2615,13 @@ void pg_writesvg(cv::String imageFileName) {
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// LIST ALL PARSED PATHS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void pg_listAllSVG_paths(void) {
+void pg_listAll_Paths(void) {
 	printf("Listing SVG paths:\n");
-	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+	for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
 		std::cout << "    " << indScenario << ": ";
 		for (SVG_scenarioPathCurve& curve : pg_SVG_scenarioPathCurves[indScenario]) {
 			std::cout << curve.path_fileName << " (" << curve.path_no << ", "
@@ -2514,40 +2632,10 @@ void pg_listAllSVG_paths(void) {
 	std::cout << std::endl;
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// SCENARIO BASED COMMANDS
-void pg_NextRecordReplayPath(void) {
-	// only one track recording per second to avoid repetition
-	if (pg_CurrentClockTime - pg_LastTrackRecordingChangeClockTime > 1) {
-		pg_LastTrackRecordingChangeClockTime = pg_CurrentClockTime;
-	}
-	else {
-		return;
-	}
-	bool new_record = false;
-	for (int pathNo = PG_NB_PATHS - 1; pathNo >= 1; pathNo--) {
-		if (path_record[pathNo]) {
-			path_replay_trackNo_callBack(pathNo, pg_enum_PG_GUI_COMMAND, -1);
-			if (pathNo < PG_NB_PATHS - 1) {
-				path_record_callBack(pathNo + 1, pg_enum_PG_GUI_COMMAND, true);
-			}
-			new_record = true;
-			break;
-		}
-	}
-	if (!new_record) {
-		for (int pathNo = 1; pathNo < PG_NB_PATHS; pathNo++) {
-			if (!pg_is_path_replay[pathNo]) {
-				path_record_callBack(pathNo, pg_enum_PG_GUI_COMMAND, true);
-				break;
-			}
-		}
-	}
-}
 
-//////////////////////////////////////////////////////////////
-// TRACK LIB FUNCTIONS
-//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PATH RECORD/REPLAY TOGGLE MANAGEMENT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_path_recording_onOff(int indPath) {
 	// switches between recording on/off 
@@ -2616,85 +2704,11 @@ void pg_path_replay_trackNo_onOff(int indPath, int trackNo) {
 	}
 }
 
-void pg_path_recording_start(int indPath) {
-	if (indPath >= 1 && indPath < PG_NB_PATHS) {
-		((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = true;
-		if (indPath >= 1 && indPath <= PG_NB_PATHS) {
-			pg_Path_Status[indPath].path_isActiveRecording = true;
-			PathCurve_Data& curve = pg_Path_Status[indPath].getCurrentCurve(pg_ind_scenario);
-			curve.PathCurve_Data_init();
-			// printf("start recording track %d\n",indPath);
-		}
-	}
-}
 
-void pg_path_recording_stop(int indPath) {
-	if (indPath >= 1 && indPath < PG_NB_PATHS) {
-		((bool*)pg_FullScenarioVarPointers[_path_record])[indPath] = false;
-		if (indPath >= 1 && indPath <= PG_NB_PATHS
-			&& pg_Path_Status[indPath].path_isActiveRecording == true) {
-			pg_Path_Status[indPath].path_isActiveRecording = false;
-			sprintf(pg_AuxString, "/path_record_%d 0", indPath);
-			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-}
-void pg_path_replay_trackNo_start(int indPath, int trackNo) {
-	//printf("replay path %d starts on track %d replayed %d nb frames %d\n", indPath, trackNo, pg_is_path_replay[indPath], 
-		//pg_Path_Status[indPath].PathStatus_nbFrames(pg_ind_scenario));
-	if (indPath >= 1 && indPath <= PG_NB_PATHS
-		&& !pg_is_path_replay[indPath]
-		&& pg_Path_Status[indPath].PathStatus_nbFrames(pg_ind_scenario) > 0) {
-		pg_is_path_replay[indPath] = true;
-		//printf("replay path No %d on track %d with %d frames (replay %d)\n", indPath, trackNo,
-			//pg_Path_Status[indPath].PathStatus_nbFrames(pg_ind_scenario), pg_is_path_replay[indPath]);
-		if (indPath >= 1 && indPath < PG_NB_PATHS) {
-			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = trackNo;
-		}
-		// first time reading: starts from beginning
-		// otherwise starts from where it is
-		//if (pg_Path_Status[indPath].path_indReading < 0) {
-		// restarts from beginning, not from where it was
-		pg_Path_Status[indPath].path_indReading = 0;
-		//}
-		pg_Path_Status[indPath].path_isFirstFrame = true;
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// OSC INTERFACE FEEDBACK FOR SINGLE/MULTIPLE FINGER INTERACTION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		sprintf(pg_AuxString, "/path_replay_trackNo_%d %d", indPath, trackNo);
-		pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-		//printf("-> start_read_path %d ind reading %d\n", indPath, pg_Path_Status[indPath].path_indReading);
-	}
-}
-void pg_path_replay_trackNo_stop(int indPath) {
-	if (indPath >= 1 && indPath <= PG_NB_PATHS
-		&& pg_is_path_replay[indPath]) {
-		pg_is_path_replay[indPath] = false;
-		pg_paths_currentDynPoint[indPath].pg_paths_x = PG_OUT_OF_SCREEN_CURSOR;
-		pg_paths_currentDynPoint[indPath].pg_paths_y = PG_OUT_OF_SCREEN_CURSOR;
-
-		pg_paths_currentDynPoint[indPath].pg_paths_xL = PG_OUT_OF_SCREEN_CURSOR;
-		pg_paths_currentDynPoint[indPath].pg_paths_yL = PG_OUT_OF_SCREEN_CURSOR;
-		pg_paths_currentDynPoint[indPath].pg_paths_xR = PG_OUT_OF_SCREEN_CURSOR;
-		pg_paths_currentDynPoint[indPath].pg_paths_yR = PG_OUT_OF_SCREEN_CURSOR;
-
-		pg_paths_currentDynPoint[indPath].pg_paths_x_prev = PG_OUT_OF_SCREEN_CURSOR;
-		pg_paths_currentDynPoint[indPath].pg_paths_y_prev = PG_OUT_OF_SCREEN_CURSOR;
-		pg_paths_currentDynPoint[indPath].pg_paths_isBegin = false;
-		pg_paths_currentDynPoint[indPath].pg_paths_isEnd = false;
-		pg_paths_currentDynPoint[indPath].pg_paths_Color_r = 0.0F;
-		pg_paths_currentDynPoint[indPath].pg_paths_Color_g = 0.0F;
-		pg_paths_currentDynPoint[indPath].pg_paths_Color_b = 0.0F;
-		pg_paths_currentDynPoint[indPath].pg_paths_Color_a = 1.0F;
-		pg_paths_currentDynPoint[indPath].pg_paths_RadiusX = 0.0F;
-		pg_paths_currentDynPoint[indPath].pg_paths_RadiusY = 0.0F;
-		// printf( "-> start_read_path\n"  );
-		((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[indPath] = -1;
-		sprintf(pg_AuxString, "/path_replay_trackNo_%d -1", indPath);
-		pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-// beat reception and corresponding events triggering
 void NumberOfInteractionFingers(int nb_fingers) {
 	if (nb_fingers == 1) {
 		sprintf(pg_AuxString, "/multixy/5/visible 0"); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_MultiTouch_send");
@@ -2720,6 +2734,9 @@ void NumberOfInteractionFingers(int nb_fingers) {
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PATH GROUP MANAGEMENT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 void pg_clear_path_group(void) {
 	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
 		pg_Path_Status[ind].path_isFirstFrame = false;
@@ -2732,6 +2749,435 @@ void pg_clear_path_group(void) {
 	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
 		for (int indCurve = 0; indCurve < pg_Path_Status[ind].nbCurves(pg_ind_scenario); indCurve++) {
 			pg_Path_Status[ind].setCurveValues(pg_ind_scenario, 1., 0., 0.);
+		}
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SVG PATHS SCENARIO
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_parseScenario_SVGPaths(std::ifstream& scenarioFin, int indScenario) {
+	std::stringstream  sstream;
+	string line;
+	string ID;
+	string temp;
+	string temp2;
+
+	////////////////////////////
+	////// SVG PATHS
+
+	// Initial markup for SVG pathCurves
+	std::getline(scenarioFin, line);
+	pg_stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string svg_paths
+	if (ID.compare("svg_paths") != 0) {
+		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+	}
+
+	// initializes the tracks for recording the strokes
+	// has to be made before loading the scenario that may load predefined svg paths
+	// and has to be made after the configuration file loading that has 
+
+	// mouse pointer tracks recording initialization
+	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
+		pg_synchr_start_recording_path[ind] = false;
+		pg_synchr_start_path_replay_trackNo[ind] = -1;
+		pg_recorded_path[ind] = false;
+		pg_is_path_replay[ind] = false;
+	}
+
+	// each path should have minimally one curve which is used to record/replay live
+	for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
+		// a path without curves
+		if (pg_Path_Status[pathNo].path_PathCurve_Data[indScenario].size() == 0) {
+			PathCurve_Data curve;
+			curve.PathCurve_Data_init();
+			pg_Path_Status[pathNo].path_PathCurve_Data[indScenario].push_back(curve);
+		}
+	}
+
+	// parses the full list of paths 
+	// check which paths have associated curves and how many pathCurves are associated to each active path
+	pg_current_SVG_path_group = 1;
+	int nb_path_curves = 0;
+	while (true) {
+		string fileName = "";
+		string local_ID = "";
+		string path_ID = "";
+
+		SVG_scenarioPathCurve pathCurve;
+
+		// adds a new curve
+		pg_SVG_scenarioPathCurves[indScenario].push_back(pathCurve);
+
+		// new line
+		std::getline(scenarioFin, line);
+		pg_stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string /svg_paths or svg_path
+		if (ID.compare("/svg_paths") == 0) {
+			break;
+		}
+		else if (ID.compare("svg_path") != 0) {
+			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"svg_path\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+		}
+
+		sstream >> fileName; // file name
+		if (!pg_isFullPath(fileName)) {
+			fileName = pg_SVGpaths_directory + fileName;
+		}
+		//printf("Filename %s\n", fileName.c_str());
+		sstream >> temp2;
+		int pathNo = pg_stoi(temp2);
+		// adds a new curve to the path, the curve is made of one empty frame 
+		// the addition of a new frame is made by filling the back frame and pushing a new one when another one is built
+		if (pathNo <= PG_NB_PATHS && pathNo >= 0) {
+			PathCurve_Data curve;
+			curve.PathCurve_Data_init();
+			pg_Path_Status[pathNo].path_PathCurve_Data[indScenario].push_back(curve);
+		}
+		else {
+			sprintf(pg_errorStr, "Error: incorrect scenario file SVG path %d number (\"%s\"), pathRank should be between 0 and %d",
+				pathNo, fileName.c_str(), PG_NB_PATHS); pg_ReportError(pg_errorStr); throw 100;
+		}
+		sstream >> temp2;
+		int path_track = pg_stoi(temp2);
+		sstream >> temp2;
+		float pathRadius = pg_stof(temp2);
+		sstream >> temp2;
+		float path_r_color = pg_stof(temp2);
+		sstream >> temp2;
+		float path_g_color = pg_stof(temp2);
+		sstream >> temp2;
+		float path_b_color = pg_stof(temp2);
+		sstream >> temp2;
+		float path_readSpeedScale = pg_stof(temp2);
+		sstream >> path_ID;
+		sstream >> temp2;
+		int local_path_group = pg_stoi(temp2);
+		if (local_path_group <= 0) {
+			sprintf(pg_errorStr, "Error: incorrect scenario file group %d for SVG path %d number (\"%s\"), path group should be stricly positive",
+				local_path_group, pathNo, fileName.c_str()); pg_ReportError(pg_errorStr); throw 100;
+		}
+		else {
+			pg_nb_SVG_path_groups[indScenario] = max(pg_nb_SVG_path_groups[indScenario], local_path_group);
+		}
+		sstream >> temp2;
+		bool with_color_radius_from_scenario = (pg_stoi(temp2) != 0);
+		sstream >> temp2;
+		double secondsforwidth = pg_stod(temp2);
+
+		//printf("path no %d group %d\n", indPathCurve, local_path_group);
+		//printf("path ID %s radius %.3f\n", path_ID.c_str(), pathRadius);
+		//printf("path no %d group %d\n", paths[indScenario][indPathCurve].indPathCurve, paths[indScenario][indPathCurve].path_group);
+		// checks whether there are other curves in the same path
+		int rankInPath = 0;
+		for (int indAux = 0; indAux < nb_path_curves; indAux++) {
+			if (pg_SVG_scenarioPathCurves[indScenario][indAux].path_no == pg_SVG_scenarioPathCurves[indScenario][nb_path_curves].path_no) {
+				rankInPath++;
+				//sprintf(pg_errorStr, "Error: incorrect configuration file paths %d and %d have the same path index %d and same path group %d", 
+				//	indAux, indPathCurve, pg_SVG_scenarioPathCurves[indScenario][indAux].indPath, pg_SVG_scenarioPathCurves[indScenario][indAux].path_group); pg_ReportError(pg_errorStr); throw 100;
+			}
+		}
+		pg_SVG_scenarioPathCurves[indScenario][nb_path_curves].SVG_scenarioPathCurve_init(pathNo, rankInPath, path_track, pathRadius,
+			path_r_color, path_g_color, path_b_color, path_readSpeedScale,
+			path_ID, fileName, local_path_group, with_color_radius_from_scenario, secondsforwidth);
+
+		//printf("indPathCurve %d path_track %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
+		//	pathRank, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
+		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
+			if (local_path_group == pg_current_SVG_path_group) {
+				//printf("Load svg path No %d track %d\n", pathNo, path_track);
+				pg_Path_Status[pathNo].load_svg_path((char*)fileName.c_str(),
+					pathRadius, path_r_color, path_g_color, path_b_color,
+					path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth, indScenario);
+				//printf("time stamps %.2f %.2f %.2f %.2f %.2f\n",
+				//	pg_Path_Status[pathNo].path_TmpTimeStamps[0], pg_Path_Status[pathNo].path_TmpTimeStamps[1], 
+				//	pg_Path_Status[pathNo].path_TmpTimeStamps[2], pg_Path_Status[pathNo].path_TmpTimeStamps[3], 
+				//	pg_Path_Status[pathNo].path_TmpTimeStamps[4]);
+			}
+		}
+		else {
+			sprintf(pg_errorStr, "Error: incorrect scenario file track %d for SVG path number %d (\"%s\") track number should be between 0 and %d and path number between 1 and %d\n",
+				path_track, pathNo, fileName.c_str(), PG_NB_TRACKS, PG_NB_PATHS); pg_ReportError(pg_errorStr); throw 100;
+		}
+		//std::cout << "svg_path #" << pathNo << ": " << pg_SVGpaths_directory + temp << " track #" << path_track << "\n";
+
+		nb_path_curves++;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SVG PATHS OSC COMMANDS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_aliasScript_Path(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar) {
+	// special command not in the scenario file
+	switch (indVar) {
+	case _NextRecordReplayPath:
+		if (float_arguments[0] > 0) {
+			pg_NextRecordReplayPath();
+		}
+		break;
+	case _path_replay_stopAll:
+		for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
+			if (pg_is_path_replay[pathNo]) {
+				pg_path_replay_trackNo_onOff(pathNo, -1);
+				//sprintf(pg_AuxString, "/path_replay_trackNo_%d -1", pathNo);
+				//pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+				//printf("replay off track was currently read (%s)\n", pg_AuxString);
+			}
+		}
+		break;
+	case _path_replay_playAll:
+		printf("play all tracks %.3f\n", pg_CurrentClockTime);
+		for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
+			if (!pg_is_path_replay[pathNo] && pg_Path_Status[pathNo].PathStatus_nbFrames(pg_ind_scenario) > 0) {
+				pg_path_replay_trackNo_onOff(pathNo, 1);
+				//sprintf(pg_AuxString, "/path_replay_trackNo_%d 1", pathNo);
+				//pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+				//printf("replay off track was currently read (%s)\n", pg_AuxString);
+			}
+		}
+		break;
+	case _clear_path_group:
+		pg_clear_path_group();
+		break;
+	default:
+		sprintf(pg_errorStr, "Path command not found (%s)!", address_string.c_str()); pg_ReportError(pg_errorStr);
+		break;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SVG PATHS OSC COMMANDS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void path_group_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+		if (int(scenario_or_gui_command_value) > pg_nb_SVG_path_groups[pg_ind_scenario]) {
+			path_group = pg_current_SVG_path_group;
+		}
+		else if (int(scenario_or_gui_command_value) >= 0
+			&& int(scenario_or_gui_command_value) != pg_current_SVG_path_group) {
+			//printf("old current path %d\n", current_path_group);
+			bool was_path_replay[PG_NB_PATHS + 1];
+			for (SVG_scenarioPathCurve& curve : pg_SVG_scenarioPathCurves[pg_ind_scenario]) {
+				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
+				if (curve.path_no <= PG_NB_PATHS
+					&& curve.path_group == pg_current_SVG_path_group) {
+					was_path_replay[curve.path_no]
+						= pg_is_path_replay[curve.path_no];
+					if (pg_is_path_replay[curve.path_no]) {
+						//printf("Stops Replay path_no %d: %d\n", paths[indPrerecPath].path_no, pg_is_path_replay[paths[indPrerecPath].indPath]);
+
+						(curve.path_no);
+					}
+					// is recording source -> has to stop recording source 
+					if (pg_Path_Status[curve.path_no].path_isActiveRecording) {
+						//printf("Stops Recording indPath %d: %d\n", paths[indPrerecPath].path_no, pg_Path_Status[paths[indPrerecPath].path_no].path_isActiveRecording);
+						pg_path_recording_stop(curve.path_no);
+					}
+				}
+			}
+			pg_clear_path_group();
+			pg_current_SVG_path_group = int(scenario_or_gui_command_value);
+			//printf("new current path %d\n", current_path_group);
+			for (SVG_scenarioPathCurve& curve : pg_SVG_scenarioPathCurves[pg_ind_scenario]) {
+				int pathNo = curve.path_no;
+				//printf("path %d path group %d\n", current_path_group, paths[indPrerecPath].path_group);
+				if (pathNo <= PG_NB_PATHS
+					&& curve.path_group == pg_current_SVG_path_group) {
+					//printf("load path for replay %s\n", paths[indPrerecPath].path_fileName.c_str());
+					pg_Path_Status[pathNo].load_svg_path((char*)curve.path_fileName.c_str(),
+						curve.pathRadius,
+						curve.path_r_color,
+						curve.path_g_color,
+						curve.path_b_color,
+						curve.path_readSpeedScale,
+						curve.path_ID,
+						curve.with_color_radius_from_scenario,
+						curve.secondsforwidth,
+						pg_ind_scenario);
+					// start reading if it was already reading
+					if (was_path_replay[curve.path_no]) {
+						//printf("Starts Replay indPath %d: %d\n", paths[indPrerecPath].path_no, was_path_replay[paths[indPrerecPath].path_no]);
+						pg_path_replay_trackNo_start(curve.path_no, curve.path_track);
+					}
+				}
+			}
+		}
+	}
+}
+
+void path_replay_trackNo_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+	int replayTrack = -1;
+	// for a keystroke or a GUI, the command is the current track whatever its value
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_KEYSTROKE) {
+		replayTrack = currentDrawingTrack;
+	}
+	// for a scenario >= 0 -> replay and -1 -> no replay
+	else if (param_input_type == pg_enum_PG_SCENARIO) {
+		replayTrack = scenario_or_gui_command_value;
+	}
+	// is not currently reading -> starts reading if it is a valid track number
+	//printf("path %d is replay %d replayTrack %d\n", pathNo, pg_is_path_replay[pathNo], replayTrack);
+	if (!pg_is_path_replay[pathNo]) {
+		// does not change anything if it is not a valid track
+		if (replayTrack < 0 || replayTrack >= PG_NB_TRACKS) {
+			//sprintf(pg_AuxString, "/path_replay_trackNo_%d -1", pathNo);
+			//pg_send_message_udp((char *)"i", pg_AuxString, (char *)"udp_TouchOSC_send");
+			//printf("replay unchanged (stop) invalid track\n");
+			return;
+		}
+
+		// stops recording if recording is on
+		bool isTrackRecord = false;
+		isTrackRecord = path_record[pathNo];
+
+		// is currently recording -> stops recording 
+		if (isTrackRecord) {
+			// stops recording 
+			pg_path_recording_onOff(pathNo);
+			printf("replay stops recording\n");
+		}
+
+		// only reads a track that has been recorded
+		// assumes that no svg track has been loaded for this track
+		//printf("recorded path %d : %d\n", pathNo, pg_recorded_path[pathNo]);
+		if (pg_recorded_path[pathNo] == true) {
+			if (tracksSync) {
+				pg_synchr_start_path_replay_trackNo[pathNo] = replayTrack;
+			}
+			else {
+				//printf("start replay path %d\n", pathNo);
+				pg_path_replay_trackNo_onOff(pathNo, replayTrack);
+			}
+			//sprintf(pg_AuxString, "/path_replay_trackNo_%d 1", pathNo);
+			//pg_send_message_udp((char *)"i", pg_AuxString, (char *)"udp_TouchOSC_send");
+			//printf("replay on recorded track (%s)\n", pg_AuxString);
+		}
+		else {
+			sprintf(pg_AuxString, "/path_replay_trackNo_%d -1", pathNo);
+			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+			//printf("replay off non recorded track %s\n", pg_AuxString);
+			((int*)pg_FullScenarioVarPointers[_path_replay_trackNo])[pathNo] = -1;
+		}
+	}
+	// is currently reading && replayTrack < 0 (scenario) or on/off command -> stops reading 
+	else {
+		//printf("1 stop replay path %d replay track %d\n", pathNo, replayTrack);
+		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_KEYSTROKE) {
+			replayTrack = -1;
+		}
+		//printf("2 stop replay path %d replay track %d\n", pathNo, replayTrack);
+		if (replayTrack == -1) {
+			pg_path_replay_trackNo_onOff(pathNo, replayTrack);
+			sprintf(pg_AuxString, "/path_replay_trackNo_%d -1", pathNo);
+			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+			//printf("replay off track was currently read (%s)\n", pg_AuxString);
+		}
+	}
+}
+
+void reload_paths_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+		if (scenario_or_gui_command_value) {
+			for (SVG_scenarioPathCurve& curve : pg_SVG_scenarioPathCurves[pg_ind_scenario]) {
+				int pathNo = curve.path_no;
+				if (pathNo >= 1 && pathNo <= PG_NB_PATHS) {
+					pg_Path_Status[pathNo].load_svg_path((char*)curve.path_fileName.c_str(),
+						curve.pathRadius,
+						curve.path_r_color,
+						curve.path_g_color,
+						curve.path_b_color,
+						curve.path_readSpeedScale,
+						curve.path_ID,
+						curve.with_color_radius_from_scenario,
+						curve.secondsforwidth,
+						pg_ind_scenario);
+				}
+			}
+		}
+	}
+}
+
+void path_record_callBack(int pathNo, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value) {
+	//keystroke on/off command
+	//printf("begin callback path %d is track record %d (recorded %d)\n", pathNo, int(pg_Path_Status[pathNo].path_isActiveRecording), int(pg_recorded_path[pathNo]));
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_KEYSTROKE) {
+		// is not currently recording -> starts recording 
+		if (!pg_Path_Status[pathNo].path_isActiveRecording) {
+			pg_recorded_path[pathNo] = true;
+			if (tracksSync) {
+				pg_synchr_start_recording_path[pathNo] = true;
+			}
+			else {
+				pg_path_recording_onOff(pathNo);
+			}
+		}
+		// is currently recording -> stops recording 
+		else {
+			// stops recording 
+			pg_path_recording_onOff(pathNo);
+		}
+	}
+	// scenario absolute command
+	if (param_input_type == pg_enum_PG_SCENARIO) {
+		// recording on 
+		if (scenario_or_gui_command_value) {
+			// starts recording 
+			if (!pg_Path_Status[pathNo].path_isActiveRecording) {
+				pg_recorded_path[pathNo] = true;
+				if (tracksSync) {
+					pg_synchr_start_recording_path[pathNo] = true;
+				}
+				else {
+					pg_path_recording_onOff(pathNo);
+				}
+			}
+		}
+		// recording off 
+		else {
+			if (pg_Path_Status[pathNo].path_isActiveRecording) {
+				// stops recording 
+				pg_path_recording_onOff(pathNo);
+			}
+		}
+	}
+
+	//printf("end callback path record for path 1 recording %d active recording %d (recorded %d)\n", path_record[1], int(pg_Path_Status[1].path_isActiveRecording), pg_recorded_path[1]);
+	//printf("end callback path record for path 2 recording %d active recording %d (recorded %d)\n", path_record[2], int(pg_Path_Status[2].path_isActiveRecording), pg_recorded_path[2]);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// SCENARIO BASED COMMANDS
+void pg_NextRecordReplayPath(void) {
+	// only one track recording per second to avoid repetition
+	if (pg_CurrentClockTime - pg_LastTrackRecordingChangeClockTime > 1) {
+		pg_LastTrackRecordingChangeClockTime = pg_CurrentClockTime;
+	}
+	else {
+		return;
+	}
+	bool new_record = false;
+	for (int pathNo = PG_NB_PATHS - 1; pathNo >= 1; pathNo--) {
+		if (path_record[pathNo]) {
+			path_replay_trackNo_callBack(pathNo, pg_enum_PG_GUI_COMMAND, -1);
+			if (pathNo < PG_NB_PATHS - 1) {
+				path_record_callBack(pathNo + 1, pg_enum_PG_GUI_COMMAND, true);
+			}
+			new_record = true;
+			break;
+		}
+	}
+	if (!new_record) {
+		for (int pathNo = 1; pathNo < PG_NB_PATHS; pathNo++) {
+			if (!pg_is_path_replay[pathNo]) {
+				path_record_callBack(pathNo, pg_enum_PG_GUI_COMMAND, true);
+				break;
+			}
 		}
 	}
 }

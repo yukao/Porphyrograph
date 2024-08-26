@@ -24,19 +24,9 @@
 #ifndef PG_CALLBACK_H
 #define PG_CALLBACK_H
 
-extern float pg_current_extern_movieNo;
-
-// +++++++++++++++++++++++ CLEAR AND INVERT +++++++++++++++++++++++++++++++++
-extern double pg_lastClearTime;
-extern int pg_lastClearSceneIndex;
-
-#ifdef _WIN32
-// +++++++++++++++++++++++ scripts for external control through python programming +++++
-// currently running script: NULLL if none
-extern string pg_currently_runnings_script_1;
-extern STARTUPINFOA pg_si_script_1;
-extern PROCESS_INFORMATION pg_pi_script_1;
-#endif
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // +++++++++++++++++++++ CLEAR +++++++++++++++++++++++++++
 extern float pg_isClearCA;
@@ -44,12 +34,16 @@ extern float pg_isClearLayer;
 extern float pg_isClearAllLayers;
 extern float pg_isClearEcho;
 
-// INITIALIZES ALL SCENARIO VARIABLES CALLBACKS
+// currently running script: NULLL if none
+extern string pg_currently_runnings_script_1;
+
+// +++++++++++++++++++++++ scripts for external control through python programming +++++
+extern PROCESS_INFORMATION pg_pi_script_1;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////// INITIALIZES ALL SCENARIO VARIABLES CALLBACKS
 void pg_initializationCallBacks(void);
 
-void pg_clear_path_group(void);
-
-void path_record_callBack(int array_index, pg_Parameter_Input_Type param_input_type, bool scenario_or_gui_command_value);
-void path_replay_trackNo_callBack(int indPath, pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 
 #endif

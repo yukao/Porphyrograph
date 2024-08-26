@@ -21,15 +21,6 @@
  * 02111-1307, USA.
  */
 
-//#define _CRTDBG_MAP_ALLOC
-
-#include<stdlib.h>
-
-#if defined(_WIN32)
-// only for VC++
-#include<crtdbg.h>
-#endif
-
 #include "pg-all_include.h"
 
 #ifndef _WIN32
@@ -37,15 +28,16 @@
 #define GLH_EXT_SINGLE_FILE
 #endif
 
-///////////////////////////////////////////////////////////////
-// global variables
-///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // displayed window
 pg_WindowData *pg_CurrentWindow = NULL;
 bool           pg_windowDisplayed = false;
 
-int			   pg_NbConfigurations = 1;
+// number of loaded scenarios
+int			   pg_NbScenarios = 1;
 unsigned int pg_ind_scenario = 0;
 
 // the width of the working window
@@ -64,17 +56,8 @@ float pg_window_height_powerOf2_ratio = 1.f;
 
 int pg_rightWindowVMargin = 0;
 
-/// screen message drawing
-GLfloat pg_messageTransparency;
-bool pg_newScreenMessage = false;
-
 /// Error string
 char *pg_errorStr = NULL;
-
-// Input network message string
-char *pg_input_message_string = NULL;
-char *pg_input_message_local_command_string = NULL;
-char *pg_output_message_string = NULL;
 
 /// OpenGL background color
 float pg_OpenGLBGcolor[4] = {0.0, 0.0, 0.0, 1.0};
@@ -87,23 +70,10 @@ double pg_PrecedingClockTime = 0.;
 /// initial time (in case of real timescale)
 double pg_InitialRealTime = 0.;
 /// last frame wall time
-double pg_LastScreenMessageDecayTime = 0.;
 int pg_LastDisplayFrame = 0;
 double pg_LastDisplayFrameTime = 0;
 int pg_FramePerSecond = 0;
 bool pg_DisplayFramePerSecond = false;
-
-/// current mouse location
-int pg_CurrentCursorPos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, pg_CurrentCursorPos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-int pg_Pulsed_CurrentCursorPos_x[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR }, pg_Pulsed_CurrentCursorPos_y[PG_NB_CURSORS_MAX] = { PG_OUT_OF_SCREEN_CURSOR };
-float pg_LastCursorPositionUpdate[PG_NB_CURSORS_MAX] = { -1.f };
-
-int pg_CurrentStylusHooverPos_x, pg_CurrentStylusHooverPos_y;
-int pg_CurrentStylus_StylusvsRubber = pg_Stylus;
-// current tablet pen pressure and orientation
-float pg_CurrentStylusPresuse = 0.0f;
-float pg_CurrentStylusAzimut = 0.0f;
-float pg_CurrentStylusInclination = 0.0f;
 
 /// log file
 FILE    *pg_csv_log_file;
@@ -122,499 +92,37 @@ long      pg_LastCameraParameterChange_Frame;
 // +++++++++++++++++++++++ Aux Var +++++++++++++++++++++++++++++++++
 char pg_AuxString[1024];
 
-int argc; char **argv;
-
-/// MAIN FUNCTION
-int main(int argcMain, char** argvMain) {
-	argc = argcMain;
-	argv = argvMain;
-
-	// error message and input buffer memory
-	pg_errorStr = new char[1024];
-
-	// current date/time based on current system
-	time_t now = time(0);
-	tm* ltm = localtime(&now);
-
-	// initialisation of pg_cwd
-	pg_cwd = pg_GetCurrentWorkingDir();
-
-	// print various components of tm structure.
-	//std::cout << "Year: "<< 1900 + ltm->tm_year << std::endl;
-	//std::cout << "Month: "<< 1 + ltm->tm_mon<< std::endl;
-	//std::cout << "Day: "<<  ltm->tm_mday << std::endl;
-	//std::cout << "Time: "<< 1 + ltm->tm_hour << ":";
-	//std::cout << 1 + ltm->tm_min << ":";
-	//std::cout << 1 + ltm->tm_sec << std::endl;
-
-	pg_date_stringStream
-		<< std::setfill('0') << std::setw(2) << 1 + ltm->tm_mon << "-"
-		<< std::setfill('0') << std::setw(2) << ltm->tm_mday << "-"
-		<< std::setfill('0') << std::setw(2) << (1900 + ltm->tm_year) << "_"
-		<< std::setfill('0') << std::setw(2) << ltm->tm_hour << "-"
-		<< std::setfill('0') << std::setw(2) << ltm->tm_min << "-"
-		<< ltm->tm_year - 100 << std::flush;
-
-	// new window
-	pg_CurrentWindow = new pg_WindowData();
-
-	// print all command line arguments
-	std::cout << "name of program: " << argv[0] << '\n';
-	for (int argcount = 1; argcount < argc; argcount++) {
-		std::cout << argv[argcount] << "\n";
-	}
-
-	// cyclic input buffer
-	// loading the configuration file
-	// the configuration file name must be terminated by ".csv" or ".txt"
-	// possibly the first argument with such an extension
-	pg_NbConfigurations = int(argc - 1);
-	if (pg_NbConfigurations > PG_MAX_SCENARIOS) {
-		sprintf(pg_errorStr, "Porphyrograph: should have maximally %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", PG_MAX_SCENARIOS, (argc - 1) / 2); pg_ReportError(pg_errorStr); throw(6678);
-	}
-	else {
-		printf("Porphyrograph: %d associated scenario file(s) (<scenario.csv>)\n", (argc - 1));
-	}
-	pg_Shader_File_Names = new string * [pg_NbConfigurations];
-	pg_Shader_Stages = new GLenum * *[pg_NbConfigurations];
-	pg_Shader_nbStages = new int* [pg_NbConfigurations];
-	pg_shader_programme = new unsigned int* [pg_NbConfigurations];
-	pg_ScenarioFileNames = new string[pg_NbConfigurations];
-
-	pg_initPaths();
-
-	for (int ind = 1; ind < argc; ind++) {
-		pg_shader_programme[(ind - 1)] = new unsigned int[pg_enum_shader_TotalNbTypes];
-		for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
-			pg_shader_programme[(ind - 1)][ind_shader_type] = 0;
-		}
-	}
-	for (int ind = 1; ind < argc; ind++) {
-		if (strstr(argv[ind], ".csv")) {
-			pg_ScenarioFileNames[(ind - 1)] = string(argv[ind]);
-			pg_LoadScenarioFile(argv[ind], (ind - 1));
-		}
-	}
-
-	///////////////////////////////////////////////
-	// GLUT display library
-
-	// scene initialization
-	pg_init_scene();
-
-	// Version number
-	string applicationName = "Porphyrograph  (" + string(project_name) + ")";
-	fprintf(pg_csv_log_file, "%s\n", applicationName.c_str());
-	pg_logFirstLineSceneVariables();
-	printf("%s\n", applicationName.c_str());
-
-	std::cout << "Date: [" << pg_date_stringStream.str() << "]" << std::endl;
-
-	// printf( "Glut initialization\n" );
-	// glut parameters initialization 
-	glutInit(&argc, argv);
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
-		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
-	}
-	else {
-		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS); // 
-	}
-
-	pg_initGLutWindows();
-	pg_printOglError(474);
-
-	// OpenGL initialization (clear buffer)
-	pg_OpenGLInit();
-	// cursor shape selection
-	pg_CursorInit();
-	pg_printOglError(475);
-
-	// initializations before rendering
-
-	// sensor initialization
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
-		pg_SensorInitialization();
-	}
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_pg_metawear]) {
-		if (pg_metawear) {
-			pg_MetawearSensorInitialization();
-		}
-	}
-
-	// matrices, geometry, shaders and FBOs
-	pg_initRenderingMatrices();
-	pg_printOglError(31);
-
-	// buiilds the quads to be rendered
-	pg_initGeometry_quads();
-	pg_printOglError(32);
-	
-	// loads the shaders
-	pg_loadAllShaders();
-	pg_printOglError(33);
-
-	// initializes the FBOS
-	pg_initFBOTextureImagesAndRendering();
-	pg_printOglError(34);
-
-	// textures loading
-	pg_loadAllTextures();
-	pg_printOglError(36);
-
-	// meshes loading
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
-		pg_loadAllMeshes();
-	}
-
-	// soundtrack listing
-	pg_listAllSoundtracks();
-
-	// SVG paths listing
-	pg_listAllSVG_paths();
-
-	/////////////////////////////////////////////////////////////////////////
-	// ClipArt GPU INITIALIZATION
-	// loads the ClipArts and lists them
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
-		pg_loadAllClipArts();
-		pg_listAllClipArts();
-	}
-
-
-	// lights off the LED
-	//pg_send_message_udp((char *)"f", (char *)"/launch 0", (char *)"udp_TouchOSC_send");
-
-#if defined(PG_RENOISE)
-	//pg_send_message_udp((char *)"i", (char *)"/track/1/solo 1", (char *)"udp_RN_send");
-	//pg_send_message_udp((char *)"i", (char *)"/track/2/solo 1", (char *)"udp_RN_send");
-	//pg_send_message_udp((char *)"i", (char *)"/track/3/mute 1", (char *)"udp_RN_send");
-	//pg_send_message_udp((char *)"i", (char *)"/track/4/mute 1", (char *)"udp_RN_send");
-	//pg_send_message_udp((char *)"i", (char *)"/track/4/volume 0", (char *)"udp_RN_send");
-	//pg_send_message_udp((char *)"i", (char *)"/master/mute 1", (char *)"udp_RN_send");
-	pg_send_message_udp((char *)"", (char *)"/scene/1/launch", (char *)"udp_RN_send");
-#endif
-
-	// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
-	pg_initializeScenearioVariables();
-
-	// GUI DISPLAY & LOG FILE LOGGING
-	// GUI initialization
-	pg_displaySceneVariables();
-
-	// LOADS DIAPORAMA
-	pg_initDiaporamas();
-	pg_loadAllDiaporamas();
-	pg_ReadInitalClipFramesTextures();
-
-	// applies all callbacks
-	pg_initializationCallBacks();
-	pg_printOglError(467);
-
-	// camera frame capture initialization
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
-		pg_openCameraCaptureAndLoadFrame();
-	}
-
-	// video intialization: loads the movie of the intial configuration
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_movieCaptFreq]) {
-		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_ind_scenario].size())
-			&& playing_movieNo != pg_currentlyPlaying_movieNo) {
-			pg_movie_frame.setTo(Scalar(0, 0, 0));
-
-			pg_currentlyPlaying_movieNo = playing_movieNo;
-
-			// texture ID initialization (should not be inside a thread)
-			if (pg_movie_texture_texID == NULL_ID) {
-				glGenTextures(1, &pg_movie_texture_texID);
-			}
-
-			pg_is_movieLoading = true;
-			printf("Loading movie %s\n",
-					pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoFileName.c_str());
-			sprintf(pg_AuxString, "/movie_shortName %s", pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoShortName.c_str());
-			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-
-			pg_initVideoMoviePlayback_nonThreaded(&pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoFileName);
-		}
-	}
-
-	// clip intialization for Left Clip
-	if (pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(0)) {
-		pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoLeft);
-		sprintf(pg_AuxString, "/clip_shortName_0 %03d", pg_playing_clipNoLeft);
-		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-	}
-	if (PG_NB_PARALLEL_CLIPS >= 2) {
-		if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(1)) {
-			pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoLeft);
-			sprintf(pg_AuxString, "/clip2_shortName_0 %03d", pg_playing_secondClipNoLeft);
-			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-	// clip intialization for Right Clip
-	if (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(0)) {
-		pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoRight);
-		sprintf(pg_AuxString, "/clip_shortName_1 %03d", pg_playing_clipNoRight);
-		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-	}
-	if (PG_NB_PARALLEL_CLIPS >= 2) {
-		if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(1)) {
-			pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoRight);
-			sprintf(pg_AuxString, "/clip2_shortName_1 %03d", pg_playing_secondClipNoRight);
-			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-
-	// connects PD to porphyrograph
-	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
-	pg_printOglError(37);
-
-	/////////////////////////////////////////////////////////////////////////
-	// USB INITIALIZATION
-	//pg_init_USB();
-	//pg_find_USB_pedals();
-
-	// main loop for event processing and display
-	glutMainLoop();
-
-	return 0;
-
-	// end of glut display library
-	///////////////////////////////////////////////
-}
-
-
-void pg_initGLutWindows(void) {
-	printf("GLUT size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
-
-	glutInitWindowSize(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
-	glutInitWindowPosition(window_x, window_y);
-
-	pg_CurrentWindow->glutID = glutCreateWindow(" ");
-
-	// window resize
-	printf("Window size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
-	glutReshapeWindow(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
-
-	// glutFullScreen();                      // Switch into full screen
-
-	///////////////////////////////////////////////
-	// OpenGL extended
-#if defined(WIN32_EXTENDED)
-	if (!CreateGLContext()) {
-		printf("OpenGL transparency context not initialized\n");
-		exit(0);
-	}
-#else
-	GLenum err = glewInit();
-	if (GLEW_OK != err) {
-		/* Problem: glewInit failed, something is seriously wrong. */
-		fprintf(stderr, "Error: OpenGL Extension Wrangler (GLEW) failed to initialize %s\n", glewGetErrorString(err));
-	}
-	fprintf(stdout, "GLEW version %s\n", glewGetString(GLEW_VERSION));
-	bool hasDSA = glewIsSupported("GL_EXT_direct_state_access");
-	if (!hasDSA) {
-		fprintf(stderr, "Error: OpenGL implementation doesn't support GL_EXT_direct_state_access\n");
-	}
-#endif
-
-	// get version info
-	const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
-	const GLubyte* version = glGetString(GL_VERSION); // version as a string
-													   //Or better yet, use the GL3 way to get the version number
-	int OpenGLVersion[2];
-	glGetIntegerv(GL_MAJOR_VERSION, &OpenGLVersion[0]);
-	glGetIntegerv(GL_MINOR_VERSION, &OpenGLVersion[1]);
-	printf("Renderer: %s\n", renderer);
-	printf("OpenGL version supported %s (%d-%d)\n", version, OpenGLVersion[0], OpenGLVersion[1]);
-
-	int maxTextureSize;
-	int maxGeomVert;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
-	glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &maxGeomVert);
-	GLint maxAttach = 0;
-	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttach);
-	GLint maxDrawBuf = 0;
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
-	//printf ("Max texture size %d geometry shader vertices %d max attach %d max draw buffs %d\n", 
-	   // maxTextureSize, maxGeomVert, maxAttach, maxDrawBuf);
-	GLint maxFragUnif = 0;
-	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragUnif);
-	//printf("Max uniform components %d\n",
-	   // maxFragUnif);
-
-
-	// window selection
-	// glut win activation
-	glutSetWindow(pg_CurrentWindow->glutID);
-
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// callback procedures for window reshape
-	glutReshapeFunc(&pg_window_reshape);
-	// keyboard events handling
-	glutKeyboardFunc(&pg_window_key_browse);
-	// special keys handling
-	glutSpecialFunc(&pg_window_special_key_browse);
-
-#if defined(PG_WACOM_TABLET)
-	// wacom tablet handling
-	glutWacomTabletCursorFunc(&pg_window_PG_WACOM_TABLET_browse);
-#else  // mouse clicks handling
-	glutMouseFunc(&pg_window_mouseFunc_browse);
-	// mouse drags handling
-	glutMotionFunc(&pg_window_motionFunc_browse);
-	// passive selection
-	//if( pg_CurrentWindow->mouse_passive_selection ) {
-	glutPassiveMotionFunc(&pg_window_passiveMotionFunc_browse);
-#endif
-
-	// window visibility
-	glutVisibilityFunc(NULL);
-	// idle update
-	glutTimerFunc(int(minimal_interframe_latency * 1000),
-		&pg_window_idle_browse, pg_nbFramesDisplayed);
-	glutDisplayFunc(&pg_window_display);
-
-}
-
-void  pg_init_screen_message( void ) {
-  // screen message initialization
-  pg_screenMessage = "";
-  pg_messageTransparency = 1.0;
-  pg_newScreenMessage = false;
-  pg_LastScreenMessageDecayTime = pg_CurrentClockTime;
-}
-
-void pg_OpenGLInit( void ) {
-  // background color
-  glClearColor (pg_OpenGLBGcolor[0], pg_OpenGLBGcolor[1], pg_OpenGLBGcolor[2], pg_OpenGLBGcolor[3]);
-
-  // buffer reset
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-  // no z-Buffer
-  glDisable(GL_DEPTH_TEST);
-  // // smooth shading
-  // glShadeModel(GL_SMOOTH);
-  // // normal vector normalization
-  // glEnable( GL_NORMALIZE );
-
-  // disable vsync
-  // float r = 
-
-}
-
-void pg_CursorInit( void ) {
-  glutSetCursor(GLUT_CURSOR_NONE);
-}
-
-void pg_init_scene(void) {
-	if (argc <= 1) {
-		sprintf(pg_errorStr, "Porphyrograph: not enough arguments"); pg_ReportError(pg_errorStr);
-		sprintf(pg_errorStr, "Usage: Porphyrograph [configuration.conf]"); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// log file
-	if (!pg_csv_file_name.empty()) {
-		printf("Open csv log file %s\n", pg_csv_file_name.c_str());
-		if ((pg_csv_log_file = fopen(pg_csv_file_name.c_str(), "wb")) == NULL) {
-			sprintf(pg_errorStr, "File %s not opened!", pg_csv_file_name.c_str()); pg_ReportError(pg_errorStr); throw 152;
-		}
-	}
-	else {
-		pg_csv_log_file = stdout;
-	}
-
-	///////////////////////////////////////////////
-	// GLOBAL VARIABLES INITIALIZATION
-	// frame number initialization
-	pg_FrameNo = first_frame_number - 1;
-	pg_ConfigurationFrameNo = pg_FrameNo;
-	pg_ParticleTargetFrameNo = pg_FrameNo;
-
-	// last camera change initialization
-	pg_LastCameraParameterChange_Frame = pg_FrameNo;
-
-	// intial real time
-	pg_InitialRealTime = pg_RealTime() + initial_time;
-
-	// initial scenario time: well before current time to be over
-	pg_InitialScenarioTime = pg_InitialRealTime - 1000000.f;
-	pg_AbsoluteInitialScenarioTime = pg_InitialRealTime - 1000000.f;
-
-	// current time initialization: internal time
-	pg_CurrentClockTime = pg_RealTime();
-	pg_PrecedingClockTime = pg_CurrentClockTime;
-
-	//printf("Initial time %.2f (real time %.5f)\n", pg_CurrentClockTime, pg_InitialRealTime);
-
-	// random seed initialization
-	srand(clock());
-
-	// ------ screen message initialization  ------------- //
-	pg_init_screen_message();
-
-	// reads the text messages in the text file
-	pg_ReadAllDisplayMessages(pg_MessageFile[pg_ind_scenario]);
-	
-#if defined(var_Novak_flight_on)
-	// ------ flight initialization  ------------- //
-	Novak_flight_init_control_points();
-#endif
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
-		pg_DMX_light_initialization();
-	}
-
-	printf("Open portaudio\n");
-	pg_pa_openSoundData();
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
-		/////////////////////////////////////////////////////////////////////////
-		// SENSORS INITIALIZATION
-		// copies the grid layout
-		pg_assignSensorPositions();
-
-		// copies the single central activation
-		pg_assignSensorActivations();
-	}
-
-	/////////////////////////////////////////////////////////////////////////
-	// UDP INITIALIZATION
-#if defined(WIN32)
-	WSADATA wsaData;
-	// Initialize Winsock
-	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (err != 0) {
-		/* Tell the user that we could not find a usable */
-		/* WinSock DLL.                                  */
-		sprintf(pg_errorStr, "could not find a usable WinSock DLL!"); pg_ReportError(pg_errorStr); throw 207;
-	}
-#endif
-
-	// server initialization
-	for (pg_IPServer &server : pg_IP_Servers) {
-		server.InitServer();
-	}
-	// client initialization
-	for (pg_IPClient &client : pg_IP_Clients) {
-		// printf( "Client %d initialization\n" , ind );
-		  //std::cout << "client->Remote_server_IP: " << ind << " " << client->Remote_server_IP << "\n";
-		  //std::cout << "client->Remote_server_port: " << client->Remote_server_port << "\n";
-		client.InitClient();
-		// printf( "Client name %s\n" , pg_IP_Clients[ ind ]->id );
-	}
-	pg_input_message_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
-	pg_input_message_local_command_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
-	pg_output_message_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
-	// printf( "End of scene initialization\n" );
-}
-
+// Perlin noise seed
+float pg_seed_pulsePerlinNoise[4 * 2]
+= { rand_0_1 * 255, rand_0_1 * 255, rand_0_1 * 255, rand_0_1 * 255,
+	rand_0_1 * 255, rand_0_1 * 255, rand_0_1 * 255, rand_0_1 * 255 };
+
+// shutdown status
 bool pg_shutdown = false;
 
+int argc; char **argv;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTILS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTION FOR TESTING THE CURRENT WORKING DIRECTORY
+std::string pg_GetCurrentWorkingDir(void) {
+	char buff[FILENAME_MAX];
+	GetCurrentDir(buff, FILENAME_MAX);
+	std::string current_working_dir(buff);
+	std::replace(current_working_dir.begin(), current_working_dir.end(), '\\', '/'); // replace all 'x' to 'y'
+	return current_working_dir;
+}
+
+// CURSOR INITIALIZATION
+void pg_CursorInit(void) {
+	glutSetCursor(GLUT_CURSOR_NONE);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// QUIT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 void pg_quit(void) {
 	//  save the svg paths before quitting (could perhaps be generalized)
 	pg_draw_scene(pg_enum_render_Svg);
@@ -645,7 +153,7 @@ void pg_quit(void) {
 	sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
 	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
 	printf("Main: soundtrack: %s\n", pg_AuxString);
-	pg_pa_closeStream();
+	pg_pa_closeAudioStream();
 	printf("close portaudio\n");
 	sprintf(pg_AuxString, "/soundtrack_onOff %d", !pg_soundTrack_on);
 	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
@@ -718,28 +226,275 @@ void pg_quit(void) {
 	exit(1);
 }
 
-void pg_window_key_browse(unsigned char key, int x, int y)
-{
-  switch (key) {
-  case KEY_ESC:
-    pg_quit();
-    break;
-  // default: use standard key processing (non-platform dependent)
-  default:
-    pg_process_key( (int)key );
-    break;
-  }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// WINDOW RESHAPE 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+void pg_window_reshape(GLsizei width, GLsizei height) {
+	glutReshapeWindow(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+
+	//  printf("reshape main win %d %d %d\n" , PG_WINDOW_WIDTH , PG_WINDOW_HEIGHT , width , height );
+	printf("Resize Window %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+
+	pg_setWindowDimensions();
+	pg_initRenderingMatrices();
+
+#ifndef PG_WACOM_TABLET
+	printf("************* Version for mouse pointer **********\n");
+#else
+	printf("************* Version for tablet **********\n");
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// KEYSTROKE RECEPTION AND PROCESSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+void pg_window_key_browse(unsigned char key, int x, int y) {
+	switch (key) {
+	case KEY_ESC:
+		pg_quit();
+		break;
+		// default: use standard key processing (non-platform dependent)
+	default:
+		pg_process_key((int)key);
+		break;
+	}
 }
 
 void pg_window_special_key_browse(int key, int x, int y) {
-  // use standard key processing (non-platform dependent)
-  pg_process_special_key( key );
+	// use standard key processing (non-platform dependent)
+	pg_process_special_key(key);
 }
 
-void pg_MouseCoordinatesRemapping(int x, int y, int *mappedX, int *mappedY) {
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// FBO INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool pg_initFBOTextureImagesAndRendering(void) {
+	int maxbuffers;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxbuffers);
+	int maxDrawBuf;
+	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
+
+	if (maxbuffers < pg_enum_FBO_Update_nbAttachts) {
+		sprintf(pg_errorStr, "Error: Maximal attachment (%d) -> %d required!", maxbuffers, pg_enum_FBO_Update_nbAttachts); pg_ReportError(pg_errorStr); // throw 336;
+	}
+	if (maxDrawBuf < pg_enum_FBO_Update_nbAttachts) {
+		sprintf(pg_errorStr, "Error: Maximal draw buffers (%d) -> %d required!", maxbuffers, pg_enum_FBO_Update_nbAttachts); pg_ReportError(pg_errorStr); // throw 336;
+	}
+
+	/*
+	// FBO: camera frame after initial processing
+	glGenFramebuffers(1, &FBO_CameraFrame);  // drawing memory on odd and even frames for echo
+	if (!FBO_CameraFrame_texID) {
+		glGenTextures(1, &FBO_CameraFrame_texID);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO_CameraFrame);
+	pg_initFBOTextures(&FBO_CameraFrame_texID, 1, false);
+	glDrawBuffers(1, enumDrawBuffersEntries);
+	pg_printOglError(343);
+	*/
+
+	// FBO: multi-attachment for update 
+	// initializations to NULL
+		// 2 = FBO ping-pong size for Update shader FBOs
+	for (int indAttachedFB = 0; indAttachedFB < 2 * pg_enum_FBO_Update_nbAttachts; indAttachedFB++) {
+		pg_FBO_Update_texID[indAttachedFB] = 0;
+	}
+	glGenTextures(2 * pg_enum_FBO_Update_nbAttachts, pg_FBO_Update_texID);
+	printf("FBO Update size %d %d attachments %d (configs %d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_Update_nbAttachts, pg_NbScenarios);
+	pg_initFBOTextures(pg_FBO_Update_texID, 2 * pg_enum_FBO_Update_nbAttachts, false, NULL);
+
+	glGenFramebuffers(1, &pg_FBO_Update);
+	// ping-pong FBO texture binding, changes each frame
+
+	pg_printOglError(341);
+
+	// FBO: multi-attachment for particle animation 
+	// 2 = FBO ping-pong size for ParticleAnimation shader FBOs
+	// initializations to NULL
+	for (int indAttachedFB = 0; indAttachedFB < 2 * pg_enum_FBO_ParticleAnimation_nbAttachts; indAttachedFB++) {
+		pg_FBO_ParticleAnimation_texID[indAttachedFB] = 0;
+	}
+	glGenTextures(2 * pg_enum_FBO_ParticleAnimation_nbAttachts, pg_FBO_ParticleAnimation_texID);
+	printf("FBO Particle animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_ParticleAnimation_nbAttachts);
+	pg_initFBOTextures(pg_FBO_ParticleAnimation_texID, 2 * pg_enum_FBO_ParticleAnimation_nbAttachts, false, NULL);
+
+	glGenFramebuffers(1, &pg_FBO_ParticleAnimation);
+	// ping-pong FBO texture binding, changes each frame
+
+	pg_printOglError(341);
+
+	// FBO: ClipArt GPU drawing output 
+	glGenTextures(1, &pg_FBO_ClipArt_render_texID);
+	glGenRenderbuffers(1, &FBO_ClipArt_depthAndStencilBuffer);
+	printf("FBO ClipArt GPU rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
+	pg_initFBOTextures(&pg_FBO_ClipArt_render_texID, 1, true, &FBO_ClipArt_depthAndStencilBuffer);
+
+	glGenFramebuffers(1, &pg_FBO_ClipArtRendering);  // drawing memory on odd and even frames for echo 
+	// texture binding is constant and made once for all
+	pg_bindFBOTextures(pg_FBO_ClipArtRendering, &pg_FBO_ClipArt_render_texID, 1, true, FBO_ClipArt_depthAndStencilBuffer);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	pg_printOglError(344);
+
+
+	// FBO: particle drawing output 
+	glGenTextures(1, &pg_FBO_Particle_render_texID);
+	glGenRenderbuffers(1, &pg_FBO_ParticleRendering_depthAndStencilBuffer);
+	printf("FBO Particle rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
+	pg_initFBOTextures(&pg_FBO_Particle_render_texID, 1, true, &pg_FBO_ParticleRendering_depthAndStencilBuffer);
+
+	glGenFramebuffers(1, &pg_FBO_ParticleRendering);  // drawing memory on odd and even frames for echo 
+	// texture binding is constant and made once for all
+	pg_bindFBOTextures(pg_FBO_ParticleRendering, &pg_FBO_Particle_render_texID, 1, true, pg_FBO_ParticleRendering_depthAndStencilBuffer);
+
+	pg_printOglError(344);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// FBO: composition output for echo
+	// 2 = FBO ping-pong size for echo FBOs
+	// initializations to NULL
+	for (int indFB = 0; indFB < 2; indFB++) {
+		pg_FBO_Mixing_capturedFB_prec_texID[indFB] = 0;
+	}
+	glGenTextures(2, pg_FBO_Mixing_capturedFB_prec_texID);
+	printf("FBO Mixing animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 2);
+	pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID, 2, false, 0);
+
+	glGenFramebuffers(1, &pg_FBO_Mixing_capturedFB_prec);  // drawing memory on odd and even frames for echo 
+	// ping-pong FBO texture binding, changes each frame
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Augmented Reality or bypassing mesh rendering: FBO capture of Master to be displayed on a mesh
+	pg_FBO_Master_capturedFB_prec_texID = 0;
+	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
+	printf("FBO Master size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 1);
+	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
+
+	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh of bypassing mesh rendering
+	// texture binding is constant and made once for all
+	pg_bindFBOTextures(pg_FBO_Master_capturedFB_prec, &pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	pg_printOglError(342);
+	return true;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// VARIABLE INITIALIZATION BEFORE LAUNCHING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+void pg_init_scene(void) {
+	if (argc <= 1) {
+		sprintf(pg_errorStr, "Porphyrograph: not enough arguments"); pg_ReportError(pg_errorStr);
+		sprintf(pg_errorStr, "Usage: Porphyrograph [configuration.conf]"); pg_ReportError(pg_errorStr); throw 100;
+	}
+
+	// log file
+	if (!pg_csv_logFile_name.empty()) {
+		printf("Open csv log file %s\n", pg_csv_logFile_name.c_str());
+		if ((pg_csv_log_file = fopen(pg_csv_logFile_name.c_str(), "wb")) == NULL) {
+			sprintf(pg_errorStr, "File %s not opened!", pg_csv_logFile_name.c_str()); pg_ReportError(pg_errorStr); throw 152;
+		}
+	}
+	else {
+		pg_csv_log_file = stdout;
+	}
+
+	///////////////////////////////////////////////
+	// GLOBAL VARIABLES INITIALIZATION
+	// frame number initialization
+	pg_FrameNo = first_frame_number - 1;
+	pg_ConfigurationFrameNo = pg_FrameNo;
+	pg_ParticleTargetFrameNo = pg_FrameNo;
+
+	// last camera change initialization
+	pg_LastCameraParameterChange_Frame = pg_FrameNo;
+
+	// intial real time
+	pg_InitialRealTime = pg_RealTime() + initial_time;
+
+	// initial scenario time: well before current time to be over
+	pg_InitialScenarioTime = pg_InitialRealTime - 1000000.f;
+	pg_AbsoluteInitialScenarioTime = pg_InitialRealTime - 1000000.f;
+
+	// current time initialization: internal time
+	pg_CurrentClockTime = pg_RealTime();
+	pg_PrecedingClockTime = pg_CurrentClockTime;
+
+	//printf("Initial time %.2f (real time %.5f)\n", pg_CurrentClockTime, pg_InitialRealTime);
+
+	// random seed initialization
+	srand(clock());
+
+	// ------ screen message initialization  ------------- //
+	pg_init_screen_message();
+
+	// reads the text messages in the text file
+	pg_ReadAllDisplayMessages(pg_MessageFile[pg_ind_scenario]);
+
+#if defined(var_Novak_flight_on)
+	// ------ flight initialization  ------------- //
+	Novak_flight_init_control_points();
+#endif
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
+		pg_DMX_light_initialization();
+	}
+
+	printf("Open portaudio\n");
+	pg_pa_openSoundData();
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
+		/////////////////////////////////////////////////////////////////////////
+		// SENSORS INITIALIZATION
+		// copies the grid layout
+		pg_assignSensorPositions();
+
+		// copies the single central activation
+		pg_assignSensorActivations();
+	}
+
+	/////////////////////////////////////////////////////////////////////////
+	// UDP INITIALIZATION
+#if defined(WIN32)
+	WSADATA wsaData;
+	// Initialize Winsock
+	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (err != 0) {
+		/* Tell the user that we could not find a usable */
+		/* WinSock DLL.                                  */
+		sprintf(pg_errorStr, "could not find a usable WinSock DLL!"); pg_ReportError(pg_errorStr); throw 207;
+	}
+#endif
+
+	// server initialization
+	for (pg_IPServer& server : pg_IP_Servers) {
+		server.InitServer();
+	}
+	// client initialization
+	for (pg_IPClient& client : pg_IP_Clients) {
+		// printf( "Client %d initialization\n" , ind );
+		  //std::cout << "client->Remote_server_IP: " << ind << " " << client->Remote_server_IP << "\n";
+		  //std::cout << "client->Remote_server_port: " << client->Remote_server_port << "\n";
+		client.InitClient();
+		// printf( "Client name %s\n" , pg_IP_Clients[ ind ]->id );
+	}
+	// printf( "End of scene initialization\n" );
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PEN COORDINATES PROCESSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_MouseCoordinatesRemapping(int x, int y, int* mappedX, int* mappedY) {
 	*mappedX = x;
 	*mappedY = y;
 }
+
 
 #if defined(PG_WACOM_TABLET)
 void pg_window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float incl, int twist, int cursor) {
@@ -768,10 +523,10 @@ void pg_window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float
 			pg_CurrentStylusHooverPos_y = PG_OUT_OF_SCREEN_CURSOR;
 		}
 		else {
-			pg_CurrentStylusHooverPos_x = mappedX; 
+			pg_CurrentStylusHooverPos_x = mappedX;
 			pg_CurrentStylusHooverPos_y = mappedY;
 		}
-	}	
+	}
 	// hoovering
 	else {
 		// standard hoovering
@@ -805,7 +560,7 @@ void pg_window_PG_WACOM_TABLET_browse(int x, int y, float press, float az, float
 }
 #else
 void pg_window_mouseFunc_browse(int button, int state, int x, int y) {
-	 printf( "click button %d (%d,%d)\n" , button , x , y );
+	printf("click button %d (%d,%d)\n", button, x, y);
 	int mappedX = x;
 	int mappedY = y;
 
@@ -824,7 +579,7 @@ void pg_window_mouseFunc_browse(int button, int state, int x, int y) {
 }
 
 void pg_window_motionFunc_browse(int x, int y) {
-	 printf( "active button (%d,%d)\n" , x , y );
+	printf("active button (%d,%d)\n", x, y);
 	pg_CurrentCursorPos_x[0] = x;
 	pg_CurrentCursorPos_y[0] = y;
 	pg_CurrentStylusHooverPos_x = x;
@@ -832,25 +587,25 @@ void pg_window_motionFunc_browse(int x, int y) {
 }
 
 void pg_window_passiveMotionFunc_browse(int x, int y) {
-	 printf( "passive button (%d,%d)\n" , x , y );
-    pg_CurrentCursorPos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
-    pg_CurrentCursorPos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
-    pg_CurrentStylusHooverPos_x = x;
-    pg_CurrentStylusHooverPos_y = y;
-  // freeglut (PG): glutGetModifiers() called outside an input callback/int
+	printf("passive button (%d,%d)\n", x, y);
+	pg_CurrentCursorPos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
+	pg_CurrentCursorPos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
+	pg_CurrentStylusHooverPos_x = x;
+	pg_CurrentStylusHooverPos_y = y;
+	// freeglut (PG): glutGetModifiers() called outside an input callback/int
 }
 #endif
 
-void pg_window_idle_browse( void ) {
-  pg_window_idle_browse( 0 );
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// IDLE FUNCTION WITH FRAME RATE CONTROL
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_window_idle_browse(int step) {
-	 //printf("begin pg_window_idle_browse\n");
-	// fprintf( pg_csv_log_file, "%.10f begin Time #\n" , pg_RealTime() );
-	//printf("cameraWeight %.3f\n", cameraWeight);
+	//printf("begin pg_window_idle_browse\n");
+   // fprintf( pg_csv_log_file, "%.10f begin Time #\n" , pg_RealTime() );
+   //printf("cameraWeight %.3f\n", cameraWeight);
 
-	// -------------------- idle function recall ------------------------- //
+   // -------------------- idle function recall ------------------------- //
 	glutTimerFunc(int(minimal_interframe_latency * 1000),
 		&pg_window_idle_browse, pg_nbFramesDisplayed);
 
@@ -982,26 +737,16 @@ void pg_window_idle_browse(int step) {
 		pg_flash_control(pg_flash_continuous_generation);
 
 		// UDP messages IN/OUT
-		for (pg_IPServer &server : pg_IP_Servers) {
+		for (pg_IPServer& server : pg_IP_Servers) {
 			server.receiveIPMessages();
 		}
-		for (pg_IPClient &client : pg_IP_Clients) {
+		for (pg_IPClient& client : pg_IP_Clients) {
 			client.sendIPmessages();
 		}
 
 		// only for DMX
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
-			if (pg_nb_light_groups[pg_ind_scenario] > 0) {
-				// light automation management
-				pg_light_automation_update();
-				// DMX message management
-				if (pg_oneLightGroup_Changed()) {
-					pg_StoreDMXValues_AllLightGroups();
-					pg_SendDMX();
-					pg_Reset_LightGroup_Changed();
-					pg_lightGUI_all_values_and_pulse_update();
-				}
-			}
+			pg_lightUpdate();
 		}
 	}
 
@@ -1014,43 +759,384 @@ void pg_window_idle_browse(int step) {
 
 	// fprintf( pg_csv_log_file, "%.10f end Time #\n\n" , pg_RealTime() );
 	pg_nbFramesDisplayed++;
-	 //printf("end pg_window_idle_browse\n");
+	//printf("end pg_window_idle_browse\n");
 }
 
-//////////////////////////////////
-// window reshape
-//////////////////////////////////
-void pg_window_reshape(GLsizei width, GLsizei height) {
+void pg_window_idle_browse(void) {
+	pg_window_idle_browse(0);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// WINDOW INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_initGLutWindows(void) {
+	printf("GLUT size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+
+	glutInitWindowSize(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+	glutInitWindowPosition(window_x, window_y);
+
+	pg_CurrentWindow->glutID = glutCreateWindow(" ");
+
+	// window resize
+	printf("Window size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 	glutReshapeWindow(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
-	//  printf("reshape main win %d %d %d\n" , PG_WINDOW_WIDTH , PG_WINDOW_HEIGHT , width , height );
-	printf( "Resize Window %dx%d\n" , PG_WINDOW_WIDTH , PG_WINDOW_HEIGHT );
+	// glutFullScreen();                      // Switch into full screen
 
-	pg_setWindowDimensions();
-	pg_initRenderingMatrices();
-
-#ifndef PG_WACOM_TABLET
-	printf("************* Version for mouse pointer **********\n");
+	///////////////////////////////////////////////
+	// OpenGL extended
+#if defined(WIN32_EXTENDED)
+	if (!CreateGLContext()) {
+		printf("OpenGL transparency context not initialized\n");
+		exit(0);
+	}
 #else
-	printf("************* Version for tablet **********\n");
+	GLenum err = glewInit();
+	if (GLEW_OK != err) {
+		/* Problem: glewInit failed, something is seriously wrong. */
+		fprintf(stderr, "Error: OpenGL Extension Wrangler (GLEW) failed to initialize %s\n", glewGetErrorString(err));
+	}
+	fprintf(stdout, "GLEW version %s\n", glewGetString(GLEW_VERSION));
+	bool hasDSA = glewIsSupported("GL_EXT_direct_state_access");
+	if (!hasDSA) {
+		fprintf(stderr, "Error: OpenGL implementation doesn't support GL_EXT_direct_state_access\n");
+	}
 #endif
+
+	// get version info
+	const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
+	const GLubyte* version = glGetString(GL_VERSION); // version as a string
+	//Or better yet, use the GL3 way to get the version number
+	int OpenGLVersion[2];
+	glGetIntegerv(GL_MAJOR_VERSION, &OpenGLVersion[0]);
+	glGetIntegerv(GL_MINOR_VERSION, &OpenGLVersion[1]);
+	printf("Renderer: %s\n", renderer);
+	printf("OpenGL version supported %s (%d-%d)\n", version, OpenGLVersion[0], OpenGLVersion[1]);
+
+	int maxTextureSize;
+	int maxGeomVert;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+	glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &maxGeomVert);
+	GLint maxAttach = 0;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttach);
+	GLint maxDrawBuf = 0;
+	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
+	//printf ("Max texture size %d geometry shader vertices %d max attach %d max draw buffs %d\n", 
+	   // maxTextureSize, maxGeomVert, maxAttach, maxDrawBuf);
+	GLint maxFragUnif = 0;
+	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragUnif);
+	//printf("Max uniform components %d\n",
+	   // maxFragUnif);
+
+
+	// window selection
+	// glut win activation
+	glutSetWindow(pg_CurrentWindow->glutID);
+
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// callback procedures for window reshape
+	glutReshapeFunc(&pg_window_reshape);
+	// keyboard events handling
+	glutKeyboardFunc(&pg_window_key_browse);
+	// special keys handling
+	glutSpecialFunc(&pg_window_special_key_browse);
+
+#if defined(PG_WACOM_TABLET)
+	// wacom tablet handling
+	glutWacomTabletCursorFunc(&pg_window_PG_WACOM_TABLET_browse);
+#else  // mouse clicks handling
+	glutMouseFunc(&pg_window_mouseFunc_browse);
+	// mouse drags handling
+	glutMotionFunc(&pg_window_motionFunc_browse);
+	// passive selection
+	//if( pg_CurrentWindow->mouse_passive_selection ) {
+	glutPassiveMotionFunc(&pg_window_passiveMotionFunc_browse);
+#endif
+
+	// window visibility
+	glutVisibilityFunc(NULL);
+	// idle update
+	glutTimerFunc(int(minimal_interframe_latency * 1000),
+		&pg_window_idle_browse, pg_nbFramesDisplayed);
+	glutDisplayFunc(&pg_window_display);
+
 }
 
+void pg_OpenGLInit(void) {
+	// background color
+	glClearColor(pg_OpenGLBGcolor[0], pg_OpenGLBGcolor[1], pg_OpenGLBGcolor[2], pg_OpenGLBGcolor[3]);
 
-//////////////////////////////////////////////////////////////
-// MISC LIB FUNCTIONS
-//////////////////////////////////////////////////////////////
-void pg_snapshot(char* type) {
-	if (strcmp(type, "svg") == 0) {
-		pg_draw_scene(pg_enum_render_Svg);
+	// buffer reset
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// no z-Buffer
+	glDisable(GL_DEPTH_TEST);
+	// // smooth shading
+	// glShadeModel(GL_SMOOTH);
+	// // normal vector normalization
+	// glEnable( GL_NORMALIZE );
+
+	// disable vsync
+	// float r = 
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MAIN FUNCTION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// MAIN FUNCTION
+int main(int argcMain, char** argvMain) {
+	argc = argcMain;
+	argv = argvMain;
+
+	// error message and input buffer memory
+	pg_errorStr = new char[1024];
+
+	// current date/time based on current system
+	time_t now = time(0);
+	tm* ltm = localtime(&now);
+
+	// initialisation of pg_cwd
+	pg_cwd = pg_GetCurrentWorkingDir();
+
+	// print various components of tm structure.
+	//std::cout << "Year: "<< 1900 + ltm->tm_year << std::endl;
+	//std::cout << "Month: "<< 1 + ltm->tm_mon<< std::endl;
+	//std::cout << "Day: "<<  ltm->tm_mday << std::endl;
+	//std::cout << "Time: "<< 1 + ltm->tm_hour << ":";
+	//std::cout << 1 + ltm->tm_min << ":";
+	//std::cout << 1 + ltm->tm_sec << std::endl;
+
+	pg_date_stringStream
+		<< std::setfill('0') << std::setw(2) << 1 + ltm->tm_mon << "-"
+		<< std::setfill('0') << std::setw(2) << ltm->tm_mday << "-"
+		<< std::setfill('0') << std::setw(2) << (1900 + ltm->tm_year) << "_"
+		<< std::setfill('0') << std::setw(2) << ltm->tm_hour << "-"
+		<< std::setfill('0') << std::setw(2) << ltm->tm_min << "-"
+		<< ltm->tm_year - 100 << std::flush;
+
+	// new window
+	pg_CurrentWindow = new pg_WindowData();
+
+	// print all command line arguments
+	std::cout << "name of program: " << argv[0] << '\n';
+	for (int argcount = 1; argcount < argc; argcount++) {
+		std::cout << argv[argcount] << "\n";
 	}
-	else if (strcmp(type, "png") == 0) {
-		pg_draw_scene(pg_enum_render_Png);
-	}
-	else if (strcmp(type, "jpg") == 0) {
-		pg_draw_scene(pg_enum_render_Jpg);
+
+	// cyclic input buffer
+	// loading the configuration file
+	// the configuration file name must be terminated by ".csv" or ".txt"
+	// possibly the first argument with such an extension
+	pg_NbScenarios = int(argc - 1);
+	if (pg_NbScenarios > PG_MAX_SCENARIOS) {
+		sprintf(pg_errorStr, "Porphyrograph: should have maximally %d associated configuration and scenario file(s), not %d (<conf.csv> <scenario.csv>)+", PG_MAX_SCENARIOS, (argc - 1) / 2); pg_ReportError(pg_errorStr); throw(6678);
 	}
 	else {
-		sprintf(pg_errorStr, "Incorrect screenshot type (%s): expected svg or png or jpg!", type); pg_ReportError(pg_errorStr);
+		printf("Porphyrograph: %d associated scenario file(s) (<scenario.csv>)\n", (argc - 1));
 	}
+
+	pg_initPaths();
+
+	pg_Shader_File_Names = new string * [pg_NbScenarios];
+	pg_Shader_Stages = new GLenum * *[pg_NbScenarios];
+	pg_Shader_nbStages = new int* [pg_NbScenarios];
+	pg_shader_programme = new unsigned int* [pg_NbScenarios];
+	for (int ind = 1; ind < argc; ind++) {
+		pg_shader_programme[(ind - 1)] = new unsigned int[pg_enum_shader_TotalNbTypes];
+		for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
+			pg_shader_programme[(ind - 1)][ind_shader_type] = 0;
+		}
+	}
+
+	pg_ScenarioFileNames = new string[pg_NbScenarios];
+	for (int ind = 1; ind < argc; ind++) {
+		if (strstr(argv[ind], ".csv")) {
+			pg_ScenarioFileNames[(ind - 1)] = string(argv[ind]);
+			pg_LoadScenarioFile(argv[ind], (ind - 1));
+		}
+	}
+
+	///////////////////////////////////////////////
+	// GLUT display library
+
+	// scene initialization
+	pg_init_scene();
+
+	// Version number
+	string applicationName = "Porphyrograph  (" + string(project_name) + ")";
+	fprintf(pg_csv_log_file, "%s\n", applicationName.c_str());
+	pg_logFirstLineSceneVariables();
+	printf("%s\n", applicationName.c_str());
+
+	std::cout << "Date: [" << pg_date_stringStream.str() << "]" << std::endl;
+
+	// printf( "Glut initialization\n" );
+	// glut parameters initialization 
+	glutInit(&argc, argv);
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_DEPTH); // 
+	}
+	else {
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS); // 
+	}
+
+	pg_initGLutWindows();
+	pg_printOglError(474);
+
+	// OpenGL initialization (clear buffer)
+	pg_OpenGLInit();
+	// cursor shape selection
+	pg_CursorInit();
+	pg_printOglError(475);
+
+	// initializations before rendering
+
+	// sensor initialization
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
+		pg_SensorInitialization();
+	}
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_pg_metawear]) {
+		if (pg_metawear) {
+			pg_MetawearSensorInitialization();
+		}
+	}
+
+	// matrices, geometry, shaders and FBOs
+	pg_initRenderingMatrices();
+	pg_printOglError(31);
+
+	// buiilds the quads to be rendered
+	pg_initGeometry_quads();
+	pg_printOglError(32);
+	
+	// loads the shaders
+	pg_loadAllShaders();
+	pg_printOglError(33);
+
+	// initializes the FBOS
+	pg_initFBOTextureImagesAndRendering();
+	pg_printOglError(34);
+
+	// textures loading
+	pg_loadAllTextures();
+	pg_printOglError(36);
+
+	// meshes loading
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
+		pg_loadAllMeshes();
+	}
+
+	// soundtrack listing
+	pg_listAll_soundTracks();
+
+	// SVG paths listing
+	pg_listAll_Paths();
+
+	/////////////////////////////////////////////////////////////////////////
+	// ClipArt GPU INITIALIZATION
+	// loads the ClipArts and lists them
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
+		pg_loadAll_ClipArts();
+		pg_listAll_ClipArts();
+	}
+
+
+#if defined(PG_RENOISE)
+	pg_send_message_udp((char *)"", (char *)"/scene/1/launch", (char *)"udp_RN_send");
+#endif
+
+	// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
+	pg_initializeScenearioVariables();
+
+	// GUI DISPLAY & LOG FILE LOGGING
+	// GUI initialization
+	pg_displaySceneVariables();
+
+	// LOADS DIAPORAMA
+	pg_initDiaporamas();
+	pg_loadAllDiaporamas();
+	pg_ReadInitalClipFramesTextures();
+
+	// applies all callbacks
+	pg_initializationCallBacks();
+	pg_printOglError(467);
+
+	// camera frame capture initialization
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
+		pg_openCameraCaptureAndLoadFrame();
+	}
+
+	// video intialization: loads the movie of the intial configuration
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_movieCaptFreq]) {
+		if (playing_movieNo >= 0 && playing_movieNo < int(pg_VideoTracks[pg_ind_scenario].size())
+			&& playing_movieNo != pg_currentlyPlaying_movieNo) {
+			pg_movie_frame.setTo(Scalar(0, 0, 0));
+
+			pg_currentlyPlaying_movieNo = playing_movieNo;
+
+			// texture ID initialization (should not be inside a thread)
+			if (pg_movie_texture_texID == NULL_ID) {
+				glGenTextures(1, &pg_movie_texture_texID);
+			}
+
+			pg_is_movieLoading = true;
+			printf("Loading movie %s\n",
+					pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoFileName.c_str());
+			sprintf(pg_AuxString, "/movie_shortName %s", pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoShortName.c_str());
+			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+
+			pg_initVideoMoviePlayback(&pg_VideoTracks[pg_ind_scenario][pg_currentlyPlaying_movieNo].videoFileName);
+		}
+	}
+
+	// clip intialization for Left Clip
+	if (pg_playing_clipNoLeft >= 0 && pg_playing_clipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(0)) {
+		pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoLeft);
+		sprintf(pg_AuxString, "/clip_shortName_0 %03d", pg_playing_clipNoLeft);
+		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+	}
+	if (PG_NB_PARALLEL_CLIPS >= 2) {
+		if (pg_playing_secondClipNoLeft >= 0 && pg_playing_secondClipNoLeft < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoLeft != pg_all_clip_status[pg_enum_clipLeft].getCurrentlyPlaying_clipNo(1)) {
+			pg_all_clip_status[pg_enum_clipLeft].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoLeft);
+			sprintf(pg_AuxString, "/clip2_shortName_0 %03d", pg_playing_secondClipNoLeft);
+			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+	// clip intialization for Right Clip
+	if (pg_playing_clipNoRight >= 0 && pg_playing_clipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_clipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(0)) {
+		pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(0, pg_playing_clipNoRight);
+		sprintf(pg_AuxString, "/clip_shortName_1 %03d", pg_playing_clipNoRight);
+		pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+	}
+	if (PG_NB_PARALLEL_CLIPS >= 2) {
+		if (pg_playing_secondClipNoRight >= 0 && pg_playing_secondClipNoRight < pg_nbClips[pg_ind_scenario] && pg_playing_secondClipNoRight != pg_all_clip_status[pg_enum_clipRight].getCurrentlyPlaying_clipNo(1)) {
+			pg_all_clip_status[pg_enum_clipRight].setCurrentlyPlaying_clipNo(1, pg_playing_secondClipNoRight);
+			sprintf(pg_AuxString, "/clip2_shortName_1 %03d", pg_playing_secondClipNoRight);
+			pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+
+	// connects PD to porphyrograph
+	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
+	pg_printOglError(37);
+
+	/////////////////////////////////////////////////////////////////////////
+	// USB INITIALIZATION
+	//pg_init_USB();
+	//pg_find_USB_pedals();
+
+	// main loop for event processing and display
+	glutMainLoop();
+
+	return 0;
+
+	// end of glut display library
+	///////////////////////////////////////////////
 }
+

@@ -33,16 +33,12 @@
 #include <stdint.h>
 #endif
 
-/********************** PLEASE SET THESE FIRST **********************************/
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /******************** PRO MK2 LABELS: ASSIGN AS PER YOUR API (request the pdf if you don't have one) *********************/
 // THE API Key is LSB First: so if it says 11223344 .. define it as ... 44,33,22,11
-
-//  #define SET_PORT_ASSIGNMENT_LABEL	    0
-//  #define SEND_DMX_PORT2					0
-//  #define RECEIVE_DMX_PORT2				0
-//  #define SEND_MIDI_PORT					0
-//  #define RECEIVE_MIDI_PORT				0
 
 #define SET_PORT_ASSIGNMENT_LABEL 209
 #define SEND_DMX_PORT2 150
@@ -79,31 +75,6 @@
 #define RX_BUFFER_SIZE 40960
 #define TX_BUFFER_SIZE 40960
 
-#pragma pack(1)
-typedef struct {
-    unsigned char FirmwareLSB;
-    unsigned char FirmwareMSB;
-    unsigned char BreakTime;
-    unsigned char MaBTime;
-    unsigned char RefreshRate;
-}DMXUSBPROParamsType;
-
-typedef struct {
-    unsigned char UserSizeLSB;
-    unsigned char UserSizeMSB;
-    unsigned char BreakTime;
-    unsigned char MaBTime;
-    unsigned char RefreshRate;
-}DMXUSBPROSetParamsType;
-#pragma pack()
-
-struct ReceivedDmxCosStruct
-{
-    unsigned char start_changed_byte_number;
-    unsigned char changed_byte_array[5];
-    unsigned char changed_byte_data[40];
-};
-
 #define MAX_PROS 20
 #define SEND_NOW 0
 #define TRUE 1
@@ -111,15 +82,63 @@ struct ReceivedDmxCosStruct
 #define HEAD 0
 #define IO_ERROR 9
 
+#define _loop_speed_factor 3.f
+
+// Create an unordered_map of three strings (that map to strings)
+// corresponds to all the parameters associated with DMX light channels
+// key constants are from enum pg_light_command_hashMap_IDs
+enum pg_light_command_hashMap_IDs {
+	pg_enum_light_dimmer = 0,
+	pg_enum_light_strobe,
+	pg_enum_light_zoom,
+	pg_enum_light_pan,
+	pg_enum_light_tilt,
+	pg_enum_light_hue,
+	pg_enum_light_red,
+	pg_enum_light_green,
+	pg_enum_light_blue,
+	pg_enum_light_grey,
+	pg_enum_light_palette_color,
+	pg_enum_nb_light_params,
+};
+
 ////////////////////////////////
 // LIGHTS
-// lights presets
-extern int pg_nb_light_groups[PG_MAX_SCENARIOS];
-// interface current light group
-extern int pg_interface_light_group;
-
 enum { pg_enum_rgb_red = 0, pg_enum_rgb_green, pg_enum_rgb_blue, pg_enum_rgb };
-void pg_light_channel_string_to_channel_no(string a_light_channel_string, int* light_channel, int* light_channel_fine, int nb_channels);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// USB/DMX MANAGEMENT STRUCT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#pragma pack(1)
+typedef struct {
+	unsigned char FirmwareLSB;
+	unsigned char FirmwareMSB;
+	unsigned char BreakTime;
+	unsigned char MaBTime;
+	unsigned char RefreshRate;
+}DMXUSBPROParamsType;
+
+typedef struct {
+	unsigned char UserSizeLSB;
+	unsigned char UserSizeMSB;
+	unsigned char BreakTime;
+	unsigned char MaBTime;
+	unsigned char RefreshRate;
+}DMXUSBPROSetParamsType;
+#pragma pack()
+
+struct ReceivedDmxCosStruct
+{
+	unsigned char start_changed_byte_number;
+	unsigned char changed_byte_array[5];
+	unsigned char changed_byte_data[40];
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// LIGHT MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class Light {
 public:
 	string light_name;
@@ -187,53 +206,13 @@ public:
 	}
 	Light(string a_light_name, int a_light_group, int an_index_in_group, int a_light_port, int a_light_address, int a_light_channels,
 		string a_light_red, string a_light_green, string a_light_blue, string a_light_grey, string a_light_dimmer, string a_light_strobe,
-		string a_light_zoom, string a_light_pan, string a_light_tilt, string a_light_hue) {
-		light_name = a_light_name;
-		light_group = a_light_group;
-		index_in_group = an_index_in_group;
-		light_port = a_light_port;
-		light_address = a_light_address;
-		light_channels = a_light_channels;
-		if (a_light_red == "" || a_light_green == "" || a_light_blue == "" || a_light_grey == "" || a_light_dimmer == ""
-			|| a_light_strobe == "" || a_light_zoom == "" || a_light_pan == "" || a_light_tilt == "" || a_light_hue == "") {
-			sprintf(pg_errorStr, "Error: incomplete light channels r g b g dimm strobe zoom pan tilt hue (%s) (%s) (%s) (%s) (%s) (%s) (%s) (%s) (%s) (%s)", a_light_red.c_str(), a_light_green.c_str(), a_light_blue.c_str(), a_light_grey.c_str(), a_light_dimmer.c_str(), a_light_strobe.c_str(), a_light_zoom.c_str(), a_light_pan.c_str(), a_light_tilt.c_str(), a_light_hue.c_str()); pg_ReportError(pg_errorStr); throw 336;
-		}
-		pg_light_channel_string_to_channel_no(a_light_red, &light_red, &light_red_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_green, &light_green, &light_green_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_blue, &light_blue, &light_blue_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_grey, &light_grey, &light_grey_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_dimmer, &light_dimmer, &light_dimmer_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_strobe, &light_strobe, &light_strobe_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_zoom, &light_zoom, &light_zoom_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_pan, &light_pan, &light_pan_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_tilt, &light_tilt, &light_tilt_fine, light_channels);
-		pg_light_channel_string_to_channel_no(a_light_hue, &light_hue, &light_hue_fine, light_channels);
-	}
+		string a_light_zoom, string a_light_pan, string a_light_tilt, string a_light_hue);
 };
-// Create an unordered_map of three strings (that map to strings)
-// corresponds to all the parameters associated with DMX light channels
-// key constants are from enum pg_light_command_hashMap_IDs
-enum pg_light_command_hashMap_IDs {	pg_enum_light_dimmer = 0,
-	pg_enum_light_strobe,
-	pg_enum_light_zoom,
-	pg_enum_light_pan,
-	pg_enum_light_tilt,
-	pg_enum_light_hue,
-	pg_enum_light_red,
-	pg_enum_light_green,
-	pg_enum_light_blue,
-	pg_enum_light_grey,
-	pg_enum_light_palette_color,
-	pg_enum_nb_light_params,
-};
-extern std::unordered_map<int, std::string> pg_light_param_hashMap;
-// same map but from strings to enum values
-extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
-// submap of the parameters which can be looped
-extern std::unordered_map<int, std::string> pg_light_loop_param_hashMap;
-// lights
-extern vector<Light> pg_Lights[PG_MAX_SCENARIOS];
-#define _loop_speed_factor 3.f
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// LIGHT GROUP MANAGEMENT CLASS
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
 class LightGroup {
 private:
 	int group_no;
@@ -360,52 +339,9 @@ public:
 	bool get_group_hasBeatCommand(void) {
 		return group_hasBeatCommand;
 	}
-	void update_beatCommand(void) {
-		for (const auto& myPair : pg_light_param_hashMap) {
-			int light_param = myPair.first;
-			string light_param_string = myPair.second;
-			if (group_beatOnOff[light_param]) {
-				group_val_master[light_param] = 1.f - group_val_master[light_param];
-				changed_since_last_DMX_update = true;
-			}
-			if (group_beatRandom[light_param]) {
-				group_val[light_param] = rand_0_1;
-				changed_since_last_DMX_update = true;
-				sprintf(pg_AuxString, "/light/%d/%s %.4f", group_no + 1, light_param_string.c_str(), group_val[light_param]); pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-			}
-		}
-	}
-	void set_group_loop(int light_param, bool onOff, int curve_typ, int par_alt, float l_min, float l_max, double l_speed) {
-		group_loop[light_param].is_looped = onOff;
-		group_loop[light_param].curve_type = curve_typ;
-		group_loop[light_param].parallel_vs_alternate = par_alt;
-		group_loop[light_param].loop_min = l_min;
-		group_loop[light_param].loop_max = l_max;
-		group_loop[light_param].loop_speed = l_speed / _loop_speed_factor;
-		//printf("group loop light param %d looped %d curve %d // %d min/max/speed %.2f %.2f %.2f\n",
-		//	light_param,
-		//	group_loop[light_param].is_looped,
-		//	group_loop[light_param].curve_type,
-		//	group_loop[light_param].parallel_vs_alternate,
-		//	group_loop[light_param].loop_min,
-		//	group_loop[light_param].loop_max,
-		//	group_loop[light_param].loop_speed);
-	}
-	float get_group_val(int light_param, int ind_light_in_group) {
-		float group_value = group_val[light_param];
-		if (group_loop[light_param].is_looped == true && group_onOff[light_param] == true && group_loop[light_param].parallel_vs_alternate == 0
-			&& ind_light_in_group % 2 == 1) {
-			group_value = 1.f - group_value;
-		}
-		if (group_val_pulse[light_param] != 0.f) {
-			float val = group_value * (1.f + pulse_average * group_val_pulse[light_param]) * group_val_master[light_param];
-			sprintf(pg_AuxString, "/light/%d/%s %.4f", group_no + 1, pg_light_param_hashMap[light_param].c_str(), val); pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-			return val;
-		}
-		else {
-			return group_value * group_val_master[light_param];
-		}
-	}
+	void update_beatCommand(void);
+	void set_group_loop(int light_param, bool onOff, int curve_typ, int par_alt, float l_min, float l_max, double l_speed);
+	float get_group_val(int light_param, int ind_light_in_group);
 	bool get_group_onOff(int light_param) {
 		return group_onOff[light_param];
 	}
@@ -442,47 +378,7 @@ public:
 		return group_loop[light_param].loop_speed * _loop_speed_factor;
 	}
 	// loop values updating (ignoring value messages from animation in Python)
-	void update_group_loop(void) {
-		for (const auto& myPair : pg_light_param_hashMap) {
-			int light_param = myPair.first;
-			string light_param_string = myPair.second;
-			if (group_loop[light_param].is_looped == true && group_onOff[light_param] == true) {
-				//printf("update loop param %d curve_type %d min %.2f max %.2f speed %.2f\n", light_param, group_loop[light_param].curve_type, group_loop[light_param].loop_min, group_loop[light_param].loop_max, group_loop[light_param].loop_speed);
-				// sin curve
-				if (group_loop[light_param].curve_type == 0) {
-					double phase = 0.f;
-					double absc = pg_CurrentClockTime * group_loop[light_param].loop_speed * 2 * M_PI + phase;
-					group_val[light_param] = group_loop[light_param].loop_min
-						+ float(sin(absc) * 0.5 + 0.5) * (group_loop[light_param].loop_max - group_loop[light_param].loop_min);
-					changed_since_last_DMX_update = true;
-					//printf("sin curve %.5f\n", group_val[light_param]);
-				}
-				// sawtooth curve
-				else if (group_loop[light_param].curve_type == 1) {
-					double absc = pg_CurrentClockTime * group_loop[light_param].loop_speed;
-					if (group_loop[light_param].parallel_vs_alternate == 1) {
-						group_val[light_param] = group_loop[light_param].loop_min
-							+ float(absc - floor(absc)) * (group_loop[light_param].loop_max - group_loop[light_param].loop_min);
-					}
-					else {
-						group_val[light_param] = group_loop[light_param].loop_min
-							+ float(1. - (absc - floor(absc))) * (group_loop[light_param].loop_max - group_loop[light_param].loop_min);
-					}
-					changed_since_last_DMX_update = true;
-					//printf("sawtooth curve %.5f\n", group_val[light_param]);
-				}
-				// on/off stepwise curve
-				else if (group_loop[light_param].curve_type == 2) {
-					double phase = 0.f;
-					double absc = pg_CurrentClockTime * group_loop[light_param].loop_speed * 2 * M_PI + phase;
-					group_val[light_param] = (sin(absc) > 0 ? group_loop[light_param].loop_max : group_loop[light_param].loop_min);
-					changed_since_last_DMX_update = true;
-					//printf("stepwise curve %.5f\n", group_val[light_param]);
-				}
-				sprintf(pg_AuxString, "/light/%d/%s %.4f", group_no + 1, light_param_string.c_str(), group_val[light_param]); pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-			}
-		}
-	}
+	void update_group_loop(void);
 	bool get_changed_since_last_DMX_update(void) {
 		return changed_since_last_DMX_update;
 	}
@@ -499,41 +395,24 @@ public:
 	~LightGroup() {
 	}
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// lights presets
+extern int pg_nb_light_groups[PG_MAX_SCENARIOS];
 extern vector<LightGroup> pg_light_groups[PG_MAX_SCENARIOS];
-// Create an unordered_map of three strings (that map to strings)
-extern std::unordered_map<std::string, int> pg_inverse_light_param_hashMap;
-extern std::unordered_map<int, std::string> pg_light_param_hashMap;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-int FTDI_SendData(int label, unsigned char* data, unsigned int length);
-int FTDI_ReceiveData(int label, unsigned char* data, unsigned int expected_length);
-uint16_t FTDI_OpenDevice(int device_num);
-int FTDI_ListDevices(void);
-void FTDI_ClosePort();
-void FTDI_PurgeBuffer();
 void pg_DMX_light_initialization(void);
-void pg_init_promk2();
-bool pg_oneLightGroup_Changed(void);
-void pg_Reset_LightGroup_Changed(void);
-void pg_Reset_allLightGroups_Changed(void);
-bool pg_oneLightGroup_Loops(void);
-bool pg_oneLightGroup_Loops(void);
-void pg_light_automation_update(void);
-void pg_store_one_DMXvalue(unsigned char* myDmx, int DMX_light_address, int channel_no, int fine_channel_no, float value);
-void pg_StoreDMXValues_AllLightGroups(void);
-void pg_SendDMX(void);
-void pg_SendDMXZeros(void);
-void pg_StoreDMX(int light_rank, float dimmer_value, float strobe_value, float zoom_value, float pan_value, float tilt_value, float hue_value, float red_value, float green_value, float blue_value, float grey_value);
-void pg_StoreDMX(int channel, float channel_value, int light_port, bool has_fine_channel);
-void pg_lightGUI_values_and_pulse_update(int light_param, int interface_light_group, string light_param_string);
-void pg_lightGUI_loop_update(int light_param, string light_param_string);
-void pg_lightGUI_all_values_and_pulse_update(void);
-void pg_lightGUI_all_loop_update(void);
-void pg_lightGUI_initialization(void);
+void pg_lightUpdate(void);
 void pg_osc_light_command(string address_string, float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments);
-void pg_light_channel_string_to_channel_no(string a_light_channel_string, int* light_channel, int* light_channel_fine, int nb_channels);
 void pg_UpdateLightGroups_from_LightVars(void);
+void pg_parseScenario_Lights(std::ifstream& scenarioFin, int indScenario);
+void pg_lightGUI_initialization(void);
 
 #endif

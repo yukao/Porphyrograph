@@ -24,21 +24,20 @@
 #ifndef PG_FLASH_H
 #define PG_FLASH_H
 
-extern int pg_flashTrkCA_freq_saved[PG_NB_TRACKS];
-extern int pg_flashTrkPart_freq_saved[PG_NB_TRACKS];
-extern int pg_flashTrkBG_freq_saved[PG_NB_TRACKS];
 
-// +++++++++++++++++++++ BEAT SYNCHRONIZED RECORD/REPLAY +++++++++++++++++++++
-extern bool pg_synchr_start_recording_path[PG_NB_PATHS + 1];
-extern int pg_synchr_start_path_replay_trackNo[PG_NB_PATHS + 1];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // ++++++++++++++++++++++ FLASHES +++++++++++++++++++++++++
 // flash: Trk->CA  
 extern float pg_flashTrkCA_weights[PG_NB_TRACKS];
 extern int pg_flashTrkCA_weights_duration[PG_NB_TRACKS];
+extern int pg_flashTrkCA_freq_saved[PG_NB_TRACKS];
 // flash: Trk->Part
 extern float pg_flashTrkPart_weights[PG_NB_TRACKS];
 extern int pg_flashTrkPart_weights_duration[PG_NB_TRACKS];
+extern int pg_flashTrkPart_freq_saved[PG_NB_TRACKS];
 // flash: CA->BG
 extern float pg_flashCABG_weight;
 extern int pg_flashCABG_weight_duration;
@@ -60,20 +59,34 @@ extern float pg_flashTrkBG_weights[PG_NB_TRACKS];
 extern int pg_flashTrkBG_weights_duration[PG_NB_TRACKS];
 
 // +++++++++++++++++++++ VIDEO FLASH +++++++++++++++++++++
-extern bool pg_is_flashCameraTrk;
-extern float pg_flashCameraTrk_weight;
 extern float pg_flashCameraTrk_decay;
+extern float pg_flashCameraTrk_weight;
 extern float pg_flashCameraTrk_threshold;
+extern bool pg_is_flashCameraTrk;
 
 // +++++++++++++++++++++ PHOTO FLASH +++++++++++++++++++++
 extern bool pg_is_flashPhotoTrk;
 extern float pg_flashPhotoTrk_weight;
 extern float pg_flashPhotoTrk_decay;
-extern float pg_flashPhotoTrk_threshold;
 extern int pg_flashPhotoTrk_nbFrames;
+extern float pg_flashPhotoTrk_threshold;
+
+// +++++++++++++++++++++ BEAT SYNCHRONIZED RECORD/REPLAY +++++++++++++++++++++
+extern bool pg_synchr_start_recording_path[PG_NB_PATHS + 1];
+extern int pg_synchr_start_path_replay_trackNo[PG_NB_PATHS + 1];
 
 
-void pg_Make_flashCamera(void);
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// flashes on photo or camera frame
 void pg_receiveBeat(void);
+void pg_Make_flashCamera(void);
+void pg_Make_flashPhoto(void);
+
+// flash control
+bool pg_flash_continuous_generation(int flash_frequency);
+void pg_flash_control(bool (*control_function)(int));
 
 #endif

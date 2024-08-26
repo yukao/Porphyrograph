@@ -75,8 +75,8 @@ ShaderBodyDecl = None
 ShaderBodyBind_name = ""
 ShaderBodyBind = None
 
-UpdateBody_name = ""
-UpdateBody = None
+RenderBody_name = ""
+RenderBody = None
 
 TouchOSCScene_name = "..\\LYM-sources\\TouchOSC\\scenes.tosc"
 TouchOSCScene = None
@@ -1158,8 +1158,8 @@ def write_binding_vars_header_and_body(indScenario) :
 	global ShaderBodyBind_name
 	global ShaderBodyBind
 
-	global UpdateBody_name
-	global UpdateBody
+	global RenderBody_name
+	global RenderBody
 
 	global scenario_var_target_shaders
 
@@ -1730,29 +1730,29 @@ def write_binding_vars_header_and_body(indScenario) :
 
 	# draws the bindings grouped by shader in the draw.cpp file
 
-	UpdateBody.write("\nif(pg_ind_scenario == "+str(indScenario)+") {\n")
+	RenderBody.write("\nif(pg_ind_scenario == "+str(indScenario)+") {\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
-	UpdateBody.write("    }\n")
+	RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]) {\n")
+	RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleAnimation]);\n" + ParticleAnimation_bindingString_cpp)
+	RenderBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]) {\n" )
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]);\n" + Update_bindingString_cpp)
-	UpdateBody.write("    }\n")
+	RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]) {\n" )
+	RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Update]);\n" + Update_bindingString_cpp)
+	RenderBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]);\n" + Mixing_bindingString_cpp)
-	UpdateBody.write("    }\n")
+	RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]) {\n")
+	RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Mixing]);\n" + Mixing_bindingString_cpp)
+	RenderBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
-	UpdateBody.write("    }\n")
+	RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]) {\n")
+	RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_ParticleRender]);\n" + ParticleRender_bindingString_cpp)
+	RenderBody.write("    }\n")
 
-	UpdateBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]) {\n")
-	UpdateBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]);\n" + Master_bindingString_cpp)
-	UpdateBody.write("    }\n")
+	RenderBody.write("\n    if (pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]) {\n")
+	RenderBody.write("      glUseProgram(pg_shader_programme["+str(indScenario)+"][pg_enum_shader_Master]);\n" + Master_bindingString_cpp)
+	RenderBody.write("    }\n")
 
-	UpdateBody.write("}\n")
+	RenderBody.write("}\n")
 
 	# manages the inclusions inside the shader files to generate the linearized shader files
 	for line in ParticleAnimation_InputShader.readlines() :
@@ -1835,8 +1835,8 @@ def main(main_args) :
 	global ShaderBodyBind_name
 	global ShaderBodyBind
 
-	global UpdateBody_name
-	global UpdateBody
+	global RenderBody_name
+	global RenderBody
 
 	global TouchOSCScene_name
 	global TouchOSCScene
@@ -1850,7 +1850,7 @@ def main(main_args) :
 	# ARGUMENTS
 	##################################################################
 	try:
-		opts, args = getopt.getopt(main_args,"n:c:f:o:s:",["nb_scenarios=","header=", "full_scenario=", "output_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "update_body_out="])
+		opts, args = getopt.getopt(main_args,"n:c:f:o:s:",["nb_scenarios=","header=", "full_scenario=", "output_scenario=", "scenario=", "particleAnimation_in=", "particleAnimation_out=", "Update_in=", "Update_out=", "Mixing_in=", "Mixing_out=", "ParticleSplat_in=", "ParticleSplat_out=", "Master_in=", "Master_out=", "script_header_out=", "script_body_out=", "shader_header_out=", "shader_body_decl_out=", "shader_body_bind_out=", "render_body_out="])
 	except getopt.GetoptError:
 		print(USAGE)
 		print("Configuration generator: End of configuration generation\n\n")
@@ -1879,8 +1879,8 @@ def main(main_args) :
 			ShaderBodyDecl_name = arg
 		elif opt in ("--shader_body_bind_out"):
 			ShaderBodyBind_name = arg
-		elif opt in ("--update_body_out"):
-			UpdateBody_name = arg
+		elif opt in ("--render_body_out"):
+			RenderBody_name = arg
 		else:
 			print("Configuration generator: option (", opt, ")")
 			assert False, "unhandled option"
@@ -1931,9 +1931,9 @@ def main(main_args) :
 	except IOError:
 		print("Configuration generator: File not found:", ShaderBodyBind_name, " or path is incorrect")
 	try:
-		UpdateBody = open(UpdateBody_name, "wt")
+		RenderBody = open(RenderBody_name, "wt")
 	except IOError:
-		print("Configuration generator: File not found:", UpdateBody_name, " or path is incorrect")
+		print("Configuration generator: File not found:", RenderBody_name, " or path is incorrect")
 	try:
 		TouchOSCScene = open(TouchOSCScene_name, "wt")
 	except IOError:
@@ -2006,7 +2006,7 @@ def main(main_args) :
 	for indScenario in range(Nb_Scenarios) :
 	 	write_binding_vars_header_and_body(indScenario)
 
-	UpdateBody.close()
+	RenderBody.close()
 
 	###############################################################################
 	# END OF CONFIGURATION GENERATOR

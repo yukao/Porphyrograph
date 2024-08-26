@@ -23,14 +23,9 @@
 
 #include "pg-all_include.h"
 
-/////////////////////////////////////////////////////////////////
-// Projection and view matrices for the shaders
-//////////////////////////////////////////////////////////////////////
-GLfloat pg_orthoWindowProjMatrix[16];
-GLfloat pg_doubleProjMatrix[16];
-GLfloat pg_identityViewMatrix[16];
-GLfloat pg_identityModelMatrix[16];
-GLfloat pg_homographyForTexture[9];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // resend all values (fx after interface crash)
 bool pg_resend_all_variables = true;
@@ -104,16 +99,10 @@ GLfloat *pg_Particle_colors;
 GLfloat *pg_Particle_vertices;
 unsigned int *pg_Particle_indices;
 
-//////////////////////////////////////////////////////////////////////
-// TEXTURES
-//////////////////////////////////////////////////////////////////////
-//GLuint pg_Particle_Pos_Texture_texID = 0;
-//GLfloat *pg_Particle_Pos_Texture = NULL;
+// IDENTITY MATRIX
+GLfloat pg_identityViewMatrix[16];
+GLfloat pg_identityModelMatrix[16];
 
-// CURVE PARTICLES TEXTIRE
-GLuint pg_curve_particle_2D_texID[PG_MAX_SCENARIOS] = { NULL_ID };
-// blurred disk texture
-std::vector<GLuint>  pg_blurredDisk_texture_2D_texID[PG_MAX_SCENARIOS];
 
 /////////////////////////////////////////////////////////////////
 // FBO INITIALIZATION
@@ -152,9 +141,9 @@ GLuint pg_FBO_Mixing_capturedFB_prec_texID[2] = { 0 }; // drawing memory on odd 
 GLuint pg_FBO_Master_capturedFB_prec_texID = 0; // master output memory for mapping on mesh  
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // INTERFACE INITIALIZATION
-//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_InterfaceInitializations(void) {
 	// PEN COLOR PRESET INTERFACE VARIABLE INITIALIZATION
@@ -192,7 +181,7 @@ void pg_InterfaceInitializations(void) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// PERLIN NOISE
+// UTILS: PERLIN NOISE
 //////////////////////////////////////////////////////////////////////////////////////////////
 // https://rosettacode.org/wiki/Perlin_noise
 double pg_fade(double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
@@ -246,13 +235,10 @@ double pg_PerlinNoise(double x, double y, double z) {
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-// GEOMETRY INITIALIZATION
-//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// OPENGL ERROR FEEDBACK
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////
-// ERRORS
-/////////////////////////////////////////////////////////////////
 int pg_printOglError(int no) {
 
 	int    retCode = 0;
@@ -274,21 +260,11 @@ void pg_ReportError(char *errorString) {
 	fprintf(stderr, "%s\n", errorString);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-// FUNCTION FOR TESTING THE CURRENT WORKING DIRECTORY
-std::string pg_GetCurrentWorkingDir(void) {
-	char buff[FILENAME_MAX];
-	GetCurrentDir(buff, FILENAME_MAX);
-	std::string current_working_dir(buff);
-	std::replace(current_working_dir.begin(), current_working_dir.end(), '\\', '/'); // replace all 'x' to 'y'
-	return current_working_dir;
-}
 
 
-
-/////////////////////////////////////////////////////////////////
-// TIME
-/////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTILS: TIME
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
 static const double epoch = 116444736000000000.;
@@ -324,6 +300,10 @@ double pg_RealTime(void) {
 	return ((realtime - pg_TimeAtApplicationLaunch) - pg_InitialRealTime) * time_scale;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTILS: MEMORY USE MONITORING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void pg_MemoryUsage(void) {
 #ifndef _WIN32
 	// struct rusage {
@@ -353,9 +333,9 @@ void pg_MemoryUsage(void) {
 #endif
 }
 
-/////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // GEOMETRY INITIALIZATION
-/////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////
 // INTIALIZATION OF THE TWO QUADS USED FOR DISPLAY: DRAWING AND COMPOSITION QUADS
@@ -773,12 +753,10 @@ void pg_initGeometry_quads(void) {
 		PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 }
 
-
-
-
-/////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // FBO TEXTURES INITIALIZATION
-/////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool pg_initFBOTextures(GLuint *textureID, int nb_attachments, bool with_stencil_andOr_depth, GLuint *depthAndStencilBuffer) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -820,125 +798,11 @@ bool pg_bindFBOTextures(GLuint currentFBO, GLuint *currentTexutreID, int nb_atta
 	return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// FBO INITIALIZATION
-/////////////////////////////////////////////////////////////////
-bool pg_initFBOTextureImagesAndRendering(void) {
-	int maxbuffers;
-	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxbuffers);
-	int maxDrawBuf;
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
 
-	if (maxbuffers < pg_enum_FBO_Update_nbAttachts) {
-		sprintf(pg_errorStr, "Error: Maximal attachment (%d) -> %d required!", maxbuffers, pg_enum_FBO_Update_nbAttachts); pg_ReportError(pg_errorStr); // throw 336;
-	}
-	if (maxDrawBuf < pg_enum_FBO_Update_nbAttachts) {
-		sprintf(pg_errorStr, "Error: Maximal draw buffers (%d) -> %d required!", maxbuffers, pg_enum_FBO_Update_nbAttachts); pg_ReportError(pg_errorStr); // throw 336;
-	}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// RENDERING MATRICES INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/*
-	// FBO: camera frame after initial processing
-	glGenFramebuffers(1, &FBO_CameraFrame);  // drawing memory on odd and even frames for echo
-	if (!FBO_CameraFrame_texID) {
-		glGenTextures(1, &FBO_CameraFrame_texID);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO_CameraFrame);
-	pg_initFBOTextures(&FBO_CameraFrame_texID, 1, false);
-	glDrawBuffers(1, enumDrawBuffersEntries);
-	pg_printOglError(343);
-	*/
-
-	// FBO: multi-attachment for update 
-	// initializations to NULL
-		// 2 = FBO ping-pong size for Update shader FBOs
-	for (int indAttachedFB = 0; indAttachedFB < 2 * pg_enum_FBO_Update_nbAttachts; indAttachedFB++) {
-		pg_FBO_Update_texID[indAttachedFB] = 0;
-	}
-	glGenTextures(2 * pg_enum_FBO_Update_nbAttachts, pg_FBO_Update_texID);
-	printf("FBO Update size %d %d attachments %d (configs %d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_Update_nbAttachts, pg_NbConfigurations);
-	pg_initFBOTextures(pg_FBO_Update_texID, 2 * pg_enum_FBO_Update_nbAttachts, false, NULL);
-
-	glGenFramebuffers(1, &pg_FBO_Update);
-	// ping-pong FBO texture binding, changes each frame
-
-	pg_printOglError(341);
-
-	// FBO: multi-attachment for particle animation 
-	// 2 = FBO ping-pong size for ParticleAnimation shader FBOs
-	// initializations to NULL
-	for (int indAttachedFB = 0; indAttachedFB < 2 * pg_enum_FBO_ParticleAnimation_nbAttachts; indAttachedFB++) {
-		pg_FBO_ParticleAnimation_texID[indAttachedFB] = 0;
-	}
-	glGenTextures(2 * pg_enum_FBO_ParticleAnimation_nbAttachts, pg_FBO_ParticleAnimation_texID);
-	printf("FBO Particle animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_ParticleAnimation_nbAttachts);
-	pg_initFBOTextures(pg_FBO_ParticleAnimation_texID, 2 * pg_enum_FBO_ParticleAnimation_nbAttachts, false, NULL);
-
-	glGenFramebuffers(1, &pg_FBO_ParticleAnimation);
-	// ping-pong FBO texture binding, changes each frame
-
-	pg_printOglError(341);
-
-	// FBO: ClipArt GPU drawing output 
-	glGenTextures(1, &pg_FBO_ClipArt_render_texID);
-	glGenRenderbuffers(1, &FBO_ClipArt_depthAndStencilBuffer);
-	printf("FBO ClipArt GPU rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
-	pg_initFBOTextures(&pg_FBO_ClipArt_render_texID, 1, true, &FBO_ClipArt_depthAndStencilBuffer);
-
-	glGenFramebuffers(1, &pg_FBO_ClipArtRendering);  // drawing memory on odd and even frames for echo 
-	// texture binding is constant and made once for all
-	pg_bindFBOTextures(pg_FBO_ClipArtRendering, &pg_FBO_ClipArt_render_texID, 1, true, FBO_ClipArt_depthAndStencilBuffer);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	pg_printOglError(344);
-
-
-	// FBO: particle drawing output 
-	glGenTextures(1, &pg_FBO_Particle_render_texID);
-	glGenRenderbuffers(1, &pg_FBO_ParticleRendering_depthAndStencilBuffer);
-	printf("FBO Particle rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
-	pg_initFBOTextures(&pg_FBO_Particle_render_texID, 1, true, &pg_FBO_ParticleRendering_depthAndStencilBuffer);
-
-	glGenFramebuffers(1, &pg_FBO_ParticleRendering);  // drawing memory on odd and even frames for echo 
-	// texture binding is constant and made once for all
-	pg_bindFBOTextures(pg_FBO_ParticleRendering, &pg_FBO_Particle_render_texID, 1, true, pg_FBO_ParticleRendering_depthAndStencilBuffer);
-
-	pg_printOglError(344);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// FBO: composition output for echo
-	// 2 = FBO ping-pong size for echo FBOs
-	// initializations to NULL
-	for (int indFB = 0; indFB < 2; indFB++) {
-		pg_FBO_Mixing_capturedFB_prec_texID[indFB] = 0;
-	}
-	glGenTextures(2, pg_FBO_Mixing_capturedFB_prec_texID);
-	printf("FBO Mixing animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 2);
-	pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID, 2, false, 0);
-
-	glGenFramebuffers(1, &pg_FBO_Mixing_capturedFB_prec);  // drawing memory on odd and even frames for echo 
-	// ping-pong FBO texture binding, changes each frame
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// Augmented Reality or bypassing mesh rendering: FBO capture of Master to be displayed on a mesh
-	pg_FBO_Master_capturedFB_prec_texID = 0;
-	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
-	printf("FBO Master size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 1);
-	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
-
-	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh of bypassing mesh rendering
-	// texture binding is constant and made once for all
-	pg_bindFBOTextures(pg_FBO_Master_capturedFB_prec, &pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	pg_printOglError(342);
-	return true;
-}
-
-/////////////////////////////////////////////////////////////////
-// MATRIX INITIALIZATION
-/////////////////////////////////////////////////////////////////
 void pg_initRenderingMatrices(void) {
 	memset((char *)pg_identityViewMatrix, 0, 16 * sizeof(float));
 	memset((char *)pg_identityModelMatrix, 0, 16 * sizeof(float));
@@ -982,8 +846,9 @@ void pg_initRenderingMatrices(void) {
 	// printf("Double width orthographic projection l %.2f r %.2f b %.2f t %.2f n %.2f f %.2f\n" , l,r,b,t,n,f);
 }
 
-/////////////////////////////////////////////////
-// PARTICLES INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// IMAGE-BASED PARTICLE TEXUTRES INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_initParticlePosition_Texture( void ) {
 	if (particle_geometry == 2) {

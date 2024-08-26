@@ -24,64 +24,72 @@
 #ifndef PG_SCENARIO_DYN_H
 #define PG_SCENARIO_DYN_H
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
 extern double                   pg_current_scene_percent;
 extern bool					    pg_last_scene_update;
 
 class Scene;
+// interpolation scene between two discontinuous scenes so that there is no visual gap inbetween
+extern Scene pg_InterpolationScene;
+extern int pg_SceneIndexAfterInterpolation;
+extern int pg_SceneIndexBeforeInterpolation;
+extern float pg_SceneInterpolationDuration;
 
-// stepwise interpolation made only once
-extern bool pg_StepwiseInterpolationEffective[_MaxInterpVarIDs];
-
-extern double pg_LastSetupChangeClockTime;
-
-// +++++++++++++++++++++++ Buttons and labels for ATELIERSENFANTS interface +++++
+// Buttons and labels for ATELIERSENFANTS interface
 extern vector<string> pg_FondButtonsPaths;
 extern vector<string> pg_FondButtonLabelsPaths;
 extern vector<int> pg_FondButtonValues;
-
-extern vector<string> pg_DessinButtonsPaths;
-extern vector<string> pg_DessinButtonLabelsPaths;
-extern vector<float> pg_DessinButtonValues;
-
+// exclusive labels on/off
 extern vector<string> pg_StylusvsRubberButtonsPaths;
 extern vector<string> pg_StylusvsRubberButtonLabelsPaths;
 extern vector<int> pg_StylusvsRubberButtonValues;
 
 // scene management
-extern bool pg_FirstFrameInScene;
 extern double pg_remainingTimeInScene;
 
-// interpolation scene between two discontinuous scenes so that there is no visual gap inbetween
-extern int pg_SceneIndexAfterInterpolation;
-extern int pg_SceneIndexBeforeInterpolation;
-extern float pg_SceneInterpolationDuration;
-class Scene;
-extern Scene pg_InterpolationScene;
+// type of variable, used for update
 extern pg_Parameter_Input_Type* pg_variable_param_input_type;
 
 // scenario launching time
 extern double pg_InitialScenarioTime;
 extern double pg_AbsoluteInitialScenarioTime;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// scenario variable type conversion
 bool double_to_bool(double param);
-bool pg_double_to_path(double param);
-int pg_double_to_sign(double param);
 
-void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
-	ScenarioValue scenario_or_gui_command_value, int array_index);
-void pg_restoreInitialTimesAndDurations(void);
+// before first scene
+void pg_launch_performance(int ind_scene);
+
+// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
+void pg_initializeScenearioVariables(void);
+
+// scene shift management
 void pg_scene(int scene_ind);
 void pg_scene_minus(int decay);
 void pg_scene_plus(int incay);
 void pg_StartNewConfiguration(int config_no);
 void pg_StartNewScene(int ind_scene, double delta_time);
-// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
-void pg_initializeScenearioVariables(void);
+
+// sends message to the interface for a correlation between the pen
+// on the graphic tablet and the xy pad
 void pg_updateXYKeystonePad(void);
-void pg_keep_value_copy(int indVar, ScenarioValue* parameter_value);
-void pg_update_scene_variables(Scene* cur_scene, float elapsed_time_from_start);
+
+// scenario based variable update
+void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
+	ScenarioValue scenario_or_gui_command_value, int array_index);
+
+// SCENARIO MAIN UPDATE: SELECTION OF THE CURRENT SCENE AND VARIABLE UPDATE
 void pg_update_scenario(void);
-void pg_launch_performance(int ind_scene);
+
+// when launching performance or starting a new scene restores initial data
+void pg_restoreInitialTimesAndDurations(void);
+
 
 #endif

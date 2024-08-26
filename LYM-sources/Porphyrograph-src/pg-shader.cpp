@@ -34,7 +34,9 @@
 #include "pg_shader_body_decl_araknit.cpp"
 #endif
 
-// #include "pg_scripts/pg_shader_body_decl.cpp"
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
 // SHADER PROGRAMMES
@@ -268,17 +270,19 @@ GLint uniform_Mesh_fs_4fv_color_palette[PG_MAX_SCENARIOS] = {-1};         // Mes
 GLint uniform_Mesh_texture_fs_BG[PG_MAX_SCENARIOS] = {-1};         // Mesh texture
 #endif
 
-//////////////////////////////////////////////////////////////
-// UTILITIES
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTILS: PRINTING AND LENGTH
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 unsigned long pg_getFileLength(ifstream& file) {
-    if(!file.good()) return 0;
-    
-    file.seekg(0,ios::end);
-    unsigned long len = (long)file.tellg();
-    file.seekg(ios::beg);
-    
-    return len;
+	if (!file.good()) return 0;
+
+	file.seekg(0, ios::end);
+	unsigned long len = (long)file.tellg();
+	file.seekg(ios::beg);
+
+	return len;
 }
 
 void pg_printShaderCompileLog(GLuint obj) {
@@ -292,7 +296,7 @@ void pg_printShaderCompileLog(GLuint obj) {
 		glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &maxLength);
 	}
 
-	char *infoLog = new char[maxLength];
+	char* infoLog = new char[maxLength];
 
 	if (glIsShader(obj)) {
 		glGetShaderInfoLog(obj, maxLength, &infologLength, infoLog);
@@ -335,10 +339,37 @@ void pg_printShaderLinkLog(GLuint obj) {
 	delete[] infoLog;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHADER UNIFORMS ALLOCATION AND BINDING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void pg_allocateBindAndCheckUniform(int configuration_rank, GLint uniformID[PG_MAX_SCENARIOS], string uniformString, ShaderFileTypes shaderType) {
+	if (configuration_rank < pg_NbScenarios) {
+		if (pg_shader_programme[configuration_rank][shaderType]) {
+			glUseProgram(pg_shader_programme[configuration_rank][shaderType]);
+			uniformID[configuration_rank] = glGetUniformLocation(pg_shader_programme[configuration_rank][shaderType], uniformString.c_str());
+		}
+		else {
+			sprintf(pg_errorStr, "Error: inactive shader [%s] configuration %d for binding %s file %s!",
+				pg_stringShaderTypes[shaderType].c_str(), configuration_rank, uniformString.c_str(),
+				pg_Shader_File_Names[configuration_rank][shaderType].c_str()); pg_ReportError(pg_errorStr); throw 430;
+		}
+	}
+	else {
+		sprintf(pg_errorStr, "Error: unknown shader type [%s]!", pg_stringShaderTypes[shaderType].c_str()); pg_ReportError(pg_errorStr); throw 430;
+	}
+	pg_printOglError(332);
+	if (uniformID[configuration_rank] == -1) {
+		std::cout << uniformString << " (" << pg_stringShaderTypes[shaderType] << ") ";
+		//sprintf(pg_errorStr, "Error: Could not bind uniform [%s] (ID: %d) in shader type %s configuration #%d shader name %s!", uniformString.c_str(), int(uniformID[configuration_rank]), pg_stringShaderTypes[shaderType].c_str(), configuration_rank, pg_Shader_File_Names[configuration_rank][shaderType].c_str()); pg_ReportError(pg_errorStr);
+	}
+}
 
-/////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 // SHADER LOADING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 int pg_loadshader(string filename, GLuint shader) {
 	GLchar* shaderSource;
 	unsigned long len;
@@ -381,33 +412,12 @@ int pg_loadshader(string filename, GLuint shader) {
 	return 0; // No Error
 }
 
-void pg_allocateBindAndCheckUniform(int configuration_rank, GLint uniformID[PG_MAX_SCENARIOS], string uniformString, ShaderFileTypes shaderType) {
-	if (configuration_rank < pg_NbConfigurations) {
-		if (pg_shader_programme[configuration_rank][shaderType]) {
-			glUseProgram(pg_shader_programme[configuration_rank][shaderType]);
-			uniformID[configuration_rank] = glGetUniformLocation(pg_shader_programme[configuration_rank][shaderType], uniformString.c_str());
-		}
-		else {
-			sprintf(pg_errorStr, "Error: inactive shader [%s] configuration %d for binding %s file %s!", 
-				pg_stringShaderTypes[shaderType].c_str(), configuration_rank, uniformString.c_str(), 
-				pg_Shader_File_Names[configuration_rank][shaderType].c_str()); pg_ReportError(pg_errorStr); throw 430;
-		}
-	}
-	else {
-		sprintf(pg_errorStr, "Error: unknown shader type [%s]!", pg_stringShaderTypes[shaderType].c_str()); pg_ReportError(pg_errorStr); throw 430;
-	}
-	pg_printOglError(332);
-	if (uniformID[configuration_rank] == -1) {
-		std::cout << uniformString << " (" << pg_stringShaderTypes[shaderType] << ") ";
-		//sprintf(pg_errorStr, "Error: Could not bind uniform [%s] (ID: %d) in shader type %s configuration #%d shader name %s!", uniformString.c_str(), int(uniformID[configuration_rank]), pg_stringShaderTypes[shaderType].c_str(), configuration_rank, pg_Shader_File_Names[configuration_rank][shaderType].c_str()); pg_ReportError(pg_errorStr);
-	}
-}
 
 void pg_loadAllShaders(void) {
 	std::cout << "\nLoading shaders: " << std::endl;
 	////////////////////////////////////////
 	// loading and compiling shaders
-	for (int indConfig = 0; indConfig < pg_NbConfigurations; indConfig++) {
+	for (int indConfig = 0; indConfig < pg_NbScenarios; indConfig++) {
 		std::cout << "   " << indConfig << ": ";
 		for (int shader_type = 0; shader_type < pg_enum_shader_TotalNbTypes; shader_type++) {
 			if (shader_type == pg_enum_shader_Sensor && pg_FullScenarioActiveVars[indConfig][_sensor_layout]
@@ -503,7 +513,7 @@ void pg_loadAllShaders(void) {
 	////////////////////////////////////////
 	// binding variables in shaders
 	std::cout << "Unbound uniforms: " << std::endl;
-	for (int indConfig = 0; indConfig < pg_NbConfigurations; indConfig++) {
+	for (int indConfig = 0; indConfig < pg_NbScenarios; indConfig++) {
 		std::cout << "   " << indConfig << ": ";
 		////////////////////////////////////////////////////////////////////////////////
 		// PARTICLE ANIMATION SHADER parameters bindings
@@ -792,3 +802,159 @@ void pg_loadAllShaders(void) {
 	}
 	std::cout << std::endl;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHADER PARSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_parseScenarioShaders(std::ifstream& scenarioFin, int indScenario) {
+	std::stringstream  sstream;
+	string line;
+	string ID;
+	string temp;
+
+	// shader file names
+	pg_Shader_File_Names[indScenario] = NULL;
+
+	// shader_files Number of files<
+	std::getline(scenarioFin, line);
+	pg_stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("shader_files") != 0) {
+		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"shader_files<\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+	}
+
+	// VERBATIM
+	std::getline(scenarioFin, line);
+	// TYPE
+	std::getline(scenarioFin, line);
+	// ID
+	std::getline(scenarioFin, line);
+
+	pg_Shader_File_Names[indScenario] = new string[pg_enum_shader_TotalNbTypes];
+	pg_Shader_nbStages[indScenario] = new int[pg_enum_shader_TotalNbTypes];
+	pg_Shader_Stages[indScenario] = new GLenum * [pg_enum_shader_TotalNbTypes];
+	for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
+		pg_Shader_File_Names[indScenario][ind_shader_type] = string("");
+		pg_Shader_nbStages[indScenario][ind_shader_type] = 0;
+	}
+	//std::unordered_map<int, std::string> pg_stringShaderTypes = {
+//	{ pg_enum_shader_ParticleAnimation, "ParticleAnimation" },
+//	{ pg_enum_shader_Update, "Update" },
+//	{ pg_enum_shader_ParticleRender, "ParticleRender" },
+//	{ pg_enum_shader_Mixing, "Mixing" },
+//	{ pg_enum_shader_Master, "Master" },
+//	{ pg_enum_shader_Sensor, "Sensor" },
+//	{ pg_enum_shader_ClipArt, "ClipArt" },
+//	{ pg_enum_shader_Mesh, "Mesh" },
+//	{ pg_enum_shader_TotalNbTypes, "TotalNbTypes" },
+//};
+	for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
+		std::getline(scenarioFin, line);
+		pg_stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // shader type
+		if (ID != pg_stringShaderTypes[ind_shader_type]) {
+			sprintf(pg_errorStr, "Error: incorrect shader type expected string \"%s\" not found! (instead \"%s\")", pg_stringShaderTypes[ind_shader_type].c_str(), ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+		}
+		sstream >> pg_Shader_File_Names[indScenario][ind_shader_type];
+		sstream >> pg_Shader_nbStages[indScenario][ind_shader_type];
+		if (pg_Shader_nbStages[indScenario][ind_shader_type] > 0 && pg_Shader_File_Names[indScenario][ind_shader_type] != "NULL") {
+			pg_Shader_Stages[indScenario][ind_shader_type] = new GLenum[pg_Shader_nbStages[indScenario][ind_shader_type]];
+			for (int ind_shader_stage = 0; ind_shader_stage < pg_Shader_nbStages[indScenario][ind_shader_type]; ind_shader_stage++) {
+				string shader_stage;
+				sstream >> shader_stage;
+				if (shader_stage.compare("GL_VERTEX_SHADER") == 0) {
+					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_VERTEX_SHADER;
+				}
+				else if (shader_stage.compare("GL_TESS_CONTROL_SHADER") == 0) {
+					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_TESS_CONTROL_SHADER;
+				}
+				else if (shader_stage.compare("GL_TESS_EVALUATION_SHADER") == 0) {
+					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_TESS_EVALUATION_SHADER;
+				}
+				else if (shader_stage.compare("GL_GEOMETRY_SHADER") == 0) {
+					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_GEOMETRY_SHADER;
+				}
+				else if (shader_stage.compare("GL_FRAGMENT_SHADER") == 0) {
+					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_FRAGMENT_SHADER;
+				}
+				else {
+					sprintf(pg_errorStr, "Error: unknown shader type [%s]!", shader_stage.c_str()); pg_ReportError(pg_errorStr); throw 430;
+				}
+			}
+		}
+		if (ind_shader_type == pg_enum_shader_ParticleAnimation
+			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+			sprintf(pg_errorStr, "Error: active shader file for Particle Animation is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+			printf("Particle aniation shader, ");
+		}
+		if (ind_shader_type == pg_enum_shader_ParticleRender
+			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+			sprintf(pg_errorStr, "Error: active shader file for Particle Rendering is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+			printf("Particle aniation shader, ");
+		}
+		if (pg_FullScenarioActiveVars[indScenario][_sensor_layout]) {
+			if (ind_shader_type == pg_enum_shader_Sensor
+				&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+					|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+				sprintf(pg_errorStr, "Error: active shader file for Sensors is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+					pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+					pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+				printf("Particle aniation shader, ");
+			}
+		}
+		if (pg_FullScenarioActiveVars[indScenario][_activeClipArts]) {
+			if (ind_shader_type == pg_enum_shader_ClipArt
+				&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+					|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+				sprintf(pg_errorStr, "Error: active shader file for Clip Arts is missing in header file (name %s, nb stages%d)", pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+				printf("Particle aniation shader, ");
+			}
+		}
+		if (pg_FullScenarioActiveVars[indScenario][_activeMeshes]) {
+			if (ind_shader_type == pg_enum_shader_Mesh
+				&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+					|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+				sprintf(pg_errorStr, "Error: active shader file for Meshes is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+					pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+					pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+				printf("Particle aniation shader, ");
+			}
+		}
+		if (ind_shader_type == pg_enum_shader_Update
+			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+			sprintf(pg_errorStr, "Error: active shader file for Update is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+			printf("Particle aniation shader, ");
+		}
+		if (ind_shader_type == pg_enum_shader_Mixing
+			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+			sprintf(pg_errorStr, "Error: active shader file for Mixing is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+			printf("Particle aniation shader, ");
+		}
+		if (ind_shader_type == pg_enum_shader_Master
+			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
+				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
+			sprintf(pg_errorStr, "Error: active shader file for Master is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
+				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
+				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
+			printf("Particle aniation shader, ");
+		}
+	}
+
+	// /shader_files
+	std::getline(scenarioFin, line);
+}
+
+

@@ -26,9 +26,31 @@
 
 #include "pg-all_include.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 typedef  char *     Pchar;
 std::array<char, PG_MAX_NETWROK_MESSAGE_LENGTH> pg_UDP_buffer;
+pg_UDP_Transprt* pg_newUDP_Transport()
+{
+	return new pg_UDP_Transprt;
+}
 std::unique_ptr<pg_UDP_Transprt> pg_udp_transport(pg_newUDP_Transport());
+const char* pg_UDPMessageFormatString[pg_enum_Empty_UDPMessageFormat + 1] = { "Plain" , "OSC" , "Empty_UDPMessageFormat" };
+
+// Input network message string
+char* pg_input_message_string = NULL;
+char* pg_input_message_local_command_string = NULL;
+char* pg_output_message_string = NULL;
+
+// UDP servers and clients
+vector<pg_IPServer>     pg_IP_Servers;
+vector<pg_IPClient>     pg_IP_Clients;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//  UTIL: STRING SPLITTING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // string splitting into string vector by single char
 vector<std::string> pg_split_string(string str, char token) {
@@ -49,8 +71,10 @@ vector<std::string> pg_split_string(string str, char token) {
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // UDP CLIENT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 pg_IPClient::pg_IPClient( void ) {
   id = "";
@@ -755,8 +779,9 @@ void pg_IPClient::storeIP_output_message(char* commandLine, char* pattern) {
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // UDP SERVER
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 pg_IPServer::pg_IPServer( void ) {
   // local server ID
@@ -899,11 +924,6 @@ void pg_IPServer::IP_InputStackInitialization(void) {
 	current_depth_input_stack = 0;
 }
 
-
-pg_UDP_Transprt* pg_newUDP_Transport()
-{
-	return new pg_UDP_Transprt;
-}
 
 int pg_UDP_Transprt::transport_recv(SOCKET serverSocket, void* buffer, size_t size_max) {
 	int n = recv(serverSocket, m_buffer, size_max, 0);
@@ -1211,5 +1231,229 @@ void pg_send_message_udp(char* pattern, char* message, pg_IPClient* targetHost) 
 		// printf("send_message_udp %s %s %d\n", message, pattern, targetHost);
 		targetHost->storeIP_output_message(message, pattern);
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UDP SCENARIO
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_parseScenario_UDP(std::ifstream& scenarioFin, int indScenario) {
+	std::stringstream  sstream;
+	string line;
+	string ID;
+	string temp;
+
+	if (indScenario == 0) {
+		pg_input_message_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
+		pg_input_message_local_command_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
+		pg_output_message_string = new char[PG_MAX_NETWROK_MESSAGE_LENGTH];
+
+		pg_IP_Servers.clear();
+
+		pg_IP_Clients.clear();
+	}
+
+	// udp_local_server Number of servers
+	std::getline(scenarioFin, line);
+	pg_stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("udp_local_server") != 0) {
+		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"udp_local_server\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+	}
+
+	// VERBATIM
+	std::getline(scenarioFin, line);
+	// TYPE
+	std::getline(scenarioFin, line);
+	// ID
+	std::getline(scenarioFin, line);
+
+	if (indScenario == 0) {
+		while (true) {
+			std::getline(scenarioFin, line);
+			pg_stringstreamStoreLine(&sstream, &line);
+			sstream >> ID; // string "server" or end with "/udp_local_server"
+			if (ID.compare("/udp_local_server") == 0) {
+				break;
+			}
+			else if (ID.compare("server") != 0) {
+				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"server\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+			pg_IPServer server;
+			sstream >> server.id;
+			sstream >> server.Local_server_port;
+			sstream >> ID;
+			server.receive_format = pg_enum_Empty_UDPMessageFormat;
+			for (int ind = 0; ind < pg_enum_Empty_UDPMessageFormat; ind++) {
+				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
+					server.receive_format = (pg_UDPMessageFormat)ind;
+					break;
+				}
+			}
+			if (server.receive_format == pg_enum_Empty_UDPMessageFormat) {
+				sprintf(pg_errorStr, "Error: unknown receive message format [%s]!", ID.c_str()); pg_ReportError(pg_errorStr); throw 249;
+			}
+			sstream >> server.IP_message_trace;
+			sstream >> server.depth_input_stack;
+			sstream >> server.OSC_duplicate_removal;
+			// printf("serveur %d duplicate removal %d\n", ind_IP_Server, pg_IP_Servers[ind_IP_Server]->OSC_duplicate_removal);
+			sstream >> server.OSC_endian_reversal;
+			pg_IP_Servers.push_back(server);
+		}
+	}
+	else {
+		while (true) {
+			std::getline(scenarioFin, line);
+			pg_stringstreamStoreLine(&sstream, &line);
+			sstream >> ID; // string "server" or end with "/udp_local_server"
+			if (ID.compare("/udp_local_server") == 0) {
+				break;
+			}
+			else if (ID.compare("server") != 0) {
+				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"server\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+		}
+	}
+
+	//// /udp_local_server
+	//std::getline(scenarioFin, line);
+
+	// udp_remote_client Number of clients
+	std::getline(scenarioFin, line);
+	pg_stringstreamStoreLine(&sstream, &line);
+	sstream >> ID;
+	if (ID.compare("udp_remote_client") != 0) {
+		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"udp_remote_client\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+	}
+
+	// VERBATIM
+	std::getline(scenarioFin, line);
+	// TYPE
+	std::getline(scenarioFin, line);
+	// ID
+	std::getline(scenarioFin, line);
+
+	if (indScenario == 0) {
+		while (true) {
+			std::getline(scenarioFin, line);
+			pg_stringstreamStoreLine(&sstream, &line);
+			sstream >> ID; // string "client" or end with "/udp_remote_client"
+			if (ID.compare("/udp_remote_client") == 0) {
+				break;
+			}
+			else if (ID.compare("client") != 0) {
+				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"client\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+			pg_IPClient client;
+			sstream >> client.id;
+			sstream >> client.Remote_server_IP;
+			sstream >> client.Remote_server_port;
+			sstream >> ID;
+			client.send_format = pg_enum_Empty_UDPMessageFormat;
+			for (int ind = 0; ind < pg_enum_Empty_UDPMessageFormat; ind++) {
+				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
+					client.send_format = (pg_UDPMessageFormat)ind;
+					break;
+				}
+			}
+			if (client.send_format == pg_enum_Empty_UDPMessageFormat) {
+				sprintf(pg_errorStr, "Error: unknown receive message format [%s]!", ID.c_str()); pg_ReportError(pg_errorStr); throw 249;
+			}
+			sstream >> client.IP_message_trace;
+			sstream >> client.max_depth_output_stack;
+			sstream >> client.OSC_endian_reversal;
+			// std::cout << "OSC_trace: " << client.IP_message_trace << "\n";
+			//std::cout << "client.id: " << client.id << "\n";
+			//std::cout << "client.Remote_server_IP: " << client.Remote_server_IP << "\n";
+			//std::cout << "client.Remote_server_port: " << client.Remote_server_port << "\n";
+			//std::cout << "client.Remote_server_port: " << client.Remote_server_port << "\n";
+			pg_IP_Clients.push_back(client);
+		}
+	}
+	else {
+		while (true) {
+			std::getline(scenarioFin, line);
+			pg_stringstreamStoreLine(&sstream, &line);
+			sstream >> ID; // string "client" or end with "/udp_remote_client"
+			if (ID.compare("/udp_remote_client") == 0) {
+				break;
+			}
+			else if (ID.compare("client") != 0) {
+				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"client\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+		}
+	}
+
+	//// /udp_remote_client
+	//std::getline(scenarioFin, line);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// UDP OSC COMMANDS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_aliasScript_UDP(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar) {
+	// special command not in the scenario file
+	switch (indVar) {
+	case _testUDP:
+		// from TouchOSC, Lola's sound program or Usine
+		pg_writeMessageOnScreen("*** OK ***");
+		sprintf(pg_AuxString, "/setup UDP_test_received"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		break;
+	case _return_message:
+		pg_writeMessageOnScreen(string_argument_0);
+		break;
+	case _QT_connected:
+		pg_writeMessageOnScreen("*** QT ***");
+		break;
+		// +++++++++++++++++ COMMUNICATION WITH EXTERNAL PURE DATA PROGRAM +++++++++++++++++++++++++++ 
+	case _PD_connected:
+		// from Yukao's PD
+		pg_send_message_udp((char*)"s", (char*)"/PD_connected 1", (char*)"udp_TouchOSC_send");
+		pg_writeMessageOnScreen("*** PD ***");
+		break;
+	case _connect_PD:
+		pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
+
+		break;
+		// +++++++++++++++++ COMMUNICATION WITH EXTERNAL PROCESSING PROGRAM +++++++++++++++++++++++++++ 
+	case _processing_video: {
+		int argt0 = int(round(float_arguments[0]));
+		sprintf(pg_AuxString, "/video %d", argt0); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_Processing_send");
+		printf("Processing message %s\n", pg_AuxString);
+	}
+						  break;
+	case _processing_image: {
+		int argt0 = int(round(float_arguments[0]));
+		sprintf(pg_AuxString, "/image %d", argt0); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_Processing_send");
+		printf("Processing message %s\n", pg_AuxString);
+	}
+						  break;
+	case _processing_master: {
+		float argt0 = float_arguments[0];
+		sprintf(pg_AuxString, "/master %.2f", argt0); pg_send_message_udp((char*)"f", (char*)pg_AuxString, (char*)"udp_Processing_send");
+		printf("Processing message %s\n", pg_AuxString);
+	}
+						   break;
+	default:
+		sprintf(pg_errorStr, "UDP command not found (%s)!", address_string.c_str()); pg_ReportError(pg_errorStr);
+		break;
+	}
+}
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+// +++++++++++++++++ UDP CALLBACKS ++++++++++++++++++++++++++++++++ 
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+void extern_movieNo_callBack(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+#if defined(var_Caverne_Mesh_Profusion)
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+		if (extern_movieNo != pg_current_extern_movieNo) {
+			pg_current_extern_movieNo = extern_movieNo;
+			sprintf(pg_AuxString, "/video %.0f", extern_movieNo);
+			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_Processing_send");
+		}
+	}
+#endif
 }
 

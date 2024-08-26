@@ -23,6 +23,10 @@
 
 #include "pg-all_include.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 double                   pg_current_scene_percent = 0.f;
 bool					 pg_last_scene_update = false;
 
@@ -59,6 +63,10 @@ pg_Parameter_Input_Type* pg_variable_param_input_type = NULL;
 double pg_InitialScenarioTime;
 double pg_AbsoluteInitialScenarioTime;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENE VARIABLES EMPTY VALUES INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////
 // INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE INITIAL VALUES LINE
 void pg_initializeScenearioVariables(void) {
@@ -70,7 +78,7 @@ void pg_initializeScenearioVariables(void) {
 
 	/////////////////////////////////////////////////////////////////////////
 	// VARIABLE INTITIALIZATION FOR EACH CONFIGURATION
-	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+	for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
 		/////////////////////////////////////////////////////////////////////////
 		// CONSTANT UNIFORM VARIABLES
 		// only assigned at initialization, does not change during the set
@@ -91,63 +99,13 @@ void pg_initializeScenearioVariables(void) {
 			(GLfloat)pg_workingWindow_width, (GLfloat)PG_WINDOW_HEIGHT);
 
 		/////////////////////////////////////////////////////////////////////////
-		// INItiAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
-		for (int indP = 0; indP < pg_ScenarioVarNb[indScenario]; indP++) {
-			int indVar = pg_ConfigScenarioVarRank[indScenario][indP];
-			if (pg_FullScenarioActiveVars[indScenario][indVar]) {
-				if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
-					if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
-						*((float*)pg_FullScenarioVarPointers[indVar]) = float(pg_InitialValuesInterpVar[indScenario][indVar].val_num);
-					}
-					else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
-						*((int*)pg_FullScenarioVarPointers[indVar]) = int(pg_InitialValuesInterpVar[indScenario][indVar].val_num);
-					}
-					else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
-						*((bool*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indScenario][indVar].val_num != 0);
-					}
-					else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
-						*((int*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indScenario][indVar].val_num > 0 ? 1 : (pg_InitialValuesInterpVar[indScenario][indVar].val_num < 0 ? -1 : 0));
-					}
-					else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
-						*((bool*)pg_FullScenarioVarPointers[indVar]) = (pg_InitialValuesInterpVar[indScenario][indVar].val_num > 0);
-					}
-					else if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
-						*((string*)pg_FullScenarioVarPointers[indVar]) = pg_InitialValuesInterpVar[indScenario][indVar].val_string;
-					}
-					else {
-						sprintf(pg_errorStr, "Incorrect variable type (%d) for scenario variable #%d!", pg_FullScenarioVarTypes[indVar], indVar); pg_ReportError(pg_errorStr);
-					}
-				}
-				// array
-				else {
-					for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
-						if (pg_FullScenarioVarTypes[indVar] == _pg_float) {
-							((float*)pg_FullScenarioVarPointers[indVar])[index] = float(pg_InitialValuesInterpVar[indScenario][indVar].val_array[index]);
-						}
-						else if (pg_FullScenarioVarTypes[indVar] == _pg_int) {
-							((int*)pg_FullScenarioVarPointers[indVar])[index] = int(pg_InitialValuesInterpVar[indScenario][indVar].val_array[index]);
-						}
-						else if (pg_FullScenarioVarTypes[indVar] == _pg_bool) {
-							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] != 0);
-						}
-						else if (pg_FullScenarioVarTypes[indVar] == _pg_sign) {
-							((int*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] > 0 ? 1 : (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] < 0 ? -1 : 0));
-						}
-						else if (pg_FullScenarioVarTypes[indVar] == _pg_path) {
-							((bool*)pg_FullScenarioVarPointers[indVar])[index] = (pg_InitialValuesInterpVar[indScenario][indVar].val_array[index] > 0);
-						}
-						else {
-							sprintf(pg_errorStr, "Incorrect variable type (%d) for scenario variable #%d!", pg_FullScenarioVarTypes[indVar], indVar); pg_ReportError(pg_errorStr);
-						}
-					}
-				}
-			}
-		}
+		// INITIAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
+		// ARE GENERATED IN THE PYTHON SCRIPT AND ASSIGNED TO THE VARIABLES
 	}
 
 	/////////////////////////////////////////
 	// PATH REPLAY/RECORD FOR THE CURRENT CONFIGURATION
-	if (pg_ind_scenario >= 0 && pg_ind_scenario < (unsigned int)pg_NbConfigurations) {
+	if (pg_ind_scenario >= 0 && pg_ind_scenario < (unsigned int)pg_NbScenarios) {
 		// track replay 
 		// source track recording
 		// is recording source -> has to stop recording source 
@@ -212,7 +170,7 @@ void pg_initializeScenearioVariables(void) {
 
 	/////////////////////////////////////////
 	// SCENARIO VARIABLES INITIALIZATION FOR THE CURRENT CONFIGURATION
-	if (pg_ind_scenario >= 0 && pg_ind_scenario < (unsigned int)pg_NbConfigurations) {
+	if (pg_ind_scenario >= 0 && pg_ind_scenario < (unsigned int)pg_NbScenarios) {
 		// background subraction
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
 			reset_camera = true;
@@ -386,7 +344,7 @@ void pg_initializeScenearioVariables(void) {
 
 	/////////////////////////////////////////
 	// INTERACE INITIALIZATION FOR THE CURRENT CONFIGURATION
-	if (pg_ind_scenario >= 0 && pg_ind_scenario < (unsigned int)pg_NbConfigurations) {
+	if (pg_ind_scenario >= 0 && pg_ind_scenario < (unsigned int)pg_NbScenarios) {
 		// color interface initialization
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_pen_hue]
 			&& pg_FullScenarioActiveVars[pg_ind_scenario][_pen_sat]
@@ -417,9 +375,10 @@ void pg_initializeScenearioVariables(void) {
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// SCENARIO BASED COMMANDS
-///////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENE VARIABLES UPDATE AT EACH FRAME BASED ON SCENARIO AND TIME
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 	ScenarioValue scenario_or_gui_command_value, int array_index) {
 	// save previous values of variables that have to know their previous value in their 
@@ -495,9 +454,11 @@ void pg_update_variable(pg_Parameter_Input_Type param_input_type, int indVar,
 			}
 		}
 		// runs the callBack on the updated variables which have one
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar] && pg_FullScenarioVarCallbacks[indVar]) {
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]
+			&& pg_FullScenarioVarCallbacks[indVar]) {
 			//printf("Run callback of var \"%s\"\n", pg_FullScenarioVarMessages[indVar].c_str());
-			(*pg_FullScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar], scenario_or_gui_command_value);
+			(*pg_FullScenarioVarCallbacks[indVar])(pg_variable_param_input_type[indVar],
+				scenario_or_gui_command_value);
 		}
 	}
 	// dimension 2 variable: between pg_FullScenarioVarIndiceRanges[indVar][0] and pg_FullScenarioVarIndiceRanges[indVar][1] - 1
@@ -638,9 +599,6 @@ void pg_updateXYKeystonePad(void) {
 	pg_send_message_udp((char*)"ff", pg_AuxString, (char*)"udp_TouchOSC_send");
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// BEGINNING OF A NEW SCENE: INITIALIZATION OF TIMES AND DURATIONS, AND VARIABLE VALUES
-
 // saves the current values of the parameters in case of k (copy) interpolation mode
 // or in case of interpolation between the current values and the initial values of the current scene
 void pg_keep_value_copy(int indVar, ScenarioValue* parameter_value) {
@@ -705,176 +663,6 @@ void pg_keep_value_copy(int indVar, ScenarioValue* parameter_value) {
 		}
 	}
 }
-
-// begins a new configuration and selects the initial variables in this scene
-void pg_StartNewConfiguration(int config_no) {
-	if (config_no >= pg_NbConfigurations || config_no < 0) {
-		return;
-	}
-	pg_ind_scenario = config_no;
-
-	pg_launch_performance(0);
-	pg_StartNewScene(0, 0);
-}
-
-
-// to be called before scene change
-void pg_restoreInitialTimesAndDurations(void) {
-	for (Scene& scene : pg_Scenario[pg_ind_scenario]) {
-		scene.scene_duration = scene.scene_originalDuration;
-		scene.scene_initial_time = scene.scene_originalInitial_time;
-		scene.scene_final_time = scene.scene_originalFinal_time;
-	}
-}
-
-// begins a new scene and updates scene variables
-void pg_StartNewScene(int ind_scene, double delta_time) {
-	pg_last_scene_update = false;
-
-	/////////////////////////////////////////////////
-	// No interpolation: starts immediately a new scene
-	if (pg_SceneInterpolationDuration <= 0 && ind_scene >= 0 && ind_scene < int(pg_Scenario[pg_ind_scenario].size())) {
-		pg_SceneIndexAfterInterpolation = -1;
-
-		pg_restoreInitialTimesAndDurations();
-
-		// we place the beginning of the current scene at this time
-		pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time -= delta_time;
-		pg_Scenario[pg_ind_scenario][ind_scene].scene_duration += delta_time;
-		if (ind_scene > 0) {
-			pg_Scenario[pg_ind_scenario][ind_scene - 1].scene_final_time -= delta_time;
-			pg_Scenario[pg_ind_scenario][ind_scene - 1].scene_duration -= delta_time;
-		}
-		// unuseful because is already made through pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time -= delta_time;
-		//pg_InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time;
-
-		pg_InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time;
-		if (ind_scene == 0) {
-			// restarts scenarios
-			pg_AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_ind_scenario][0].scene_initial_time;
-		}
-
-		// UPDATES THE SCENE POINTERS AND INDICES
-		pg_CurrentSceneIndex = ind_scene;
-		pg_CurrentScene = &pg_Scenario[pg_ind_scenario][pg_CurrentSceneIndex];
-		pg_SceneIndexBeforeInterpolation = -1;
-		pg_SceneIndexAfterInterpolation = -1;
-
-#if defined(pg_Project_SilentDrawing)
-		// sends the new scene to recording for later replay
-		sprintf(pg_AuxString, "/new_scene %d", ind_scene);
-		pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_Record_send");
-#endif
-
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_moving_messages]) {
-			if (pg_CurrentSceneIndex == 0 || pg_CurrentSceneIndex == 5) {
-				pg_Ind_Current_DisplayText = 0;
-			}
-		}
-	}
-	/////////////////////////////////////////////////
-	// SCENE INTERPOLATION: linear interpolation of current variable values to a new scene 
-	// variables all keep their current values and interpolate towards the values of the variables in the target scene
-	else {
-		//printf("Start interpolation scene\n");
-		// UPDATES THE SCENE POINTERS AND INDICES
-		pg_CurrentSceneIndex = -1;
-		pg_CurrentScene = &pg_InterpolationScene;
-		pg_SceneIndexBeforeInterpolation = pg_CurrentSceneIndex;
-		pg_SceneIndexAfterInterpolation = ind_scene;
-
-		//to be completed
-		if (pg_CurrentScene) {
-			pg_CurrentScene->scene_IDs = "INTERPOLATION";
-			pg_CurrentScene->scene_duration = pg_SceneInterpolationDuration;
-			pg_CurrentScene->scene_change_when_ends = true;
-			pg_CurrentScene->scene_initial_time = pg_CurrentClockTime;
-			pg_CurrentScene->scene_final_time = pg_CurrentScene->scene_initial_time + pg_SceneInterpolationDuration;
-			pg_CurrentScene->scene_originalDuration = pg_SceneInterpolationDuration;
-			pg_CurrentScene->scene_originalInitial_time = pg_CurrentClockTime;
-			pg_CurrentScene->scene_originalFinal_time = pg_CurrentScene->scene_initial_time + pg_SceneInterpolationDuration;
-
-			for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
-				int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
-				if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
-					// copies the current value in the initial value
-					pg_keep_value_copy(indVar, pg_CurrentScene->scene_initial_parameters);
-					// if the next interpolation keeps the value, copies the current value in the final value
-					// otherwise copies the initial value of the target scene as final value of the interpolaiton scene
-					if (pg_Scenario[pg_ind_scenario][pg_SceneIndexAfterInterpolation].scene_interpolations[indVar].interpolation_mode != pg_enum_keep_value) {
-						pg_CurrentScene->scene_final_parameters[indVar] = pg_Scenario[pg_ind_scenario][pg_SceneIndexAfterInterpolation].scene_initial_parameters[indVar]; // next scene initial value
-					}
-					else {
-						pg_keep_value_copy(indVar, pg_CurrentScene->scene_final_parameters);
-					}
-				}
-			}
-			for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
-				int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
-				if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
-					pg_CurrentScene->scene_interpolations[indVar].interpolation_mode = pg_enum_linear_interpolation;
-					pg_CurrentScene->scene_interpolations[indVar].offSet = 0.0;
-					pg_CurrentScene->scene_interpolations[indVar].duration = 1.0;
-				}
-			}
-			//printf("Master values cur %.2f ini %.2f fin %.2f\n", *((float*)pg_FullScenarioVarPointers[_master]), 
-			//	pg_CurrentScene->scene_final_parameters[_master], pg_CurrentScene->scene_final_parameters[_master]);
-			// resets interpolation time so that the interpolation does not restart indefinitely
-			pg_SceneInterpolationDuration = 0.f;
-
-			sprintf(pg_AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
-			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-
-	if (pg_CurrentScene) {
-		pg_FirstFrameInScene = true;
-		sprintf(pg_AuxString, "/setupNo %d", pg_CurrentSceneIndex); pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(pg_AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(pg_AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		sprintf(pg_AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		string next_string = "";
-		if (pg_CurrentScene->scene_change_when_ends == true) {
-			next_string = "next_autom:";
-		}
-		else {
-			next_string = "next_manual:";
-		}
-		if (pg_CurrentSceneIndex < int(pg_Scenario[pg_ind_scenario].size()) - 1) {
-			sprintf(pg_AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_ind_scenario][pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-		else {
-			sprintf(pg_AuxString, "/setup_next %s_%s", next_string.c_str(), (char*)"END"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-
-	if (pg_CurrentScene) {
-		std::cout << "Scene: " << pg_CurrentScene->scene_IDs << std::endl;
-		// fprintf(pg_csv_log_file, "Scene:¨%d %s\n", pg_CurrentSceneIndex, pg_CurrentScene->scene_IDs.c_str());
-		// reinitialization of the interpolation control variables at the beginning of a new scene
-		for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
-			int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
-			if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
-				pg_BrokenInterpolationVar[indVar] = false;
-				pg_StepwiseInterpolationEffective[indVar] = false;
-				if (pg_CurrentScene->scene_interpolations[indVar].interpolation_mode == pg_enum_keep_value
-					|| pg_CurrentScene->scene_interpolations[indVar].initialization_mode == pg_current_value) {
-					pg_keep_value_copy(indVar, pg_CurrentScene->scene_initial_parameters);
-				}
-			}
-		}
-	}
-	// stops ongoing flashes if there is one
-	pg_flashCameraTrk_weight = 0.0f;
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBeat]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBright]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkLength]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoChangeBeat]) {
-		pg_flashPhotoTrk_weight = 0.0f;
-		pg_flashPhotoTrk_nbFrames = 0;
-	}
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////
 // UPDATE OF A CURRENT SCENE: UPDATE OF VARIABLE VALUES ACCORDING TO INTERPOLATIONS
@@ -1149,8 +937,183 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 	pg_FirstFrameInScene = false;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENE VARIABLES RESET AND TIME/DURATION INITIALIZATION FOR A NEW SCENE
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// begins a new configuration and selects the initial variables in this scene
+void pg_StartNewConfiguration(int config_no) {
+	if (config_no >= pg_NbScenarios || config_no < 0) {
+		return;
+	}
+	pg_ind_scenario = config_no;
+
+	pg_launch_performance(0);
+	pg_StartNewScene(0, 0);
+}
+
+
+// to be called before scene change
+void pg_restoreInitialTimesAndDurations(void) {
+	for (Scene& scene : pg_Scenario[pg_ind_scenario]) {
+		scene.scene_duration = scene.scene_originalDuration;
+		scene.scene_initial_time = scene.scene_originalInitial_time;
+		scene.scene_final_time = scene.scene_originalFinal_time;
+	}
+}
+
+// begins a new scene and updates scene variables
+void pg_StartNewScene(int ind_scene, double delta_time) {
+	pg_last_scene_update = false;
+
+	/////////////////////////////////////////////////
+	// No interpolation: starts immediately a new scene
+	if (pg_SceneInterpolationDuration <= 0 && ind_scene >= 0 && ind_scene < int(pg_Scenario[pg_ind_scenario].size())) {
+		pg_SceneIndexAfterInterpolation = -1;
+
+		pg_restoreInitialTimesAndDurations();
+
+		// we place the beginning of the current scene at this time
+		pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time -= delta_time;
+		pg_Scenario[pg_ind_scenario][ind_scene].scene_duration += delta_time;
+		if (ind_scene > 0) {
+			pg_Scenario[pg_ind_scenario][ind_scene - 1].scene_final_time -= delta_time;
+			pg_Scenario[pg_ind_scenario][ind_scene - 1].scene_duration -= delta_time;
+		}
+		// unuseful because is already made through pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time -= delta_time;
+		//pg_InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time;
+
+		pg_InitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_ind_scenario][ind_scene].scene_initial_time;
+		if (ind_scene == 0) {
+			// restarts scenarios
+			pg_AbsoluteInitialScenarioTime = pg_CurrentClockTime - pg_Scenario[pg_ind_scenario][0].scene_initial_time;
+		}
+
+		// UPDATES THE SCENE POINTERS AND INDICES
+		pg_CurrentSceneIndex = ind_scene;
+		pg_CurrentScene = &pg_Scenario[pg_ind_scenario][pg_CurrentSceneIndex];
+		pg_SceneIndexBeforeInterpolation = -1;
+		pg_SceneIndexAfterInterpolation = -1;
+
+#if defined(pg_Project_SilentDrawing)
+		// sends the new scene to recording for later replay
+		sprintf(pg_AuxString, "/new_scene %d", ind_scene);
+		pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_Record_send");
+#endif
+
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_moving_messages]) {
+			if (pg_CurrentSceneIndex == 0 || pg_CurrentSceneIndex == 5) {
+				pg_Ind_Current_DisplayText = 0;
+			}
+		}
+	}
+	/////////////////////////////////////////////////
+	// SCENE INTERPOLATION: linear interpolation of current variable values to a new scene 
+	// variables all keep their current values and interpolate towards the values of the variables in the target scene
+	else {
+		//printf("Start interpolation scene\n");
+		// UPDATES THE SCENE POINTERS AND INDICES
+		pg_CurrentSceneIndex = -1;
+		pg_CurrentScene = &pg_InterpolationScene;
+		pg_SceneIndexBeforeInterpolation = pg_CurrentSceneIndex;
+		pg_SceneIndexAfterInterpolation = ind_scene;
+
+		//to be completed
+		if (pg_CurrentScene) {
+			pg_CurrentScene->scene_IDs = "INTERPOLATION";
+			pg_CurrentScene->scene_duration = pg_SceneInterpolationDuration;
+			pg_CurrentScene->scene_change_when_ends = true;
+			pg_CurrentScene->scene_initial_time = pg_CurrentClockTime;
+			pg_CurrentScene->scene_final_time = pg_CurrentScene->scene_initial_time + pg_SceneInterpolationDuration;
+			pg_CurrentScene->scene_originalDuration = pg_SceneInterpolationDuration;
+			pg_CurrentScene->scene_originalInitial_time = pg_CurrentClockTime;
+			pg_CurrentScene->scene_originalFinal_time = pg_CurrentScene->scene_initial_time + pg_SceneInterpolationDuration;
+
+			for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
+				int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
+				if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
+					// copies the current value in the initial value
+					pg_keep_value_copy(indVar, pg_CurrentScene->scene_initial_parameters);
+					// if the next interpolation keeps the value, copies the current value in the final value
+					// otherwise copies the initial value of the target scene as final value of the interpolaiton scene
+					if (pg_Scenario[pg_ind_scenario][pg_SceneIndexAfterInterpolation].scene_interpolations[indVar].interpolation_mode != pg_enum_keep_value) {
+						pg_CurrentScene->scene_final_parameters[indVar] = pg_Scenario[pg_ind_scenario][pg_SceneIndexAfterInterpolation].scene_initial_parameters[indVar]; // next scene initial value
+					}
+					else {
+						pg_keep_value_copy(indVar, pg_CurrentScene->scene_final_parameters);
+					}
+				}
+			}
+			for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
+				int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
+				if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
+					pg_CurrentScene->scene_interpolations[indVar].interpolation_mode = pg_enum_linear_interpolation;
+					pg_CurrentScene->scene_interpolations[indVar].offSet = 0.0;
+					pg_CurrentScene->scene_interpolations[indVar].duration = 1.0;
+				}
+			}
+			//printf("Master values cur %.2f ini %.2f fin %.2f\n", *((float*)pg_FullScenarioVarPointers[_master]), 
+			//	pg_CurrentScene->scene_final_parameters[_master], pg_CurrentScene->scene_final_parameters[_master]);
+			// resets interpolation time so that the interpolation does not restart indefinitely
+			pg_SceneInterpolationDuration = 0.f;
+
+			sprintf(pg_AuxString, "/interpolation_duration %.2f", pg_SceneInterpolationDuration);
+			pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+
+	if (pg_CurrentScene) {
+		pg_FirstFrameInScene = true;
+		sprintf(pg_AuxString, "/setupNo %d", pg_CurrentSceneIndex); pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(pg_AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(pg_AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(pg_AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		string next_string = "";
+		if (pg_CurrentScene->scene_change_when_ends == true) {
+			next_string = "next_autom:";
+		}
+		else {
+			next_string = "next_manual:";
+		}
+		if (pg_CurrentSceneIndex < int(pg_Scenario[pg_ind_scenario].size()) - 1) {
+			sprintf(pg_AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_ind_scenario][pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+		else {
+			sprintf(pg_AuxString, "/setup_next %s_%s", next_string.c_str(), (char*)"END"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+
+	if (pg_CurrentScene) {
+		std::cout << "Scene: " << pg_CurrentScene->scene_IDs << std::endl;
+		// fprintf(pg_csv_log_file, "Scene:¨%d %s\n", pg_CurrentSceneIndex, pg_CurrentScene->scene_IDs.c_str());
+		// reinitialization of the interpolation control variables at the beginning of a new scene
+		for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
+			int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
+				pg_BrokenInterpolationVar[indVar] = false;
+				pg_StepwiseInterpolationEffective[indVar] = false;
+				if (pg_CurrentScene->scene_interpolations[indVar].interpolation_mode == pg_enum_keep_value
+					|| pg_CurrentScene->scene_interpolations[indVar].initialization_mode == pg_current_value) {
+					pg_keep_value_copy(indVar, pg_CurrentScene->scene_initial_parameters);
+				}
+			}
+		}
+	}
+	// stops ongoing flashes if there is one
+	pg_flashCameraTrk_weight = 0.0f;
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBeat]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBright]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkLength]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoChangeBeat]) {
+		pg_flashPhotoTrk_weight = 0.0f;
+		pg_flashPhotoTrk_nbFrames = 0;
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 // SCENARIO UPDATE: SELECTION OF THE CURRENT SCENE AND VARIABLE UPDATE
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_update_scenario(void) {
 	// printf("VideoPb Update scenario \n");
@@ -1259,6 +1222,9 @@ void pg_update_scenario(void) {
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// LAUNCHING A NEW PERFORMANCE OR NEW SCENE SELECTION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_launch_performance(int ind_scene) {
 	// sprintf(pg_AuxString, "/message launching"); pg_send_message_udp((char *)"s", pg_AuxString, (char *)"udp_TouchOSC_send");
@@ -1276,9 +1242,6 @@ void pg_launch_performance(int ind_scene) {
 			pg_StepwiseInterpolationEffective[indVar] = false;
 		}
 	}
-
-	// removes snaptshots before launching
-	// pg_remove_files_in_dir(&pg_snapshots_dir_path_name); // removes snapshots before pg_launch_performance
 
 #if defined(var_GenerativeNights_planes)
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_GenerativeNights_planes]) {

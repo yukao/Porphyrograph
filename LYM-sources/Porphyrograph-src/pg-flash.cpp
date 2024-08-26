@@ -23,6 +23,10 @@
 
 #include "pg-all_include.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
  // ++++++++++++++++++++++ FLASHES +++++++++++++++++++++++++
 // flash: Trk->CA -> values passed to the shader
 // as a function of on/off values and weights
@@ -73,10 +77,10 @@ int pg_flashPhotoTrk_nbFrames = 0;
 bool pg_synchr_start_recording_path[PG_NB_PATHS + 1];
 int pg_synchr_start_path_replay_trackNo[PG_NB_PATHS + 1];
 
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-// +++++++++++++++++ FLASHES +++++++++++++++++++++++++++++++ 
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-// ======================================== 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// FLASH TRINGGERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // flash triggering according to beat & frequency, weight, and on/off values 
 // ======================================== 
 bool pg_flash_beat_generation(int flash_frequency) {
@@ -95,12 +99,12 @@ bool pg_flash_continuous_generation(int flash_frequency) {
 		return true;
 	}
 	// flashes are made every video soundtrack peak (sound volume 1) if frequency is PG_LOOP_SIZE + 2
-	else if (flash_frequency == (PG_LOOP_SIZE + 2) && (pg_movie_sound_peak || pg_track_sound_peak)) {
+	else if (flash_frequency == (PG_LOOP_SIZE + 2) && (pg_movie_sound_peak || pg_soundTrack_peak)) {
 		//printf("peak %.5f left %d\n", pg_CurrentClockTime - pg_movie_status.get_initialTime(), pg_movie_status.get_nbFramesLeft());
 		return true;
 	}
 	// flashes are made every video soundtrack onset detected by aubio library if frequency is PG_LOOP_SIZE + 3
-	else if (flash_frequency == (PG_LOOP_SIZE + 3) && (pg_movie_sound_onset || pg_track_sound_onset)) {
+	else if (flash_frequency == (PG_LOOP_SIZE + 3) && (pg_movie_sound_onset || pg_soundTrack_onset)) {
 		//printf("onset %.5f left %d\n", pg_CurrentClockTime - pg_movie_status.get_initialTime(), pg_movie_status.get_nbFramesLeft());
 		return true;
 	}
@@ -366,6 +370,10 @@ void pg_flash_control(bool (*control_function)(int)) {
 #endif
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// BEAT RECEPTION AND ASSOCIATED FUNCTIONS TRIGGERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ///////////////////////////////////////////////////////////////////////////////////
 // beat reception and corresponding events triggering
 void pg_receiveBeat(void) {
@@ -491,6 +499,10 @@ void pg_receiveBeat(void) {
 		}
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PHOTO AND CAMERA FLASH
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
 // photo flash launching

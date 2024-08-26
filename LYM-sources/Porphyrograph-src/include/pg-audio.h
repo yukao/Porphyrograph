@@ -29,6 +29,10 @@
 #include "sndfile.h"
 #include "portaudio.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define NUM_SECONDS   (5)
 #define SAMPLE_RATE   (44100)
 #define FRAMES_PER_BUFFER  (64)
@@ -37,6 +41,9 @@
 #define M_PI  (3.14159265)
 #endif
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PORT AUDIO MANAGEMENT CLASS
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 class pa_AudioOut
 {
 public:
@@ -108,14 +115,9 @@ typedef struct
     double                sound_file_StartReadingTime;
 } callback_data_s;
 
-// sound track playing
-extern int pg_currentlyPlaying_trackNo;
-extern bool pg_soundTrack_on;
-
-// movie soundtrack passes over an onset or a peak before next frame
-extern bool pg_track_sound_onset;
-extern bool pg_track_sound_peak;
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SOUNDTRACK MANAGEMENT CLASS
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 // soundtracks
 class SoundTrack {
 public:
@@ -136,22 +138,27 @@ public:
     ~SoundTrack(void) {
     }
 };
-extern vector<SoundTrack> pg_SoundTracks[PG_MAX_SCENARIOS];
-extern int pg_currentTrackSoundPeakIndex;
-extern int pg_nbTrackSoundPeakIndex[PG_MAX_SCENARIOS];
-extern int pg_currentTrackSoundOnsetIndex;
-extern int pg_nbTrackSoundOnsetIndex[PG_MAX_SCENARIOS];
 
-/*******************************************************************/
-void pg_listAllSoundtracks(void);
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-void PlayTrack(int trackNo, double timeFromStart);
-void StopTrack(void);
+// movie soundtrack passes over an onset or a peak before next frame
 
-void soundTrackonOff();
-void soundTrackvolume(float vol);
-void pg_checkAudioStream();
-void pg_pa_closeStream(void);
+extern bool pg_soundTrack_onset;
+extern bool pg_soundTrack_peak; 
+extern bool pg_soundTrack_on;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+void pg_parseScenario_soundTracks(std::ifstream& scenarioFin, int indScenario);
+void pg_listAll_soundTracks(void);
 void pg_pa_openSoundData(void);
+void pg_pa_closeAudioStream(void);
+void pg_pa_checkAudioStream(void);
+void pg_aliasScriptAudio(string address_string, string string_argument_0,
+    float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar);
 
 #endif

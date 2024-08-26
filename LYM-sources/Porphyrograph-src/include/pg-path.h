@@ -1,7 +1,7 @@
-/*! \file pg-stroke.h
+/*! \file pg-path.h
  *
  *
- *     File pg-stroke.h
+ *     File pg-path.h
  *
  *
  *
@@ -24,9 +24,29 @@
 #ifndef PG_STROKE_H
 #define PG_STROKE_H
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define PG_OUT_OF_SCREEN_CURSOR -1000
 
- // ClipArt PATHs from scenario
+ // stroke shipping to GPU (Update and PartcleAnimation shaders)
+#define PG_PATH_P_X              0
+#define PG_PATH_P_Y              1
+
+#define PG_PATH_BOX              2
+#define PG_PATH_COLOR            3
+#define PG_PATH_RADIUS_BEGINEND  4
+#define PG_MAX_PATH_DATA         5
+
+#define PG_PATH_ANIM_POS              0
+#define PG_PATH_ANIM_RAD              1
+#define PG_MAX_PATH_ANIM_DATA         2
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SVG PATH MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // a path curve from scenario with its parameters
 class SVG_scenarioPathCurve {
 public:
@@ -86,20 +106,11 @@ public:
 		path_ID = "";
 	}
 };
-extern vector<SVG_scenarioPathCurve> pg_SVG_scenarioPathCurves[PG_MAX_SCENARIOS];
-extern int pg_current_SVG_path_group;
-extern int pg_nb_SVG_path_groups[PG_MAX_SCENARIOS];
 
-/// mouse recording tracks management
-//extern float **pg_Path_Pos_x_prev;
-//extern float **pg_Path_Pos_y_prev;
-//extern float **pg_Path_Pos_x;
-//extern float **pg_Path_Pos_y;
-//extern float **pg_Path_Pos_xL;
-//extern float **pg_Path_Pos_yL;
-//extern float **pg_Path_Pos_xR;
-//extern float **pg_Path_Pos_yR;
-//extern float **pg_Path_TimeStamp;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PATH FRAME (SINGLE POINT) MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class PathCurveFrame {
 public:
 	float path_Color_r;
@@ -213,6 +224,11 @@ public:
 	~PathCurveFrame() {
 	}
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// FULL PATH CURVE MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class PathCurve_Data {
 public:
 	// int pathCurve_nbRecordedFrames;
@@ -254,6 +270,11 @@ public:
 	~PathCurve_Data() {
 	}
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PATH PLAYONG OR RECORDING DYNATMIC STATUS MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class Path_Status {
 public:
 	bool path_isFirstFrame;
@@ -634,14 +655,6 @@ public:
 	~Path_Status() {
 	}
 };
-// extern struct PathCurve_Data* pg_PathCurve_Params[PG_MAX_SCENARIOS];
-// extern struct PathCurveFrame** pg_PathCurveFrame_Data[PG_MAX_SCENARIOS];
-extern Path_Status* pg_Path_Status;
-
-// Bezier Path convex hull shipped to the GPU
-extern glm::vec2 pg_BezierControl[(PG_NB_PATHS + 1) * 4];
-extern glm::vec2 pg_BezierHull[(PG_NB_PATHS + 1) * 4];
-extern glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
 
 struct vec2
 {
@@ -649,21 +662,9 @@ struct vec2
 	float y;
 };
 
-// stroke shipping to GPU (Update and PartcleAnimation shaders)
-#define PG_PATH_P_X              0
-#define PG_PATH_P_Y              1
-
-#define PG_PATH_BOX              2
-#define PG_PATH_COLOR            3
-#define PG_PATH_RADIUS_BEGINEND  4
-#define PG_MAX_PATH_DATA         5
-
-extern float pg_path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
-
-#define PG_PATH_ANIM_POS              0
-#define PG_PATH_ANIM_RAD              1
-#define PG_MAX_PATH_ANIM_DATA         2
-extern float pg_path_data_ParticleAnimation[(PG_NB_PATHS + 1) * PG_MAX_PATH_ANIM_DATA * 4];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PATH CURRENTLY DRAWN POINT MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // current mouse location (also used for displaying the cursor)
 class pg_paths_currentDynPoint_data {
@@ -684,7 +685,7 @@ public:
 
 	float pg_paths_x_forGPU;
 	float pg_paths_y_forGPU;
-	
+
 	float pg_paths_time;
 	float pg_paths_time_prev;
 	float pg_paths_time_prev_prev;
@@ -719,67 +720,71 @@ public:
 	}
 };
 
-extern pg_paths_currentDynPoint_data pg_paths_currentDynPoint[PG_NB_PATHS + 1];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-extern bool pg_recorded_path[PG_NB_PATHS + 1];
+// PATH CURVE AND GROUPS
+extern vector<SVG_scenarioPathCurve> pg_SVG_scenarioPathCurves[PG_MAX_SCENARIOS];
+extern int pg_current_SVG_path_group;
+extern int pg_nb_SVG_path_groups[PG_MAX_SCENARIOS];
+
+/// current mouse location
+extern int pg_CurrentCursorPos_x[PG_NB_CURSORS_MAX], pg_CurrentCursorPos_y[PG_NB_CURSORS_MAX];
+extern pg_paths_currentDynPoint_data pg_paths_currentDynPoint[PG_NB_PATHS + 1];
+/// current mouse type
+extern int pg_CurrentStylus_StylusvsRubber;
+// current tablet pen pressure and orientation
+extern float pg_CurrentStylusPresuse;
+extern float pg_CurrentStylusAzimut;
+extern float pg_CurrentStylusInclination;
+/// current hoover location
+extern int pg_CurrentStylusHooverPos_x, pg_CurrentStylusHooverPos_y;
+
+// path data for particle animation (repulse/follow)
+extern float pg_path_data_ParticleAnimation[(PG_NB_PATHS + 1) * PG_MAX_PATH_ANIM_DATA * 4];
+// communication with shader
+extern float pg_path_data_Update[(PG_NB_PATHS + 1) * PG_MAX_PATH_DATA * 4];
+
+// builds the box around a curve for the shader
+extern glm::vec4 pg_BezierBox[(PG_NB_PATHS + 1)];
+
+// keeps track of replayed paths
 extern bool pg_is_path_replay[PG_NB_PATHS + 1];
 
-// +++++++++++++++++++++ SETUP +++++++++++++++++++++++++++
-extern double pg_LastTrackRecordingChangeClockTime;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// BEZIER PATH CONVEX HULL 
-bool pg_pointEquals(glm::vec2* p, glm::vec2* q);
-bool pg_left_oriented(glm::vec2* p1, glm::vec2* p2, glm::vec2* candidate);
-void pg_cubicBezier(glm::vec2 control_points[4], glm::vec2* curve_point, float alphaBezier);
-void pg_cubicBezier(glm::vec3 control_points[4], glm::vec3* curve_point, float alphaBezier);
-void pg_Bezier_hull_expanded_by_radius(glm::vec2 control_points[4], int* hull, float radius, glm::vec2 hull_points[4]);
-void pg_Bezier_boundingBox_expanded_by_radius(glm::vec2 control_points[4], float radius, glm::vec4* boundingBox);
-float pg_Bezier_length(glm::vec2 control_points[4], int nb_steps);
-void pg_build_Bezier_bounding_box(int indPath);
-void pg_build_Bezier_expanded_hull(int indPath);
-
-void pg_ScaleVec2(vec2* pOut_result, vec2* p0, float c0);
-void pg_AddScaledVec2_Self(vec2* pOut_result, vec2* p0, float c0);
-
-/// SAVE IMAGE
-void pg_writesvg(cv::String imageFileName);
+// OSC commands
+void pg_aliasScript_Path(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar);
+void pg_parseScenario_SVGPaths(std::ifstream& scenarioFin, int indScenario);
 
 // initialization of the tables that contain the stroke parameters
 void pg_initPaths(void);
+// list paths after compilling
+void pg_listAll_Paths(void);
 
-// char array to integer or float
-long     pg_ScanIntegerString(int* p_c, int withTrailingSpaceChars, char* charstring, int* ind);
-float    pg_ScanFloatString(int* p_c, int withTrailingSpaceChars, char* charstring, int* ind);
-
-#if defined(var_Novak_flight_on)
-#define PG_NB_FLIGHTS 11
-extern glm::vec3     prev_Novak_flight_control_points[PG_NB_FLIGHTS][4];
-extern glm::vec3     cur_Novak_flight_control_points[PG_NB_FLIGHTS][4];
-extern glm::vec3     cur_Novak_flight_points[PG_NB_FLIGHTS];
-extern glm::vec2     cur_Novak_flight_2D_points[PG_NB_FLIGHTS];
-extern float         prev_Novak_flightTime[PG_NB_FLIGHTS];
-extern double        prev_Novak_flightCurrentCLockTime[PG_NB_FLIGHTS];
-extern float         cur_Novak_flightTime[PG_NB_FLIGHTS];
-extern int           cur_Novak_flightIndex[PG_NB_FLIGHTS];
-extern glm::vec3     Novak_flight_deviation[PG_NB_FLIGHTS];
-extern float         cur_Novak_flightPerlinNoise[PG_NB_FLIGHTS][3][2];
-void             Novak_flight_next_control_points(int indFlight);
-void             Novak_flight_init_control_points(void);
-void             Novak_flight_update_coordinates(int indFlight);
-void             cur_Novak_flight_2D_coordinates(void);
-#endif
-
-// calculation of tangents from successive locations of the pen
-void pg_stroke_Bezier_geometry_calculation(int indPath, int curr_position_x, int curr_position_y);
-
-// REPLAY PATHS  
-void pg_replay_paths(double theTime);
+// command chaining record/replay on paths
+void pg_NextRecordReplayPath(void);
+// on/oof path recording
+void pg_path_recording_onOff(int indPath);
+// playing track onoff
+void pg_path_replay_trackNo_onOff(int indPath, int trackNo);
+// recording on off
+void pg_path_recording_stop(int indPath);
 
 // update of the tables that contain the stroke parameters
 void pg_update_pulsed_colors_and_replay_paths(double theTime);
 
-void pg_listAllSVG_paths(void);
+// builds the box around a curve for the shader
+void pg_build_Bezier_bounding_box(int indPath);
 
-void pg_NextRecordReplayPath(void);
+/// SAVE PATH
+void pg_writesvg(cv::String imageFileName);
+
+// interface feedback depending on how many fingers are considered on the pad
+void NumberOfInteractionFingers(int nb_fingers);
 
 #endif

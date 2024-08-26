@@ -23,6 +23,10 @@
 
 #include "pg-all_include.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool pg_has_NV_path_rendering = false;
 
 // ClipArt GPU
@@ -39,6 +43,9 @@ GLuint pg_ClipArt_path_baseID[PG_MAX_SCENARIOS];
 // fill color table
 unsigned int** pg_ClipArt_path_fill_color[PG_MAX_SCENARIOS];
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// NVIDIA PATH RENDERING INITIALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_initializeNVPathRender(void) {
 	pg_has_NV_path_rendering = (glutExtensionSupported("GL_NV_path_rendering") != 0);
@@ -47,6 +54,9 @@ void pg_initializeNVPathRender(void) {
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIPART LOADING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtFile, int indScenario) {
 	string splitFileName = fileName;
@@ -197,6 +207,40 @@ void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtF
 	pathFin.close();
 	pg_printOglError(4);
 }
+
+//////////////////////////////////////////////////
+// LOAD ALL CLIPARTS
+void pg_loadAll_ClipArts(void) {
+	//std::cout << "Loading ClipArts\n";
+	for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
+		//std::cout << "    " << indScenario << ": ";
+		if (pg_FullScenarioActiveVars[indScenario][_activeClipArts]) {
+			const char* ClipArt_programName = "nvpr_ClipArt";
+			//std::cout << "Loading " << pg_ClipArts[indScenario].size() << " ClipArt\n";
+			pg_initializeNVPathRender();
+			if (pg_has_NV_path_rendering) {
+				pg_ClipArt_path_baseID[indScenario] = glGenPathsNV(pg_nb_tot_SvgGpu_paths[indScenario]);
+				pg_ClipArt_path_fill_color[indScenario] = new unsigned int* [pg_ClipArts[indScenario].size()];
+				int nb_tot_paths = 0;
+				for (unsigned int indClipArtFile = 0; indClipArtFile < pg_ClipArts[indScenario].size(); indClipArtFile++) {
+					//std::cout << pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_fileNames << " (" << pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt << " paths), ";
+					pg_ClipArt_path_fill_color[indScenario][indClipArtFile] = new unsigned int[pg_nb_tot_SvgGpu_paths[indScenario]];
+					pg_ClipArts[indScenario][indClipArtFile].ClipArt_file_baseID = pg_ClipArt_path_baseID[indScenario] + nb_tot_paths;
+					pg_LoadClipArtPathsToGPU(pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_fileNames,
+						pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt, indClipArtFile, indScenario);
+					nb_tot_paths += pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt;
+				}
+			}
+			else {
+				sprintf(pg_errorStr, "Error: required NV_path_rendering OpenGL extension is not present\n"); pg_ReportError(pg_errorStr); throw 23771;
+			}
+		}
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIPART RENDERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void pg_OpenGLBasicColors(int color) {
 	switch (color) {
@@ -380,10 +424,10 @@ void pg_Display_All_ClipArt(int activeFiles) {
 	}
 }
 
-void pg_listAllClipArts(void) {
+void pg_listAll_ClipArts(void) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
 		printf("Listing ClipArts:\n");
-		for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+		for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
 			std::cout << "    " << indScenario << ": ";
 			for (ClipArt& aClipArt : pg_ClipArts[indScenario]) {
 				std::cout << aClipArt.pg_ClipArt_fileNames << " (" << aClipArt.pg_nb_paths_in_ClipArt << " paths), ";
@@ -394,7 +438,11 @@ void pg_listAllClipArts(void) {
 	}
 }
 
-//////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIPART LETTTER BASED TEXT RENDERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////
 // RENDERING OF MESSAGE THROUGH ClipArt GPU CHARACTERS
 float pg_Translate_ClipArt_Text(int indDisplayText) {
 	return float(log(indDisplayText / 3.f) * 210 + 160);
@@ -420,6 +468,7 @@ void pg_convertTextStringToClipartIndices(std::vector<int>* indClipArts, string 
 		(*indClipArts)[indChar] = indClipArt;
 	}
 }
+
 void pg_Display_ClipArt_Text(int* ind_Current_DisplayText, int mobile) {
 	for (int indLine = 0; indLine < 60; indLine++) {
 		if ((*ind_Current_DisplayText) >= 0 && (*ind_Current_DisplayText) < pg_NbDisplayTexts
@@ -514,35 +563,9 @@ void pg_Display_ClipArt_Text(int* ind_Current_DisplayText, int mobile) {
 	pg_printOglError(5257);
 }
 
-//////////////////////////////////////////////////
-// LOAD ALL CLIPARTS
-void pg_loadAllClipArts(void) {
-	//std::cout << "Loading ClipArts\n";
-	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
-		//std::cout << "    " << indScenario << ": ";
-		if (pg_FullScenarioActiveVars[indScenario][_activeClipArts]) {
-			const char* ClipArt_programName = "nvpr_ClipArt";
-			//std::cout << "Loading " << pg_ClipArts[indScenario].size() << " ClipArt\n";
-			pg_initializeNVPathRender();
-			if (pg_has_NV_path_rendering) {
-				pg_ClipArt_path_baseID[indScenario] = glGenPathsNV(pg_nb_tot_SvgGpu_paths[indScenario]);
-				pg_ClipArt_path_fill_color[indScenario] = new unsigned int* [pg_ClipArts[indScenario].size()];
-				int nb_tot_paths = 0;
-				for (unsigned int indClipArtFile = 0; indClipArtFile < pg_ClipArts[indScenario].size(); indClipArtFile++) {
-					//std::cout << pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_fileNames << " (" << pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt << " paths), ";
-					pg_ClipArt_path_fill_color[indScenario][indClipArtFile] = new unsigned int[pg_nb_tot_SvgGpu_paths[indScenario]];
-					pg_ClipArts[indScenario][indClipArtFile].ClipArt_file_baseID = pg_ClipArt_path_baseID[indScenario] + nb_tot_paths;
-					pg_LoadClipArtPathsToGPU(pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_fileNames,
-						pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt, indClipArtFile, indScenario);
-					nb_tot_paths += pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt;
-				}
-			}
-			else {
-				sprintf(pg_errorStr, "Error: required NV_path_rendering OpenGL extension is not present\n"); pg_ReportError(pg_errorStr); throw 23771;
-			}
-		}
-	}
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIPART DISPLAY CONTROL
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_ClipArt_OnOff(int indCLipArt) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
@@ -597,3 +620,222 @@ void pg_ClipArt_SubPathOnOff(int indPath) {
 			= !pg_last_activated_ClipArt->pg_ClipArt_SubPath[indPath - 1];
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIPART SCENARIO
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_parseScenario_ClipArt(std::ifstream& scenarioFin, int indScenario) {
+	std::stringstream  sstream;
+	string line;
+	string ID;
+	string temp;
+
+	////////////////////////////
+	////// ClipArt GPU PATHS
+	// the paths are loaded inside the GPU and diplayed path by path
+	std::getline(scenarioFin, line);
+	pg_stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string clip_arts
+	if (ID.compare("clip_arts") != 0) {
+		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"clip_arts\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+	}
+
+	pg_nb_tot_SvgGpu_paths[indScenario] = 0;
+	while (true) {
+		// new line
+		std::getline(scenarioFin, line);
+		pg_stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string /svg_paths or svg_path
+		if (ID.compare("/clip_arts") == 0) {
+			break;
+		}
+		else if (ID.compare("clip_art") != 0) {
+			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"clip_art\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+		}
+
+		// adds a new clipart
+		ClipArt aClipArt;
+
+		sstream >> aClipArt.pg_ClipArt_fileNames; // file name
+		if (!pg_isFullPath(aClipArt.pg_ClipArt_fileNames)) {
+			//printf("CipArts dir [%s] filename [%s]\n", pg_cliparts_directory.c_str(), aClipArt.pg_ClipArt_fileNames.c_str());
+			aClipArt.pg_ClipArt_fileNames = pg_cliparts_directory + aClipArt.pg_ClipArt_fileNames;
+		}
+		sstream >> aClipArt.pg_nb_paths_in_ClipArt; // number of paths in the file
+		pg_nb_tot_SvgGpu_paths[indScenario] += aClipArt.pg_nb_paths_in_ClipArt;
+		//printf("%s, ", aClipArt.pg_ClipArt_fileNames.c_str());
+		//printf("ind path file %d name %s nb paths %d, ", indClipArtFile, aClipArt.pg_ClipArt_fileNames.c_str(), aClipArt.pg_nb_paths_in_ClipArt);
+
+		aClipArt.pg_ClipArt_SubPath = new bool[aClipArt.pg_nb_paths_in_ClipArt];
+		for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+			aClipArt.pg_ClipArt_SubPath[indPathCurve] = true;
+		}
+
+		aClipArt.pg_ClipArt_Colors = new pg_ClipArt_Colors_Types[aClipArt.pg_nb_paths_in_ClipArt];
+		for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+			aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_nat;
+		}
+
+		// image initial geometry
+		sstream >> aClipArt.pg_ClipArt_Scale;
+		sstream >> aClipArt.pg_ClipArt_Translation_X;
+		sstream >> aClipArt.pg_ClipArt_Translation_Y;
+		//printf("ind clipart %d scale %.2f pos %.2f %.2f\n", indClipArtFile, aClipArt.pg_ClipArt_Scale, aClipArt.pg_ClipArt_Translation_X, aClipArt.pg_ClipArt_Translation_Y);
+		sstream >> aClipArt.pg_ClipArt_Rotation;
+		sstream >> ID;
+		if (ID.compare("nat") == 0) {
+			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_nat;
+			}
+		}
+		else if (ID.compare("white") == 0) {
+			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_white;
+			}
+		}
+		else if (ID.compare("red") == 0) {
+			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_red;
+			}
+		}
+		else if (ID.compare("green") == 0) {
+			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_green;
+			}
+		}
+		else if (ID.compare("blue") == 0) {
+			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_blue;
+			}
+		}
+		else {
+			sprintf(pg_errorStr, "Error: incorrect configuration file ClipArt GPU color \"%s\" (nat, white, red, blue or green expected)", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+		}
+
+		pg_ClipArts[indScenario].push_back(aClipArt);
+	}
+	printf("\n");
+	printf("Nb clip arts %d config %d\n", (int)pg_ClipArts[indScenario].size(), indScenario);
+	if (pg_ClipArts[indScenario].size() > 0) {
+		pg_last_activated_ClipArt = &(pg_ClipArts[indScenario][0]);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIPART OSC COMMANDS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pg_aliasScript_ClipArt(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar) {
+	// special command not in the scenario file
+	switch (indVar) {
+	case _ClipArt_1_onOff: pg_ClipArt_OnOff(1); break;
+	case _ClipArt_2_onOff: pg_ClipArt_OnOff(2); break;
+	case _ClipArt_3_onOff: pg_ClipArt_OnOff(3); break;
+	case _ClipArt_4_onOff: pg_ClipArt_OnOff(4); break;
+	case _ClipArt_5_onOff: pg_ClipArt_OnOff(5); break;
+	case _ClipArt_6_onOff: pg_ClipArt_OnOff(6); break;
+	case _ClipArt_7_onOff: pg_ClipArt_OnOff(7); break;
+	case _ClipArt_8_onOff: pg_ClipArt_OnOff(8); break;
+	case _ClipArt_9_onOff: pg_ClipArt_OnOff(9); break;
+	case _ClipArt_10_onOff: pg_ClipArt_OnOff(10); break;
+	case _ClipArt_11_onOff: pg_ClipArt_OnOff(11); break;
+	case _ClipArt_12_onOff: pg_ClipArt_OnOff(12); break;
+	case _ClipArt_13_onOff: pg_ClipArt_OnOff(13); break;
+	case _ClipArt_14_onOff: pg_ClipArt_OnOff(14); break;
+	case _ClipArt_15_onOff: pg_ClipArt_OnOff(15); break;
+	case _ClipArt_16_onOff: pg_ClipArt_OnOff(16); break;
+	case _ClipArt_17_onOff: pg_ClipArt_OnOff(17); break;
+	case _ClipArt_18_onOff: pg_ClipArt_OnOff(18); break;
+	case _ClipArt_19_onOff: pg_ClipArt_OnOff(19); break;
+	case _ClipArt_20_onOff: pg_ClipArt_OnOff(20); break;
+
+	case _ClipArt_onOff: pg_ClipArt_OnOff(int(float_arguments[0])); break;
+	case _ClipArt_off: pg_ClipArt_Off(int(float_arguments[0])); break;
+	case _ClipArt_on: pg_ClipArt_On(int(float_arguments[0])); break;
+
+	case _ClipArt_SubPath_1_onOff: pg_ClipArt_SubPathOnOff(1); break;
+	case _ClipArt_SubPath_2_onOff: pg_ClipArt_SubPathOnOff(2); break;
+	case _ClipArt_SubPath_3_onOff: pg_ClipArt_SubPathOnOff(3); break;
+	case _ClipArt_SubPath_4_onOff: pg_ClipArt_SubPathOnOff(4); break;
+
+	case _ClipArt_scale:
+		pg_last_activated_ClipArt->pg_ClipArt_Scale = float_arguments[0];
+		printf("ClipArt GPU scale %.2f\n", float_arguments[0]);
+		break;
+	case _ClipArt_rotate:
+		pg_last_activated_ClipArt->pg_ClipArt_Rotation = float_arguments[0];
+		printf("ClipArt GPU rotate %.2f\n", float_arguments[0]);
+		break;
+	case _ClipArt_xy:
+		pg_last_activated_ClipArt->pg_ClipArt_Translation_X = float_arguments[0] * pg_workingWindow_width;
+		pg_last_activated_ClipArt->pg_ClipArt_Translation_Y = float_arguments[1] * PG_WINDOW_HEIGHT;
+		printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * pg_workingWindow_width, float_arguments[1] * PG_WINDOW_HEIGHT);
+		break;
+	case _ClipArt_x:
+		pg_last_activated_ClipArt->pg_ClipArt_Translation_X = float_arguments[0] * pg_workingWindow_width;
+		printf("ClipArt GPU translate %.2fx%.2f\n", pg_last_activated_ClipArt->pg_ClipArt_Translation_X, pg_last_activated_ClipArt->pg_ClipArt_Translation_Y);
+		break;
+	case _ClipArt_y:
+		pg_last_activated_ClipArt->pg_ClipArt_Translation_Y = float_arguments[0] * PG_WINDOW_HEIGHT;
+		printf("ClipArt GPU translate %.2fx%.2f\n", pg_last_activated_ClipArt->pg_ClipArt_Translation_X, pg_last_activated_ClipArt->pg_ClipArt_Translation_Y);
+		break;
+	case _ClipArt_nat_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_nat;
+		}
+		break;
+	case _ClipArt_white_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_white;
+		}
+		break;
+	case _ClipArt_red_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_red;
+		}
+		break;
+	case _ClipArt_green_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_green;
+		}
+		break;
+	case _ClipArt_blue_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_blue;
+		}
+		break;
+	case _ClipArt_yellow_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_yellow;
+		}
+		break;
+	case _ClipArt_cyan_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_cyan;
+		}
+		break;
+	case _ClipArt_magenta_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_magenta;
+		}
+		break;
+	case _ClipArt_black_color:
+		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_black;
+		}
+		break;
+	case _ClipArt_translations:
+		for (unsigned int indClipArt = 0; indClipArt < pg_ClipArts[pg_ind_scenario].size() && (2 * indClipArt + 1) < (unsigned int)nb_arguments; indClipArt++) {
+			pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_X = float_arguments[2 * indClipArt] * pg_workingWindow_width;
+			pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_Y = float_arguments[2 * indClipArt + 1] * PG_WINDOW_HEIGHT;
+		}
+		// printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * pg_workingWindow_width, float_arguments[1] * PG_WINDOW_HEIGHT);
+		break;
+	default:
+		sprintf(pg_errorStr, "ClipArt command not found (%s)!", address_string.c_str()); pg_ReportError(pg_errorStr);
+		break;
+	}
+}
+

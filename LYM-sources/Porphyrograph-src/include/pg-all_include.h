@@ -22,146 +22,24 @@
  * 02111-1307, USA.
  */
 
-#ifndef _WIN32
-#include "config.h"
-#include <dirent.h>
-#endif // !_WIN32
-
-#include <stdio.h>
-#include <iostream>
-#include <iomanip>
 #include <filesystem>
 namespace fs = std::filesystem;
 
 #define _USE_MATH_DEFINES
 #include <math.h>    // math constants such as M_PI
-// define the round function for Visual Studio (not include in math.h)
-#if defined(_WIN32)
-	#include <conio.h>
-	//#define round(x) (x >= 0 ? floor(x + 0.5) : ceil(x - 0.5))
-	//double round(double x) { return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5); }
-#endif // _WIN32
-#include <stdlib.h>
+
+#include <cstdlib>      // std::rand, std::srand
 #include <stdarg.h>     // Header File For Variable Argument Routines
-#include <string.h>
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
 #include <regex>
-
-#include <time.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <fstream>
 #include <random>
-#include <cstdlib>      // std::rand, std::srand
 #include <algorithm>    // std::max / min
-
-
-#if defined(_WIN32)
-// memory leak tracing
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
-#define rand_0_1 (float(rand()) / float(RAND_MAX))
-template<typename T>
-constexpr auto rand_0_x(T x) { return (x * rand_0_1); }
-template<typename T>
-constexpr auto rand_x(T x) { return ( x * (2 * rand_0_1 - 1.f)); }
-
-#ifndef INT_MAX
-        #include <limits.h>
-#endif
-
-#ifndef _WIN32
-	#include <sys/types.h>
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-        #include <sys/resource.h>
-	#include <netdb.h>
-	#include <unistd.h>
-#else // !_WIN32
-	//#define socklen_t int
-	#include <winsock2.h>
-	#include <Ws2tcpip.h>
-	//#include <wspiapi.h>
-#endif // _WIN32
-// \}
-
-/*! \name Group time_management
- *  \brief time management
-*/
-//\ {
-#if defined(_WIN32)
-	#include <time.h>
-	#include <Winbase.h>
-	#include <Windows.h>
-
-	// transparent windows
-	#include <windowsx.h>
-	// transparent windows
-	#include <dwmapi.h>
-	
-	#ifndef _WIN32
-		#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
-			#define _TIMEVAL_DEFINED
-			struct timeval {
-			  unsigned long int tv_usec;
-			  unsigned long int tv_sec;
-			};
-		#endif /* !_TIMEVAL_DEFINED */
-	#endif /* !_WIN32 */
-#else // _WIN32
-	#include <sys/time.h>
-	#include <pthread.h>
-#endif // _WIN32
-// \}
-
-////////////////////////////////////////////
-// current directory 
-#if defined(_WIN32)
-#include <direct.h>
-#define GetCurrentDir _getcwd
-#else
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#include <sys/stat.h>
-#endif
-
-#define GLM_FORCE_RADIANS
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtx/string_cast.hpp>
-#include <gtx/norm.hpp>
-
-#define OPENCV_3
-
-#ifndef OPENCV_3
-// opencv include files
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-#else
-// opencv include files
-#define HAVE_OPENCV_CALIB3D
-#define HAVE_OPENCV_HIGHGUI
-#define HAVE_OPENCV_IMGPROC
-#define HAVE_OPENCV_VIDEO
-#define HAVE_OPENCV_VIDEOIO
-#include <opencv2/opencv.hpp>
-#endif
-using namespace cv;
-
-// oscpp library
-#include <oscpp/server.hpp>
-#include <oscpp/print.hpp>
-#include <oscpp/client.hpp>
-#include <memory>
-#include <stdexcept>
 
 #include <list>
 #include <vector>
@@ -174,15 +52,98 @@ using std::array;
 using std::map;
 using std::string;
 using std::ios;
-using std::cerr;
 using std::ifstream;
+
+
+#define rand_0_1 (float(rand()) / float(RAND_MAX))
+template<typename T>
+constexpr auto rand_0_x(T x) { return (x * rand_0_1); }
+template<typename T>
+constexpr auto rand_x(T x) { return (x * (2 * rand_0_1 - 1.f)); }
+
+#ifndef INT_MAX
+#include <limits.h>
+#endif
+
+#if defined(_WIN32)
+	// memory leak tracing
+	#define _CRTDBG_MAP_ALLOC
+	#include <crtdbg.h>
+
+	// networking
+	#include <winsock2.h>
+	#include <Ws2tcpip.h>
+
+	// time reading
+	#include <time.h>
+
+	// directory
+	#include <direct.h>
+	#define GetCurrentDir _getcwd
+#else
+	#include <sys/types.h>
+
+	// networking
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
+	#include <sys/resource.h>
+	#include <netdb.h>
+	#include <unistd.h>
+
+	#include "config.h"
+	#include <dirent.h>
+
+	// time reading
+	#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
+	#define _TIMEVAL_DEFINED
+	#endif
+	#include <sys/time.h>
+	struct timeval {
+		unsigned long int tv_usec;
+		unsigned long int tv_sec;
+	};
+
+	// threads
+	#include <pthread.h>
+
+	// directory
+	#include <unistd.h>
+	#define GetCurrentDir getcwd
+	#include <sys/stat.h>
+#endif // !_WIN32
+
+// geometry
+#define GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm.hpp>
+#include <gtc/type_ptr.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtx/string_cast.hpp>
+#include <gtx/norm.hpp>
+
+// opencv include files
+#define OPENCV_3
+#define HAVE_OPENCV_CALIB3D
+#define HAVE_OPENCV_HIGHGUI
+#define HAVE_OPENCV_IMGPROC
+#define HAVE_OPENCV_VIDEO
+#define HAVE_OPENCV_VIDEOIO
+#include <opencv2/opencv.hpp>
+using namespace cv;
+
+// oscpp library
+#include <oscpp/server.hpp>
+#include <oscpp/print.hpp>
+#include <oscpp/client.hpp>
+#include <memory>
+#include <stdexcept>
 
 //GLEW
 #include <GL/glew.h>
 #if defined(_WIN32)
 #include <GL/wglew.h>
 #endif
-
 #define  GL_GLEXT_LEGACY
 
 #if defined(_WIN32)
@@ -191,17 +152,18 @@ using std::ifstream;
 #endif
 #endif // _WIN32
 
+// Update shader blurring
 #if defined(pg_Project_Voluspa)
 #define PG_WITH_BLUR
 #endif
 
-// light DMX command in porphyrograph
+// light DMX commands
 #include <controller_library.h>
 
+// JUCE lib for sound analysis
 #if defined(pg_Project_Criton)
 #define PG_WITH_JUCE
 #endif
-
 
 // SENSORS
 #if defined(pg_Project_CAaudio)
@@ -243,20 +205,23 @@ class ScenarioValue;
 #include "pg_script_header_araknit.h"
 #endif
 
+//////////////////////////////////////////
+// module headers
 #include "pg-init.h"
 #include "pg-main.h"
 #include "pg-path.h"
 #include "pg-udp.h"
 #include "pg-mesh.h"
 #include "pg-callBack.h"
-#include "pg-media.h"
+#include "pg-photoClip.h"
+#include "pg-movieCamera.h"
 #include "pg-color.h"
 #include "pg-messages.h"
 #include "pg-scenarioDyn.h"
 #include "pg-flash.h"
 #include "pg-script.h"
 #include "pg-audio.h"
-#include "pg-update.h"
+#include "pg-render.h"
 #include "pg-texture.h"
 #include "pg-gui.h"
 

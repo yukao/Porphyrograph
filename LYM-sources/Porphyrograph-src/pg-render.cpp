@@ -2,7 +2,7 @@
 // _
 // 
 // 
-//     File pg-update.cpp
+//     File pg-render.cpp
 // 
 //
 // This program is free software; you can redistribute it and/or
@@ -23,6 +23,10 @@
 
 #include "pg-all_include.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #if defined(_CRTDBG_MAP_ALLOC)
 // MEMORY LEAK CONTROL
 _CrtMemState s1{};
@@ -40,8 +44,18 @@ _CrtMemState s12{};
 _CrtMemState s13{};
 _CrtMemState sDiff{};
 #endif
-      
+ 
+/////////////////////////////////////////////////////////////////
+// Projection and view matrices for the shaders
+//////////////////////////////////////////////////////////////////////
+GLfloat pg_orthoWindowProjMatrix[16];
+GLfloat pg_doubleProjMatrix[16];
+GLfloat pg_homographyForTexture[9];
+GLfloat pg_modelMatrixSensor[16];
 
+/////////////////////////////////////////////////////////////////
+// Repop colors
+//////////////////////////////////////////////////////////////////////
 float pg_repop_ColorBGcolorRed;
 float pg_repop_ColorBG_g;
 float pg_repop_ColorBG_b;
@@ -90,21 +104,9 @@ cv::Mat homography;
 
 float pen_x, pen_y, vec_x, vec_y;
 
-/////////////////////////////////////////////////////////////////
-// VIDEO PARAMETERS
-
-std::string* pg_displayTextList = NULL;
-int* pg_displayTextFirstInChapter = NULL;
-int pg_NbDisplayTexts = 0;
-int pg_displayText_maxLen = 0;
-int pg_Ind_Current_DisplayText = 0;
-float * pg_displayText_rand_translX = NULL;
-float * pg_displayText_rand_translY = NULL;
-
 ////////////////////////////////////////////////////////////////////
 // DIAPORAMA IMAGE FILES
 ////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////
 // image index management for progessive image turnover
 // according to image blend frequency and duration
 // and according to directory size
@@ -115,43 +117,6 @@ GLuint Sensor_texture_rectangle[PG_MAX_SCENARIOS] = { NULL_ID };
 // pen palettes presets
 vector<ColorPreset> pg_ColorPresets[PG_MAX_SCENARIOS];
 
-// lights presets
-int pg_nb_light_groups[PG_MAX_SCENARIOS] = {0};
-vector<Light> pg_Lights[PG_MAX_SCENARIOS];
-vector<LightGroup> pg_light_groups[PG_MAX_SCENARIOS];
-// interface current light group
-int pg_interface_light_group = 0;
-
-// Create an unordered_map of three strings (that map to strings)
-// corresponds to all the parameters associated with DMX light channels
-// key constants are from enum pg_light_command_hashMap_IDs
-std::unordered_map<int, std::string> pg_light_param_hashMap = {
-	{ pg_enum_light_dimmer, "dimmer" },
-	{ pg_enum_light_strobe, "strobe" },
-	{ pg_enum_light_zoom, "zoom" },
-	{ pg_enum_light_pan, "pan" },
-	{ pg_enum_light_tilt, "tilt" },
-	{ pg_enum_light_hue, "hue" },
-	{ pg_enum_light_red, "red" },
-	{ pg_enum_light_green, "green" },
-	{ pg_enum_light_blue, "blue" },
-	{ pg_enum_light_grey, "grey" },
-	{ pg_enum_light_palette_color, "palette_color" }
-};
-// same map but from strings to enum values
-std::unordered_map<std::string, int> pg_inverse_light_param_hashMap = {
-};
-// submap of the parameters which can be looped
-std::unordered_map<int, std::string> pg_light_loop_param_hashMap = {
-	{ pg_enum_light_zoom, "zoom" },
-	{ pg_enum_light_pan, "pan" },
-	{ pg_enum_light_tilt, "tilt" }
-};
-
-// pen palettes colors
-vector<Palette> pg_Palettes[PG_MAX_SCENARIOS];
-// photo albums
-std::string pg_ImageDirectory[PG_MAX_SCENARIOS] = { "" };
 // short video clip albums
 string pg_ClipDirectory[PG_MAX_SCENARIOS] = { "" };
 int pg_NbClipAlbums[PG_MAX_SCENARIOS] = {0};
@@ -174,13 +139,22 @@ int pg_playing_secondClipNoRight = -1;
 
 const char *TextureEncodingString[pg_enum_EmptyTextureEncoding + 1] = { "jpeg", "png", "pnga", "png_gray", "pnga_gray", "rgb", "raw", "emptyimagetype" };
 
-/*
-threadData pDataWriteJpg;
-threadData pDataWriteSvg;
-threadData pDataWritePng;
-*/
+// ++++++++++++++++++++++ MUSIC CONTROL ++++++++++++++++++++ 
+// music control inputs received at each frame
 
-///////////////////////////////////////////////////////
+
+// factor increasing the acceleration weight of pixels, the brush radius, color...
+// based on sound volume attacks
+float pulse_average;
+float pg_audio_pulse_average_prec = -1.f;
+float pg_audio_pulse[3] = { 0.0f };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// RENDERD IMAGE TRANSLATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////
 // CONVERSION OF FLOAT TRANSLATION INTO FRAME BASED INTEGER TRANSLATION
 float pg_frame_based_translation(float transl, int translation_rank) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_slow_track_translation]) {
@@ -208,786 +182,23 @@ float pg_frame_based_translation(float transl, int translation_rank) {
 	return 0.f;
 }
 
-///////////////////////////////////////////////////////
-// GLUT draw function (from the viewpoint)
-
-// the glut callback
-// requires predrawing (drawing from the user to the root node)
-
-// ------------------------------------------------------------ //
-// --------------- DISPLAYS WINDOWS ONE AFTER ANOTHER --------- //
-// ------------------------------------------------------------ //
-void pg_window_display(void) {
-
-#if defined(PG_DEBUG)
-	OutputDebugStringW(_T("\nstat 1\n"));
-	_CrtMemCheckpoint(&s1);
-#endif
-
-	//printf("Maser %.2f\n", master);
-
-	pg_windowDisplayed = true;
-	// pg_printOglError(508);
-
-	//////////////////////////////////////////////////
-	//////////////////////////////////////////////////
-	// SCENE UPDATE AND SHADER UNIFORM PARAMETERS UPDATE
-	//////////////////////////////////////////////////
-	// scenario update 
-	pg_update_scenario();
-	// recalculates pulsed colors and reads current paths
-	pg_update_pulsed_colors_and_replay_paths(pg_CurrentClockTime);
-
-	// ships uniform variables  pg_printOglError(51);
-	pg_printOglError(50);
-	pg_update_shader_uniforms();
-	pg_printOglError(51);
-
-	// loads movie andor camera frames
-	pg_update_clip_camera_and_movie_frame();
-
-#if defined(PG_DEBUG)
-	OutputDebugStringW(_T("stat 7\n"));
-	_CrtMemCheckpoint(&s7);
-	if (_CrtMemDifference(&sDiff, &s9, &s7))
-		_CrtMemDumpStatistics(&sDiff);
-#endif
-
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
-		// updates mesh animation
-		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_ind_scenario].size(); indMeshFile++) {
-			// visibility
-			bool visible = false;
-#if defined(pg_Project_Etoiles)
-			visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
-#elif defined(var_Caverne_Mesh_Profusion)
-			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneActveMesh
-				&& (pg_CurrentClockTime - pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshBirthTime > pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshWakeupTime)
-				&& (pg_CurrentClockTime < pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshDeathTime));
-#else
-			visible = (activeMeshes & (1 << indMeshFile));
-
-			// visible mesh
-			if (visible) {
-				if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones != NULL) {
-					//printf("updage anim & bones mesh %d\n", indMeshFile);
-					pg_update_bone_anim(indMeshFile);
-					pg_update_bones(indMeshFile);
-				}
-				if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_rotation]) {
-					pg_update_motion(indMeshFile);
-				}
-			}
-		}
-	}
-#endif
-
-	// Looks for next peak or onset for random diaporama (cf GrabIt! music piece)
-#if defined(var_Argenteuil_onsetchange_diaporama)
-	double timeFromBeginning = pg_RealTime() - soundfile_data.sound_file_StartReadingTime;
-	if (pg_currentlyPlaying_trackNo >= 0 
-		&& int(pg_SoundTracks[pg_ind_scenario].size()) > pg_currentlyPlaying_trackNo) {
-		//printf("size %d %d\n", pg_SoundTracks[pg_currentlyPlaying_trackNo]->soundTrackSoundtrackPeaks.size(), pg_SoundTracks[pg_currentlyPlaying_trackNo]->soundTrackSoundtrackPeaks.size());
-		pg_updatePeakOrOnset(timeFromBeginning, &pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackPeaks, 
-			&pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackOnsets,
-			&pg_track_sound_peak, &pg_track_sound_onset, pg_nbTrackSoundPeakIndex[pg_ind_scenario], 
-			pg_nbTrackSoundOnsetIndex[pg_ind_scenario], &pg_currentTrackSoundPeakIndex, &pg_currentTrackSoundOnsetIndex);
-		if (pg_track_sound_onset) {
-			pg_diaporama_random();
-		}
-	}
-#endif
-
-	// tests whether the soundtrack is finished reading
-	pg_checkAudioStream();
-
-	//////////////////////////////////////////////////
-	//////////////////////////////////////////////////
-	// SCENE DISPLAY AND SHADER UNIFORM PARAMETERS UPDATE
-	//////////////////////////////////////////////////
-	// OpenGL initializations before redisplay
-	pg_OpenGLInit();
-	// pg_printOglError(509);
-
-#if defined(PG_DEBUG)
-	OutputDebugStringW(_T("stat 4\n"));
-	_CrtMemCheckpoint(&s4);
-	if (_CrtMemDifference(&sDiff, &s7, &s4))
-		_CrtMemDumpStatistics(&sDiff);
-#endif
-
-	// proper scene redrawing
-	pg_draw_scene( pg_enum_render_Display );
-
-#if defined(PG_DEBUG)
-	OutputDebugStringW(_T("stat 2\n"));
-	_CrtMemCheckpoint(&s2);
-	if (_CrtMemDifference(&sDiff, &s4, &s2))
-		_CrtMemDumpStatistics(&sDiff);
-#endif
-
-	//////////////////////////////////////////////////
-	//////////////////////////////////////////////////
-	// ONE-FRAME PARAMETERS RESET OR UPDATE (AUTOMATIC, NON SCENARIO-BASED UPDATES)
-	//////////////////////////////////////////////////
-	// resets to 0 the variables that are only true for one frame such as flashes, resets...
-	pg_automatic_var_reset_or_update();
-
-	// flushes OpenGL commands
-	glFlush();
-
-	// displays new frame
-	glutSwapBuffers();
-
-#if defined(PG_DEBUG)
-	OutputDebugStringW(_T("stat 3\n"));
-	_CrtMemCheckpoint(&s3);
-	if (_CrtMemDifference(&sDiff, &s2, &s3))
-		_CrtMemDumpStatistics(&sDiff);
-#endif
-
-	// ------------------------------------------------------------ //
-	// --------------- FRAME/SUBFRAME GRABBING -------------------- //
-
-	// ---------------- frame by frame output --------------------- //
-	// Svg screen shots
-	// printf("Draw Svg\n" );
-	if (take_snapshots && pg_Svg_Capture_param.outputSvg) {
-		// frame count based output
-		if (pg_Svg_Capture_param.stepSvgInFrames > 0) {
-			if (pg_FrameNo % pg_Svg_Capture_param.stepSvgInFrames == 0
-				&& pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames >= pg_Svg_Capture_param.beginSvg &&
-				pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames <= pg_Svg_Capture_param.endSvg) {
-				pg_draw_scene( pg_enum_render_Svg );
-			}
-		}
-		else if (pg_Svg_Capture_param.stepSvgInSeconds > 0) {
-			if (pg_Svg_Capture_param.nextSvgCapture < 0) {
-				pg_Svg_Capture_param.nextSvgCapture = pg_CurrentClockTime;
-			}
-			if (pg_CurrentClockTime >= pg_Svg_Capture_param.nextSvgCapture
-				&& pg_CurrentClockTime >= pg_Svg_Capture_param.beginSvg &&
-				pg_CurrentClockTime <= pg_Svg_Capture_param.endSvg) {
-				pg_Svg_Capture_param.nextSvgCapture = max(pg_Svg_Capture_param.nextSvgCapture + pg_Svg_Capture_param.stepSvgInSeconds, pg_CurrentClockTime);
-				pg_draw_scene( pg_enum_render_Svg );
-			}
-		}
-	}
-
-	// ---------------- frame by frame output --------------------- //
-	// Png screen shots
-	// printf("Draw Png\n" );
-	if (take_snapshots && pg_Png_Capture_param.outputPng ) {
-		// frame count based output
-		if (pg_Png_Capture_param.stepPngInFrames > 0) {
-			if (pg_FrameNo % pg_Png_Capture_param.stepPngInFrames == 0
-				&& pg_FrameNo / pg_Png_Capture_param.stepPngInFrames >= pg_Png_Capture_param.beginPng &&
-				pg_FrameNo / pg_Png_Capture_param.stepPngInFrames <= pg_Png_Capture_param.endPng) {
-				pg_draw_scene( pg_enum_render_Png );
-			}
-		}
-		else if (pg_Png_Capture_param.stepPngInSeconds > 0) {
-			if (pg_Png_Capture_param.nextPngCapture < 0) {
-				pg_Png_Capture_param.nextPngCapture = pg_CurrentClockTime;
-			}
-			if (pg_CurrentClockTime >= pg_Png_Capture_param.nextPngCapture
-				&& pg_CurrentClockTime >= pg_Png_Capture_param.beginPng &&
-				pg_CurrentClockTime <= pg_Png_Capture_param.endPng) {
-				pg_Png_Capture_param.nextPngCapture = max(pg_Png_Capture_param.nextPngCapture + pg_Png_Capture_param.stepPngInSeconds, pg_CurrentClockTime);
-				pg_draw_scene( pg_enum_render_Png );
-			}
-		}
-	}
-
-	// ---------------- frame by frame output --------------------- //
-	// Jpg screen shots
-	// printf("Draw Jpg\n"  );
-	if (take_snapshots && pg_Jpg_Capture_param.outputJpg) {
-		// frame count based output
-		if (pg_Jpg_Capture_param.stepJpgInFrames > 0) {
-			if (pg_FrameNo % pg_Jpg_Capture_param.stepJpgInFrames == 0
-				&& pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames >= pg_Jpg_Capture_param.beginJpg &&
-				pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames <= pg_Jpg_Capture_param.endJpg) {
-				pg_draw_scene( pg_enum_render_Jpg );
-			}
-		}
-		else if (pg_Jpg_Capture_param.stepJpgInSeconds > 0) {
-			if (pg_Jpg_Capture_param.nextJpgCapture < 0) {
-				pg_Jpg_Capture_param.nextJpgCapture = pg_CurrentClockTime;
-			}
-			if (pg_CurrentClockTime >= pg_Jpg_Capture_param.nextJpgCapture
-				&& pg_CurrentClockTime >= pg_Jpg_Capture_param.beginJpg &&
-				pg_CurrentClockTime <= pg_Jpg_Capture_param.endJpg) {
-				pg_Jpg_Capture_param.nextJpgCapture = max(pg_Jpg_Capture_param.nextJpgCapture + pg_Jpg_Capture_param.stepJpgInSeconds, pg_CurrentClockTime);
-				pg_draw_scene( pg_enum_render_Jpg );
-				//printf("nextJpgCapture %.2f pg_CurrentClockTime %.2f\n", nextJpgCapture, pg_CurrentClockTime);
-			}
-		}
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// SENSOR READING AND SAMPLE CHOICE/
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-//// sample choice
-//// current sample choice
-//int pg_sample_choice[ PG_NB_SENSORS];
-//// all possible sensor layouts
-//int pg_sensor_sample_setUps[ PG_NB_MAX_SENSOR_SAMPLE_SETUPS][ PG_NB_SENSORS ] =
-//  {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25},
-//   {26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50},
-//   {51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75}};
-//// groups of samples for aliasing with additive samples
-
-void pg_readSensors(void) {
-	bool sensorOn[PG_NB_SENSORS] = { false };
-
-	bool sampleOn[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] = { false };
-	int sampleToSensorPointer[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS] = { 0 };
-
-	GLubyte pixelColor[3 * PG_NB_SENSORS] = { 0 };
-
-	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
-		return;
-	}
-	
-	// marks all the samples as unread
-	for (int indSample = 0; indSample < PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS; indSample++) {
-		sampleOn[indSample] = false;
-		sampleToSensorPointer[indSample] = -1;
-	}
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, pg_FBO_Mixing_capturedFB_prec); // drawing memory on odd and even frames for echo and sensors	
-	pg_bindFBOTextures(pg_FBO_Mixing_capturedFB_prec, pg_FBO_Mixing_capturedFB_prec_texID + (pg_FrameNo % 2), 1, false, 0);
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	// sensor readback
-	//printf("sensor on ");
-	//printf("SENSOR position %d %d %d %d %d %d %d %d\n", (int)pg_sensorPositions[0], (int)pg_sensorPositions[1],
-	//	(int)pg_sensorPositions[3], (int)pg_sensorPositions[4], (int)pg_sensorPositions[6], (int)pg_sensorPositions[7], (int)pg_sensorPositions[9], (int)pg_sensorPositions[10]);
-	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		if (pg_sensor_onOff[indSens]) {
-			//printf("position %d %d\n", (int)pg_sensorPositions[3 * indSens],
-			//	(int)(pg_sensorPositions[3 * indSens + 1]));
-			glReadPixels((int)pg_sensorPositions[3 * indSens],
-				(int)(pg_sensorPositions[3 * indSens + 1]),
-				1, 1,
-				GL_RGB, GL_UNSIGNED_BYTE, pixelColor + 3 * indSens);
-			pg_sensorLevel[indSens] =
-				(pixelColor[3 * indSens] + pixelColor[3 * indSens + 1] + pixelColor[3 * indSens + 2]) / (255.f * 3.f);
-			sensorOn[indSens] = (pg_sensorLevel[indSens] > 0.0f);
-			if (sensorOn[indSens]) {
-				sampleOn[pg_sample_choice[indSens]] = true;
-				sampleToSensorPointer[pg_sample_choice[indSens]] = indSens;
-				//printf("ON#%d ",indSens);
-			}
-		}
-		else {
-			pg_sensorLevel[indSens] = 0.0f;
-			sensorOn[indSens] = false;
-		}
-	}
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	//printf("\n");
-	pg_printOglError(691);
-
-	///////////////////////////////////////////////////////////////
-	// SENSOR-BASED SOUND IN RENOISE OR PORPHYROGRAPH SOUND
-	// message value
-	std::string float_string;
-	std::string int_string;
-
-	///////////////////////////////////////////////
-	// TRIGGERING THE SAMPLE
-	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-		if (sensorOn[indSens] // active sensor
-			&& pg_sensorLevel[indSens] > 0 // non black pixel
-			&& pg_sample_play_start[pg_sample_choice[indSens]] < 0 // not currently playing
-			) {
-
-#if defined(PG_RENOISE)
-			// Renoise message format && message posting
-			sprintf(pg_AuxString, "/renoise/song/track/%d/prefx_volume %.2f", pg_sample_choice[indSens] + 1, pg_sensorLevel[indSens] * sensor_vol);
-			pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_RN_send");
-
-			//printf("RENOISE send %s %f %f\n", pg_AuxString, pg_sensorLevel[indSens], sensor_vol);
-#endif
-
-			// starts the clock for stopping the sample play after a certain time
-			pg_sample_play_start[pg_sample_choice[indSens]] = pg_CurrentClockTime;
-			pg_sample_play_volume[pg_sample_choice[indSens]] = pg_sensorLevel[indSens];
-			// printf("lights sensor #%d\n", indSens);
-		}
-
-		// the sample has been triggered and has not yet reached 90% of its playing duration
-		if (pg_sample_play_start[pg_sample_choice[indSens]] > 0.0
-			&& pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]] <= 0.9 * sensor_beat_duration) {
-			// set the value to the initial value until 0.9 so that there is one visual feedback per loop
-			pg_sensorLevel[indSens] = (pg_sample_play_volume[pg_sample_choice[indSens]]
-				* float((pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]]) / sensor_beat_duration));
-		}
-	}
-	pg_printOglError(689);
-
-	///////////////////////////////////////////////
-	// MANAGING THE SAMPLE SEVEL
-	for (int indSetup = 0; indSetup < PG_NB_MAX_SENSOR_SAMPLE_SETUPS; indSetup++) {
-		for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
-			int indSample = pg_sensor_sample_setUps[indSetup][indSens];
-			if (pg_sample_play_start[indSample] > 0
-				&& pg_CurrentClockTime - pg_sample_play_start[indSample] > sensor_beat_duration) {
-#if defined(PG_RENOISE)
-				// Renoise message format && message posting
-				sprintf(pg_AuxString, "/renoise/song/track/%d/prefx_volume %.2f", indSample + 1, 0.f);
-				pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_RN_send");
-#endif
-
-				// resets the clock for replaying the sample if sensor triggered again
-				pg_sample_play_start[indSample] = -1.f;
-			}
-		}
-	}
-	pg_printOglError(690);
-
-	// message trace
-	//std::cout << "format: " << format << "\n";
-	//std::cout << "msg: " << message << "\n";
-}
-
-#if defined(pg_Project_CAaudio)
-class pg_greyNote {
-public:
-	float grey;
-	int note;
-};
-void pg_playChord() {
-	// line reading
-	GLubyte *rowColor = new GLubyte[3 * 1024];
-	pg_greyNote *rowGrey = new pg_greyNote[1024];
-	// reads the 2nd horizontal line (from the top)
-	glReadPixels(0, 766, 1024, 1,
-				 GL_RGB, GL_UNSIGNED_BYTE, rowColor);
-	GLubyte *ptr = rowColor;
-	std::string float_string;
-	std::string int_string;
-	std::string message;
-	// message format
-	int nbGrey = 0;
-	//printf("Colors\n");
-	for (int indPixel = 0; indPixel < 1024; indPixel++) {
-		GLubyte r, g, b;
-		r = *(ptr++);
-		g = *(ptr++);
-		b = *(ptr++);
-		//if (indPixel < 100) {
-		//	printf("(%d,%d,%d) ", int(r), int(g), int(b));
-		//}
-		float greyVal = (float(r) + float(g) + float(b)) / (255.f * 3.f);
-		if (greyVal > 0) {
-			rowGrey[nbGrey].note = indPixel;
-			rowGrey[nbGrey].grey = greyVal;
-			nbGrey++;
-		}
-	}
-	//printf("\n");
-
-	// no non null note
-	if (nbGrey <= 0) {
-		//printf("No note\n");
-		delete rowColor;
-		return;
-	}
-
-	// less than 10 notes play them all
-	if (nbGrey < 10) {
-		std::string format = "";
-		for (int ind = 0; ind < 20; ind++) {
-			format += "f";
-		}
-		//printf("Less than 10 notes\n");
-		//for (int indGreyNote = 0; indGreyNote < nbGrey; indGreyNote++) {
-		//	printf("%d %.2f / ", rowGrey[nbGrey].note, rowGrey[nbGrey].grey);
-		//}
-		//printf("\n");
-
-		message = "/chord ";
-		// non null notes
-		for (int indGreyNote = 0; indGreyNote < nbGrey; indGreyNote++) {
-			// MESSAGE CONSTRUCTION
-			// the note is converted into a frequency
-			int_string
-				= std::to_string(static_cast<long double>(440 * pow(pow(2., 1. / 12.),
-				(rowGrey[indGreyNote].note - 512) / 8)));
-			message += int_string + " ";
-			// the intensity is turned into decibels
-			float_string = std::to_string(static_cast<long double>(rowGrey[indGreyNote].grey * 100.f));
-			// float_str.resize(4);
-			message += float_string;
-			if (indGreyNote < 10 - 1) {
-				message += float_string + " ";
-			}
-			else {
-				message += float_string;
-			}
-		}
-		// remaining nul notes to fill up to 10 notes in a chord
-		for (int indGreyNote = nbGrey; indGreyNote < 10; indGreyNote++) {
-			// MESSAGE CONSTRUCTION
-			// the note is outside the scale
-			int_string = std::to_string(-1);
-			message += int_string + " ";
-			// the intensity is null
-			float_string = std::to_string(static_cast<long double>(0.f));
-			// float_str.resize(4);
-			if (indGreyNote < 10 - 1) {
-				message += float_string + " ";
-			}
-			else {
-				message += float_string;
-			}
-		}
-		// message posting
-		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
-	}
-	else {
-		message = "/chord ";
-		// notes are grouped by package of same size into metaNotes with a metaIntensity
-		// number minimal of notes per metanote
-		int nbNotesMinPerMetaNote = nbGrey / 10; // integer part
-		// some metaNotes are built from 1 additional note
-		int nbMetaNotesWithNbNMPMPlus1 = (nbGrey * 10) % 10; // first decimal
-		// rank of the non null note
-		int indGreyNote = 0;
-		// rank of the note inside the metaNote group
-		int indNotesMinPerMetaNote = 0;
-		// average note value
-		float metaNote[10] = { 0.f };
-		// average intensity values
-		float metaGrey[10] = { 0.f };
-		// builds the metaNotes from note groups
-		for (int indMetaNote = 0; indMetaNote < 10; indMetaNote++) {
-			// average note value
-			metaNote[indMetaNote] = 0.f;
-			// average intensity values
-			metaGrey[indMetaNote] = 0.f;
-
-			// METANOTE SIZE
-			// number of notes building the metaNote
-			int nbNotes
-				= (indMetaNote < nbMetaNotesWithNbNMPMPlus1 ? nbNotesMinPerMetaNote + 1 : nbNotesMinPerMetaNote);
-			// the last metaNote uses the remaining non null notes
-			if (indMetaNote == 10 - 1) {
-				nbNotes = nbGrey - indGreyNote;
-			}
-
-			// METANOTE computation
-			// average note and intensity value
-			for (int indLocalGreyNote = 0; indLocalGreyNote < nbNotes && indGreyNote < nbGrey; indLocalGreyNote++) {
-				metaGrey[indMetaNote] += rowGrey[indGreyNote].grey;
-				metaNote[indMetaNote] += rowGrey[indGreyNote].note * rowGrey[indGreyNote].grey;
-				indGreyNote++;
-			}
-
-			// AVERAGE VALUES
-			// the note is corrected by the sum of weights (intensities) to turn it into a barycenter
-			if (metaGrey > 0) {
-				metaNote[indMetaNote] /= metaGrey[indMetaNote];
-			}
-			else {
-				metaNote[indMetaNote] = -1;
-			}
-			if (nbNotes > 0) {
-				metaGrey[indMetaNote] /= nbNotes;
-			}
-
-			// MESSAGE CONSTRUCTION
-			// the note is converted into a frequency
-			int_string
-				= std::to_string(static_cast<long double>(440 * pow(pow(2., 1. / 12.),
-				(int(round(metaNote[indMetaNote])) - 512) / 8)));
-			message += int_string + " ";
-			// the intensity is turned into decibels
-			float_string = std::to_string(static_cast<long double>(metaGrey[indMetaNote] * 100.f));
-			// float_str.resize(4);
-			if (indMetaNote < 10 - 1) {
-				message += float_string + " ";
-			}
-			else {
-				message += float_string;
-			}
-		}
-		std::string format = "";
-
-		format += "f";
-		}
-		// message posting
-		pg_send_message_udp((char *)format.c_str(), (char *)message.c_str(), (char *)"udp_PD_send");
-	}
-	delete rowColor;
-	delete rowGrey;
-}
-#endif
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-// SCENE VARIABLE UPDATES
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-// restores variables to 0 or false so that
-// they do not stay on more than one frame (flashes, initialization...)
-void pg_automatic_var_reset_or_update(void) {
-	///////////////////////////////////////////////////////////////////////
-	// flash reset: restores flash to 0 so that
-	// it does not stay on more than one frame 
-	for (int indtrack = 0; indtrack < PG_NB_TRACKS; indtrack++) {
-		if (pg_flashTrkCA_weights_duration[indtrack] > 1) {
-			pg_flashTrkCA_weights_duration[indtrack]--;
-		}
-		else {
-			pg_flashTrkCA_weights[indtrack] = 0;
-			pg_flashTrkCA_weights_duration[indtrack] = 0;
-		}
-		if (pg_flashTrkBG_weights_duration[indtrack] > 1) {
-			pg_flashTrkBG_weights_duration[indtrack]--;
-		}
-		else {
-			pg_flashTrkBG_weights[indtrack] = 0;
-			pg_flashTrkBG_weights_duration[indtrack] = 0;
-		}
-		if (pg_flashTrkPart_weights_duration[indtrack] > 1) {
-			pg_flashTrkPart_weights_duration[indtrack]--;
-		}
-		else {
-			pg_flashTrkPart_weights[indtrack] = 0;
-			pg_flashTrkPart_weights_duration[indtrack] = 0;
-		}
-	}
-
-	if (pg_flashPixel > 0) {
-		pg_flashPixel -= 1;
-	}
-	if (pg_flashCABG_weight_duration > 1) {
-		pg_flashCABG_weight_duration--;
-	}
-	else {
-		pg_flashCABG_weight_duration = 0;
-		pg_flashCABG_weight = 0;
-	}
-	if (pg_flashCAPart_weight_duration > 1) {
-		pg_flashCAPart_weight_duration--;
-	}
-	else {
-		pg_flashCAPart_weight_duration = 0;
-		pg_flashCAPart_weight = 0;
-	}
-	if (pg_flashPartBG_weight_duration > 1) {
-		pg_flashPartBG_weight_duration--;
-	}
-	else {
-		pg_flashPartBG_weight_duration = 0;
-		pg_flashPartBG_weight = 0;
-	}
-	if (pg_flashPartCA_weight_duration > 1) {
-		pg_flashPartCA_weight_duration--;
-	}
-	else {
-		pg_flashPartCA_weight_duration = 0;
-		pg_flashPartCA_weight = 0;
-	}
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_master_scale]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_master_offsetX]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_gamma]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_satur]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_threshold]) {
-		if (pg_flashMaster > 0) {
-			pg_flashMaster--;
-			// end of flash return to dark
-			if (pg_CurrentScene && pg_flashMaster == 0) {
-				master = 0.f;
-				*((float*)pg_FullScenarioVarPointers[_master]) = master;
-				master_scale = float(pg_CurrentScene->scene_initial_parameters[_master_scale].val_num);
-				*((float*)pg_FullScenarioVarPointers[_master_scale]) = master_scale;
-				master_offsetX = float(pg_CurrentScene->scene_initial_parameters[_master_offsetX].val_num);
-				*((float*)pg_FullScenarioVarPointers[_master_offsetX]) = master_offsetX;
-				master_offsetY = float(pg_CurrentScene->scene_initial_parameters[_master_offsetY].val_num);
-				*((float*)pg_FullScenarioVarPointers[_master_offsetY]) = master_offsetY;
-				photo_threshold = float(pg_CurrentScene->scene_initial_parameters[_photo_threshold].val_num);
-				*((float*)pg_FullScenarioVarPointers[_photo_threshold]) = photo_threshold;
-				photo_gamma = float(pg_CurrentScene->scene_initial_parameters[_photo_gamma].val_num);
-				*((float*)pg_FullScenarioVarPointers[_photo_gamma]) = photo_gamma;
-				photo_satur = float(pg_CurrentScene->scene_initial_parameters[_photo_satur].val_num);
-				*((float*)pg_FullScenarioVarPointers[_photo_satur]) = photo_satur;
-				invertAllLayers = bool(pg_CurrentScene->scene_initial_parameters[_invertAllLayers].val_num);
-				*((bool*)pg_FullScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
-			}
-		}
-	}
-
-	////////////////////////////
-	// flash camera reset
-	if (pg_flashCameraTrk_weight > 0.0f) {
-		if (pg_flashCameraTrk_weight - pg_flashCameraTrk_decay > 0) {
-			pg_flashCameraTrk_weight -= pg_flashCameraTrk_decay;
-			//printf("flash camera weight %.3f\n", pg_flashCameraTrk_weight);
-		}
-		else {
-			pg_flashCameraTrk_weight = 0.0f;
-			//printf("end of flash camera weight %.3f\n", pg_flashCameraTrk_weight);
-		}
-	}
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBeat]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBright]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkLength]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoChangeBeat]) {
-		// flash photo reset
-		if (pg_flashPhotoTrk_weight > 0.0f) {
-			if (pg_flashPhotoTrk_weight > 0) {
-				pg_flashPhotoTrk_weight -= pg_flashPhotoTrk_decay;
-				if (pg_flashPhotoTrk_weight < 0) {
-					pg_flashPhotoTrk_weight = 0.f;
-				}
-				pg_flashPhotoTrk_nbFrames++;
-			}
-			else {
-				pg_flashPhotoTrk_weight = 0.0f;
-				//printf("end of flash photo weight %.3f\n", pg_flashPhotoTrk_weight);
-				pg_flashPhotoTrk_nbFrames = 0;
-			}
-		}
-	}
-
-	if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
-		if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
-			printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
-			pg_CurrentDiaporamaEnd = -1;
-			photo_diaporama = -1;
-			photoWeight = 0.f;
-			sprintf(pg_AuxString, "/diaporama_shortName ---"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
-		}
-	}
-
-	// /////////////////////////
-	// clear layer reset
-	// does not reset if camera capture is still ongoing
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]
-		&& pg_FullScenarioActiveVars[pg_ind_scenario][_camera_BG_subtr]) {
-		if ((reset_camera || (pg_initialSecondBGCapture == 1)) && (pg_initialBGCapture || pg_secondInitialBGCapture)) {
-			pg_isClearAllLayers = 0.f;
-		}
-	}
-
-	// clear 3 frames
-	// clear CA reset 
-	// clear layer reset
-	// clear all layers reset
-	// clear echo reset
-	(pg_isClearCA > 0.f ? pg_isClearCA -= 0.35f : pg_isClearCA = 0.f);
-	(pg_isClearLayer > 0.f ? pg_isClearLayer -= 0.35f : pg_isClearLayer = 0.f);
-	(pg_isClearAllLayers > 0.f ? pg_isClearAllLayers -= 0.35f : pg_isClearAllLayers = 0.f);
-	(pg_isClearEcho > 0.f ? pg_isClearEcho -= 0.35f : pg_isClearEcho = 0.f);
-
-	// layer copy reset	
-	// copy to layer above (+1) or to layer below (-1)
-	pg_copyToNextTrack = 0;
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
-		// DELAYED CAMERA WEIGHT COUNTDOWN
-		if (pg_delayedCameraWeight > 1) {
-			pg_delayedCameraWeight--;
-		}
-		else if (pg_delayedCameraWeight == 1) {
-			*((float*)pg_FullScenarioVarPointers[_cameraWeight]) = 1;
-			pg_BrokenInterpolationVar[_cameraWeight] = true;
-			cameraWeight = 1;
-			pg_delayedCameraWeight = 0;
-		}
-	}
-
-#if defined(PG_WITH_BLUR)
-	// blur reset
-	if (nb_blur_frames_1 > 0) {
-		nb_blur_frames_1--;
-		if (nb_blur_frames_1 <= 0) {
-			is_blur_1 = false;
-		}
-	}
-	if (nb_blur_frames_2 > 0) {
-		nb_blur_frames_2--;
-		if (nb_blur_frames_2 <= 0) {
-			is_blur_2 = false;
-		}
-	}
-#endif
-
-#if defined(pg_Project_CAaudio)
-	// CA seed
-	pg_CAseed_trigger = false;
-#endif
-
-	// /////////////////////////
-	// particle initialization reset
-	part_initialization = -1;
-
-	// automatic master incay/decay
-	if (pg_master_incay_duration > 0) {
-		if (pg_master_incay_start_time + pg_master_incay_duration >= pg_CurrentClockTime) {
-			float alpha = max(0.f, min(1.f, float((pg_CurrentClockTime - pg_master_incay_start_time) / pg_master_incay_duration)));
-			master = pg_master_incay_start_value + alpha * (1.f - pg_master_incay_start_value);
-		}
-		else {
-			pg_master_incay_duration = 0.;
-			master = 1.f;
-		}
-		pg_BrokenInterpolationVar[_master] = true;
-		*((float*)pg_FullScenarioVarPointers[_master]) = master;
-	}
-	if (pg_master_decay_duration > 0) {
-		if (pg_master_decay_start_time + pg_master_decay_duration >= pg_CurrentClockTime) {
-			float alpha = max(0.f, min(1.f, float((pg_CurrentClockTime - pg_master_decay_start_time) / pg_master_decay_duration)));
-			master = (1.f - alpha) * pg_master_decay_start_value;
-		}
-		else {
-			pg_master_decay_duration = 0.;
-			master = 0.f;
-		}
-		pg_BrokenInterpolationVar[_master] = true;
-		*((float*)pg_FullScenarioVarPointers[_master]) = master;
-	}
-}
-
-/////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHADER UNIFORMS UPDATE
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////
 /////// UPDATES UNIFORMS IN ALL ACTIVE SHADERS
 /////// AS WELL AS TABLES FOR SCENARIO VARIABLES BOUND WITH SHADERS
-/////////////////////////////////////////////////////////
-void pg_update_shader_uniforms(void) {
-	pg_update_shader_var_data();
-	pg_update_shader_ParticleAnimation_uniforms();
-	pg_update_shader_Update_uniforms();
-	pg_update_shader_Mixing_uniforms();
-	pg_update_shader_Master_uniforms();
-	pg_update_shader_ParticleRender_uniforms();
-	// no update for uniforms in Sensor and ClipArt shaders
-	pg_update_shader_Mesh_uniforms();
-}
-
 void pg_update_shader_var_data(void) {
 #if defined(CORE)
-#include "pg_update_body_Core.cpp"
+#include "pg_render_body_Core.cpp"
 #endif
 #if defined(pg_Project_Voluspa)
-#include "pg_update_body_voluspa.cpp"
+#include "pg_render_body_voluspa.cpp"
 #endif
 #if defined(pg_Project_araKnit)
-#include "pg_update_body_araknit.cpp"
+#include "pg_render_body_araknit.cpp"
 #endif
-
-// #include "pg_scripts/pg_update_body.cpp"
 	pg_printOglError(510);
 }
 
@@ -1228,7 +439,7 @@ void pg_update_shader_Update_uniforms(void) {
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_ind_scenario],
 		pg_flashTrkBG_weights[1], pg_flashTrkBG_weights[2], pg_flashTrkBG_weights[3], pg_flashPartBG_weight);
 
-// flash Trk -> CA weights
+	// flash Trk -> CA weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkCAWghts[pg_ind_scenario],
 		pg_flashTrkCA_weights[0], pg_flashTrkCA_weights[1], pg_flashTrkCA_weights[2], pg_flashTrkCA_weights[3]);
 	// printf("pg_flashTrkCA_weights %.2f %.2f %.2f %.2f \n", pg_flashTrkCA_weights[0], pg_flashTrkCA_weights[1], pg_flashTrkCA_weights[2], pg_flashTrkCA_weights[3]);
@@ -1237,7 +448,7 @@ void pg_update_shader_Update_uniforms(void) {
 
 	// CA type, frame no, flashback and current track
 	glUniform4f(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[pg_ind_scenario],
-		(GLfloat)pg_ConfigurationFrameNo,
+		(GLfloat)pg_FrameNo,
 		(GLfloat)pg_CurrentStylus_StylusvsRubber, pg_flashPartCA_weight, (GLfloat)double_window);
 
 	// movie size, flash camera and copy tracks
@@ -1271,13 +482,13 @@ void pg_update_shader_Update_uniforms(void) {
 		pg_repop_ColorBGcolorRed, pg_repop_ColorBG_g, pg_repop_ColorBG_b, pg_flashCABG_weight);
 
 #if !defined(var_alKemi)
+	glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_ind_scenario],
+		pg_repop_ColorCA_r, pg_repop_ColorCA_g, pg_repop_ColorCA_b);
+#else
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_alKemi] == false) {
 		glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_ind_scenario],
 			pg_repop_ColorCA_r, pg_repop_ColorCA_g, pg_repop_ColorCA_b);
-#else
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_alKemi] == false) {
-			glUniform3f(uniform_Update_fs_3fv_repop_ColorCA[pg_ind_scenario],
-				pg_repop_ColorCA_r, pg_repop_ColorCA_g, pg_repop_ColorCA_b);
-		}
+	}
 #endif
 
 	// clear layer, flash pixel, flash CA -> Part
@@ -1460,7 +671,7 @@ void pg_update_shader_Update_uniforms(void) {
 			CAInterpolatedType = CA2Type;
 			CAInterpolatedSubType = CA2SubType;
 		}
-			//printf("CA1/CA2 mix: CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
+		//printf("CA1/CA2 mix: CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 	}
 
 #if !defined(PG_WITH_BLUR)
@@ -1549,7 +760,7 @@ void pg_update_shader_ParticleRender_uniforms(void) {
 		glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleRender]);
 		glUniform4f(uniform_ParticleSplat_gs_4fv_part_size_partType_highPitchPulse_windowRatio[pg_ind_scenario],
 			(part_size + pulse_average * part_size_pulse * part_size) / 512.f,
-			(GLfloat)particle_type, pg_audio_pulse[2], 
+			(GLfloat)particle_type, pg_audio_pulse[2],
 			float(pg_workingWindow_width) / float(PG_WINDOW_HEIGHT));
 		//printf("part size gs: %.3f\n", (part_size + pulse_average * part_size_pulse * part_size));
 
@@ -1596,8 +807,9 @@ void pg_update_shader_Mixing_uniforms(void) {
 		// TEXT TRANSPARENCY
 		glUniform3f(uniform_Mixing_fs_3fv_screenMsgTransp_Text1_2_Alpha[pg_ind_scenario],
 			pg_messageTransparency,
-			(GLfloat)1.f, (GLfloat)0.f);	}
-		pg_printOglError(512);
+			(GLfloat)1.f, (GLfloat)0.f);
+	}
+	pg_printOglError(512);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1639,11 +851,11 @@ void pg_update_shader_Mesh_uniforms(void) {
 		// MESH SHADER UNIFORM VARIABLES
 		glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mesh]);
 		// the variable of the mesh shader is updated before each rendering mode (lines of facets)
-			glUniform3f(uniform_Mesh_fs_3fv_light[pg_ind_scenario], pg_mesh_light_x, pg_mesh_light_y, pg_mesh_light_z);
+		glUniform3f(uniform_Mesh_fs_3fv_light[pg_ind_scenario], pg_mesh_light_x, pg_mesh_light_y, pg_mesh_light_z);
 #if defined(var_Contact_mesh_expand)
-			if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_expand]) {
-				glUniform2f(uniform_Mesh_vp_2fv_dilate_explode[pg_ind_scenario], Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
-			}
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_expand]) {
+			glUniform2f(uniform_Mesh_vp_2fv_dilate_explode[pg_ind_scenario], Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
+		}
 		//printf("mesh %.2f %.2f\n", Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
 #endif
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_textureFrontier_wmin]) {
@@ -1662,11 +874,662 @@ void pg_update_shader_Mesh_uniforms(void) {
 	pg_printOglError(517);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
+void pg_update_shader_uniforms(void) {
+	pg_update_shader_var_data();
+	pg_update_shader_ParticleAnimation_uniforms();
+	pg_update_shader_Update_uniforms();
+	pg_update_shader_Mixing_uniforms();
+	pg_update_shader_Master_uniforms();
+	pg_update_shader_ParticleRender_uniforms();
+	// no update for uniforms in Sensor and ClipArt shaders
+	pg_update_shader_Mesh_uniforms();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENE VARIABLES RESET AT EACH FRAME
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////
+// restores variables to 0 or false so that
+// they do not stay on more than one frame (flashes, initialization...)
+void pg_automatic_var_reset_or_update(void) {
+	///////////////////////////////////////////////////////////////////////
+	// flash reset: restores flash to 0 so that
+	// it does not stay on more than one frame 
+	for (int indtrack = 0; indtrack < PG_NB_TRACKS; indtrack++) {
+		if (pg_flashTrkCA_weights_duration[indtrack] > 1) {
+			pg_flashTrkCA_weights_duration[indtrack]--;
+		}
+		else {
+			pg_flashTrkCA_weights[indtrack] = 0;
+			pg_flashTrkCA_weights_duration[indtrack] = 0;
+		}
+		if (pg_flashTrkBG_weights_duration[indtrack] > 1) {
+			pg_flashTrkBG_weights_duration[indtrack]--;
+		}
+		else {
+			pg_flashTrkBG_weights[indtrack] = 0;
+			pg_flashTrkBG_weights_duration[indtrack] = 0;
+		}
+		if (pg_flashTrkPart_weights_duration[indtrack] > 1) {
+			pg_flashTrkPart_weights_duration[indtrack]--;
+		}
+		else {
+			pg_flashTrkPart_weights[indtrack] = 0;
+			pg_flashTrkPart_weights_duration[indtrack] = 0;
+		}
+	}
+
+	if (pg_flashPixel > 0) {
+		pg_flashPixel -= 1;
+	}
+	if (pg_flashCABG_weight_duration > 1) {
+		pg_flashCABG_weight_duration--;
+	}
+	else {
+		pg_flashCABG_weight_duration = 0;
+		pg_flashCABG_weight = 0;
+	}
+	if (pg_flashCAPart_weight_duration > 1) {
+		pg_flashCAPart_weight_duration--;
+	}
+	else {
+		pg_flashCAPart_weight_duration = 0;
+		pg_flashCAPart_weight = 0;
+	}
+	if (pg_flashPartBG_weight_duration > 1) {
+		pg_flashPartBG_weight_duration--;
+	}
+	else {
+		pg_flashPartBG_weight_duration = 0;
+		pg_flashPartBG_weight = 0;
+	}
+	if (pg_flashPartCA_weight_duration > 1) {
+		pg_flashPartCA_weight_duration--;
+	}
+	else {
+		pg_flashPartCA_weight_duration = 0;
+		pg_flashPartCA_weight = 0;
+	}
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_master_scale]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_master_offsetX]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_gamma]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_satur]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_photo_threshold]) {
+		if (pg_flashMaster > 0) {
+			pg_flashMaster--;
+			// end of flash return to dark
+			if (pg_CurrentScene && pg_flashMaster == 0) {
+				master = 0.f;
+				*((float*)pg_FullScenarioVarPointers[_master]) = master;
+				master_scale = float(pg_CurrentScene->scene_initial_parameters[_master_scale].val_num);
+				*((float*)pg_FullScenarioVarPointers[_master_scale]) = master_scale;
+				master_offsetX = float(pg_CurrentScene->scene_initial_parameters[_master_offsetX].val_num);
+				*((float*)pg_FullScenarioVarPointers[_master_offsetX]) = master_offsetX;
+				master_offsetY = float(pg_CurrentScene->scene_initial_parameters[_master_offsetY].val_num);
+				*((float*)pg_FullScenarioVarPointers[_master_offsetY]) = master_offsetY;
+				photo_threshold = float(pg_CurrentScene->scene_initial_parameters[_photo_threshold].val_num);
+				*((float*)pg_FullScenarioVarPointers[_photo_threshold]) = photo_threshold;
+				photo_gamma = float(pg_CurrentScene->scene_initial_parameters[_photo_gamma].val_num);
+				*((float*)pg_FullScenarioVarPointers[_photo_gamma]) = photo_gamma;
+				photo_satur = float(pg_CurrentScene->scene_initial_parameters[_photo_satur].val_num);
+				*((float*)pg_FullScenarioVarPointers[_photo_satur]) = photo_satur;
+				invertAllLayers = bool(pg_CurrentScene->scene_initial_parameters[_invertAllLayers].val_num);
+				*((bool*)pg_FullScenarioVarPointers[_invertAllLayers]) = invertAllLayers;
+			}
+		}
+	}
+
+	////////////////////////////
+	// flash camera reset
+	if (pg_flashCameraTrk_weight > 0.0f) {
+		if (pg_flashCameraTrk_weight - pg_flashCameraTrk_decay > 0) {
+			pg_flashCameraTrk_weight -= pg_flashCameraTrk_decay;
+			//printf("flash camera weight %.3f\n", pg_flashCameraTrk_weight);
+		}
+		else {
+			pg_flashCameraTrk_weight = 0.0f;
+			//printf("end of flash camera weight %.3f\n", pg_flashCameraTrk_weight);
+		}
+	}
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBeat]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkBright]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoTrkLength]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_flashPhotoChangeBeat]) {
+		// flash photo reset
+		if (pg_flashPhotoTrk_weight > 0.0f) {
+			if (pg_flashPhotoTrk_weight > 0) {
+				pg_flashPhotoTrk_weight -= pg_flashPhotoTrk_decay;
+				if (pg_flashPhotoTrk_weight < 0) {
+					pg_flashPhotoTrk_weight = 0.f;
+				}
+				pg_flashPhotoTrk_nbFrames++;
+			}
+			else {
+				pg_flashPhotoTrk_weight = 0.0f;
+				//printf("end of flash photo weight %.3f\n", pg_flashPhotoTrk_weight);
+				pg_flashPhotoTrk_nbFrames = 0;
+			}
+		}
+	}
+
+	if (photo_diaporama >= 0 && pg_CurrentDiaporamaEnd > 0) {
+		if (pg_CurrentDiaporamaEnd < pg_CurrentClockTime) {
+			printf("end of flash_photo_diaporama %d\n", pg_FrameNo);
+			pg_CurrentDiaporamaEnd = -1;
+			photo_diaporama = -1;
+			photoWeight = 0.f;
+			sprintf(pg_AuxString, "/diaporama_shortName ---"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+
+	// /////////////////////////
+	// clear layer reset
+	// does not reset if camera capture is still ongoing
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]
+		&& pg_FullScenarioActiveVars[pg_ind_scenario][_camera_BG_subtr]) {
+		if ((reset_camera || (pg_initialSecondBGCapture == 1)) && (pg_initialBGCapture || pg_secondInitialBGCapture)) {
+			pg_isClearAllLayers = 0.f;
+		}
+	}
+
+	// clear 3 frames
+	// clear CA reset 
+	// clear layer reset
+	// clear all layers reset
+	// clear echo reset
+	(pg_isClearCA > 0.f ? pg_isClearCA -= 0.35f : pg_isClearCA = 0.f);
+	(pg_isClearLayer > 0.f ? pg_isClearLayer -= 0.35f : pg_isClearLayer = 0.f);
+	(pg_isClearAllLayers > 0.f ? pg_isClearAllLayers -= 0.35f : pg_isClearAllLayers = 0.f);
+	(pg_isClearEcho > 0.f ? pg_isClearEcho -= 0.35f : pg_isClearEcho = 0.f);
+
+	// layer copy reset	
+	// copy to layer above (+1) or to layer below (-1)
+	pg_copyToNextTrack = 0;
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
+		// DELAYED CAMERA WEIGHT COUNTDOWN
+		if (pg_delayedCameraWeight > 1) {
+			pg_delayedCameraWeight--;
+		}
+		else if (pg_delayedCameraWeight == 1) {
+			*((float*)pg_FullScenarioVarPointers[_cameraWeight]) = 1;
+			pg_BrokenInterpolationVar[_cameraWeight] = true;
+			cameraWeight = 1;
+			pg_delayedCameraWeight = 0;
+		}
+	}
+
+#if defined(PG_WITH_BLUR)
+	// blur reset
+	if (nb_blur_frames_1 > 0) {
+		nb_blur_frames_1--;
+		if (nb_blur_frames_1 <= 0) {
+			is_blur_1 = false;
+		}
+	}
+	if (nb_blur_frames_2 > 0) {
+		nb_blur_frames_2--;
+		if (nb_blur_frames_2 <= 0) {
+			is_blur_2 = false;
+		}
+	}
+#endif
+
+#if defined(pg_Project_CAaudio)
+	// CA seed
+	pg_CAseed_trigger = false;
+#endif
+
+	// /////////////////////////
+	// particle initialization reset
+	part_initialization = -1;
+
+	// automatic master incay/decay
+	if (pg_master_incay_duration > 0) {
+		if (pg_master_incay_start_time + pg_master_incay_duration >= pg_CurrentClockTime) {
+			float alpha = max(0.f, min(1.f, float((pg_CurrentClockTime - pg_master_incay_start_time) / pg_master_incay_duration)));
+			master = pg_master_incay_start_value + alpha * (1.f - pg_master_incay_start_value);
+		}
+		else {
+			pg_master_incay_duration = 0.;
+			master = 1.f;
+		}
+		pg_BrokenInterpolationVar[_master] = true;
+		*((float*)pg_FullScenarioVarPointers[_master]) = master;
+	}
+	if (pg_master_decay_duration > 0) {
+		if (pg_master_decay_start_time + pg_master_decay_duration >= pg_CurrentClockTime) {
+			float alpha = max(0.f, min(1.f, float((pg_CurrentClockTime - pg_master_decay_start_time) / pg_master_decay_duration)));
+			master = (1.f - alpha) * pg_master_decay_start_value;
+		}
+		else {
+			pg_master_decay_duration = 0.;
+			master = 0.f;
+		}
+		pg_BrokenInterpolationVar[_master] = true;
+		*((float*)pg_FullScenarioVarPointers[_master]) = master;
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// FRAME RENDERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////
+// GLUT draw function
+void pg_window_display(void) {
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("\nstat 1\n"));
+	_CrtMemCheckpoint(&s1);
+#endif
+
+	//printf("Maser %.2f\n", master);
+
+	pg_windowDisplayed = true;
+	// pg_printOglError(508);
+
+	//////////////////////////////////////////////////
+	//////////////////////////////////////////////////
+	// SCENE UPDATE AND SHADER UNIFORM PARAMETERS UPDATE
+	//////////////////////////////////////////////////
+	// scenario update 
+	pg_update_scenario();
+	// recalculates pulsed colors and reads current paths
+	pg_update_pulsed_colors_and_replay_paths(pg_CurrentClockTime);
+
+	// ships uniform variables  pg_printOglError(51);
+	pg_printOglError(50);
+	pg_update_shader_uniforms();
+	pg_printOglError(51);
+
+	// loads movie andor camera frames
+	pg_update_clip_camera_and_movie_frame();
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 7\n"));
+	_CrtMemCheckpoint(&s7);
+	if (_CrtMemDifference(&sDiff, &s9, &s7))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
+		// updates mesh animation
+		for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_ind_scenario].size(); indMeshFile++) {
+			// visibility
+			bool visible = false;
+#if defined(pg_Project_Etoiles)
+			visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
+#elif defined(var_Caverne_Mesh_Profusion)
+			visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneActveMesh
+				&& (pg_CurrentClockTime - pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshBirthTime > pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshWakeupTime)
+				&& (pg_CurrentClockTime < pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshDeathTime));
+#else
+			visible = (activeMeshes & (1 << indMeshFile));
+
+			// visible mesh
+			if (visible) {
+				if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones != NULL) {
+					//printf("updage anim & bones mesh %d\n", indMeshFile);
+					pg_update_bone_anim(indMeshFile);
+					pg_update_bones(indMeshFile);
+				}
+				if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_rotation]) {
+					pg_update_motion(indMeshFile);
+				}
+			}
+		}
+	}
+#endif
+
+	// Looks for next peak or onset for random diaporama (cf GrabIt! music piece)
+#if defined(var_Argenteuil_onsetchange_diaporama)
+	double timeFromBeginning = pg_RealTime() - soundfile_data.sound_file_StartReadingTime;
+	if (pg_currentlyPlaying_trackNo >= 0 
+		&& int(pg_SoundTracks[pg_ind_scenario].size()) > pg_currentlyPlaying_trackNo) {
+		//printf("size %d %d\n", pg_SoundTracks[pg_currentlyPlaying_trackNo]->soundTrackSoundtrackPeaks.size(), pg_SoundTracks[pg_currentlyPlaying_trackNo]->soundTrackSoundtrackPeaks.size());
+		pg_updatePeakOrOnset(timeFromBeginning, &pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackPeaks, 
+			&pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackOnsets,
+			&pg_soundTrack_peak, &pg_soundTrack_onset, pg_nbTrackSoundPeakIndex[pg_ind_scenario], 
+			pg_nbTrackSoundOnsetIndex[pg_ind_scenario], &pg_currentTrackSoundPeakIndex, &pg_currentTrackSoundOnsetIndex);
+		if (pg_soundTrack_onset) {
+			pg_diaporama_random();
+		}
+	}
+#endif
+
+	// tests whether the soundtrack is finished reading
+	pg_pa_checkAudioStream();
+
+	//////////////////////////////////////////////////
+	// SCENE DISPLAY AND SHADER UNIFORM PARAMETERS UPDATE
+	// OpenGL initializations before redisplay
+	pg_OpenGLInit();
+	// pg_printOglError(509);
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 4\n"));
+	_CrtMemCheckpoint(&s4);
+	if (_CrtMemDifference(&sDiff, &s7, &s4))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+	// proper scene redrawing
+	pg_draw_scene( pg_enum_render_Display );
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 2\n"));
+	_CrtMemCheckpoint(&s2);
+	if (_CrtMemDifference(&sDiff, &s4, &s2))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+	//////////////////////////////////////////////////
+	// ONE-FRAME PARAMETERS RESET OR UPDATE (AUTOMATIC, NON SCENARIO-BASED UPDATES)
+	// resets to 0 the variables that are only true for one frame such as flashes, resets...
+	pg_automatic_var_reset_or_update();
+
+	// flushes OpenGL commands
+	glFlush();
+
+	// displays new frame
+	glutSwapBuffers();
+
+#if defined(PG_DEBUG)
+	OutputDebugStringW(_T("stat 3\n"));
+	_CrtMemCheckpoint(&s3);
+	if (_CrtMemDifference(&sDiff, &s2, &s3))
+		_CrtMemDumpStatistics(&sDiff);
+#endif
+
+	//////////////////////////////////////////////////
+	// OPTIONAL SVG SNAPSHOTS
+	// Svg screen shots
+	// printf("Draw Svg\n" );
+	if (take_snapshots && pg_Svg_Capture_param.outputSvg) {
+		// frame count based output
+		if (pg_Svg_Capture_param.stepSvgInFrames > 0) {
+			if (pg_FrameNo % pg_Svg_Capture_param.stepSvgInFrames == 0
+				&& pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames >= pg_Svg_Capture_param.beginSvg &&
+				pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames <= pg_Svg_Capture_param.endSvg) {
+				pg_draw_scene( pg_enum_render_Svg );
+			}
+		}
+		else if (pg_Svg_Capture_param.stepSvgInSeconds > 0) {
+			if (pg_Svg_Capture_param.nextSvgCapture < 0) {
+				pg_Svg_Capture_param.nextSvgCapture = pg_CurrentClockTime;
+			}
+			if (pg_CurrentClockTime >= pg_Svg_Capture_param.nextSvgCapture
+				&& pg_CurrentClockTime >= pg_Svg_Capture_param.beginSvg &&
+				pg_CurrentClockTime <= pg_Svg_Capture_param.endSvg) {
+				pg_Svg_Capture_param.nextSvgCapture = max(pg_Svg_Capture_param.nextSvgCapture + pg_Svg_Capture_param.stepSvgInSeconds, pg_CurrentClockTime);
+				pg_draw_scene( pg_enum_render_Svg );
+			}
+		}
+	}
+
+	//////////////////////////////////////////////////
+	// OPTIONAL PNG SNAPSHOTS
+	// Png screen shots
+	// printf("Draw Png\n" );
+	if (take_snapshots && pg_Png_Capture_param.outputPng ) {
+		// frame count based output
+		if (pg_Png_Capture_param.stepPngInFrames > 0) {
+			if (pg_FrameNo % pg_Png_Capture_param.stepPngInFrames == 0
+				&& pg_FrameNo / pg_Png_Capture_param.stepPngInFrames >= pg_Png_Capture_param.beginPng &&
+				pg_FrameNo / pg_Png_Capture_param.stepPngInFrames <= pg_Png_Capture_param.endPng) {
+				pg_draw_scene( pg_enum_render_Png );
+			}
+		}
+		else if (pg_Png_Capture_param.stepPngInSeconds > 0) {
+			if (pg_Png_Capture_param.nextPngCapture < 0) {
+				pg_Png_Capture_param.nextPngCapture = pg_CurrentClockTime;
+			}
+			if (pg_CurrentClockTime >= pg_Png_Capture_param.nextPngCapture
+				&& pg_CurrentClockTime >= pg_Png_Capture_param.beginPng &&
+				pg_CurrentClockTime <= pg_Png_Capture_param.endPng) {
+				pg_Png_Capture_param.nextPngCapture = max(pg_Png_Capture_param.nextPngCapture + pg_Png_Capture_param.stepPngInSeconds, pg_CurrentClockTime);
+				pg_draw_scene( pg_enum_render_Png );
+			}
+		}
+	}
+
+	//////////////////////////////////////////////////
+	// OPTIONAL JPG SNAPSHOTS
+	// Jpg screen shots
+	// printf("Draw Jpg\n"  );
+	if (take_snapshots && pg_Jpg_Capture_param.outputJpg) {
+		// frame count based output
+		if (pg_Jpg_Capture_param.stepJpgInFrames > 0) {
+			if (pg_FrameNo % pg_Jpg_Capture_param.stepJpgInFrames == 0
+				&& pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames >= pg_Jpg_Capture_param.beginJpg &&
+				pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames <= pg_Jpg_Capture_param.endJpg) {
+				pg_draw_scene( pg_enum_render_Jpg );
+			}
+		}
+		else if (pg_Jpg_Capture_param.stepJpgInSeconds > 0) {
+			if (pg_Jpg_Capture_param.nextJpgCapture < 0) {
+				pg_Jpg_Capture_param.nextJpgCapture = pg_CurrentClockTime;
+			}
+			if (pg_CurrentClockTime >= pg_Jpg_Capture_param.nextJpgCapture
+				&& pg_CurrentClockTime >= pg_Jpg_Capture_param.beginJpg &&
+				pg_CurrentClockTime <= pg_Jpg_Capture_param.endJpg) {
+				pg_Jpg_Capture_param.nextJpgCapture = max(pg_Jpg_Capture_param.nextJpgCapture + pg_Jpg_Capture_param.stepJpgInSeconds, pg_CurrentClockTime);
+				pg_draw_scene( pg_enum_render_Jpg );
+				//printf("nextJpgCapture %.2f pg_CurrentClockTime %.2f\n", nextJpgCapture, pg_CurrentClockTime);
+			}
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 // MULTIPASS RENDERING
-//////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// initializes the homography matrices for the distortion of the projected image
+void pg_calculate_homography_matrices(std::vector<cv::Point2f>* sourcePoints, std::vector<cv::Point2f>* destinationPoints, GLfloat pg_matValues[], int dim) {
+	//////////////////////////////////////////////////////////////////////////////////
+	// right camera (left display)
+
+	///////////////////////// HOMOGRPAHY
+	// This homography transforms the points projected at near=1 into the four
+	// points measured experimetally corresponding to the 4 vertices of the
+	// quad projected at 1m with the projector axis orthogonal to the projection plane
+
+	homography = cv::findHomography(*sourcePoints, *destinationPoints, 0);
+	//printf("mat size %d %d\n", homography.size().width, homography.size().height);
+	// in GLM Matrix types store their values in column - major order.
+	if (dim == 4) {
+		pg_matValues[0] = (float)((double*)homography.data)[0];
+		pg_matValues[1] = (float)((double*)homography.data)[3];
+		pg_matValues[2] = 0.0;
+		pg_matValues[3] = (float)((double*)homography.data)[6];
+
+		pg_matValues[4] = (float)((double*)homography.data)[1];
+		pg_matValues[5] = (float)((double*)homography.data)[4];
+		pg_matValues[6] = 0.0;
+		pg_matValues[7] = (float)((double*)homography.data)[7];
+
+		pg_matValues[8] = 0.0;
+		pg_matValues[9] = 0.0;
+		pg_matValues[10] = 0.0;
+		pg_matValues[11] = 0.0;
+
+		pg_matValues[12] = (float)((double*)homography.data)[2];
+		pg_matValues[13] = (float)((double*)homography.data)[5];
+		pg_matValues[14] = 0.0;
+		pg_matValues[15] = (float)((double*)homography.data)[8];
+	}
+	else if (dim == 3) {
+		pg_matValues[0] = (float)((double*)homography.data)[0];
+		pg_matValues[1] = (float)((double*)homography.data)[3];
+		pg_matValues[2] = (float)((double*)homography.data)[6];
+
+		pg_matValues[3] = (float)((double*)homography.data)[1];
+		pg_matValues[4] = (float)((double*)homography.data)[4];
+		pg_matValues[5] = (float)((double*)homography.data)[7];
+
+		pg_matValues[6] = (float)((double*)homography.data)[2];
+		pg_matValues[7] = (float)((double*)homography.data)[5];
+		pg_matValues[8] = (float)((double*)homography.data)[8];
+	}
+	else {
+		sprintf(pg_errorStr, "homography dimension should be 3 or 4, not %d", dim); pg_ReportError(pg_errorStr);
+	}
+}
+
+// initializes the transformation matrices related to the frustum
+// should only be called when the values are changed through pd or maxmsp
+void pg_calculate_perspective_matrices(void) {
+	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
+	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
+
+	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_VP1LocX]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LocY]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LocZ]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtX]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtY]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtZ]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1UpY]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1Reversed]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1WidthTopAt1m]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1BottomAt1m]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1TopAt1m]
+		|| !pg_shader_programme[pg_ind_scenario][_nearPlane]
+		|| !pg_shader_programme[pg_ind_scenario][_farPlane]) {
+		return;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// right camera (right display)
+	if (double_window) {
+		pg_NbTextChapters
+			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
+	else {
+		pg_NbTextChapters
+			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
+	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+
+	// Camera matrix
+	// float eyePosition[3] = {10.1f,4.6f,4.4f};
+	// the projection of the bottom of the screen is known
+	// we have to deduce the look at from this point && the measure of 
+	// the projector calibration
+	// the look at has to be recalculated because the targe point is above the axis of projection
+	// by an angle alpha
+	//printf("VP1BottomAt1m %.2f\n" , VP1BottomAt1m );
+
+	float VP1alpha = atan(VP1BottomAt1m);
+	glm::vec4 vectorVPPositionToScreenBottom
+		= glm::vec4(VP1LookAtX - VP1LocX, VP1LookAtY - VP1LocY, VP1LookAtZ - VP1LocZ, 0.0);
+	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
+	glm::mat4 rotationMat(1); // Creates a identity matrix
+	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
+	glm::vec3 rotationAxis = glm::cross(glm::vec3(0, 0, (VP1Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
+	rotationAxis = glm::normalize(rotationAxis);
+	// printf("rotationAxis %.2f %.2f %.2f\n", rotationAxis.x, rotationAxis.y, rotationAxis.z);
+	// shifts towards the bottom the actual lookat center according to VP1BottomAt1m
+	rotationMat = glm::rotate(rotationMat, VP1alpha, rotationAxis); // (VP1Reversed?-1.0f:1.0f) *
+	glm::vec3 vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
+	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
+	glm::vec3 lookAtPoint = glm::vec3(VP1LocX, VP1LocY, VP1LocZ) + vectorLookAt;
+	//printf("VP1Loc %.2f %.2f %.2f\n", VP1LocX, VP1LocY, VP1LocZ);
+	//printf("Look at real %.2f %.2f %.2f\n\n", lookAtPoint.x, lookAtPoint.y, lookAtPoint.z);
+	pg_VP1viewMatrix
+		= glm::lookAt(
+			glm::vec3(VP1LocX, VP1LocY, VP1LocZ), // Camera is at (VP1LocX, VP1LocY, VP1LocZ), in World Space
+			lookAtPoint, // && looks at lookAtPoint
+			glm::vec3(0, VP1UpY, (VP1Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP1UpY, 1 or 0, VP1UpY, -1 if projector is upside down)
+		);
+
+#if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
+	//////////////////////////////////////////////////////////////////////////////////
+	// left camera (right display)
+	VP2perspMatrix
+		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m, nearPlane, farPlane);
+
+	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m );
+
+	// Camera matrix
+	// float eyePosition[3] = {10.1f,4.6f,4.4f};
+	// the projection of the bottom of the screen is known
+	// we have to deduce the look at from this point and the measure of 
+	// the projector calibration
+	// the look at has to be recalculated because the targe point is above the axis of projection
+	// by an angle alpha
+	//printf("VP2BottomAt1m %.2f\n" , VP2BottomAt1m );
+
+	float VP2alpha = atan(VP2BottomAt1m);
+	vectorVPPositionToScreenBottom
+		= glm::vec4(VP2LookAtX - VP2LocX, VP2LookAtY - VP2LocY, VP2LookAtZ - VP2LocZ, 0.0);
+	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
+	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
+	rotationAxis = glm::cross(glm::vec3(0, 0, (VP2Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
+	rotationAxis = glm::normalize(rotationAxis);
+	// shifts towards the bottom the actual lookat center according to VP2BottomAt1m
+	rotationMat = glm::rotate(glm::mat4(1.0f), VP2alpha, rotationAxis); // (VP2Reversed?-1.0f:1.0f) *
+	vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
+	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
+	lookAtPoint = glm::vec3(VP2LocX, VP2LocY, VP2LocZ) + vectorLookAt;
+	// printf("Look at real %.2f %.2f %.2f\n\n" , lookAtPoint.x , lookAtPoint.y , lookAtPoint.z );
+	VP2viewMatrix
+		= glm::lookAt(
+			glm::vec3(VP2LocX, VP2LocY, VP2LocZ), // Camera is at (VP2LocX, VP2LocY, VP2LocZ), in World Space
+			lookAtPoint, // and looks at lookAtPoint
+			glm::vec3(0, VP2UpY, (VP2Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP2UpY, 1 or 0, VP2UpY, -1 if projector is upside down)
+		);
+#endif
+}
+
+void pg_calculate_orthographic_matrices(void) {
+	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
+	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
+
+	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_VP1LocX]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LocY]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LocZ]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtX]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtY]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtZ]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1UpY]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1Reversed]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1WidthTopAt1m]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1BottomAt1m]
+		|| !pg_shader_programme[pg_ind_scenario][_VP1TopAt1m]
+		|| !pg_shader_programme[pg_ind_scenario][_nearPlane]
+		|| !pg_shader_programme[pg_ind_scenario][_farPlane]) {
+		return;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// right camera (right display)
+	if (double_window) {
+		pg_NbTextChapters
+			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
+	else {
+		pg_NbTextChapters
+			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+	}
+	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
+
+	// Camera matrix
+	//printf("Look at real %.2f %.2f %.2f\n\n", lookAtPoint.x, lookAtPoint.y, lookAtPoint.z);
+	glm::mat4 m4(1.0f);
+	pg_VP1viewMatrix = m4;
+
+
+#if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
+	// TODO
+#endif
+}
 
 /////////////////////////////////////
 // PASS #0: PARTICLE ANIMATION PASS
@@ -2185,6 +2048,7 @@ void pg_ClipArtRenderingPass(void) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+/////////////////////////////////////
 // PASS #3: PARTICLE RENDERING PASS
 void pg_ParticleRenderingPass(void) {
 	if (!pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleRender]) {
@@ -2650,206 +2514,6 @@ void pg_SensorPass(void) {
 	glDisable(GL_BLEND);
 }
 
-// initializes the homography matrices for the distortion of the projected image
-void pg_calculate_homography_matrices(std::vector<cv::Point2f> *sourcePoints, std::vector<cv::Point2f> *destinationPoints, GLfloat pg_matValues[], int dim) {
-	//////////////////////////////////////////////////////////////////////////////////
-	// right camera (left display)
-
-	///////////////////////// HOMOGRPAHY
-	// This homography transforms the points projected at near=1 into the four
-	// points measured experimetally corresponding to the 4 vertices of the
-	// quad projected at 1m with the projector axis orthogonal to the projection plane
-
-	homography = cv::findHomography(*sourcePoints, *destinationPoints, 0);
-	//printf("mat size %d %d\n", homography.size().width, homography.size().height);
-	// in GLM Matrix types store their values in column - major order.
-	 if (dim == 4) {
-		 pg_matValues[0] = (float)((double*)homography.data)[0];
-		 pg_matValues[1] = (float)((double*)homography.data)[3];
-		 pg_matValues[2] = 0.0;
-		 pg_matValues[3] = (float)((double*)homography.data)[6];
-
-		 pg_matValues[4] = (float)((double*)homography.data)[1];
-		 pg_matValues[5] = (float)((double*)homography.data)[4];
-		 pg_matValues[6] = 0.0;
-		 pg_matValues[7] = (float)((double*)homography.data)[7];
-
-		 pg_matValues[8] = 0.0;
-		 pg_matValues[9] = 0.0;
-		 pg_matValues[10] = 0.0;
-		 pg_matValues[11] = 0.0;
-
-		 pg_matValues[12] = (float)((double*)homography.data)[2];
-		 pg_matValues[13] = (float)((double*)homography.data)[5];
-		 pg_matValues[14] = 0.0;
-		 pg_matValues[15] = (float)((double*)homography.data)[8];
-	 }
-	 else if (dim == 3) {
-		 pg_matValues[0] = (float)((double*)homography.data)[0];
-		 pg_matValues[1] = (float)((double*)homography.data)[3];
-		 pg_matValues[2] = (float)((double*)homography.data)[6];
-
-		 pg_matValues[3] = (float)((double*)homography.data)[1];
-		 pg_matValues[4] = (float)((double*)homography.data)[4];
-		 pg_matValues[5] = (float)((double*)homography.data)[7];
-
-		 pg_matValues[6] = (float)((double*)homography.data)[2];
-		 pg_matValues[7] = (float)((double*)homography.data)[5];
-		 pg_matValues[8] = (float)((double*)homography.data)[8];
-	 }
-	 else {
-		 sprintf(pg_errorStr, "homography dimension should be 3 or 4, not %d", dim); pg_ReportError(pg_errorStr);
-	 }
-}
-
-// initializes the transformation matrices related to the frustum
-// should only be called when the values are changed through pd or maxmsp
-void pg_calculate_perspective_matrices(void) {
-	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
-	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
-
-	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_VP1LocX]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LocY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LocZ]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtX]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtZ]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1UpY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1Reversed]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1WidthTopAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1BottomAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1TopAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_nearPlane]
-		|| !pg_shader_programme[pg_ind_scenario][_farPlane]) {
-		return;
-	}
-
-	//////////////////////////////////////////////////////////////////////////////////
-	// right camera (right display)
-	if (double_window) {
-		pg_NbTextChapters
-			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-	}
-	else {
-		pg_NbTextChapters
-			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-	}
-	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-
-	// Camera matrix
-	// float eyePosition[3] = {10.1f,4.6f,4.4f};
-	// the projection of the bottom of the screen is known
-	// we have to deduce the look at from this point && the measure of 
-	// the projector calibration
-	// the look at has to be recalculated because the targe point is above the axis of projection
-	// by an angle alpha
-	//printf("VP1BottomAt1m %.2f\n" , VP1BottomAt1m );
-
-	float VP1alpha = atan(VP1BottomAt1m);
-	glm::vec4 vectorVPPositionToScreenBottom
-		= glm::vec4(VP1LookAtX - VP1LocX, VP1LookAtY - VP1LocY, VP1LookAtZ - VP1LocZ, 0.0);
-	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
-	glm::mat4 rotationMat(1); // Creates a identity matrix
-	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
-	glm::vec3 rotationAxis = glm::cross(glm::vec3(0, 0, (VP1Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
-	rotationAxis = glm::normalize(rotationAxis);
-	// printf("rotationAxis %.2f %.2f %.2f\n", rotationAxis.x, rotationAxis.y, rotationAxis.z);
-	// shifts towards the bottom the actual lookat center according to VP1BottomAt1m
-	rotationMat = glm::rotate(rotationMat, VP1alpha, rotationAxis); // (VP1Reversed?-1.0f:1.0f) *
-	glm::vec3 vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
-	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
-	glm::vec3 lookAtPoint = glm::vec3(VP1LocX, VP1LocY, VP1LocZ) + vectorLookAt;
-	//printf("VP1Loc %.2f %.2f %.2f\n", VP1LocX, VP1LocY, VP1LocZ);
-	//printf("Look at real %.2f %.2f %.2f\n\n", lookAtPoint.x, lookAtPoint.y, lookAtPoint.z);
-	pg_VP1viewMatrix
-		= glm::lookAt(
-			glm::vec3(VP1LocX, VP1LocY, VP1LocZ), // Camera is at (VP1LocX, VP1LocY, VP1LocZ), in World Space
-			lookAtPoint, // && looks at lookAtPoint
-			glm::vec3(0, VP1UpY, (VP1Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP1UpY, 1 or 0, VP1UpY, -1 if projector is upside down)
-		);
-
-#if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
-	//////////////////////////////////////////////////////////////////////////////////
-	// left camera (right display)
-	VP2perspMatrix
-		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m, nearPlane, farPlane);
-
-	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m );
-
-	// Camera matrix
-	// float eyePosition[3] = {10.1f,4.6f,4.4f};
-	// the projection of the bottom of the screen is known
-	// we have to deduce the look at from this point and the measure of 
-	// the projector calibration
-	// the look at has to be recalculated because the targe point is above the axis of projection
-	// by an angle alpha
-	//printf("VP2BottomAt1m %.2f\n" , VP2BottomAt1m );
-
-	float VP2alpha = atan(VP2BottomAt1m);
-	vectorVPPositionToScreenBottom
-		= glm::vec4(VP2LookAtX - VP2LocX, VP2LookAtY - VP2LocY, VP2LookAtZ - VP2LocZ, 0.0);
-	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
-	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
-	rotationAxis = glm::cross(glm::vec3(0, 0, (VP2Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
-	rotationAxis = glm::normalize(rotationAxis);
-	// shifts towards the bottom the actual lookat center according to VP2BottomAt1m
-	rotationMat = glm::rotate(glm::mat4(1.0f), VP2alpha, rotationAxis); // (VP2Reversed?-1.0f:1.0f) *
-	vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
-	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
-	lookAtPoint = glm::vec3(VP2LocX, VP2LocY, VP2LocZ) + vectorLookAt;
-	// printf("Look at real %.2f %.2f %.2f\n\n" , lookAtPoint.x , lookAtPoint.y , lookAtPoint.z );
-	VP2viewMatrix
-		= glm::lookAt(
-			glm::vec3(VP2LocX, VP2LocY, VP2LocZ), // Camera is at (VP2LocX, VP2LocY, VP2LocZ), in World Space
-			lookAtPoint, // and looks at lookAtPoint
-			glm::vec3(0, VP2UpY, (VP2Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP2UpY, 1 or 0, VP2UpY, -1 if projector is upside down)
-		);
-#endif
-}
-
-void pg_calculate_orthographic_matrices(void) {
-	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
-	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
-
-	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_VP1LocX]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LocY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LocZ]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtX]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtZ]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1UpY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1Reversed]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1WidthTopAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1BottomAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1TopAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_nearPlane]
-		|| !pg_shader_programme[pg_ind_scenario][_farPlane]) {
-		return;
-	}
-
-	//////////////////////////////////////////////////////////////////////////////////
-	// right camera (right display)
-	if (double_window) {
-		pg_NbTextChapters
-			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-	}
-	else {
-		pg_NbTextChapters
-			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-	}
-	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
-
-	// Camera matrix
-	//printf("Look at real %.2f %.2f %.2f\n\n", lookAtPoint.x, lookAtPoint.y, lookAtPoint.z);
-	glm::mat4 m4(1.0f);
-	pg_VP1viewMatrix = m4;
-
-
-#if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
-	// TODO
-#endif
-}
-
 //////////////////////////////////////////////////
 // PASS #6: MESH PASS
 // MESH ANIMATIONS FOR PROJECTS
@@ -2878,7 +2542,7 @@ bool Etoiles_mesh_guided_by_strokes(int indMeshFile) {
 	return visible;
 }
 
-
+// PROJECT BASED MESH ANIMATION
 void Etoiles_ray_animation(int indMeshFile) {
 	// rotates and scales a ray so that it follows a pen
 	// vector from ray center to pen
@@ -2933,6 +2597,10 @@ void MmeShanghai_automatic_brokenGlass_animation(int indMeshFile, int indObjectI
 	pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_angle[indObjectInMesh] += pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_Ini_angle[indObjectInMesh];
 }
 #endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH RENDERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_drawOneMesh(int indMeshFile) {
 	// visibility
@@ -3458,10 +3126,10 @@ void pg_MeshPass(void) {
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// DRAWING A SCENE : SCREEN SHOT OR INTERACTIVE RENDERING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-// DRAWING A SCENE ON VARIOUS MODALITIES (CURVE, IMAGE, FRAMEBUFFER...)
-//////////////////////////////////////////////////////////////////////////////////////////////
 void pg_draw_scene(DrawingMode mode) {
 	// ******************** Svg output ********************
 	if (mode == pg_enum_render_Svg) {
@@ -3476,39 +3144,6 @@ void pg_draw_scene(DrawingMode mode) {
 		pg_logCurrentLineSceneVariables(imageFileName);
 
 		pg_writesvg(imageFileName);
-
-/*
-		if (!threaded) {
-			pg_writesvg((void*)&pDataWriteSvg);
-		}
-		else {
-#if defined(WIN32)
-			DWORD rc;
-			HANDLE  hThread = CreateThread(
-				NULL,                   // default security attributes
-				0,                      // use default stack size  
-				pg_writesvg,		    // thread function name
-				(void*)&pDataWriteSvg,		    // argument to thread function 
-				0,                      // use default creation flags 
-				&rc);   // returns the thread identifier 
-			if (hThread == NULL) {
-				std::cout << "Error:unable to create thread pg_writesvg" << std::endl;
-				exit(-1);
-			}
-			CloseHandle(hThread);
-#else
-			pthread_t drawing_thread;
-			int rc;
-			rc = pthread_create(&drawing_thread, NULL,
-				pg_writesvg, (void*)&pDataWriteSvg);
-			if (rc) {
-				std::cout << "Error:unable to create thread pg_writesvg" << rc << std::endl;
-				exit(-1);
-			}
-			pthread_exit(NULL);
-#endif
-		}
-*/
 	}
 
 	// ******************** Png output ********************

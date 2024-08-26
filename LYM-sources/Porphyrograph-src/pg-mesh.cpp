@@ -25,6 +25,10 @@
 
 #include "pg-all_include.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////
 // geometrical data of mesh
 
@@ -51,165 +55,167 @@ vector<MeshAnimationData> pg_Mesh_Animations[PG_MAX_SCENARIOS];
 
 GLfloat** modelMatrixMeshes;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// ARMATURE PARSING (BONES)
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc, int indMeshFile, int indScenario) {
+	//printf("VH Bone object level %d tag %s nb bones %d line %s\n", level, tag, *nbBonesLoc, line);
+	while (strcmp(tag, "transl") == 0) {
+		float w, x, y, z;
 
-//////////////////////////////////////////////////////////////////
-// MESH FILE PARSING
-//////////////////////////////////////////////////////////////////
-
-void pg_parseScenarioMeshes(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	////////////////////////////
-	////// MESHES
-	// the meshes are loaded inside the GPU and diplayed depending on their activity
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string meshes
-	if (ID.compare("meshes") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"meshes\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-	while (true) {
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/meshes") == 0) {
-			break;
+		// Scan for Bones in this mesh
+		if ((*nbBonesLoc) >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones) {
+			printf("Error: Excessive number of Bones\n");
+			throw 0;
 		}
 
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
-			// adds a new mesh
-			MeshData aMesh(indScenario);
-			MeshAnimationData aMeshAnimationData;
+		// has read the transl/ID line
 
-			if (ID.compare("mesh") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"mesh\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
+		// stores the translation values
+		fgets(line, 512, file);
+		sscanf(line, "%f %f %f", &x, &y, &z);
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneInitialTranslationMatrix
+			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneAnimationTranslationMatrix
+			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
 
-			aMesh.pg_Mesh_Scale = 1.0f;
-			sstream >> aMesh.pg_Mesh_fileNames; // file name
-			// full path is not given, look in default local path
-			if (!pg_isFullPath(aMesh.pg_Mesh_fileNames)) {
-				aMesh.pg_Mesh_fileNames
-					= pg_meshes_directory + aMesh.pg_Mesh_fileNames;
-			}
+		// initialRotation tag
+		fgets(line, 512, file);
+		// stores the initialRotation values
+		fgets(line, 512, file);
 
-			// image initial geometry
-			sstream >> aMesh.pg_Mesh_Scale;
-			sstream >> aMesh.pg_Mesh_Translation_X;
-			sstream >> aMesh.pg_Mesh_Translation_Y;
-			sstream >> aMesh.pg_Mesh_Translation_Z;
-			sstream >> aMesh.pg_Mesh_Rotation_angle;
-			sstream >> aMesh.pg_Mesh_Rotation_X;
-			sstream >> aMesh.pg_Mesh_Rotation_Y;
-			sstream >> aMesh.pg_Mesh_Rotation_Z;
-			if (aMesh.pg_Mesh_Rotation_X == 0 && aMesh.pg_Mesh_Rotation_Y == 0 && aMesh.pg_Mesh_Rotation_Z == 0) {
-				sprintf(pg_errorStr, "Error: incorrect mesh %s configuration: rotation with Null axix ", aMesh.pg_Mesh_fileNames.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-			sstream >> aMesh.pg_Mesh_Motion_X;
-			sstream >> aMesh.pg_Mesh_Motion_Y;
-			sstream >> aMesh.pg_Mesh_Motion_Z;
-			aMesh.pg_Mesh_Translation_Ini_X = aMesh.pg_Mesh_Translation_X;
-			aMesh.pg_Mesh_Translation_Ini_Y = aMesh.pg_Mesh_Translation_Y;
-			aMesh.pg_Mesh_Translation_Ini_Z = aMesh.pg_Mesh_Translation_Z;
-			aMesh.pg_Mesh_Rotation_Ini_X = aMesh.pg_Mesh_Rotation_X;
-			aMesh.pg_Mesh_Rotation_Ini_Y = aMesh.pg_Mesh_Rotation_Y;
-			aMesh.pg_Mesh_Rotation_Ini_Z = aMesh.pg_Mesh_Rotation_Z;
-			sstream >> ID;
-			if (ID.compare("nat") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 1.f;
-				aMesh.pg_Mesh_Colors[1] = 1.f;
-				aMesh.pg_Mesh_Colors[2] = 1.f;
-				aMesh.pg_Mesh_Colors[3] = 0.f;
-			}
-			else if (ID.compare("white") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 1.f;
-				aMesh.pg_Mesh_Colors[1] = 1.f;
-				aMesh.pg_Mesh_Colors[2] = 1.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("red") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 1.f;
-				aMesh.pg_Mesh_Colors[1] = 0.f;
-				aMesh.pg_Mesh_Colors[2] = 0.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("green") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 0.f;
-				aMesh.pg_Mesh_Colors[1] = 1.f;
-				aMesh.pg_Mesh_Colors[2] = 0.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("blue") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 0.f;
-				aMesh.pg_Mesh_Colors[1] = 0.f;
-				aMesh.pg_Mesh_Colors[2] = 1.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("cyan") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 0.f;
-				aMesh.pg_Mesh_Colors[1] = 1.f;
-				aMesh.pg_Mesh_Colors[2] = 1.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("magenta") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 1.f;
-				aMesh.pg_Mesh_Colors[1] = 0.f;
-				aMesh.pg_Mesh_Colors[2] = 1.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("yellow") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 1.f;
-				aMesh.pg_Mesh_Colors[1] = 1.f;
-				aMesh.pg_Mesh_Colors[2] = 0.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else if (ID.compare("black") == 0) {
-				aMesh.pg_Mesh_Colors[0] = 0.f;
-				aMesh.pg_Mesh_Colors[1] = 0.f;
-				aMesh.pg_Mesh_Colors[2] = 0.f;
-				aMesh.pg_Mesh_Colors[3] = 1.f;
-			}
-			else {
-				sprintf(pg_errorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, cyan, yellow, magenta, red, blue, or greeen expected)", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-			sstream >> aMesh.pg_Mesh_TextureRank;
-			//printf("Mesh #%d scale %.2f translation (%.2f,%.2f,%.2f), rotation %.2f\n",
-			//	indMeshFile, aMesh.pg_Mesh_Scale, aMesh.pg_Mesh_Translation_X,
-			//	aMesh.pg_Mesh_Translation_Y, aMesh.pg_Mesh_Translation_Z,
-			//	aMesh.pg_Mesh_Rotation_angle);
-			// the rank of the mesh textures applied to this mesh
-#if defined(var_MmeShanghai_brokenGlass)
-			if (pg_FullScenarioActiveVars[indScenario][_MmeShanghai_brokenGlass]) {
-				sstream >> aMesh.pg_MmeShanghai_NbMeshSubParts;
-				aMesh.pg_MmeShanghai_MeshSubPart_FileNames = new string[aMesh.pg_MmeShanghai_NbMeshSubParts];
-				aMesh.pg_MmeShanghai_MeshSubParts = new bool* [aMesh.pg_MmeShanghai_NbMeshSubParts];
-				for (int indPart = 0; indPart < aMesh.pg_MmeShanghai_NbMeshSubParts; indPart++) {
-					sstream >> aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indPart];
-					aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indPart]
-						= pg_meshes_directory + aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indPart];
-					aMesh.pg_MmeShanghai_MeshSubParts[indPart] = NULL;
+		sscanf(line, "%f %f %f %f", &w, &x, &y, &z);
+		glm::quat initialRotation
+			= glm::quat(w, x, y, z);
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneInitialRotationMatrix
+			= glm::mat4_cast(initialRotation);
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneAnimationRotationMatrix
+			= glm::mat4_cast(initialRotation);
+
+		// bone
+		fgets(line, 512, file);
+		char boneID[256];
+		sscanf(line, "%s %256s",
+			tag, boneID);
+		if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].id != string(boneID)) {
+			printf("Error: Incorrect Bone ID\n");
+			throw 0;
+		}
+
+		// length
+		fgets(line, 512, file);
+		sscanf(line, "%f",
+			&(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length));
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points[2 * 3 + 1] = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length;
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points[5 * 3 + 1] = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length;
+
+		///////////////////////////////////////////////////////////
+		// vertex buffer objects and vertex array for the bones
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo = 0;
+		glGenBuffers(1, &(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo));
+
+		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao = 0;
+		glGenVertexArrays(1, &(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao));
+
+		// vertex buffer objects and vertex array
+		glBindBuffer(GL_ARRAY_BUFFER, pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo);
+		glBufferData(GL_ARRAY_BUFFER,
+			2 * 3 * 3 * sizeof(float),
+			pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points,
+			GL_STATIC_DRAW);
+
+		glBindVertexArray(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao);
+		glBindBuffer(GL_ARRAY_BUFFER, pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
+		glEnableVertexAttribArray(0);
+
+		// parent
+		fgets(line, 512, file);
+		sscanf(line, "%s %256s", tag, boneID);
+		//printf("Bone %s (parent: %s) (prof: %d)\n",
+		//	pg_tabBones[indMeshFile][(*nbBonesLoc)].id.c_str(), boneID, level);
+
+		// associates the parent bone with the current bone
+		if (strcmp(boneID, "NULL") != 0) {
+			bool parentfound = false;
+			for (int ind = 0; ind < (*nbBonesLoc); ind++) {
+				if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].id == string(boneID)) {
+					pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].parentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + ind;
+					if (!pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone) {
+						pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
+					}
+					else {
+						Bone* currentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone;
+						while (currentBone->sisterBone) {
+							currentBone = currentBone->sisterBone;
+						}
+						currentBone->sisterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
+					}
+					parentfound = true;
+					break;
 				}
 			}
-#endif
-			pg_Meshes[indScenario].push_back(aMesh);
-			pg_Mesh_Animations[indScenario].push_back(aMeshAnimationData);
+			if (!parentfound) {
+				printf("Parent of bone %s (%s) not found!\n",
+					pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].id.c_str(), id);
+			}
 		}
+		// no parent chains with the root node
 		else {
-			sprintf(pg_errorStr, "Error: incorrect configuration file unexpected mesh definition at \"%s\"", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			// it is not the root node
+			if ((*nbBonesLoc) > 0) {
+				Bone* currentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones;
+				while (currentBone->sisterBone) {
+					currentBone = currentBone->sisterBone;
+				}
+				currentBone->sisterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
+			}
 		}
-	}
-	// Augmented Reality: FBO capture of Master to be displayed on a mesh
-	if (pg_FullScenarioActiveVars[indScenario][_textureFrontier_wmin]) {
-		if (pg_Meshes[indScenario].empty()) {
-			sprintf(pg_errorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); pg_ReportError(pg_errorStr); throw 100;
+
+		// next tag
+		fgets(line, 512, file);
+		sscanf(line, "%s %s", tag, id);
+
+		(*nbBonesLoc)++;
+
+		// daughter bone
+		if (strcmp(tag, "transl") == 0) {
+			pg_parseOneBoneObj(file, level + 1, line, tag, id, nbBonesLoc, indMeshFile, indScenario);
+			if (strcmp(tag, "end") == 0) { strcpy(tag, "end"); return; }
+
+			// if empty line: end of file
+			if (!fgets(line, 512, file)) { strcpy(tag, "end"); return; }
+			// non empty line: reads further (possible sister node)
+			sscanf(line, "%s %s", tag, id);
+		}
+
+		// end_bone tag
+		else if (strcmp(tag, "bone_end") == 0) {
+			// if empty line: end of file
+			if (!fgets(line, 512, file)) { strcpy(tag, "end"); return; }
+			// non empty line: reads further (possible sister node)
+			sscanf(line, "%s %s", tag, id);
 		}
 	}
 }
+
+void pg_parseArmatureObj(FILE* file, char* line, char* tag, char* id, int indMeshFile, int indScenario) {
+	int nbBonesLoc = 0;
+
+	// next tag
+	sscanf(line, "%s %s", tag, id);
+
+	//printf("VH Armature level %d tag %s nb bones %d line %s\n", 1, tag, nbBonesLoc, line);
+	while (strcmp(tag, "transl") == 0) {
+		pg_parseOneBoneObj(file, 1, line, tag, id, &nbBonesLoc, indMeshFile, indScenario);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH PARSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 // the linearization for OpenGL replaces indices associated with each face in obj format
 // by coordinates copied from these temporary buffers (through pg_copyMeshData)
@@ -564,158 +570,9 @@ void pg_transferMeshDataToGPU(int indMeshFile, int indObjectInMesh, int indScena
 	pg_mesh_indexBuffer = NULL;
 }
 
-void pg_parseArmatureObj(FILE* file, char * line, char * tag, char * id, int indMeshFile, int indScenario) {
-	int nbBonesLoc = 0;
 
-	// next tag
-	sscanf(line, "%s %s", tag, id);
 
-	//printf("VH Armature level %d tag %s nb bones %d line %s\n", 1, tag, nbBonesLoc, line);
-	while (strcmp(tag, "transl") == 0) {
-		pg_parseOneBoneObj(file, 1, line, tag, id, &nbBonesLoc, indMeshFile, indScenario);
-	}
-}
-
-void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int * nbBonesLoc, int indMeshFile, int indScenario) {
-	//printf("VH Bone object level %d tag %s nb bones %d line %s\n", level, tag, *nbBonesLoc, line);
-	while (strcmp(tag, "transl") == 0) {
-		float w, x, y, z;
-
-		// Scan for Bones in this mesh
-		if ((*nbBonesLoc) >= pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones) {
-			printf("Error: Excessive number of Bones\n");
-			throw 0;
-		}
-
-		// has read the transl/ID line
-
-		// stores the translation values
-		fgets(line, 512, file);
-		sscanf(line, "%f %f %f", &x, &y, &z);
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneInitialTranslationMatrix
-			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneAnimationTranslationMatrix
-			= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
-
-		// initialRotation tag
-		fgets(line, 512, file);
-		// stores the initialRotation values
-		fgets(line, 512, file);
-
-		sscanf(line, "%f %f %f %f", &w, &x, &y, &z);
-		glm::quat initialRotation
-			= glm::quat(w, x, y, z);
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneInitialRotationMatrix
-			= glm::mat4_cast(initialRotation);
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].boneAnimationRotationMatrix
-			= glm::mat4_cast(initialRotation);
-
-		// bone
-		fgets(line, 512, file);
-		char boneID[256];
-		sscanf(line, "%s %256s",
-			tag, boneID);
-		if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].id != string(boneID)) {
-			printf("Error: Incorrect Bone ID\n");
-			throw 0;
-		}
-
-		// length
-		fgets(line, 512, file);
-		sscanf(line, "%f",
-			&(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length));
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points[2 * 3 + 1] = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length;
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points[5 * 3 + 1] = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].length;
-
-		///////////////////////////////////////////////////////////
-		// vertex buffer objects and vertex array for the bones
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo = 0;
-		glGenBuffers(1, &(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo));
-
-		pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao = 0;
-		glGenVertexArrays(1, &(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao));
-
-		// vertex buffer objects and vertex array
-		glBindBuffer(GL_ARRAY_BUFFER, pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo);
-		glBufferData(GL_ARRAY_BUFFER,
-			2 * 3 * 3 * sizeof(float),
-			pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].points,
-			GL_STATIC_DRAW);
-
-		glBindVertexArray(pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vao);
-		glBindBuffer(GL_ARRAY_BUFFER, pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].vbo);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte*)NULL);
-		glEnableVertexAttribArray(0);
-
-		// parent
-		fgets(line, 512, file);
-		sscanf(line, "%s %256s", tag, boneID);
-		//printf("Bone %s (parent: %s) (prof: %d)\n",
-		//	pg_tabBones[indMeshFile][(*nbBonesLoc)].id.c_str(), boneID, level);
-
-		// associates the parent bone with the current bone
-		if (strcmp(boneID, "NULL") != 0) {
-			bool parentfound = false;
-			for (int ind = 0; ind < (*nbBonesLoc); ind++) {
-				if (pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].id == string(boneID)) {
-					pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].parentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + ind;
-					if (!pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone) {
-						pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
-					}
-					else {
-						Bone* currentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[ind].daughterBone;
-						while (currentBone->sisterBone) {
-							currentBone = currentBone->sisterBone;
-						}
-						currentBone->sisterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
-					}
-					parentfound = true;
-					break;
-				}
-			}
-			if (!parentfound) {
-				printf("Parent of bone %s (%s) not found!\n",
-					pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones[(*nbBonesLoc)].id.c_str(), id);
-			}
-		}
-		// no parent chains with the root node
-		else {
-			// it is not the root node
-			if ((*nbBonesLoc) > 0) {
-				Bone* currentBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones;
-				while (currentBone->sisterBone) {
-					currentBone = currentBone->sisterBone;
-				}
-				currentBone->sisterBone = pg_Mesh_Animations[indScenario][indMeshFile].pg_tabBones + (*nbBonesLoc);
-			}
-		}
-
-		// next tag
-		fgets(line, 512, file);
-		sscanf(line, "%s %s", tag, id);
-
-		(*nbBonesLoc)++;
-
-		// daughter bone
-		if (strcmp(tag, "transl") == 0) {
-			pg_parseOneBoneObj(file, level + 1, line, tag, id, nbBonesLoc, indMeshFile, indScenario);
-			if (strcmp(tag, "end") == 0) { strcpy(tag, "end"); return; }
-
-			// if empty line: end of file
-			if (!fgets(line, 512, file)) { strcpy(tag, "end"); return; }
-			// non empty line: reads further (possible sister node)
-			sscanf(line, "%s %s", tag, id);
-		}
-
-		// end_bone tag
-		else if (strcmp(tag, "bone_end") == 0) {
-			// if empty line: end of file
-			if (!fgets(line, 512, file)) { strcpy(tag, "end"); return; }
-			// non empty line: reads further (possible sister node)
-			sscanf(line, "%s %s", tag, id);
-		}
-	}
-}
+// MESH AND ARMATURE SENT TO GPU
 
 void pg_copy_mesh_data_and_ship_to_GPU(int indMeshFile, int indObjectInMesh, GLfloat* vertexBufferIni, 
 	GLfloat* texCoordBufferIni, GLfloat* normalBufferIni,
@@ -1223,6 +1080,10 @@ void pg_parseMeshObj(FILE *file, int indMeshFile, int nbMeshObjects,
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH LOADING FROM OBJ WAVEFRONT FORMAT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // OBJ file parsing (Alias Wavefront ASCII format)
 // nbMeshObjectsInFile: number of mesh objects inside the obj file
 void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indScenario) {
@@ -1284,7 +1145,7 @@ void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indScenari
 // point positions and texture coordinates
 void pg_loadAllMeshes(void) {
 	std::cout << "Loading meshes: " << std::endl;
-	for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+	for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
 		std::cout << "    " << indScenario << ": ";
 		int nbMeshObjects = 0;
 		int indMeshFile = 0;
@@ -1361,10 +1222,9 @@ void pg_loadMeshSubParts(string meshPart_fileName, bool* ObjectsInSubPart, int n
 }
 #endif
 
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // MESH ARMATURE RENDERING
-//////////////////////////////////////////////////////////////////
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_render_one_bone(Bone* bone, glm::mat4 parentModelMatrix) {
 	if (!bone)
@@ -1409,9 +1269,10 @@ void pg_render_bones(glm::mat4 modelMatrix, int indMeshFile) {
 }
 
 
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // MESH ARMATURE ANIMATION
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose, int mesh_AnimationPose) {
 	if (indMeshFile < int(pg_Meshes[pg_ind_scenario].size())
 		&& chosen_mesh_LibraryPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses 
@@ -1924,6 +1785,10 @@ void pg_update_motion(int indMeshFile) {
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH DISPLAY/ANIMATION TOGGLE
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void pg_meshOn(int indMesh) {
 	if (indMesh <= int(pg_Meshes[pg_ind_scenario].size())) {
 		bool isMeshOn = activeMeshes & (1 << (indMesh - 1));
@@ -2013,5 +1878,253 @@ void pg_meshOnOff(int indMesh) {
 		*((int*)pg_FullScenarioVarPointers[_activeMeshes]) = activeMeshes;
 		sprintf(pg_AuxString, "/Mesh_%d_onOff %d", indMesh, (!isMeshOn)); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 	}
+}
+ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH SCENARIO
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+void pg_parseScenario_Meshes(std::ifstream& scenarioFin, int indScenario) {
+	std::stringstream  sstream;
+	string line;
+	string ID;
+	string temp;
+
+	////////////////////////////
+	////// MESHES
+	// the meshes are loaded inside the GPU and diplayed depending on their activity
+	std::getline(scenarioFin, line);
+	pg_stringstreamStoreLine(&sstream, &line);
+	sstream >> ID; // string meshes
+	if (ID.compare("meshes") != 0) {
+		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"meshes\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+	}
+	while (true) {
+		// new line
+		std::getline(scenarioFin, line);
+		pg_stringstreamStoreLine(&sstream, &line);
+		sstream >> ID; // string /svg_paths or svg_path
+		if (ID.compare("/meshes") == 0) {
+			break;
+		}
+
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
+			// adds a new mesh
+			MeshData aMesh(indScenario);
+			MeshAnimationData aMeshAnimationData;
+
+			if (ID.compare("mesh") != 0) {
+				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"mesh\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+
+			aMesh.pg_Mesh_Scale = 1.0f;
+			sstream >> aMesh.pg_Mesh_fileNames; // file name
+			// full path is not given, look in default local path
+			if (!pg_isFullPath(aMesh.pg_Mesh_fileNames)) {
+				aMesh.pg_Mesh_fileNames
+					= pg_meshes_directory + aMesh.pg_Mesh_fileNames;
+			}
+
+			// image initial geometry
+			sstream >> aMesh.pg_Mesh_Scale;
+			sstream >> aMesh.pg_Mesh_Translation_X;
+			sstream >> aMesh.pg_Mesh_Translation_Y;
+			sstream >> aMesh.pg_Mesh_Translation_Z;
+			sstream >> aMesh.pg_Mesh_Rotation_angle;
+			sstream >> aMesh.pg_Mesh_Rotation_X;
+			sstream >> aMesh.pg_Mesh_Rotation_Y;
+			sstream >> aMesh.pg_Mesh_Rotation_Z;
+			if (aMesh.pg_Mesh_Rotation_X == 0 && aMesh.pg_Mesh_Rotation_Y == 0 && aMesh.pg_Mesh_Rotation_Z == 0) {
+				sprintf(pg_errorStr, "Error: incorrect mesh %s configuration: rotation with Null axix ", aMesh.pg_Mesh_fileNames.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+			sstream >> aMesh.pg_Mesh_Motion_X;
+			sstream >> aMesh.pg_Mesh_Motion_Y;
+			sstream >> aMesh.pg_Mesh_Motion_Z;
+			aMesh.pg_Mesh_Translation_Ini_X = aMesh.pg_Mesh_Translation_X;
+			aMesh.pg_Mesh_Translation_Ini_Y = aMesh.pg_Mesh_Translation_Y;
+			aMesh.pg_Mesh_Translation_Ini_Z = aMesh.pg_Mesh_Translation_Z;
+			aMesh.pg_Mesh_Rotation_Ini_X = aMesh.pg_Mesh_Rotation_X;
+			aMesh.pg_Mesh_Rotation_Ini_Y = aMesh.pg_Mesh_Rotation_Y;
+			aMesh.pg_Mesh_Rotation_Ini_Z = aMesh.pg_Mesh_Rotation_Z;
+			sstream >> ID;
+			if (ID.compare("nat") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 1.f;
+				aMesh.pg_Mesh_Colors[1] = 1.f;
+				aMesh.pg_Mesh_Colors[2] = 1.f;
+				aMesh.pg_Mesh_Colors[3] = 0.f;
+			}
+			else if (ID.compare("white") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 1.f;
+				aMesh.pg_Mesh_Colors[1] = 1.f;
+				aMesh.pg_Mesh_Colors[2] = 1.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("red") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 1.f;
+				aMesh.pg_Mesh_Colors[1] = 0.f;
+				aMesh.pg_Mesh_Colors[2] = 0.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("green") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 0.f;
+				aMesh.pg_Mesh_Colors[1] = 1.f;
+				aMesh.pg_Mesh_Colors[2] = 0.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("blue") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 0.f;
+				aMesh.pg_Mesh_Colors[1] = 0.f;
+				aMesh.pg_Mesh_Colors[2] = 1.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("cyan") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 0.f;
+				aMesh.pg_Mesh_Colors[1] = 1.f;
+				aMesh.pg_Mesh_Colors[2] = 1.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("magenta") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 1.f;
+				aMesh.pg_Mesh_Colors[1] = 0.f;
+				aMesh.pg_Mesh_Colors[2] = 1.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("yellow") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 1.f;
+				aMesh.pg_Mesh_Colors[1] = 1.f;
+				aMesh.pg_Mesh_Colors[2] = 0.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else if (ID.compare("black") == 0) {
+				aMesh.pg_Mesh_Colors[0] = 0.f;
+				aMesh.pg_Mesh_Colors[1] = 0.f;
+				aMesh.pg_Mesh_Colors[2] = 0.f;
+				aMesh.pg_Mesh_Colors[3] = 1.f;
+			}
+			else {
+				sprintf(pg_errorStr, "Error: incorrect configuration file Mesh color \"%s\" (nat, white, cyan, yellow, magenta, red, blue, or greeen expected)", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			}
+			sstream >> aMesh.pg_Mesh_TextureRank;
+			//printf("Mesh #%d scale %.2f translation (%.2f,%.2f,%.2f), rotation %.2f\n",
+			//	indMeshFile, aMesh.pg_Mesh_Scale, aMesh.pg_Mesh_Translation_X,
+			//	aMesh.pg_Mesh_Translation_Y, aMesh.pg_Mesh_Translation_Z,
+			//	aMesh.pg_Mesh_Rotation_angle);
+			// the rank of the mesh textures applied to this mesh
+#if defined(var_MmeShanghai_brokenGlass)
+			if (pg_FullScenarioActiveVars[indScenario][_MmeShanghai_brokenGlass]) {
+				sstream >> aMesh.pg_MmeShanghai_NbMeshSubParts;
+				aMesh.pg_MmeShanghai_MeshSubPart_FileNames = new string[aMesh.pg_MmeShanghai_NbMeshSubParts];
+				aMesh.pg_MmeShanghai_MeshSubParts = new bool* [aMesh.pg_MmeShanghai_NbMeshSubParts];
+				for (int indPart = 0; indPart < aMesh.pg_MmeShanghai_NbMeshSubParts; indPart++) {
+					sstream >> aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indPart];
+					aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indPart]
+						= pg_meshes_directory + aMesh.pg_MmeShanghai_MeshSubPart_FileNames[indPart];
+					aMesh.pg_MmeShanghai_MeshSubParts[indPart] = NULL;
+				}
+			}
+#endif
+			pg_Meshes[indScenario].push_back(aMesh);
+			pg_Mesh_Animations[indScenario].push_back(aMeshAnimationData);
+		}
+		else {
+			sprintf(pg_errorStr, "Error: incorrect configuration file unexpected mesh definition at \"%s\"", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+		}
+	}
+	// Augmented Reality: FBO capture of Master to be displayed on a mesh
+	if (pg_FullScenarioActiveVars[indScenario][_textureFrontier_wmin]) {
+		if (pg_Meshes[indScenario].empty()) {
+			sprintf(pg_errorStr, "Error: Augemented reality requires that at least one mesh file is declared in the scenario file"); pg_ReportError(pg_errorStr); throw 100;
+		}
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH OSC COMMANDS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+void pg_aliasScript_Mesh(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar) {
+	// special command not in the scenario file
+	switch (indVar) {
+	case _Mesh_onOff:
+		pg_meshOnOff(int(float_arguments[0]) + 1);
+		break;
+
+	case _Mesh_mobile_onOff:
+		pg_meshMobileOnOff(int(float_arguments[0]) + 1);
+		break;
+
+#if defined(var_Caverne_Mesh_Profusion)
+	case _Caverne_Mesh_Profusion_on: for (int indMesh = 7; indMesh < pg_Meshes[pg_ind_scenario].size(); indMesh++) { Caverne_Mesh_Profusion_On(indMesh); }; break;
+	case _Caverne_Mesh_Profusion_off: for (int indMesh = 7; indMesh < pg_Meshes[pg_ind_scenario].size(); indMesh++) { Caverne_Mesh_Profusion_Off(indMesh); }; break;
+	case _Caverne_Mesh_7Solids_on: for (int indMesh = 0; indMesh < 7; indMesh++) { pg_meshOn(indMesh + 1); pg_meshMobileOff(indMesh + 1); }; break;
+	case _Caverne_Mesh_7Solids_off: for (int indMesh = 0; indMesh < 7; indMesh++) { pg_meshOff(indMesh + 1); pg_meshMobileOff(indMesh + 1); }; break;
+	case _BGcolor_onOff: BGcolor = !BGcolor; break;
+#endif
+	case _Mesh_light_x: pg_mesh_light_x = float_arguments[0]; printf("MESH light x %.2f\n", float_arguments[0]);  break;
+	case _Mesh_light_y: pg_mesh_light_y = float_arguments[0]; printf("MESH light y %.2f\n", float_arguments[0]);  break;
+	case _Mesh_light_z: pg_mesh_light_z = float_arguments[0]; printf("MESH light z %.2f\n", float_arguments[0]);  break;
+	default:
+		sprintf(pg_errorStr, "Mesh command not found (%s)!", address_string.c_str()); pg_ReportError(pg_errorStr);
+		break;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// MESH CALLBACKS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void mesh_anime_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+		for (int indMesh = 0; indMesh < int(pg_Meshes[pg_ind_scenario].size()); indMesh++) {
+			pg_Mesh_Animations[pg_ind_scenario][indMesh].pg_mesh_startAnime = pg_CurrentClockTime;
+		}
+	}
+}
+void mesh_motion_speed_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+		for (int indMesh = 0; indMesh < int(pg_Meshes[pg_ind_scenario].size()); indMesh++) {
+			pg_Mesh_Animations[pg_ind_scenario][indMesh].pg_mesh_startMotion = pg_CurrentClockTime;
+		}
+	}
+}
+void Caverne_Mesh_Profusion_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+#if defined(var_Caverne_Mesh_Profusion)
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+		//printf("/Caverne_Mesh_Profusion %.1f\n", scenario_or_gui_command_value);
+		if (scenario_or_gui_command_value == 1.) {
+			for (int indMesh = 7; indMesh < pg_Meshes[pg_ind_scenario].size(); indMesh++) {
+				Caverne_Mesh_Profusion_On(indMesh);
+			}
+		}
+		else if (scenario_or_gui_command_value == 0.) {
+			for (int indMesh = 7; indMesh < pg_Meshes[pg_ind_scenario].size(); indMesh++) {
+				Caverne_Mesh_Profusion_Off(indMesh);
+			}
+		}
+	}
+#endif
+}
+void activeMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_KEYSTROKE || param_input_type == pg_enum_PG_SCENARIO) {
+		// MESH INTERFACE VARIABLE INITIALIZATION
+		for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_ind_scenario].size(); indMesh++) {
+			sprintf(pg_AuxString, "/Mesh_%d_onOff %d", indMesh + 1, (activeMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+}
+void mobileMeshes_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_KEYSTROKE || param_input_type == pg_enum_PG_SCENARIO) {
+		// MESH INTERFACE VARIABLE INITIALIZATION
+		for (unsigned int indMesh = 0; indMesh < pg_Meshes[pg_ind_scenario].size(); indMesh++) {
+			sprintf(pg_AuxString, "/Mesh_mobile_%d_onOff %d", indMesh + 1, (mobileMeshes & (1 << (indMesh)))); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+		}
+	}
+}
+void MmeShanghai_brokenGlass_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+#if defined(var_MmeShanghai_brokenGlass)
+	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_KEYSTROKE || param_input_type == pg_enum_PG_SCENARIO) {
+		// activation of a mesh subgroup for which the edges will be drawn
+	}
+#endif
 }
 

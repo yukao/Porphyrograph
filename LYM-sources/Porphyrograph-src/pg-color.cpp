@@ -23,20 +23,21 @@
 
 #include "pg-all_include.h"
  
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// pen palettes colors
+vector<Palette> pg_Palettes[PG_MAX_SCENARIOS];
+
 float pg_lowPalette[3];
 int pg_indLowPalette[3];
 int pg_indUpperPalette[3];
 float pg_pulsed_color_percentage[3];
-float pg_bandpass_3color_palette[3][3]; 
-float pg_light_color_prec[PG_NB_LIGHTS + 1] = { 0.f };
-float pg_light_grey_prec[PG_NB_LIGHTS + 1] = { 0.f };
-float pg_light_dimmer_prec[PG_NB_LIGHTS + 1] = { 0.f };
-float pg_light_strobe_prec[PG_NB_LIGHTS + 1] = { 0.f };
-// addition of color for light based on palette
-float pg_light_color_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
-float pg_light_grey_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
-float pg_light_dimmer_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
-float pg_light_strobe_pulse_prec[PG_NB_LIGHTS + 1] = { 0.f };
+float pg_bandpass_3color_palette[3][3];
+
+// pg_audio_pulse preceding value
+float pg_audio_pulse_prec[3] = { -1.f };
 
 // addition of colorfor pen  based on palette
 float pg_pulsed_pen_color[4];
@@ -81,9 +82,12 @@ float pg_repop_valuePart_pulse_prec = -1.f;
 // Cuurent palette after interpolation
 float pen_bandpass_3color_palette[3][3];
 
-//////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// AUDIO-BASED COLOR VARIATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////
 // PULSE COLOR FUNCTIONS
-//////////////////////////////////////////////////////////////
 void pg_compute_pulsed_palette_color(float color, float color_pulse, float grey, float grey_pulse, float pulsed_color[3], pg_ColorTarget color_target) {
 	if (pg_Palettes[pg_ind_scenario].empty()) {
 		pulsed_color[3] = { 1 };
@@ -203,6 +207,8 @@ void pg_compute_pulsed_palette_color(float color, float color_pulse, float grey,
 	}
 }
 
+
+
 // from https://www.codespeedy.com/hsv-to-rgb-in-cpp/
 
 void pg_HSVtoRGB(float h, float s, float v, float* r, float* g, float* b) {
@@ -241,6 +247,10 @@ void pg_HSVtoRGB(float h, float s, float v, float* r, float* g, float* b) {
 	//cout << "G : " << G << endl;
 	//cout << "B : " << B << endl;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// COLOR ENCODING CONVERSION AND SOUND BASED PULSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_RGBtoHSV(float r, float g, float b, float* h, float* s, float* v) {
 	if (r > 1.f || r < 0 || g > 1.f || g < 0 || b > 1.f || b < 0) {

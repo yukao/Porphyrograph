@@ -28,22 +28,21 @@
  */
 // \{
 
-const char *pg_UDPMessageFormatString[pg_enum_Empty_UDPMessageFormat + 1] = { "Plain" , "OSC" , "Empty_UDPMessageFormat" };
 
-/////////////////////////////////////////////////////
-// global variable for screenshot file name
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 vector<Scene>			 pg_Scenario[PG_MAX_SCENARIOS];
 						// table of PG_MAX_SCENARIOS booleans tables indicating whether a var (from the full scenario) 
 						// is active for the current configuration and scenario
 bool					 pg_FullScenarioActiveVars[PG_MAX_SCENARIOS][_MaxInterpVarIDs] = { {false} };
 
-string					 pg_csv_file_name;
+string					 pg_csv_logFile_name;
 string					 pg_snapshots_dir_path_prefix;
 string					 pg_snapshots_dir_path_name;
 
-pg_WindowData              *pg_Window;
+pg_WindowData            *pg_Window;
 
 // PNG capture
 pg_Png_Capture pg_Png_Capture_param;
@@ -54,30 +53,13 @@ pg_Jpg_Capture pg_Jpg_Capture_param;
 // SVG path capture
 pg_Svg_Capture pg_Svg_Capture_param;
 
-// VIDEO capture
-pg_Video_Capture pg_Video_Capture_param;
-
-// UDP servers and clients
-vector<pg_IPServer>     pg_IP_Servers;
-vector<pg_IPClient>     pg_IP_Clients;
-
-// nb configuration and scenario files
+// scenario file names
 string *pg_ScenarioFileNames = NULL;
 
 // shader file names
 string  ** pg_Shader_File_Names;
 GLenum *** pg_Shader_Stages;
 int     ** pg_Shader_nbStages;
-
-// BACKGROUND COLOR
-float pg_BGcolorRed_prec;
-float pg_BGcolorGreen_prec;
-float pg_BGcolorBlue_prec;
-
-// TEXTURES
-// number of Texture files
-vector<pg_TextureData> pg_Textures[PG_MAX_SCENARIOS];
-pg_TextureData pg_texDataScreenFont;
 
 // ++++++++++++++++++++++ PATHS, IDs FROM CONFIGURATION FILE ++++++++++++++++++++ 
 string pg_scripts_directory;
@@ -102,8 +84,6 @@ string pg_ConfigScenarioVarIDs[PG_MAX_SCENARIOS][_MaxInterpVarIDs];
 int pg_ScenarioVarNb[PG_MAX_SCENARIOS] = { 0 };
 // last value shipped to the GUI (PD)
 ScenarioValue pg_LastGUIShippedValuesInterpVar[PG_MAX_SCENARIOS][_MaxInterpVarIDs];
-// initial values in the configuration file
-//float InitialValuesConfigurationVar[_MaxConfigurationVarIDs];
 
 // current working directory
 std::string pg_cwd;
@@ -118,9 +98,9 @@ pg_WindowData::pg_WindowData( void ) {
 pg_WindowData::~pg_WindowData(void) {
 }
 
-/////////////////////////////////////////////////////
-// environment parsing from configuration file
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// DATA TYPE CONVERSION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 float pg_stof(string str) {
 	float f = 0.f;
@@ -204,6 +184,10 @@ double pg_stringToDuration(string percentOrAbsoluteDuration, double full_length,
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PATH COMPLETION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool pg_isFullPath(string dir_or_filename) {
 	if (dir_or_filename.length() > 0
 		&& (dir_or_filename.find(':') != std::string::npos
@@ -225,13 +209,47 @@ void pg_completeToFullPath(string &dir_or_filename) {
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// WORKING WINDOW SIZE CALCULATION
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
-// SCENARIO FILE
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
+// WINDTH/HEIGHT TO WORKING DIMENSIONS OF MAIN WINDOW
+void pg_setWindowDimensions(void) {
+	if (double_window && (PG_WINDOW_WIDTH > 1920)) {
+		if (wide_screen) {
+			pg_workingWindow_width = PG_WINDOW_WIDTH * 3 / 7;
+		}
+		else {
+			pg_workingWindow_width = PG_WINDOW_WIDTH / 2;
+		}
+		pg_rightWindowVMargin = (PG_WINDOW_WIDTH - 2 * pg_workingWindow_width) / 2;
+	}
+	else {
+		pg_workingWindow_width = PG_WINDOW_WIDTH;
+		pg_rightWindowVMargin = 0;
+	}
+	// looks for the smallest powers of 2 for width and height
+	pg_workingWindow_width_powerOf2 = 1;
+	while (pg_workingWindow_width_powerOf2 < pg_workingWindow_width)
+		pg_workingWindow_width_powerOf2 *= 2;
+	pg_window_height_powerOf2 = 1;
+	while (pg_window_height_powerOf2 < PG_WINDOW_HEIGHT)
+		pg_window_height_powerOf2 *= 2;
+	pg_window_width_powerOf2 = 1;
+	while (pg_window_width_powerOf2 < PG_WINDOW_WIDTH)
+		pg_window_width_powerOf2 *= 2;
+	pg_workingWindow_width_powerOf2_ratio =
+		float(pg_workingWindow_width) / float(pg_workingWindow_width_powerOf2);
+	pg_window_height_powerOf2_ratio =
+		float(PG_WINDOW_HEIGHT) / float(pg_window_height_powerOf2);
+}
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENARIO PARSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// UTIL: VAR ID TO RANK
 int pg_varID_to_rank(string var_ID, int indConfig) {
 	for (int indP = 0; indP < _MaxInterpVarIDs; indP++) {
 		if (pg_FullScenarioVarStrings[indP] == var_ID) {
@@ -242,809 +260,7 @@ int pg_varID_to_rank(string var_ID, int indConfig) {
 	return -1;
 }
 
-void pg_parseScenarioVideos(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-	string temp2;
-
-	////////////////////////////
-	////// VIDEOS
-	// Number of videos
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string videos
-	if (ID.compare("videos") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"videos\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	while (true) {
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/videos") == 0) {
-			break;
-		}
-		else if (ID.compare("movie") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"movie\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		VideoTrack video;
-
-		sstream >> temp;
-		video.videoFileName = temp;
-		if (!pg_isFullPath(video.videoFileName)) {
-			video.videoFileName = pg_videos_directory + video.videoFileName;
-		}
-		sstream >> temp2;
-		video.videoShortName = temp2;
-
-		// in addition to the movie name and short name, 2 additional
-		// sound files can be provided that are synchronized with the 
-		// movie and used to generate beats from sound envelope at 1
-		// or sound onsets detected through aubio library
-
-		// possible additional soundtrack file with peaked sound envelope at 1.0 or above
-		// NULL value or no value means no file
-		if (sstream >> temp2) {
-			// there is a soundtrack file with peaked sound envelope at 1.0
-			if (temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
-				video.videoSoundtrackPeaksFileName = temp2;
-				string csv_line;
-				vector<float> peak_times;
-				std::ifstream peak_file(temp2);
-				if (!peak_file) {
-					sprintf(pg_errorStr, "Error: peak file [%s] not found!", temp2.c_str()); pg_ReportError(pg_errorStr); throw 11;
-				}
-				printf("Read video soundtrack peaks [%s]\n", temp2.c_str());
-				// reads the peaks timecodes and stores them in a float vector
-				std::getline(peak_file, csv_line);
-				std::getline(peak_file, csv_line);
-				std::getline(peak_file, csv_line);
-				while (std::getline(peak_file, csv_line)) {
-					std::stringstream  peak_sstream;
-					pg_stringstreamStoreLine(&peak_sstream, &csv_line);
-					float time, sound;
-					peak_sstream >> time;
-					peak_sstream >> sound;
-					if (sound >= 1) {
-						peak_times.push_back(time);
-					}
-				}
-				peak_file.close();
-				video.videoSoundtrackPeaks = peak_times;
-				//for (int i = 0; i < int(peak_times.size()); ++i) {
-				//	std::cout << "Peak: " << peak_times[i] << '\n';
-				//}
-			}
-			else {
-				video.videoSoundtrackPeaksFileName = "";
-				video.videoSoundtrackPeaks = {};
-			}
-			if (sstream >> temp2 && temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
-				video.videoSoundtrackOnsetsFileName = temp2;
-				string csv_line;
-				vector<float> onset_times;
-				std::ifstream onset_file(temp2);
-				if (!onset_file) {
-					sprintf(pg_errorStr, "Error: onset file [%s] not found!", temp2.c_str()); pg_ReportError(pg_errorStr); throw 11;
-				}
-				// reads the peaks timecodes and stores them in a float vector
-				printf("Read video soundtrack onsets [%s]\n", temp2.c_str());
-				while (std::getline(onset_file, csv_line)) {
-					std::stringstream  onset_sstream;
-					pg_stringstreamStoreLine(&onset_sstream, &csv_line);
-					float time;
-					onset_sstream >> time;
-					onset_times.push_back(time);
-				}
-				onset_file.close();
-				video.videoSoundtrackOnsets = onset_times;
-				//for (int i = 0; i < int(onset_times.size()); ++i) {
-				//	std::cout << "Onset: " << onset_times[i] << '\n';
-				//}
-			}
-			else {
-				video.videoSoundtrackOnsetsFileName = "";
-				video.videoSoundtrackOnsets = {};
-			}
-		}
-		else {
-			video.videoSoundtrackPeaksFileName = "";
-			video.videoSoundtrackPeaks = {};
-			video.videoSoundtrackOnsetsFileName = "";
-			video.videoSoundtrackOnsets = {};
-		}
-		//std::cout << "movie : " << 
-		// movieFileName[indVideo] << "\n";
-		pg_VideoTracks[indScenario].push_back(video);
-	}
-}
-
-void pg_parseScenarioClipsAndPhotos(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	////////////////////////////
-	////// SHORT VIDEO CLIPS ALBUMS
-	//pg_NbClipAlbums[indScenario] = 0;
-	// Number of photo albums
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string videos
-	if (ID.compare("clips") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"clips\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-	//sstream >> pg_NbClipAlbums[indScenario];
-
-	//printf("Clip album Number %d\n", pg_NbClipAlbums);
-
-	int nbClipAlbums = 0;
-	pg_ClipDirectory[indScenario] = "";
-	while (true) {
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/clips") == 0) {
-			break;
-		}
-		else if (ID.compare("album") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"album\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		if (nbClipAlbums > 1) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file: Only one clip album with subdirectories is expected!"); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		sstream >> pg_ClipDirectory[indScenario];
-		if (!pg_isFullPath(pg_ClipDirectory[indScenario])) {
-			pg_ClipDirectory[indScenario] = pg_clips_directory + pg_ClipDirectory[indScenario];
-		}
-		std::cout << "Clip album directory: " << pg_ClipDirectory << "\n";
-		sstream >> clip_image_width[indScenario];
-		sstream >> clip_image_height[indScenario];
-		sstream >> clip_crop_width[indScenario];
-		sstream >> clip_crop_height[indScenario];
-		sstream >> clip_max_length[indScenario];
-		if (clip_image_width[indScenario] == 0 || clip_image_height[indScenario] == 0 || clip_crop_width[indScenario] == 0 || clip_crop_height[indScenario] == 0 || clip_max_length[indScenario] == 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file: missing dimension data for clip image size %dx%d cropped size %dx%d max length %d\n", clip_image_width[indScenario], clip_image_height[indScenario], clip_crop_width[indScenario], clip_crop_height[indScenario], clip_max_length[indScenario]); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		nbClipAlbums;
-	}
-	pg_NbClipAlbums[indScenario] = nbClipAlbums;
-
-	////////////////////////////
-	////// PHOTO ALBUMS
-	//pg_NbPhotoAlbums[indScenario] = 0;
-	// Number of photo albums
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string videos
-	if (ID.compare("photos") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"photos\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	int nbPhotoAlbums = 0;
-	string photoAlbumDir = "";
-	while (true) {
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/photos") == 0) {
-			break;
-		}
-		else if (ID.compare("album") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"album\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		if (nbPhotoAlbums > 1) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file: Only one photo album with subdirectories is expected"); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		sstream >> photoAlbumDir;
-		//std::cout << "photo album : " << photoAlbumDir << "\n";
-
-		nbPhotoAlbums++;
-	}
-
-	if (photoAlbumDir != "") {
-		if (!pg_isFullPath(photoAlbumDir)) {
-			pg_ImageDirectory[indScenario] = pg_diaporamas_directory + photoAlbumDir;
-		}
-		else {
-			pg_ImageDirectory[indScenario] = photoAlbumDir;
-		}
-		//std::cout << "Photo album directory: " << pg_ImageDirectory[indScenario] << std::endl;
-	}
-	else {
-		pg_ImageDirectory[indScenario] = "";
-	}
-
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string messages
-	if (ID.compare("messages") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"messages\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string lines
-	if (ID.compare("/messages") != 0) {
-		sstream >> pg_MessageFile[indScenario];
-		if (!pg_isFullPath(pg_MessageFile[indScenario])) {
-			pg_MessageFile[indScenario] = pg_messages_directory + pg_MessageFile[indScenario];
-		}
-		std::cout << "Loading messages from " << pg_MessageFile[indScenario] << std::endl;
-
-		// /messages
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /messages
-		if (ID.compare("/messages") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"/messages\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-	}
-	else {
-		pg_MessageFile[indScenario] = "";
-	}
-
-}
-
-void pg_parseScenarioSoundtracks(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-	string temp2;
-
-	////////////////////////////
-	////// SOUNDTRACKS
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string soundtracks
-	if (ID.compare("soundtracks") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"soundtracks\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	while (true) {
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/soundtracks") == 0) {
-			break;
-		}
-		else if (ID.compare("track") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"track\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		SoundTrack soundtrack;
-
-		sstream >> temp;
-		soundtrack.soundtrackFileName = temp;
-		if (!pg_isFullPath(soundtrack.soundtrackFileName)) {
-			soundtrack.soundtrackFileName = pg_soundtracks_directory + soundtrack.soundtrackFileName;
-		}
-		sstream >> temp2;
-		soundtrack.soundtrackShortName = temp2;
-		//std::cout << "Soundtrack: " << pg_SoundTracks[indScenario][indTrack].soundtrackFileName << " " << pg_SoundTracks[indScenario][indTrack].trackShortName << " (#" << indTrack << ")\n";
-
-		// in addition to the track name and short name, 2 additional
-		// files can be used to generate beats from sound envelope at 1
-		// or sound onsets detected through aubio library
-
-		// possible additional peaked sound envelope at 1.0 or above
-		// NULL value or no value means no file
-		if (sstream >> temp2) {
-			// there is a soundtrack file with peaked sound envelope at 1.0
-			if (temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
-				soundtrack.soundtrackPeaksFileName = temp2;
-				string csv_line;
-				vector<float> peak_times;
-				std::ifstream peak_file(temp2);
-				if (!peak_file) {
-					sprintf(pg_errorStr, "Error: peak file [%s] not found!", temp2.c_str()); pg_ReportError(pg_errorStr); throw 11;
-				}
-				printf("Read audio soundtrack peaks [%s]\n", temp2.c_str());
-				// reads the peaks timecodes and stores them in a float vector
-				std::getline(peak_file, csv_line);
-				std::getline(peak_file, csv_line);
-				std::getline(peak_file, csv_line);
-				while (std::getline(peak_file, csv_line)) {
-					std::stringstream  peak_sstream;
-					pg_stringstreamStoreLine(&peak_sstream, &csv_line);
-					float time, sound;
-					peak_sstream >> time;
-					peak_sstream >> sound;
-					if (sound >= 1) {
-						peak_times.push_back(time);
-					}
-				}
-				peak_file.close();
-				soundtrack.soundtrackPeaks = peak_times;;
-				//for (int i = 0; i < int(peak_times.size()); ++i) {
-				//	std::cout << "Peak: " << peak_times[i] << '\n';
-				//}
-			}
-			else {
-				soundtrack.soundtrackPeaksFileName = "";
-				soundtrack.soundtrackPeaks = {};
-			}
-			if (sstream >> temp2 && temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
-				soundtrack.soundtrackOnsetsFileName = temp2;
-				string csv_line;
-				vector<float> onset_times;
-				std::ifstream onset_file(temp2);
-				if (!onset_file) {
-					sprintf(pg_errorStr, "Error: onset file [%s] not found!", temp2.c_str()); pg_ReportError(pg_errorStr); throw 11;
-				}
-				// reads the peaks timecodes and stores them in a float vector
-				printf("Read audio soundtrack onsets [%s]\n", temp2.c_str());
-				while (std::getline(onset_file, csv_line)) {
-					std::stringstream  onset_sstream;
-					pg_stringstreamStoreLine(&onset_sstream, &csv_line);
-					float time;
-					onset_sstream >> time;
-					onset_times.push_back(time);
-				}
-				onset_file.close();
-				soundtrack.soundtrackOnsets = onset_times;;
-				//for (int i = 0; i < int(onset_times.size()); ++i) {
-				//	std::cout << "Onset: " << onset_times[i] << '\n';
-				//}
-			}
-			else {
-				soundtrack.soundtrackOnsetsFileName = "";
-				soundtrack.soundtrackOnsets = {};
-			}
-			float offset = 0.f;
-			sstream >> offset;
-			soundtrack.soundtrackOnsetsAndPeasksOffset = offset;
-		}
-		else {
-			soundtrack.soundtrackPeaksFileName = "";
-			soundtrack.soundtrackPeaks = {};
-			soundtrack.soundtrackOnsetsFileName = "";
-			soundtrack.soundtrackOnsets = {};
-			soundtrack.soundtrackOnsetsAndPeasksOffset = 0.f;
-		}
-		//std::cout << "track : " << 
-		// pg_SoundTracks[indVideo]->soundtrackFileName << "\n";
-		pg_SoundTracks[indScenario].push_back(soundtrack);
-	}
-}
-
-void pg_parseScenarioSVGPaths(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-	string temp2;
-
-	////////////////////////////
-	////// SVG PATHS
-
-	// Initial markup for SVG pathCurves
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string svg_paths
-	if (ID.compare("svg_paths") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"svg_paths\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// initializes the tracks for recording the strokes
-	// has to be made before loading the scenario that may load predefined svg paths
-	// and has to be made after the configuration file loading that has 
-
-	// mouse pointer tracks recording initialization
-	for (int ind = 0; ind <= PG_NB_PATHS; ind++) {
-		pg_synchr_start_recording_path[ind] = false;
-		pg_synchr_start_path_replay_trackNo[ind] = -1;
-		pg_recorded_path[ind] = false;
-		pg_is_path_replay[ind] = false;
-	}
-
-	// each path should have minimally one curve which is used to record/replay live
-	for (int pathNo = 1; pathNo <= PG_NB_PATHS; pathNo++) {
-		// a path without curves
-		if (pg_Path_Status[pathNo].path_PathCurve_Data[indScenario].size() == 0) {
-			PathCurve_Data curve;
-			curve.PathCurve_Data_init();
-			pg_Path_Status[pathNo].path_PathCurve_Data[indScenario].push_back(curve);
-		}
-	}
-
-	// parses the full list of paths 
-	// check which paths have associated curves and how many pathCurves are associated to each active path
-	pg_current_SVG_path_group = 1;
-	int nb_path_curves = 0;
-	while(true) {
-		string fileName = "";
-		string local_ID = "";
-		string path_ID = "";
-
-		SVG_scenarioPathCurve pathCurve;
-
-		// adds a new curve
-		pg_SVG_scenarioPathCurves[indScenario].push_back(pathCurve);
-
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/svg_paths") == 0) {
-			break;
-		}
-		else if (ID.compare("svg_path") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"svg_path\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		sstream >> fileName; // file name
-		if (!pg_isFullPath(fileName)) {
-			fileName = pg_SVGpaths_directory + fileName;
-		}
-		//printf("Filename %s\n", fileName.c_str());
-		sstream >> temp2;
-		int pathNo = pg_stoi(temp2);
-		// adds a new curve to the path, the curve is made of one empty frame 
-		// the addition of a new frame is made by filling the back frame and pushing a new one when another one is built
-		if (pathNo <= PG_NB_PATHS && pathNo >= 0) {
-			PathCurve_Data curve;
-			curve.PathCurve_Data_init();
-			pg_Path_Status[pathNo].path_PathCurve_Data[indScenario].push_back(curve);
-		}
-		else {
-			sprintf(pg_errorStr, "Error: incorrect scenario file SVG path %d number (\"%s\"), pathRank should be between 0 and %d",
-				pathNo, fileName.c_str(), PG_NB_PATHS); pg_ReportError(pg_errorStr); throw 100;
-		}
-		sstream >> temp2;
-		int path_track = pg_stoi(temp2);
-		sstream >> temp2;
-		float pathRadius = pg_stof(temp2);
-		sstream >> temp2;
-		float path_r_color = pg_stof(temp2);
-		sstream >> temp2;
-		float path_g_color = pg_stof(temp2);
-		sstream >> temp2;
-		float path_b_color = pg_stof(temp2);
-		sstream >> temp2;
-		float path_readSpeedScale = pg_stof(temp2);
-		sstream >> path_ID;
-		sstream >> temp2;
-		int local_path_group = pg_stoi(temp2);
-		if (local_path_group <= 0) {
-			sprintf(pg_errorStr, "Error: incorrect scenario file group %d for SVG path %d number (\"%s\"), path group should be stricly positive",
-				local_path_group, pathNo, fileName.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-		else {
-			pg_nb_SVG_path_groups[indScenario] = max(pg_nb_SVG_path_groups[indScenario], local_path_group);
-		}
-		sstream >> temp2;
-		bool with_color_radius_from_scenario = (pg_stoi(temp2) != 0);
-		sstream >> temp2;
-		double secondsforwidth = pg_stod(temp2);
-
-		//printf("path no %d group %d\n", indPathCurve, local_path_group);
-		//printf("path ID %s radius %.3f\n", path_ID.c_str(), pathRadius);
-		//printf("path no %d group %d\n", paths[indScenario][indPathCurve].indPathCurve, paths[indScenario][indPathCurve].path_group);
-		// checks whether there are other curves in the same path
-		int rankInPath = 0;
-		for (int indAux = 0; indAux < nb_path_curves; indAux++) {
-			if (pg_SVG_scenarioPathCurves[indScenario][indAux].path_no == pg_SVG_scenarioPathCurves[indScenario][nb_path_curves].path_no) {
-				rankInPath++;
-				//sprintf(pg_errorStr, "Error: incorrect configuration file paths %d and %d have the same path index %d and same path group %d", 
-				//	indAux, indPathCurve, pg_SVG_scenarioPathCurves[indScenario][indAux].indPath, pg_SVG_scenarioPathCurves[indScenario][indAux].path_group); pg_ReportError(pg_errorStr); throw 100;
-			}
-		}
-		pg_SVG_scenarioPathCurves[indScenario][nb_path_curves].SVG_scenarioPathCurve_init(pathNo, rankInPath, path_track, pathRadius,
-			path_r_color, path_g_color, path_b_color, path_readSpeedScale,
-			path_ID, fileName, local_path_group, with_color_radius_from_scenario, secondsforwidth);
-
-		//printf("indPathCurve %d path_track %d pathRadius %.2f path_r_color %.2f path_g_color %.2f path_b_color %.2f path_readSpeedScale %.2f\n",
-		//	pathRank, path_track, pathRadius, path_r_color, path_g_color, path_b_color, path_readSpeedScale);
-		if (path_track >= 0 && path_track < PG_NB_TRACKS && pathNo >= 1 && pathNo <= PG_NB_PATHS) {
-			if (local_path_group == pg_current_SVG_path_group) {
-				//printf("Load svg path No %d track %d\n", pathNo, path_track);
-				pg_Path_Status[pathNo].load_svg_path((char*)fileName.c_str(),
-					pathRadius, path_r_color, path_g_color, path_b_color,
-					path_readSpeedScale, path_ID, with_color_radius_from_scenario, secondsforwidth, indScenario);
-				//printf("time stamps %.2f %.2f %.2f %.2f %.2f\n",
-				//	pg_Path_Status[pathNo].path_TmpTimeStamps[0], pg_Path_Status[pathNo].path_TmpTimeStamps[1], 
-				//	pg_Path_Status[pathNo].path_TmpTimeStamps[2], pg_Path_Status[pathNo].path_TmpTimeStamps[3], 
-				//	pg_Path_Status[pathNo].path_TmpTimeStamps[4]);
-			}
-		}
-		else {
-			sprintf(pg_errorStr, "Error: incorrect scenario file track %d for SVG path number %d (\"%s\") track number should be between 0 and %d and path number between 1 and %d\n",
-				path_track, pathNo, fileName.c_str(), PG_NB_TRACKS, PG_NB_PATHS); pg_ReportError(pg_errorStr); throw 100;
-		}
-		//std::cout << "svg_path #" << pathNo << ": " << pg_SVGpaths_directory + temp << " track #" << path_track << "\n";
-
-		nb_path_curves++;
-	}
-}
-
-void pg_parseScenarioClipArt(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	////////////////////////////
-	////// ClipArt GPU PATHS
-	// the paths are loaded inside the GPU and diplayed path by path
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string clip_arts
-	if (ID.compare("clip_arts") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"clip_arts\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	pg_nb_tot_SvgGpu_paths[indScenario] = 0;
-	while (true) {
-		// new line
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
-		if (ID.compare("/clip_arts") == 0) {
-			break;
-		}
-		else if (ID.compare("clip_art") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"clip_art\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		// adds a new clipart
-		ClipArt aClipArt;
-
-		sstream >> aClipArt.pg_ClipArt_fileNames; // file name
-		if (!pg_isFullPath(aClipArt.pg_ClipArt_fileNames)) {
-			//printf("CipArts dir [%s] filename [%s]\n", pg_cliparts_directory.c_str(), aClipArt.pg_ClipArt_fileNames.c_str());
-			aClipArt.pg_ClipArt_fileNames = pg_cliparts_directory + aClipArt.pg_ClipArt_fileNames;
-		}
-		sstream >> aClipArt.pg_nb_paths_in_ClipArt; // number of paths in the file
-		pg_nb_tot_SvgGpu_paths[indScenario] += aClipArt.pg_nb_paths_in_ClipArt;
-		//printf("%s, ", aClipArt.pg_ClipArt_fileNames.c_str());
-		//printf("ind path file %d name %s nb paths %d, ", indClipArtFile, aClipArt.pg_ClipArt_fileNames.c_str(), aClipArt.pg_nb_paths_in_ClipArt);
-
-		aClipArt.pg_ClipArt_SubPath = new bool[aClipArt.pg_nb_paths_in_ClipArt];
-		for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-			aClipArt.pg_ClipArt_SubPath[indPathCurve] = true;
-		}
-
-		aClipArt.pg_ClipArt_Colors = new pg_ClipArt_Colors_Types[aClipArt.pg_nb_paths_in_ClipArt];
-		for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-			aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_nat;
-		}
-
-		// image initial geometry
-		sstream >> aClipArt.pg_ClipArt_Scale;
-		sstream >> aClipArt.pg_ClipArt_Translation_X;
-		sstream >> aClipArt.pg_ClipArt_Translation_Y;
-		//printf("ind clipart %d scale %.2f pos %.2f %.2f\n", indClipArtFile, aClipArt.pg_ClipArt_Scale, aClipArt.pg_ClipArt_Translation_X, aClipArt.pg_ClipArt_Translation_Y);
-		sstream >> aClipArt.pg_ClipArt_Rotation;
-		sstream >> ID;
-		if (ID.compare("nat") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_nat;
-			}
-		}
-		else if (ID.compare("white") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_white;
-			}
-		}
-		else if (ID.compare("red") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_red;
-			}
-		}
-		else if (ID.compare("green") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_green;
-			}
-		}
-		else if (ID.compare("blue") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_blue;
-			}
-		}
-		else {
-			sprintf(pg_errorStr, "Error: incorrect configuration file ClipArt GPU color \"%s\" (nat, white, red, blue or green expected)", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		pg_ClipArts[indScenario].push_back(aClipArt);
-	}
-	printf("\n");
-	printf("Nb clip arts %d config %d\n", (int)pg_ClipArts[indScenario].size(), indScenario);
-	if (pg_ClipArts[indScenario].size() > 0) {
-		pg_last_activated_ClipArt = &(pg_ClipArts[indScenario][0]);
-	}
-}
-
-void pg_parseScenarioTextures(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	////////////////////////////	
-	////// TEXTURES
-	// the textures are loaded inside the GPU and diplayed path by path
-
-	// initial markup
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string textures
-	if (ID.compare("textures") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"textures\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// Number of textures
-	while(true) {
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string texture
-		if (ID.compare("/textures") == 0) {
-			break;
-		}
-		else if (ID.compare("texture") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"texture\" not found! (instead \"%s\")\n", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		pg_TextureData cur_texture;
-
-		sstream >> ID; // file name
-		if (!pg_isFullPath(ID)) {
-				cur_texture.texture_fileName = pg_textures_directory + ID;
-		}
-		else {
-			cur_texture.texture_fileName = ID;
-		}
-		sstream >> cur_texture.texture_fileNameSuffix; // file suffix
-
-		// usage
-		sstream >> ID;
-		//printf("Usage %s: (%s)\n", cur_texture.texture_fileName.c_str(), ID.c_str());
-		if (ID.compare("master_mask") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_master_mask;
-		}
-		else if (ID.compare("mesh") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_mesh;
-		}
-		else if (ID.compare("sensor") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_sensor;
-		}
-		else if (ID.compare("logo") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_logo;
-		}
-		else if (ID.compare("brush") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_brush;
-		}
-		else if (ID.compare("noise") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_noise;
-		}
-		else if (ID.compare("curve_particle") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_particle;
-		}
-		else if (ID.compare("splat_particle") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_splat_particle;
-		}
-		else if (ID.compare("part_init") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_part_init;
-		}
-		else if (ID.compare("part_acc") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_part_acc;
-		}
-		else if (ID.compare("pixel_acc") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_pixel_acc;
-		}
-		else if (ID.compare("repop_density") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_repop_density;
-		}
-		else if (ID.compare("multilayer_master_mask") == 0) {
-			cur_texture.texture_usage = pg_enum_Texture_multilayer_master_mask;
-		}
-		else {
-			sprintf(pg_errorStr, "Error: incorrect configuration file Texture usage \"%s\"\n", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-		// rank of the texture (used in particular for meshes)
-		sstream >> cur_texture.texture_Rank;
-		// dimension (2 or 3)
-		sstream >> cur_texture.texture_Dimension;
-		if (cur_texture.texture_Dimension != 2
-			&& cur_texture.texture_Dimension != 3) {
-			sprintf(pg_errorStr, "Error: 2D or 3D texture dimension expected, not %d for texture (%s)\n", cur_texture.texture_Dimension, cur_texture.texture_fileName.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-		// number of piled textures in case of 3D texture or tif format
-		sstream >> cur_texture.texture_Nb_Layers;
-		if (cur_texture.texture_usage == pg_enum_Texture_brush) {
-			nb_pen_brushes[indScenario] = cur_texture.texture_Nb_Layers;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_multilayer_master_mask) {
-			nb_layers_master_mask[indScenario] = cur_texture.texture_Nb_Layers;
-		}
-
-		// image initial geometry
-		sstream >> cur_texture.texture_Size_X;
-		sstream >> cur_texture.texture_Size_Y;
-		if (cur_texture.texture_usage == pg_enum_Texture_master_mask &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width || cur_texture.texture_Size_Y < PG_WINDOW_HEIGHT)) {
-			sprintf(pg_errorStr, "Error: master mask texture should be minimlally %dx%d (%dx%d)\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_multilayer_master_mask &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width || cur_texture.texture_Size_Y < PG_WINDOW_HEIGHT)) {
-			sprintf(pg_errorStr, "Error: multilayer master mask texture should be minimlally %dx%d (%dx%d)\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_noise &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width_powerOf2 || cur_texture.texture_Size_Y < pg_window_height_powerOf2)) {
-			sprintf(pg_errorStr, "Error: noise texture should be minimlally %dx%d (%dx%d)\n", pg_workingWindow_width_powerOf2, pg_window_height_powerOf2,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_part_init &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width || cur_texture.texture_Size_Y < PG_WINDOW_HEIGHT)) {
-			sprintf(pg_errorStr, "Error: particle initialization texture should be minimlally %dx%d (%dx%d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_part_acc &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width || cur_texture.texture_Size_Y < PG_WINDOW_HEIGHT)) {
-			sprintf(pg_errorStr, "Error: particle acceleration texture should be minimlally %dx%d (%dx%d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_pixel_acc &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width || cur_texture.texture_Size_Y < PG_WINDOW_HEIGHT)) {
-			sprintf(pg_errorStr, "Error: pixel acceleration texture should be minimlally %dx%d (%dx%d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-		if (cur_texture.texture_usage == pg_enum_Texture_repop_density &&
-			(cur_texture.texture_Size_X < pg_workingWindow_width || cur_texture.texture_Size_Y < PG_WINDOW_HEIGHT)) {
-			sprintf(pg_errorStr, "Error:  repopulation density texture should be minimlally %dx%d (%dx%d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT,
-				cur_texture.texture_Size_X, cur_texture.texture_Size_Y); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		// image color depth
-		sstream >> cur_texture.texture_Nb_Bytes_per_Pixel;
-
-		// booleans invert & is rectangle
-		sstream >> ID;
-		if (ID.compare("true") == 0 || ID.compare("TRUE") == 0) {
-			cur_texture.texture_Is_Rectangle = true;
-		}
-		else if (ID.compare("false") == 0 || ID.compare("FALSE") == 0) {
-			cur_texture.texture_Is_Rectangle = false;
-		}
-		else {
-			sprintf(pg_errorStr, "Error: incorrect boolean for Texture rectangle \"%s\" (true or false expected)\n", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-		sstream >> ID;
-		if (ID.compare("true") == 0 || ID.compare("TRUE") == 0) {
-			cur_texture.texture_Invert = true;
-		}
-		else if (ID.compare("false") == 0 || ID.compare("FALSE") == 0) {
-			cur_texture.texture_Invert = false;
-		}
-		else {
-			sprintf(pg_errorStr, "Error: incorrect boolean for Texture invert \"%s\" (true or false expected)\n", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		pg_Textures[indScenario].push_back(cur_texture);
-
-		//printf("Texture #%d size (%d,%d), rank %d, usage %d\n",
-		//	pg_Textures[indScenario].size(), cur_texture.texture_Size_X, cur_texture.texture_Size_Y,
-		//	cur_texture.texture_Rank, cur_texture.texture_usage);
-	}
-	// /textures
-}
-
+////// COLOR PALETTES
 void pg_parseScenarioColorPalettes(std::ifstream& scenarioFin, int indScenario) {
 	std::stringstream  sstream;
 	string line;
@@ -1052,7 +268,6 @@ void pg_parseScenarioColorPalettes(std::ifstream& scenarioFin, int indScenario) 
 	string temp;
 
 	////////////////////////////
-	////// PALETTE COLORSS
 	// palettes markup
 	std::getline(scenarioFin, line);
 	pg_stringstreamStoreLine(&sstream, &line);
@@ -1089,6 +304,7 @@ void pg_parseScenarioColorPalettes(std::ifstream& scenarioFin, int indScenario) 
 	// std::cout << "Nb palettes : " << pg_Palettes[indScenario].size() <<  "\n";
 }
 
+////// COLOR PRESETS
 void pg_parseScenarioColorPresets(std::ifstream& scenarioFin, int indScenario) {
 	std::stringstream  sstream;
 	string line;
@@ -1096,7 +312,6 @@ void pg_parseScenarioColorPresets(std::ifstream& scenarioFin, int indScenario) {
 	string temp;
 
 	////////////////////////////
-	////// COLOR PRESETS
 	// Number of presets
 	std::getline(scenarioFin, line);
 	pg_stringstreamStoreLine(&sstream, &line);
@@ -1129,139 +344,14 @@ void pg_parseScenarioColorPresets(std::ifstream& scenarioFin, int indScenario) {
 	// std::cout << "Nb palettes : " << pg_ColorPresets[indScenario].size() <<  "\n";
 }
 
-// Can't compile if DMX is not present
-void pg_parseScenarioLights(std::ifstream & scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	////////////////////////////
-	////// LIGHTS
-	// lights markup
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID; // string color_presets
-	if (ID.compare("lights") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"lights\" not found! (instead \"%s\")\n", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// lights presets
-	pg_nb_light_groups[indScenario] = 0;
-	int nbLights = 0;
-	while (true) {
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string texture
-		if (ID.compare("/lights") == 0) {
-			break;
-		}
-		else if (ID.compare("light") != 0) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"light\" not found! (instead \"%s\")\n", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-
-		string a_light_name;
-		int a_light_group;
-		int a_light_port;
-		int a_light_address;
-		int a_light_channels;
-		string a_light_red;
-		string a_light_green;
-		string a_light_blue;
-		string a_light_grey;
-		string a_light_dimmer;
-		string a_light_strobe;
-		string a_light_zoom;
-		string a_light_pan;
-		string a_light_tilt;
-		string a_light_hue;
-
-		 //std::cout << "scene: " << line << "\n";
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // "light"
-		sstream >> a_light_name; // light ID
-		sstream >> a_light_group;
-		//#ifdef PG_NB_LIGHTS_GROUPS_IN_PG_VARS
-		//		if (a_light_group > PG_NB_LIGHTS_GROUPS_IN_PG_VARS) {
-		//			sprintf(pg_errorStr, "Error: incorrect configuration file light group of light #%d should be <= %d\n", indLight, PG_NB_LIGHTS_GROUPS_IN_PG_VARS); pg_ReportError(pg_errorStr); throw 100;
-		//		}
-		//#endif
-		if (a_light_group < 1) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file light group (%d) should be a value >= 1 for light %d\n", a_light_group, nbLights + 1); pg_ReportError(pg_errorStr); throw 100;
-		}
-		pg_nb_light_groups[indScenario] = max(pg_nb_light_groups[indScenario], a_light_group);
-
-		sstream >> a_light_port;
-		if (a_light_port != 1 && a_light_port != 2) {
-			sprintf(pg_errorStr, "Error: incorrect configuration file light port should be equal to 1 or 2 not %d for light %d\n", a_light_port, nbLights + 1); pg_ReportError(pg_errorStr); throw 100;
-		}
-		sstream >> a_light_address;
-		sstream >> a_light_channels;
-		sstream >> a_light_red;
-		sstream >> a_light_green;
-		sstream >> a_light_blue;
-		sstream >> a_light_grey;
-		sstream >> a_light_dimmer;
-		sstream >> a_light_strobe;
-		sstream >> a_light_zoom;
-		sstream >> a_light_pan;
-		sstream >> a_light_tilt;
-		sstream >> a_light_hue;
-		Light alight(a_light_name, a_light_group, 0, a_light_port, a_light_address, a_light_channels,
-			a_light_red, a_light_green, a_light_blue, a_light_grey, a_light_dimmer, a_light_strobe, a_light_zoom, a_light_pan, a_light_tilt, a_light_hue);
-		pg_Lights[indScenario].push_back(alight);
-		//std::cout << "light : " << indLight << " id " <<  a_light_names << " port " 
-		//	<< a_light_port << " rank " << a_light_group << " add " << a_light_address << " ch " << a_light_channels << " r "
-		//	<< a_light_red << " g " << a_light_green << " b " << a_light_blue 
-		//	<< " dimm " << a_light_dimmer <<" strobe " << a_light_strobe << "\n";
-	}
-
-	// initializes light groups with no lights (0 light index in each light group)
-	vector<int> indexes_in_group(pg_nb_light_groups[indScenario],0);
-	// assign index inside light group to each light
-	for (Light &light : pg_Lights[indScenario]) {
-		int an_index_in_group = 0;
-		int a_light_group = light.light_group;
-		if (a_light_group < pg_nb_light_groups[indScenario]) {
-			an_index_in_group = indexes_in_group[a_light_group];
-			indexes_in_group[a_light_group] += 1;
-		}
-		light.index_in_group = an_index_in_group;
-	}
-
-
-	// classes of light groups initialized to default values
-	for (int ind_light_group = 0; ind_light_group < pg_nb_light_groups[indScenario]; ind_light_group++) {
-		LightGroup lgroup(ind_light_group + 1);
-		pg_light_groups[indScenario].push_back(lgroup);
-		for (Light &light : pg_Lights[indScenario]) {
-			if (light.light_group == ind_light_group + 1) {
-				pg_light_groups[indScenario][ind_light_group].set_group_id(light.light_name);
-				//printf("group ind %d id %s\n", ind , pg_light_groups[ind].get_group_id().c_str());
-				break;
-			}
-		}
-	}
-
-	// Iterate over an unordered_map using range based for loop
-	// builds pg_inverse_light_param_hashMap from pg_light_param_hashMap
-	// by exchanging keys and values
-	for (const auto& myPair : pg_light_param_hashMap) {
-		pg_inverse_light_param_hashMap[myPair.second] = myPair.first;
-	}
-}
-
-////////////////////////////////////
-////// RENDERING FILES & DIRECTORIES (VIDEP, PNG, JPG, ClipArt...)
-////////////////////////////////////
-
+////// RENDERING FILES (VIDEP, PNG, JPG, ClipArt...)
 void pg_parseScenarioRenderingFiles(std::ifstream& scenarioFin, int indScenario) {
 	std::stringstream  sstream;
 	string line;
 	string ID;
 	string temp;
 
-// rendering_files
+	// rendering_files
 	std::getline(scenarioFin, line);
 	pg_stringstreamStoreLine(&sstream, &line);
 	sstream >> ID;
@@ -1281,13 +371,7 @@ void pg_parseScenarioRenderingFiles(std::ifstream& scenarioFin, int indScenario)
 	if (ID.compare("VIDEO") != 0) {
 		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"VIDEO\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
 	}
-	if (indScenario == 0) {
-		sstream >> pg_Video_Capture_param.beginVideo_file;
-		sstream >> pg_Video_Capture_param.endVideo_file;
-		sstream >> temp; // unused
-		sstream >> pg_Video_Capture_param.Video_file_name;
-		pg_Video_Capture_param.outputVideo_file = !pg_Video_Capture_param.Video_file_name.empty();
-	}
+	// not used currently (instead video capture by external program)
 
 	// storing the Svg capture values
 	std::getline(scenarioFin, line);
@@ -1372,453 +456,7 @@ void pg_parseScenarioRenderingFiles(std::ifstream& scenarioFin, int indScenario)
 	std::getline(scenarioFin, line);
 }
 
-////////////////////////////////////
-////// IP CLIENTS/SERVERS
-////////////////////////////////////
-void pg_parseScenarioUDP(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	if (indScenario == 0) {
-		pg_IP_Servers.clear();
-
-		pg_IP_Clients.clear();
-	}
-
-	// udp_local_server Number of servers
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID;
-	if (ID.compare("udp_local_server") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"udp_local_server\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// VERBATIM
-	std::getline(scenarioFin, line);
-	// TYPE
-	std::getline(scenarioFin, line);
-	// ID
-	std::getline(scenarioFin, line);
-
-	if (indScenario == 0) {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "server" or end with "/udp_local_server"
-			if (ID.compare("/udp_local_server") == 0) {
-				break;
-			}
-			else if (ID.compare("server") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"server\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-			pg_IPServer server;
-			sstream >> server.id;
-			sstream >> server.Local_server_port;
-			sstream >> ID;
-			server.receive_format = pg_enum_Empty_UDPMessageFormat;
-			for (int ind = 0; ind < pg_enum_Empty_UDPMessageFormat; ind++) {
-				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
-					server.receive_format = (pg_UDPMessageFormat)ind;
-					break;
-				}
-			}
-			if (server.receive_format == pg_enum_Empty_UDPMessageFormat) {
-				sprintf(pg_errorStr, "Error: unknown receive message format [%s]!", ID.c_str()); pg_ReportError(pg_errorStr); throw 249;
-			}
-			sstream >> server.IP_message_trace;
-			sstream >> server.depth_input_stack;
-			sstream >> server.OSC_duplicate_removal;
-			// printf("serveur %d duplicate removal %d\n", ind_IP_Server, pg_IP_Servers[ind_IP_Server]->OSC_duplicate_removal);
-			sstream >> server.OSC_endian_reversal;
-			pg_IP_Servers.push_back(server);
-		}
-	}
-	else {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "server" or end with "/udp_local_server"
-			if (ID.compare("/udp_local_server") == 0) {
-				break;
-			}
-			else if (ID.compare("server") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"server\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-		}
-	}
-
-	//// /udp_local_server
-	//std::getline(scenarioFin, line);
-
-	// udp_remote_client Number of clients
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID;
-	if (ID.compare("udp_remote_client") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"udp_remote_client\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// VERBATIM
-	std::getline(scenarioFin, line);
-	// TYPE
-	std::getline(scenarioFin, line);
-	// ID
-	std::getline(scenarioFin, line);
-
-	if (indScenario == 0) {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "client" or end with "/udp_remote_client"
-			if (ID.compare("/udp_remote_client") == 0) {
-				break;
-			}
-			else if (ID.compare("client") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"client\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-			pg_IPClient client;
-			sstream >> client.id;
-			sstream >> client.Remote_server_IP;
-			sstream >> client.Remote_server_port;
-			sstream >> ID;
-			client.send_format = pg_enum_Empty_UDPMessageFormat;
-			for (int ind = 0; ind < pg_enum_Empty_UDPMessageFormat; ind++) {
-				if (strcmp(ID.c_str(), pg_UDPMessageFormatString[ind]) == 0) {
-					client.send_format = (pg_UDPMessageFormat)ind;
-					break;
-				}
-			}
-			if (client.send_format == pg_enum_Empty_UDPMessageFormat) {
-				sprintf(pg_errorStr, "Error: unknown receive message format [%s]!", ID.c_str()); pg_ReportError(pg_errorStr); throw 249;
-			}
-			sstream >> client.IP_message_trace;
-			sstream >> client.max_depth_output_stack;
-			sstream >> client.OSC_endian_reversal;
-			// std::cout << "OSC_trace: " << client.IP_message_trace << "\n";
-			//std::cout << "client.id: " << client.id << "\n";
-			//std::cout << "client.Remote_server_IP: " << client.Remote_server_IP << "\n";
-			//std::cout << "client.Remote_server_port: " << client.Remote_server_port << "\n";
-			//std::cout << "client.Remote_server_port: " << client.Remote_server_port << "\n";
-			pg_IP_Clients.push_back(client);
-		}
-	}
-	else {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "client" or end with "/udp_remote_client"
-			if (ID.compare("/udp_remote_client") == 0) {
-				break;
-			}
-			else if (ID.compare("client") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"client\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-		}
-	}
-
-	//// /udp_remote_client
-	//std::getline(scenarioFin, line);
-}
-
-////////////////////////////////////
-////// CAMERAS
-////////////////////////////////////
-void pg_parseScenarioCameras(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-	string temp2;
-	string temp3;
-
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID;
-	if (ID.compare("webCam") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"webCam\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// VERBATIM
-	std::getline(scenarioFin, line);
-	// TYPE
-	std::getline(scenarioFin, line);
-	// ID
-	std::getline(scenarioFin, line);
-
-	if (indScenario == 0) {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "client" or end with "/udp_remote_client"
-			if (ID.compare("/webCam") == 0) {
-				break;
-			}
-			else if (ID.compare("camera") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"camera\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-			webCam cur_webCam;
-
-			sstream >> cur_webCam.cameraString; // string "cameraString"
-
-			sstream >> temp; // string "cameraID"
-			try {
-				cur_webCam.cameraID = stoi(temp);
-			}
-			catch (...) {
-				sprintf(pg_errorStr, "Error: webcam configuration incorrect cameraID \"%s\"\n", temp.c_str()); pg_ReportError(pg_errorStr); throw 50;
-			}
-
-			sstream >> temp2; // string "cameraWidth"
-			try {
-				cur_webCam.cameraWidth = stoi(temp2);
-			}
-			catch (...) {
-				sprintf(pg_errorStr, "Error: webcam configuration incorrect cameraWidth \"%s\"\n", temp2.c_str()); pg_ReportError(pg_errorStr); throw 50;
-			}
-
-			sstream >> temp3; // string "cameraHeight"
-			try {
-				cur_webCam.cameraHeight = stoi(temp3);
-			}
-			catch (...) {
-				sprintf(pg_errorStr, "Error: webcam configuration incorrect cameraHeight \"%s\"\n", temp3.c_str()); pg_ReportError(pg_errorStr); throw 50;
-			}		//std::cout << temp2 << "\n";
-			pg_webCams.push_back(cur_webCam);
-		}
-	}
-	else {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "client" or end with "/udp_remote_client"
-			if (ID.compare("/webCam") == 0) {
-				break;
-			}
-			else if (ID.compare("camera") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"camera\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-		}
-	}
-
-	// remote_IPCam Number of cameras
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID;
-	if (ID.compare("remote_IPCam") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"remote_IPCam\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// VERBATIM
-	std::getline(scenarioFin, line);
-	// TYPE
-	std::getline(scenarioFin, line);
-	// ID
-	std::getline(scenarioFin, line);
-
-	if (indScenario == 0) {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "client" or end with "/udp_remote_client"
-			if (ID.compare("/remote_IPCam") == 0) {
-				break;
-			}
-			else if (ID.compare("IPCam") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"IPCam\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-			VideoCapture cur_IPCam;
-
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> temp; // string "IPCam_IP"
-			sstream >> temp2; // string "IPCam_Port"
-			sstream >> temp3; // string "IPCam_Device"
-			//String fulllAddress = "http://" + temp + ":" + temp2;
-			// "rtsp://[username]:[pass]@[ip address]/media/video1"
-			// fulllAddress = "rtsp://" + temp + "/H264?ch=1&subtype=0";
-			// fulllAddress = "rtsp://" + temp + "/H264?ch=1&subtype=0";
-			//fulllAddress = "rtsp://" + temp + "/H264";
-			//fulllAddress = "rtsp://" + temp + "/mjpeg.cgi?user=yukao.nagemi@gmail.com&password=Fire5432_&channel=0&.mjpg";
-			//fulllAddress = "rtsp://yukao.nagemi@gmail.com:Fire5432_@" + temp + ":" + temp2 + "/onvif1";
-			//fulllAddress = "rtsp://" + temp + ":" + temp2 + "/onvif1";
-			//fulllAddress = "rtsp://" + temp + "/onvif1";
-			// rtsp://192.168.1.65:8554/main
-			//fulllAddress = "rtsp://192.168.1.65:8554/main";
-			pg_IPCam_capture_address.push_back("rtsp://" + temp + ":" + temp2 + "/" + temp3);
-			pg_IPCam_capture.push_back(cur_IPCam);
-		}
-	}
-	else {
-		while (true) {
-			std::getline(scenarioFin, line);
-			pg_stringstreamStoreLine(&sstream, &line);
-			sstream >> ID; // string "client" or end with "/udp_remote_client"
-			if (ID.compare("/remote_IPCam") == 0) {
-				break;
-			}
-			else if (ID.compare("IPCam") != 0) {
-				sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"IPCam\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-			}
-		}
-	}
-}
-
-////////////////////////////////////
-////// SHADERS
-////////////////////////////////////
-void pg_parseScenarioShaders(std::ifstream& scenarioFin, int indScenario) {
-	std::stringstream  sstream;
-	string line;
-	string ID;
-	string temp;
-
-	// shader file names
-	pg_Shader_File_Names[indScenario] = NULL;
-
-	// shader_files Number of files<
-	std::getline(scenarioFin, line);
-	pg_stringstreamStoreLine(&sstream, &line);
-	sstream >> ID;
-	if (ID.compare("shader_files") != 0) {
-		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"shader_files<\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-	}
-
-	// VERBATIM
-	std::getline(scenarioFin, line);
-	// TYPE
-	std::getline(scenarioFin, line);
-	// ID
-	std::getline(scenarioFin, line);
-
-	pg_Shader_File_Names[indScenario] = new string[pg_enum_shader_TotalNbTypes];
-	pg_Shader_nbStages[indScenario] = new int[pg_enum_shader_TotalNbTypes];
-	pg_Shader_Stages[indScenario] = new GLenum * [pg_enum_shader_TotalNbTypes];
-	for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
-		pg_Shader_File_Names[indScenario][ind_shader_type] = string("");
-		pg_Shader_nbStages[indScenario][ind_shader_type] = 0;
-	}
-	//std::unordered_map<int, std::string> pg_stringShaderTypes = {
-//	{ pg_enum_shader_ParticleAnimation, "ParticleAnimation" },
-//	{ pg_enum_shader_Update, "Update" },
-//	{ pg_enum_shader_ParticleRender, "ParticleRender" },
-//	{ pg_enum_shader_Mixing, "Mixing" },
-//	{ pg_enum_shader_Master, "Master" },
-//	{ pg_enum_shader_Sensor, "Sensor" },
-//	{ pg_enum_shader_ClipArt, "ClipArt" },
-//	{ pg_enum_shader_Mesh, "Mesh" },
-//	{ pg_enum_shader_TotalNbTypes, "TotalNbTypes" },
-//};
-	for (int ind_shader_type = 0; ind_shader_type < pg_enum_shader_TotalNbTypes; ind_shader_type++) {
-		std::getline(scenarioFin, line);
-		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // shader type
-		if (ID != pg_stringShaderTypes[ind_shader_type]) {
-			sprintf(pg_errorStr, "Error: incorrect shader type expected string \"%s\" not found! (instead \"%s\")", pg_stringShaderTypes[ind_shader_type].c_str(), ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
-		}
-		sstream >> pg_Shader_File_Names[indScenario][ind_shader_type];
-		sstream >> pg_Shader_nbStages[indScenario][ind_shader_type];
-		if (pg_Shader_nbStages[indScenario][ind_shader_type] > 0 && pg_Shader_File_Names[indScenario][ind_shader_type] != "NULL") {
-			pg_Shader_Stages[indScenario][ind_shader_type] = new GLenum[pg_Shader_nbStages[indScenario][ind_shader_type]];
-			for (int ind_shader_stage = 0; ind_shader_stage < pg_Shader_nbStages[indScenario][ind_shader_type]; ind_shader_stage++) {
-				string shader_stage;
-				sstream >> shader_stage;
-				if (shader_stage.compare("GL_VERTEX_SHADER") == 0) {
-					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_VERTEX_SHADER;
-				}
-				else if (shader_stage.compare("GL_TESS_CONTROL_SHADER") == 0) {
-					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_TESS_CONTROL_SHADER;
-				}
-				else if (shader_stage.compare("GL_TESS_EVALUATION_SHADER") == 0) {
-					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_TESS_EVALUATION_SHADER;
-				}
-				else if (shader_stage.compare("GL_GEOMETRY_SHADER") == 0) {
-					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_GEOMETRY_SHADER;
-				}
-				else if (shader_stage.compare("GL_FRAGMENT_SHADER") == 0) {
-					pg_Shader_Stages[indScenario][ind_shader_type][ind_shader_stage] = GL_FRAGMENT_SHADER;
-				}
-				else {
-					sprintf(pg_errorStr, "Error: unknown shader type [%s]!", shader_stage.c_str()); pg_ReportError(pg_errorStr); throw 430;
-				}
-			}
-		}
-		if (ind_shader_type == pg_enum_shader_ParticleAnimation
-			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-			sprintf(pg_errorStr, "Error: active shader file for Particle Animation is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-			printf("Particle aniation shader, ");
-		}
-		if (ind_shader_type == pg_enum_shader_ParticleRender
-			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-			sprintf(pg_errorStr, "Error: active shader file for Particle Rendering is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-			printf("Particle aniation shader, ");
-		}
-		if (pg_FullScenarioActiveVars[indScenario][_sensor_layout]) {
-			if (ind_shader_type == pg_enum_shader_Sensor
-				&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-					|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-				sprintf(pg_errorStr, "Error: active shader file for Sensors is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-					pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-					pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-				printf("Particle aniation shader, ");
-			}
-		}
-		if (pg_FullScenarioActiveVars[indScenario][_activeClipArts]) {
-			if (ind_shader_type == pg_enum_shader_ClipArt
-				&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-					|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-				sprintf(pg_errorStr, "Error: active shader file for Clip Arts is missing in header file (name %s, nb stages%d)", pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-				printf("Particle aniation shader, ");
-			}
-		}
-		if (pg_FullScenarioActiveVars[indScenario][_activeMeshes]) {
-			if (ind_shader_type == pg_enum_shader_Mesh
-				&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-					|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-				sprintf(pg_errorStr, "Error: active shader file for Meshes is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-					pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-					pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-				printf("Particle aniation shader, ");
-			}
-		}
-		if (ind_shader_type == pg_enum_shader_Update
-			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-			sprintf(pg_errorStr, "Error: active shader file for Update is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-			printf("Particle aniation shader, ");
-		}
-		if (ind_shader_type == pg_enum_shader_Mixing
-			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-			sprintf(pg_errorStr, "Error: active shader file for Mixing is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-			printf("Particle aniation shader, ");
-		}
-		if (ind_shader_type == pg_enum_shader_Master
-			&& (pg_Shader_nbStages[indScenario][ind_shader_type] == 0
-				|| pg_Shader_File_Names[indScenario][ind_shader_type] == "NULL")) {
-			sprintf(pg_errorStr, "Error: active shader file for Master is missing in header file (name %s/configuration #%d/%s, nb stages %d)",
-				pg_Shader_File_Names[indScenario][ind_shader_type].c_str(), indScenario, pg_ScenarioFileNames[indScenario].c_str(),
-				pg_Shader_nbStages[indScenario][ind_shader_type]); pg_ReportError(pg_errorStr); throw(6778);
-			printf("Particle aniation shader, ");
-		}
-	}
-
-	// /shader_files
-	std::getline(scenarioFin, line);
-}
-
-
+////// DIRECTORIES
 void pg_parseScenarioDirectories(std::ifstream& scenarioFin, int indScenario) {
 	std::stringstream  sstream;
 	string line;
@@ -1933,9 +571,19 @@ void pg_parseScenarioDirectories(std::ifstream& scenarioFin, int indScenario) {
 	}
 }
 
-////////////////////////////////////
-////// FULL SCENARIO
-////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// FULL SCENARIO PARSING
+//////////////////////////////////////////////////////////////////////////////////////////////////////  
+
+// to be called once after parsing
+void pg_saveInitialTimesAndDurations(int indScenario) {
+	for (Scene& scene : pg_Scenario[indScenario]) {
+		scene.scene_originalDuration = scene.scene_duration;
+		scene.scene_originalInitial_time = scene.scene_initial_time;
+		scene.scene_originalFinal_time = scene.scene_final_time;
+	}
+}
+
 void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 
 	////////////////////////////
@@ -2621,33 +1269,33 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 
 	pg_parseScenarioRenderingFiles(scenarioFin, indScenario);
 
-	pg_parseScenarioUDP(scenarioFin, indScenario);
+	pg_parseScenario_UDP(scenarioFin, indScenario);
 
-	pg_parseScenarioCameras(scenarioFin, indScenario);
+	pg_parseScenario_Cameras(scenarioFin, indScenario);
 
 	pg_parseScenarioShaders(scenarioFin, indScenario);
 
 	pg_parseScenarioDirectories(scenarioFin, indScenario);
 
-	pg_parseScenarioVideos(scenarioFin, indScenario);
+	pg_parseScenario_Videos(scenarioFin, indScenario);
 
-	pg_parseScenarioClipsAndPhotos(scenarioFin, indScenario);
+	pg_parseScenario_ClipsAndPhotos(scenarioFin, indScenario);
 
-	pg_parseScenarioSoundtracks(scenarioFin, indScenario);
+	pg_parseScenario_soundTracks(scenarioFin, indScenario);
 
-	pg_parseScenarioSVGPaths(scenarioFin, indScenario);
+	pg_parseScenario_SVGPaths(scenarioFin, indScenario);
 
-	pg_parseScenarioClipArt(scenarioFin, indScenario);
+	pg_parseScenario_ClipArt(scenarioFin, indScenario);
 
-	pg_parseScenarioMeshes(scenarioFin, indScenario);
+	pg_parseScenario_Meshes(scenarioFin, indScenario);
 
-	pg_parseScenarioTextures(scenarioFin, indScenario);
+	pg_parseScenario_Textures(scenarioFin, indScenario);
 
 	pg_parseScenarioColorPalettes(scenarioFin, indScenario);
 
 	pg_parseScenarioColorPresets(scenarioFin, indScenario);
 
-	pg_parseScenarioLights(scenarioFin, indScenario);
+	pg_parseScenario_Lights(scenarioFin, indScenario);
 
 	// saves the original durations
 	pg_saveInitialTimesAndDurations(indScenario);
@@ -2657,7 +1305,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 
 	// log file opening
 	pg_snapshots_dir_path_name = pg_snapshots_dir_path_prefix + "/pic_" + project_name + "_" + pg_date_stringStream.str() + "/";
-	pg_csv_file_name = pg_snapshots_dir_path_name + "porphyrograph-" + project_name + "-" + pg_date_stringStream.str() + ".csv";
+	pg_csv_logFile_name = pg_snapshots_dir_path_name + "porphyrograph-" + project_name + "-" + pg_date_stringStream.str() + ".csv";
 
 	int nError = 0;
 #if defined(_WIN32)
@@ -2680,44 +1328,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 
 }	
 
-void pg_setWindowDimensions(void) {
-	if (double_window && (PG_WINDOW_WIDTH > 1920)) {
-		if (wide_screen) {
-			pg_workingWindow_width = PG_WINDOW_WIDTH * 3 / 7;
-		}
-		else {
-			pg_workingWindow_width = PG_WINDOW_WIDTH / 2;
-		}
-		pg_rightWindowVMargin = (PG_WINDOW_WIDTH -  2 * pg_workingWindow_width) / 2;
-	}
-	else {
-		pg_workingWindow_width = PG_WINDOW_WIDTH;
-		pg_rightWindowVMargin = 0;
-	}
-	// looks for the smallest powers of 2 for width and height
-	pg_workingWindow_width_powerOf2 = 1;
-	while (pg_workingWindow_width_powerOf2 < pg_workingWindow_width)
-		pg_workingWindow_width_powerOf2 *= 2;
-	pg_window_height_powerOf2 = 1;
-	while (pg_window_height_powerOf2 < PG_WINDOW_HEIGHT)
-		pg_window_height_powerOf2 *= 2;
-	pg_window_width_powerOf2 = 1;
-	while (pg_window_width_powerOf2 < PG_WINDOW_WIDTH)
-		pg_window_width_powerOf2 *= 2;
-	pg_workingWindow_width_powerOf2_ratio =
-		float(pg_workingWindow_width) / float(pg_workingWindow_width_powerOf2);
-	pg_window_height_powerOf2_ratio =
-		float(PG_WINDOW_HEIGHT) / float(pg_window_height_powerOf2);
-}
-
-// to be called once after parsing
-void pg_saveInitialTimesAndDurations(int indScenario) {
-	for (Scene &scene : pg_Scenario[indScenario]) {
-		scene.scene_originalDuration = scene.scene_duration;
-		scene.scene_originalInitial_time = scene.scene_initial_time;
-		scene.scene_originalFinal_time = scene.scene_final_time;
-	}
-}
+// loads the full scenario
 void pg_LoadScenarioFile(const char* scenarioFileName, int indScenario) {
 	//printf("Loading %s\n", scenarioFileName);
 

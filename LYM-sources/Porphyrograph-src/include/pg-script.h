@@ -25,12 +25,9 @@
 #ifndef PG_SCRIPT_H
 #define PG_SCRIPT_H
 
-/////////////////////////////////////////////////////////////////////////
-// WORKING CONSTANTS
-/////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////
-// size
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // number of ClipArt tracks 
 #define nb_ClipArt_tracks 2
@@ -51,6 +48,300 @@
 
 // track loops 
 #define PG_LOOP_SIZE 8  // standrd 8 beats/loop size
+
+// +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
+#if defined(pg_Project_CAaudio)
+enum pg_CAseed_types
+{
+	_pg_CAseed_dot_center = 0,
+	_pg_CAseed_dot,
+	_pg_CAseed_h_line,
+	_pg_CAseed_v_line,
+	_pg_CAseed_cross,
+	_pg_CAseed_X,
+	_pg_CAseed_square,
+	_pg_Nb_CAseed_types,
+};
+enum pg_CAseed_locations
+{
+	_pg_CAseed_loc_center = 0,
+	_pg_CAseed_loc_N,
+	_pg_CAseed_loc_E,
+	_pg_CAseed_loc_S,
+	_pg_CAseed_loc_W,
+	_pg_CAseed_loc_NW,
+	_pg_CAseed_loc_NE,
+	_pg_CAseed_loc_SE,
+	_pg_CAseed_loc_SW,
+	_pg_Nb_CAseed_locations,
+};
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////
+// HASH MAP FOR STRING COMMANDS
+enum pg_OSC_addresses_hashMap_IDs
+{
+	_resend_all = _MaxInterpVarIDs,
+	_resend_all_light,
+	_setupNo,
+	_configurationNo,
+	_setupName,
+	_setup_plus,
+	_interpolation_duration,
+	_master_incay,
+	_master_decay,
+	_setup_plus_5,
+	_setup_minus,
+	_setup_minus_5,
+	_setup_plus_keep_total_dur,
+	_snapshot,
+	_new_scene,
+	_take_snapshot,
+	_muteRightScreen_onOff,
+	_isClearAllLayers,
+	_launch,
+	_quit,
+		
+	_pen_touch,
+	_pen_xy,
+	_pen2_xy,
+	_pen3_xy,
+	_pen4_xy,
+	_pen5_xy,
+	_abs_pen_xy,
+	_pen_brush_plus,
+	_pen_brush_minus,
+	_pen_brush_replay_plus,
+	_pen_brush_replay_minus,
+	_pen_BW,
+	_pressure_onOff,
+	_pen_colorPreset_minus,
+	_pen_colorPreset_plus,
+	_pen_colorPreset,
+	_StylusvsRubber,
+	_pen_hue_sat_value,
+
+	_NextRecordReplayPath,
+	_path_replay_stopAll,
+	_path_replay_playAll,
+	_clear_path_group,
+
+	_repopBG_BW,
+	_repopCA_BW,
+	_repopPart_BW,
+	_repop_hue_sat_valuePart,
+
+	_flashPixel,
+	_flashTrkPart,
+	_flashTrkCA,
+	_flashCABG,
+	_flashCAPart,
+	_flashMaster,
+	_beat,
+	_MIDIVelocity,
+	_flashTrkCA_onOff,
+	_flashTrkPart_onOff,
+	_copyTrack_above,
+	_copyTrack_under,
+	_MIDINote,
+
+	_CA1Type_plus,
+	_CA1Type_minus,
+	_CA1SubType_plus,
+	_CA1SubType_minus,
+	_CAonOff,
+	_initCA,
+	_CAseed_dot_center,
+	_CAseed_dot,
+	_CAseed_h_line,
+	_CAseed_v_line,
+	_CAseed_cross,
+	_CAseed_X,
+	_CAseed_square,
+	_CAseed_size,
+	_CAseed_loc,
+	_CAseed_loc_plus,
+	_CAseed_trigger,
+
+	_partStroke_mode_0,
+	_partStroke_mode_1,
+	_partStroke_mode_2,
+	_partColor_mode_0,
+	_partColor_mode_1,
+	_partColor_mode_2,
+	_partExit_mode_0,
+	_partExit_mode_1,
+	_partExit_mode_2,
+	_partExit_mode_plus,
+	_partStroke_mode_plus,
+	_partColor_mode_plus,
+	_pixel_mode_plus,
+
+	_TopLeftKeystone,
+	_BottomLeftKeystone,
+	_TopRightKeystone,
+	_BottomRightKeystone,
+
+	_is_blur_1,
+	_is_blur_1_plus,
+	_is_blur_1_plus_plus,
+	_is_blur_2,
+
+	_reset_sound,
+	_pulse_spectrum,
+	_soundtrack_plus,
+	_soundtrack_minus,
+	_soundtrack_seek,
+	_soundtrack_onOff,
+	_soundtrack_volume,
+	_JUCE_loop_track,
+	_JUCE_exit,
+	_fftLevel8,
+
+	_ClipArt_1_onOff,
+	_ClipArt_2_onOff,
+	_ClipArt_3_onOff,
+	_ClipArt_4_onOff,
+	_ClipArt_5_onOff,
+	_ClipArt_6_onOff,
+	_ClipArt_7_onOff,
+	_ClipArt_8_onOff,
+	_ClipArt_9_onOff,
+	_ClipArt_10_onOff,
+	_ClipArt_11_onOff,
+	_ClipArt_12_onOff,
+	_ClipArt_13_onOff,
+	_ClipArt_14_onOff,
+	_ClipArt_15_onOff,
+	_ClipArt_16_onOff,
+	_ClipArt_17_onOff,
+	_ClipArt_18_onOff,
+	_ClipArt_19_onOff,
+	_ClipArt_20_onOff,
+	_ClipArt_onOff,
+	_ClipArt_off,
+	_ClipArt_on,
+	_ClipArt_SubPath_1_onOff,
+	_ClipArt_SubPath_2_onOff,
+	_ClipArt_SubPath_3_onOff,
+	_ClipArt_SubPath_4_onOff,
+	_ClipArt_scale,
+	_ClipArt_rotate,
+	_ClipArt_xy,
+	_ClipArt_x,
+	_ClipArt_y,
+	_ClipArt_nat_color,
+	_ClipArt_white_color,
+	_ClipArt_red_color,
+	_ClipArt_green_color,
+	_ClipArt_blue_color,
+	_ClipArt_yellow_color,
+	_ClipArt_cyan_color,
+	_ClipArt_magenta_color,
+	_ClipArt_black_color,
+	_ClipArt_translations,
+
+	_currentPhotoTrack_plus,
+	_flashPhoto,
+	_diaporama_add_dirs,
+	_reload_all_diaporamas,
+	_diaporama_random,
+	_diaporama_slide,
+	_diaporama_plus,
+	_diaporama_minus,
+	_flash_photo_diaporama,
+
+	_clip_plus,
+	_clip_minus,
+	_clip_forward,
+	_clip_backward,
+	_clip_scratch,
+	_clip_scratch_touch_press,
+	_clip_scratch_touch_release,
+	_clip_nudge,
+	_clip_nudge_touch_press,
+	_clip_nudge_touch_release,
+	_clip_cue_onOff,
+	_clip_cue_jump,
+	_clip2_cue_jump,
+	_clip_cue_call,
+	_clip_fx,
+	_clip_fx_std,
+	_clip_equalizer,
+	_clip2_equalizer,
+	_clip_new,
+	_clip2_new,
+	_clip_sample,
+	_clip_sample_range,
+	_clip2_sample,
+	_clip_fader,
+	_clip2_fader,
+	_clip_autoplay_left,
+	_clip_autoplay_right,
+	_clip_play_left,
+	_clip_play_right,
+	_clip2_autoplay_left,
+	_clip2_autoplay_right,
+	_clip2_play_left,
+	_clip2_play_right,
+
+	_currentVideoTrack_plus,
+	_movie_plus,
+	_movie_minus,
+	_movie_forward,
+	_movie_backward,
+	_movie_loop_onOff,
+		
+	_camera_close,
+	_camera_open,
+	_initialBGCapture,
+	_flashCamera,
+	_cameraWB_R_plus,
+	_cameraWB_R_minus,
+	_cameraWB_B_plus,
+	_cameraWB_B_minus,
+	_cameraExposure_plus,
+	_cameraExposure_minus,
+	_cameraGain_plus,
+	_cameraGain_minus,
+	_cameraBrightness_plus,
+	_cameraBrightness_minus,
+	_cameraSaturation_plus,
+	_cameraSaturation_minus,
+	_cameraContrast_plus,
+	_cameraContrast_minus,
+	_cameraGamma_plus,
+	_cameraGamma_minus,
+	_reset_on_camera,
+	_reset_camera_params,
+	_cameraCumul_plus,
+
+	_Mesh_onOff,
+	_Mesh_mobile_onOff,
+	_Caverne_Mesh_Profusion_on,
+	_Caverne_Mesh_Profusion_off,
+	_Caverne_Mesh_7Solids_on,
+	_Caverne_Mesh_7Solids_off,
+	_BGcolor_onOff,
+	_Mesh_light_x,
+	_Mesh_light_y,
+	_Mesh_light_z,
+
+	_sensor_layout_plus,
+	_sensor_sample_setUp_plus,
+	_sensor_activation_plus,
+	_mw_mss_pos,
+
+	_testUDP,
+	_return_message,
+	_QT_connected,
+	_PD_connected,
+	_connect_PD,
+	_processing_video,
+	_processing_image,
+	_processing_master,
+};
+
 
 enum pg_Keystroke_Input_Type { pg_enum_KEYSTROKE_MINUS = 0, pg_enum_KEYSTROKE_PLUS, pg_enum_KEYSTROKE_VOID };
 
@@ -73,17 +364,12 @@ enum pg_Keystroke_Input_Type { pg_enum_KEYSTROKE_MINUS = 0, pg_enum_KEYSTROKE_PL
 #define PG_NB_PARTSTROKE_MODES 4
 #define PG_NB_PARTCOLOR_MODES 3
 
-/////////////////////////////////////////////////////////////////////////
-// WORKING VARIABLES
-/////////////////////////////////////////////////////////////////////////
-
-// echo modulator for clips
-extern float pg_fx_dry_wet;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENARIO VARIABLE VALUE MANAGEMENT CLASS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////
 // SCENARIO AND CONFIGURATION VARIABLES
-// changed to true when a value is changed manually during scenario
-extern bool pg_BrokenInterpolationVar[_MaxInterpVarIDs];
 // initial values in the scenario (before first scene)
 class ScenarioValue {
 public:
@@ -140,39 +426,10 @@ public:
 	~ScenarioValue() {}
 };
 
-//////////////////////////////////////////////
-// beat no
-extern int pg_BeatNo;
 
-//////////////////////////////////////////////
-// MIDI event creates a local stroke
-extern int pg_FourFrameStrokeNb;
-extern int pg_FourFrameStroke_x;
-extern int pg_FourFrameStroke_y;
-
-// ++++++++++++++++++++++ GLUT MODIFIER ++++++++++++++++++++ 
-extern int pg_key_modifier;
-
-// ++++++++++++++++++++++ MUSIC CONTROL ++++++++++++++++++++ 
-// music control inputs received at each frame
-// pg_audio_pulse preceding value
-extern float pg_audio_pulse_prec[3];
-
-// factor increasing the acceleration weight of particles
-// based on sound volume attacks
-// brush radius
-// particle radius
-extern float pulse_average;
-extern float pg_audio_pulse_average_prec;
-// not used currently extern float pulse_attack;
-
-// +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
-extern float pg_audio_pulse[3];
-extern float pg_seed_pulsePerlinNoise[4 * 2];
-
-extern std::unordered_map<std::string, int> pg_OSC_addresses_hashMap;
-
-extern double pg_lastPenTouchTime;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 #if defined(var_GenerativeNights_planes)
 //////////////////////////////////////////////
@@ -184,76 +441,8 @@ extern int      firstPlaneFrameNo;
 extern float initCA;
 #endif
 
-// ++++++++++++++++++++++ SCENARIO +++++++++++++++++++++++++ 
-extern int pg_CurrentSceneIndex;
-class Scene;
-extern Scene* pg_CurrentScene;
-
-// DELAYED CAMERA WEIGHT
-extern int pg_delayedCameraWeight;
-
-#if defined(PG_WITH_BLUR)
-// +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
-extern bool is_blur_1;
-extern bool is_blur_2;
-extern int nb_blur_frames_1;
-extern int nb_blur_frames_2;
-#endif
-
-// +++++++++++++++++++++ COPY LAYERS +++++++++++++++++++++++++++
-// copy to layer above (+1) or to layer below (-1)
-extern int pg_copyToNextTrack;
-
-// pen preset
-extern int pg_current_pen_colorPreset;
-
-// ++++++++++++++++++++++ CA and TACKS WOKING VARIABLE ++++
-// CA and track working variable
-
-// +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(pg_Project_Criton)
-extern float fftLevels[8];
-extern float fftFrequencies[8];
-extern float fftPhases[8];
-#endif
-
-// master automatic incay/decay
-extern double pg_master_incay_duration;
-extern double pg_master_incay_start_time;
-extern float pg_master_incay_start_value;
-extern double pg_master_decay_duration;
-extern double pg_master_decay_start_time;
-extern float pg_master_decay_start_value;
-
-// +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
-extern double pg_lastBeatTime;
-
-// +++++++++++++++++++++++ CA seeding +++++++++++++++++++++++++++++++++
 #if defined(pg_Project_CAaudio)
-enum pg_CAseed_types
-{
-	_pg_CAseed_dot_center = 0,
-	_pg_CAseed_dot,
-	_pg_CAseed_h_line,
-	_pg_CAseed_v_line,
-	_pg_CAseed_cross,
-	_pg_CAseed_X,
-	_pg_CAseed_square,
-	_pg_Nb_CAseed_types,
-};
-enum pg_CAseed_locations
-{
-	_pg_CAseed_loc_center = 0,
-	_pg_CAseed_loc_N,
-	_pg_CAseed_loc_E,
-	_pg_CAseed_loc_S,
-	_pg_CAseed_loc_W,
-	_pg_CAseed_loc_NW,
-	_pg_CAseed_loc_NE,
-	_pg_CAseed_loc_SE,
-	_pg_CAseed_loc_SW,
-	_pg_Nb_CAseed_locations,
-}; extern pg_CAseed_types pg_CAseed_type;
+extern pg_CAseed_types pg_CAseed_type;
 extern pg_CAseed_locations pg_CAseed_location;
 extern int pg_CAseed_coordinates[2];
 extern int pg_CAseed_size;
@@ -262,44 +451,68 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 #endif
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(pg_Projet_Criton)
+#if defined(pg_Project_Criton)
 extern float fftLevels[8];
 extern float fftFrequencies[8];
 extern float fftPhases[8];
 #endif
 
-// GUI DISPLAY & LOG FILE LOGGING
-void pg_send_message_udp( char *pattern , char * message , char *targetHostid );
-void pg_send_message_udp(char *pattern, char * message, pg_IPClient *targetHost);
-void pg_process_key( int key );
-void pg_process_special_key( int key );
-void pg_keyStrokeScripts( int key );
-bool pg_flash_beat_generation(int flash_frequency);
-bool pg_flash_continuous_generation(int flash_frequency);
-void pg_flash_control(bool (*control_function)(int));
-void pg_Make_flashPhoto(void);
-void pg_aliasScript( string address , string string_argument_0 ,
-					 float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments);
-#if defined(var_Caverne_Mesh_Profusion)
-void Caverne_Mesh_Profusion_On(int indImage);
-void Caverne_Mesh_Profusion_Off(int indImage);
+// +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
+#if defined(PG_WITH_BLUR)
+extern bool is_blur_1;
+extern bool is_blur_2;
+extern int nb_blur_frames_1;
+extern int nb_blur_frames_2;
 #endif
-void pg_path_recording_onOff(int indPath);
 
-// playing track onoff
-void pg_path_replay_trackNo_onOff( int indPath, int trackNo);
-void pg_path_replay_trackNo_start(int indPath, int trackNo);
-void pg_path_replay_trackNo_stop(int indPath);
-void pg_path_recording_start( int indPath );
-// recording on off
-void pg_path_recording_stop( int indPath );
-// interpolation on off
-void NumberOfInteractionFingers(int nb_fingers);
+// ++++++++++++++++++++++ SCENARIO +++++++++++++++++++++++++ 
+class Scene;
+extern Scene* pg_CurrentScene;
+extern int pg_CurrentSceneIndex;
 
-void pg_snapshot( char * type );
+// changed to true when a value is changed manually during scenario
+extern bool pg_BrokenInterpolationVar[_MaxInterpVarIDs];
+
+// +++++++++++++++++++++++ Beats +++++++++++++++++++++++++++++++++
+extern double pg_lastBeatTime;
+
+// pen preset
+extern int pg_current_pen_colorPreset;
+
+// +++++++++++++++++++++ COPY LAYERS +++++++++++++++++++++++++++
+// copy to layer above (+1) or to layer below (-1)
+extern int pg_copyToNextTrack;
+
+// master automatic incay/decay
+extern double pg_master_incay_duration;
+extern double pg_master_decay_duration;
+extern double pg_master_incay_start_time;
+extern double pg_master_decay_start_time;
+extern float pg_master_incay_start_value;
+extern float pg_master_decay_start_value;
+
+// beat no
+extern int pg_BeatNo;
+
+// MIDI event creates a local stroke
+extern int pg_FourFrameStrokeNb;
+extern int pg_FourFrameStroke_x;
+extern int pg_FourFrameStroke_y;
+
+// hash table for message strings
+extern std::unordered_map<std::string, int> pg_OSC_addresses_hashMap;
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int pg_FindSceneById(std::string* sceneID);
+// keystroke command processing
+void pg_process_key(int key);
+void pg_process_special_key(int key);
+
+// generic alias script
+void pg_aliasScript(string address_string, string string_argument_0,
+	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments);
 
 #endif

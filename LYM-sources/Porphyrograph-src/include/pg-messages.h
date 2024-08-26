@@ -1,7 +1,7 @@
-/*! \file pg-audio.h
+/*! \file pg-message.h
  *
  *
- *     File pg-audio.h
+ *     File pg-message.h
  *
  *
  *
@@ -24,16 +24,47 @@
 #ifndef PG_MESSAGES_H
 #define PG_MESSAGES_H
 
-extern string pg_screenMessage;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
+extern string pg_screenMessage;
+extern GLfloat pg_messageTransparency;
+extern double pg_LastScreenMessageDecayTime;
+
+class pg_TextureData;
+extern pg_TextureData pg_texDataScreenFont;
+
+extern std::string pg_MessageFile[PG_MAX_SCENARIOS];
+
+extern std::string* pg_displayTextList;
+extern int* pg_displayTextFirstInChapter;
+extern int pg_NbDisplayTexts;
+extern int pg_displayText_maxLen;
+extern int pg_Ind_Current_DisplayText;
+extern float* pg_displayText_rand_translX;
+extern float* pg_displayText_rand_translY;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// screen font initialization
+void pg_init_texDataScreenFont(void);
+/// screen_message initialization
+void pg_init_screen_message(void);
+// read a text file with messages
 bool pg_ReadAllDisplayMessages(string basefilename);
-int pg_displayMessage_update(int indMesg);
-void pg_screenMessage_update(void);
+// screen display of message
 void pg_writeMessageOnScreen(string text);
+/// screen message update
+void pg_screenMessage_update(void);
+
+/// screen message and font texture transfer to GPU
 void pg_loadScreenMessageTexture(void);
+void pg_loadScreenFontTexture(void);
 void pg_bindFontTextureID(void);
 void pg_bindMessageTextureID(void);
-void pg_init_texDataScreenFont(void);
-void pg_loadScreenFontTexture(void);
+
 
 #endif

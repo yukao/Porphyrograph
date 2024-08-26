@@ -33,6 +33,10 @@
  *
  */
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL VARS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 pa_AudioOut pa_sound_data;
 ScopedPaHandler* paInit;
 callback_data_s soundfile_data;
@@ -42,8 +46,8 @@ int pg_currentlyPlaying_trackNo = -1;
 bool pg_soundTrack_on = true;
 
 // movie soundtrack passes over an onset or a peak before next frame
-bool pg_track_sound_onset = false;
-bool pg_track_sound_peak = false;
+bool pg_soundTrack_onset = false;
+bool pg_soundTrack_peak = false;
 
 // soundtracks
 vector<SoundTrack> pg_SoundTracks[PG_MAX_SCENARIOS];
@@ -51,6 +55,10 @@ int pg_currentTrackSoundPeakIndex = 0;
 int pg_nbTrackSoundPeakIndex[PG_MAX_SCENARIOS] = { 0 };
 int pg_currentTrackSoundOnsetIndex = 0;
 int pg_nbTrackSoundOnsetIndex[PG_MAX_SCENARIOS] = { 0 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PORT AUDIO STREAM MANAGEMENT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 pa_AudioOut::pa_AudioOut() : pa_myStream(0), left_phase(0), right_phase(0)
 {
@@ -216,9 +224,12 @@ void pa_AudioOut::paStreamFinished(void* userData)
     return ((pa_AudioOut*)userData)->paStreamFinishedMethod();
 }
 
-void pg_listAllSoundtracks(void) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// SOUNDTRACKS MANAGEMENT
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+void pg_listAll_soundTracks(void) {
     printf("Listing Soundtracks:\n");
-    for (int indScenario = 0; indScenario < pg_NbConfigurations; indScenario++) {
+    for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
         std::cout << "    " << indScenario << ": ";
         for (SoundTrack& soundtrack : pg_SoundTracks[indScenario]) {
             std::cout << soundtrack.soundtrackFileName << " (" << soundtrack.soundtrackShortName << "), ";
@@ -283,8 +294,8 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); throw 100;
             }
 
-            pg_track_sound_onset = false;
-            pg_track_sound_peak = false;
+            pg_soundTrack_onset = false;
+            pg_soundTrack_peak = false;
             pg_currentTrackSoundPeakIndex = 0;
             pg_currentTrackSoundOnsetIndex = 0;
 
@@ -365,7 +376,7 @@ void StopTrack(void) {
 }
 
 // tests whether the soundtrack is finished reading
-void pg_checkAudioStream() {
+void pg_pa_checkAudioStream() {
     pa_sound_data.pa_checkAudioStream();
     //printf("soundtrack current time %f\n", pg_RealTime() - soundfile_data.sound_file_StartReadingTime);
 }
@@ -408,7 +419,7 @@ void soundTrackonOff() {
     //pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
 }
 
-void pg_pa_closeStream(void) {
+void pg_pa_closeAudioStream(void) {
     pa_sound_data.pa_closeMyStream();
     delete paInit;
 }
@@ -418,5 +429,367 @@ void pg_pa_openSoundData(void) {
     if (paInit->result() != paNoError) {
         fprintf(stderr, "Error number: %d\n", paInit->result());
         fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// AUDIO SCENARIO
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+void pg_parseScenario_soundTracks(std::ifstream& scenarioFin, int indScenario) {
+    std::stringstream  sstream;
+    string line;
+    string ID;
+    string temp;
+    string temp2;
+
+    ////////////////////////////
+    ////// SOUNDTRACKS
+    std::getline(scenarioFin, line);
+    pg_stringstreamStoreLine(&sstream, &line);
+    sstream >> ID; // string soundtracks
+    if (ID.compare("soundtracks") != 0) {
+        sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"soundtracks\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+    }
+
+    while (true) {
+        // new line
+        std::getline(scenarioFin, line);
+        pg_stringstreamStoreLine(&sstream, &line);
+        sstream >> ID; // string /svg_paths or svg_path
+        if (ID.compare("/soundtracks") == 0) {
+            break;
+        }
+        else if (ID.compare("track") != 0) {
+            sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"track\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+        }
+
+        SoundTrack soundtrack;
+
+        sstream >> temp;
+        soundtrack.soundtrackFileName = temp;
+        if (!pg_isFullPath(soundtrack.soundtrackFileName)) {
+            soundtrack.soundtrackFileName = pg_soundtracks_directory + soundtrack.soundtrackFileName;
+        }
+        sstream >> temp2;
+        soundtrack.soundtrackShortName = temp2;
+        //std::cout << "Soundtrack: " << pg_SoundTracks[indScenario][indTrack].soundtrackFileName << " " << pg_SoundTracks[indScenario][indTrack].trackShortName << " (#" << indTrack << ")\n";
+
+        // in addition to the track name and short name, 2 additional
+        // files can be used to generate beats from sound envelope at 1
+        // or sound onsets detected through aubio library
+
+        // possible additional peaked sound envelope at 1.0 or above
+        // NULL value or no value means no file
+        if (sstream >> temp2) {
+            // there is a soundtrack file with peaked sound envelope at 1.0
+            if (temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
+                soundtrack.soundtrackPeaksFileName = temp2;
+                string csv_line;
+                vector<float> peak_times;
+                std::ifstream peak_file(temp2);
+                if (!peak_file) {
+                    sprintf(pg_errorStr, "Error: peak file [%s] not found!", temp2.c_str()); pg_ReportError(pg_errorStr); throw 11;
+                }
+                printf("Read audio soundtrack peaks [%s]\n", temp2.c_str());
+                // reads the peaks timecodes and stores them in a float vector
+                std::getline(peak_file, csv_line);
+                std::getline(peak_file, csv_line);
+                std::getline(peak_file, csv_line);
+                while (std::getline(peak_file, csv_line)) {
+                    std::stringstream  peak_sstream;
+                    pg_stringstreamStoreLine(&peak_sstream, &csv_line);
+                    float time, sound;
+                    peak_sstream >> time;
+                    peak_sstream >> sound;
+                    if (sound >= 1) {
+                        peak_times.push_back(time);
+                    }
+                }
+                peak_file.close();
+                soundtrack.soundtrackPeaks = peak_times;;
+                //for (int i = 0; i < int(peak_times.size()); ++i) {
+                //	std::cout << "Peak: " << peak_times[i] << '\n';
+                //}
+            }
+            else {
+                soundtrack.soundtrackPeaksFileName = "";
+                soundtrack.soundtrackPeaks = {};
+            }
+            if (sstream >> temp2 && temp2.compare("") != 0 && temp2.compare("NULL") != 0) {
+                soundtrack.soundtrackOnsetsFileName = temp2;
+                string csv_line;
+                vector<float> onset_times;
+                std::ifstream onset_file(temp2);
+                if (!onset_file) {
+                    sprintf(pg_errorStr, "Error: onset file [%s] not found!", temp2.c_str()); pg_ReportError(pg_errorStr); throw 11;
+                }
+                // reads the peaks timecodes and stores them in a float vector
+                printf("Read audio soundtrack onsets [%s]\n", temp2.c_str());
+                while (std::getline(onset_file, csv_line)) {
+                    std::stringstream  onset_sstream;
+                    pg_stringstreamStoreLine(&onset_sstream, &csv_line);
+                    float time;
+                    onset_sstream >> time;
+                    onset_times.push_back(time);
+                }
+                onset_file.close();
+                soundtrack.soundtrackOnsets = onset_times;;
+                //for (int i = 0; i < int(onset_times.size()); ++i) {
+                //	std::cout << "Onset: " << onset_times[i] << '\n';
+                //}
+            }
+            else {
+                soundtrack.soundtrackOnsetsFileName = "";
+                soundtrack.soundtrackOnsets = {};
+            }
+            float offset = 0.f;
+            sstream >> offset;
+            soundtrack.soundtrackOnsetsAndPeasksOffset = offset;
+        }
+        else {
+            soundtrack.soundtrackPeaksFileName = "";
+            soundtrack.soundtrackPeaks = {};
+            soundtrack.soundtrackOnsetsFileName = "";
+            soundtrack.soundtrackOnsets = {};
+            soundtrack.soundtrackOnsetsAndPeasksOffset = 0.f;
+        }
+        //std::cout << "track : " << 
+        // pg_SoundTracks[indVideo]->soundtrackFileName << "\n";
+        pg_SoundTracks[indScenario].push_back(soundtrack);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// AUDIO OSC COMMANDS
+//////////////////////////////////////////////////////////////////////////////////////////////////////  
+void pg_aliasScriptAudio(string address_string, string string_argument_0,
+    float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar) {
+    // special command not in the scenario file
+    switch (indVar) {
+    case _reset_sound:
+        pg_send_message_udp((char*)"i", (char*)"/reset_sound 1", (char*)"udp_PD_send");
+        break;
+    case _pulse_spectrum:
+        pg_audio_pulse[0] = float_arguments[0] * sound_volume + sound_min;
+        pg_audio_pulse[1] = float_arguments[1] * sound_volume + sound_min;
+        pg_audio_pulse[2] = float_arguments[2] * sound_volume + sound_min;
+        // not used currently  pulse_attack = float_arguments[3] * sound_volume + sound_min;
+        sprintf(pg_AuxString, "/pulse_low %.2f", pg_audio_pulse[0]);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+        sprintf(pg_AuxString, "/pulse_medium %.2f", pg_audio_pulse[1]);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+        sprintf(pg_AuxString, "/pulse_high %.2f", pg_audio_pulse[2]);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+
+        pg_audio_pulse_average_prec = pulse_average;
+        pulse_average = (pg_audio_pulse[0] + pg_audio_pulse[1] + pg_audio_pulse[2]) / 3.f;
+
+        sprintf(pg_AuxString, "/pg_audio_pulse %.2f", pulse_average);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
+        // printf("%s\n", pg_AuxString);
+
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_pen_color]
+            && pg_FullScenarioActiveVars[pg_ind_scenario][_pen_grey]
+            && !pen_hsv) {
+            //printf("pg_audio_pulse %.2f %.2f %.2f avg %.2f\n", pg_audio_pulse[0], pg_audio_pulse[1], pg_audio_pulse[2], pulse_average);
+            //printf("pen_color %.2f pen_color_pulse %.2f pen_grey %.2f pen_grey_pulse %.2f pg_pulsed_pen_color  %.2f %.2f %.2f %.2f\n", pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pg_pulsed_pen_color[0], pg_pulsed_pen_color[1], pg_pulsed_pen_color[2], pg_pulsed_pen_color[3]);
+            pg_compute_pulsed_palette_color(pen_color, pen_color_pulse, pen_grey, pen_grey_pulse, pg_pulsed_pen_color, pg_enum_PEN_COLOR);
+        }
+        else if (pg_FullScenarioActiveVars[pg_ind_scenario][_pen_hue]
+            && pg_FullScenarioActiveVars[pg_ind_scenario][_pen_sat]
+            && pg_FullScenarioActiveVars[pg_ind_scenario][_pen_value]
+            && pen_hsv) {
+            pg_compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pg_pulsed_pen_color, true);
+        }
+
+        sprintf(pg_AuxString, "/pen_color/color %02x%02x%02xFF", int(pg_pulsed_pen_color[0] * 255), int(pg_pulsed_pen_color[1] * 255), int(pg_pulsed_pen_color[2] * 255));
+        pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+        //printf("%s\n", pg_AuxString);
+        pg_compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pg_pulsed_repop_colorCA, pg_enum_REPOP_COLOR);
+        sprintf(pg_AuxString, "/CA_repopColor/color %02x%02x%02xFF", int(pg_pulsed_repop_colorCA[0] * 255), int(pg_pulsed_repop_colorCA[1] * 255), int(pg_pulsed_repop_colorCA[2] * 255));
+        pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+        pg_compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pg_pulsed_repop_colorBG, pg_enum_REPOP_COLOR);
+        sprintf(pg_AuxString, "/BGcolorRedepopColor/color %02x%02x%02xFF", int(pg_pulsed_repop_colorBG[0] * 255), int(pg_pulsed_repop_colorBG[1] * 255), int(pg_pulsed_repop_colorBG[2] * 255));
+        pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_repop_colorPart]
+            && pg_FullScenarioActiveVars[pg_ind_scenario][_repop_greyPart]
+            && !repop_hsvPart) {
+            pg_compute_pulsed_palette_color(repop_colorPart, repop_colorPart_pulse, repop_greyPart, repop_greyPart_pulse, pg_pulsed_repop_colorPart, pg_enum_REPOP_COLOR);
+        }
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_repop_huePart]
+            && pg_FullScenarioActiveVars[pg_ind_scenario][_repop_satPart]
+            && pg_FullScenarioActiveVars[pg_ind_scenario][_repop_valuePart]
+            && repop_hsvPart) {
+            pg_compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pg_pulsed_repop_colorPart, false);
+        }
+        sprintf(pg_AuxString, "/Part_repopColor/color %02x%02x%02xFF", int(pg_pulsed_repop_colorPart[0] * 255), int(pg_pulsed_repop_colorPart[1] * 255), int(pg_pulsed_repop_colorPart[2] * 255));
+        pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+        break;
+    case _soundtrack_plus:
+        if (!pg_SoundTracks[pg_ind_scenario].empty()) {
+            if (pg_currentlyPlaying_trackNo < 0) {
+                PlayTrack(0, 0.);
+            }
+            else {
+                PlayTrack((pg_currentlyPlaying_trackNo + 1) % pg_SoundTracks[pg_ind_scenario].size(), 0.);
+            }
+            pg_BrokenInterpolationVar[_playing_soundtrackNo] = true;
+            *((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = pg_currentlyPlaying_trackNo;
+        }
+        break;
+    case _soundtrack_minus:
+        if (!pg_SoundTracks[pg_ind_scenario].empty()) {
+            if (pg_currentlyPlaying_trackNo < 0) {
+                PlayTrack(0, 0.);
+            }
+            else {
+                PlayTrack((pg_currentlyPlaying_trackNo + pg_SoundTracks[pg_ind_scenario].size() - 1) % pg_SoundTracks[pg_ind_scenario].size(), 0.);
+            }
+            pg_BrokenInterpolationVar[_playing_soundtrackNo] = true;
+            *((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = pg_currentlyPlaying_trackNo;
+        }
+        break;
+    case _soundtrack_seek: {
+        int soundTrack_no = int(float_arguments[0]);
+        double seek_position = 0.;
+        if (nb_arguments >= 2) {
+            seek_position = double(float_arguments[1]);
+        }
+
+        // seek inside the current track or a new track
+        if (soundTrack_no >= 0 && soundTrack_no < int(pg_SoundTracks[pg_ind_scenario].size())) {
+            if (pg_currentlyPlaying_trackNo != soundTrack_no) {
+                printf("soundtrack_seek: pg_currentlyPlaying_trackNo %d != soundTrack_no %d\n", pg_currentlyPlaying_trackNo, soundTrack_no);
+                StopTrack();
+                pg_BrokenInterpolationVar[_playing_soundtrackNo] = true;
+                *((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = soundTrack_no;
+                pg_currentlyPlaying_trackNo = soundTrack_no;
+            }
+            PlayTrack(pg_currentlyPlaying_trackNo, seek_position);
+        }
+        // stop playing a track
+        else if (soundTrack_no < 0) {
+            if (playing_soundtrackNo >= 0) {
+                printf("soundtrack_seek: playing_soundtrackNo neg %d\n", soundTrack_no);
+                StopTrack();
+            }
+            pg_BrokenInterpolationVar[_playing_soundtrackNo] = true;
+            *((int*)pg_FullScenarioVarPointers[_playing_soundtrackNo]) = -1;
+            pg_currentlyPlaying_trackNo = -1;
+        }
+    }
+                         break;
+    case _soundtrack_onOff:
+        pg_soundTrack_on = !pg_soundTrack_on;
+        soundTrackonOff();
+        break;
+    case _soundtrack_volume:
+        pg_soundTrack_on = (float_arguments[0] > 0);
+        soundTrackvolume(float_arguments[0]);
+        break;
+        // +++++++++++++++++ JUCE SOUND CONTROL +++++++++++++++++++++++++
+    case _JUCE_loop_track:
+#if defined(pg_Project_Criton)
+        pg_send_message_udp((char*)"", (char*)"/JUCE_loop_track", (char*)"udp_SoundJUCE_send");
+#endif
+        break;
+    case _JUCE_exit:
+#if defined(pg_Project_Criton)
+        pg_send_message_udp((char*)"", (char*)"/JUCE_exit", (char*)"udp_SoundJUCE_send");
+#endif
+        break;
+    case _fftLevel8:
+#if defined(pg_Project_Criton)
+        //printf("fft levels: ");
+        //for (int indArg = 0; indArg < 8; indArg++) {
+        //	printf("%.2f/%.2f ", float_arguments[2 * indArg], float_arguments[2 * indArg + 1]);
+        //}
+        //printf("\n");
+        float totFFTLevel = 0.f;
+        for (int indArg = 0; indArg < 8; indArg++) {
+            fftFrequencies[indArg] = float_arguments[3 * indArg];
+            fftLevels[indArg] = float_arguments[3 * indArg + 1];
+            fftPhases[indArg] = float_arguments[3 * indArg + 2];
+            totFFTLevel += fftLevels[indArg];
+        }
+        // normalization of the levels (sum = 0.5 (because cos + 1 used for color))
+        totFFTLevel *= 2.f;
+        if (totFFTLevel > 0.f) {
+            for (int indArg = 0; indArg < 8; indArg++) {
+                fftLevels[indArg] /= totFFTLevel;
+            }
+        }
+#endif
+        break;
+    default:
+        sprintf(pg_errorStr, "Audio command not found (%s)!", address_string.c_str()); pg_ReportError(pg_errorStr);
+        break;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// AUDIO CALLBACKS
+//////////////////////////////////////////////////////////////////////////////////////////////////////  
+void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        audioInput_weight = scenario_or_gui_command_value;
+        sprintf(pg_AuxString, "/audioInput_weight %.2f", audioInput_weight);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+#if defined(PG_WITH_JUCE)
+        sprintf(pg_AuxString, "/JUCE_audioInput_weight %.2f", audioInput_weight);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_SoundJUCE_send");
+#endif
+    }
+}
+
+void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        soundtrack_PD_weight = scenario_or_gui_command_value;
+        sprintf(pg_AuxString, "/soundtrack_weight %.2f", soundtrack_PD_weight);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+
+#if defined(PG_WITH_JUCE)
+        sprintf(pg_AuxString, "/JUCE_soundtrack_weight %.2f", soundtrack_PD_weight);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_SoundJUCE_send");
+#endif
+    }
+}
+
+void soundtrack_PA_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        soundtrack_PA_weight = scenario_or_gui_command_value;
+    }
+}
+
+void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        sprintf(pg_AuxString, "/sound_env_min %.2f", scenario_or_gui_command_value);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+    }
+    // printf("reset sound\n");
+}
+
+void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        sprintf(pg_AuxString, "/sound_env_max %.2f", scenario_or_gui_command_value);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+    }
+    // printf("reset sound\n");
+}
+
+void playing_soundtrackNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        // play a new track
+        if (int(scenario_or_gui_command_value) >= 0
+            && int(scenario_or_gui_command_value) < int(pg_SoundTracks[pg_ind_scenario].size())
+            && pg_currentlyPlaying_trackNo != int(scenario_or_gui_command_value)) {
+            PlayTrack(int(scenario_or_gui_command_value), 0.);
+        }
+        // stop playing a track
+        else if (int(scenario_or_gui_command_value) < 0) {
+            //printf("playing_soundtrackNo_callBack: playing_soundtrackNo neg %d\n", int(scenario_or_gui_command_value));
+            StopTrack();
+        }
     }
 }

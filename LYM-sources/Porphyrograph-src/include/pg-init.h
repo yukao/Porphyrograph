@@ -31,6 +31,10 @@ https://github.com/fcaruso/GLSLParametricCurve
 
 #define PG_SIZE_QUAD_ARRAY 4  // quads made of a 4-point triangle strip
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONSTs
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 enum pg_FBO_Update_samplers { pg_enum_CA_FBO_Update_sampler = 0,
 	pg_enum_PreviousCA_FBO_Update_sampler,
 	pg_enum_Pixels_FBO_Update_sampler,
@@ -107,7 +111,6 @@ enum pg_FBO_ParticleAnimation_attachments { pg_enum_Part_pos_speed_FBO_ParticleA
 	pg_enum_Part_Target_pos_col_rad_FBO_ParticleAnimation_attacht,
 	pg_enum_FBO_ParticleAnimation_nbAttachts
 };
-#endif
 
 enum eVertexArrayObject { pg_enum_VAOParticle,
 	pg_enum_VAOQuad,
@@ -125,81 +128,19 @@ enum eVertexBufferObject { pg_enum_VBOParticle,
 	pg_enum_VBOCount
 };
 
-/////////////////////////////////////////////////////////////////
-// Projection and view matrices for the shaders
-//////////////////////////////////////////////////////////////////////
-extern GLfloat pg_orthoWindowProjMatrix[16];
-extern GLfloat pg_doubleProjMatrix[16];
-extern GLfloat pg_identityViewMatrix[16];
-extern GLfloat pg_identityModelMatrix[16];
-extern GLfloat pg_homographyForTexture[9];
-extern GLfloat pg_modelMatrixSensor[16];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED VARIABLES
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 /////////////////////////////////////////////////////////////////
 // GEOMETRY
-//////////////////////////////////////////////////////////////////////
 extern GLuint pg_vaoID[pg_enum_VAOCount];
 extern GLuint pg_vboID[pg_enum_VBOCount];
 extern unsigned int pg_quadSensor_vao;
 
-// geometrical data
-extern float pg_quadDraw_points[];
-extern float pg_quadDraw_texCoords[];
-extern unsigned int pg_quadDraw_indices[PG_SIZE_QUAD_ARRAY];
-
-// geometrical data
-extern float pg_quadMaster_points[];
-extern float pg_quadMaster_texCoords[];
-extern unsigned int pg_quadMaster_indices[PG_SIZE_QUAD_ARRAY];
-
-// particle curves
-extern GLfloat *pg_Particle_control_points;
-extern GLfloat *pg_Particle_radius;
-extern GLfloat *pg_Particle_colors;
-
-// particle splat or geometry
-extern GLfloat *pg_Particle_vertices;
-extern GLfloat *pg_Particle_radius;
-extern GLfloat *pg_Particle_colors;
-extern unsigned int *pg_Particle_indices;
-
-//////////////////////////////////////////////////////////////////////
-// SENSORS
-//////////////////////////////////////////////////////////////////////
-
-// sensor translations
-// current sensor layout
-extern float pg_sensorPositions[3 * PG_NB_SENSORS];
-// all possible sensor layouts
-extern float pg_sensorLayouts[3 * PG_NB_SENSORS * PG_NB_MAX_SENSOR_LAYOUTS];
-
-// sensor on off
-// current sensor activation pattern
-extern bool pg_sensor_onOff[PG_NB_SENSORS];
-extern double pg_sensor_last_activation_time;
-// all sensor activation patterns
-extern bool pg_sensorActivations[PG_NB_SENSORS * PG_NB_MAX_SENSOR_ACTIVATIONS];
-
-// sample choice
-// current sample choice
-extern int pg_sample_choice[PG_NB_SENSORS];
-// all possible sensor layouts
-extern int pg_sensor_sample_setUps[PG_NB_MAX_SENSOR_SAMPLE_SETUPS][PG_NB_SENSORS];
-// sample start playing time for muting after 1 cycle
-extern double pg_sample_play_start[PG_NB_MAX_SENSOR_SAMPLE_SETUPS * PG_NB_SENSORS];
-
-// +++++++++++++++++++++++ Metawear sensors ++++++++++++++++++++
-#define PG_MW_NB_MAX_SENSORS 2
-struct metawear_sensor_data {
-	float mw_mss_pos[3];		// x y z
-	bool  mw_mss_pos_update;
-};
-extern struct metawear_sensor_data pg_mw_sensors[PG_MW_NB_MAX_SENSORS];
-
-/////////////////////////////////////////////////////////////////
-// FBO INITIALIZATION
-/////////////////////////////////////////////////////////////////
-extern GLuint enumDrawBuffersEntries[16];
+// IDENTITY MATRIX
+extern GLfloat pg_identityViewMatrix[16];
+extern GLfloat pg_identityModelMatrix[16];
 
 /////////////////////////////////////////////
 // FBO 
@@ -222,30 +163,17 @@ extern GLuint pg_FBO_Mixing_capturedFB_prec_texID[2]; // drawing memory on odd a
 // Augmented Reality: FBO capture of Master to be displayed on a mesh
 extern GLuint pg_FBO_Master_capturedFB_prec_texID; // master output memory for mapping on mesh or bypassing mesh rendering
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXPORTED FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////
-// TEXTURES
-/////////////////////////////////////////////////////////////////
-//extern GLuint pg_Particle_Pos_Texture_texID;
-//extern GLfloat *pg_Particle_Pos_Texture;
-
-// CURVE PARTICLES TEXTURE
-extern GLuint pg_curve_particle_2D_texID[PG_MAX_SCENARIOS];
-// blurred disk texture
-extern std::vector<GLuint> pg_blurredDisk_texture_2D_texID[PG_MAX_SCENARIOS];
-
-//////////////////
-// FUNCTIONS
 // Perlin Noise
 double pg_PerlinNoise(double x, double y, double z);
 
 // opengl error
 int pg_printOglError(int no);
 // error report
-void pg_ReportError(char *errorString);
-
-// current directory
-std::string pg_GetCurrentWorkingDir(void);
+void pg_ReportError(char* errorString);
 
 // time management
 double pg_RealTime(void);
@@ -253,14 +181,19 @@ double pg_RealTime(void);
 int gettimeofday(struct timeval* tp);
 #endif
 
-void pg_MemoryUsage(void);
-
+// INTERFACE INITIALIZATION
 void pg_InterfaceInitializations(void);
 
-void pg_initGeometry_quads(void);
-bool pg_initFBOTextureImagesAndRendering(void);
-bool pg_bindFBOTextures(GLuint currentFBO, GLuint* currentTexutreID, int nb_attachments, bool with_stencil_andOr_depth, GLuint currentStencilOrDepthBuffer);
-bool pg_initFBOTextures(GLuint* textureID, int nb_attachments, bool with_stencil_andOr_depth, GLuint* depthAndStencilBuffer);
-void pg_initRenderingMatrices(void);
-
+// particle image based position
 void pg_initParticlePosition_Texture(void);
+
+// FBO TEXTURES INITIALIZATION
+bool pg_initFBOTextures(GLuint* textureID, int nb_attachments, bool with_stencil_andOr_depth, GLuint* depthAndStencilBuffer);
+bool pg_bindFBOTextures(GLuint currentFBO, GLuint* currentTexutreID, int nb_attachments, bool with_stencil_andOr_depth, GLuint currentStencilOrDepthBuffer);
+
+// GEOMETRY INITIALIZATION
+void pg_initRenderingMatrices(void);
+void pg_initGeometry_quads(void);
+
+
+#endif
