@@ -131,8 +131,8 @@ void pg_quit(void) {
 #ifdef _WIN32
 	// script
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
-		if (pg_pi_script_1.hProcess != NULL) {
-			TerminateProcess(pg_pi_script_1.hProcess, 0);
+		if (pg_pi_script_python.hProcess != NULL) {
+			TerminateProcess(pg_pi_script_python.hProcess, 0);
 		}
 	}
 #endif
@@ -149,21 +149,25 @@ void pg_quit(void) {
 
 	// soundtrack on
 	pg_soundTrack_on = false;
-	pg_send_message_udp((char*)"f", (char*)"/stopsoundtrack 0", (char*)"udp_PD_send");
-	sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
-	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
-	printf("Main: soundtrack: %s\n", pg_AuxString);
-	pg_pa_closeAudioStream();
-	printf("close portaudio\n");
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+		pg_send_message_udp((char*)"f", (char*)"/stopsoundtrack 0", (char*)"udp_PD_send");
+		sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
+		pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
+	}
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+		printf("Main: soundtrack: %s\n", pg_AuxString);
+		pg_pa_closeAudioStream();
+		printf("close portaudio\n");
+	}
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+		// soundtrack off
+		pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_script_binary_send");
+		pg_send_message_udp((char*)"", (char*)"/JUCE_exit", (char*)"udp_script_binary_send");
+	}
 	sprintf(pg_AuxString, "/soundtrack_onOff %d", !pg_soundTrack_on);
 	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
 	sprintf(pg_AuxString, "/soundtrack_volume %d", 0);
 	pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
-#if defined(PG_WITH_JUCE)
-	// soundtrack off
-	pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
-	pg_send_message_udp((char*)"", (char*)"/JUCE_exit", (char*)"udp_SoundJUCE_send");
-#endif
 
 	// lights out the LEDs
 	//pg_send_message_udp((char *)"i", (char *)"/switchOff_LEDs 1", (char *)"udp_TouchOSC_send");
@@ -774,6 +778,12 @@ void pg_initGLutWindows(void) {
 	printf("GLUT size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
 	glutInitWindowSize(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_window_x]) {
+		window_x = int(pg_InitialValuesInterpVar[0][_window_x].val_num);
+	}
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_window_y]) {
+		window_x = int(pg_InitialValuesInterpVar[0][_window_y].val_num);
+	}
 	glutInitWindowPosition(window_x, window_y);
 
 	pg_CurrentWindow->glutID = glutCreateWindow(" ");

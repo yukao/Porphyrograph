@@ -1,8 +1,8 @@
 RANK,0
-VERBATIM,current light scene
-TYPE,int
-ID,currentLightScene
-FUNCTION,currentLightScene_callBack
-GUI,currentLightScene
-SHADER,*
+VERBATIM,FFT scale
+TYPE,float
+ID,fft_scale
+FUNCTION,NULL
+GUI,fft_scale
+SHADER,Update_fs
 PULSE,*

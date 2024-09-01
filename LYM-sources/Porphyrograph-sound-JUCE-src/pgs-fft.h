@@ -65,7 +65,7 @@ class SpectrogramComponent   : public AudioAppComponent,
 							   private OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 {
 public:
-    SpectrogramComponent()
+    SpectrogramComponent(int clientPort, int serverPort)
         : forwardFFT (fftOrder),
 #ifndef PGS_WITHOUT_VISUALS
           spectrogramImage (Image::RGB, 512, 512, true),
@@ -82,12 +82,16 @@ public:
 		formatManager.registerBasicFormats();
 
 		// specify here where to send OSC messages to: host URL and UDP port number
-		if (!sender.connect("127.0.0.1", 9001))
-			showConnectionErrorMessage("Error: could not connect to UDP port 9001.");
+		if (!sender.connect("127.0.0.1", clientPort))
+			printf("Error: connection to client 127.0.0.1:%d failed!\n", clientPort);
+		else
+			printf("Connected to client 127.0.0.1:%d\n", clientPort);
 
 		// specify here on which UDP port number to receive incoming OSC messages
-		if (!connect(8001))
-			showConnectionErrorMessage("Error: could not connect to UDP port 8001.");
+		if (!connect(serverPort))
+			printf("Error: opening server on port %d failed!\n", serverPort);
+		else
+			printf("Server on port %d open\n", serverPort);
 
 		// tell the component to listen for OSC messages matching this address:
 		addListener(this);
@@ -114,6 +118,7 @@ public:
 		auto activeOutputChannels = device->getActiveOutputChannels();
 		auto maxInputChannels = activeInputChannels.getHighestBit() + 1;
 		auto maxOutputChannels = activeOutputChannels.getHighestBit() + 1;
+		auto sampleRate = device->getCurrentSampleRate();
 
 		// temporary buffer for storing the soundtrack samples before mixing with audio input
 		AudioSampleBuffer tmpBuffer(bufferToFill.buffer->getNumChannels(), 
@@ -161,7 +166,7 @@ public:
 					if (outputChannel == 0) {
 						if (nbTotSamples % 10 == 0 && state == Started) {
 							if (outputEnveloppe) {
-								fileEnveloppeCSV << std::fixed << std::setprecision(4) << double(nbTotSamples) / transportSource.getSampleRate() << "," << std::fixed << std::setprecision(5) << float(inTmpBuffer[sample]) << std::endl;
+								fileEnveloppeCSV << std::fixed << std::setprecision(4) << double(nbTotSamples) / sampleRate << "," << std::fixed << std::setprecision(5) << float(inTmpBuffer[sample]) << std::endl;
 							}
 						}
 						if (state == Started) {
@@ -184,7 +189,7 @@ public:
 	{
 		transportSource.releaseResources();
 	}
-	//void addListener(OSCReceiver::Listener<MessageLoopCallback>* listenerToAdd) override
+	//void addListxener(OSCReceiver::Listener<MessageLoopCallback>* listenerToAdd) override
 	//{
 	//}
 
@@ -207,14 +212,14 @@ public:
 			// std::cout << "Next line of spectrogram" << std::endl;
 			fftAnalysisAndDisplay();
 			nextFFTBlockReady = false;
-#ifdef PGS_WITHOUT_VISUAL
+#ifndef PGS_WITHOUT_VISUAL
 			repaint();
 #endif
 		}
 
-#ifdef PGS_WITHOUT_VISUAL
+#ifndef PGS_WITHOUT_VISUAL
 		// audio file player interface update (not used currently)
-		if (transportSource.isStarted())
+		if (transportSource.isPlaying())
 		{
 			RelativeTime position(transportSource.getCurrentPosition());
 
@@ -256,15 +261,19 @@ public:
 			{
 				float val = message[0].getFloat32();
 				if (val == 0.f) {
-					trackFileName = juce::String("C:/sync.com/Sync/LYM-videos-sources/LYM_Annika_Araknit_2020/selfies_sounds/3beeps.wav");
+					trackFileName = juce::String("E:/LYM-videos-sources/LYM_Annika_Araknit_2020/selfies_sounds/3beeps.wav");
 					outputEnveloppe = true;
 				}
 				else if (val == 1.f) {
-					trackFileName = juce::String("C:/sync.com/Sync/LYM-videos-sources/LYM_Annika_Araknit_2020/selfies_sounds/3disch.wav");
+					trackFileName = juce::String("E:/LYM-videos-sources/LYM_Annika_Araknit_2020/selfies_sounds/3disch.wav");
 					outputEnveloppe = true;
 				}
 				else if (val == 2.f) {
-					trackFileName = juce::String("C:/sync.com/Sync/LYM-videos-sources/LYM_Isskjutning_2020/Isskjut_NewEnd_v24EQ.wav");
+					trackFileName = juce::String("E:/LYM-videos-sources/LYM_Isskjutning_2020/Isskjut_NewEnd_v24EQ.wav");
+					outputEnveloppe = true;
+				}
+				else if (val == 3.f) {
+					trackFileName = juce::String("E:/LYM-videos-sources/YN_Rivets_2020/soundtrack/IN_A_GADDA_DA_VIDA_Drum_Solo.wav");
 					outputEnveloppe = true;
 				}
 				else {
@@ -292,7 +301,7 @@ public:
 					}
 				}
 			}
-			// std::cout << "File name: " << trackFileName << std::endl;
+			std::cout << "JUCE open file name: " << trackFileName << std::endl;
 			if(!trackFileName.isEmpty())
 			{
 				if (outputEnveloppe) {
@@ -313,8 +322,14 @@ public:
 						transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
 						transportSource.setPosition(0.0);
 						readerSource.reset(newSource.release());
-						std::cout << "Audio file opened: " << trackFileName.toStdString() << " sample rate " << reader->sampleRate << std::endl;
+						std::cout << "Audio file opened: " << trackFileName.toStdString() << " sample rate " << reader->sampleRate << " volume " << soundtrack_weight << std::endl;
 						trackFileOpen = true;
+
+						// plays opened track
+						std::cout << "Play track: " << trackFileName.toStdString() << std::endl;
+						looping = false;
+						updateLoopState(looping);
+						changeState(Starting);
 					}
 					else {
 						std::cout << "Unknown audio file type: " << trackFileName.toStdString() << std::endl;
@@ -329,6 +344,7 @@ public:
 			}
 		}
 		else if (str.compare("/JUCE_play_track") == 0) {
+			std::cout << "Play track: " << trackFileName.toStdString() << std::endl;
 			if (trackFileOpen) {
 				looping = false;
 				updateLoopState(looping);
@@ -336,19 +352,23 @@ public:
 			}
 		}
 		else if (str.compare("/JUCE_stop_track") == 0) {
+			std::cout << "Stop track: " << trackFileName.toStdString() << std::endl;
 			changeState(Stopping);
 		}
 		else if (str.compare("/JUCE_loop_track") == 0) {
+			std::cout << "Loop track: " << trackFileName.toStdString() << std::endl;
 			looping = !looping;
 			updateLoopState(looping);
 		}
 		else if (str.compare("/JUCE_soundtrack_weight") == 0) {
 			if (message.size() == 1 && message[0].isFloat32()) {
+				std::cout << "Track volume: " << message[0].getFloat32() << std::endl;
 				soundtrack_weight = message[0].getFloat32();
 			}
 		}
 		else if (str.compare("/JUCE_audioInput_weight") == 0) {
 			if (message.size() == 1 && message[0].isFloat32()) {
+				std::cout << "Audio input volume: " << message[0].getFloat32() << std::endl;
 				audioInput_weight = message[0].getFloat32();
 			}
 		}
@@ -356,6 +376,7 @@ public:
 			// delete this;
 			// app.systemRequestedQuit();
 			// mainWindow = nullptr;
+			std::cout << "JUCE script terminates" << std::endl;
 			if (outputEnveloppe) {
 				fileEnveloppeCSV.close();
 			}
@@ -422,10 +443,10 @@ public:
 		//}
 
 		// create and send an OSC message with an address and first 8 frequency/level pairs:
-		//if (!sender.send("/fftLevel8", min_maxLevel.getStart(), min_maxLevel.getEnd()))
+		//if (!sender.send("/ fftLevel8loudestFreqBins", min_maxLevel.getStart(), min_maxLevel.getEnd()))
 		//	showConnectionErrorMessage("Error: could not send OSC message.");
 		// create and send an OSC message with an address and first 8 frequency/level/phase triplets:
-		if (!sender.send("/fftLevel8",
+		if (!sender.send("/fftLevel8loudestFreqBins",
 			val_and_id[0][1], val_and_id[0][0], val_and_id[0][2], 
 			val_and_id[1][1], val_and_id[1][0], val_and_id[1][2],
 			val_and_id[2][1], val_and_id[2][0], val_and_id[2][2],
@@ -438,7 +459,7 @@ public:
 		}
 
 
-#ifdef PGS_WITHOUT_VISUAL
+#ifndef PGS_WITHOUT_VISUAL
 		auto rightHandEdge = spectrogramImage.getWidth() - 1;
 		auto imageHeight = spectrogramImage.getHeight();
 
@@ -532,7 +553,7 @@ private:
 	float audioInput_weight = 0.f;
 
 	dsp::FFT forwardFFT;
-#ifdef PGS_WITHOUT_VISUAL
+#ifndef PGS_WITHOUT_VISUAL
     Image spectrogramImage;
 #endif
 

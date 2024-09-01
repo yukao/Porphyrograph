@@ -101,11 +101,9 @@ bool pg_CAseed_trigger = false;
 #endif
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(pg_Project_Criton)
 float fftLevels[8];
 float fftFrequencies[8];
 float fftPhases[8];
-#endif
 
 // +++++++++++++++++++++++ Clip ranges for automatic clip selection for ContAct +++++
 #if defined(var_Contact_clip_in_range)
@@ -230,7 +228,7 @@ std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "soundtrack_volume", _soundtrack_volume },
 	{ "JUCE_loop_track", _JUCE_loop_track },
 	{ "JUCE_exit", _JUCE_exit },
-	{ "fftLevel8", _fftLevel8 },
+	{ "fftLevel8loudestFreqBins", _fftLevel8loudestFreqBins },
 
 	{ "ClipArt_1_onOff", _ClipArt_1_onOff },
 	{ "ClipArt_2_onOff", _ClipArt_2_onOff },
@@ -1695,6 +1693,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// unregistered command (neither scenario variable nor program defined command)
 	if (indVar == -1) {
+		printf("unregistered command (neither scenario variable nor program defined command) indVar %d _fftLevel8loudestFreqBins %d indexChangedValue%d\n", indVar, _fftLevel8loudestFreqBins, indexChangedValue);
+
 		// touch OSC sends OSC commands for each tab change, we have decided to suffix their address with _DISPLAY
 		string touchOSC_tab_command_ending("_DISPLAY");
 		unsigned int touchOSC_tab_command_ending_length = touchOSC_tab_command_ending.length();
@@ -1932,7 +1932,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 	case _soundtrack_volume:
 	case _JUCE_loop_track:
 	case _JUCE_exit:
-	case _fftLevel8:
+	case _fftLevel8loudestFreqBins:
 		pg_aliasScriptAudio(address_string, string_argument_0,
 			float_arguments, nb_arguments, indVar);
 		break;

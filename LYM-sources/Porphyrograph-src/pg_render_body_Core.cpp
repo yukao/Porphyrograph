@@ -137,6 +137,7 @@ Update_scenario_var_data[77] = (GLfloat)trkDecay[3] * (1.f + pulse_average * trk
 Update_scenario_var_data[78] = (GLfloat)currentDrawingTrack;
 Update_scenario_var_data[79] = (GLfloat)currentPhotoTrack;
 Update_scenario_var_data[80] = (GLfloat)currentVideoTrack;
+Update_scenario_var_data[81] = (GLfloat)fft_scale;
 
 Master_scenario_var_data[0] = (GLfloat)master_crop_width;
 Master_scenario_var_data[1] = (GLfloat)master_crop_x;
@@ -179,7 +180,7 @@ if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_ParticleAnimation]) {
 
 if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]) {
   glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]);
-  glUniform1fv(uniform_Update_scenario_var_data[pg_ind_scenario], 81, Update_scenario_var_data);
+  glUniform1fv(uniform_Update_scenario_var_data[pg_ind_scenario], 82, Update_scenario_var_data);
 }
 
 if (pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mixing]) {

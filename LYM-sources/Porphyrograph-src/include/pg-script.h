@@ -196,7 +196,7 @@ enum pg_OSC_addresses_hashMap_IDs
 	_soundtrack_volume,
 	_JUCE_loop_track,
 	_JUCE_exit,
-	_fftLevel8,
+	_fftLevel8loudestFreqBins,
 
 	_ClipArt_1_onOff,
 	_ClipArt_2_onOff,
@@ -451,11 +451,9 @@ void pg_CAseed_location_to_coordinates(pg_CAseed_locations location, int coordin
 #endif
 
 // +++++++++++++++++++++++ FFT levels and frequency storage ++++++++++++++++++++
-#if defined(pg_Project_Criton)
 extern float fftLevels[8];
 extern float fftFrequencies[8];
 extern float fftPhases[8];
-#endif
 
 // +++++++++++++++++++++ BLUR +++++++++++++++++++++++++++
 #if defined(PG_WITH_BLUR)

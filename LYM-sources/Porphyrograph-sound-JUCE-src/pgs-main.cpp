@@ -74,14 +74,19 @@ private:
 
     std::unique_ptr<MainWindow> mainWindow;
 #else
-	class MainComponent : public Component
+    class MainComponent : public Component
 	{
 	public:
 		Component * c;
 		MainComponent(JUCEApplication& a)
 			: app(a)
 		{
-			c = new SpectrogramComponent();
+            StringArray params = a.getCommandLineParameterArray();
+            //for (int i = 0; i < params.size(); i++) {
+            //    printf("array %d (%s)\n", i, params[i].toStdString().c_str());
+            //}
+            // command line arguments UDP server and client port
+			c = new SpectrogramComponent(std::stoi(params[0].toStdString()), std::stoi(params[1].toStdString()));
 		}
 
 		~MainComponent()

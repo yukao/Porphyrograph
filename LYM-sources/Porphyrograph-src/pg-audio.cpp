@@ -68,64 +68,70 @@ pa_AudioOut::pa_AudioOut() : pa_myStream(0), left_phase(0), right_phase(0)
 
 bool pa_AudioOut::pa_openMyStream(PaDeviceIndex index, int* channelCount, int* sampleRate)
 {
-    PaStreamParameters outputParameters;
+    PaStreamParameters outputParameters = PaStreamParameters();
+    PaError err = paNoError;
 
-    outputParameters.device = index;
-    if (outputParameters.device == paNoDevice) {
-        return false;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        outputParameters.device = index;
+        if (outputParameters.device == paNoDevice) {
+            return false;
+        }
+
+        const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
+        if (pInfo != 0)
+        {
+            printf("Output device name: '%s'\n", pInfo->name);
+        }
+
+        outputParameters.channelCount = soundfile_data.sound_file_info.channels;
+        *channelCount = outputParameters.channelCount;
+        *sampleRate = soundfile_data.sound_file_info.samplerate;
+        outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+        outputParameters.hostApiSpecificStreamInfo = NULL;
+
+        err = Pa_OpenStream(
+            &pa_myStream,
+            NULL, /* no input */
+            &outputParameters,
+            soundfile_data.sound_file_info.samplerate,
+            FRAMES_PER_BUFFER,
+            paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+            &pa_AudioOut::paCallback,
+            &soundfile_data            /* Using 'this' for userData so we can cast to pa_AudioOut* in paCallback method */
+        );
+
+        if (err != paNoError)
+        {
+            printf("Failed to open stream to device\n");
+            return false;
+        }
+
+        err = Pa_SetStreamFinishedCallback(pa_myStream, &pa_AudioOut::paStreamFinished);
+
+        if (err != paNoError)
+        {
+            Pa_CloseStream(pa_myStream);
+            pa_myStream = 0;
+
+            return false;
+        }
+
+        is_streaming = true;
     }
-
-    const PaDeviceInfo* pInfo = Pa_GetDeviceInfo(index);
-    if (pInfo != 0)
-    {
-        printf("Output device name: '%s'\n", pInfo->name);
-    }
-
-    outputParameters.channelCount = soundfile_data.sound_file_info.channels;
-    *channelCount = outputParameters.channelCount;
-    *sampleRate = soundfile_data.sound_file_info.samplerate;
-    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-    outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-    outputParameters.hostApiSpecificStreamInfo = NULL;
-
-    PaError err = Pa_OpenStream(
-        &pa_myStream,
-        NULL, /* no input */
-        &outputParameters,
-        soundfile_data.sound_file_info.samplerate,
-        FRAMES_PER_BUFFER,
-        paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-        &pa_AudioOut::paCallback,
-        &soundfile_data            /* Using 'this' for userData so we can cast to pa_AudioOut* in paCallback method */
-    );
-
-    if (err != paNoError)
-    {
-        printf("Failed to open stream to device\n");
-        return false;
-    }
-
-    err = Pa_SetStreamFinishedCallback(pa_myStream, &pa_AudioOut::paStreamFinished);
-
-    if (err != paNoError)
-    {
-        Pa_CloseStream(pa_myStream);
-        pa_myStream = 0;
-
-        return false;
-    }
-
-    is_streaming = true;
     return true;
 }
 
 bool pa_AudioOut::pa_closeMyStream()
 {
-    if (pa_myStream == 0)
-        return false;
+    PaError err = paNoError;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        if (pa_myStream == 0)
+            return false;
 
-    PaError err = Pa_CloseStream(pa_myStream);
-    is_streaming = false;
+        err = Pa_CloseStream(pa_myStream);
+        is_streaming = false;
+    }
 
     return (err == paNoError);
 }
@@ -133,23 +139,29 @@ bool pa_AudioOut::pa_closeMyStream()
 
 bool pa_AudioOut::pa_startMyStream()
 {
-    if (pa_myStream == 0)
-        return false;
+    PaError err = paNoError;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        if (pa_myStream == 0)
+            return false;
 
-    PaError err = Pa_StartStream(pa_myStream);
+        err = Pa_StartStream(pa_myStream);
 
-    is_streaming = true;
+        is_streaming = true;
+    }
     return (err == paNoError);
 }
 
 bool pa_AudioOut::pa_stopMyStream()
 {
-    if (pa_myStream == 0)
-        return false;
+    PaError err = paNoError;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        if (pa_myStream == 0)
+            return false;
 
-    PaError err = Pa_StopStream(pa_myStream);
+       err = Pa_StopStream(pa_myStream);
 
-    is_streaming = false;
+        is_streaming = false;
+    }
     return (err == paNoError);
 }
 
@@ -163,21 +175,26 @@ int pa_AudioOut::paCallback(const void* inputBuffer, void* outputBuffer,
     callback_data_s* p_data = (callback_data_s*)userData;
     sf_count_t       num_read;
 
-    out = (float*)outputBuffer;
-    p_data = (callback_data_s*)userData;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        out = (float*)outputBuffer;
+        p_data = (callback_data_s*)userData;
 
-    /* clear output buffer */
-    memset(out, 0, sizeof(float) * framesPerBuffer * p_data->sound_file_info.channels);
+        /* clear output buffer */
+        memset(out, 0, sizeof(float) * framesPerBuffer * p_data->sound_file_info.channels);
 
-    /* read directly into output buffer */
-    num_read = sf_read_float(p_data->sound_file, out, framesPerBuffer * p_data->sound_file_info.channels);
-    for (int ind = 0; ind < num_read; ind++) {
-        out[ind] *= soundtrack_PA_weight;
+        /* read directly into output buffer */
+        num_read = sf_read_float(p_data->sound_file, out, framesPerBuffer * p_data->sound_file_info.channels);
+        for (int ind = 0; ind < num_read; ind++) {
+            out[ind] *= soundtrack_PA_weight;
+        }
+
+        /*  If we couldn't read a full frameCount of samples we've reached EOF */
+        if (num_read < framesPerBuffer)
+        {
+            return paComplete;
+        }
     }
-
-    /*  If we couldn't read a full frameCount of samples we've reached EOF */
-    if (num_read < framesPerBuffer)
-    {
+    else {
         return paComplete;
     }
 
@@ -185,21 +202,23 @@ int pa_AudioOut::paCallback(const void* inputBuffer, void* outputBuffer,
 }
 
 bool pa_AudioOut::pa_checkAudioStream() {
-    if (is_streaming) {
-        // playing
-        if (Pa_IsStreamActive(pa_myStream) > 0) {
-            return true;
-        }
-        // not playing
-        else if (Pa_IsStreamActive(pa_myStream) == 0) {
-            printf("Wav file streaming finished\n");
-            is_streaming = false;
-            return false;
-        }
-        // error
-        else if (Pa_IsStreamActive(pa_myStream) < 0) {
-            printf("Error paBadStreamPtr %d\n", paBadStreamPtr);
-            sprintf(pg_errorStr, "Error audio streaming %d", Pa_IsStreamActive(pa_myStream)); pg_ReportError(pg_errorStr); throw 561;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        if (is_streaming) {
+            // playing
+            if (Pa_IsStreamActive(pa_myStream) > 0) {
+                return true;
+            }
+            // not playing
+            else if (Pa_IsStreamActive(pa_myStream) == 0) {
+                printf("Wav file streaming finished\n");
+                is_streaming = false;
+                return false;
+            }
+            // error
+            else if (Pa_IsStreamActive(pa_myStream) < 0) {
+                printf("Error paBadStreamPtr %d\n", paBadStreamPtr);
+                sprintf(pg_errorStr, "Error audio streaming %d", Pa_IsStreamActive(pa_myStream)); pg_ReportError(pg_errorStr); throw 561;
+            }
         }
     }
     return false;
@@ -253,47 +272,60 @@ void PlayTrack(int indTrack, double timeFromStart) {
             sprintf(pg_AuxString, "/soundtrack_fileName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName.c_str());
 
             // PureData play
-            pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
+            if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+                pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
+            }
 
             // portaudio play
-            if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < int(pg_SoundTracks[pg_ind_scenario].size()))
-                || pa_sound_data.pa_is_streaming()) {
-                printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][previouslyPlayingSoundtrackNo].soundtrackFileName).c_str());
-                pa_sound_data.pa_stopMyStream();
-                pa_sound_data.pa_closeMyStream();
-            }
-            printf("Opening Wav file (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str());
-            /* Open the soundfile */
-            soundfile_data.sound_file = sf_open((char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str(),
-                SFM_READ, &soundfile_data.sound_file_info);
-            if (sf_error(soundfile_data.sound_file) != SF_ERR_NO_ERROR) {
-                fprintf(stderr, "%s\n", sf_strerror(soundfile_data.sound_file));
-                sprintf(pg_errorStr, "Wav file not opened (%s)!", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str()); pg_ReportError(pg_errorStr);
-                return;
+            if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+                if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < int(pg_SoundTracks[pg_ind_scenario].size()))
+                    || pa_sound_data.pa_is_streaming()) {
+                    printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][previouslyPlayingSoundtrackNo].soundtrackFileName).c_str());
+                    pa_sound_data.pa_stopMyStream();
+                    pa_sound_data.pa_closeMyStream();
+                }
+                printf("Opening Wav file (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str());
+                /* Open the soundfile */
+                soundfile_data.sound_file = sf_open((char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str(),
+                    SFM_READ, &soundfile_data.sound_file_info);
+                if (sf_error(soundfile_data.sound_file) != SF_ERR_NO_ERROR) {
+                    fprintf(stderr, "%s\n", sf_strerror(soundfile_data.sound_file));
+                    sprintf(pg_errorStr, "Wav file not opened (%s)!", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str()); pg_ReportError(pg_errorStr);
+                    return;
+                }
+
+                // opening stream
+                int channelCount;
+                int sampleRate;
+                if (pa_sound_data.pa_openMyStream(Pa_GetDefaultOutputDevice(), &channelCount, &sampleRate)) {
+                    printf("portaudio stream opened %d ch at %d Hz\n", channelCount, sampleRate);
+                }
+                else {
+                    fprintf(stderr, "Error number: %d\n", paInit->result());
+                    fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+                    sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); throw 100;
+                }
+
+                // starting stream
+                if (pa_sound_data.pa_startMyStream()) {
+                    printf("portaudio stream started\n");
+                }
+                else {
+                    fprintf(stderr, "Error number: %d\n", paInit->result());
+                    fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+                    sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); throw 100;
+                }
             }
 
-            // opening stream
-            int channelCount;
-            int sampleRate;
-            if (pa_sound_data.pa_openMyStream(Pa_GetDefaultOutputDevice(), &channelCount, &sampleRate)) {
-                printf("portaudio stream opened %d ch at %d Hz\n", channelCount, sampleRate);
-            }
-            else {
-                fprintf(stderr, "Error number: %d\n", paInit->result());
-                fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
-                sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); throw 100;
+            // JUCE play
+            if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+                printf("soundtrack Name %s\n", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName.c_str());
+                sprintf(pg_AuxString, "/JUCE_open_track \"%s\"", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName.c_str());
+                pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_script_binary_send");
+                pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_script_binary_send");
             }
 
-            // starting stream
-            if (pa_sound_data.pa_startMyStream()) {
-                printf("portaudio stream started\n");
-            }
-            else {
-                fprintf(stderr, "Error number: %d\n", paInit->result());
-                fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
-                sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); throw 100;
-            }
-
+            // Peak or Onset indices
             pg_soundTrack_onset = false;
             pg_soundTrack_peak = false;
             pg_currentTrackSoundPeakIndex = 0;
@@ -333,13 +365,6 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 = pg_RealTime() - pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackOnsetsAndPeasksOffset;
         }
 
-#if defined(PG_WITH_JUCE)
-        sprintf(pg_AuxString, "/JUCE_open_track \"%s\"",
-            (pg_cwd + pg_soundtracks_directory + pg_SoundTracks[pg_currentlyPlaying_trackNo]->soundtrackFileName).c_str());
-        pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_SoundJUCE_send");
-        pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
-#endif
-
         //sprintf(pg_AuxString, "/soundtrack_shortName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].trackShortName.c_str());
         //pg_send_message_udp((char *)"s", pg_AuxString, (char *)"udp_TouchOSC_send");
         sprintf(pg_AuxString, "/track_shortName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackShortName.c_str());
@@ -352,18 +377,23 @@ void PlayTrack(int indTrack, double timeFromStart) {
 }
 
 void StopTrack(void) {
-    sprintf(pg_AuxString, "/soundtrack_fileName %s", (char*)"");
-    pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
-
-    if (pa_sound_data.pa_is_streaming()) {
-        pa_sound_data.pa_closeMyStream();
+    // PD play
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+        sprintf(pg_AuxString, "/soundtrack_fileName %s", (char*)"");
+        pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
     }
 
-#if defined(PG_WITH_JUCE)
-    sprintf(pg_AuxString, "/JUCE_open_track \"%s\"", (char*)"void");
-    pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_SoundJUCE_send");
-    pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
-#endif
+    // PA play
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        if (pa_sound_data.pa_is_streaming()) {
+            pa_sound_data.pa_closeMyStream();
+        }
+    }
+
+    // JUCE play
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+        pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_script_binary_send");
+    }
 
     //sprintf(pg_AuxString, "/soundtrack_shortName %s", pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].trackShortName.c_str());
     //pg_send_message_udp((char *)"s", pg_AuxString, (char *)"udp_TouchOSC_send");
@@ -377,23 +407,25 @@ void StopTrack(void) {
 
 // tests whether the soundtrack is finished reading
 void pg_pa_checkAudioStream() {
-    pa_sound_data.pa_checkAudioStream();
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        pa_sound_data.pa_checkAudioStream();
+    }
     //printf("soundtrack current time %f\n", pg_RealTime() - soundfile_data.sound_file_StartReadingTime);
 }
 
 void soundTrackvolume(float vol) {
-    sprintf(pg_AuxString, "/soundtrack_onOff %.5f", vol);
-    pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
-    printf("Command: soundtrack: %s\n", pg_AuxString);
+    // PD play
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+        sprintf(pg_AuxString, "/soundtrack_weight %.5f", vol);
+        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        printf("Command: soundtrack: %s\n", pg_AuxString);
+    }
 
-#if defined(PG_WITH_JUCE)
-    if (vol > 0) {
-        pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
+    // JUCE play
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+        sprintf(pg_AuxString, "/JUCE_soundtrack_weight %.5f", vol);
+        pg_send_message_udp((char*)"f", (char*)"/JUCE_soundtrack_weight", (char*)"udp_script_binary_send");
     }
-    else {
-        pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
-    }
-#endif
 
     sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
     pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
@@ -402,17 +434,19 @@ void soundTrackvolume(float vol) {
 }
 
 void soundTrackonOff() {
-    sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
-    pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+        sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
+        pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_PD_send");
+    }
     printf("Command: soundtrack: %s\n", pg_AuxString);
-#if defined(PG_WITH_JUCE)
-    if (pg_soundTrack_on) {
-        pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_SoundJUCE_send");
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+        if (pg_soundTrack_on) {
+            pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_script_binary_send");
+        }
+        else {
+            pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_script_binary_send");
+        }
     }
-    else {
-        pg_send_message_udp((char*)"", (char*)"/JUCE_stop_track", (char*)"udp_SoundJUCE_send");
-    }
-#endif
     sprintf(pg_AuxString, "/soundtrack_onOff %d", pg_soundTrack_on);
     pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
     //sprintf(pg_AuxString, "/soundtrack_volume %.5f", float(int(pg_soundTrack_on)));
@@ -420,15 +454,19 @@ void soundTrackonOff() {
 }
 
 void pg_pa_closeAudioStream(void) {
-    pa_sound_data.pa_closeMyStream();
-    delete paInit;
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        pa_sound_data.pa_closeMyStream();
+        delete paInit;
+    }
 }
 
 void pg_pa_openSoundData(void) {
-    paInit = new ScopedPaHandler();
-    if (paInit->result() != paNoError) {
-        fprintf(stderr, "Error number: %d\n", paInit->result());
-        fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+    if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+        paInit = new ScopedPaHandler();
+        if (paInit->result() != paNoError) {
+            fprintf(stderr, "Error number: %d\n", paInit->result());
+            fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+        }
     }
 }
 
@@ -690,37 +728,37 @@ void pg_aliasScriptAudio(string address_string, string string_argument_0,
         break;
         // +++++++++++++++++ JUCE SOUND CONTROL +++++++++++++++++++++++++
     case _JUCE_loop_track:
-#if defined(pg_Project_Criton)
-        pg_send_message_udp((char*)"", (char*)"/JUCE_loop_track", (char*)"udp_SoundJUCE_send");
-#endif
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+            pg_send_message_udp((char*)"", (char*)"/JUCE_loop_track", (char*)"udp_script_binary_send");
+        }
         break;
     case _JUCE_exit:
-#if defined(pg_Project_Criton)
-        pg_send_message_udp((char*)"", (char*)"/JUCE_exit", (char*)"udp_SoundJUCE_send");
-#endif
-        break;
-    case _fftLevel8:
-#if defined(pg_Project_Criton)
-        //printf("fft levels: ");
-        //for (int indArg = 0; indArg < 8; indArg++) {
-        //	printf("%.2f/%.2f ", float_arguments[2 * indArg], float_arguments[2 * indArg + 1]);
-        //}
-        //printf("\n");
-        float totFFTLevel = 0.f;
-        for (int indArg = 0; indArg < 8; indArg++) {
-            fftFrequencies[indArg] = float_arguments[3 * indArg];
-            fftLevels[indArg] = float_arguments[3 * indArg + 1];
-            fftPhases[indArg] = float_arguments[3 * indArg + 2];
-            totFFTLevel += fftLevels[indArg];
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+            pg_send_message_udp((char*)"", (char*)"/JUCE_exit", (char*)"udp_script_binary_send");
         }
-        // normalization of the levels (sum = 0.5 (because cos + 1 used for color))
-        totFFTLevel *= 2.f;
-        if (totFFTLevel > 0.f) {
+        break;
+    case _fftLevel8loudestFreqBins:
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+            //printf("fft levels: ");
+            //for (int indArg = 0; indArg < 8; indArg++) {
+            //	printf("%.2f/%.2f ", float_arguments[2 * indArg], float_arguments[2 * indArg + 1]);
+            //}
+            //printf("\n");
+            float totFFTLevel = 0.f;
             for (int indArg = 0; indArg < 8; indArg++) {
-                fftLevels[indArg] /= totFFTLevel;
+                fftFrequencies[indArg] = float_arguments[3 * indArg];
+                fftLevels[indArg] = float_arguments[3 * indArg + 1];
+                fftPhases[indArg] = float_arguments[3 * indArg + 2];
+                totFFTLevel += fftLevels[indArg];
+            }
+            // normalization of the levels (sum = 0.5 (because cos + 1 used for color))
+            totFFTLevel *= 2.f;
+            if (totFFTLevel > 0.f) {
+                for (int indArg = 0; indArg < 8; indArg++) {
+                    fftLevels[indArg] /= totFFTLevel;
+                }
             }
         }
-#endif
         break;
     default:
         sprintf(pg_errorStr, "Audio command not found (%s)!", address_string.c_str()); pg_ReportError(pg_errorStr);
@@ -734,46 +772,59 @@ void pg_aliasScriptAudio(string address_string, string string_argument_0,
 void audioInput_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
         audioInput_weight = scenario_or_gui_command_value;
-        sprintf(pg_AuxString, "/audioInput_weight %.2f", audioInput_weight);
-        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
-#if defined(PG_WITH_JUCE)
-        sprintf(pg_AuxString, "/JUCE_audioInput_weight %.2f", audioInput_weight);
-        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_SoundJUCE_send");
-#endif
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+            sprintf(pg_AuxString, "/audioInput_weight %.2f", audioInput_weight);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        }
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+            sprintf(pg_AuxString, "/JUCE_audioInput_weight %.2f", audioInput_weight);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_script_binary_send");
+        }
     }
 }
 
 void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
-        soundtrack_PD_weight = scenario_or_gui_command_value;
-        sprintf(pg_AuxString, "/soundtrack_weight %.2f", soundtrack_PD_weight);
-        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
-
-#if defined(PG_WITH_JUCE)
-        sprintf(pg_AuxString, "/JUCE_soundtrack_weight %.2f", soundtrack_PD_weight);
-        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_SoundJUCE_send");
-#endif
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+            soundtrack_PD_weight = scenario_or_gui_command_value;
+            sprintf(pg_AuxString, "/soundtrack_weight %.2f", soundtrack_PD_weight);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        }
+    }
+}
+void soundtrack_JUCE_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
+    if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+            sprintf(pg_AuxString, "/JUCE_soundtrack_weight %.2f", soundtrack_JUCE_weight);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_script_binary_send");
+        }
     }
 }
 
 void soundtrack_PA_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
-        soundtrack_PA_weight = scenario_or_gui_command_value;
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+            soundtrack_PA_weight = scenario_or_gui_command_value;
+        }
     }
 }
 
 void sound_env_min_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
-        sprintf(pg_AuxString, "/sound_env_min %.2f", scenario_or_gui_command_value);
-        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+            sprintf(pg_AuxString, "/sound_env_min %.2f", scenario_or_gui_command_value);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        }
     }
     // printf("reset sound\n");
 }
 
 void sound_env_max_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
-        sprintf(pg_AuxString, "/sound_env_max %.2f", scenario_or_gui_command_value);
-        pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
+            sprintf(pg_AuxString, "/sound_env_max %.2f", scenario_or_gui_command_value);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+        }
     }
     // printf("reset sound\n");
 }

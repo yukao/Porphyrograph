@@ -101,6 +101,12 @@ void pg_initializeScenearioVariables(void) {
 		/////////////////////////////////////////////////////////////////////////
 		// INITIAL VALUES OF SCENARIO-CONTROLLED UNIFORM VARIABLES
 		// ARE GENERATED IN THE PYTHON SCRIPT AND ASSIGNED TO THE VARIABLES
+		for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
+			int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][indVar]) {
+				pg_update_variable(pg_enum_PG_SCENARIO, indVar, pg_InitialValuesInterpVar[indScenario][indVar], -1);
+			}
+		}
 	}
 
 	/////////////////////////////////////////
@@ -1156,7 +1162,7 @@ void pg_update_scenario(void) {
 							if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
 								sprintf(pg_AuxString, "/percent %.5f", pg_current_scene_percent);
 								//printf("send %.5f\n", 1.);
-								pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_script_1_send");
+								pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_script_python_send");
 								//printf("send %s\n", pg_AuxString);
 							}
 							return;
@@ -1180,11 +1186,11 @@ void pg_update_scenario(void) {
 					// script is only available on WIN32
 #ifdef _WIN32
 					// feeds the current script #1 if one is active
-					if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeClipArts]) {
-						if (pg_currently_runnings_script_1 != "NULL") {
+					if (pg_FullScenarioActiveVars[pg_ind_scenario][_script_python]) {
+						if (pg_currently_runnings_script_python != "NULL") {
 							sprintf(pg_AuxString, "/percent %.5f", pg_current_scene_percent);
 							//printf("send %.5f\n", percent);
-							pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_script_1_send");
+							pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_script_python_send");
 							//printf("send %s\n", pg_AuxString);
 						}
 					}

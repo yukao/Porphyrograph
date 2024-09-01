@@ -414,26 +414,26 @@ void pg_update_shader_Update_uniforms(void) {
 	//	pg_BezierBox[1].x, pg_BezierBox[1].y, pg_BezierBox[1].z, pg_BezierBox[1].w, pg_paths_currentDynPoint[1].pg_paths_isBegin, pg_paths_currentDynPoint[1].pg_paths_isEnd);
 	glUniform4fv(uniform_Update_path_data[pg_ind_scenario], (PG_NB_PATHS + 1) * PG_MAX_PATH_DATA, pg_path_data_Update);
 
-#if defined(pg_Project_Criton)
-	glUniform4f(uniform_Update_fs_4fv_fftLevels03[pg_ind_scenario],
-		fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3]);
-	glUniform4f(uniform_Update_fs_4fv_fftFrequencies03[pg_ind_scenario],
-		fftFrequencies[0], fftFrequencies[1], fftFrequencies[2], fftFrequencies[3]);
-	glUniform4f(uniform_Update_fs_4fv_fftPhases03[pg_ind_scenario],
-		fftPhases[0], fftPhases[1], fftPhases[2], fftPhases[3]);
-	glUniform4f(uniform_Update_fs_4fv_fftLevels47[pg_ind_scenario],
-		fftLevels[4], fftLevels[5], fftLevels[6], fftLevels[7]);
-	glUniform4f(uniform_Update_fs_4fv_fftFrequencies47[pg_ind_scenario],
-		fftFrequencies[4], fftFrequencies[5], fftFrequencies[6], fftFrequencies[7]);
-	glUniform4f(uniform_Update_fs_4fv_fftPhases47[pg_ind_scenario],
-		fftPhases[4], fftPhases[5], fftPhases[6], fftPhases[7]);
-	//printf("Freq %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftFrequencies[0], fftFrequencies[1], fftFrequencies[2], fftFrequencies[3], fftFrequencies[4], fftFrequencies[5], fftFrequencies[6], fftFrequencies[7]);
-	//printf("Levels %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3], fftLevels[4], fftLevels[5], fftLevels[6], fftLevels[7]);
-	//printf("Phases %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftPhases[0], fftPhases[1], fftPhases[2], fftPhases[3], fftPhases[4], fftPhases[5], fftPhases[6], fftPhases[7]);
-	//printf("Freq %.2f\n", fftFrequencies[0]);
-	//printf("Levels %.2f\n", fftLevels[0]);
-	//printf("Phase %.2f\n", fftPhases[0]);
-#endif
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+		glUniform4f(uniform_Update_fs_4fv_fftLevels03[pg_ind_scenario],
+			fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3]);
+		glUniform4f(uniform_Update_fs_4fv_fftFrequencies03[pg_ind_scenario],
+			fftFrequencies[0], fftFrequencies[1], fftFrequencies[2], fftFrequencies[3]);
+		glUniform4f(uniform_Update_fs_4fv_fftPhases03[pg_ind_scenario],
+			fftPhases[0], fftPhases[1], fftPhases[2], fftPhases[3]);
+		glUniform4f(uniform_Update_fs_4fv_fftLevels47[pg_ind_scenario],
+			fftLevels[4], fftLevels[5], fftLevels[6], fftLevels[7]);
+		glUniform4f(uniform_Update_fs_4fv_fftFrequencies47[pg_ind_scenario],
+			fftFrequencies[4], fftFrequencies[5], fftFrequencies[6], fftFrequencies[7]);
+		glUniform4f(uniform_Update_fs_4fv_fftPhases47[pg_ind_scenario],
+			fftPhases[4], fftPhases[5], fftPhases[6], fftPhases[7]);
+		//printf("Freq %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftFrequencies[0], fftFrequencies[1], fftFrequencies[2], fftFrequencies[3], fftFrequencies[4], fftFrequencies[5], fftFrequencies[6], fftFrequencies[7]);
+		//printf("Levels %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftLevels[0], fftLevels[1], fftLevels[2], fftLevels[3], fftLevels[4], fftLevels[5], fftLevels[6], fftLevels[7]);
+		//printf("Phases %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", fftPhases[0], fftPhases[1], fftPhases[2], fftPhases[3], fftPhases[4], fftPhases[5], fftPhases[6], fftPhases[7]);
+		//printf("Freq %.2f\n", fftFrequencies[0]);
+		//printf("Levels %.2f\n", fftLevels[0]);
+		//printf("Phase %.2f\n", fftPhases[0]);
+	}
 
 	// flash BG weights
 	glUniform4f(uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght[pg_ind_scenario],

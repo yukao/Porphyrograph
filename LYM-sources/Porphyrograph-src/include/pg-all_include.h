@@ -160,11 +160,6 @@ using namespace cv;
 // light DMX commands
 #include <controller_library.h>
 
-// JUCE lib for sound analysis
-#if defined(pg_Project_Criton)
-#define PG_WITH_JUCE
-#endif
-
 // SENSORS
 #if defined(pg_Project_CAaudio)
 #define PG_PUREDATA_SOUND

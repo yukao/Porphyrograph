@@ -107,7 +107,7 @@ GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[PG_MAX_S
 GLint uniform_Update_fs_4fv_flashTrkCAWghts[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_path_data[PG_MAX_SCENARIOS] = {-1};
 
-// pg_Project_Criton PROJECT
+// JUCE AUDIO OUT
 GLint uniform_Update_fs_4fv_fftLevels03[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_4fv_fftFrequencies03[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Update_fs_4fv_fftPhases03[PG_MAX_SCENARIOS] = {-1};
@@ -602,14 +602,15 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_flashTrkCAWghts, "uniform_Update_fs_4fv_flashTrkCAWghts", pg_enum_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_path_data, "uniform_Update_path_data", pg_enum_shader_Update);
 
-#if defined(pg_Project_Criton)
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftLevels03, "uniform_Update_fs_4fv_fftLevels03", pg_enum_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftFrequencies03, "uniform_Update_fs_4fv_fftFrequencies03", pg_enum_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftPhases03, "uniform_Update_fs_4fv_fftPhases03", pg_enum_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftLevels47, "uniform_Update_fs_4fv_fftLevels47", pg_enum_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftFrequencies47, "uniform_Update_fs_4fv_fftFrequencies47", pg_enum_shader_Update);
-		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftPhases47, "uniform_Update_fs_4fv_fftPhases47", pg_enum_shader_Update);
-#endif
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_JUCE_weight]) {
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftLevels03, "uniform_Update_fs_4fv_fftLevels03", pg_enum_shader_Update);
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftFrequencies03, "uniform_Update_fs_4fv_fftFrequencies03", pg_enum_shader_Update);
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftPhases03, "uniform_Update_fs_4fv_fftPhases03", pg_enum_shader_Update);
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftLevels47, "uniform_Update_fs_4fv_fftLevels47", pg_enum_shader_Update);
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftFrequencies47, "uniform_Update_fs_4fv_fftFrequencies47", pg_enum_shader_Update);
+			pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_fftPhases47, "uniform_Update_fs_4fv_fftPhases47", pg_enum_shader_Update);
+		}
+
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack, "uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack", pg_enum_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght, "uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght", pg_enum_shader_Update);
 		pg_allocateBindAndCheckUniform(indConfig, uniform_Update_fs_3fv_repop_ColorCA, "uniform_Update_fs_3fv_repop_ColorCA", pg_enum_shader_Update);

@@ -110,7 +110,7 @@ extern GLint uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow[P
 extern GLint uniform_Update_fs_4fv_flashTrkCAWghts[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_path_data[PG_MAX_SCENARIOS];
 
-// pg_Project_Criton PROJECT
+// JUCE AUDIO OUT
 extern GLint uniform_Update_fs_4fv_fftLevels03[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_fs_4fv_fftFrequencies03[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_fs_4fv_fftPhases03[PG_MAX_SCENARIOS];

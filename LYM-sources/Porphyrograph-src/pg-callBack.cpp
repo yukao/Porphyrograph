@@ -37,10 +37,14 @@ int pg_lastClearSceneIndex = -1;
 
 #ifdef _WIN32
 // +++++++++++++++++++++++ scripts for external control through python programming +++++
-// currently running script: NULLL if none
-string pg_currently_runnings_script_1 = "NULL";
-STARTUPINFOA pg_si_script_1 = { 0 };
-PROCESS_INFORMATION pg_pi_script_1;
+// currently running Python script: NULLL if none
+string pg_currently_runnings_script_python = "NULL";
+STARTUPINFOA pg_si_script_python = { 0 };
+PROCESS_INFORMATION pg_pi_script_python;
+// currently running binary script: NULLL if none
+string pg_currently_runnings_script_binary = "NULL";
+STARTUPINFOA pg_si_script_binary = { 0 };
+PROCESS_INFORMATION pg_pi_script_binary;
 #endif
 
 // +++++++++++++++++++++ CLEAR +++++++++++++++++++++++++++
@@ -166,27 +170,27 @@ void clearEcho_callBack(pg_Parameter_Input_Type param_input_type, bool scenario_
 		pg_isClearEcho = 1.f;
 	}
 }
-void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
+void script_python_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 #ifdef _WIN32
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_script_1]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_script_python]) {
 		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
-			// stops the current script #1 if one is active
-			if (pg_currently_runnings_script_1 != "NULL") {
-				if (pg_pi_script_1.hProcess != NULL) {
-					TerminateProcess(pg_pi_script_1.hProcess, 0);
+			// stops the current Python script if one is active
+			if (pg_currently_runnings_script_python != "NULL") {
+				if (pg_pi_script_python.hProcess != NULL) {
+					TerminateProcess(pg_pi_script_python.hProcess, 0);
 				}
 
-				std::cout << "quit script" << std::endl;
-				pg_currently_runnings_script_1 = "NULL";
+				std::cout << "quit Python script" << pg_currently_runnings_script_python << std::endl;
+				pg_currently_runnings_script_python = "NULL";
 			}
-			// launches a new current script #1 if one is given by the scenario
+			// launches a new Python script if one is given by the scenario
 			if (scenario_or_gui_command_value != "NULL") {
-				// launches the script #1
-				pg_currently_runnings_script_1 = scenario_or_gui_command_value;
-				string  full_script_name = pg_scripts_directory + pg_currently_runnings_script_1;
+				// launches the script
+				pg_currently_runnings_script_python = scenario_or_gui_command_value;
+				string  full_script_name = pg_scripts_directory + pg_currently_runnings_script_python;
 				unsigned int serverPort = 7000;
 				for (pg_IPClient& client : pg_IP_Clients) {
-					if (strcmp("udp_script_1_send", client.id.c_str()) == 0) {
+					if (strcmp("udp_script_python_send", client.id.c_str()) == 0) {
 						serverPort = client.Remote_server_port;
 						break;
 					}
@@ -201,11 +205,11 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 
 				sprintf(pg_errorStr, "python.exe %s -p %d -s %d", full_script_name.c_str(), clientPort, serverPort);
 				std::cout << "run script " << string(pg_errorStr) << std::endl;
-				pg_si_script_1.cb = sizeof(STARTUPINFO);
-				pg_si_script_1.dwFlags = STARTF_USESHOWWINDOW;
-				pg_si_script_1.wShowWindow = FALSE;
-				if (pg_pi_script_1.hProcess != NULL) {
-					TerminateProcess(pg_pi_script_1.hProcess, 0);
+				pg_si_script_python.cb = sizeof(STARTUPINFO);
+				pg_si_script_python.dwFlags = STARTF_USESHOWWINDOW;
+				pg_si_script_python.wShowWindow = FALSE;
+				if (pg_pi_script_python.hProcess != NULL) {
+					TerminateProcess(pg_pi_script_python.hProcess, 0);
 				}
 				if (!CreateProcessA(NULL,   // No module name (use command line)
 					pg_errorStr,        // Command line
@@ -215,8 +219,70 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 					0,              // No creation flags
 					NULL,           // Use parent's environment block
 					NULL,           // Use parent's starting directory 
-					&pg_si_script_1,            // Pointer to STARTUPINFO structure
-					&pg_pi_script_1)           // Pointer to PROCESS_INFORMATION structure
+					&pg_si_script_python,            // Pointer to STARTUPINFO structure
+					&pg_pi_script_python)           // Pointer to PROCESS_INFORMATION structure
+					)
+				{
+					printf("CreateProcess failed (%d).\n", GetLastError());
+					return;
+				}
+				//system(pg_errorStr);
+			}
+		}
+	}
+#endif
+}
+void script_binary_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
+#ifdef _WIN32
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_script_binary]) {
+		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
+			// stops the current binary script if one is active
+			if (pg_currently_runnings_script_binary != "NULL") {
+				if (pg_pi_script_binary.hProcess != NULL) {
+					TerminateProcess(pg_pi_script_binary.hProcess, 0);
+				}
+
+				std::cout << "quit binary script" << pg_currently_runnings_script_binary  << std::endl;
+				pg_currently_runnings_script_binary = "NULL";
+			}
+			// launches a new binary script if one is given by the scenario
+			if (scenario_or_gui_command_value != "NULL") {
+				// launches the script #1
+				pg_currently_runnings_script_binary = scenario_or_gui_command_value;
+				string  full_script_name = pg_scripts_directory + pg_currently_runnings_script_binary;
+				unsigned int serverPort = 7000;
+				for (pg_IPClient& client : pg_IP_Clients) {
+					if (strcmp("udp_script_binary_send", client.id.c_str()) == 0) {
+						serverPort = client.Remote_server_port;
+						break;
+					}
+				}
+				unsigned int clientPort = 9000;
+				for (pg_IPServer& server : pg_IP_Servers) {
+					if (strcmp("udp_script_binary_receive", server.id.c_str()) == 0) {
+						clientPort = server.Local_server_port;
+						break;
+					}
+				}
+
+				sprintf(pg_errorStr, "%s %d %d", full_script_name.c_str(), clientPort, serverPort);
+				std::cout << "run script " << string(pg_errorStr) << std::endl;
+				pg_si_script_binary.cb = sizeof(STARTUPINFO);
+				pg_si_script_binary.dwFlags = STARTF_USESHOWWINDOW;
+				pg_si_script_binary.wShowWindow = FALSE;
+				if (pg_pi_script_binary.hProcess != NULL) {
+					TerminateProcess(pg_pi_script_binary.hProcess, 0);
+				}
+				if (!CreateProcessA(NULL,   // No module name (use command line)
+					pg_errorStr,        // Command line
+					NULL,           // Process handle not inheritable
+					NULL,           // Thread handle not inheritable
+					FALSE,          // Set handle inheritance to FALSE
+					0,              // No creation flags
+					NULL,           // Use parent's environment block
+					NULL,           // Use parent's starting directory 
+					&pg_si_script_binary,            // Pointer to STARTUPINFO structure
+					&pg_pi_script_binary)           // Pointer to PROCESS_INFORMATION structure
 					)
 				{
 					printf("CreateProcess failed (%d).\n", GetLastError());
@@ -231,8 +297,7 @@ void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // PEN CALLBACKS (SCENARIO BASED COMMANDS)
-//////////////////////////////////////////////////////////////////////////////////////////////////////  
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 void pen_color_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value) {
 	if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
 		sprintf(pg_AuxString, "/pen_colorPreset -1.0");

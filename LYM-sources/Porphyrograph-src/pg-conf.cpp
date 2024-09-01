@@ -858,7 +858,6 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 					sprintf(pg_errorStr, "Error: missing final value in scene %d var %d (%s)\n", nbScenesInScenario + 1, indVar, temp.c_str()); pg_ReportError(pg_errorStr); throw 50;
 				}
 				sstream >> temp;
-				//printf("val %s\n", temp.c_str());
 				if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
 					newScene.scene_final_parameters[indVar].val_string = temp;
 				}

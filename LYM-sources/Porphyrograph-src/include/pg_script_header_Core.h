@@ -53,6 +53,7 @@
 #define var_sound_volume
 #define var_soundtrack_PA_weight
 #define var_soundtrack_PD_weight
+#define var_soundtrack_JUCE_weight
 #define var_camera_gamma
 #define var_camera_gamma_pulse
 #define var_cameraBrightness
@@ -275,7 +276,8 @@
 #define var_repop_part_pulse
 #define var_repop_path
 #define var_repop_path_pulse
-#define var_script_1
+#define var_script_python
+#define var_script_binary
 #define var_pg_metawear
 #define var_sensor_activation
 #define var_sensor_beat_duration
@@ -434,6 +436,7 @@
 #define var_light_strobe
 #define var_light_strobe_pulse
 #define var_currentLightScene
+#define var_fft_scale
 enum InterpVarIDs{ 
   _CA1_CA2_weight = 0,
   _CA1SubType,
@@ -489,6 +492,7 @@ enum InterpVarIDs{
   _sound_volume,
   _soundtrack_PA_weight,
   _soundtrack_PD_weight,
+  _soundtrack_JUCE_weight,
   _camera_gamma,
   _camera_gamma_pulse,
   _cameraBrightness,
@@ -711,7 +715,8 @@ enum InterpVarIDs{
   _repop_part_pulse,
   _repop_path,
   _repop_path_pulse,
-  _script_1,
+  _script_python,
+  _script_binary,
   _pg_metawear,
   _sensor_activation,
   _sensor_beat_duration,
@@ -870,6 +875,7 @@ enum InterpVarIDs{
   _light_strobe,
   _light_strobe_pulse,
   _currentLightScene,
+  _fft_scale,
   _MaxInterpVarIDs};
 extern float CA1_CA2_weight      ;
 extern int   CA1SubType          ;
@@ -925,6 +931,7 @@ extern float sound_min           ;
 extern float sound_volume        ;
 extern float soundtrack_PA_weight;
 extern float soundtrack_PD_weight;
+extern float soundtrack_JUCE_weight;
 extern float camera_gamma        ;
 extern float camera_gamma_pulse  ;
 extern float cameraBrightness    ;
@@ -1147,7 +1154,8 @@ extern float repop_part          ;
 extern float repop_part_pulse    ;
 extern float repop_path          ;
 extern float repop_path_pulse    ;
-extern string script_1            ;
+extern string script_python       ;
+extern string script_binary       ;
 extern bool  pg_metawear         ;
 extern int   sensor_activation   ;
 extern float sensor_beat_duration;
@@ -1306,6 +1314,7 @@ extern float light_dimmer_pulse  [(PG_NB_LIGHTS+1)];
 extern float light_strobe        [(PG_NB_LIGHTS+1)];
 extern float light_strobe_pulse  [(PG_NB_LIGHTS+1)];
 extern int   currentLightScene   ;
+extern float fft_scale           ;
 enum VarTypes { _pg_bool = 0 , _pg_int , _pg_float , _pg_sign , _pg_path , _pg_string };
 enum PulseTypes { _pg_pulsed_absolute = 0 , _pg_pulsed_uniform , _pg_pulsed_differential , _pg_pulsed_special , _pg_pulsed_none };
 extern VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs];

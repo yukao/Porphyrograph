@@ -34,11 +34,15 @@ extern float pg_isClearLayer;
 extern float pg_isClearAllLayers;
 extern float pg_isClearEcho;
 
-// currently running script: NULLL if none
-extern string pg_currently_runnings_script_1;
+// currently running Python script: NULLL if none
+extern string pg_currently_runnings_script_python;
+// currently running binary script: NULLL if none
+extern string pg_currently_runnings_script_binary;
 
 // +++++++++++++++++++++++ scripts for external control through python programming +++++
-extern PROCESS_INFORMATION pg_pi_script_1;
+extern PROCESS_INFORMATION pg_pi_script_python;
+// +++++++++++++++++++++++ scripts for external binary +++++
+extern PROCESS_INFORMATION pg_pi_script_binary;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXPORTED FUNCTIONS

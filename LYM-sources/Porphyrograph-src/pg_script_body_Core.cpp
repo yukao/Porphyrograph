@@ -53,6 +53,7 @@ float sound_min            = float(0);
 float sound_volume         = float(2);
 float soundtrack_PA_weight = float(0);
 float soundtrack_PD_weight = float(0);
+float soundtrack_JUCE_weight = float(0);
 float camera_gamma         = float(1);
 float camera_gamma_pulse   = float(0);
 float cameraBrightness     = float(-3);
@@ -275,7 +276,8 @@ float repop_part           = float(0);
 float repop_part_pulse     = float(0);
 float repop_path           = float(0);
 float repop_path_pulse     = float(0);
-string script_1             = "NULL";
+string script_python        = "NULL";
+string script_binary        = "NULL";
 bool  pg_metawear          = 0;
 int   sensor_activation    = 0;
 float sensor_beat_duration = float(1);
@@ -434,6 +436,7 @@ float light_dimmer_pulse  [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.
 float light_strobe        [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
 float light_strobe_pulse  [(PG_NB_LIGHTS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
 int   currentLightScene    = -1;
+float fft_scale            = float(1700);
 VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = { 
 	_pg_float,
 	_pg_int,
@@ -494,6 +497,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -712,6 +716,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_string,
+	_pg_string,
 	_pg_bool,
 	_pg_int,
 	_pg_float,
@@ -870,6 +875,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_int,
+	_pg_float,
 };
 int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = { 
 	{-1, -1},
@@ -956,6 +962,7 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
 	{1, (PG_NB_CLIPART_LAYERS+1)},
 	{1, (PG_NB_CLIPART_LAYERS+1)},
 	{-1, -1},
@@ -1197,6 +1204,7 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{-1, -1},
@@ -1306,6 +1314,7 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{1, (PG_NB_LIGHTS+1)},
 	{1, (PG_NB_LIGHTS+1)},
 	{1, (PG_NB_LIGHTS+1)},
+	{-1, -1},
 	{-1, -1},
 };
 void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = { 
@@ -1363,6 +1372,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&sound_volume,
 	(void *)&soundtrack_PA_weight,
 	(void *)&soundtrack_PD_weight,
+	(void *)&soundtrack_JUCE_weight,
 	(void *)&camera_gamma,
 	(void *)&camera_gamma_pulse,
 	(void *)&cameraBrightness,
@@ -1585,7 +1595,8 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&repop_part_pulse,
 	(void *)&repop_path,
 	(void *)&repop_path_pulse,
-	(void *)&script_1,
+	(void *)&script_python,
+	(void *)&script_binary,
 	(void *)&pg_metawear,
 	(void *)&sensor_activation,
 	(void *)&sensor_beat_duration,
@@ -1744,6 +1755,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&light_strobe,
 	(void *)&light_strobe_pulse,
 	(void *)&currentLightScene,
+	(void *)&fft_scale,
 };
 void flashCameraTrkLength_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void flashCameraTrkLength_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1784,6 +1796,10 @@ void soundtrack_PA_weight_callBack_generic(pg_Parameter_Input_Type param_input_t
 void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void soundtrack_PD_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	soundtrack_PD_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
+}
+void soundtrack_JUCE_weight_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
+void soundtrack_JUCE_weight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	soundtrack_JUCE_weight_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
 }
 void cameraBrightness_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void cameraBrightness_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -1917,9 +1933,13 @@ void repop_valuePart_callBack(pg_Parameter_Input_Type param_input_type, float sc
 void repop_valuePart_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	repop_valuePart_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
 }
-void script_1_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
-void script_1_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	script_1_callBack(param_input_type, scenario_or_gui_command_value.val_string);
+void script_python_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
+void script_python_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	script_python_callBack(param_input_type, scenario_or_gui_command_value.val_string);
+}
+void script_binary_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
+void script_binary_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	script_binary_callBack(param_input_type, scenario_or_gui_command_value.val_string);
 }
 void sensor_activation_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or_gui_command_value);
 void sensor_activation_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -2052,6 +2072,7 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	&soundtrack_PA_weight_callBack_generic,
 	&soundtrack_PD_weight_callBack_generic,
+	&soundtrack_JUCE_weight_callBack_generic,
 	NULL,
 	NULL,
 	&cameraBrightness_callBack_generic,
@@ -2274,7 +2295,8 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
-	&script_1_callBack_generic,
+	&script_python_callBack_generic,
+	&script_binary_callBack_generic,
 	NULL,
 	&sensor_activation_callBack_generic,
 	NULL,
@@ -2433,8 +2455,10 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	&currentLightScene_callBack_generic,
+	NULL,
 };
 void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int) = { 
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2870,6 +2894,8 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
 };
 std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = { 
   "CA1_CA2_weight",
@@ -2926,6 +2952,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "sound_volume",
   "soundtrack_PA_weight",
   "soundtrack_PD_weight",
+  "soundtrack_JUCE_weight",
   "camera_gamma",
   "camera_gamma_pulse",
   "cameraBrightness",
@@ -3148,7 +3175,8 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "repop_part_pulse",
   "repop_path",
   "repop_path_pulse",
-  "script_1",
+  "script_python",
+  "script_binary",
   "pg_metawear",
   "sensor_activation",
   "sensor_beat_duration",
@@ -3307,6 +3335,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "light_strobe",
   "light_strobe_pulse",
   "currentLightScene",
+  "fft_scale",
 };
 PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = { 
   _pg_pulsed_none,
@@ -3363,6 +3392,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3584,6 +3614,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3742,6 +3773,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
 };
@@ -3800,6 +3832,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "sound_volume",
   "soundtrack_PA_weight",
   "soundtrack_PD_weight",
+  "soundtrack_JUCE_weight",
   "camera_gamma",
   "camera_gamma_pulse",
   "cameraBrightness",
@@ -4022,7 +4055,8 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "repop_part_pulse",
   "repop_path",
   "repop_path_pulse",
-  "script_1",
+  "script_python",
+  "script_binary",
   "pg_metawear",
   "sensor_activation",
   "sensor_beat_duration",
@@ -4181,4 +4215,5 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "light_strobe",
   "light_strobe_pulse",
   "currentLightScene",
+  "fft_scale",
 };
