@@ -1,8 +1,8 @@
-/*! \file pg-conf.cpp
+/*! \file pg-scenarioParse.cpp
  *
  * 
  * 
- *     File pg-conf.cpp
+ *     File pg-scenarioParse.cpp
  * 
  *
  *

@@ -1,8 +1,8 @@
-/*! \file pg-conf.h
+/*! \file pg-scenarioParse.h
  * 
  * 
 * 
- *     File pg-conf.h
+ *     File pg-scenarioParse.h
  * 
  *
  *
@@ -22,8 +22,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef PG_CONF_H
-#define PG_CONF_H
+#ifndef PG_SCENARIOPARSE_H
+#define PG_SCENARIOPARSE_H
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // CONSTs

@@ -222,7 +222,7 @@ class ScenarioValue;
 
 #include "pg-shader.h"
 #include "pg-clipArt.h"
-#include "pg-conf.h"
+#include "pg-scenarioParse.h"
 
 #include "pg-light.h"
 
