@@ -714,7 +714,7 @@ void pg_aliasScriptSetup(string address_string, string string_argument_0,
 		break;
 	case _take_snapshot:
 		pg_draw_scene(pg_enum_render_Jpg);
-		sprintf(pg_AuxString, "/snapshot_ID Snap_%04d", pg_Jpg_Capture_param.indJpgSnapshot); pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(pg_AuxString, "/snapshot_ID Snap_%04d", pg_Jpg_Capture_param.indImgSnapshot); pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 		break;
 	case _muteRightScreen_onOff:
 		pg_muteRightScreen = !pg_muteRightScreen;
@@ -722,7 +722,7 @@ void pg_aliasScriptSetup(string address_string, string string_argument_0,
 	case _isClearAllLayers:
 		pg_isClearAllLayers = 1.f;
 		break;
-		// +++++++++++++++++ LAUNCH, QUIT ++++++++++++++++++++++++++ 
+		// +++++++++++++++++ LAUNCH, QUIT ++++++++++++++++++++++'++++ 
 	case _launch:
 		pg_launch_performance(0);
 		break;
@@ -1693,7 +1693,8 @@ void pg_aliasScript(string address_string, string string_argument_0,
 
 	// unregistered command (neither scenario variable nor program defined command)
 	if (indVar == -1) {
-		printf("unregistered command (neither scenario variable nor program defined command) indVar %d _fftLevel8loudestFreqBins %d indexChangedValue%d\n", indVar, _fftLevel8loudestFreqBins, indexChangedValue);
+		//printf("unregistered command (neither scenario variable nor program defined command) indVar %d _fftLevel8loudestFreqBins %d indexChangedValue%d\n", 
+		//	indVar, _fftLevel8loudestFreqBins, indexChangedValue);
 
 		// touch OSC sends OSC commands for each tab change, we have decided to suffix their address with _DISPLAY
 		string touchOSC_tab_command_ending("_DISPLAY");

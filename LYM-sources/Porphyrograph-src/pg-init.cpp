@@ -748,9 +748,6 @@ void pg_initGeometry_quads(void) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	pg_printOglError(32);
-
-	printf("Geometry initialized. Working size: %dx%d & full size: %dx%d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT,
-		PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

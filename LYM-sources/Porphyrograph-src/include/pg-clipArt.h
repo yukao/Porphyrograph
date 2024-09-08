@@ -31,10 +31,6 @@
 // CONSTs
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ClipArt GPU
-// color
-enum pg_ClipArt_Colors_Types { pg_enum_ClipArt_nat = 0, pg_enum_ClipArt_white, pg_enum_ClipArt_red, pg_enum_ClipArt_green, pg_enum_ClipArt_blue, pg_enum_ClipArt_yellow, pg_enum_ClipArt_cyan, pg_enum_ClipArt_magenta, pg_enum_ClipArt_black };
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLIPART MANAGEMENT CLASS
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,11 +47,13 @@ public:
 	float pg_ClipArt_Translation_X;
 	float pg_ClipArt_Translation_Y;
 	// color
-	pg_ClipArt_Colors_Types* pg_ClipArt_Colors;
+	std::string *pg_ClipArt_Colors;
 	// subpath display
 	bool* pg_ClipArt_SubPath;
 	// base ID of the GPU files
 	GLuint ClipArt_file_baseID;
+	// fill color table
+	unsigned int *pg_ClipArt_path_fill_color;
 	ClipArt(void) {
 		// number of paths for each file
 		pg_nb_paths_in_ClipArt = 0;
@@ -72,7 +70,10 @@ public:
 		pg_ClipArt_SubPath = NULL;
 		// base ID of the GPU files
 		ClipArt_file_baseID = NULL_ID;
+		// fill color table
+		pg_ClipArt_path_fill_color = NULL;
 	}
+	void pg_Display_One_ClipArt(int indLayer);
 	~ClipArt(void) {
 	}
 };

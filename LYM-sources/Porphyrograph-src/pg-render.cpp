@@ -1251,23 +1251,23 @@ void pg_window_display(void) {
 	// OPTIONAL SVG SNAPSHOTS
 	// Svg screen shots
 	// printf("Draw Svg\n" );
-	if (take_snapshots && pg_Svg_Capture_param.outputSvg) {
+	if (take_snapshots && pg_Svg_Capture_param.outputImg) {
 		// frame count based output
-		if (pg_Svg_Capture_param.stepSvgInFrames > 0) {
-			if (pg_FrameNo % pg_Svg_Capture_param.stepSvgInFrames == 0
-				&& pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames >= pg_Svg_Capture_param.beginSvg &&
-				pg_FrameNo / pg_Svg_Capture_param.stepSvgInFrames <= pg_Svg_Capture_param.endSvg) {
+		if (pg_Svg_Capture_param.stepImgInFrames > 0) {
+			if (pg_FrameNo % pg_Svg_Capture_param.stepImgInFrames == 0
+				&& pg_FrameNo / pg_Svg_Capture_param.stepImgInFrames >= pg_Svg_Capture_param.beginImg &&
+				pg_FrameNo / pg_Svg_Capture_param.stepImgInFrames <= pg_Svg_Capture_param.endImg) {
 				pg_draw_scene( pg_enum_render_Svg );
 			}
 		}
-		else if (pg_Svg_Capture_param.stepSvgInSeconds > 0) {
-			if (pg_Svg_Capture_param.nextSvgCapture < 0) {
-				pg_Svg_Capture_param.nextSvgCapture = pg_CurrentClockTime;
+		else if (pg_Svg_Capture_param.stepImgInSeconds > 0) {
+			if (pg_Svg_Capture_param.nextImgCapture < 0) {
+				pg_Svg_Capture_param.nextImgCapture = pg_CurrentClockTime;
 			}
-			if (pg_CurrentClockTime >= pg_Svg_Capture_param.nextSvgCapture
-				&& pg_CurrentClockTime >= pg_Svg_Capture_param.beginSvg &&
-				pg_CurrentClockTime <= pg_Svg_Capture_param.endSvg) {
-				pg_Svg_Capture_param.nextSvgCapture = max(pg_Svg_Capture_param.nextSvgCapture + pg_Svg_Capture_param.stepSvgInSeconds, pg_CurrentClockTime);
+			if (pg_CurrentClockTime >= pg_Svg_Capture_param.nextImgCapture
+				&& pg_CurrentClockTime >= pg_Svg_Capture_param.beginImg &&
+				pg_CurrentClockTime <= pg_Svg_Capture_param.endImg) {
+				pg_Svg_Capture_param.nextImgCapture = max(pg_Svg_Capture_param.nextImgCapture + pg_Svg_Capture_param.stepImgInSeconds, pg_CurrentClockTime);
 				pg_draw_scene( pg_enum_render_Svg );
 			}
 		}
@@ -1277,23 +1277,23 @@ void pg_window_display(void) {
 	// OPTIONAL PNG SNAPSHOTS
 	// Png screen shots
 	// printf("Draw Png\n" );
-	if (take_snapshots && pg_Png_Capture_param.outputPng ) {
+	if (take_snapshots && pg_Png_Capture_param.outputImg ) {
 		// frame count based output
-		if (pg_Png_Capture_param.stepPngInFrames > 0) {
-			if (pg_FrameNo % pg_Png_Capture_param.stepPngInFrames == 0
-				&& pg_FrameNo / pg_Png_Capture_param.stepPngInFrames >= pg_Png_Capture_param.beginPng &&
-				pg_FrameNo / pg_Png_Capture_param.stepPngInFrames <= pg_Png_Capture_param.endPng) {
+		if (pg_Png_Capture_param.stepImgInFrames > 0) {
+			if (pg_FrameNo % pg_Png_Capture_param.stepImgInFrames == 0
+				&& pg_FrameNo / pg_Png_Capture_param.stepImgInFrames >= pg_Png_Capture_param.beginImg &&
+				pg_FrameNo / pg_Png_Capture_param.stepImgInFrames <= pg_Png_Capture_param.endImg) {
 				pg_draw_scene( pg_enum_render_Png );
 			}
 		}
-		else if (pg_Png_Capture_param.stepPngInSeconds > 0) {
-			if (pg_Png_Capture_param.nextPngCapture < 0) {
-				pg_Png_Capture_param.nextPngCapture = pg_CurrentClockTime;
+		else if (pg_Png_Capture_param.stepImgInSeconds > 0) {
+			if (pg_Png_Capture_param.nextImgCapture < 0) {
+				pg_Png_Capture_param.nextImgCapture = pg_CurrentClockTime;
 			}
-			if (pg_CurrentClockTime >= pg_Png_Capture_param.nextPngCapture
-				&& pg_CurrentClockTime >= pg_Png_Capture_param.beginPng &&
-				pg_CurrentClockTime <= pg_Png_Capture_param.endPng) {
-				pg_Png_Capture_param.nextPngCapture = max(pg_Png_Capture_param.nextPngCapture + pg_Png_Capture_param.stepPngInSeconds, pg_CurrentClockTime);
+			if (pg_CurrentClockTime >= pg_Png_Capture_param.nextImgCapture
+				&& pg_CurrentClockTime >= pg_Png_Capture_param.beginImg &&
+				pg_CurrentClockTime <= pg_Png_Capture_param.endImg) {
+				pg_Png_Capture_param.nextImgCapture = max(pg_Png_Capture_param.nextImgCapture + pg_Png_Capture_param.stepImgInSeconds, pg_CurrentClockTime);
 				pg_draw_scene( pg_enum_render_Png );
 			}
 		}
@@ -1303,23 +1303,23 @@ void pg_window_display(void) {
 	// OPTIONAL JPG SNAPSHOTS
 	// Jpg screen shots
 	// printf("Draw Jpg\n"  );
-	if (take_snapshots && pg_Jpg_Capture_param.outputJpg) {
+	if (take_snapshots && pg_Jpg_Capture_param.outputImg) {
 		// frame count based output
-		if (pg_Jpg_Capture_param.stepJpgInFrames > 0) {
-			if (pg_FrameNo % pg_Jpg_Capture_param.stepJpgInFrames == 0
-				&& pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames >= pg_Jpg_Capture_param.beginJpg &&
-				pg_FrameNo / pg_Jpg_Capture_param.stepJpgInFrames <= pg_Jpg_Capture_param.endJpg) {
+		if (pg_Jpg_Capture_param.stepImgInFrames > 0) {
+			if (pg_FrameNo % pg_Jpg_Capture_param.stepImgInFrames == 0
+				&& pg_FrameNo / pg_Jpg_Capture_param.stepImgInFrames >= pg_Jpg_Capture_param.beginImg &&
+				pg_FrameNo / pg_Jpg_Capture_param.stepImgInFrames <= pg_Jpg_Capture_param.endImg) {
 				pg_draw_scene( pg_enum_render_Jpg );
 			}
 		}
-		else if (pg_Jpg_Capture_param.stepJpgInSeconds > 0) {
-			if (pg_Jpg_Capture_param.nextJpgCapture < 0) {
-				pg_Jpg_Capture_param.nextJpgCapture = pg_CurrentClockTime;
+		else if (pg_Jpg_Capture_param.stepImgInSeconds > 0) {
+			if (pg_Jpg_Capture_param.nextImgCapture < 0) {
+				pg_Jpg_Capture_param.nextImgCapture = pg_CurrentClockTime;
 			}
-			if (pg_CurrentClockTime >= pg_Jpg_Capture_param.nextJpgCapture
-				&& pg_CurrentClockTime >= pg_Jpg_Capture_param.beginJpg &&
-				pg_CurrentClockTime <= pg_Jpg_Capture_param.endJpg) {
-				pg_Jpg_Capture_param.nextJpgCapture = max(pg_Jpg_Capture_param.nextJpgCapture + pg_Jpg_Capture_param.stepJpgInSeconds, pg_CurrentClockTime);
+			if (pg_CurrentClockTime >= pg_Jpg_Capture_param.nextImgCapture
+				&& pg_CurrentClockTime >= pg_Jpg_Capture_param.beginImg &&
+				pg_CurrentClockTime <= pg_Jpg_Capture_param.endImg) {
+				pg_Jpg_Capture_param.nextImgCapture = max(pg_Jpg_Capture_param.nextImgCapture + pg_Jpg_Capture_param.stepImgInSeconds, pg_CurrentClockTime);
 				pg_draw_scene( pg_enum_render_Jpg );
 				//printf("nextJpgCapture %.2f pg_CurrentClockTime %.2f\n", nextJpgCapture, pg_CurrentClockTime);
 			}
@@ -2038,7 +2038,7 @@ void pg_ClipArtRenderingPass(void) {
 				pg_Display_ClipArt_Text(&pg_Ind_Current_DisplayText, 1);
 			}
 			:*/
-			pg_Display_ClipArt_Text(&pg_Ind_Current_DisplayText, int(moving_messages));
+			pg_Display_ClipArt_Text(&pg_Ind_Current_DisplayText, moving_messages);
 		}
 		else {
 			pg_Display_All_ClipArt(activeClipArts);
@@ -3134,13 +3134,13 @@ void pg_draw_scene(DrawingMode mode) {
 	// ******************** Svg output ********************
 	if (mode == pg_enum_render_Svg) {
 		cv::String imageFileName;
-		pg_Svg_Capture_param.indSvgSnapshot++;
+		pg_Svg_Capture_param.indImgSnapshot++;
 
 		imageFileName = format("%s%s-%s-%04d.svg",
 			pg_snapshots_dir_path_name.c_str(),
-			pg_Svg_Capture_param.Svg_file_name.c_str(),
+			pg_Svg_Capture_param.Img_file_name.c_str(),
 			pg_date_stringStream.str().c_str(),
-			pg_Svg_Capture_param.indSvgSnapshot);
+			pg_Svg_Capture_param.indImgSnapshot);
 		pg_logCurrentLineSceneVariables(imageFileName);
 
 		pg_writesvg(imageFileName);
@@ -3152,21 +3152,21 @@ void pg_draw_scene(DrawingMode mode) {
 		//pDataWritePng.h = PG_WINDOW_HEIGHT;
 		cv::String imageFileName;
 
-		pg_Png_Capture_param.indPngSnapshot++;
+		pg_Png_Capture_param.indImgSnapshot++;
 
 		imageFileName = format("%s%s-%s-%04d.png",
 			pg_snapshots_dir_path_name.c_str(),
-			pg_Png_Capture_param.Png_file_name.c_str(),
+			pg_Png_Capture_param.Img_file_name.c_str(),
 			pg_date_stringStream.str().c_str(),
-			pg_Png_Capture_param.indPngSnapshot);
+			pg_Png_Capture_param.indImgSnapshot);
 		struct stat buffer;
 		int count = 0;
 		while (stat(imageFileName.c_str(), &buffer) == 0) {
 			imageFileName = format("%s%s-%s-%04d-%03d.png",
 				pg_snapshots_dir_path_name.c_str(),
-				pg_Png_Capture_param.Png_file_name.c_str(),
+				pg_Png_Capture_param.Img_file_name.c_str(),
 				pg_date_stringStream.str().c_str(),
-				pg_Png_Capture_param.indPngSnapshot, count);
+				pg_Png_Capture_param.indImgSnapshot, count);
 			count++;
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);
@@ -3181,42 +3181,10 @@ void pg_draw_scene(DrawingMode mode) {
 		//   the rows are packed as tight as possible (no row padding), set the pack
 		//   alignment to 1.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		pngImgMatRGBInitial.create(PG_WINDOW_HEIGHT, pg_workingWindow_width, CV_8UC3); // GL_RGB
-		glReadPixels(0, 0, pg_workingWindow_width, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pngImgMatRGBInitial.data);
+		pngImgMatRGBInitial.create(PG_WINDOW_HEIGHT, PG_WINDOW_WIDTH, CV_8UC3); // GL_RGB
+		glReadPixels(0, 0, PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pngImgMatRGBInitial.data);
 
 		pg_writepng(imageFileName);
-/*
-		if (!threaded) {
-			pg_writepng((void*)&pDataWritePng);
-		}
-		else {
-#if defined(WIN32)
-			DWORD rc;
-			HANDLE  hThread = CreateThread(
-				NULL,                   // default security attributes
-				0,                      // use default stack size  
-				pg_writepng,		    // thread function name
-				(void*)&pDataWritePng,		    // argument to thread function 
-				0,                      // use default creation flags 
-				&rc);   // returns the thread identifier 
-			if (hThread == NULL) {
-				std::cout << "Error:unable to create thread pg_writepng" << std::endl;
-				exit(-1);
-			}
-			CloseHandle(hThread);
-#else
-			pthread_t drawing_thread;
-			int rc;
-			rc = pthread_create(&drawing_thread, NULL,
-				pg_writepng, (void*)pData);
-			if (rc) {
-				std::cout << "Error:unable to create thread pg_writepng" << rc << std::endl;
-				exit(-1);
-			}
-			pthread_exit(NULL);
-#endif
-		}
-*/
 	}
 
 	// ******************** Jpg output ********************
@@ -3225,26 +3193,26 @@ void pg_draw_scene(DrawingMode mode) {
 		//pDataWriteJpg.h = PG_WINDOW_HEIGHT;
 		cv::String imageFileName;
 	
-		pg_Jpg_Capture_param.indJpgSnapshot++;
+		pg_Jpg_Capture_param.indImgSnapshot++;
 
 		imageFileName = format("%s%s-%s-%04d.jpg",
 			pg_snapshots_dir_path_name.c_str(),
-			pg_Jpg_Capture_param.Jpg_file_name.c_str(),
+			pg_Jpg_Capture_param.Img_file_name.c_str(),
 			pg_date_stringStream.str().c_str(),
-			pg_Jpg_Capture_param.indJpgSnapshot);
+			pg_Jpg_Capture_param.indImgSnapshot);
 		struct stat buffer;
 		int count = 0;
 		while (stat(imageFileName.c_str(), &buffer) == 0) {
 			imageFileName = format("%s%s-%s-%04d-%03d.jpg",
 				pg_snapshots_dir_path_name.c_str(),
-				pg_Jpg_Capture_param.Jpg_file_name.c_str(),
+				pg_Jpg_Capture_param.Img_file_name.c_str(),
 				pg_date_stringStream.str().c_str(),
-				pg_Jpg_Capture_param.indJpgSnapshot, count);
+				pg_Jpg_Capture_param.indImgSnapshot, count);
 			count++;
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);
 		printf("Snapshot jpg step %d (%s)\n",
-			pg_Jpg_Capture_param.indJpgSnapshot,
+			pg_Jpg_Capture_param.indImgSnapshot,
 			imageFileName.c_str());
 
 		glReadBuffer(GL_BACK);
@@ -3258,8 +3226,8 @@ void pg_draw_scene(DrawingMode mode) {
 		//   alignment to 1.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		jpgImgMatRGBInitial.create(PG_WINDOW_HEIGHT, pg_workingWindow_width, CV_8UC3); // GL_RGB
-		glReadPixels(0, 0, pg_workingWindow_width, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
+		jpgImgMatRGBInitial.create(PG_WINDOW_HEIGHT, PG_WINDOW_WIDTH, CV_8UC3); // GL_RGB
+		glReadPixels(0, 0, PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
 			jpgImgMatRGBInitial.data);
 		pg_printOglError(706);
 

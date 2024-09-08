@@ -83,7 +83,7 @@ string playing_clipNameRight = "NULL";
 string playing_secondClipNameLeft = "NULL";
 string playing_secondClipNameRight = "NULL";
 int   activeClipArts       = 0;
-float moving_messages      = float(0);
+int   moving_messages      = 0;
 float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)] = {0.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, };
 float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, };
 float ClipArt_width        = float(0.1);
@@ -522,7 +522,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_string,
 	_pg_string,
 	_pg_int,
-	_pg_float,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_float,

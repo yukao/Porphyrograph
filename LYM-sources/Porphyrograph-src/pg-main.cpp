@@ -775,8 +775,6 @@ void pg_window_idle_browse(void) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pg_initGLutWindows(void) {
-	printf("GLUT size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
-
 	glutInitWindowSize(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_window_x]) {
 		window_x = int(pg_InitialValuesInterpVar[0][_window_x].val_num);
@@ -789,9 +787,9 @@ void pg_initGLutWindows(void) {
 	pg_CurrentWindow->glutID = glutCreateWindow(" ");
 
 	// window resize
-	printf("Window size %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 	glutReshapeWindow(PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
+	printf("GLUT size %dx%d offset %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, window_x, window_y);
 	// glutFullScreen();                      // Switch into full screen
 
 	///////////////////////////////////////////////

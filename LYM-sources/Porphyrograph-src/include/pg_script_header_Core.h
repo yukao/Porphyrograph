@@ -961,7 +961,7 @@ extern string playing_clipNameRight;
 extern string playing_secondClipNameLeft;
 extern string playing_secondClipNameRight;
 extern int   activeClipArts      ;
-extern float moving_messages     ;
+extern int   moving_messages     ;
 extern float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
 extern float ClipArt_layer_color_preset_pulse[(PG_NB_CLIPART_LAYERS+1)];
 extern float ClipArt_width       ;

@@ -31,6 +31,7 @@
 
 enum InterpolationType { pg_enum_linear_interpolation = 0, pg_enum_cosine_interpolation, pg_enum_bell_interpolation, pg_enum_bezier_interpolation, pg_enum_sawtooth_interpolation, pg_enum_stepwise_interpolation, pg_enum_keep_value, pg_enum_exponential_interpolation, EmptyInterpolationType };
 enum InitializationType { pg_enum_scenario_initial = 0, pg_current_value, EmptyInitializationType };
+enum CaptureType { pg_enum_Jpg = 0, pg_enum_Png, pg_enum_Svg, EmptyCaptureType };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // VARIALBE INTERPOLATION STRUCT, WINDOW DATA AND SCENE MANAGEMENT CLASSES
@@ -109,43 +110,18 @@ public:
 // SCREEN AND PATH CAPTURE MANAGEMENT CLASS
 ////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-// PNG capture
-class pg_Png_Capture {
+// IMG capture
+class pg_Img_Capture {
 public:
-	string                   Png_file_name;
-	int                      beginPng;
-	int                      endPng;
-	int                      stepPngInFrames;
-	double                   stepPngInSeconds;
-	double                   nextPngCapture;
-	bool                     outputPng;
-	int					    indPngSnapshot;
-};
-
-// JPG capture
-class pg_Jpg_Capture {
-public:
-	string                   Jpg_file_name;
-	int                      beginJpg;
-	int                      endJpg;
-	int                      stepJpgInFrames;
-	double                   stepJpgInSeconds;
-	double                   nextJpgCapture;
-	bool                     outputJpg;
-	int						indJpgSnapshot;
-};
-
-// Svg capture
-class pg_Svg_Capture {
-public:
-	string                   Svg_file_name;
-	int                      beginSvg;
-	int                      endSvg;
-	int                      stepSvgInFrames;
-	double                   stepSvgInSeconds;
-	double                   nextSvgCapture;
-	bool                     outputSvg;
-	int						indSvgSnapshot;
+	CaptureType              imageFormat;
+	string                   Img_file_name;
+	int                      beginImg;
+	int                      endImg;
+	int                      stepImgInFrames;
+	double                   stepImgInSeconds;
+	double                   nextImgCapture;
+	bool                     outputImg;
+	int					    indImgSnapshot;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,9 +142,9 @@ extern string pg_clips_directory;
 extern string pg_shaders_directory;
 
 // captures of snapshots
-extern pg_Png_Capture pg_Png_Capture_param;
-extern pg_Jpg_Capture pg_Jpg_Capture_param;
-extern pg_Svg_Capture pg_Svg_Capture_param;
+extern pg_Img_Capture pg_Png_Capture_param;
+extern pg_Img_Capture pg_Jpg_Capture_param;
+extern pg_Img_Capture pg_Svg_Capture_param;
 
 // csv log file name and path
 extern string pg_csv_logFile_name;

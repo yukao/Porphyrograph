@@ -40,8 +40,6 @@ ClipArt* pg_last_activated_ClipArt = NULL;
 int pg_nb_tot_SvgGpu_paths[PG_MAX_SCENARIOS];
 // base ID of the GPU paths
 GLuint pg_ClipArt_path_baseID[PG_MAX_SCENARIOS];
-// fill color table
-unsigned int** pg_ClipArt_path_fill_color[PG_MAX_SCENARIOS];
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // NVIDIA PATH RENDERING INITIALIZATION
@@ -93,40 +91,12 @@ void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtF
 	ind_gpu_path = 0;
 	while (std::getline(pathFin, line)) {
 		if (!line.empty() && ind_gpu_path < nb_gpu_paths) {
-			switch (pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_Colors[ind_gpu_path]) {
-			case pg_enum_ClipArt_nat:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0x888888"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_white:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0xFFFFFF"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_red:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0xFF0000"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_green:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0x00FF00"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_blue:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0x0000FF"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_yellow:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0xFFFF00"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_cyan:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0x00FFFF"), nullptr, 16));
-				break;
-			case pg_enum_ClipArt_magenta:
-				pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path]
-					= (unsigned int)(std::stoi(std::string("0xFF00FF"), nullptr, 16));
-				break;
-			}
+			// rewrites the string #XXXXXX as 0xXXXXXX to be transformed into an int
+			pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_path_fill_color[ind_gpu_path]
+				= (unsigned int)(std::stoi(std::string("0x") 
+					+ pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_Colors[ind_gpu_path].substr(1), nullptr, 16));
+			//printf("SVG Clip Art color: %d (%s)\n", pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path],
+			//	(std::string("0x") + pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_Colors[ind_gpu_path].substr(1)).c_str());
 			std::size_t found = std::string::npos;
 			found = line.find("<path");
 			if (found != std::string::npos) {
@@ -144,7 +114,7 @@ void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtF
 						lineAux = lineAux.substr(0, found);
 						lineAux = std::string("0x") + lineAux;
 						//printf("File %d Fill color of path #%d: %s\n", indClipArtFile, ind_gpu_path, lineAux.c_str());
-						pg_ClipArt_path_fill_color[indScenario][indClipArtFile][ind_gpu_path] = (unsigned int)(std::stoi(lineAux, nullptr, 16));
+						pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_path_fill_color[ind_gpu_path] = (unsigned int)(std::stoi(lineAux, nullptr, 16));
 					}
 				}
 				// looks for a path
@@ -220,11 +190,10 @@ void pg_loadAll_ClipArts(void) {
 			pg_initializeNVPathRender();
 			if (pg_has_NV_path_rendering) {
 				pg_ClipArt_path_baseID[indScenario] = glGenPathsNV(pg_nb_tot_SvgGpu_paths[indScenario]);
-				pg_ClipArt_path_fill_color[indScenario] = new unsigned int* [pg_ClipArts[indScenario].size()];
 				int nb_tot_paths = 0;
 				for (unsigned int indClipArtFile = 0; indClipArtFile < pg_ClipArts[indScenario].size(); indClipArtFile++) {
 					//std::cout << pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_fileNames << " (" << pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt << " paths), ";
-					pg_ClipArt_path_fill_color[indScenario][indClipArtFile] = new unsigned int[pg_nb_tot_SvgGpu_paths[indScenario]];
+					pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_path_fill_color = new unsigned int[pg_nb_tot_SvgGpu_paths[indScenario]];
 					pg_ClipArts[indScenario][indClipArtFile].ClipArt_file_baseID = pg_ClipArt_path_baseID[indScenario] + nb_tot_paths;
 					pg_LoadClipArtPathsToGPU(pg_ClipArts[indScenario][indClipArtFile].pg_ClipArt_fileNames,
 						pg_ClipArts[indScenario][indClipArtFile].pg_nb_paths_in_ClipArt, indClipArtFile, indScenario);
@@ -242,34 +211,6 @@ void pg_loadAll_ClipArts(void) {
 // CLIPART RENDERING
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static void pg_OpenGLBasicColors(int color) {
-	switch (color) {
-	case 0:
-		glColor3ub(0, 0, 0);
-		break;
-	case 1:
-		glColor3ub(255, 0, 0);
-		break;
-	case 2:
-		glColor3ub(0, 255, 0);
-		break;
-	case 3:
-		glColor3ub(0, 0, 255);
-		break;
-	case 4:
-		glColor3ub(255, 255, 0);
-		break;
-	case 5:
-		glColor3ub(255, 0, 255);
-		break;
-	case 6:
-		glColor3ub(0, 255, 255);
-		break;
-	case 7:
-		glColor3ub(255, 255, 255);
-		break;
-	}
-}
 static void pg_OpenGLIntColors(unsigned int color) {
 	unsigned int red, green, blue;
 	blue = color % 256;
@@ -278,6 +219,7 @@ static void pg_OpenGLIntColors(unsigned int color) {
 	//printf("color % d, red % d green % d blue % d\n", color, red, green, blue);
 	glColor3ub((unsigned char)(red), (unsigned char)(green), (unsigned char)(blue));
 }
+
 static void pg_OpenGLPaletteColors(Color& col, float palette_pulse) {
 	float pulsed_color[3] = { 0.f };
 	pg_compute_pulsed_palette_color(col.color, palette_pulse, col.grey, palette_pulse, pulsed_color, pg_enum_CLIP_ART_COLOR);
@@ -289,7 +231,7 @@ static void pg_OpenGLPaletteColors(Color& col, float palette_pulse) {
 	glColor3ub((unsigned char)(red), (unsigned char)(green), (unsigned char)(blue));
 }
 
-static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
+void ClipArt::pg_Display_One_ClipArt(int indLayer) {
 	int low_palette = -1;
 	float alpha = 0;
 	float palette_pulse = 0.f;
@@ -323,12 +265,12 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 	}
 	else {
 		//printf("config %d active clipart display %d layer %d color %d\n", pg_ind_scenario, indClipArt, indLayer, 
-		//	pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_path_fill_color[indLayer]);
+		//	pg_ClipArt_path_fill_color[indLayer]);
 		// original clip art color for surface filling
-		pg_OpenGLIntColors(pg_ClipArt_path_fill_color[pg_ind_scenario][indClipArt][indLayer]);
+		pg_OpenGLIntColors(pg_ClipArt_path_fill_color[indLayer]);
 	}
-	glStencilFillPathNV(pg_ClipArts[pg_ind_scenario][indClipArt].ClipArt_file_baseID + indLayer, GL_COUNT_UP_NV, 0x1F);
-	glCoverFillPathNV(pg_ClipArts[pg_ind_scenario][indClipArt].ClipArt_file_baseID + indLayer, GL_BOUNDING_BOX_NV);
+	glStencilFillPathNV(ClipArt_file_baseID + indLayer, GL_COUNT_UP_NV, 0x1F);
+	glCoverFillPathNV(ClipArt_file_baseID + indLayer, GL_BOUNDING_BOX_NV);
 
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_ClipArt_width]
 		&& ClipArt_width > 0.f) {
@@ -357,9 +299,9 @@ static void pg_Display_One_ClipArt(int indClipArt, int indLayer) {
 			// black
 			glColor3ub((unsigned char)0, (unsigned char)0, (unsigned char)0);
 		}
-		glPathParameterfNV(pg_ClipArts[pg_ind_scenario][indClipArt].ClipArt_file_baseID + indLayer, GL_PATH_STROKE_WIDTH_NV, ClipArt_width);
-		glStencilStrokePathNV(pg_ClipArts[pg_ind_scenario][indClipArt].ClipArt_file_baseID + indLayer, GL_COUNT_UP_NV, 0x1F);
-		glCoverStrokePathNV(pg_ClipArts[pg_ind_scenario][indClipArt].ClipArt_file_baseID + indLayer, GL_BOUNDING_BOX_NV);
+		glPathParameterfNV(ClipArt_file_baseID + indLayer, GL_PATH_STROKE_WIDTH_NV, ClipArt_width);
+		glStencilStrokePathNV(ClipArt_file_baseID + indLayer, GL_COUNT_UP_NV, 0x1F);
+		glCoverStrokePathNV(ClipArt_file_baseID + indLayer, GL_BOUNDING_BOX_NV);
 	}
 }
 
@@ -410,7 +352,7 @@ void pg_Display_All_ClipArt(int activeFiles) {
 								if (indLayer < pg_ClipArts[pg_ind_scenario][indClipArt].pg_nb_paths_in_ClipArt
 									&& pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_SubPath[indLayer] == true) {
 									//printf("config %d active clipart display %d layer %d\n", pg_ind_scenario, indClipArt, indLayer);
-									pg_Display_One_ClipArt(indClipArt, indLayer);
+									pg_ClipArts[pg_ind_scenario][indClipArt].pg_Display_One_ClipArt(indLayer);
 								}
 							}
 						}
@@ -543,7 +485,7 @@ void pg_Display_ClipArt_Text(int* ind_Current_DisplayText, int mobile) {
 							//	<< " ind PATH " << indLayer << " ind CLIPART " << indClipArt << std::endl;
 						float scale = pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Scale;
 						glScalef(scale, scale, scale);
-						pg_Display_One_ClipArt(indClipArt, indLayer);
+						pg_ClipArts[pg_ind_scenario][indClipArt].pg_Display_One_ClipArt(indLayer);
 						//}
 						//else {
 						//	printf("subpath not visible\n");
@@ -672,9 +614,14 @@ void pg_parseScenario_ClipArt(std::ifstream& scenarioFin, int indScenario) {
 			aClipArt.pg_ClipArt_SubPath[indPathCurve] = true;
 		}
 
-		aClipArt.pg_ClipArt_Colors = new pg_ClipArt_Colors_Types[aClipArt.pg_nb_paths_in_ClipArt];
+		aClipArt.pg_ClipArt_Colors = new std::string[aClipArt.pg_nb_paths_in_ClipArt];
 		for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-			aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_nat;
+			aClipArt.pg_ClipArt_Colors[indPathCurve] = "#FFFFFF";
+		}
+
+		aClipArt.pg_ClipArt_path_fill_color = new unsigned int[aClipArt.pg_nb_paths_in_ClipArt];
+		for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+			aClipArt.pg_ClipArt_path_fill_color[indPathCurve] = 16777215;
 		}
 
 		// image initial geometry
@@ -684,33 +631,17 @@ void pg_parseScenario_ClipArt(std::ifstream& scenarioFin, int indScenario) {
 		//printf("ind clipart %d scale %.2f pos %.2f %.2f\n", indClipArtFile, aClipArt.pg_ClipArt_Scale, aClipArt.pg_ClipArt_Translation_X, aClipArt.pg_ClipArt_Translation_Y);
 		sstream >> aClipArt.pg_ClipArt_Rotation;
 		sstream >> ID;
-		if (ID.compare("nat") == 0) {
+		std::regex pat("[0-9A-F]{6}");
+		if (ID.length() != 7 || ID[0] != '#' || std::regex_match(ID.substr(1), pat) == false) {
+			sprintf(pg_errorStr, "Error: incorrect configuration file ClipArt GPU color \"%s\" (hexadecimal color prefixed with # expected)", ID.c_str()); pg_ReportError(pg_errorStr);
 			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_nat;
-			}
-		}
-		else if (ID.compare("white") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_white;
-			}
-		}
-		else if (ID.compare("red") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_red;
-			}
-		}
-		else if (ID.compare("green") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_green;
-			}
-		}
-		else if (ID.compare("blue") == 0) {
-			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
-				aClipArt.pg_ClipArt_Colors[indPathCurve] = pg_enum_ClipArt_blue;
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = "#FFFFFF";
 			}
 		}
 		else {
-			sprintf(pg_errorStr, "Error: incorrect configuration file ClipArt GPU color \"%s\" (nat, white, red, blue or green expected)", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
+			for (int indPathCurve = 0; indPathCurve < aClipArt.pg_nb_paths_in_ClipArt; indPathCurve++) {
+				aClipArt.pg_ClipArt_Colors[indPathCurve] = ID;
+			}
 		}
 
 		pg_ClipArts[indScenario].push_back(aClipArt);
@@ -783,47 +714,47 @@ void pg_aliasScript_ClipArt(string address_string, string string_argument_0,
 		break;
 	case _ClipArt_nat_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_nat;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#E5D3BF";
 		}
 		break;
 	case _ClipArt_white_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_white;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FFFFFF";
 		}
 		break;
 	case _ClipArt_red_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_red;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FF0000";
 		}
 		break;
 	case _ClipArt_green_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_green;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#00FF00";
 		}
 		break;
 	case _ClipArt_blue_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_blue;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#0000FF";
 		}
 		break;
 	case _ClipArt_yellow_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_yellow;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FFFF00";
 		}
 		break;
 	case _ClipArt_cyan_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_cyan;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#00FFFF";
 		}
 		break;
 	case _ClipArt_magenta_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_magenta;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FF00FF";
 		}
 		break;
 	case _ClipArt_black_color:
 		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = pg_enum_ClipArt_black;
+			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#000000";
 		}
 		break;
 	case _ClipArt_translations:

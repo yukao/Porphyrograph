@@ -45,13 +45,13 @@ string					 pg_snapshots_dir_path_name;
 pg_WindowData            *pg_Window;
 
 // PNG capture
-pg_Png_Capture pg_Png_Capture_param;
+pg_Img_Capture pg_Png_Capture_param;
 
 // JPG capture
-pg_Jpg_Capture pg_Jpg_Capture_param;
+pg_Img_Capture pg_Jpg_Capture_param;
 
 // SVG path capture
-pg_Svg_Capture pg_Svg_Capture_param;
+pg_Img_Capture pg_Svg_Capture_param;
 
 // scenario file names
 string *pg_ScenarioFileNames = NULL;
@@ -242,6 +242,9 @@ void pg_setWindowDimensions(void) {
 		float(pg_workingWindow_width) / float(pg_workingWindow_width_powerOf2);
 	pg_window_height_powerOf2_ratio =
 		float(PG_WINDOW_HEIGHT) / float(pg_window_height_powerOf2);
+
+	printf("Geometry initialized. Working size: %dx%d margin %d & full size: %dx%d. Working size PoT: %dx%d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_rightWindowVMargin,
+		PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, pg_workingWindow_width_powerOf2, pg_window_height_powerOf2);
 }
 
 
@@ -381,22 +384,23 @@ void pg_parseScenarioRenderingFiles(std::ifstream& scenarioFin, int indScenario)
 		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"SVG\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
 	}
 	if (indScenario == 0) {
-		sstream >> pg_Svg_Capture_param.beginSvg;
-		sstream >> pg_Svg_Capture_param.endSvg;
+		pg_Svg_Capture_param.imageFormat = pg_enum_Svg;
+		sstream >> pg_Svg_Capture_param.beginImg;
+		sstream >> pg_Svg_Capture_param.endImg;
 		sstream >> temp;
 		if (temp.back() == 's') {
 			temp.resize(size_t(temp.size() - 1));
-			pg_Svg_Capture_param.stepSvgInSeconds = pg_stof(temp);
-			pg_Svg_Capture_param.nextSvgCapture = -1.;
-			pg_Svg_Capture_param.stepSvgInFrames = -1;
+			pg_Svg_Capture_param.stepImgInSeconds = pg_stof(temp);
+			pg_Svg_Capture_param.nextImgCapture = -1.;
+			pg_Svg_Capture_param.stepImgInFrames = -1;
 		}
 		else {
-			pg_Svg_Capture_param.stepSvgInFrames = pg_stoi(temp);
-			pg_Svg_Capture_param.stepSvgInSeconds = -1.;
+			pg_Svg_Capture_param.stepImgInFrames = pg_stoi(temp);
+			pg_Svg_Capture_param.stepImgInSeconds = -1.;
 		}
-		sstream >> pg_Svg_Capture_param.Svg_file_name;
-		pg_Svg_Capture_param.outputSvg = !pg_Svg_Capture_param.Svg_file_name.empty();
-		pg_Svg_Capture_param.indSvgSnapshot = 0;
+		sstream >> pg_Svg_Capture_param.Img_file_name;
+		pg_Svg_Capture_param.outputImg = !pg_Svg_Capture_param.Img_file_name.empty();
+		pg_Svg_Capture_param.indImgSnapshot = 0;
 	}
 
 	// storing the Png capture values
@@ -407,22 +411,23 @@ void pg_parseScenarioRenderingFiles(std::ifstream& scenarioFin, int indScenario)
 		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"PNG\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
 	}
 	if (indScenario == 0) {
-		sstream >> pg_Png_Capture_param.beginPng;
-		sstream >> pg_Png_Capture_param.endPng;
+		pg_Svg_Capture_param.imageFormat = pg_enum_Png;
+		sstream >> pg_Png_Capture_param.beginImg;
+		sstream >> pg_Png_Capture_param.endImg;
 		sstream >> temp;
 		if (temp.back() == 's') {
 			temp.resize(size_t(temp.size() - 1));
-			pg_Png_Capture_param.stepPngInSeconds = pg_stof(temp);
-			pg_Png_Capture_param.nextPngCapture = -1.;
-			pg_Png_Capture_param.stepPngInFrames = -1;
+			pg_Png_Capture_param.stepImgInSeconds = pg_stof(temp);
+			pg_Png_Capture_param.nextImgCapture = -1.;
+			pg_Png_Capture_param.stepImgInFrames = -1;
 		}
 		else {
-			pg_Png_Capture_param.stepPngInFrames = pg_stoi(temp);
-			pg_Png_Capture_param.stepPngInSeconds = -1.;
+			pg_Png_Capture_param.stepImgInFrames = pg_stoi(temp);
+			pg_Png_Capture_param.stepImgInSeconds = -1.;
 		}
-		sstream >> pg_Png_Capture_param.Png_file_name;
-		pg_Png_Capture_param.outputPng = !pg_Png_Capture_param.Png_file_name.empty();
-		pg_Png_Capture_param.indPngSnapshot = 0;
+		sstream >> pg_Png_Capture_param.Img_file_name;
+		pg_Png_Capture_param.outputImg = !pg_Png_Capture_param.Img_file_name.empty();
+		pg_Png_Capture_param.indImgSnapshot = 0;
 	}
 
 	// storing the Jpg capture values
@@ -433,23 +438,24 @@ void pg_parseScenarioRenderingFiles(std::ifstream& scenarioFin, int indScenario)
 		sprintf(pg_errorStr, "Error: incorrect configuration file expected string \"JPG\" not found! (instead \"%s\")", ID.c_str()); pg_ReportError(pg_errorStr); throw 100;
 	}
 	if (indScenario == 0) {
-		sstream >> pg_Jpg_Capture_param.beginJpg;
-		sstream >> pg_Jpg_Capture_param.endJpg;
+		pg_Svg_Capture_param.imageFormat = pg_enum_Jpg;
+		sstream >> pg_Jpg_Capture_param.beginImg;
+		sstream >> pg_Jpg_Capture_param.endImg;
 		sstream >> temp;
 		if (temp.back() == 's') {
 			temp.resize(size_t(temp.size() - 1));
-			pg_Jpg_Capture_param.stepJpgInSeconds = pg_stof(temp);
-			pg_Jpg_Capture_param.nextJpgCapture = -1.;
-			pg_Jpg_Capture_param.stepJpgInFrames = -1;
+			pg_Jpg_Capture_param.stepImgInSeconds = pg_stof(temp);
+			pg_Jpg_Capture_param.nextImgCapture = -1.;
+			pg_Jpg_Capture_param.stepImgInFrames = -1;
 		}
 		else {
-			pg_Jpg_Capture_param.stepJpgInFrames = pg_stoi(temp);
-			pg_Jpg_Capture_param.stepJpgInSeconds = -1.;
+			pg_Jpg_Capture_param.stepImgInFrames = pg_stoi(temp);
+			pg_Jpg_Capture_param.stepImgInSeconds = -1.;
 		}
 
-		sstream >> pg_Jpg_Capture_param.Jpg_file_name;
-		pg_Jpg_Capture_param.outputJpg = !pg_Jpg_Capture_param.Jpg_file_name.empty();
-		pg_Jpg_Capture_param.indJpgSnapshot = 0;
+		sstream >> pg_Jpg_Capture_param.Img_file_name;
+		pg_Jpg_Capture_param.outputImg = !pg_Jpg_Capture_param.Img_file_name.empty();
+		pg_Jpg_Capture_param.indImgSnapshot = 0;
 	}
 
 	// /rendering_files
