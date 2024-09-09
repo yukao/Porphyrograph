@@ -74,6 +74,8 @@ public:
 		pg_ClipArt_path_fill_color = NULL;
 	}
 	void pg_Display_One_ClipArt(int indLayer);
+	void pg_Render_One_ClipArt(void);
+	void pg_Render_One_TextChar_ClipArt(int mobile, int ind_current_displayed_line, int indLine, unsigned int indChar);
 	~ClipArt(void) {
 	}
 };

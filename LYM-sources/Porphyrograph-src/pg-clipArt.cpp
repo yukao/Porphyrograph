@@ -231,6 +231,11 @@ static void pg_OpenGLPaletteColors(Color& col, float palette_pulse) {
 	glColor3ub((unsigned char)(red), (unsigned char)(green), (unsigned char)(blue));
 }
 
+float pg_Translate_ClipArt_Text(int indDisplayText) {
+	return float(log(indDisplayText / 3.f) * 210 + 160);
+	// return ((indDisplayText % 370) / 10) * 30.f;
+}
+
 void ClipArt::pg_Display_One_ClipArt(int indLayer) {
 	int low_palette = -1;
 	float alpha = 0;
@@ -305,6 +310,83 @@ void ClipArt::pg_Display_One_ClipArt(int indLayer) {
 	}
 }
 
+void ClipArt::pg_Render_One_TextChar_ClipArt(int mobile, int ind_current_displayed_line, int indLine, unsigned int indChar) {
+	//printf("active clipart display %d\n", indClipArt);
+	glMatrixLoadIdentityEXT(GL_MODELVIEW);
+	float y_transl = 0.f;
+	// value given by the variable moving_messages in the scenario
+	// the message is moving vertically (log based falling function)
+	if (mobile) {
+		y_transl = pg_Translate_ClipArt_Text(ind_current_displayed_line) - indLine * 32;
+	}
+	// the translation is given in the scenario file together with the clipart declaration at the bottom of the scenario
+	else {
+		y_transl = pg_ClipArt_Translation_Y;
+	}
+
+	if (mobile == 2 && indChar < (unsigned int)(pg_displayText_maxLen)) {
+		pg_displayText_rand_translX[indChar] += (rand_0_1 - 0.5f) * (1.f + float(pg_current_scene_percent) * 10.f);
+		pg_displayText_rand_translY[indChar] += (rand_0_1 - 0.5f) * (1.f + float(pg_current_scene_percent) * 10.f) + rand_0_1 * 0.2f * (1.f + float(pg_current_scene_percent) * 10.f);
+	}
+	else {
+		pg_displayText_rand_translX[indChar] = 0.f;
+		pg_displayText_rand_translY[indChar] = 0.f;
+	}
+
+	// XxY translation of the character
+	// Y translation is given by motion or by scenario
+	// X translation is the scenario translation + the horizontal shift due to position in the string
+	glTranslatef(pg_ClipArt_Translation_X * 1.5f
+		+ pg_ClipArt_Translation_X * indChar + pg_displayText_rand_translX[indChar],
+		y_transl + pg_displayText_rand_translY[indChar], 0);
+
+	//glRotatef(pg_ClipArt_Rotation, 0, 0, 1);
+	//glScalef(pg_ClipArt_Scale, pg_ClipArt_Scale, 1);
+	// the clipart can be made of several sub-paths, only display the ones that are not been set to off
+	for (int indLayer = 0;
+		indLayer < pg_nb_paths_in_ClipArt;
+		indLayer++) {
+		//if (pg_ClipArt_SubPath[indLayer] == true) {
+			//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArt_Colors[indLayer] 
+			//	<< " ind PATH " << indLayer << " ind CLIPART " << indClipArt << std::endl;
+		float scale = pg_ClipArt_Scale;
+		glScalef(scale, scale, scale);
+		pg_Display_One_ClipArt(indLayer);
+		//}
+		//else {
+		//	printf("subpath not visible\n");
+		//}
+	}
+}
+
+void ClipArt::pg_Render_One_ClipArt(void) {
+		glMatrixPushEXT(GL_MODELVIEW); {
+			glMatrixLoadIdentityEXT(GL_MODELVIEW);
+			glTranslatef(pg_ClipArt_Translation_X, pg_ClipArt_Translation_Y, 0);
+			glRotatef(pg_ClipArt_Rotation, 0, 0, 1);
+			glScalef(pg_ClipArt_Scale, pg_ClipArt_Scale, 1);
+			//printf("config %d active clipart display %d layer color: ", pg_ind_scenario, indClipArt);
+			//for (int indLayer = 0;
+			//	indLayer < pg_nb_paths_in_ClipArt;
+			//	indLayer++) {
+			//	printf("%.2f ", ClipArt_layer_color_preset[indLayer + 1]);
+			//}
+			//printf("\n");
+			for (int indLayer = 0;
+				indLayer < pg_nb_paths_in_ClipArt;
+				indLayer++) {
+				if (indLayer < pg_nb_paths_in_ClipArt
+					&& pg_ClipArt_SubPath[indLayer] == true) {
+					//printf("config %d active clipart display %d layer %d\n", pg_ind_scenario, indClipArt, indLayer);
+					pg_Display_One_ClipArt(indLayer);
+				}
+			}
+		}
+		glMatrixPopEXT(GL_MODELVIEW);
+}
+
+
+
 //////////////////////////////////////////////////
 // RENDERING GPU ClipArt IF SOME LAYERS ARE ACTIVE
 void pg_Display_All_ClipArt(int activeFiles) {
@@ -317,7 +399,6 @@ void pg_Display_All_ClipArt(int activeFiles) {
 
 			//glClearStencil(0);
 			// glClearColor(1, 1, 1, 1);
-
 			// glEnable(GL_BLEND);
 			glEnable(GL_STENCIL_TEST);
 			glStencilFunc(GL_NOTEQUAL, 0, 0x1F);
@@ -334,32 +415,11 @@ void pg_Display_All_ClipArt(int activeFiles) {
 				}
 				for (int indClipArt = 0; indClipArt < maxNbDisplayedClipArt; indClipArt++) {
 					if ((activeFiles == -1) || (activeFiles & (1 << indClipArt))) {
-						glMatrixPushEXT(GL_MODELVIEW); {
-							glMatrixLoadIdentityEXT(GL_MODELVIEW);
-							glTranslatef(pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_X, pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_Y, 0);
-							glRotatef(pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Rotation, 0, 0, 1);
-							glScalef(pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Scale, pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Scale, 1);
-							//printf("config %d active clipart display %d layer color: ", pg_ind_scenario, indClipArt);
-							//for (int indLayer = 0;
-							//	indLayer < pg_ClipArts[pg_ind_scenario][indClipArt].pg_nb_paths_in_ClipArt;
-							//	indLayer++) {
-							//	printf("%.2f ", ClipArt_layer_color_preset[indLayer + 1]);
-							//}
-							//printf("\n");
-							for (int indLayer = 0;
-								indLayer < pg_ClipArts[pg_ind_scenario][indClipArt].pg_nb_paths_in_ClipArt;
-								indLayer++) {
-								if (indLayer < pg_ClipArts[pg_ind_scenario][indClipArt].pg_nb_paths_in_ClipArt
-									&& pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_SubPath[indLayer] == true) {
-									//printf("config %d active clipart display %d layer %d\n", pg_ind_scenario, indClipArt, indLayer);
-									pg_ClipArts[pg_ind_scenario][indClipArt].pg_Display_One_ClipArt(indLayer);
-								}
-							}
-						}
-						glMatrixPopEXT(GL_MODELVIEW);
+						pg_ClipArts[pg_ind_scenario][indClipArt].pg_Render_One_ClipArt();
 					}
 				}
-			} glMatrixPopEXT(GL_PROJECTION);
+			}
+			glMatrixPopEXT(GL_PROJECTION);
 			glDisable(GL_STENCIL_TEST);
 		}
 		pg_printOglError(5257);
@@ -386,10 +446,6 @@ void pg_listAll_ClipArts(void) {
 
 /////////////////////////////////////////////
 // RENDERING OF MESSAGE THROUGH ClipArt GPU CHARACTERS
-float pg_Translate_ClipArt_Text(int indDisplayText) {
-	return float(log(indDisplayText / 3.f) * 210 + 160);
-	// return ((indDisplayText % 370) / 10) * 30.f;
-}
 void pg_convertTextStringToClipartIndices(std::vector<int>* indClipArts, string displayed_text) {
 	// decomposition of the string into characters and svg index lookup
 	for (unsigned int indChar = 0; indChar < displayed_text.size(); indChar++) {
@@ -445,52 +501,7 @@ void pg_Display_ClipArt_Text(int* ind_Current_DisplayText, int mobile) {
 				// displays the character
 				unsigned int indClipArt = indClipArts[indChar];
 				if (indClipArt >= 0 && indClipArt < pg_ClipArts[pg_ind_scenario].size()) {
-					//printf("active clipart display %d\n", indClipArt);
-					glMatrixLoadIdentityEXT(GL_MODELVIEW);
-					float y_transl = 0.f;
-					// value given by the variable moving_messages in the scenario
-					// the message is moving vertically (log based falling function)
-					if (mobile) {
-						y_transl = pg_Translate_ClipArt_Text(ind_current_displayed_line) - indLine * 32;
-					}
-					// the translation is given in the scenario file together with the clipart declaration at the bottom of the scenario
-					else {
-						y_transl = pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_Y;
-					}
-
-					if (mobile == 2 && indChar < (unsigned int)(pg_displayText_maxLen)) {
-						pg_displayText_rand_translX[indChar] += (rand_0_1 - 0.5f) * (1.f + float(pg_current_scene_percent) * 10.f);
-						pg_displayText_rand_translY[indChar] += (rand_0_1 - 0.5f) * (1.f + float(pg_current_scene_percent) * 10.f) + rand_0_1 * 0.2f * (1.f + float(pg_current_scene_percent) * 10.f);
-					}
-					else {
-						pg_displayText_rand_translX[indChar] = 0.f;
-						pg_displayText_rand_translY[indChar] = 0.f;
-					}
-
-					// XxY translation of the character
-					// Y translation is given by motion or by scenario
-					// X translation is the scenario translation + the horizontal shift due to position in the string
-					glTranslatef(pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_X * 1.5f
-						+ pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_X * indChar + pg_displayText_rand_translX[indChar],
-						y_transl + pg_displayText_rand_translY[indChar], 0);
-
-					//glRotatef(pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Rotation, 0, 0, 1);
-					//glScalef(pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Scale, pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Scale, 1);
-					// the clipart can be made of several sub-paths, only display the ones that are not been set to off
-					for (int indLayer = 0;
-						indLayer < pg_ClipArts[pg_ind_scenario][indClipArt].pg_nb_paths_in_ClipArt;
-						indLayer++) {
-						//if (pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_SubPath[indLayer] == true) {
-							//std::cout << "pg_Display_One_ClipArt COLOR " << pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Colors[indLayer] 
-							//	<< " ind PATH " << indLayer << " ind CLIPART " << indClipArt << std::endl;
-						float scale = pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Scale;
-						glScalef(scale, scale, scale);
-						pg_ClipArts[pg_ind_scenario][indClipArt].pg_Display_One_ClipArt(indLayer);
-						//}
-						//else {
-						//	printf("subpath not visible\n");
-						//}
-					}
+					pg_ClipArts[pg_ind_scenario][indClipArt].pg_Render_One_TextChar_ClipArt(mobile, ind_current_displayed_line, indLine, indChar);
 				}
 			}
 			glMatrixPopEXT(GL_MODELVIEW);
