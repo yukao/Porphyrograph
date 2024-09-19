@@ -144,7 +144,6 @@ uniform float uniform_Update_scenario_var_data[83];
 const float PI = 3.1415926535897932384626433832795;
 
 #define SPLAT_PARTICLES
-
 #define PG_BEZIER_PATHS
 
 ////////////////////////////////////////////////////////////////////
@@ -167,13 +166,21 @@ const uint pg_FBO_fs_Pixels_attacht = 1;
 ////////////////////////////////////////////////////////////////////
 // CELLULAR AUTOMATA
 // CA types
-const uint CA_DISLOCATION   = 0;
-const uint CA_CYCLIC_1      = 1;
-const uint CA_PROTOCELLS    = 2;
-const uint GOL_1            = 3;
-const uint CA_CYCLIC        = 4;
-const uint CA_PREY          = 5;
-const uint CA_SOCIAL_PD     = 6;
+#define CA_TOTALISTIC                    0
+#define CA_TOTALISTIC_NB_SUBTYPES        4
+#define CA_TOTALISTIC_TABLE_OFFSET       0
+#define CA_GENERATION                    1
+#define CA_GENERATION_NB_SUBTYPES        4
+#define CA_GENERATION_TABLE_OFFSET       (CA_TOTALISTIC_TABLE_OFFSET + CA_TOTALISTIC_NB_SUBTYPES)
+#define CA_GAL_BIN_MOORE                 2
+#define CA_GAL_BIN_MOORE_NB_SUBTYPES     9
+#define CA_GAL_BIN_MOORE_TABLE_OFFSET    (CA_GENERATION_TABLE_OFFSET + CA_GENERATION_NB_SUBTYPES)
+#define CA_GAL_BIN_NEUMANN               3
+#define CA_GAL_BIN_NEUMANN_NB_SUBTYPES   4
+#define CA_GAL_BIN_NEUMANN_TABLE_OFFSET  (CA_GAL_BIN_MOORE_TABLE_OFFSET + CA_GAL_BIN_MOORE_NB_SUBTYPES)
+#define CA_NEUMANN_BIN                   4
+#define CA_NEUMANN_BIN_NB_SUBTYPES       10
+#define CA_NEUMANN_BIN_TABLE_OFFSET      (CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CA_GAL_BIN_NEUMANN_NB_SUBTYPES)
 
 // CA OFFSETS
 const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},              // E NE N NW
@@ -182,10 +189,6 @@ const vec2 neighborOffsetsDiamond[4] = {{1,0},{-1,0},{0,1},{0,-1}};  // W WW S S
 const float neighborDistances[8]={1.0,0.707,1.0,0.707,1.0,0.707,1.0,0.707};
 
 
-const float shadePrey[5] = {0,0.4,              // dead predator/prey
-                                 0.6, 0.8,  1.0};       // prey hungry/full predator
-const float inverseShadePrey[5] = {0.0,2.5,              // dead predator/prey
-                                 1.67,1.25,  1.0};       // prey hungry/full predator
 const vec3 shadeCyclic[6] = {{208/255.f,57/255.f,98/255.f},{62/255.f,125/255.f,218/255.f},{252/255.f,249/255.f,50/255.f},
                             {250/255.f,135/255.f,50/255.f},{129/255.f,166/255.f,61/255.f},{100/255.f,100/255.f,100/255.f}};
 
@@ -197,10 +200,9 @@ const float shadeDisloc[5] = {0,0.4,              // empty new/old border
                                  0.6, 0.8,  1.0};       // new/old nucleus
 const float inverseShadeDisloc[5] = {0.0,2.5,              // empty new/old border
                                  1.67,1.25,  1.0};       // new/old nucleus
-const float shadeSocial[3] = {0,               // empty
-                                 0.5, 1.0};    // Coorperator / Defector
-const float inverseShadeSocial[3] = {0,                 // empty
-                                        2.0 , 1.0};     // Coorperator / Defector
+
+const int nbStatesTotalistic[CA_TOTALISTIC_NB_SUBTYPES] ={1, 16, 16, 16};
+const int nbStatesGeneration[CA_GENERATION_NB_SUBTYPES] ={1,  4,  4, 25};
 
 ////////////////////////////////////////////////////////////////////
 // pixel mode
@@ -337,7 +339,6 @@ float sobelMatrixY_0[9] = { 1,2,1, 0,0,-1,-2,-1, 0};
 ////////////////////////////////////
 // CA UPDATE
 vec4 out4_CA;
-vec4 noiseCA = vec4(0);
 
 bool CA_on_off;
 
@@ -350,18 +351,10 @@ vec2 pixelTextureCoordinatesPOT_XY; // the POT coordinates of the
 // pixel texture + z offset according to the chosen texture
 vec2 noisepixels;
 
-vec4 randomCA;
-vec4 randomCA2;
+vec4 randomCA = vec4(0);
 ///////////////////////////////////////
 // REPOPULATION OF PARTICLES: DENSITY OF REPOPULATION
 float repop_density_weight = 1;
-vec3 textureDensityValue = vec3(0);
-
-///////////////////////////////////////
-// photo or clip images
-vec3 photoOriginal = vec3( 0.0 );
-vec3 clipOriginal = vec3( 0.0 );
-
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -378,7 +371,6 @@ in vec2 decalCoordsPOT;  // normalized texture coordinates
 // UNIFORMS
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-
 // passed by the C program
 // pen Bezier curve control points
 uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
@@ -386,7 +378,7 @@ uniform vec4 uniform_Update_path_data[PG_MAX_PATH_DATA * (PG_NB_PATHS + 1)];
 uniform vec4 uniform_Update_fs_4fv_flashTrkBGWghts_flashPartBGWght;  
 uniform vec4 uniform_Update_fs_4fv_flashTrkCAWghts;  
 
-uniform vec4 uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow;
+uniform vec3 uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght;
 uniform vec3 uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift;
 uniform vec4 uniform_Update_fs_4fv_xy_transl_tracks_0_1;
 uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
@@ -397,40 +389,37 @@ uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
-uniform vec3 uniform_Update_fs_3fv_photo_rgb; 
 uniform vec2 uniform_Update_fs_2fv_clip01Wghts;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
+uniform vec4 uniform_Update_fs_4fv_CAseed_type_size_loc;
 
 /////////////////////////////////////
 // INPUT
-layout (binding = 0) uniform samplerRect   uniform_Update_texture_fs_CA;            // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 1) uniform samplerRect   uniform_Update_texture_fs_PreviousCA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
-layout (binding = 2) uniform samplerRect   uniform_Update_texture_fs_Pixels;        // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
-layout (binding = 3) uniform sampler3D     uniform_Update_texture_fs_Brushes;       // pen patterns
-layout (binding = 4) uniform samplerRect   uniform_Update_texture_fs_Camera_frame;  // camera texture
-layout (binding = 5) uniform samplerRect   uniform_Update_texture_fs_Camera_BG;     // camera BG texture
-layout (binding = 6) uniform samplerRect   uniform_Update_texture_fs_Movie_frame;   // movie textures
-layout (binding = 7) uniform sampler3D     uniform_Update_texture_fs_Noise;         // noise texture
-layout (binding = 8)  uniform samplerRect  uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 9)  uniform sampler2D    uniform_Update_texture_fs_Photo0;        // photo_0 texture or first clip left
-layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Photo1;        // photo_1 texture or first clip right
-layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip0;         // second clip left texture
-layout (binding = 12)  uniform sampler2D   uniform_Update_texture_fs_Clip1;         // second clip right texture
-layout (binding = 13)  uniform samplerRect uniform_Update_texture_fs_Part_render;   // FBO capture of particle rendering
-layout (binding = 14) uniform samplerRect  uniform_Update_texture_fs_Trk0;          // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 0) uniform samplerRect uniform_Update_texture_fs_CA;       // 2-cycle ping-pong Update pass CA step n (FBO attachment 0)
+layout (binding = 1) uniform samplerRect uniform_Update_texture_fs_Pixels;   // 2-cycle ping-pong Update pass speed/position of Pixels step n (FBO attachment 1)
+layout (binding = 2) uniform sampler3D uniform_Update_texture_fs_Brushes; // pen patterns
+layout (binding = 3) uniform samplerRect uniform_Update_texture_fs_Camera_frame;  // camera texture
+layout (binding = 4) uniform samplerRect uniform_Update_texture_fs_Camera_BG;     // camera BG texture
+layout (binding = 5) uniform samplerRect uniform_Update_texture_fs_Movie_frame;   // movie textures
+layout (binding = 6) uniform sampler3D   uniform_Update_texture_fs_Noise;  // noise texture
+layout (binding = 7)  uniform samplerRect uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 8)  uniform sampler2D   uniform_Update_texture_fs_Photo0;  // photo_0 texture or first clip left
+layout (binding = 9)  uniform sampler2D   uniform_Update_texture_fs_Photo1;  // photo_1 texture or first clip right
+layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Clip0;  // second clip left texture
+layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip1;  // second clip right texture
+layout (binding = 12)  uniform samplerRect uniform_Update_texture_fs_Part_render;  // FBO capture of particle rendering
+layout (binding = 13) uniform samplerRect uniform_Update_texture_fs_Trk0;  // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 15) uniform samplerRect  uniform_Update_texture_fs_Trk1;          // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 14) uniform samplerRect uniform_Update_texture_fs_Trk1;  // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Trk2;          // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 15) uniform samplerRect uniform_Update_texture_fs_Trk2;  // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_Trk3;          // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 16) uniform samplerRect uniform_Update_texture_fs_Trk3;  // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
-layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
-// layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
+layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
 
 /////////////////////////////////////
 // CA OUTPUT COLOR + STATE
@@ -541,7 +530,6 @@ return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
 }
 
 vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
-#if defined(var_noiseType) && defined(var_noiseCenterX) && defined(var_noiseCenterY) && defined(var_noiseLineScale) && defined(var_noiseAngleScale)
   // FLAT
   if(noiseType == 0 )  {
     return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
@@ -562,15 +550,11 @@ vec2 multiTypeGenerativeNoise(vec2 texCoordLoc, vec2 usedNeighborOffset) {
   else {
     return texture(uniform_Update_texture_fs_Movie_frame, movieCoord + usedNeighborOffset/ movieWH ).rg;
   }
-#else
-  return vec2(snoise( texCoordLoc , noiseUpdateScale * 100 ),
-                          snoise( texCoordLoc + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
-#endif
 }
 
 // random noise
 // https://www.ronja-tutorials.com/2018/09/02/white-noise.html
-// after (c) Ronja Böhringer
+// after (c) Ronja B�hringer
 //get a scalar random value from a 3d value
 // 2-step computation due to lack of precision
 int rand3D(vec3 value, float threshold){
@@ -609,25 +593,6 @@ float Line( float x1 , float y1 ,
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
-float payoffCalc( float state1 , float state2) {
-  if(state1==1.0) {
-    if (state2==1.0) {
-      return CAParams[1];
-    }
-    else {
-      return CAParams[3];
-    }
-  }
-  else {
-    if (state2==1.0) {
-      return CAParams[2];
-    }
-    else {
-      return CAParams[4];
-    }
-  }
-}
-
 void CA_out( vec4 currentCA ) {
   // the ALPHA canal of uniform_Update_texture_fs_CA contains > 0 if it is a live cell
 
@@ -650,237 +615,9 @@ void CA_out( vec4 currentCA ) {
             decalCoords + neighborOffsets[7] );
 
   //////////////////////////////////////////////////////
-  // CCA MOORE
-  if( CAType == CA_CYCLIC  || CAType == CA_CYCLIC_1 ) {
-    const int nbStates = 5;
-    uint nbNeighbors[nbStates];
-
-    nbNeighbors[0] =
-      (round(neighborValues[0].a) == 0? 1:0) +
-      (round(neighborValues[1].a) == 0? 1:0) +
-      (round(neighborValues[2].a) == 0? 1:0) +
-      (round(neighborValues[3].a) == 0? 1:0) +
-      (round(neighborValues[4].a) == 0? 1:0) +
-      (round(neighborValues[5].a) == 0? 1:0) +
-      (round(neighborValues[6].a) == 0? 1:0) +
-      (round(neighborValues[7].a) == 0? 1:0);
-    
-    nbNeighbors[1] =
-      (round(neighborValues[0].a) == 1? 1:0) +
-      (round(neighborValues[1].a) == 1? 1:0) +
-      (round(neighborValues[2].a) == 1? 1:0) +
-      (round(neighborValues[3].a) == 1? 1:0) +
-      (round(neighborValues[4].a) == 1? 1:0) +
-      (round(neighborValues[5].a) == 1? 1:0) +
-      (round(neighborValues[6].a) == 1? 1:0) +
-      (round(neighborValues[7].a) == 1? 1:0);
-    
-    nbNeighbors[2] =
-      (round(neighborValues[0].a) == 2? 1:0) +
-      (round(neighborValues[1].a) == 2? 1:0) +
-      (round(neighborValues[2].a) == 2? 1:0) +
-      (round(neighborValues[3].a) == 2? 1:0) +
-      (round(neighborValues[4].a) == 2? 1:0) +
-      (round(neighborValues[5].a) == 2? 1:0) +
-      (round(neighborValues[6].a) == 2? 1:0) +
-      (round(neighborValues[7].a) == 2? 1:0);
-    
-    nbNeighbors[3] =
-      (round(neighborValues[0].a) == 3? 1:0) +
-      (round(neighborValues[1].a) == 3? 1:0) +
-      (round(neighborValues[2].a) == 3? 1:0) +
-      (round(neighborValues[3].a) == 3? 1:0) +
-      (round(neighborValues[4].a) == 3? 1:0) +
-      (round(neighborValues[5].a) == 3? 1:0) +
-      (round(neighborValues[6].a) == 3? 1:0) +
-      (round(neighborValues[7].a) == 3? 1:0);
-    
-    nbNeighbors[4] =
-      (round(neighborValues[0].a) == 4? 1:0) +
-      (round(neighborValues[1].a) == 4? 1:0) +
-      (round(neighborValues[2].a) == 4? 1:0) +
-      (round(neighborValues[3].a) == 4? 1:0) +
-      (round(neighborValues[4].a) == 4? 1:0) +
-      (round(neighborValues[5].a) == 4? 1:0) +
-      (round(neighborValues[6].a) == 4? 1:0) +
-      (round(neighborValues[7].a) == 4? 1:0);
-    
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    uint newState = 0;
-    if( currentCA.a < 0 ) {
-      out4_CA.a = floor(randomCA.x * (nbStates+1)); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = shadeCyclic[newState];
-    }
-    else {
-      // CCA with autotmatic cycling from one step to the next
-      if(CAType == CA_CYCLIC) {
-        uint state = int(clamp(currentCA.a,0,nbStates));
-        if( state < nbStates ) {
-          uint nextState = (state + 1) % nbStates;
-          vec3 nextColor = currentCA.rgb;
-          newState = state;
-          if(nbNeighbors[nextState] > 0) {
-            newState = nextState;
-            nextColor = 
-              ((round(neighborValues[0].a)) == nextState? neighborValues[0].rgb:vec3(0)) +
-              ((round(neighborValues[1].a)) == nextState? neighborValues[1].rgb:vec3(0)) +
-              ((round(neighborValues[2].a)) == nextState? neighborValues[2].rgb:vec3(0)) +
-              ((round(neighborValues[3].a)) == nextState? neighborValues[3].rgb:vec3(0)) +
-              ((round(neighborValues[4].a)) == nextState? neighborValues[4].rgb:vec3(0)) +
-              ((round(neighborValues[5].a)) == nextState? neighborValues[5].rgb:vec3(0)) +
-              ((round(neighborValues[6].a)) == nextState? neighborValues[6].rgb:vec3(0)) +
-              ((round(neighborValues[7].a)) == nextState? neighborValues[7].rgb:vec3(0));
-            nextColor /= nbNeighbors[nextState];
-          }
-
-          nextColor -= vec3(CAdecay);
-          if(nextColor.r > 0 &&  nextColor.g > 0 &&  nextColor.b > 0) {
-            out4_CA.a = float(newState);
-            out4_CA.rgb = nextColor;
-          }
-          else {
-            out4_CA.a = float(nbStates);
-            out4_CA.rgb = vec3(0);
-          }
-
-        }
-        else {
-            out4_CA.rgb = vec3(0);
-        }
-      }
-      // b color used to count steps in a state
-      else if(CAType == CA_CYCLIC_1) {
-        uint state = int(clamp(currentCA.a,0,nbStates));
-        const uint durations[nbStates] = {1,2,3,4,5};
-        if( state < nbStates ) {
-          uint nextState = (state + 1) % nbStates;
-          vec3 nextColor = currentCA.rgb;
-          newState = state;
-          if(nbNeighbors[nextState] > 0 && nextColor.g <= 0) {
-            newState = nextState;
-            nextColor = 
-              ((round(neighborValues[0].a)) == nextState? neighborValues[0].rgb:vec3(0)) +
-              ((round(neighborValues[1].a)) == nextState? neighborValues[1].rgb:vec3(0)) +
-              ((round(neighborValues[2].a)) == nextState? neighborValues[2].rgb:vec3(0)) +
-              ((round(neighborValues[3].a)) == nextState? neighborValues[3].rgb:vec3(0)) +
-              ((round(neighborValues[4].a)) == nextState? neighborValues[4].rgb:vec3(0)) +
-              ((round(neighborValues[5].a)) == nextState? neighborValues[5].rgb:vec3(0)) +
-              ((round(neighborValues[6].a)) == nextState? neighborValues[6].rgb:vec3(0)) +
-              ((round(neighborValues[7].a)) == nextState? neighborValues[7].rgb:vec3(0));
-            nextColor /= nbNeighbors[nextState];
-            nextColor.g = durations[nextState];
-          }
-
-          nextColor.rb -= vec2(CAdecay);
-          nextColor.g -= 1;
-          if(nextColor.r > 0 &&  nextColor.b > 0) {
-            out4_CA.a = float(newState);
-            out4_CA.rb = nextColor.rb;
-          }
-          else {
-            out4_CA.a = float(nbStates);
-            out4_CA.rgb = vec3(0);
-          }
-
-        }
-        else {
-            out4_CA.rgb = vec3(0);
-        }
-      }
-    }
-  }
-  //////////////////////////////////////////////////////
-  // GOL MOORE
-  else if( CAType == GOL_1 ) {
-    const int nbStates = 2;
-    uint nbNeighbors[nbStates];
-
-    nbNeighbors[0] =
-      (round(neighborValues[0].a) == 0? 1:0) +
-      (round(neighborValues[1].a) == 0? 1:0) +
-      (round(neighborValues[2].a) == 0? 1:0) +
-      (round(neighborValues[3].a) == 0? 1:0) +
-      (round(neighborValues[4].a) == 0? 1:0) +
-      (round(neighborValues[5].a) == 0? 1:0) +
-      (round(neighborValues[6].a) == 0? 1:0) +
-      (round(neighborValues[7].a) == 0? 1:0);
-
-    nbNeighbors[1] =
-      (round(neighborValues[0].a) == 1? 1:0) +
-      (round(neighborValues[1].a) == 1? 1:0) +
-      (round(neighborValues[2].a) == 1? 1:0) +
-      (round(neighborValues[3].a) == 1? 1:0) +
-      (round(neighborValues[4].a) == 1? 1:0) +
-      (round(neighborValues[5].a) == 1? 1:0) +
-      (round(neighborValues[6].a) == 1? 1:0) +
-      (round(neighborValues[7].a) == 1? 1:0);
-    
-    
-    // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    uint newState = 0;
-    vec3 nextColor = currentCA.rgb;
-    if( currentCA.a < 0 ) {
-      out4_CA.a = floor(randomCA.x * (nbStates+1)); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = uniform_Update_fs_3fv_repop_ColorCA.rgb;
-    }
-    else {
-      // CCA with atuotmatic cycling from one step to the next
-      if(CAType == GOL_1) {
-        uint state = int(clamp(currentCA.a,0,nbStates));
-        if( state < nbStates) {
-          newState = 0;
-          // if( (state == 0 && (nbNeighbors[1] == 3 || nbNeighbors[1] == 5 || nbNeighbors[1] == 7 || nbNeighbors[1] == 8) )
-          //    || (state == 1 && (nbNeighbors[1] == 4 || nbNeighbors[1] == 6 || nbNeighbors[1] == 7 || nbNeighbors[1] == 8) ) ){
-          //   newState = 1;
-          // }
-          if( (state == 1) 
-             || (state == 0 && (nbNeighbors[1] == 3) ) ){
-            newState = 1;
-          }
-
-          if(newState == 1 && nbNeighbors[newState] > 0) {
-            nextColor = 
-              ((round(neighborValues[0].a)) == newState? neighborValues[0].rgb:vec3(0)) +
-              ((round(neighborValues[1].a)) == newState? neighborValues[1].rgb:vec3(0)) +
-              ((round(neighborValues[2].a)) == newState? neighborValues[2].rgb:vec3(0)) +
-              ((round(neighborValues[3].a)) == newState? neighborValues[3].rgb:vec3(0)) +
-              ((round(neighborValues[4].a)) == newState? neighborValues[4].rgb:vec3(0)) +
-              ((round(neighborValues[5].a)) == newState? neighborValues[5].rgb:vec3(0)) +
-              ((round(neighborValues[6].a)) == newState? neighborValues[6].rgb:vec3(0)) +
-              ((round(neighborValues[7].a)) == newState? neighborValues[7].rgb:vec3(0));
-            nextColor /= nbNeighbors[newState];
-          }
-
-          nextColor = clamp(nextColor-vec3(CAdecay),0,1);
-          if(newState == 0){
-            nextColor = vec3(0);
-          }
-          if(nextColor.r > 0 ||  nextColor.g > 0 || nextColor.b > 0) {
-            out4_CA.a = float(newState);
-            out4_CA.rgb = nextColor;
-          }
-          else {
-            out4_CA.a = float(0);
-            out4_CA.rgb = vec3(0);
-          }
-        }
-        else {
-            out4_CA.rgb = vec3(0);
-        }
-      }
-    }
-  }
-
-  else if( CAType == CA_PROTOCELLS ) {
-    int nbNeighbors =
+  // GAME OF LIFE - TOTALISTIC OR GENERATION
+  if(CAType == CA_TOTALISTIC || CAType == CA_GENERATION ) {
+    int nbSurroundingLives =
       (neighborValues[0].a > 0? 1:0) +
       (neighborValues[1].a > 0? 1:0) +
       (neighborValues[2].a > 0? 1:0) +
@@ -889,662 +626,333 @@ void CA_out( vec4 currentCA ) {
       (neighborValues[5].a > 0? 1:0) +
       (neighborValues[6].a > 0? 1:0) +
       (neighborValues[7].a > 0? 1:0);
-
-    vec3 maxSurrounding = (neighborValues[0].rgb);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb;
-      if( graylevel(newColorFactor) > graylevel(maxSurrounding) ) {
-        maxSurrounding = newColorFactor;
-      }
-    }
-    if( graylevel(currentCA.rgb) > graylevel(maxSurrounding) ) {
-      maxSurrounding = currentCA.rgb;
-    }
-
-    vec3 gatherColorFactors =
-      (neighborValues[0].rgb) +
-      (neighborValues[1].rgb) +
-      (neighborValues[2].rgb) +
-      (neighborValues[3].rgb) +
-      (neighborValues[4].rgb) +
-      (neighborValues[5].rgb) +
-      (neighborValues[6].rgb) +
-      (neighborValues[7].rgb);
-
-    vec3 averageSurrounding;
-    if( nbNeighbors > 0 ) {
-      averageSurrounding = (gatherColorFactors + currentCA.rgb)/8;
+    
+    vec4 gatherSurroundingLives =
+      (neighborValues[0]) +
+      (neighborValues[1]) +
+      (neighborValues[2]) +
+      (neighborValues[3]) +
+      (neighborValues[4]) +
+      (neighborValues[5]) +
+      (neighborValues[6]) +
+      (neighborValues[7]);
+    
+    vec4 averageSurrounding;
+    if( nbSurroundingLives > 0 ) {
+      averageSurrounding = gatherSurroundingLives / nbSurroundingLives;
     }
     else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
+      averageSurrounding = vec4(0.0);
     }
-
-    // 0 empty
-    // 1 X
-    // 2 Y
-    // 3 Z
-    uint nbStates = 4;
-    uint newState = 0;
-
-    // CAParams optimal values from Composites/soundinitiative²
-/*     float CAParams[1] = 0.480315;
-    float CAParams[2] = 0.511811;
-    float CAParams[3] = 0.637795;
-    float CAParams[4] = 0.472441;
-    float CAParams[5] = 0.244094;
- */
-    // The first CA value is negative so that it is not 
+    
+    // The first CA alpha value is negative so that it is not 
     // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
+    // because it is the second time it is displayed 
+    // then alpha represents the state of the automaton
     if( currentCA.a < 0 ) {
-      out4_CA.a = randomCA.x * (nbStates+1); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      newState = 3;
-      out4_CA.rgb = shadeProtocell[newState] * currentCA.rgb;
+      /* out4_CA.a = randomCA.r * (nbStates+1); // nbStates states randomly */
+      // out4_CA.rgb = averageSurrounding.rgb;
+      
+      // special treatment for generation, otherwise
+      // it does not start from flashCA
+      if( CAType == CA_TOTALISTIC ) { 
+        int nbStates = nbStatesTotalistic[CASubType];
+        float newState = clamp(randomCA.r * (nbStates+1),1,nbStates); // nbStates states randomly
+        out4_CA.a = newState;
+        out4_CA.rgb = currentCA.rgb;
+        out4_CA.rgb = averageSurrounding.rgb;
+      }
+      else if( CAType == CA_GENERATION ) { 
+        int nbStates = nbStatesGeneration[CASubType];
+        float newState = clamp(randomCA.r * (nbStates+1),1,nbStates); // nbStates states randomly
+        newState = 1;
+        out4_CA.a = newState;
+        out4_CA.rgb = currentCA.rgb;
+        out4_CA.rgb = averageSurrounding.rgb;
+      }
     }
     else {
-      uint state = int(clamp(currentCA.a,0,nbStates));
-      newState = state;
-      // parameters CA thresholds
-      // CAParams[1]: px - X duplication from X+Y (randomCA.x)
-      // CAParams[2]: py - Y duplication from Y+Z (randomCA.y)
-      // CAParams[3]: pz - Z duplication from Z+X (randomCA.z)
-
-      // empty cell: replication or migration from neighboring cells
-      if( state ==  0 ) { // empty
-        newState = 0; // stays empty
-        int firstindex = clamp(int(randomCA.x * 8),0,8);
-        // has a neighboring X and a neighboring Y slot
-        for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-          if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 2 
-              && randomCA.y < CAParams[1]) {
-            newState = 1; // new X
-          }
+      if( CAType == CA_TOTALISTIC ) {
+        int nbStates = nbStatesTotalistic[CASubType];
+        float state = clamp(currentCA.a,0,nbStates);
+        float newState = 0;
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
+                                CA_TOTALISTIC_TABLE_OFFSET + CASubType ) ).r;
+        out4_CA.a = float(newState);
+        if( newState > 0 ) {
+          out4_CA.rgb = currentCA.rgb;
+          out4_CA.rgb = averageSurrounding.rgb;
         }
-
-        // did not replicate at the preceding loop
-        if( newState == 0 ) {
-          // has a neighboring Y and a neighboring Z slot
-          int firstindex = clamp(int(randomCA.z * 8),0,8);
-          for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-            if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 6 
-                && randomCA.w < CAParams[2]) {
-              newState = 2; // new Y
-            }
-          }
-        }
-
-        // did not replicate at the preceding loop
-        if( newState == 0 ) {
-          // has a neighboring Z and a neighboring X slot
-          int firstindex = clamp(int(randomCA2.x * 8),0,8);
-          for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-            if( neighborValues[ind % 8].a * neighborValues[(ind+1)%8].a == 3 
-                && randomCA2.y < CAParams[3]) {
-              newState = 3; // new Z
-            }
-          }
-        }
-
-        // migration
-        if( newState == 0 && nbNeighbors < 4 ) {
-          // random selection of a neighbor
-          int firstindex = clamp(int(randomCA2.z * 8),0,8);
-          newState = 0;
-          // looks for an old border around
-          for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-            if( neighborValues[ind % 8].a != 0 ) {
-              newState = int(neighborValues[ind % 8].a);
-            }
-          }
+        else {
+          out4_CA.rgb = vec3(0,0,0);
         }
       }
-      // CAParams[5]: px - X/Y/Z degradation (randomCA.w)
-      // randomCA2.x choice of a first neighbor
-      // degradation or migration of X
-      else if( randomCA.x < CAParams[4] 
-        || nbNeighbors < 8 * CAParams[5] ) { 
-        newState = 0; 
-      }
-
-      out4_CA.a = float(newState);
-      // state change: takes the color of the current stage
-      if( currentCA.a != out4_CA.a ) {
-        out4_CA.rgb = shadeProtocell[newState] * currentCA.rgb;
-#ifdef var_Song_CA_color_mode
-        if(Song_CA_color_mode) {
-          out4_CA.rgb = shadeProtocell[newState] * vec3(1,0,0);
+      else if( CAType == CA_GENERATION ) {
+        int nbStates = nbStatesGeneration[CASubType];
+        float state = clamp(currentCA.a,0,nbStates);
+        float newState = 0;
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( int(state) * 10 + nbSurroundingLives + 1 , 
+                                CA_GENERATION_TABLE_OFFSET + CASubType ) ).r;
+        out4_CA.a = float(newState);
+        if( newState > 0 ) {
+          out4_CA.rgb = currentCA.rgb;
+          out4_CA.rgb = averageSurrounding.rgb;
         }
-#endif
-      }
-      else {
-        //averageSurrounding  maxSurrounding
-        maxSurrounding = clamp( maxSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-        out4_CA.rgb = shadeProtocell[newState] * maxSurrounding;
-        // out4_CA.rgb = vec3(shadeProtocell[newState]);
+        else {
+          out4_CA.rgb = vec3(0,0,0);
+        }
       }
     }
   }
 
-  //////////////////////////////////////////////////////
-  // DISLOCATION
-  // parameter values: 0.314  0.606 0.354 0.409
-  else if( CAType == CA_DISLOCATION ) {
-    // CAParams optimal values from effe
-/*     float CAParams[1] = 0.393673;
-    float CAParams[2] = 0.102449;
-    float CAParams[3] = 0.53551;
-    float CAParams[4] = 0.165306;
-    float CAParams[5] = 0.196939;
-    float CAParams[6] = 0.322857;
- */
-    int nbSurroundingNewBorders =
-      (neighborValues[0].a == 1? 1:0) +
-      (neighborValues[1].a == 1? 1:0) +
-      (neighborValues[2].a == 1? 1:0) +
-      (neighborValues[3].a == 1? 1:0) +
-      (neighborValues[4].a == 1? 1:0) +
-      (neighborValues[5].a == 1? 1:0) +
-      (neighborValues[6].a == 1? 1:0) +
-      (neighborValues[7].a == 1? 1:0);
-    
-    int nbSurroundingOldBorders =
-      (neighborValues[0].a == 2? 1:0) +
-      (neighborValues[1].a == 2? 1:0) +
-      (neighborValues[2].a == 2? 1:0) +
-      (neighborValues[3].a == 2? 1:0) +
-      (neighborValues[4].a == 2? 1:0) +
-      (neighborValues[5].a == 2? 1:0) +
-      (neighborValues[6].a == 2? 1:0) +
-      (neighborValues[7].a == 2? 1:0);
+  ////////////////////////////////////////////////////// 
+  // GAL BIN MOORE NEIGHBORHOOD
+  else if( CAType == CA_GAL_BIN_MOORE ) {
+    // Fallski
+    // C48,NM,Sb255a,Babb189ab63a
+    // 48 states 0-47
+    // Moore neihborhood Order N,NE,E,SE,S,SW,W,NW
+    // states are encoded: N + 2 * NE + 4 * E + 8 * SE + 16 * S + 32 * SW + 64 * W + 128 * NW
+    // 00000000 0 neighbor
+    // 10000000 N neighbor
+    // 01000000 NE neighbor
+    // 192 = 00000011 W and NW neighbors
+    // Survive b255a survival on no alive neighbors: 
+    //                             1 x one    255 x zeros
+    // Birth   abb189ab63a birth on a single N or  NE neighbor, or on W and NW neighbors:
+    //                             0 1 1   189 x zeros   1   63 x zeros
+    // Encoding of Survival and Birth
+    // 256 0/1 digits encode 
 
-    vec3 gatherColorFactors =
-      (neighborValues[0].rgb * inverseShadeDisloc[int(max(0,neighborValues[0].a))]) +
-      (neighborValues[1].rgb * inverseShadeDisloc[int(max(0,neighborValues[1].a))]) +
-      (neighborValues[2].rgb * inverseShadeDisloc[int(max(0,neighborValues[2].a))]) +
-      (neighborValues[3].rgb * inverseShadeDisloc[int(max(0,neighborValues[3].a))]) +
-      (neighborValues[4].rgb * inverseShadeDisloc[int(max(0,neighborValues[4].a))]) +
-      (neighborValues[5].rgb * inverseShadeDisloc[int(max(0,neighborValues[5].a))]) +
-      (neighborValues[6].rgb * inverseShadeDisloc[int(max(0,neighborValues[6].a))]) +
-      (neighborValues[7].rgb * inverseShadeDisloc[int(max(0,neighborValues[7].a))]) ;
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
 
-    vec3 maxColorFactors =
-      //(currentCA.rgb * inverseShadeDisloc[int(max(0,currentCA.a))]) +
-      (neighborValues[0].rgb * inverseShadeDisloc[int(max(0,neighborValues[0].a))]);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb 
-                          * inverseShadeDisloc[int(max(0,neighborValues[ind].a))];
-      if( graylevel(newColorFactor) > graylevel(maxColorFactors) ) {
-        maxColorFactors = newColorFactor;
-      }
-    }
+    uint nbSurroundingLives =
+      (neighborValues[0].a > 0?   4:0) +  // E
+      (neighborValues[1].a > 0?  64:0) +  // W
+      (neighborValues[2].a > 0?   1:0) +  // N
+      (neighborValues[3].a > 0?  16:0) +  // S
+      (neighborValues[4].a > 0?   2:0) +  // NE
+      (neighborValues[5].a > 0?  32:0) +  // SW
+      (neighborValues[6].a > 0?   8:0) +  // SE
+      (neighborValues[7].a > 0? 128:0);   // NW
 
-    vec3 averageSurrounding;
-    int nbNeighbors = nbSurroundingNewBorders + nbSurroundingOldBorders;
-    if( nbNeighbors > 0 ) {
-      if( CAcolorSpread ) {
-        averageSurrounding = maxColorFactors;
+    // uint CArank = 38;
+    #define nbStatesGeneralBinary 21
+    /*
+    uint nbStates = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( 0 , 38 + CASubType ) ).r;
+    */
+
+    // previous automata collected from the web
+    if(CASubType <= 5) {
+      // The first CA value is negative so that it is not 
+      // displayed, here we change alpha value to positive
+      // because it is the second time it is displayed if 
+      float state = clamp(currentCA.a,0,nbStatesGeneralBinary);
+      float newState = 0;
+      if( currentCA.a < 0 ) {
+        newState = floor(randomCA.r * (nbStatesGeneralBinary+1)); // nbStates states randomly
+       //  out4_CA.a = nbStatesGeneralBinary;
+        out4_CA.a = newState;
       }
       else {
-        averageSurrounding = gatherColorFactors / nbNeighbors;
+        // survival
+        if( state != 0 ) {
+           newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                                 ivec2( nbSurroundingLives + 1 , 
+                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+           // survival
+           if( newState != 0 && out4_CA.a >= 0.0 ) {
+              // out4_CA.a -= 1.0;
+           }
+           else {
+              out4_CA.a = 0;
+           }
+        }
+        // birth
+        else {
+          newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( 256 + nbSurroundingLives + 1 , 
+                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r;
+          // birth
+          if( newState != 0 ) {
+            out4_CA.a = nbStatesGeneralBinary;
+          }
+        }
       }
-      // averageSurrounding = gatherSurroundingLives;
-      // averageSurrounding = vec3(0.4);
+    }
+    // personal automata
+    else {
+      // The first CA value is negative so that it is not 
+      // displayed, here we change alpha value to positive
+      // because it is the second time it is displayed if 
+      float state = clamp(currentCA.a,0,1);
+      float newState = 0;
+      if( currentCA.a < 0 ) {
+        out4_CA.a = 1;
+      }
+      else {
+        // survival
+        if( state > 0 ) {
+           newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                                 ivec2( nbSurroundingLives + 1 , 
+                                        CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r * 255;
+           // survival
+           if( newState != 0) {
+              out4_CA.a = currentCA.a;
+           }
+           // ageing
+           else {
+              out4_CA.a = max(0,round(currentCA.a - 1));
+           }
+        }
+        // birth
+        else {
+          newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                         ivec2( 256 + nbSurroundingLives + 1 , 
+                                CA_GAL_BIN_MOORE_TABLE_OFFSET + CASubType ) ).r * 255;
+          // birth
+          if( newState != 0 ) {
+            out4_CA.a = round(newState);
+          }
+          // nothing (stays dead)
+          else {
+              out4_CA.a = 0;
+           }
+        }
+      }
+    }
+    if( out4_CA.a != 0 ) {
+      out4_CA.rgb = currentCA.rgb;
     }
     else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
+      out4_CA.rgb = vec3(0);
     }
+  }
 
-    // 0 empty
-    // 1 new border
-    // 2 old border: border at preceding state
-    // 3 new nucleus
-    // 4 new nucleus at preceding step
-    uint nbStates = 5;
-    uint newState = 0;
+  ////////////////////////////////////////////////////// 
+  // GAL BIN VON NEUMANN NEIGHBORHOOD
+  else if( CAType == CA_GAL_BIN_NEUMANN ) {
+    // Banks,
+    // C0,NN,S3babbabbabba3b,B7ab3aba3b
+    // 2 states 0-1
+    // von Neumann neihborhood Order N,E,S,W
+    // states are encoded: N + 2 * E + 4 * S + 8 * W
+    // 0000 0 neighbor
+    // 1000 N neighbor
+    // 0100 E neighbor
+    // 3 = 1100 N and E neighbors
+    // Survive 3babbabbabba3b survival on 
+    //         1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,
+    // Birth   7ab3aba3b birth on 
+    //         0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,
+    // Encoding of Survival and Birth
+    // 16 0/1 digits encode 
+
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+    //                                  {1,1},{-1,-1},{1,-1},{-1,1},};  // NE SW SE NW
+
+    int nbSurroundingLives =
+      (neighborValues[0].a > 0?   2:0) +  // E
+      (neighborValues[1].a > 0?   8:0) +  // W
+      (neighborValues[2].a > 0?   1:0) +  // N
+      (neighborValues[3].a > 0?   4:0) ;  // S
+
+    // uint CArank = 38;
+    uint nbStates = uint(texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( 0 , 
+                                      CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r * 255);
 
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
+    uint state = int(clamp(currentCA.a,0,nbStates));
+    float newState = 0;
     if( currentCA.a < 0 ) {
-      out4_CA.a = randomCA.x * (nbStates+1); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      // newState = 3;
-      out4_CA.rgb = shadeDisloc[newState].r * currentCA.rgb;
+      // newState = int(randomCA.r * (nbStates+1)); // nbStates states randomly
+      out4_CA.a = float(nbStates);
     }
     else {
-      int indexOld = -1;
-      int firstindex = int(randomCA.x * 8);
-      // looks for an old border around
-      for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-        if( neighborValues[ind % 8].a == 2 ) {
-          indexOld = ind;
-        }
+      // survival
+      if( state > 0 ) {
+         newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                               ivec2( nbSurroundingLives + 1 , 
+                                      CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r;
+         // survival
+         if( newState > 0 && out4_CA.a >= 0.0 ) {
+            out4_CA.a -= 1.0;
+         }
       }
-      int indexNew = -1;
-      firstindex = int(randomCA.y * 8);
-      // looks for a new border around
-      for( int ind = firstindex ; ind < firstindex + 8 ; ind++ ) {
-        if( neighborValues[ind % 8].a == 1 ) {
-          indexNew = ind;
-        }
-      }
-
-      uint state = int(clamp(currentCA.a,0,nbStates));
-      // parameters
-      // w: fluidity (penetration of old borders between cells)
-      // z : celle density
-      // y : permeability
-      // x : freezing/dissolve
-
-      // empty cell transformation
-      if( state ==  0 ) {
-        newState = 0; // stays empty
-        // found a new border at indexNew
-        if( nbSurroundingNewBorders == 1  ) {
-          // prolongs the border
-          newState = 1; // new border
-        }
-        else if( nbSurroundingOldBorders == 1 
-                && randomCA.y < CAParams[2] ) {
-          // prolongs the border
-          newState = 2; // old border
-        }
-        else if( nbSurroundingNewBorders >= CAParams[1] * 8.0  ) {
-          // creates a nucleus
-          newState = 3; // nucleus
-        }
-      }
-      // new border growth: new border pushed by old border
-      else if( state ==  1 ) {
-        newState = 1; // stays a border
-        if( nbSurroundingNewBorders >= CAParams[5] * 10.0 ) {
-          newState = 3; //makes a nucleus
-        }
-        // found an old border at indexOld
-        else if( indexOld >= 0 && neighborValues[(indexOld + 4) % 8].a == 0 ) {
-          // a new border can be established in diametrically opposed cell
-          newState = 2; // becomes an old border
-        }
-      }
-      // border growth: old border pulled by new border
-      else if( state ==  2 ) {
-        newState = 2; // stays old border
-        if( nbSurroundingOldBorders >= CAParams[6] * 10.0 ) {
-          newState = 0; //makes a hole
-        }
-        else if( indexNew >= 0 ) {
-          newState = 0; // becomes an empty cell
-        }
-      }
-       // nucleus
-      else if( state ==  3 ) {
-        newState = 3; // stays a nucleus
-        if( nbSurroundingOldBorders + nbSurroundingNewBorders 
-             >= CAParams[4] * 16.0 ) {
-          newState = 0; //makes a hole
-        }
-        else 
-          if( randomCA.y < CAParams[3] ) {
-          newState = 1; // becomes a border
-        }
-      }
-      // newState = state;
-      out4_CA.a = float(newState);
-      averageSurrounding = clamp( averageSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-      out4_CA.rgb = shadeDisloc[newState] * averageSurrounding;
-      // out4_CA.rgb = colorDisloc[newState];
-    }
-    // const vec3 colorDisloc[5] = {{0.3,0.3,0.3},     // emptry
-    //                              {0,1,0},{0,0,1},   // new/old border
-    //                              {1,0,0},{1,1,0}};  // new/old nucleus
-  }
-
-  //////////////////////////////////////////////////////
-  // PREY/PREDATOR
-  else if( CAType == CA_PREY ) {
-    int nbSurroundingHungryPredators =
-      (round(neighborValues[0].a) == 3? 1:0) +
-      (round(neighborValues[1].a) == 3? 1:0) +
-      (round(neighborValues[2].a) == 3? 1:0) +
-      (round(neighborValues[3].a) == 3? 1:0) +
-      (round(neighborValues[4].a) == 3? 1:0) +
-      (round(neighborValues[5].a) == 3? 1:0) +
-      (round(neighborValues[6].a) == 3? 1:0) +
-      (round(neighborValues[7].a) == 3? 1:0);
-    
-    int nbSurroundingFullPredators =
-      (round(neighborValues[0].a) == 4? 1:0) +
-      (round(neighborValues[1].a) == 4? 1:0) +
-      (round(neighborValues[2].a) == 4? 1:0) +
-      (round(neighborValues[3].a) == 4? 1:0) +
-      (round(neighborValues[4].a) == 4? 1:0) +
-      (round(neighborValues[5].a) == 4? 1:0) +
-      (round(neighborValues[6].a) == 4? 1:0) +
-      (round(neighborValues[7].a) == 4? 1:0);
-    
-    int nbSurroundingPreys =
-      (round(neighborValues[0].a) == 2? 1:0) +
-      (round(neighborValues[1].a) == 2? 1:0) +
-      (round(neighborValues[2].a) == 2? 1:0) +
-      (round(neighborValues[3].a) == 2? 1:0) +
-      (round(neighborValues[4].a) == 2? 1:0) +
-      (round(neighborValues[5].a) == 2? 1:0) +
-      (round(neighborValues[6].a) == 2? 1:0) +
-      (round(neighborValues[7].a) == 2? 1:0);
-    
-    int nbNeighbors =
-      (round(neighborValues[0].a) != 0? 1:0) +
-      (round(neighborValues[1].a) != 0? 1:0) +
-      (round(neighborValues[2].a) != 0? 1:0) +
-      (round(neighborValues[3].a) != 0? 1:0) +
-      (round(neighborValues[4].a) != 0? 1:0) +
-      (round(neighborValues[5].a) != 0? 1:0) +
-      (round(neighborValues[6].a) != 0? 1:0) +
-      (round(neighborValues[7].a) != 0? 1:0);
-    
-    uint nbStates = 5;
-    uint newState = 0;
-    
-     vec3 gatherColorFactors =
-      (neighborValues[0].rgb * inverseShadePrey[ int(max(0,neighborValues[0].a)) ]) +
-      (neighborValues[1].rgb * inverseShadePrey[ int(max(0,neighborValues[1].a)) ]) +
-      (neighborValues[2].rgb * inverseShadePrey[ int(max(0,neighborValues[2].a)) ]) +
-      (neighborValues[3].rgb * inverseShadePrey[ int(max(0,neighborValues[3].a)) ]) +
-      (neighborValues[4].rgb * inverseShadePrey[ int(max(0,neighborValues[4].a)) ]) +
-      (neighborValues[5].rgb * inverseShadePrey[ int(max(0,neighborValues[5].a)) ]) +
-      (neighborValues[6].rgb * inverseShadePrey[ int(max(0,neighborValues[6].a)) ]) +
-      (neighborValues[7].rgb * inverseShadePrey[ int(max(0,neighborValues[7].a)) ]) ;
-
-    vec3 maxColorFactors =
-      //(currentCA.rgb * inverseShadePrey[ int(max(0,currentCA.a)) ]) +
-      (neighborValues[0].rgb * inverseShadePrey[ int(max(0,neighborValues[0].a)) ]);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb 
-                          * inverseShadePrey[ int(max(0,neighborValues[ind].a)) ];
-      if( graylevel(newColorFactor) > graylevel(maxColorFactors) ) {
-        maxColorFactors = newColorFactor;
-      }
-    }
-
-    vec3 averageSurrounding;
-    if( nbNeighbors > 0 ) {
-      if( CAcolorSpread ) {
-        averageSurrounding = maxColorFactors;
-      }
+      // birth
       else {
-        averageSurrounding = gatherColorFactors / nbNeighbors;
+        newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                       ivec2( 16 + nbSurroundingLives + 1 , 
+                              CA_GAL_BIN_NEUMANN_TABLE_OFFSET + CASubType ) ).r;
+        // birth
+        if( newState > 0 ) {
+          out4_CA.a = float(nbStates);
+        }
       }
-      // averageSurrounding = gatherSurroundingLives;
-      // averageSurrounding = vec3(0.4);
-    }
-    else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
     }
 
-   // The first CA value is negative so that it is not 
-    // displayed, here we change alpha value to positive
-    // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    if( currentCA.a < 0 ) {
-      out4_CA.a = round(randomCA.x * (nbStates+1)); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      out4_CA.rgb = shadePrey[ newState ].r * currentCA.rgb;
+    if( out4_CA.a > 0 ) {
+      out4_CA.rgb = vec3(out4_CA.a/float(nbStates-1));
     }
     else {
-      uint state = int(clamp(currentCA.a,0,nbStates));
-      newState = state;
-
-      // dead predator 
-      if( state == 0 ) {
-        // prey birth probability if preys are in neighborhood
-        if( nbSurroundingPreys > 0
-            && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams[1] ) {
-          newState = 2; // becomes a prey
-        }
-        // else {
-        //   out4_CA.a = currentCA.a; // remains dead predator
-        // }
-      }
-      // dead prey 
-      else if( state == 1 ) {
-        // predator birth probability if full predators are in neighborhood
-        if( nbSurroundingFullPredators > 0
-            && pow( randomCA.x , nbSurroundingFullPredators ) 
-               < CAParams[2] ) {
-          newState = 3; // becomes a hungry predator
-        }
-        // else {
-        //   newState = currentCA.a; // remains dead prey
-        // }
-      }
-      // prey 
-      else if( state == 2 ) {
-        // death probability if hungry predators are in neighborhood
-        if( nbSurroundingHungryPredators > 0
-            && pow( randomCA.x , nbSurroundingHungryPredators ) 
-               < CAParams[3] ) {
-          newState = 1; // dead prey
-        }
-        // else {
-        //   newState = currentCA.a; // survives
-        // }
-      }
-      // hungry predator 
-      else if( state == 3 ) {
-        // probability of eating if preys are in the neighborhood
-        if( nbSurroundingPreys > 0
-            && pow( randomCA.x , nbSurroundingPreys ) 
-               < CAParams[3] ) {
-          newState = 4; // survives in state full
-        }
-        else { // dies with a certain probability
-          if( randomCA.x < CAParams[4] ) {
-            newState = 0;  // dead predator
-          }
-          // else {
-          //   newState = currentCA.a; // survives
-          // }
-        }
-      }
-      // full predator 
-      else if( state == 4 ) {
-        // probability of becoming hungry
-        if( randomCA.x < CAParams[5] ) {
-          newState = 3; // becomes hungry
-        }
-        // else { 
-        //   newState = currentCA.a; // stays in state full
-        // }
-      }
-      else {
-        newState = 0;
-      }
-      // newState = state;
-      // out4_CA.a = float(newState);
-      out4_CA.a = float(newState);
-      averageSurrounding = clamp( averageSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-      out4_CA.rgb = shadePrey[ newState ] * averageSurrounding;
-      // out4_CA.rgb = vec3(shadePrey[ newState ]);
+      out4_CA.rgb = vec3(0,0,0);
     }
   }
 
-  //////////////////////////////////////////////////////
-  // SOCIAL COLLABORATION: PRISONNER'S DILEMNA
-  else if( CAType == CA_SOCIAL_PD ) {
-    // NW  N  NE
-    // S   *  E
-    // SW  S  SE
-    //
-    // 3  2  1
-    // 4  *  0
-    // 5  6  7
-    //
-    // in the Moore neighborhood, each neighbor has 3 neighbors
-    // N has NE NW & Center
-    // NE has N E & Center...
-    // the payoff for each neighbor is calculated for these 3 neighbors
-    // 3 payoffs: 
-    //     . CAParams[1] Cooperation
-    //     . CAParams[2] Defect (with Coop)
-    //     . CAParams[3] Coop (with Defect)
-    //     . CAParams[4] double defect
-    // 2 states 1: coop - 2: defect
-// first state is state of player, second state is state of partner
+  ////////////////////////////////////////////////////// 
+  // NEUMANN BIN VON NEUMANN NEIGHBORHOOD + CENTER
+  else if( CAType == CA_NEUMANN_BIN ) {
+    // Fredkin2 rule has the following definition: 2,01101001100101101001011001101001
+    // The first digit, '2', tells the rule has 2 states (it's a 1 bit rule).
+    // The second digit, '0', tells a cell in a configuration ME=0,N=0,E=0,S=0,W=0 will get the state 0.
+    // The third digit, '1', tells a cell in a configuration ME=0,N=0,E=0,S=0,W=1 will get the state 1.
+    // The fourth digit, '1', tells a cell in a configuration ME=0,N=0,E=0,S=1,W=0 will get the state 1.
+    // The fifth digit, '0', tells a cell in a configuration ME=0,N=0,E=0,S=1,W=1 will get the state 0.
+    // . . .
 
-    // const vec2 neighborOffsets[8] = {{1,0},{1,1},{0,1},{-1,1},      // E NE N NW
-    //                                  {-1,0},{-1,-1},{0,-1},{1,-1},};  // W SW S SE
+    // const vec2 neighborOffsets[8] = {{1,0},{-1,0},{0,1},{0,-1},      // E W N S
+
+    int nbSurroundingLives =
+      (int(currentCA.a)) +  // CENTER
+      (int(neighborValues[0].a) * 9) +  // E
+      (int(neighborValues[1].a) * 81) +  // W
+      (int(neighborValues[2].a) * 3) +  // N
+      (int(neighborValues[3].a) * 27) ;  // S
+
     // The first CA value is negative so that it is not 
     // displayed, here we change alpha value to positive
     // because it is the second time it is displayed if 
-    // we choose a random value according between 0 & nbStates
-    uint nbStates = 3;
-    uint newState = 0;
-
-    int nbNeighbors =
-      (neighborValues[0].a > 0? 1:0) +
-      (neighborValues[1].a > 0? 1:0) +
-      (neighborValues[2].a > 0? 1:0) +
-      (neighborValues[3].a > 0? 1:0) +
-      (neighborValues[4].a > 0? 1:0) +
-      (neighborValues[5].a > 0? 1:0) +
-      (neighborValues[6].a > 0? 1:0) +
-      (neighborValues[7].a > 0? 1:0);
-
-    vec3 gatherColorFactors =
-      (neighborValues[0].rgb * inverseShadeSocial[ int(max(0,neighborValues[0].a)) ]) +
-      (neighborValues[1].rgb * inverseShadeSocial[ int(max(0,neighborValues[1].a)) ]) +
-      (neighborValues[2].rgb * inverseShadeSocial[ int(max(0,neighborValues[2].a)) ]) +
-      (neighborValues[3].rgb * inverseShadeSocial[ int(max(0,neighborValues[3].a)) ]) +
-      (neighborValues[4].rgb * inverseShadeSocial[ int(max(0,neighborValues[4].a)) ]) +
-      (neighborValues[5].rgb * inverseShadeSocial[ int(max(0,neighborValues[5].a)) ]) +
-      (neighborValues[6].rgb * inverseShadeSocial[ int(max(0,neighborValues[6].a)) ]) +
-      (neighborValues[7].rgb * inverseShadeSocial[ int(max(0,neighborValues[7].a)) ]) ;
-
-    vec3 maxColorFactors =
-      //(currentCA.rgb * inverseShadeSocial[ int(max(0,currentCA.a)) ]) +
-      (neighborValues[0].rgb * inverseShadeSocial[ int(max(0,neighborValues[0].a)) ]);
-    for( int ind = 1; ind < 8 ; ind++ ) {
-      vec3 newColorFactor = neighborValues[ind].rgb 
-                          * inverseShadeSocial[ int(max(0,neighborValues[ind].a)) ];
-      if( graylevel(newColorFactor) > graylevel(maxColorFactors) ) {
-        maxColorFactors = newColorFactor;
-      }
-    }
-
-    vec3 averageSurrounding;
-    if( nbNeighbors > 0 ) {
-      if( CAcolorSpread ) {
-        averageSurrounding = maxColorFactors;
-      }
-      else {
-        averageSurrounding = gatherColorFactors / nbNeighbors;
-      }
-      // averageSurrounding = gatherSurroundingLives;
-      // averageSurrounding = vec3(0.4);
-    }
-    else {
-      averageSurrounding = currentCA.rgb;//vec3(0.0);
-    }
-
+    float state = clamp(currentCA.a,0,3);
+    float newState = 0;
     if( currentCA.a < 0 ) {
-      out4_CA.a = randomCA.x * (nbStates+1); // nbStates states randomly
-      newState = int( clamp(out4_CA.a,0,nbStates) );
-      // newState = 3;
-      out4_CA.rgb = shadeSocial[ newState ].r * currentCA.rgb;
+      newState = clamp(randomCA.r * (3+1),0,3); // nbStates states randomly
+      // newState = 2;
+      out4_CA.a = float(newState);
     }
     else {
-      // float payoffs[8];
-      float state = clamp(currentCA.a,0,nbStates);
-      int indMax = -1;
-      float maxPayoff = -1;
-      float sumPayoff = 0;
-      int firstIndex = int(randomCA.y * 9)%8;
-      for( int i = firstIndex ; i < firstIndex + 8 ; i++ ) {
-        int curInd = i%8;
-        float curPayoff = payoffCalc(neighborValues[curInd].a,state)
-                    + payoffCalc(neighborValues[curInd].a,neighborValues[(i+1)%8].a)
-                    + payoffCalc(neighborValues[curInd].a,neighborValues[(i+7)%8].a);
-        sumPayoff += curPayoff;
-        if( curPayoff > maxPayoff ) {
-          maxPayoff = curPayoff;
-          indMax = curInd;
-        }
-      }
-      newState = int(state);
-
-      // BASIC : adopts behavior of most successful neighbor
-      if( CASubType == 1 ) {
-        newState = int(neighborValues[indMax].a);
-      }
-      // VARIANT 2 : adopts behavior of most successful neighbor if it is above a certain minimal value
-      // otherwise dies or adopts opposite behavior with a certain probability
-      // ****** payoffCalc uses parameters 1 to 4
-      else if( CASubType == 2 ) {
-        if( sumPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
-          newState = int(neighborValues[indMax].a);
-        }
-        else {
-          if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
-            newState = 3 - int(neighborValues[indMax].a);
-          }
-          else {
-            newState = 0;
-          }
-        }
-      }
-      // VARIANT 3 : adopts behavior of most successful neighbor if it is above a certain minimal value
-      // otherwise if alive dies or stays as it is with a certain probability
-      // if dead copies most succesful neighbor with a certain probability
-      else if( CASubType == 3 ) {
-        if( maxPayoff > 24 * CAParams[5] ) { // ****** payoffCalc uses parameters 1 to 4
-          newState = int(neighborValues[indMax].a);
-        }
-        else {
-          // alive and adopts opposite behavior
-          if( neighborValues[indMax].a > 0 ) {
-              if( randomCA.z > CAParams[6] ) { // ****** payoffCalc uses parameters 1 to 4
-                newState = 3 - int(neighborValues[indMax].a);
-              }
-              // or stays in its current state
-          }
-          //dead
-          else {
-              if( randomCA.z > CAParams[7] ) {
-                newState = int(neighborValues[indMax].a);
-              }
-              // or stays dead
-          }
-        }
-      }
-      // VARIANT 4 : adopts behavior of most successful neighbor if it is above a certain minimal value
-      // or the opposite behavior with a given probability
-      else if( CASubType == 4 ) {
-        if( sumPayoff > 24 * CAParams[5] ) {
-          if( randomCA.z > CAParams[6] ) {
-             newState = int(neighborValues[indMax].a);
-          }
-          else {
-                newState = 3 - int(neighborValues[indMax].a);
-          }
-        }
-        else {
-          if( randomCA.z > 1 - CAParams[7] ) {
-             newState = int(neighborValues[indMax].a);
-          }
-          else {
-             newState = 3 - int(neighborValues[indMax].a);
-          }
-        }
-      }
-
+      newState = texelFetch(uniform_Update_texture_fs_CATable, 
+                    ivec2( nbSurroundingLives + 1 , 
+                            CA_NEUMANN_BIN_TABLE_OFFSET + CASubType ) ).r * 255.0;
+      // newState = texelFetch(uniform_Update_texture_fs_CATable, 
+      //                       ivec2( nbSurroundingLives + 1 , 58 ) ).r;
       out4_CA.a = float(newState);
-      averageSurrounding = clamp( averageSurrounding - vec3(CAdecay) , 0.0 , 1.0 );
-      out4_CA.rgb = shadeSocial[ newState ] * averageSurrounding;
     }
+
+    if( out4_CA.a > 0 ) {
+      vec3 averageSurrounding = vec3(out4_CA.a/float(3-1)); //gatherSurroundingLives* 3 / nbSurroundingLives;
+      out4_CA.rgb = currentCA.rgb;
+    }
+    else {
+      out4_CA.rgb = vec3(0);
+    }
+    // out4_CA = vec4(1.0,0.0,0.0,1.0);
   }
 
   //////////////////////////////////////////////////////
@@ -1585,56 +993,39 @@ void pixel_out( void ) {
       // and the position corresponding to the loclation of the
       // pixel in the coordinates system of the current pixel
       // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
-      // the positions are calculated in the coordinates centered at the current pixel
       if( graylevel(surrpixel_localColor) >  0 ) {
         vec2 surrpixel_speed;
         vec2 surrpixel_position;
         vec2 surrpixel_nextPosition;
 
-        vec4 surrpixel_speed_position = texture( uniform_Update_texture_fs_Pixels, newDecalCoord );
+        vec4 surrpixel_speed_position = texture( uniform_Update_texture_fs_Pixels,
+                newDecalCoord );
         surrpixel_speed = surrpixel_speed_position.xy;
         surrpixel_position = surrpixel_speed_position.zw;
+        vec2 pixel_acceleration;
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
-        vec2 acceleration;
-        // texture based acceleration shift
-        if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
-          float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
-          float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
-          float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
-          float gradX = greyX - grey_center;
-          float gradY = greyY - grey_center;
-          float norm = length(vec2(gradX, gradY));
-          if(norm != 0) {
-            float cosa = gradX / norm;
-            float sina = gradY / norm;
-            acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
-          }
-          else {          
-            acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
-          }
-        }
-        else 
-        {          
-          acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
-        }
 
+        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset);
+
+        vec2 acceleration;
+        acceleration = pixel_acceleration - pixel_acc_center;
         if( pixel_acc > 0 ) {
           // acceleration
-          surrpixel_speed += pixel_acc * acceleration;
+          surrpixel_speed 
+            += pixel_acc * acceleration;
         }
         else {
           // damping
-          surrpixel_speed += pixel_acc * surrpixel_speed;
+          surrpixel_speed 
+            += pixel_acc * surrpixel_speed;
         }
-
-        // the current step is added to the position
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
-        
-        // if( abs(surrpixel_nextPosition.x) <= 0.5 
-        //           && abs(surrpixel_nextPosition.y) <= 0.5 ) {
-        if( length(surrpixel_nextPosition) <= 0.5 ) {
+        // the current step is added to the position
+
+        if( abs(surrpixel_nextPosition.x) <= 0.5 
+                  && abs(surrpixel_nextPosition.y) <= 0.5 ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
           // computes the position of the pixel
@@ -1681,51 +1072,33 @@ void pixel_out( void ) {
         vec2 surrpixel_nextPosition;
 
         vec4 surrpixel_speed_position
-          = texture( uniform_Update_texture_fs_Pixels, newDecalCoord );
-        surrpixel_speed = surrpixel_speed_position.xy;
-        surrpixel_position = surrpixel_speed_position.zw;
+          = texture( uniform_Update_texture_fs_Pixels,
+               newDecalCoord );
+              surrpixel_speed = surrpixel_speed_position.xy;
+              surrpixel_position = surrpixel_speed_position.zw;
 
+        vec2 pixel_acceleration;
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
+
+        pixel_acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset);
+
         vec2 acceleration;
-
-        // texture based acceleration shift
-        if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
-          float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
-          float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
-          float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
-          float gradX = greyX - grey_center;
-          float gradY = greyY - grey_center;
-          float norm = length(vec2(gradX, gradY));
-          if(norm != 0) {
-            float cosa = gradX / norm;
-            float sina = gradY / norm;
-            acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
-          }
-          else {          
-            acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
-          }
-        }
-        else
-        {          
-          acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
-        }
-
+        acceleration = pixel_acceleration - pixel_acc_center;
         if( pixel_acc > 0 ) {
           // acceleration
-          surrpixel_speed += pixel_acc * acceleration;
+          surrpixel_speed 
+            += pixel_acc * acceleration;
         }
-        else if( pixel_acc < 0 && pixel_acc > -1) {
+        else {
           // damping
-          surrpixel_speed *= (1 + pixel_acc);
+          surrpixel_speed 
+            += pixel_acc * surrpixel_speed;
         }
-        else { // if( pixel_acc == 0 || pixel_acc <= -1)
-          // stops
-          surrpixel_speed = vec2(0);
-        }
-        // the current step is added to the position
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
+        // the current step is added to the position
+
         if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
                   && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
           out_color_pixel += surrpixel_localColor.rgb;
@@ -1740,15 +1113,15 @@ void pixel_out( void ) {
 
   out_position_pixel 
     = normalize( out_position_pixel + vec2( 0.5, 0.5 ) ) 
-        - vec2( 0.5, 0.5 );
+    - vec2( 0.5, 0.5 );
 
   if( graylevel(out_color_pixel) > 0 ) {
     out_color_pixel /= nb_cumultated_pixels;
     float out_color_pixel_max_col = maxCol(out_color_pixel);
     if(out_color_pixel_max_col > 1) {
       out_color_pixel -= vec3((out_color_pixel_max_col) - 1);
-      out_color_pixel = clamp( out_color_pixel , 0.0 , 1.0 );
-    }
+    out_color_pixel = clamp( out_color_pixel , 0.0 , 1.0 );
+  }
   }
   else {
     out_color_pixel = vec3(0,0,0);
@@ -1830,6 +1203,7 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
       signed_rx = PixelLocation.x - BezierControl[3].x;
       signed_ry = PixelLocation.y - BezierControl[3].y;
       float distanceToCurve = length( vec2(signed_rx , signed_ry) );
+
       if( // doesnt redraw on previously drawn place
           distanceToCurve < current_Brush_Radius ) {
         if(current_brushID > 0) {
@@ -1837,8 +1211,8 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
             return stroke_out( current_Brush_Radius , current_brushID );
         }
         else {
-            // reads the gray level of the brush at this position
-            return 1.0f - distanceToCurve / current_Brush_Radius;
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
         }
       }
   }
@@ -1900,8 +1274,8 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
             return stroke_out( current_Brush_Radius , current_brushID );
         }
         else {
-            // reads the gray level of the brush at this position
-            return 1.0f - distanceToCurve / current_Brush_Radius;
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
         }
       }
     }    
@@ -1931,8 +1305,8 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
               return stroke_out( current_Brush_Radius , current_brushID );
           }
           else {
-              // reads the gray level of the brush at this position
-              return 1.0f - distanceToCurve / current_Brush_Radius;
+          // reads the gray level of the brush at this position
+          return 1.0f - distanceToCurve / current_Brush_Radius;
           }
         }
         break;
@@ -1961,8 +1335,8 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
             return stroke_out( current_Brush_Radius , current_brushID );
         }
         else {
-            // reads the gray level of the brush at this position
-            return 1.0f - distanceToCurve / current_Brush_Radius;
+        // reads the gray level of the brush at this position
+        return 1.0f - distanceToCurve / current_Brush_Radius;
         }
       }
     }    
@@ -1970,69 +1344,6 @@ float out_gray_drawing( float current_Brush_Radius, int current_brushID ) {
 
   return 0.f;
 }
-
-
-#if defined(var_photoSobel)
-// Sobel on photo or clip
-void Sobel(int currentPhotoSource, int currentClipSource, vec2 coordsImageScaled) {
-  if( photoSobel > 0 && ((currentPhotoSource > 0) || (currentClipSource > 0))) {
-    vec3 samplerSobel;
-    // sobel
-    vec3 sobelX = vec3(0.0);
-    vec3 sobelY = vec3(0.0);
-    vec3 samplerClipSobel;
-    // sobel
-    vec3 sobelClipX = vec3(0.0);
-    vec3 sobelClipY = vec3(0.0);
-
-    // samples the center pixel and its Moore neighborhood
-    for( int i = 0 ; i < 9 ; i++ ) {
-      switch(currentPhotoSource) {
-        case 1:
-          samplerSobel = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-          break;
-        case 2:
-          samplerSobel = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-          break;
-        default:
-          break;
-      }
-      switch(currentClipSource) {
-        case 1:
-          samplerClipSobel = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-          break;
-        case 2:
-          samplerClipSobel = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
-          break;
-        default:
-          break;
-      }
-      if(i < 8) {
-        sobelX += sobelMatrixX_0[i] * samplerSobel;
-        sobelY += sobelMatrixY_0[i] * samplerSobel;
-        sobelClipX += sobelMatrixX_0[i] * samplerClipSobel;
-        sobelClipY += sobelMatrixY_0[i] * samplerClipSobel;
-      }
-    }
-
-    samplerSobel = photoOriginal;
-    sobelX = mix( samplerSobel , sobelX , photoSobel );
-    sobelY = mix( samplerSobel , sobelY , photoSobel );
-    samplerClipSobel = clipOriginal;
-    sobelClipX = mix( samplerClipSobel , sobelClipX , photoSobel );
-    sobelClipY = mix( samplerClipSobel , sobelClipY , photoSobel );
-
-    vec3 photo_sobel_result = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
-    vec3 clip_sobel_result = clamp( sqrt( sobelClipX * sobelClipX + sobelClipY * sobelClipY ) , 0.0 , 1.0 );
-    if(currentPhotoSource > 0) {
-        photoOriginal = photo_sobel_result;
-    }
-    if(currentClipSource > 0) {
-        clipOriginal = clip_sobel_result;
-    }
-  }
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
@@ -2126,16 +1437,21 @@ void main() {
   fft_scale = uniform_Update_scenario_var_data[82];
 
   //////////////////////////
+  // TRACK DECAY
+  vec4 trkDecay = vec4(trkDecay_0,trkDecay_1,trkDecay_2,trkDecay_3);
+
+  //////////////////////////
   // variables 
   // frame number
-  frameNo = int(round(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.x));
+  frameNo = int(round(uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.x));
 
  // cursor type (+1 for stylus and -1 for rubber)
-  Cursor = uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.y;
+  Cursor = uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.y;
 
   // pixels position speed update parameters
   pixel_acc_center = vec2(pixel_acc_shiftX,pixel_acc_shiftY);
   
+
   // working variables for screen dimension
   width = uniform_Update_fs_4fv_W_H_time_currentScene.x;
   height = uniform_Update_fs_4fv_W_H_time_currentScene.y;
@@ -2160,14 +1476,9 @@ void main() {
   
   // noise for CA: random value
   randomCA = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.0 ) );
-  randomCA2 = texture( uniform_Update_texture_fs_Noise , vec3( vec2(1,1) - pixelTextureCoordinatesPOT_XY , 0.5 ) );
   // CA or BG "REPOPULATION"
   if( BG_CA_repop_density >= 0 && (repop_CA > 0 || repop_BG > 0)) {
-    textureDensityValue = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).rgb;
-    repop_density_weight = graylevel(textureDensityValue);
-  }
-  else {
-    repop_density_weight = 1;
+        repop_density_weight = texture(uniform_Update_texture_fs_RepopDensity,decalCoords).r;
   }
 
   ///////////////////////////////////////////////////
@@ -2199,7 +1510,6 @@ void main() {
   // CA, pixels and particle parameters FBO copy
   out_attachment_FBO[pg_FBO_fs_CA_attacht]
     = texture( uniform_Update_texture_fs_CA , decalCoords );
-  // pixel speed and local position inside the current pixel
   out_attachment_FBO[pg_FBO_fs_Pixels_attacht]
     = texture( uniform_Update_texture_fs_Pixels , decalCoords );
 
@@ -2242,7 +1552,6 @@ void main() {
   if( freeze ) {
     // FBO OUTPUTS
     out_Update_FBO_fs_CA = out_attachment_FBO[pg_FBO_fs_CA_attacht];
-    // pixel speed and local position inside the current pixel
     out_Update_FBO_fs_Pixels = out_attachment_FBO[pg_FBO_fs_Pixels_attacht];
     out_Update_FBO_fs_Trk0 = out_track_FBO[0];
 #if PG_NB_TRACKS >= 2
@@ -2265,83 +1574,252 @@ void main() {
   // each track possibly covers the previous color
 
   vec3 photocolor = vec3( 0.0 );
+  vec3 photoOriginal = vec3( 0.0 );
+  vec3 clipOriginal = vec3( 0.0 );
   vec2 coordsImage = vec2( 0.0 );
   vec2 coordsImageScaled = vec2( 0.0 );
   int currentPhotoSource = 0;
   int currentClipSource = 0;
-  vec2 photo_scale = vec2(1);
-  photo_scale = vec2(photo_scaleX, photo_scaleY);
-  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy 
-      + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
-    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
-    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - vec2(1)) / photo_scale;
-    // coordsImageScaled = coordsImage;
-    photoOriginal = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled ).rgb;
-    // color inversion
-#if defined(var_photoSobel)
-    Sobel(1,-1, coordsImageScaled);
-#endif
-    if( invertPhoto) {
-        photoOriginal = vec3(1) - photoOriginal;
-    }
-    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photoOriginal;
+  float clip0_x_crop = 0.;
+  float clip0_y_shift = 0.;
+  float clip0_scale = 1.;
+  float clip1_x_crop = 0.;
+  float clip1_y_shift = 0.;
+  float clip1_scale = 1.;
+  float full_clip_bottom_crop = 0.;
+  float full_clip_top_crop = 1.;
+  float full_clip_left_crop = 0.;
+  float full_clip_right_crop = 1.;
+  float right_clip_shift = 0.;
+  float left_clip_shift = 0.;
+  float midScreen = 0.5;
+  // 1 full scale right
+  if(ContAct_screenLayout == 1) {
+    clip0_x_crop = 0.;
+    clip0_y_shift = 0.;
+    clip0_scale = 1.;
+    clip1_x_crop = 0.;
+    clip1_y_shift = 0.;
+    clip1_scale = 1.;
+    full_clip_bottom_crop = 0.;
+    full_clip_top_crop = 1.;
+    full_clip_left_crop = 0.;
+    full_clip_right_crop = 1.;
+    left_clip_shift = 1.;
+    right_clip_shift = 0.;
+    midScreen = 0.;
   }
-  else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
-    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
-    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - vec2(1)) / photo_scale;
-    // coordsImageScaled = coordsImage;
-    clipOriginal = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled ).rgb;
-    // color inversion
-#if defined(var_photoSobel)
-    Sobel(-1,1, coordsImageScaled);
-#endif
-   if( invertPhoto) {
-        clipOriginal = vec3(1) - clipOriginal;
+  // 0 full scale left
+  else if(ContAct_screenLayout == 0) {
+    clip0_x_crop = 0.;
+    clip0_y_shift = 0.;
+    clip0_scale = 1.;
+    clip1_x_crop = 0.;
+    clip1_y_shift = 0.;
+    clip1_scale = 1.;
+    full_clip_bottom_crop = 0.;
+    full_clip_top_crop = 1.;
+    full_clip_left_crop = 0.;
+    full_clip_right_crop = 1.;
+    left_clip_shift = 0.;
+    right_clip_shift = 1.;
+    midScreen = 1.;
+  }
+  // two full scale (hoizontal with vertical split)
+  else if(ContAct_screenLayout == 2) {
+    clip0_x_crop = 0.25;
+    clip0_y_shift = 0.;
+    clip0_scale = 1.;
+    clip1_x_crop = 0.25;
+    clip1_y_shift = 0.;
+    clip1_scale = 1.;
+    full_clip_bottom_crop = 0.;
+    full_clip_top_crop = 1.;
+    full_clip_left_crop = 0.;
+    full_clip_right_crop = 1.;
+    left_clip_shift = 0.;
+    right_clip_shift = 0.5;
+    midScreen = 0.5;
+  }
+  // 2 half scale
+  else if(ContAct_screenLayout == 3) {
+    clip0_x_crop = 0.;
+    clip0_y_shift = 0.25;
+    clip0_scale = 2.;
+    clip1_x_crop = 0.;
+    clip1_y_shift = 0.25;
+    clip1_scale = 2.;
+    full_clip_bottom_crop = 0.25;
+    full_clip_top_crop = 0.75;
+    full_clip_left_crop = 0.;
+    full_clip_right_crop = 1.;
+    left_clip_shift = 0.;
+    right_clip_shift = 0.5;
+    midScreen = 0.5;
+  }
+  // 4 half scale
+  else if(ContAct_screenLayout == 4) {
+    clip0_x_crop = 0.;
+    clip0_y_shift = 0.;
+    clip0_scale = 2.;
+    clip1_x_crop = 0.;
+    clip1_y_shift = 0.5;
+    clip1_scale = 2.;
+    full_clip_bottom_crop = 0.;
+    full_clip_top_crop = 1.;
+    full_clip_left_crop = 0.;
+    full_clip_right_crop = 1.;
+    left_clip_shift = 0.;
+    right_clip_shift = 0.5;
+    midScreen = 0.5;
+  }
+  // two half scale (vertical with horizontal split)
+  else if(ContAct_screenLayout == 5) {
+    clip0_x_crop = 0.;
+    clip0_y_shift = 0.;
+    clip0_scale = 2.;
+    clip1_x_crop = 0.;
+    clip1_y_shift = 0.5;
+    clip1_scale = 2.;
+    full_clip_bottom_crop = 0.;
+    full_clip_top_crop = 1.;
+    full_clip_left_crop = 0.25;
+    full_clip_right_crop = 0.75;
+    left_clip_shift = 0.25;
+    right_clip_shift = 1.;
+    midScreen = 0.75;
+  }
+  // two full scale (hoizontal with vertical split)
+  // black strips top and bottom
+  if(decalCoordsPOT.y >= full_clip_bottom_crop && decalCoordsPOT.y < full_clip_top_crop
+     && decalCoordsPOT.x >= full_clip_left_crop && decalCoordsPOT.x < full_clip_right_crop) {
+    // left clip top
+    if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x > 0 
+      && decalCoordsPOT.x < midScreen) {
+      if((ContAct_screenLayout != 4 && ContAct_screenLayout != 5) || decalCoordsPOT.y > 0.5) {
+        coordsImage = vec2(decalCoordsPOT.x - left_clip_shift + clip0_x_crop , (1 - decalCoordsPOT.y) - clip0_y_shift) * clip0_scale * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+        // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
+        coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
+        // coordsImageScaled = coordsImage;
+        photoOriginal = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled ).rgb;
+        photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photoOriginal;
+        currentPhotoSource = 1;
+      }
     }
-    photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clipOriginal;
+    // right clip top
+    if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0 
+      && decalCoordsPOT.x >= midScreen) {
+      if((ContAct_screenLayout != 4 && ContAct_screenLayout != 5) || decalCoordsPOT.y > 0.5) {
+        coordsImage = vec2(decalCoordsPOT.x - right_clip_shift + clip0_x_crop , (1 - decalCoordsPOT.y) - clip0_y_shift) * clip0_scale * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+        // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
+        coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
+        // coordsImageScaled = coordsImage;
+        photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
+        photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
+        currentPhotoSource = 2;
+      }
+    }
+    // left clip bottom
+    if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.x > 0 
+      && decalCoordsPOT.x < midScreen) {
+      // black strims top and bottom
+      if((ContAct_screenLayout != 4 && ContAct_screenLayout != 5) || decalCoordsPOT.y < 0.5) {
+        coordsImage = vec2(decalCoordsPOT.x - left_clip_shift + clip1_x_crop , (1 - decalCoordsPOT.y) - clip1_y_shift) * clip1_scale * uniform_Update_fs_4fv_photo01_wh.xy + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+        // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.y - coordsImage.y;
+        coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.xy * (photo_scale - 1) / photo_scale;
+        // coordsImageScaled = coordsImage;
+        clipOriginal = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled ).rgb;
+        photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clipOriginal;
+        currentClipSource = 1;
+      }
+    }
+    // right clip bottom
+    if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0 
+      && decalCoordsPOT.x >= midScreen) {
+      // black strims top and bottom
+      if((ContAct_screenLayout != 4 && ContAct_screenLayout != 5) || decalCoordsPOT.y < 0.5) {
+        coordsImage = vec2(decalCoordsPOT.x - right_clip_shift + clip1_x_crop , (1 - decalCoordsPOT.y) - clip1_y_shift) * clip1_scale * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
+        // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
+        coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - 1) / photo_scale;
+        // coordsImageScaled = coordsImage;
+        clipOriginal = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled ).rgb;
+        photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clipOriginal;
+        currentClipSource = 2;
+      }
+    }
   }
 
-  if(photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw 
-      + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
-    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
-    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
-    // coordsImageScaled = coordsImage;
-    photoOriginal = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled ).rgb;
-    // color inversion
-#if defined(var_photoSobel)
-    Sobel(2, -1, coordsImageScaled);
-#endif
-    if( invertPhoto) {
-        photoOriginal = vec3(1) - photoOriginal;
-    }
-    photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photoOriginal;
-  }
-  else if(photoWeight * uniform_Update_fs_2fv_clip01Wghts.y > 0) {
-    coordsImage = vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * uniform_Update_fs_4fv_photo01_wh.zw + uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.zw;
-    // coordsImage.y = uniform_Update_fs_4fv_photo01_wh.w - coordsImage.y;
-    coordsImageScaled = coordsImage / photo_scale + vec2(0.5) * uniform_Update_fs_4fv_photo01_wh.zw * (photo_scale - vec2(1)) / photo_scale;
-    // coordsImageScaled = coordsImage;
-    clipOriginal = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled ).rgb;
-    // color inversion
-#if defined(var_photoSobel)
-    Sobel(-1, 2, coordsImageScaled);
-#endif
-    if( invertPhoto) {
-        clipOriginal = vec3(1) - clipOriginal;
-    }
-    photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clipOriginal;
-  }
+  // Sobel on photo
+  if( photoSobel > 0 ) {
+      vec3 samplerSobel;
+      // sobel
+      vec3 sobelX = vec3(0.0);
+      vec3 sobelY = vec3(0.0);
+      vec3 samplerClipSobel;
+      // sobel
+      vec3 sobelClipX = vec3(0.0);
+      vec3 sobelClipY = vec3(0.0);
 
-#if defined(var_photo_value)
+      // samples the center pixel and its Moore neighborhood
+      for( int i = 0 ; i < 9 ; i++ ) {
+        switch(currentPhotoSource) {
+          case 1:
+            samplerSobel = texture(uniform_Update_texture_fs_Photo0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+            break;
+          case 2:
+            samplerSobel = texture(uniform_Update_texture_fs_Photo1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+            break;
+        }
+        switch(currentClipSource) {
+          case 1:
+            samplerClipSobel = texture(uniform_Update_texture_fs_Clip0, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+            break;
+          case 2:
+            samplerClipSobel = texture(uniform_Update_texture_fs_Clip1, coordsImageScaled + offsetsSobelPOT[i]).rgb;
+            break;
+        }
+        if(i < 8) {
+          sobelX += sobelMatrixX_0[i] * samplerSobel;
+          sobelY += sobelMatrixY_0[i] * samplerSobel;
+          sobelClipX += sobelMatrixX_0[i] * samplerClipSobel;
+          sobelClipY += sobelMatrixY_0[i] * samplerClipSobel;
+        }
+      }
+
+      samplerSobel = photoOriginal;
+      sobelX = mix( samplerSobel , sobelX , photoSobel );
+      sobelY = mix( samplerSobel , sobelY , photoSobel );
+      samplerClipSobel = clipOriginal;
+      sobelClipX = mix( samplerClipSobel , sobelClipX , photoSobel );
+      sobelClipY = mix( samplerClipSobel , sobelClipY , photoSobel );
+
+      vec3 photo_sobel_result = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+      vec3 clip_sobel_result = clamp( sqrt( sobelClipX * sobelClipX + sobelClipY * sobelClipY ) , 0.0 , 1.0 );
+      photocolor = vec3(0);
+      switch(currentPhotoSource) {
+        case 1:
+          photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.x * photo_sobel_result;
+          break;
+        case 2:
+          photocolor += photoWeight * uniform_Update_fs_4fv_photo01Wghts_randomValues.y * photo_sobel_result;
+          break;
+      }
+      switch(currentClipSource) {
+        case 1:
+          photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.x * clip_sobel_result;
+          break;
+        case 2:
+          photocolor += photoWeight * uniform_Update_fs_2fv_clip01Wghts.y * clip_sobel_result;
+          break;
+      }
+  }
   photocolor *= vec3(photo_value);
-#endif
-
-  // photo_satur
+  // color inversion
+  if( invertPhoto) {
+      photocolor = vec3(1) - photocolor;
+  }
+  // video_satur
   //  public-domain function by Darel Rex Finley
-#if defined(var_photo_satur)
   if(photo_satur >= 0) {
     float  powerColor = sqrt( (photocolor.r)*(photocolor.r) * .299 +
                                (photocolor.g)*(photocolor.g) * .587 +
@@ -2349,53 +1827,34 @@ void main() {
     photocolor = clamp( powerColor 
       + (photocolor - vec3(powerColor)) * photo_satur , 0 , 1 );
   }
-#endif
-
-  // photo_threshold
-#if defined(var_photo_threshold)
   if( graylevel(photocolor) < photo_threshold ) {
     photocolor = vec3(0.0);
   }
-#endif
 
-  // photo_gamma
+    // photo_gamma
   // Gamma correction on photo (mainly blck and white)
-#if defined(var_photo_gamma)
   if(photo_gamma != 1) 
   {
-    float gamma = max(photo_gamma, 0.01);
-    photocolor.r = pow( photocolor.r, gamma);
-    photocolor.g = pow( photocolor.g, gamma);
-    photocolor.b = pow( photocolor.b, gamma);
+    photocolor.r = pow( photocolor.r, photo_gamma);
+    photocolor.g = pow( photocolor.g, photo_gamma);
+    photocolor.b = pow( photocolor.b, photo_gamma);
   }
-#endif
 
   // image_threshold 
-#if defined(var_photo_threshold)
-  if(photo_threshold > 0) {
+  if(photo_threshold > 0) 
+  {
     photocolor.r = (photocolor.r > photo_threshold? photocolor.r : 0);
     photocolor.g = (photocolor.g > photo_threshold? photocolor.g : 0);
     photocolor.b = (photocolor.b > photo_threshold? photocolor.b : 0);
   }
-#endif
 
   // image contrast
   //  from http://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/
-#if defined(var_photo_contrast)
-  if(photo_contrast > 0) {
-    float correctionFactor =  1.016 * (photo_contrast + 1.0) 
-                                / (1.016 - photo_contrast);
-    photocolor = clamp( vec3(correctionFactor)
-      * (photocolor - vec3(0.5)) + vec3(0.5) , 0 , 1 );
-  }
-#endif
+  float correctionFactor =  1.016 * (photo_contrast + 1.0) 
+                              / (1.016 - photo_contrast);
+  photocolor = clamp( vec3(correctionFactor)
+    * (photocolor - vec3(0.5)) + vec3(0.5) , 0 , 1 );
 
-#ifdef var_photo_equalization
-  if(photo_equalization > 0) {
-    photocolor *= uniform_Update_fs_3fv_photo_rgb;
-  }
-#endif
-  // photocolor = texture(uniform_Update_texture_fs_Photo1, vec2(decalCoordsPOT.x , 1 - decalCoordsPOT.y) * vec2(1920,1080)  ).rgb;
 
   vec3 videocolor = vec3( 0.0 );
 
@@ -2418,62 +1877,36 @@ void main() {
      cameraCoord = vec2(decalCoordsPOT.x, (1 - decalCoordsPOT.y) )
                * cameraWH;
  */
- 
-/* // FlowingForms
-   cameraCoord = vec2(0.7 * (decalCoordsPOT.x + 0.15), 0.7 * (1. - decalCoordsPOT.y + 0.15) ) * cameraWH;
-*/
-
   // cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
-  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) );
-  // two images in case of double screen
-/*  if(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.w != 0) {
-    cameraCoord.x *= 2.;
-    if(cameraCoord.x >= 1) {
-      cameraCoord.x -= 1.;
-    }
-  }
-*/
-  // Zoom on camera
-  #ifdef var_cameraZoom
-    cameraCoord = (cameraCoord - vec2(0.5,0.5)) / cameraZoom +vec2(0.5,0.5);
-  #endif
-  // added for wide angle lens that covers more than the drawing surface
-  cameraCoord =  cameraCoord * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
-  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y );
-  // two images in case of double screen
-/*  if(uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.w != 0) {
-    movieCoord.x *= 2.;
-    if(movieCoord.x >= 1) {
-      movieCoord.x -= 1.;
-    }
-  }
-*/  // from PoT coordinates to movie texture coordina
-  movieCoord *= movieWH;
+  cameraCoord = vec2((decalCoordsPOT.x), (1 - decalCoordsPOT.y) )
+              // added for wide angle lens that covers more than the drawing surface
+               * cameraWH; + uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H.xy;
+  movieCoord = vec2(decalCoordsPOT.x , 1.0-decalCoordsPOT.y )
+               * movieWH;
 
   // image reading
   cameraOriginal = texture(uniform_Update_texture_fs_Camera_frame, cameraCoord ).rgb;
   cameraImage = cameraOriginal;
   // cameraOriginal = vec3(1) - cameraOriginal;
   // gamma correction
-#ifdef var_camera_gamma
+  #ifdef var_camera_gamma
   if(camera_gamma != 1) {
-    float gamma = max(camera_gamma, 0.01);
-    cameraImage = vec3( pow(cameraImage.r,gamma) , pow(cameraImage.g,gamma) , pow(cameraImage.b,gamma) );
+    cameraImage = vec3( pow(cameraImage.r,camera_gamma) , pow(cameraImage.g,camera_gamma) , pow(cameraImage.b,camera_gamma) );
   }
-#endif
-#ifdef var_camera_BG_subtr
+  #endif
+  #ifdef var_camera_BG_subtr
   if( camera_BG_subtr ) {
     cameraImage = abs(cameraImage - texture(uniform_Update_texture_fs_Camera_BG, cameraCoord ).rgb); // initial background subtraction
   }
-#endif
-#ifdef var_cameraThreshold
+  #endif
+  #ifdef var_cameraThreshold
   if( graylevel(cameraImage) < cameraThreshold ) {
     cameraImage = vec3(0.0);
   }
 #endif
 
   // Sobel on camera
-#ifdef var_cameraSobel
+  #ifdef var_cameraSobel
   if( cameraSobel > 0 ) {
       vec3 samplerSobel;
       // sobel
@@ -2496,34 +1929,26 @@ void main() {
       sobelX = mix( samplerSobel , sobelX , cameraSobel );
       sobelY = mix( samplerSobel , sobelY , cameraSobel );
 
-     cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
+      cameraImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
   }
 #endif
   // color inversion
-#ifdef var_invertCamera
+  #ifdef var_invertCamera
   if( invertCamera ) {
       cameraImage = vec3(1) - cameraImage;
   }
-#endif
+  #endif
 
   movieImage = texture(uniform_Update_texture_fs_Movie_frame, movieCoord ).rgb;
-  
   // gamma correction
-#if defined(var_photo_contrast)
   if(movie_gamma != 1) {
-    float gamma = max(movie_gamma, 0.01);
-    movieImage = vec3( pow(movieImage.r,gamma) , pow(movieImage.g,gamma) , pow(movieImage.b,gamma) );
+    movieImage = vec3( pow(movieImage.r,movie_gamma) , pow(movieImage.g,movie_gamma) , pow(movieImage.b,movie_gamma) );
   }
-#endif
-
-#if defined(var_movie_threshold)
   if( graylevel(movieImage) <= movie_threshold ) {
       movieImage = vec3(0.0);
   }
-#endif
 
   // Sobel on movie
-#ifdef var_movieSobel
   if( movieSobel > 0 ) {
       vec3 samplerSobel;
       // sobel
@@ -2548,32 +1973,24 @@ void main() {
 
       movieImage = clamp( sqrt( sobelX * sobelX + sobelY * sobelY ) , 0.0 , 1.0 );
   }
-#endif
-
-#ifdef var_invertMovie
   // color inversion
   if( invertMovie ) {
       movieImage = vec3(1) - movieImage;
   }
-#endif
 
   // video image = mix of movie and camera
   float videoWeight = 0;
-#ifdef var_cameraWeight
+  #ifdef var_cameraWeight
   videocolor += cameraWeight * cameraImage;
   videoWeight += cameraWeight;
-#endif
-#ifdef var_movieWeight
+  #endif
+  #ifdef var_movieWeight
   videocolor += movieWeight * movieImage;
   videoWeight += movieWeight;
 #endif
 
-  // videocolor = movieImage;
-  // videoWeight = 1.;
-
   // video_satur
   //  public-domain function by Darel Rex Finley
-#ifdef var_video_satur
   if(video_satur >= 0) {
     float  powerColor = sqrt( (videocolor.r)*(videocolor.r) * .299 +
                                (videocolor.g)*(videocolor.g) * .587 +
@@ -2581,21 +1998,16 @@ void main() {
     videocolor = clamp( powerColor 
       + (videocolor - vec3(powerColor)) * video_satur , 0 , 1 );
   }
-#endif
 
-#ifdef var_video_gamma
   // video_gamma
   // Gamma correction on video (mainly blck and white)
   if(video_gamma != 1) 
   {
-    float gamma = max(video_gamma, 0.01);
-    videocolor.r = pow( videocolor.r, gamma);
-    videocolor.g = pow( videocolor.g, gamma);
-    videocolor.b = pow( videocolor.b, gamma);
+    videocolor.r = pow( videocolor.r, video_gamma);
+    videocolor.g = pow( videocolor.g, video_gamma);
+    videocolor.b = pow( videocolor.b, video_gamma);
   }
-#endif
 
-#ifdef var_video_threshold
   // image_threshold 
   if(video_threshold > 0) 
   {
@@ -2603,18 +2015,8 @@ void main() {
     videocolor.g = (videocolor.g > video_threshold? videocolor.g : 0);
     videocolor.b = (videocolor.b > video_threshold? videocolor.b : 0);
   }
-#endif
 
-#ifdef var_video_contrast
-  // video contrast
-  //  from http://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/
-  if(video_contrast > 0) {
-    float correctionFactor =  1.016 * (video_contrast + 1.0) 
-                                / (1.016 - video_contrast);
-    videocolor = clamp( vec3(correctionFactor)
-      * (videocolor - vec3(0.5)) + vec3(0.5) , 0 , 1 );
-  }
-#endif
+
 
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
@@ -2626,6 +2028,21 @@ void main() {
   //  FLASH BG - FLASH CA - FLASH PART
   vec3 flashToBGCumul = vec3(0.0);
   vec4 flashToCACumul = vec4(0.0);
+
+  /////////////////////////////////////
+  // builds a path_replay_trackNo vector so that it can be used in the for loop
+  #if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+  ivec3 path_replay_trackNo03 = ivec3(path_replay_trackNo_1,path_replay_trackNo_2,
+                                      path_replay_trackNo_3);
+  #endif
+  #if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+  ivec4 path_replay_trackNo47 = ivec4(path_replay_trackNo_4,path_replay_trackNo_5,
+                                      path_replay_trackNo_6,path_replay_trackNo_7);
+  #endif
+  #if PG_NB_PATHS == 11
+  ivec4 path_replay_trackNo811 = ivec4(path_replay_trackNo_8,path_replay_trackNo_9,
+                                      path_replay_trackNo_10,path_replay_trackNo_11);
+  #endif
 
   /////////////////////////////////////
   // TRACK indTrack between 1 and PG_NB_TRACKS - 1 + track 0 in the end
@@ -2645,11 +2062,24 @@ void main() {
       if( indPath == 0 && currentDrawingTrack == indCurTrack ) {
         pathStroke = DRAWING_BEZIER;
       }
+#if PG_NB_PATHS == 3 || PG_NB_PATHS == 7 || PG_NB_PATHS == 11
       // path drawing on current track
-      else if( indPath > 0 && path_replay_trackNo[indPath] == indCurTrack ) {
+      else if( indPath > 0 && indPath < 4 && path_replay_trackNo03[indPath - 1] == indCurTrack ) {
         pathStroke = DRAWING_BEZIER;
       }
-
+#endif
+#if PG_NB_PATHS == 7 || PG_NB_PATHS == 11
+      // path drawing on current track
+      else if( indPath >= 4 && path_replay_trackNo47[indPath - 4] == indCurTrack ) {
+        pathStroke = DRAWING_BEZIER;
+      }
+#endif
+ #if PG_NB_PATHS == 11
+      // path drawing on current track
+      else if( indPath >= 8 && path_replay_trackNo811[indPath - 8] == indCurTrack ) {
+        pathStroke = DRAWING_BEZIER;
+      }
+#endif
       // drawing occurs
       if( pathStroke > 0 ) {
         BezierControlX = uniform_Update_path_data[indPath * PG_MAX_PATH_DATA + PG_PATH_P_X];
@@ -2670,7 +2100,6 @@ void main() {
             curTrack_grayLevel =  out_gray_drawing( 3 * radiusX_beginOrEnd_radiusY_brushID.x, 0 ); 
                                  // rubber radius is made 3 times larger than regular pen
             out_track_FBO[indCurTrack].rgb *= (1 - curTrack_grayLevel * pathColor.a);
-            //out_track_FBO[indCurTrack].rgb += curTrack_grayLevel * 0.1 * pathColor.rgb;
             curTrack_color.rgb = vec3(0);
         }
         else { // normal stylus
@@ -2698,89 +2127,71 @@ void main() {
     /////////////////
     // TRACK video
     bool videoOn = false;
-    if( currentVideoTrack == indCurTrack 
-      && (videoWeight > 0 || flashCameraTrkWght > 0)) {
-      out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
-      if( videoWeight > 0) {
-        videoOn = true;
+    if( currentVideoTrack == indCurTrack && videoWeight > 0) {
+      videoOn = true;
 #ifdef var_cameraCumul
-        if( cameraCumul == 1 ) { // ADD
-          out_track_FBO[indCurTrack] 
-            = vec4( clamp( max(videocolor,out_track_FBO[indCurTrack].rgb) , 0.0 , 1.0 ) ,  1.0 );
+      if( cameraCumul == 1 ) { // ADD
+        out_track_FBO[indCurTrack] 
+          = vec4( clamp( max(videocolor,out_track_FBO[indCurTrack].rgb) , 0.0 , 1.0 ) ,  1.0 );
+      }
+      else if( cameraCumul == 2 ) {
+        if( graylevel(videocolor) > 0) { // STAMP
+          out_track_FBO[indCurTrack] = vec4( videocolor ,  1.0 );
         }
-        else if( cameraCumul == 2 ) {
-          if( graylevel(videocolor) > 0) { // STAMP
-            out_track_FBO[indCurTrack] = vec4( videocolor ,  1.0 );
-          }
+      }
+      else if( cameraCumul == 3 ) { // XOR
+        float gvid = graylevel(videocolor);
+        float gtrack = graylevel(out_track_FBO[1].rgb);
+        if( gvid > 0 && gtrack == 0)  {
+          out_track_FBO[indCurTrack] = vec4( videocolor ,  1.0 );
         }
-        else if( cameraCumul == 3 ) { // XOR
-          float gvid = graylevel(videocolor);
-          float gtrack = graylevel(out_track_FBO[1].rgb);
-          if( gvid > 0 && gtrack == 0)  {
-            out_track_FBO[indCurTrack] = vec4( videocolor ,  1.0 );
-          }
-          else if( gvid > 0 && gtrack > 0)  {
-            out_track_FBO[indCurTrack] = vec4( vec3(0) ,  1.0 );
-          }
+        else if( gvid > 0 && gtrack > 0)  {
+          out_track_FBO[indCurTrack] = vec4( vec3(0) ,  1.0 );
         }
-        else { // NORMAL
-          out_track_FBO[indCurTrack] 
-            = vec4( clamp( videocolor , 0.0 , 1.0 ) ,  1.0 );
-        }
-#else
+      }
+      else { // NORMAL
         out_track_FBO[indCurTrack] 
           = vec4( clamp( videocolor , 0.0 , 1.0 ) ,  1.0 );
+      }
+#else
+      out_track_FBO[indCurTrack] 
+        = vec4( clamp( videocolor , 0.0 , 1.0 ) ,  1.0 );
 #endif
-      }
-      if( flashCameraTrkWght > 0 
+    }
+    if( currentVideoTrack == indCurTrack 
+        && flashCameraTrkWght > 0 
         && graylevel(cameraOriginal) > flashCameraTrkWght ) { // flash camera
-        videoOn = true;
         // video image copy when there is a flash video
-        flashToCACumul.rgb = cameraImage;
-        flashToBGCumul.rgb = cameraImage;
-        flashToCACumul.a = 1;
-      }
+      flashToCACumul.rgb = cameraImage;
+      flashToBGCumul.rgb = cameraImage;
+      flashToCACumul.a = 1;
     }
 
     /////////////////
     // TRACK photo
-    float photoCumulWgth = photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
-        + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
-        + uniform_Update_fs_2fv_clip01Wghts.x 
-        + uniform_Update_fs_2fv_clip01Wghts.y);
     if(currentPhotoTrack == indCurTrack 
-      && (photoCumulWgth > 0 || flashPhotoTrkWght > 0)) {
-      if(!videoOn) {
-        out_track_FBO[indCurTrack] = vec4(vec3(0), 1.);
-      }
-      // visible photo
-      if(photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
+      && photoWeight * (uniform_Update_fs_4fv_photo01Wghts_randomValues.x 
         + uniform_Update_fs_4fv_photo01Wghts_randomValues.y 
         + uniform_Update_fs_2fv_clip01Wghts.x 
         + uniform_Update_fs_2fv_clip01Wghts.y) > 0 ) {
-        // photo + video
-        if(currentVideoTrack == indCurTrack) {
-          // only photo no video
-          if (!videoOn) {
-            out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
-          }
-          // cumul video + photo
-          else {
-            out_track_FBO[indCurTrack].rgb = clamp( videocolor + photocolor , 0.0 , 1.0 );
-          }
-        }
-        // only photo
-        else {
-            out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
-        }
+      // only photo (but not drawing or whatever memory from preceding tracks)
+      if(!videoOn) {
+        out_track_FBO[indCurTrack].rgb = clamp( photocolor , 0.0 , 1.0 );
       }
-      if( flashPhotoTrkWght > 0 
-          && graylevel(photocolor) > flashPhotoTrkWght ) { // flash photo
-        // photo image copy when there is a flash photo
-        flashToCACumul.rgb = photocolor;
-        flashToCACumul.a = 1;
+      // cumul video + photo
+      else {
+        out_track_FBO[indCurTrack].rgb
+          = clamp( videocolor + photocolor , 0.0 , 1.0 );
       }
     }
+    if( currentPhotoTrack == indCurTrack 
+        && flashPhotoTrkWght > 0 
+        && graylevel(photocolor) > flashPhotoTrkWght ) { // flash photo
+      // photo image copy when there is a flash photo
+      flashToCACumul.rgb = photocolor;
+      flashToCACumul.a = 1;
+    }
+
 
     // non BG track flash on BG track (only concerns tracks >= 1)
     if( indCurTrack != 0 ) {
@@ -2815,7 +2226,7 @@ void main() {
     = texture( uniform_Update_texture_fs_Part_render , decalCoords );
 
   // particle flash on CA
-  flashToCACumul += uniform_Update_fs_4fv_frameno_Cursor_flashPartCAWght_doubleWindow.z
+  flashToCACumul += uniform_Update_fs_3fv_frameno_Cursor_flashPartCAWght.z
                   * vec4(out_particlesRendering.rgb,graylevel(out_particlesRendering.rgb));
 
   // particle flash on BG track
@@ -2831,8 +2242,7 @@ void main() {
   // CA LAYER: CA "SPREADING" UPDATE
   ///////////////////////////////////////////////////
   ///////////////////////////////////////////////////
-  // if( CA_on_off && (frameNo % CAstep == 0) ) 
-  {
+  if( CA_on_off && (frameNo % CAstep == 0) ) {
     out4_CA = vec4(0.0);
     vec4 currentCA = out_attachment_FBO[pg_FBO_fs_CA_attacht]; // RGB: CA color ALPHA: CA state (ALPHA negative 
               // when first time writing on CA for skipping the first frame for CA update)
@@ -2849,7 +2259,7 @@ void main() {
       // currentCA.rgb = vec3(1,0,0);
     }
 
-    // calculates the new state of the automaton
+     // calculates the new state of the automaton
     CA_out( currentCA );
 
 
@@ -2858,9 +2268,6 @@ void main() {
       if( rand3D(vec3(decalCoordsPOT, uniform_Update_fs_4fv_photo01Wghts_randomValues.z), repop_CA * repop_density_weight) != 0) {
         out4_CA.a = -1.0;
         out4_CA.rgb  = uniform_Update_fs_3fv_repop_ColorCA.xyz;
-        if(BG_CA_repop_color_mode == 1) {
-          out4_CA.rgb = textureDensityValue;
-        }
       }
     }
 
@@ -2891,91 +2298,53 @@ void main() {
       pixel_radius = 1;
     }
 
-    if(frameNo % Pixelstep == 0) {
-      pixel_out();
+    pixel_out();
 
-      // arrival of a new pixel
-      if( graylevel(out_color_pixel) > 0 ) {
-        // outputs the color from pixel move at drawing layer
-        out_track_FBO[0].rgb = out_color_pixel;
-        // speed - position
-        out_attachment_FBO[pg_FBO_fs_Pixels_attacht] 
-  	      = vec4( out_speed_pixel , out_position_pixel );
-      }
-      // update of the current pixel
-      else {
-        //  modifies speed according to acceleration
-        vec2 acceleration;
-
-        // texture based acceleration shift
-        if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
-          float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
-          float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
-          float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
-          float gradX = greyX - grey_center;
-          float gradY = greyY - grey_center;
-          float norm = length(vec2(gradX, gradY));
-          if(norm != 0) {
-            float cosa = gradX / norm;
-            float sina = gradY / norm;
-            acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
-          }
-          else {
-            acceleration = multiTypeGenerativeNoise(pixelTextureCoordinatesPOT_XY, vec2(0)) - pixel_acc_center;
-          }
-        }
-        else
-        {          
-          acceleration = multiTypeGenerativeNoise(pixelTextureCoordinatesPOT_XY, vec2(0)) - pixel_acc_center;
-        }
-
-        if( pixel_acc > 0 ) {
-        	// acceleration
-          // speed
-        	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
-            += pixel_acc * acceleration;
-        }
-        else if( pixel_acc < 0 && pixel_acc > -1) {
-        	// damping
-          // speed
-        	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
-            *= (1 + pixel_acc);
-        }
-        else { // if( pixel_acc == 0 || pixel_acc <= -1)
-          // stops 
-          // speed
-          out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy = vec2(0);
-        }
-
-        // updates the position of the current pixel
-        out_attachment_FBO[pg_FBO_fs_Pixels_attacht].zw 
-           += out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy; 
-
-        // if the pixel leaves the cell (absolute local position > 0.5), it is erased
-        if( abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].z ) > 0.5
-        	  || abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].w ) > 0.5 ) {
-          if( pixel_mode == PIXEL_UNIQUE ) {
-            out_track_FBO[0].rgb = vec3(0);
-          }
-          else if( pixel_mode == PIXEL_FIREWORK ) {
-            // out_track_FBO[0].rgb += vec3(0);
-          }
-        }
-      }
+    // arrival of a new pixel
+    if( graylevel(out_color_pixel) > 0 ) {
+      // outputs the color from pixel move at drawing layer
+      out_track_FBO[0].rgb = out_color_pixel;
+      out_attachment_FBO[pg_FBO_fs_Pixels_attacht] 
+	     = vec4( out_speed_pixel , out_position_pixel );
     }
+    // update of the current pixel
     else {
-      // keeps previous step value of out_track_FBO[0].rgb
+      //  modifies speed according to acceleration
+      vec2 pixel_acceleration;
+      // FLAT
+        pixel_acceleration = vec2(snoise( pixelTextureCoordinatesPOT_XY , noiseUpdateScale * 100 ),
+                                snoise( pixelTextureCoordinatesPOT_XY + vec2(2.0937,9.4872) , noiseUpdateScale * 100 ));
+      // }
+
+      vec2 acceleration;
+      acceleration = pixel_acceleration - pixel_acc_center;
+      if( pixel_acc > 0 ) {
+      	// acceleration
+      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
+          += pixel_acc * acceleration;
+      }
+      else {
+      	// damping
+      	out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy 
+          += pixel_acc * out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy;
+      }
+      // updates the position of the current pixel
+      out_attachment_FBO[pg_FBO_fs_Pixels_attacht].zw += out_attachment_FBO[pg_FBO_fs_Pixels_attacht].xy; 
+
+      // if the pixel leaves the cell, it is erased
+      if( abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].z ) > 0.5
+      	  || abs( out_attachment_FBO[pg_FBO_fs_Pixels_attacht].w ) > 0.5 ) {
+      	if( pixel_mode == PIXEL_UNIQUE ) {
+      	  out_track_FBO[0].rgb = vec3(0);
+      	}
+      }
     }
   }
 
-  // pixel "REPOPULATION"
+  // pixel "ADDITION"
   if( repop_BG > 0 ) {
     if( rand3D(vec3(decalCoordsPOT, uniform_Update_fs_4fv_photo01Wghts_randomValues.w), repop_BG * repop_density_weight) != 0) {
         out_track_FBO[0].rgb = uniform_Update_fs_4fv_repop_ColorBG_flashCABGWght.xyz;
-        // repopulation with the color of the density texture
-        if(BG_CA_repop_color_mode == 1) {
-          out_track_FBO[0].rgb = textureDensityValue;
-        }
     }
   }
 
@@ -2998,25 +2367,29 @@ void main() {
   // track decay and clear layer
   for(int indTrack = 0 ; indTrack < PG_NB_TRACKS ; indTrack++) {
       if( graylevel(out_track_FBO[indTrack].rgb) > 0 ) {
+        if(currentScene != 18) {
+          out_track_FBO[indTrack].rgb 
+               = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
+        }
         // saturates in case of incay (instead of going to white)
-        if(false) {
-        // if(trkDecay[indTrack] < 0) {
+        else {
           vec3 decayedColor = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
-          // saturated color, nothing to do
-          // else proportionally increase each channel
-          oderedChannels(decayedColor);
-          if(orderedColor[2] <= 1) {
-            vec3 decay = vec3(trkDecay[indTrack]);
-            decay[orderedRank[0]] = 0;
-            decay[orderedRank[1]] *= 0.5;
-            out_track_FBO[indTrack].rgb -= decay;
+          if( trkDecay[indTrack] < 0) {
+            // saturated color, nothing to do
+            // else proportionally increase each channel
+            oderedChannels(decayedColor);
+            if(orderedColor[2] <= 1) {
+              vec3 decay = vec3(trkDecay[indTrack]);
+              decay[orderedRank[0]] = 0;
+              decay[orderedRank[1]] *= 0.5;
+              out_track_FBO[indTrack].rgb -= decay;
+            }
+          }
+          else {
+            out_track_FBO[indTrack].rgb = decayedColor;            
           }
         }
-        else {
-          out_track_FBO[indTrack].rgb = out_track_FBO[indTrack].rgb - vec3(trkDecay[indTrack]);
-        }
       }
-
       out_track_FBO[indTrack].rgb 
         = clamp( out_track_FBO[indTrack].rgb , 0.0 , 1.0 );
       // clear layer
@@ -3049,6 +2422,26 @@ void main() {
 
   //////////////////////////////////////////////
   // CA LAYER CLEAR
+  // CA LAYER DECAY
+  // the first frame for CA is negative so that it is not drawn
+  // in this case its value is preserved as it is
+  // and incay or decay does not make sense on a black color
+  if( out_attachment_FBO[pg_FBO_fs_CA_attacht].a > 0 ) {
+    vec3 newCA_w_decay = out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb;
+    newCA_w_decay = clamp( newCA_w_decay - vec3(CAdecay) , 0.0 , 1.0 );
+
+    //////////////////////////////////////////////
+    // rebuilds output for the gray/drawing buffer after decay
+    // has been taken into consideration
+    if( graylevel(newCA_w_decay) > 0 ) {
+      out_attachment_FBO[pg_FBO_fs_CA_attacht].rgb = newCA_w_decay;
+    }
+    else {
+      // in case color has faded out the cell is considered as dead
+      out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
+    }
+  }
+
   if( uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift.y > 0 ) {
       out_attachment_FBO[pg_FBO_fs_CA_attacht] = vec4(0);
   }

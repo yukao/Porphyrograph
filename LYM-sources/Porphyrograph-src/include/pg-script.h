@@ -423,7 +423,8 @@ public:
 		}
 		printf("set_array_value: Expected array of min size %d, not %d\n", ind + 1, array_size);
 	}
-	~ScenarioValue() {}
+	~ScenarioValue() {
+	}
 };
 
 

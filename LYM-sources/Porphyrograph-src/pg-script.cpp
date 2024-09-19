@@ -105,12 +105,6 @@ float fftLevels[8];
 float fftFrequencies[8];
 float fftPhases[8];
 
-// +++++++++++++++++++++++ Clip ranges for automatic clip selection for ContAct +++++
-#if defined(var_Contact_clip_in_range)
-std::vector<int> ContAct_clip_ranges_min;
-std::vector<int> ContAct_clip_ranges_max;
-#endif
-
 // Create an unordered_map of three strings (that map to strings)
 std::unordered_map<std::string, int> pg_OSC_addresses_hashMap = {
 	{ "resend_all", _resend_all },

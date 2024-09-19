@@ -189,31 +189,25 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-#if defined(var_Contact_flashchangeClipLeft_freq) && defined(var_Contact_flashchangeClip2Left_freq) \
-			&& defined(var_Contact_flashchangeClipRight_freq) && defined(var_Contact_flashchangeClip2Right_freq) \
-			&& defined(var_Contact_flashchangeScreenLayout_freq) && defined(var_Contact_flashchange_mesh_palette_freq) && defined(var_Contact_flashchange_mesh_anime_freq) \
-			&& defined(var_Contact_flashchangeRightHandPose_freq) && defined(var_Contact_flashchangeLeftHandPose_freq)
-	//std::vector<int> ContAct_clip_ranges_min;
-	//std::vector<int> ContAct_clip_ranges_max;
+	//std::vector<int> pg_clip_ranges_min;
+	//std::vector<int> pg_clip_ranges_max;
 	int clip_no_low = 0;
 	int clip_no_high = pg_nbClips[pg_ind_scenario] - 1;
 
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_flashchangeClipLeft_freq]) {
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashchangeClipLeft_freq]) {
 
-#if defined(var_Contact_clip_in_range)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_clip_in_range]) {
-			if (ContAct_clip_ranges_min.size() > 0 && ContAct_clip_ranges_min.size() == ContAct_clip_ranges_max.size()) {
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clip_in_range]) {
+			if (pg_clip_ranges_min.size() > 0 && pg_clip_ranges_min.size() == pg_clip_ranges_max.size()) {
 				// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
-				int range_selected = int(rand_0_1 * ContAct_clip_ranges_min.size()) % ContAct_clip_ranges_min.size();
-				int clip_no_low = ContAct_clip_ranges_min[range_selected];
-				int clip_no_high = ContAct_clip_ranges_max[range_selected];
+				int range_selected = int(rand_0_1 * pg_clip_ranges_min.size()) % pg_clip_ranges_min.size();
+				int clip_no_low = pg_clip_ranges_min[range_selected];
+				int clip_no_high = pg_clip_ranges_max[range_selected];
 				int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
 				clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
 			}
 		}
-#endif
 
-		if ((*control_function)(Contact_flashchangeClipLeft_freq)) {
+		if ((*control_function)(flashchangeClipLeft_freq)) {
 			int clipSide = pg_enum_clipLeft;
 			int clipRank = 0;
 			int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
@@ -223,7 +217,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 				pg_play_clip_no(clipRank, clipSide, clip_no);
 			}
 		}
-		if ((*control_function)(Contact_flashchangeClip2Left_freq)) {
+		if ((*control_function)(flashchangeClip2Left_freq)) {
 			int clipSide = pg_enum_clipLeft;
 			int clipRank = 1;
 			int clip_no_low = 0;
@@ -235,7 +229,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 				pg_play_clip_no(clipRank, clipSide, clip_no);
 			}
 		}
-		if ((*control_function)(Contact_flashchangeClipRight_freq)) {
+		if ((*control_function)(flashchangeClipRight_freq)) {
 			int clipSide = pg_enum_clipRight;
 			int clipRank = 0;
 			int clip_no_low = 0;
@@ -247,7 +241,7 @@ void pg_flash_control(bool (*control_function)(int)) {
 				pg_play_clip_no(clipRank, clipSide, clip_no);
 			}
 		}
-		if ((*control_function)(Contact_flashchangeClip2Right_freq)) {
+		if ((*control_function)(flashchangeClip2Right_freq)) {
 			int clipSide = pg_enum_clipRight;
 			int clipRank = 1;
 			int clip_no_low = 0;
@@ -259,63 +253,62 @@ void pg_flash_control(bool (*control_function)(int)) {
 				pg_play_clip_no(clipRank, clipSide, clip_no);
 			}
 		}
-		if ((*control_function)(Contact_flashchangeScreenLayout_freq)) {
+		if ((*control_function)(flashchangeScreenLayout_freq)) {
 			// screen layout is between O and 5
 			// O: Left / 1: RIght
 			// 2: L+R full size / 3: L+R half size side by side
 			// 4: 4 screens / 5: L+R half size on top of each other
 			int layout = int(rand_0_1 * 6) % 6;
-			(*((int*)pg_FullScenarioVarPointers[_ContAct_screenLayout])) = layout;
-			ContAct_screenLayout = layout;
+			(*((int*)pg_FullScenarioVarPointers[_screenLayout])) = layout;
+			screenLayout = layout;
 		}
-		if ((*control_function)(Contact_flashchange_mesh_palette_freq)) {
+		if ((*control_function)(flashchange_mesh_palette_freq)) {
 			int level = int(rand_0_1 * 9) % 9;
-			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_palette])) = level;
-			Contact_mesh_palette = level;
+			(*((int*)pg_FullScenarioVarPointers[_mesh_palette])) = level;
+			mesh_palette = level;
 		}
-		if ((*control_function)(Contact_flashchange_mesh_anime_freq)) {
-			int anime = int(rand_0_1 * (_lastMesh_Anime + 1)) % (_lastMesh_Anime + 1);
-			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_anime])) = anime;
-			Contact_mesh_anime = anime;
+		if ((*control_function)(flashchange_mesh_anime_freq)) {
+			int anime = int(rand_0_1 * (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1)) % (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1);
+			(*((int*)pg_FullScenarioVarPointers[_mesh_anime])) = anime;
+			mesh_anime = anime;
 		}
-		if ((*control_function)(Contact_flashchange_mesh_motion_freq)) {
-			int motion = int(rand_0_1 * (_lastMesh_Motion + 1)) % (_lastMesh_Motion + 1);
-			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_motion])) = motion;
-			Contact_mesh_motion = motion;
+		if ((*control_function)(flashchange_mesh_motion_freq)) {
+			int motion = int(rand_0_1 * (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1)) % (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1);
+			(*((int*)pg_FullScenarioVarPointers[_mesh_motion])) = motion;
+			mesh_motion = motion;
 		}
 		bool fixedLeftPose = false;
 		bool fixedRightPose = false;
-		if ((*control_function)(Contact_flashchangeRightHandPose_freq)) {
+		if ((*control_function)(flashchangeRightHandPose_freq)) {
 			fixedRightPose = true;
 		}
-		if ((*control_function)(Contact_flashchangeLeftHandPose_freq)) {
+		if ((*control_function)(flashchangeLeftHandPose_freq)) {
 			fixedLeftPose = true;
 		}
 		if (fixedRightPose || fixedLeftPose) {
 			int chosen_mesh_LibraryPose = -1;
 			// bianry animation between two indentical poses
-			(*((int*)pg_FullScenarioVarPointers[_Contact_mesh_anime])) = 1;
-			Contact_mesh_anime = 1;
+			(*((int*)pg_FullScenarioVarPointers[_mesh_anime])) = 1;
+			mesh_anime = 1;
 			// two poses are memorized: twice the randomly selected pose;
-			for (int indMeshFile = 0; indMeshFile < min(2, pg_Meshes[pg_ind_scenario].size()); indMeshFile++) {
+			for (int indMeshFile = 0; indMeshFile < std::min(2, int(pg_Meshes[pg_ind_scenario].size())); indMeshFile++) {
 				if ((indMeshFile == 0 && fixedLeftPose) || (indMeshFile == 1 && fixedRightPose)) {
 					if (chosen_mesh_LibraryPose == -1) {
-						chosen_mesh_LibraryPose = int(rand_0_1 * pg_nb_LibraryPoses[indMeshFile]) % pg_nb_LibraryPoses[indMeshFile];
+						chosen_mesh_LibraryPose = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 					}
-					pg_nb_AnimationPoses[indMeshFile] = min(2, PG_MAX_ANIMATION_POSES);
 					pg_copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose, 0);
 					pg_copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose, 1);
 					//printf("ind Mesh %d chosen library pose %d \n", indMeshFile, chosen_mesh_LibraryPose);
 					// all the weights are set to zero except the first pose weight
-					for (int indPose = 0; indPose < pg_nb_AnimationPoses[indMeshFile]; indPose++) {
+					for (int indPose = 0; indPose < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_MaxAnimationPoses; indPose++) {
 						pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[indPose] = 0.f;
 					}
 					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_interpolation_weight_AnimationPose[0] = 1.f;
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_CurAnimationPoses = 2;
 				}
 			}
 		}
 	}
-#endif
 
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashchange_invertAllLayers_freq]) {
 		if ((*control_function)(flashchange_invertAllLayers_freq)) {

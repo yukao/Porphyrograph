@@ -1,8 +1,8 @@
-RANK,0,1,2,3
-VERBATIM,screen_drawing_no,Song_CA_color_mode,Zoom camera,ID comment
-TYPE,int,bool,float,float
-ID,screen_drawing_no,Song_CA_color_mode,cameraZoom,cameraZoom_pulse
-FUNCTION,NULL,NULL,NULL,NULL
-GUI,screen_drawing_no,Song_CA_color_mode,cameraZoom,cameraZoom_pulse
-SHADER,*,Update_fs,Update_fs,*
-PULSE,*,*,pulsed_absolute,*
+RANK,0
+VERBATIM,Flash change freeze
+TYPE,int
+ID,flashchange_freeze_freq
+FUNCTION,NULL
+GUI,flashchange_freeze_freq
+SHADER,*
+PULSE,*

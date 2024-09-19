@@ -360,29 +360,29 @@ void ClipArt::pg_Render_One_TextChar_ClipArt(int mobile, int ind_current_display
 }
 
 void ClipArt::pg_Render_One_ClipArt(void) {
-		glMatrixPushEXT(GL_MODELVIEW); {
-			glMatrixLoadIdentityEXT(GL_MODELVIEW);
-			glTranslatef(pg_ClipArt_Translation_X, pg_ClipArt_Translation_Y, 0);
-			glRotatef(pg_ClipArt_Rotation, 0, 0, 1);
-			glScalef(pg_ClipArt_Scale, pg_ClipArt_Scale, 1);
-			//printf("config %d active clipart display %d layer color: ", pg_ind_scenario, indClipArt);
-			//for (int indLayer = 0;
-			//	indLayer < pg_nb_paths_in_ClipArt;
-			//	indLayer++) {
-			//	printf("%.2f ", ClipArt_layer_color_preset[indLayer + 1]);
-			//}
-			//printf("\n");
-			for (int indLayer = 0;
-				indLayer < pg_nb_paths_in_ClipArt;
-				indLayer++) {
-				if (indLayer < pg_nb_paths_in_ClipArt
-					&& pg_ClipArt_SubPath[indLayer] == true) {
-					//printf("config %d active clipart display %d layer %d\n", pg_ind_scenario, indClipArt, indLayer);
-					pg_Display_One_ClipArt(indLayer);
-				}
+	glMatrixPushEXT(GL_MODELVIEW); {
+		glMatrixLoadIdentityEXT(GL_MODELVIEW);
+		glTranslatef(pg_ClipArt_Translation_X, pg_ClipArt_Translation_Y, 0);
+		glRotatef(pg_ClipArt_Rotation, 0, 0, 1);
+		glScalef(pg_ClipArt_Scale, pg_ClipArt_Scale, 1);
+		//printf("config %d active clipart display %d layer color: ", pg_ind_scenario, indClipArt);
+		//for (int indLayer = 0;
+		//	indLayer < pg_nb_paths_in_ClipArt;
+		//	indLayer++) {
+		//	printf("%.2f ", ClipArt_layer_color_preset[indLayer + 1]);
+		//}
+		//printf("\n");
+		for (int indLayer = 0;
+			indLayer < pg_nb_paths_in_ClipArt;
+			indLayer++) {
+			if (indLayer < pg_nb_paths_in_ClipArt
+				&& pg_ClipArt_SubPath[indLayer] == true) {
+				//printf("config %d active clipart display %d layer %d\n", pg_ind_scenario, indClipArt, indLayer);
+				pg_Display_One_ClipArt(indLayer);
 			}
 		}
-		glMatrixPopEXT(GL_MODELVIEW);
+	}
+	glMatrixPopEXT(GL_MODELVIEW);
 }
 
 
@@ -657,7 +657,9 @@ void pg_parseScenario_ClipArt(std::ifstream& scenarioFin, int indScenario) {
 
 		pg_ClipArts[indScenario].push_back(aClipArt);
 	}
-	printf("\n");
+	if (pg_ClipArts[indScenario].size() > 0) {
+		printf("\n");
+	}
 	printf("Nb clip arts %d config %d\n", (int)pg_ClipArts[indScenario].size(), indScenario);
 	if (pg_ClipArts[indScenario].size() > 0) {
 		pg_last_activated_ClipArt = &(pg_ClipArts[indScenario][0]);
@@ -703,75 +705,107 @@ void pg_aliasScript_ClipArt(string address_string, string string_argument_0,
 	case _ClipArt_SubPath_4_onOff: pg_ClipArt_SubPathOnOff(4); break;
 
 	case _ClipArt_scale:
-		pg_last_activated_ClipArt->pg_ClipArt_Scale = float_arguments[0];
-		printf("ClipArt GPU scale %.2f\n", float_arguments[0]);
+		if (pg_last_activated_ClipArt) {
+			pg_last_activated_ClipArt->pg_ClipArt_Scale = float_arguments[0];
+			printf("ClipArt GPU scale %.2f\n", float_arguments[0]);
+		}
 		break;
 	case _ClipArt_rotate:
-		pg_last_activated_ClipArt->pg_ClipArt_Rotation = float_arguments[0];
-		printf("ClipArt GPU rotate %.2f\n", float_arguments[0]);
+		if (pg_last_activated_ClipArt) {
+			pg_last_activated_ClipArt->pg_ClipArt_Rotation = float_arguments[0];
+			printf("ClipArt GPU rotate %.2f\n", float_arguments[0]);
+		}
 		break;
 	case _ClipArt_xy:
-		pg_last_activated_ClipArt->pg_ClipArt_Translation_X = float_arguments[0] * pg_workingWindow_width;
-		pg_last_activated_ClipArt->pg_ClipArt_Translation_Y = float_arguments[1] * PG_WINDOW_HEIGHT;
-		printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * pg_workingWindow_width, float_arguments[1] * PG_WINDOW_HEIGHT);
+		if (pg_last_activated_ClipArt) {
+			pg_last_activated_ClipArt->pg_ClipArt_Translation_X = float_arguments[0] * pg_workingWindow_width;
+			pg_last_activated_ClipArt->pg_ClipArt_Translation_Y = float_arguments[1] * PG_WINDOW_HEIGHT;
+			printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * pg_workingWindow_width, float_arguments[1] * PG_WINDOW_HEIGHT);
+		}
 		break;
 	case _ClipArt_x:
-		pg_last_activated_ClipArt->pg_ClipArt_Translation_X = float_arguments[0] * pg_workingWindow_width;
-		printf("ClipArt GPU translate %.2fx%.2f\n", pg_last_activated_ClipArt->pg_ClipArt_Translation_X, pg_last_activated_ClipArt->pg_ClipArt_Translation_Y);
+		if (pg_last_activated_ClipArt) {
+			pg_last_activated_ClipArt->pg_ClipArt_Translation_X = float_arguments[0] * pg_workingWindow_width;
+			printf("ClipArt GPU translate %.2fx%.2f\n", pg_last_activated_ClipArt->pg_ClipArt_Translation_X, pg_last_activated_ClipArt->pg_ClipArt_Translation_Y);
+		}
 		break;
 	case _ClipArt_y:
-		pg_last_activated_ClipArt->pg_ClipArt_Translation_Y = float_arguments[0] * PG_WINDOW_HEIGHT;
-		printf("ClipArt GPU translate %.2fx%.2f\n", pg_last_activated_ClipArt->pg_ClipArt_Translation_X, pg_last_activated_ClipArt->pg_ClipArt_Translation_Y);
+		if (pg_last_activated_ClipArt) {
+			pg_last_activated_ClipArt->pg_ClipArt_Translation_Y = float_arguments[0] * PG_WINDOW_HEIGHT;
+			printf("ClipArt GPU translate %.2fx%.2f\n", pg_last_activated_ClipArt->pg_ClipArt_Translation_X, pg_last_activated_ClipArt->pg_ClipArt_Translation_Y);
+		}
 		break;
 	case _ClipArt_nat_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#E5D3BF";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#E5D3BF";
+			}
 		}
 		break;
 	case _ClipArt_white_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FFFFFF";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FFFFFF";
+			}
 		}
 		break;
 	case _ClipArt_red_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FF0000";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FF0000";
+			}
 		}
 		break;
 	case _ClipArt_green_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#00FF00";
+		if (pg_last_activated_ClipArt) {
+			if (pg_last_activated_ClipArt) {
+				for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+					pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#00FF00";
+				}
+			}
 		}
 		break;
 	case _ClipArt_blue_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#0000FF";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#0000FF";
+			}
 		}
 		break;
 	case _ClipArt_yellow_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FFFF00";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FFFF00";
+			}
 		}
 		break;
 	case _ClipArt_cyan_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#00FFFF";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#00FFFF";
+			}
 		}
 		break;
 	case _ClipArt_magenta_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FF00FF";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#FF00FF";
+			}
 		}
 		break;
 	case _ClipArt_black_color:
-		for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
-			pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#000000";
+		if (pg_last_activated_ClipArt) {
+			for (int indPath = 0; indPath < pg_last_activated_ClipArt->pg_nb_paths_in_ClipArt; indPath++) {
+				pg_last_activated_ClipArt->pg_ClipArt_Colors[indPath] = "#000000";
+			}
 		}
 		break;
 	case _ClipArt_translations:
-		for (unsigned int indClipArt = 0; indClipArt < pg_ClipArts[pg_ind_scenario].size() && (2 * indClipArt + 1) < (unsigned int)nb_arguments; indClipArt++) {
-			pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_X = float_arguments[2 * indClipArt] * pg_workingWindow_width;
-			pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_Y = float_arguments[2 * indClipArt + 1] * PG_WINDOW_HEIGHT;
+		if (pg_last_activated_ClipArt) {
+			for (unsigned int indClipArt = 0; indClipArt < pg_ClipArts[pg_ind_scenario].size() && (2 * indClipArt + 1) < (unsigned int)nb_arguments; indClipArt++) {
+				pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_X = float_arguments[2 * indClipArt] * pg_workingWindow_width;
+				pg_ClipArts[pg_ind_scenario][indClipArt].pg_ClipArt_Translation_Y = float_arguments[2 * indClipArt + 1] * PG_WINDOW_HEIGHT;
+			}
 		}
 		// printf("ClipArt GPU translate %.2fx%.2f\n", float_arguments[0] * pg_workingWindow_width, float_arguments[1] * PG_WINDOW_HEIGHT);
 		break;

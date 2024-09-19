@@ -252,12 +252,9 @@ GLint uniform_Mesh_vp_view[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Mesh_vp_proj[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Mesh_fs_3fv_light[PG_MAX_SCENARIOS] = {-1};
-#if defined(var_Contact_mesh_expand)
 GLint uniform_Mesh_vp_2fv_dilate_explode[PG_MAX_SCENARIOS] = {-1};
-#endif
-#if defined(var_Contact_mesh_anime)
 GLint uniform_Mesh_bones_matrices[PG_MAX_SCENARIOS] = {-1};
-#endif
+
 #if defined(var_MmeShanghai_brokenGlass)
 GLint uniform_Mesh_fs_4fv_color[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Mesh_fs_4fv_color_master_photo_weight_bg[PG_MAX_SCENARIOS] = {-1};
@@ -268,9 +265,7 @@ GLint uniform_Mesh_fs_4fv_textureFrontier_width[PG_MAX_SCENARIOS] = {-1};
 GLint uniform_Mesh_fs_4fv_textureScaleTransl[PG_MAX_SCENARIOS] = {-1};
 // Mesh SHADER TEXTURE IDS
 GLint uniform_Mesh_texture_fs_decal[PG_MAX_SCENARIOS] = {-1};         // Mesh texture
-#if defined(var_Contact_mesh_palette)
 GLint uniform_Mesh_fs_4fv_color_palette[PG_MAX_SCENARIOS] = {-1};         // Mesh color
-#endif
 #if defined(var_MmeShanghai_brokenGlass)
 GLint uniform_Mesh_texture_fs_BG[PG_MAX_SCENARIOS] = {-1};         // Mesh texture
 #endif
@@ -535,7 +530,7 @@ void pg_loadAllShaders(void) {
 
 	////////////////////////////////////////
 	// binding variables in shaders
-	std::cout << "Unbound uniforms: " << std::endl;
+	std::cout << "\n**** Unbound uniforms: " << std::endl;
 	for (int indConfig = 0; indConfig < pg_NbScenarios; indConfig++) {
 		std::cout << "   " << indConfig << ": ";
 		////////////////////////////////////////////////////////////////////////////////
@@ -788,16 +783,12 @@ void pg_loadAllShaders(void) {
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_vp_proj, "vp_projMatrix", pg_enum_shader_Mesh);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene, "uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene", pg_enum_shader_Mesh);
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_3fv_light, "uniform_Mesh_fs_3fv_light", pg_enum_shader_Mesh);
-#if defined(var_Contact_mesh_expand)
-			if (pg_FullScenarioActiveVars[indConfig][_Contact_mesh_expand]) {
+			if (pg_FullScenarioActiveVars[indConfig][_mesh_expand]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_vp_2fv_dilate_explode, "uniform_Mesh_vp_2fv_dilate_explode", pg_enum_shader_Mesh);
 			}
-#endif
-#if defined(var_Contact_mesh_anime)
-			if (pg_FullScenarioActiveVars[indConfig][_Contact_mesh_anime]) {
+			if (pg_FullScenarioActiveVars[indConfig][_mesh_anime]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_bones_matrices, "uniform_Mesh_bones_matrices", pg_enum_shader_Mesh);
 			}
-#endif
 #if defined(var_MmeShanghai_brokenGlass)
 			if (pg_FullScenarioActiveVars[indConfig][_MmeShanghai_brokenGlass]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_color, "uniform_Mesh_fs_4fv_color", pg_enum_shader_Mesh);
@@ -810,11 +801,9 @@ void pg_loadAllShaders(void) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureFrontier_width, "uniform_Mesh_fs_4fv_textureFrontier_width", pg_enum_shader_Mesh);
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_textureScaleTransl, "uniform_Mesh_fs_4fv_textureScaleTransl", pg_enum_shader_Mesh);
 			}
-#if defined(var_Contact_mesh_palette)
-			if (pg_FullScenarioActiveVars[indConfig][_Contact_mesh_palette]) {
+			if (pg_FullScenarioActiveVars[indConfig][_mesh_palette]) {
 				pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_fs_4fv_color_palette, "uniform_Mesh_fs_4fv_color_palette", pg_enum_shader_Mesh); // mesh color
 			}
-#endif
 			pg_allocateBindAndCheckUniform(indConfig, uniform_Mesh_texture_fs_decal, "fs_Mesh_texture_fs_decal", pg_enum_shader_Mesh); // previous pass output
 #if defined(var_MmeShanghai_brokenGlass)
 			if (pg_FullScenarioActiveVars[indConfig][_MmeShanghai_brokenGlass]) {

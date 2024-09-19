@@ -33,6 +33,10 @@ std::vector<pg_clip_track> pg_clip_tracks[PG_MAX_SCENARIOS];
 // clip status (left and right)
 pg_clip_status pg_all_clip_status[pg_enum_clipLeftRight] = { pg_clip_status(pg_enum_clipLeft), pg_clip_status(pg_enum_clipRight) };
 
+// +++++++++++++++++++++++ Clip ranges for automatic clip selection +++++
+std::vector<int> pg_clip_ranges_min;
+std::vector<int> pg_clip_ranges_max;
+
 // echo modulator for clips
 float pg_fx_dry_wet = 0.f;
 
@@ -766,7 +770,6 @@ void pg_clip_status::reset_clip(int indClipRank) {
 	lastFrame[indClipRank] = 0;
 }
 pg_clip_status::~pg_clip_status() {
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -915,7 +918,7 @@ void pg_parseScenario_ClipsAndPhotos(std::ifstream& scenarioFin, int indScenario
 		if (!pg_isFullPath(pg_ClipDirectory[indScenario])) {
 			pg_ClipDirectory[indScenario] = pg_clips_directory + pg_ClipDirectory[indScenario];
 		}
-		std::cout << "Clip album directory: " << pg_ClipDirectory << "\n";
+		std::cout << "Clip album directory: " << pg_ClipDirectory[indScenario] << "\n";
 		sstream >> clip_image_width[indScenario];
 		sstream >> clip_image_height[indScenario];
 		sstream >> clip_crop_width[indScenario];
@@ -1846,23 +1849,21 @@ void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_ty
 	}
 }
 
-void Contact_clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
-#if defined(var_Contact_clip_in_range)
+void clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
-			ContAct_clip_ranges_min.clear();
-			ContAct_clip_ranges_max.clear();
+			pg_clip_ranges_min.clear();
+			pg_clip_ranges_max.clear();
 			if (scenario_or_gui_command_value != "NULL") {
-				std::vector<std::string> ContAct_clip_ranges;
-				ContAct_clip_ranges = pg_split_string(scenario_or_gui_command_value, '/');
-				for (string& range : ContAct_clip_ranges) {
+				std::vector<std::string> clip_ranges;
+				clip_ranges = pg_split_string(scenario_or_gui_command_value, '/');
+				for (string& range : clip_ranges) {
 					std::vector<std::string> clip_min_max;
 					clip_min_max = pg_split_string(range, '-');
-					ContAct_clip_ranges_min.push_back(stoi(clip_min_max[0]));
-					ContAct_clip_ranges_max.push_back(stoi(clip_min_max[1]));
+					pg_clip_ranges_min.push_back(stoi(clip_min_max[0]));
+					pg_clip_ranges_max.push_back(stoi(clip_min_max[1]));
 				}
 			}
 		}
 	}
-#endif
 }

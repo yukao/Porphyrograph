@@ -256,12 +256,8 @@ extern GLint uniform_Mesh_vp_view[PG_MAX_SCENARIOS];
 extern GLint uniform_Mesh_vp_proj[PG_MAX_SCENARIOS];
 extern GLint uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[PG_MAX_SCENARIOS];
 extern GLint uniform_Mesh_fs_3fv_light[PG_MAX_SCENARIOS];
-#if defined(var_Contact_mesh_expand)
 extern GLint uniform_Mesh_vp_2fv_dilate_explode[PG_MAX_SCENARIOS];
-#endif
-#if defined(var_Contact_mesh_anime)
 extern GLint uniform_Mesh_bones_matrices[PG_MAX_SCENARIOS];
-#endif
 #if defined(var_MmeShanghai_brokenGlass)
 extern GLint uniform_Mesh_fs_4fv_color[PG_MAX_SCENARIOS];
 extern GLint uniform_Mesh_fs_4fv_color_master_photo_weight_bg[PG_MAX_SCENARIOS];
@@ -272,9 +268,7 @@ extern GLint uniform_Mesh_fs_4fv_textureFrontier_width[PG_MAX_SCENARIOS];
 extern GLint uniform_Mesh_fs_4fv_textureScaleTransl[PG_MAX_SCENARIOS];
 // Mesh SHADER TEXTURE IDS
 extern GLint uniform_Mesh_texture_fs_decal[PG_MAX_SCENARIOS];         // Mesh texture
-#if defined(var_Contact_mesh_palette)
 extern GLint uniform_Mesh_fs_4fv_color_palette[PG_MAX_SCENARIOS];         // Mesh color
-#endif
 #if defined(var_MmeShanghai_brokenGlass)
 extern GLint uniform_Mesh_texture_fs_BG[PG_MAX_SCENARIOS];         // Mesh texture
 #endif

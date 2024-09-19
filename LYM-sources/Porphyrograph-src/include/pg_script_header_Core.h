@@ -17,6 +17,16 @@
 #define var_flashchange_invertAllLayers_freq
 #define var_flashchange_diaporama_freq
 #define var_flashchange_BGcolor_freq
+#define var_flashchangeClipLeft_freq
+#define var_flashchangeClip2Left_freq
+#define var_flashchangeClipRight_freq
+#define var_flashchangeClip2Right_freq
+#define var_flashchangeScreenLayout_freq
+#define var_flashchangeRightHandPose_freq
+#define var_flashchangeLeftHandPose_freq
+#define var_flashchange_mesh_palette_freq
+#define var_flashchange_mesh_anime_freq
+#define var_flashchange_mesh_motion_freq
 #define var_flashPartBG_freq
 #define var_flashPartCA_freq
 #define var_flashParticleInit_freq
@@ -82,6 +92,7 @@
 #define var_playing_clipNameRight
 #define var_playing_secondClipNameLeft
 #define var_playing_secondClipNameRight
+#define var_clip_in_range
 #define var_activeClipArts
 #define var_moving_messages
 #define var_ClipArt_layer_color_preset
@@ -105,6 +116,7 @@
 #define var_invertPhoto
 #define var_maskJitterAmpl
 #define var_photo_contrast
+#define var_photo_contrast_pulse
 #define var_photo_diaporama
 #define var_photo_diaporama_fade
 #define var_photo_diaporama_plateau
@@ -127,6 +139,7 @@
 #define var_photo_value
 #define var_photo_value_pulse
 #define var_photoJitterAmpl
+#define var_photoJitterAmpl_pulse
 #define var_photoSobel
 #define var_photoSobel_pulse
 #define var_photoWeight
@@ -318,6 +331,7 @@
 #define var_window_x
 #define var_window_y
 #define var_wide_screen
+#define var_screenLayout
 #define var_CAdecay
 #define var_CAdecay_pulse
 #define var_echo
@@ -361,6 +375,7 @@
 #define var_mesh_homography
 #define var_isDisplayLookAt
 #define var_with_mesh
+#define var_with_bones
 #define var_with_blue
 #define var_with_whiteText
 #define var_VP1LocX
@@ -408,7 +423,7 @@
 #define var_mesh_color
 #define var_mesh_grey
 #define var_mesh_palette
-#define var_light_level
+#define var_mesh_light_level
 #define var_mesh_expand
 #define var_mesh_expand_pulse
 #define var_mesh_explode
@@ -456,6 +471,16 @@ enum InterpVarIDs{
   _flashchange_invertAllLayers_freq,
   _flashchange_diaporama_freq,
   _flashchange_BGcolor_freq,
+  _flashchangeClipLeft_freq,
+  _flashchangeClip2Left_freq,
+  _flashchangeClipRight_freq,
+  _flashchangeClip2Right_freq,
+  _flashchangeScreenLayout_freq,
+  _flashchangeRightHandPose_freq,
+  _flashchangeLeftHandPose_freq,
+  _flashchange_mesh_palette_freq,
+  _flashchange_mesh_anime_freq,
+  _flashchange_mesh_motion_freq,
   _flashPartBG_freq,
   _flashPartCA_freq,
   _flashParticleInit_freq,
@@ -521,6 +546,7 @@ enum InterpVarIDs{
   _playing_clipNameRight,
   _playing_secondClipNameLeft,
   _playing_secondClipNameRight,
+  _clip_in_range,
   _activeClipArts,
   _moving_messages,
   _ClipArt_layer_color_preset,
@@ -544,6 +570,7 @@ enum InterpVarIDs{
   _invertPhoto,
   _maskJitterAmpl,
   _photo_contrast,
+  _photo_contrast_pulse,
   _photo_diaporama,
   _photo_diaporama_fade,
   _photo_diaporama_plateau,
@@ -566,6 +593,7 @@ enum InterpVarIDs{
   _photo_value,
   _photo_value_pulse,
   _photoJitterAmpl,
+  _photoJitterAmpl_pulse,
   _photoSobel,
   _photoSobel_pulse,
   _photoWeight,
@@ -757,6 +785,7 @@ enum InterpVarIDs{
   _window_x,
   _window_y,
   _wide_screen,
+  _screenLayout,
   _CAdecay,
   _CAdecay_pulse,
   _echo,
@@ -800,6 +829,7 @@ enum InterpVarIDs{
   _mesh_homography,
   _isDisplayLookAt,
   _with_mesh,
+  _with_bones,
   _with_blue,
   _with_whiteText,
   _VP1LocX,
@@ -847,7 +877,7 @@ enum InterpVarIDs{
   _mesh_color,
   _mesh_grey,
   _mesh_palette,
-  _light_level,
+  _mesh_light_level,
   _mesh_expand,
   _mesh_expand_pulse,
   _mesh_explode,
@@ -895,6 +925,16 @@ extern int   flashCAPart_freq    ;
 extern int   flashchange_invertAllLayers_freq;
 extern int   flashchange_diaporama_freq;
 extern int   flashchange_BGcolor_freq;
+extern int   flashchangeClipLeft_freq;
+extern int   flashchangeClip2Left_freq;
+extern int   flashchangeClipRight_freq;
+extern int   flashchangeClip2Right_freq;
+extern int   flashchangeScreenLayout_freq;
+extern int   flashchangeRightHandPose_freq;
+extern int   flashchangeLeftHandPose_freq;
+extern int   flashchange_mesh_palette_freq;
+extern int   flashchange_mesh_anime_freq;
+extern int   flashchange_mesh_motion_freq;
 extern int   flashPartBG_freq    ;
 extern int   flashPartCA_freq    ;
 extern int   flashParticleInit_freq;
@@ -960,6 +1000,7 @@ extern string playing_clipNameLeft;
 extern string playing_clipNameRight;
 extern string playing_secondClipNameLeft;
 extern string playing_secondClipNameRight;
+extern string clip_in_range       ;
 extern int   activeClipArts      ;
 extern int   moving_messages     ;
 extern float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];
@@ -983,6 +1024,7 @@ extern int   playing_movieNo     ;
 extern bool  invertPhoto         ;
 extern float maskJitterAmpl      ;
 extern float photo_contrast      ;
+extern float photo_contrast_pulse;
 extern int   photo_diaporama     ;
 extern float photo_diaporama_fade;
 extern float photo_diaporama_plateau;
@@ -1005,6 +1047,7 @@ extern float photo_transl_y      ;
 extern float photo_value         ;
 extern float photo_value_pulse   ;
 extern float photoJitterAmpl     ;
+extern float photoJitterAmpl_pulse;
 extern float photoSobel          ;
 extern float photoSobel_pulse    ;
 extern float photoWeight         ;
@@ -1196,6 +1239,7 @@ extern bool  trace_time          ;
 extern int   window_x            ;
 extern int   window_y            ;
 extern bool  wide_screen         ;
+extern int   screenLayout        ;
 extern float CAdecay             ;
 extern float CAdecay_pulse       ;
 extern float echo                ;
@@ -1239,6 +1283,7 @@ extern int   mobileMeshes        ;
 extern bool  mesh_homography     ;
 extern float isDisplayLookAt     ;
 extern float with_mesh           ;
+extern float with_bones          ;
 extern float with_blue           ;
 extern float with_whiteText      ;
 extern float VP1LocX             ;
@@ -1286,7 +1331,7 @@ extern int   mesh_motion         ;
 extern float mesh_color          ;
 extern float mesh_grey           ;
 extern int   mesh_palette        ;
-extern float light_level         ;
+extern float mesh_light_level    ;
 extern float mesh_expand         ;
 extern float mesh_expand_pulse   ;
 extern float mesh_explode        ;

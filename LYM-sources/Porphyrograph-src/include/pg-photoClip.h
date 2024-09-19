@@ -212,6 +212,10 @@ extern int pg_playing_secondClipNoLeft;
 extern int pg_playing_clipNoRight;
 extern int pg_playing_secondClipNoRight;
 
+// +++++++++++++++++++++++ Clip ranges for automatic clip selection +++++
+extern std::vector<int> pg_clip_ranges_min;
+extern std::vector<int> pg_clip_ranges_max;
+
 // displaying diaporama no
 extern int pg_CurrentDiaporamaFile;
 #define PG_PHOTO_NB_TEXTURES                 (2)
@@ -239,6 +243,8 @@ void pg_aliasScript_Photo(string address_string, string string_argument_0,
 	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar);
 void pg_aliasScript_Clip(string address_string, string string_argument_0,
 	float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar);
+
+void pg_play_clip_no(int indClipRank, int clipSide, int clipNo);
 
 // diaporama management
 void pg_initDiaporamas(void);

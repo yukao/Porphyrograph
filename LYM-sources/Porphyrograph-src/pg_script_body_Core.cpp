@@ -17,6 +17,16 @@ int   flashCAPart_freq     = 0;
 int   flashchange_invertAllLayers_freq = 0;
 int   flashchange_diaporama_freq = 0;
 int   flashchange_BGcolor_freq = 0;
+int   flashchangeClipLeft_freq = 0;
+int   flashchangeClip2Left_freq = 0;
+int   flashchangeClipRight_freq = 0;
+int   flashchangeClip2Right_freq = 0;
+int   flashchangeScreenLayout_freq = 0;
+int   flashchangeRightHandPose_freq = 0;
+int   flashchangeLeftHandPose_freq = 0;
+int   flashchange_mesh_palette_freq = 0;
+int   flashchange_mesh_anime_freq = 0;
+int   flashchange_mesh_motion_freq = 0;
 int   flashPartBG_freq     = 0;
 int   flashPartCA_freq     = 0;
 int   flashParticleInit_freq = 0;
@@ -82,6 +92,7 @@ string playing_clipNameLeft = "NULL";
 string playing_clipNameRight = "NULL";
 string playing_secondClipNameLeft = "NULL";
 string playing_secondClipNameRight = "NULL";
+string clip_in_range        = "0-56";
 int   activeClipArts       = 0;
 int   moving_messages      = 0;
 float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)] = {0.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, };
@@ -105,6 +116,7 @@ int   playing_movieNo      = -1;
 bool  invertPhoto          = 0;
 float maskJitterAmpl       = float(0);
 float photo_contrast       = float(0);
+float photo_contrast_pulse = float(0);
 int   photo_diaporama      = -1;
 float photo_diaporama_fade = float(0.2);
 float photo_diaporama_plateau = float(100000);
@@ -127,6 +139,7 @@ float photo_transl_y       = float(0);
 float photo_value          = float(1);
 float photo_value_pulse    = float(0);
 float photoJitterAmpl      = float(0);
+float photoJitterAmpl_pulse = float(0);
 float photoSobel           = float(0);
 float photoSobel_pulse     = float(0);
 float photoWeight          = float(0);
@@ -318,6 +331,7 @@ bool  trace_time           = 0;
 int   window_x             = 0;
 int   window_y             = 0;
 bool  wide_screen          = 0;
+int   screenLayout         = 0;
 float CAdecay              = float(0.05401);
 float CAdecay_pulse        = float(0.80344);
 float echo                 = float(0.9996);
@@ -361,6 +375,7 @@ int   mobileMeshes         = 0;
 bool  mesh_homography      = 0;
 float isDisplayLookAt      = float(0);
 float with_mesh            = float(0);
+float with_bones           = float(0);
 float with_blue            = float(0);
 float with_whiteText       = float(0);
 float VP1LocX              = float(-0.07449);
@@ -408,7 +423,7 @@ int   mesh_motion          = 0;
 float mesh_color           = float(0);
 float mesh_grey            = float(0);
 int   mesh_palette         = 0;
-float light_level          = float(0);
+float mesh_light_level     = float(0);
 float mesh_expand          = float(0);
 float mesh_expand_pulse    = float(0);
 float mesh_explode         = float(0);
@@ -461,6 +476,16 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_int,
@@ -521,6 +546,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_string,
 	_pg_string,
 	_pg_string,
+	_pg_string,
 	_pg_int,
 	_pg_int,
 	_pg_float,
@@ -544,6 +570,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_bool,
 	_pg_float,
 	_pg_float,
+	_pg_float,
 	_pg_int,
 	_pg_float,
 	_pg_float,
@@ -552,6 +579,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_bool,
+	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -757,6 +785,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_bool,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -798,6 +827,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_bool,
+	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -905,6 +935,16 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
 	{1, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
@@ -963,8 +1003,11 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
 	{1, (PG_NB_CLIPART_LAYERS+1)},
 	{1, (PG_NB_CLIPART_LAYERS+1)},
+	{-1, -1},
+	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1205,25 +1248,15 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
-	{-1, -1},
 	{-1, -1},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
-	{0, PG_NB_TRACKS},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1235,6 +1268,18 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{0, PG_NB_TRACKS},
+	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1336,6 +1381,16 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&flashchange_invertAllLayers_freq,
 	(void *)&flashchange_diaporama_freq,
 	(void *)&flashchange_BGcolor_freq,
+	(void *)&flashchangeClipLeft_freq,
+	(void *)&flashchangeClip2Left_freq,
+	(void *)&flashchangeClipRight_freq,
+	(void *)&flashchangeClip2Right_freq,
+	(void *)&flashchangeScreenLayout_freq,
+	(void *)&flashchangeRightHandPose_freq,
+	(void *)&flashchangeLeftHandPose_freq,
+	(void *)&flashchange_mesh_palette_freq,
+	(void *)&flashchange_mesh_anime_freq,
+	(void *)&flashchange_mesh_motion_freq,
 	(void *)&flashPartBG_freq,
 	(void *)&flashPartCA_freq,
 	(void *)&flashParticleInit_freq,
@@ -1401,6 +1456,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&playing_clipNameRight,
 	(void *)&playing_secondClipNameLeft,
 	(void *)&playing_secondClipNameRight,
+	(void *)&clip_in_range,
 	(void *)&activeClipArts,
 	(void *)&moving_messages,
 	(void *)&ClipArt_layer_color_preset,
@@ -1424,6 +1480,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&invertPhoto,
 	(void *)&maskJitterAmpl,
 	(void *)&photo_contrast,
+	(void *)&photo_contrast_pulse,
 	(void *)&photo_diaporama,
 	(void *)&photo_diaporama_fade,
 	(void *)&photo_diaporama_plateau,
@@ -1446,6 +1503,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&photo_value,
 	(void *)&photo_value_pulse,
 	(void *)&photoJitterAmpl,
+	(void *)&photoJitterAmpl_pulse,
 	(void *)&photoSobel,
 	(void *)&photoSobel_pulse,
 	(void *)&photoWeight,
@@ -1637,6 +1695,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&window_x,
 	(void *)&window_y,
 	(void *)&wide_screen,
+	(void *)&screenLayout,
 	(void *)&CAdecay,
 	(void *)&CAdecay_pulse,
 	(void *)&echo,
@@ -1680,6 +1739,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&mesh_homography,
 	(void *)&isDisplayLookAt,
 	(void *)&with_mesh,
+	(void *)&with_bones,
 	(void *)&with_blue,
 	(void *)&with_whiteText,
 	(void *)&VP1LocX,
@@ -1727,7 +1787,7 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&mesh_color,
 	(void *)&mesh_grey,
 	(void *)&mesh_palette,
-	(void *)&light_level,
+	(void *)&mesh_light_level,
 	(void *)&mesh_expand,
 	(void *)&mesh_expand_pulse,
 	(void *)&mesh_explode,
@@ -1852,6 +1912,10 @@ void playing_secondClipNameLeft_callBack_generic(pg_Parameter_Input_Type param_i
 void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
 void playing_secondClipNameRight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	playing_secondClipNameRight_callBack(param_input_type, scenario_or_gui_command_value.val_string);
+}
+void clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
+void clip_in_range_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
+	clip_in_range_callBack(param_input_type, scenario_or_gui_command_value.val_string);
 }
 void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void movieCaptFreq_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
@@ -2042,6 +2106,16 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	&flashPhotoTrkLength_callBack_generic,
 	NULL,
 	NULL,
@@ -2101,6 +2175,7 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	&playing_clipNameRight_callBack_generic,
 	&playing_secondClipNameLeft_callBack_generic,
 	&playing_secondClipNameRight_callBack_generic,
+	&clip_in_range_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -2124,7 +2199,9 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	&photo_diaporama_callBack_generic,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2375,8 +2452,10 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	&activeMeshes_callBack_generic,
 	&mobileMeshes_callBack_generic,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2458,6 +2537,19 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 };
 void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int) = { 
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2896,6 +2988,8 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
 };
 std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = { 
   "CA1_CA2_weight",
@@ -2916,6 +3010,16 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "flashchange_invertAllLayers_freq",
   "flashchange_diaporama_freq",
   "flashchange_BGcolor_freq",
+  "flashchangeClipLeft_freq",
+  "flashchangeClip2Left_freq",
+  "flashchangeClipRight_freq",
+  "flashchangeClip2Right_freq",
+  "flashchangeScreenLayout_freq",
+  "flashchangeRightHandPose_freq",
+  "flashchangeLeftHandPose_freq",
+  "flashchange_mesh_palette_freq",
+  "flashchange_mesh_anime_freq",
+  "flashchange_mesh_motion_freq",
   "flashPartBG_freq",
   "flashPartCA_freq",
   "flashParticleInit_freq",
@@ -2981,6 +3085,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "playing_clipNameRight",
   "playing_secondClipNameLeft",
   "playing_secondClipNameRight",
+  "clip_in_range",
   "activeClipArts",
   "moving_messages",
   "ClipArt_layer_color_preset",
@@ -3004,6 +3109,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "invertPhoto",
   "maskJitterAmpl",
   "photo_contrast",
+  "photo_contrast_pulse",
   "photo_diaporama",
   "photo_diaporama_fade",
   "photo_diaporama_plateau",
@@ -3026,6 +3132,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "photo_value",
   "photo_value_pulse",
   "photoJitterAmpl",
+  "photoJitterAmpl_pulse",
   "photoSobel",
   "photoSobel_pulse",
   "photoWeight",
@@ -3217,6 +3324,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "window_x",
   "window_y",
   "wide_screen",
+  "screenLayout",
   "CAdecay",
   "CAdecay_pulse",
   "echo",
@@ -3260,6 +3368,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "photo_homography",
   "isDisplayLookAt",
   "with_mesh",
+  "with_bones",
   "with_blue",
   "with_whiteText",
   "VP1LocX",
@@ -3307,7 +3416,7 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "mesh_color",
   "mesh_grey",
   "mesh_palette",
-  "light_level",
+  "mesh_light_level",
   "mesh_expand",
   "mesh_expand_pulse",
   "mesh_explode",
@@ -3379,6 +3488,47 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3395,36 +3545,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
@@ -3443,6 +3563,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3465,6 +3586,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -3614,6 +3736,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3694,6 +3817,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_differential,
   _pg_pulsed_none,
   _pg_pulsed_differential,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3796,6 +3920,16 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "flashchange_invertAllLayers_freq",
   "flashchange_diaporama_freq",
   "flashchange_BGcolor_freq",
+  "flashchangeClipLeft_freq",
+  "flashchangeClip2Left_freq",
+  "flashchangeClipRight_freq",
+  "flashchangeClip2Right_freq",
+  "flashchangeScreenLayout_freq",
+  "flashchangeRightHandPose_freq",
+  "flashchangeLeftHandPose_freq",
+  "flashchange_mesh_palette_freq",
+  "flashchange_mesh_anime_freq",
+  "flashchange_mesh_motion_freq",
   "flashPartBG_freq",
   "flashPartCA_freq",
   "flashParticleInit_freq",
@@ -3861,6 +3995,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "playing_clipNameRight",
   "playing_secondClipNameLeft",
   "playing_secondClipNameRight",
+  "clip_in_range",
   "activeClipArts",
   "moving_messages",
   "ClipArt_layer_color_preset",
@@ -3884,6 +4019,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "invertPhoto",
   "maskJitterAmpl",
   "photo_contrast",
+  "photo_contrast_pulse",
   "photo_diaporama",
   "photo_diaporama_fade",
   "photo_diaporama_plateau",
@@ -3906,6 +4042,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "photo_value",
   "photo_value_pulse",
   "photoJitterAmpl",
+  "photoJitterAmpl_pulse",
   "photoSobel",
   "photoSobel_pulse",
   "photoWeight",
@@ -4097,6 +4234,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "window_x",
   "window_y",
   "wide_screen",
+  "screenLayout",
   "CAdecay",
   "CAdecay_pulse",
   "echo",
@@ -4140,6 +4278,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "mesh_homography",
   "isDisplayLookAt",
   "with_mesh",
+  "with_bones",
   "with_blue",
   "with_whiteText",
   "VP1LocX",
@@ -4187,7 +4326,7 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "mesh_color",
   "mesh_grey",
   "mesh_palette",
-  "light_level",
+  "mesh_light_level",
   "mesh_expand",
   "mesh_expand_pulse",
   "mesh_explode",

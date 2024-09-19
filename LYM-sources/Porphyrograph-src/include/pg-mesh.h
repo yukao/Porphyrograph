@@ -33,12 +33,6 @@
 // CONSTs
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define PG_MAX_ANIMATION_POSES 7
-
- // mesh anim data
-#define _lastMesh_Anime 6
-#define _lastMesh_Motion 6
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // BONE MANAGEMENT CLASS
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,24 +54,31 @@ public:
     unsigned int vbo;
     unsigned int vao;
 
-    // initial translation matrix computed from translation vector
-    glm::mat4      boneAnimationTranslationMatrix;
-    glm::mat4      boneInitialTranslationMatrix;
-    glm::vec3*     boneLibraryPoseTranslationVector;
-    glm::vec3*     boneAnimationPoseTranslationVector;
+	// transformations provided in the obj file library of poses
+	// static poses from the library inside the obj file
+	glm::vec3*		boneLibraryPoseTranslationVector;
+	glm::quat*		boneLibraryPoseRotationQuat;
 
-    // initial and animation rotation computed from axis and angle
-    glm::mat4      boneAnimationRotationMatrix;
-    glm::mat4      boneInitialRotationMatrix;
-    glm::quat      *boneLibraryPoseRotationQuat;
-    glm::quat      *boneAnimationPoseRotationQuat;
+	// transformations copied from the library or generated automatically
+	// for making animations through pose interpolations
+	// dynamic animation poses copied from the library or generated automatically
+	glm::vec3*		boneAnimationPoseTranslationVector;
+	glm::quat*		boneAnimationPoseRotationQuat;
+
+	// initial transformation matrices computed from translation vector/quaternion
+    glm::mat4		boneInitialTranslationMatrix;
+	glm::mat4		boneInitialRotationMatrix;
+
+    // transformations matrices computed computed from translation vector/quaternion
+	glm::mat4		boneAnimationRotationMatrix;
+	glm::mat4		boneAnimationTranslationMatrix;
 
     // joint Transformation Matrices (initial and current)
-    glm::mat4      initialJointTransformation;
-    glm::mat4      currentJointTransformation;
+    glm::mat4		initialJointTransformation;
+    glm::mat4		currentJointTransformation;
 
     // current point Transformation Matrices (initial and current)
-    glm::mat4      pointAnimationMatrix;
+    glm::mat4		pointAnimationMatrix;
 
     Bone(void) {
         id = "";
@@ -127,10 +128,11 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // MESH MANAGEMENT CLASS
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+class MeshAnimationData;
 
 class MeshData {
 public:
-	string pg_Mesh_fileNames;
+	string pg_Mesh_fileName;
 	// geometrical transformations
 	float pg_Mesh_Scale;
 	float pg_Mesh_Rotation_angle;
@@ -177,11 +179,11 @@ public:
 	array<float, 4> pg_Mesh_Colors;
 	// textures
 	GLuint Mesh_texture_rectangle;
-	vector<unsigned int> mesh_vao;
-	vector<array<float, 3>> mesh_barycenter;
-	vector<unsigned int> mesh_index_vbo;
+	unsigned int *mesh_vao;
+	float *mesh_barycenter;
+	unsigned int *mesh_index_vbo;
 	MeshData(int indScenario) {
-		pg_Mesh_fileNames = "";
+		pg_Mesh_fileName = "";
 		// geometrical transformations
 		pg_Mesh_Scale = 1.f;
 		pg_Mesh_Rotation_angle = 0.f;
@@ -208,9 +210,9 @@ public:
 		pg_nbObjectsPerMeshFile = 0;
 		pg_nbFacesPerMeshFile = NULL;
 		Mesh_texture_rectangle = NULL_ID;
-		mesh_vao = {};
-		mesh_barycenter = {};
-		mesh_index_vbo = {};
+		mesh_vao = NULL;
+		mesh_barycenter = NULL;
+		mesh_index_vbo = NULL;
 #if defined(var_Caverne_Mesh_Profusion)
 		if (pg_FullScenarioActiveVars[indScenario][_Caverne_Mesh_Profusion]) {
 			pg_CaverneActveMesh = false;
@@ -251,6 +253,16 @@ public:
 		pg_CaverneMeshDeathTime = 0.f;
 #endif
 	}
+	void pg_transferMeshDataToGPU(int indMeshFile);
+	void pg_load_mesh_objects(string mesh_file_name, int indMeshFile, int indScenario);
+	void pg_copy_mesh_data_and_ship_to_GPU(int indObjectInMesh, GLfloat* vertexBufferIni,
+		GLfloat* texCoordBufferIni, GLfloat* normalBufferIni,
+		GLint* boneIndexBufferIni, GLfloat* boneWeightBufferIni,
+		GLuint* indexPointBufferIni, GLuint* indexTexCoordBufferIni, GLuint* indexNormalBufferIni, int nbFacesInThisMesh,
+		int* nbVertexTot, int* nbCoordTexTot, int* nbNormalTot, int nbVertices, int nbTexCoords, int nbNormals, vector <string> mesh_IDs_current_mesh);
+	void pg_compute_MeshMotion(int indMeshFile, bool with_motion, MeshAnimationData* animData);
+	void pg_drawOneMesh(int indMeshFile);
+	void pg_drawOneMesh2(int indMeshFile);
 	~MeshData(void) {
 	}
 };
@@ -298,13 +310,32 @@ public:
 	// bones & animation
 	int pg_nb_bones;
 	Bone* pg_tabBones;
+
+	// poses provided in the obj file
+	// used as a library for animation which interpolates between some of these poses
 	int pg_nb_LibraryPoses;
-	int pg_nb_AnimationPoses;
-	float* pg_interpolation_weight_AnimationPose;
-	int pg_nb_MotionPoses;
-	MotionPose* pg_motionPoses;
-	float* pg_interpolation_weight_MotionPose;
-	MeshAnimationData() {
+
+	// maximal number of interpolated animation poses
+	int pg_nb_MaxAnimationPoses;
+	// current number of interpolated animation poses given by mesh_anime value
+	int pg_nb_CurAnimationPoses;
+	// interpolation weight between the pg_nb_CurAnimationPoses
+	float *pg_interpolation_weight_AnimationPose;
+
+	// maximal number of interpolated motion poses
+	int pg_nb_MaxMotionPoses;
+	// current number of interpolated motion poses given by mesh_motion value
+	int pg_nb_CurMotionPoses;
+	// library of motion poses
+	MotionPose *pg_motionPoses;
+	// interpolation weight between the pg_nb_CurMotionPoses
+	float *pg_interpolation_weight_MotionPose;
+
+	int pg_chosen_mesh_LibraryPose1;
+	int pg_chosen_mesh_LibraryPose2;
+	int pg_chosen_mesh_LibraryPose3;
+
+	MeshAnimationData(void) {
 		// animation
 		pg_mesh_startAnime = -1;
 		pg_mesh_anime_precTime = -1;
@@ -317,25 +348,35 @@ public:
 		pg_mesh_motion_precTime = -1;
 		pg_mesh_precedingMotion = -1;
 
-		// bones & animation
+		// bones
 		pg_nb_bones = 0;
 		pg_tabBones = NULL;
-		pg_nb_AnimationPoses = 0;
+
+		// poses provided in the obj file
+		// used as a library for animation which interpolates between some of these poses
 		pg_nb_LibraryPoses = 0;
-		pg_nb_MotionPoses = 0;
-		pg_interpolation_weight_AnimationPose = new float[PG_MAX_ANIMATION_POSES];
-		pg_interpolation_weight_MotionPose = new float[PG_MAX_ANIMATION_POSES];
-		for (int indPose = 0; indPose < PG_MAX_ANIMATION_POSES; indPose++) {
-			pg_interpolation_weight_AnimationPose[indPose] = 0.f;
-			pg_interpolation_weight_MotionPose[indPose] = 0.f;
-		}
-		pg_motionPoses = new MotionPose[PG_MAX_ANIMATION_POSES]();
-	}
-	~MeshAnimationData(void) {
-		free(pg_interpolation_weight_AnimationPose);
+
+		pg_nb_MaxAnimationPoses = 0;
+		pg_nb_CurAnimationPoses = 0;
 		pg_interpolation_weight_AnimationPose = NULL;
-		free(pg_interpolation_weight_MotionPose);
+
+		pg_nb_MaxMotionPoses = 0;
+		pg_nb_CurMotionPoses = 0;
 		pg_interpolation_weight_MotionPose = NULL;
+		pg_motionPoses = NULL;
+
+		pg_chosen_mesh_LibraryPose1 = -1;
+		pg_chosen_mesh_LibraryPose2 = -1;
+		pg_chosen_mesh_LibraryPose3 = -1;
+	}
+	// bone animaton & motion
+	void pg_update_BoneAnimation(int indMeshFile);
+	void pg_update_MeshMotion(int indMeshFile);
+	void pg_compute_BoneTransformations(int indMeshFile);
+	void pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc);
+	void pg_parseArmatureObj(FILE* file, char* line, char* tag, char* id);
+	bool pg_ParseMeshAnimation(FILE* file, int indMeshFile, char* line, char* tag);
+	~MeshAnimationData(void) {
 	}
 };
 
@@ -361,12 +402,10 @@ void Caverne_Mesh_Profusion_Off(int indImage);
 // EXPORTED FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// bone animaton & motion
-void pg_update_bone_anim(int indMeshFile);
-void pg_update_bones(int indMeshFile);
-void pg_update_motion(int indMeshFile);
 
 void pg_render_bones(glm::mat4 modelMatrix, int indMeshFile);
+
+void pg_copyLibraryPoseToAnimationPose(int indMeshFile, int chosen_mesh_LibraryPose, int mesh_AnimationPose);
 
 void pg_parseScenario_Meshes(std::ifstream& scenarioFin, int indScenario);
 // loads meshes in GPU

@@ -86,15 +86,13 @@ int pg_tablet_prec_x = 0;
 int pg_tablet_prec_y = 0;
 
 // MVP matrices
-glm::mat4 pg_NbTextChapters;
+glm::mat4 pg_VP1perspMatrix;
 glm::mat4 pg_VP1viewMatrix;
-glm::mat4 pg_MeshPosModelMatrix;
-glm::mat4 ObjectPosModelMatrix;
 glm::mat4 pg_VP1homographyMatrix;
 #if defined(PG_SECOND_MESH_CAMERA)
-glm::mat4 VP2perspMatrix;
-glm::mat4 VP2viewMatrix;
-glm::mat4 VP2homographyMatrix;
+glm::mat4 pg_VP2perspMatrix;
+glm::mat4 pg_VP2viewMatrix;
+glm::mat4 pg_VP2homographyMatrix;
 #endif
 
 // homographyw matrix
@@ -852,24 +850,21 @@ void pg_update_shader_Mesh_uniforms(void) {
 		glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mesh]);
 		// the variable of the mesh shader is updated before each rendering mode (lines of facets)
 		glUniform3f(uniform_Mesh_fs_3fv_light[pg_ind_scenario], pg_mesh_light_x, pg_mesh_light_y, pg_mesh_light_z);
-#if defined(var_Contact_mesh_expand)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_expand]) {
-			glUniform2f(uniform_Mesh_vp_2fv_dilate_explode[pg_ind_scenario], Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_expand]) {
+			glUniform2f(uniform_Mesh_vp_2fv_dilate_explode[pg_ind_scenario], mesh_expand + pulse_average * mesh_expand_pulse, mesh_explode);
 		}
-		//printf("mesh %.2f %.2f\n", Contact_mesh_expand + pulse_average * Contact_mesh_expand_pulse, Contact_mesh_explode);
-#endif
+		//printf("mesh %.2f %.2f\n", mesh_expand + pulse_average * mesh_expand_pulse, mesh_explode);
+
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_textureFrontier_wmin]) {
 			glUniform4f(uniform_Mesh_fs_4fv_textureFrontier[pg_ind_scenario], textureFrontier_wmin, textureFrontier_wmax, textureFrontier_hmin, textureFrontier_hmax);
 			glUniform4f(uniform_Mesh_fs_4fv_textureFrontier_width[pg_ind_scenario], textureFrontier_wmin_width, textureFrontier_wmax_width, textureFrontier_hmin_width, textureFrontier_hmax_width);
 			glUniform4f(uniform_Mesh_fs_4fv_textureScaleTransl[pg_ind_scenario], textureScale_w, textureScale_h, textureTranslate_w, textureTranslate_h);
 		}
-#if defined(var_Contact_mesh_palette)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_palette]) {
+		if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_palette]) {
 			float pulsed_color[3];
-			pg_compute_pulsed_palette_color(Contact_mesh_color, pen_color_pulse, Contact_mesh_grey, pen_grey_pulse, pulsed_color, pg_enum_PEN_COLOR);
-			glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_ind_scenario], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(Contact_mesh_palette));
+			pg_compute_pulsed_palette_color(mesh_color, pen_color_pulse, mesh_grey, pen_grey_pulse, pulsed_color, pg_enum_PEN_COLOR);
+			glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_ind_scenario], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(mesh_palette));
 		}
-#endif
 	}
 	pg_printOglError(517);
 }
@@ -1176,11 +1171,11 @@ void pg_window_display(void) {
 			if (visible) {
 				if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones != NULL) {
 					//printf("updage anim & bones mesh %d\n", indMeshFile);
-					pg_update_bone_anim(indMeshFile);
-					pg_update_bones(indMeshFile);
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_update_BoneAnimation(indMeshFile);
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_compute_BoneTransformations(indMeshFile);
 				}
 				if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_rotation]) {
-					pg_update_motion(indMeshFile);
+					pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_update_MeshMotion(indMeshFile);
 				}
 			}
 		}
@@ -1342,7 +1337,7 @@ void pg_calculate_homography_matrices(std::vector<cv::Point2f>* sourcePoints, st
 	// quad projected at 1m with the projector axis orthogonal to the projection plane
 
 	homography = cv::findHomography(*sourcePoints, *destinationPoints, 0);
-	//printf("mat size %d %d\n", homography.size().width, homography.size().height);
+	printf("Homography matrix calculation %d %d\n", homography.size().width, homography.size().height);
 	// in GLM Matrix types store their values in column - major order.
 	if (dim == 4) {
 		pg_matValues[0] = (float)((double*)homography.data)[0];
@@ -1389,30 +1384,14 @@ void pg_calculate_perspective_matrices(void) {
 	//printf("[1] Loc %.1f %.1f %.1f LookAt %.1f %.1f %.1f\n",
 	//	VP1LocX, VP1LocY, VP1LocZ, VP1LookAtX, VP1LookAtY, VP1LookAtZ);
 
-	if (!pg_FullScenarioActiveVars[pg_ind_scenario][_VP1LocX]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LocY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LocZ]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtX]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1LookAtZ]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1UpY]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1Reversed]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1WidthTopAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1BottomAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_VP1TopAt1m]
-		|| !pg_shader_programme[pg_ind_scenario][_nearPlane]
-		|| !pg_shader_programme[pg_ind_scenario][_farPlane]) {
-		return;
-	}
-
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
 	if (double_window) {
-		pg_NbTextChapters
+		pg_VP1perspMatrix
 			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
 	}
 	else {
-		pg_NbTextChapters
+		pg_VP1perspMatrix
 			= glm::frustum(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
 	}
 	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
@@ -1452,7 +1431,7 @@ void pg_calculate_perspective_matrices(void) {
 #if defined(var_VP2WidthTopAt1m) && defined(var_VP2BottomAt1m) && defined(var_VP2TopAt1m) && defined(var_nearPlane) && defined(var_farPlane)
 	//////////////////////////////////////////////////////////////////////////////////
 	// left camera (right display)
-	VP2perspMatrix
+	pg_VP2perspMatrix
 		= glm::frustum(-VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m, nearPlane, farPlane);
 
 	//printf("Perspective 1 %.2f %.2f %.2f %.2f\n" , -VP2WidthTopAt1m / 2.0f, VP2WidthTopAt1m / 2.0f, VP2BottomAt1m, VP2TopAt1m );
@@ -1479,7 +1458,7 @@ void pg_calculate_perspective_matrices(void) {
 	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
 	lookAtPoint = glm::vec3(VP2LocX, VP2LocY, VP2LocZ) + vectorLookAt;
 	// printf("Look at real %.2f %.2f %.2f\n\n" , lookAtPoint.x , lookAtPoint.y , lookAtPoint.z );
-	VP2viewMatrix
+	pg_VP2viewMatrix
 		= glm::lookAt(
 			glm::vec3(VP2LocX, VP2LocY, VP2LocZ), // Camera is at (VP2LocX, VP2LocY, VP2LocZ), in World Space
 			lookAtPoint, // and looks at lookAtPoint
@@ -1511,11 +1490,11 @@ void pg_calculate_orthographic_matrices(void) {
 	//////////////////////////////////////////////////////////////////////////////////
 	// right camera (right display)
 	if (double_window) {
-		pg_NbTextChapters
+		pg_VP1perspMatrix
 			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
 	}
 	else {
-		pg_NbTextChapters
+		pg_VP1perspMatrix
 			= glm::ortho(-VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
 	}
 	//printf("Perspective 1 %.2f %.2f %.2f %.2f near Far %.2f %.2f\n" , -VP1WidthTopAt1m / 2.0f, VP1WidthTopAt1m / 2.0f, VP1BottomAt1m, VP1TopAt1m, nearPlane, farPlane);
@@ -1776,7 +1755,6 @@ void pg_UpdatePass(void) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_BG_CA_repop_density]) {
 		glUniform1i(uniform_Update_texture_fs_RepopDensity[pg_ind_scenario], pg_enum_RepopDensity_Update_sampler);
 	}
-
 	glUniform1i(uniform_Update_texture_fs_Photo0[pg_ind_scenario], pg_enum_Photo0_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Photo1[pg_ind_scenario], pg_enum_Photo1_Update_sampler);
 	if (PG_NB_PARALLEL_CLIPS >= 2) {
@@ -1791,14 +1769,14 @@ void pg_UpdatePass(void) {
 	glUniform1i(uniform_Update_texture_fs_Trk1[pg_ind_scenario], pg_enum_Trk1_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk2[pg_ind_scenario], pg_enum_Trk2_FBO_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Trk3[pg_ind_scenario], pg_enum_Trk3_FBO_Update_sampler);
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_CATable]) {
-		glUniform1i(uniform_Update_texture_fs_CATable[pg_ind_scenario], pg_enum_CATable_Update_sampler);
-	}
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_camera_BG_subtr]) {
 		glUniform1i(uniform_Update_texture_fs_Camera_BGIni[pg_ind_scenario], pg_enum_Camera_BGIni_FBO_Update_sampler);
 	}
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_pixel_image_acceleration]) {
 		glUniform1i(uniform_Update_texture_fs_pixel_acc[pg_ind_scenario], pg_enum_pixel_image_acc_Update_sampler);
+	}
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_CATable]) {
+		glUniform1i(uniform_Update_texture_fs_CATable[pg_ind_scenario], pg_enum_CATable_Update_sampler);
 	}
 
 	////////////////////////////////////////////////////////
@@ -1968,12 +1946,6 @@ void pg_UpdatePass(void) {
 	glActiveTexture(GL_TEXTURE0 + pg_enum_Trk3_FBO_Update_sampler);
 	glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Update_texID[(pg_FrameNo % 2) * pg_enum_FBO_Update_nbAttachts + pg_enum_Trk3_FBO_Update_attacht]);
 
-	// CA Data table (FBO attachment 11)
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_CATable]) {
-		glActiveTexture(GL_TEXTURE0 + pg_enum_CATable_Update_sampler);
-		glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
-	}
-
 	// Initial background texture
 	glActiveTexture(GL_TEXTURE0 + pg_enum_Camera_BGIni_FBO_Update_sampler);
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_camera_BG_subtr]) {
@@ -1995,6 +1967,12 @@ void pg_UpdatePass(void) {
 	}
 	else {
 		glBindTexture(GL_TEXTURE_RECTANGLE, NULL_ID);
+	}
+
+	// CA Data table (FBO attachment 11)
+	if (pg_FullScenarioActiveVars[pg_ind_scenario][_CATable]) {
+		glActiveTexture(GL_TEXTURE0 + pg_enum_CATable_Update_sampler);
+		glBindTexture(GL_TEXTURE_RECTANGLE, pg_CATable_ID);
 	}
 
 	// draw points from the currently bound VAO with current in-use shader
@@ -2602,346 +2580,6 @@ void MmeShanghai_automatic_brokenGlass_animation(int indMeshFile, int indObjectI
 // MESH RENDERING
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void pg_drawOneMesh(int indMeshFile) {
-	// visibility
-	bool visible = false;
-#if defined(pg_Project_Etoiles)
-	visible = Etoiles_mesh_guided_by_strokes(indMeshFile);
-#elif defined(var_Caverne_Mesh_Profusion)
-	visible = (indMeshFile < 7 && (activeMeshes & (1 << indMeshFile))) || (pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneActveMesh
-		&& (pg_CurrentClockTime - pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshBirthTime > pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshWakeupTime)
-		&& (pg_CurrentClockTime < pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshDeathTime));
-#else
-	visible = (activeMeshes & (1 << indMeshFile));
-#endif
-
-	// visible mesh
-	if (visible) {
-		// mesh animation
-#if defined(pg_Project_Etoiles)
-		Etoiles_ray_animation();
-#elif defined(var_Caverne_Mesh_Profusion)
-		Caverne_profusion_automatic_rotation(indMeshFile);
-#endif
-
-#if defined(var_Contact_mesh_anime)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_anime]) {
-			glm::f32* valMats = new glm::f32[16 * pg_nb_bones[indMeshFile]];
-			for (int indBone = 0; indBone < pg_Meshes[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
-				memcpy(&valMats[16 * indBone],
-					glm::value_ptr(pg_Meshes[pg_ind_scenario][indMeshFile].pg_tabBones[indBone].pointAnimationMatrix),
-					16 * sizeof(glm::f32));
-			}
-			glUniformMatrix4fv(uniform_Mesh_bones_matrices[pg_ind_scenario], 20, GL_FALSE, valMats);
-			delete[] valMats;
-		}
-#endif
-
-		// Model matrix 
-		// transformed mesh according to scenario file
-		// 1. a varying translation matrix
-		pg_MeshPosModelMatrix = glm::translate(glm::mat4(1.0f),
-			glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_X, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Y, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Z));
-		//printf("Mesh translation ind Mesh %d tr %.2f %.2f %.2f \n",indMeshFile, 
-			//pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_X, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Y, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Z);
-		// 2. a varying rotation matrix 
-		glm::vec3 myRotationAxis(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_X,
-			pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Y, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Z);
-#if defined(var_Contact_mesh_rotation)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_rotation]) {
-			pg_MeshPosModelMatrix = glm::translate(pg_MeshPosModelMatrix, glm::vec3(0.f, -15.f, 0.f));
-		}
-#endif
-		pg_MeshPosModelMatrix = glm::rotate(pg_MeshPosModelMatrix, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_angle, myRotationAxis);
-#if defined(var_Contact_mesh_rotation)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_Contact_mesh_rotation]) {
-			pg_MeshPosModelMatrix = glm::translate(pg_MeshPosModelMatrix, glm::vec3(0.f, 15.f, 0.f));
-		}
-#endif
-		// 3. a varying scaling matrix 
-#if defined(var_Caverne_Mesh_Profusion)
-		if (indMeshFile < 7) {
-			pg_MeshPosModelMatrix = glm::scale(pg_MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Scale));
-		}
-		else {
-			pg_MeshPosModelMatrix = glm::scale(pg_MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Scale * min(2.0f, (pg_CurrentClockTime - pg_Meshes[pg_ind_scenario][indMeshFile].pg_CaverneMeshBirthTime) / 20.f)));
-		}
-#else
-		pg_MeshPosModelMatrix = glm::scale(pg_MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Scale));
-#endif
-
-		// model matrix transfered to GPU (if it is not object by object made)
-		glUniformMatrix4fv(uniform_Mesh_vp_model[pg_ind_scenario], 1, GL_FALSE,
-			glm::value_ptr(pg_MeshPosModelMatrix));
-
-#if defined(var_MmeShanghai_brokenGlass)
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_MmeShanghai_brokenGlass]) {
-			if (indMeshFile == 0 /* wall (broken glass on the right panel) */) {
-				glUniform4f(uniform_Mesh_fs_4fv_color[pg_ind_scenario], 0, 0, 0, 1.0f);
-				glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg[pg_ind_scenario], 0, 0, 1.f, MS_BLACK);
-			}
-			else if (indMeshFile == 2 /* WHITE_RIGHT */) {
-				glUniform4f(uniform_Mesh_fs_4fv_color[pg_ind_scenario], MS_WHITE_RIGHT_r, MS_WHITE_RIGHT_g, MS_WHITE_RIGHT_b, 1.0f);
-				glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg[pg_ind_scenario], MS_WHITE_RIGHT_color_weight, MS_WHITE_RIGHT_master_weight, MS_WHITE_RIGHT_photo_weight, MS_BLACK);
-			}
-			else if (indMeshFile == 1 /* WHITE_LEFT */) {
-				glUniform4f(uniform_Mesh_fs_4fv_color[pg_ind_scenario], MS_WHITE_LEFT_r, MS_WHITE_LEFT_g, MS_WHITE_LEFT_b, 1.0f);
-				glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg[pg_ind_scenario], MS_WHITE_LEFT_color_weight, MS_WHITE_LEFT_master_weight, MS_WHITE_LEFT_photo_weight, MS_BLACK);
-			}
-			else if (indMeshFile == 3 /* BLACK */) {
-				glUniform4f(uniform_Mesh_fs_4fv_color[pg_ind_scenario], MS_WHITE_LEFT_r, MS_WHITE_LEFT_g, MS_WHITE_LEFT_b, 1.0f);
-				glUniform4f(uniform_Mesh_fs_4fv_color_master_photo_weight_bg[pg_ind_scenario], 0.f, 0.f, 0.f, MS_BLACK);
-			}
-		}
-#endif
-
-		for (int indObjectInMesh = 0; indObjectInMesh < pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbObjectsPerMeshFile; indObjectInMesh++) {
-			bool visibleObject = true;
-#if defined(var_MmeShanghai_brokenGlass)
-			if (pg_FullScenarioActiveVars[pg_ind_scenario][_MmeShanghai_brokenGlass]) {
-				if (indMeshFile == 0) {
-					if (MmeShanghai_brokenGlass > 0 && MmeShanghai_brokenGlass <= pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_NbMeshSubParts) {
-						visibleObject = pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_MeshSubParts[MmeShanghai_brokenGlass - 1][indObjectInMesh];
-						// new visible object, defines the wake up time for falling
-						if (visibleObject && pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh] == 0.f
-							// animation starts when all the meshes are displayed
-							&& MmeShanghai_brokenGlass >= pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_NbMeshSubParts) {
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh] = pg_CurrentClockTime + rand_0_1 * 10.0;
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_Ini_angle[indObjectInMesh] = float(rand_0_1 * M_PI * 0.004);
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_X[indObjectInMesh] = rand_0_1;
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_Y[indObjectInMesh] = rand_0_1;
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_Z[indObjectInMesh] = rand_0_1;
-						}
-					}
-					else if (MmeShanghai_brokenGlass > pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_NbMeshSubParts) {
-						visibleObject = pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_MeshSubParts[pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_NbMeshSubParts - 1][indObjectInMesh];
-					}
-					else {
-						visibleObject = false;
-					}
-					if (visibleObject
-						&& pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghaiMeshObjectWakeupTime[indObjectInMesh] < pg_CurrentClockTime
-						// animation starts when all the meshes are displayed
-						&& MmeShanghai_brokenGlass >= pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_NbMeshSubParts) {
-						MmeShanghai_automatic_brokenGlass_animation(indMeshFile, indObjectInMesh);
-						// Model matrix 
-						// transformed mesh according to scenario file
-						// 1. a varying translation matrix
-						ObjectPosModelMatrix = glm::translate(pg_MeshPosModelMatrix,
-							glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Translation_X[indObjectInMesh],
-								pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Translation_Y[indObjectInMesh],
-								pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Translation_Z[indObjectInMesh]));
-						// 2. a varying rotation matrix (with bakc and forth translation to barycenter so that the object rotates on itself
-						ObjectPosModelMatrix = glm::translate(ObjectPosModelMatrix,
-							glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].mesh_barycenter[3 * indObjectInMesh + 0],
-								pg_Meshes[pg_ind_scenario][indMeshFile].mesh_barycenter[3 * indObjectInMesh + 1],
-								pg_Meshes[pg_ind_scenario][indMeshFile].mesh_barycenter[3 * indObjectInMesh + 2]));
-						glm::vec3 myObjectRotationAxis(pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_X[indObjectInMesh],
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_Y[indObjectInMesh],
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_Z[indObjectInMesh]);
-						ObjectPosModelMatrix = glm::rotate(ObjectPosModelMatrix,
-							pg_Meshes[pg_ind_scenario][indMeshFile].pg_MmeShanghai_Object_Rotation_angle[indObjectInMesh],
-							myObjectRotationAxis);
-						ObjectPosModelMatrix = glm::translate(ObjectPosModelMatrix,
-							glm::vec3(-pg_Meshes[pg_ind_scenario][indMeshFile].mesh_barycenter[3 * indObjectInMesh + 0],
-								-pg_Meshes[pg_ind_scenario][indMeshFile].mesh_barycenter[3 * indObjectInMesh + 1],
-								-pg_Meshes[pg_ind_scenario][indMeshFile].mesh_barycenter[3 * indObjectInMesh + 2]));
-
-						// model matrix transfered to GPU (if it is not object by object made)
-						glUniformMatrix4fv(uniform_Mesh_vp_model[pg_ind_scenario], 1, GL_FALSE,
-							glm::value_ptr(ObjectPosModelMatrix));
-					}
-					else {
-						glUniformMatrix4fv(uniform_Mesh_vp_model[pg_ind_scenario], 1, GL_FALSE,
-							glm::value_ptr(glm::mat4(1.0f)));
-					}
-				}
-			}
-#endif
-			if (visibleObject 
-				&& pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mesh]) {
-				//printf("mesh pass mesh %d obj %d\n", indMeshFile, indObjectInMesh);
-
-				// binds VAO
-				glBindVertexArray(pg_Meshes[pg_ind_scenario][indMeshFile].mesh_vao[indObjectInMesh]);
-
-				// activate shaders and sets uniform variable values    
-				glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mesh]);
-
-				glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				// texture unit location
-				glUniform1i(uniform_Mesh_texture_fs_decal[pg_ind_scenario], 0);
-				glActiveTexture(GL_TEXTURE0 + 0);
-
-				// specific texture
-				if (pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_TextureRank != -1) {
-					glBindTexture(GL_TEXTURE_RECTANGLE, pg_Meshes[pg_ind_scenario][indMeshFile].Mesh_texture_rectangle);
-				}
-				// Augmented Reality: FBO capture of Master to be displayed on a mesh
-				else if (augmentedReality) {
-					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);
-				}
-				else {
-					glBindTexture(GL_TEXTURE_RECTANGLE, 0);
-				}
-
-#if defined(var_MmeShanghai_brokenGlass)
-				if (pg_FullScenarioActiveVars[pg_ind_scenario][_MmeShanghai_brokenGlass]) {
-					// second texture is the BG rendering
-					glUniform1i(uniform_Mesh_texture_fs_BG[pg_ind_scenario], 1);
-					glActiveTexture(GL_TEXTURE0 + 1);
-					glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);  // master output memory for mapping on mesh
-				}
-#endif
-				// standard filled mesh drawing
-				// draw triangles from the currently bound VAO with current in-use shader
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_ind_scenario][indMeshFile].mesh_index_vbo[indObjectInMesh]);
-
-				// updates this variable according whether triangles or lines are shown
-				glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_ind_scenario],
-					isDisplayLookAt, -1, float(indMeshFile), (GLfloat)pg_CurrentSceneIndex);
-				glUniform3f(uniform_Mesh_fs_3fv_light[pg_ind_scenario], pg_mesh_light_x, pg_mesh_light_y, pg_mesh_light_z);
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				glDrawElements(GL_TRIANGLES, pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-				pg_printOglError(698);
-
-				if (pg_FullScenarioActiveVars[pg_ind_scenario][_with_mesh]) {
-					// draws the polygon contours
-					// updates this variable according whether triangles or lines are shown
-					if (with_mesh == 1
-#if defined(var_MmeShanghai_brokenGlass)
-						&& indMeshFile == 0
-#endif
-						) {
-						glDisable(GL_DEPTH_TEST);
-						glLineWidth(1);
-						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_ind_scenario], isDisplayLookAt, 1, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_TextureRank != -1, (GLfloat)pg_CurrentSceneIndex);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						glDrawElements(GL_TRIANGLES, pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-						glEnable(GL_DEPTH_TEST);
-					}
-				}
-
-				// Augmented Reality: FBO capture of Master to be displayed on a mesh
-				if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes] 
-					&& pg_FullScenarioActiveVars[pg_ind_scenario][_meshRenderBypass]) {
-					// optional additional drawing of the polygon contours for checking calibration in augmented reality
-					if (with_mesh) {
-						// no z-Buffer
-						glDisable(GL_DEPTH_TEST);
-						glLineWidth(3);
-						glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_ind_scenario], isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						glDrawElements(GL_TRIANGLES, pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-						// no z-Buffer
-						glEnable(GL_DEPTH_TEST);
-					}
-				}
-				//printf("Display mesh VP1 %d/%d size (nb faces) %d\n\n", indMeshFile + 1, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Meshes->pg_nbObjectsPerMeshFile,
-				//	pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]);
-			} // visible submesh object
-		} // submeshes
-
-		// armature rendering
-		if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones != NULL && false) {
-			glDisable(GL_DEPTH_TEST);
-			//printf("render armature mesh #%d\n", indMeshFile);
-				// updates this variable according whether triangles or lines are shown
-			glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_ind_scenario],
-				isDisplayLookAt, 1, float(indMeshFile), (GLfloat)pg_CurrentSceneIndex);
-			glUniform3f(uniform_Mesh_fs_3fv_light[pg_ind_scenario], 0, 0, 0);
-			pg_render_bones(pg_MeshPosModelMatrix, indMeshFile);
-		}
-
-	} // visible mesh
-}
-
-void pg_drawOneMesh2(int indMeshFile) {
-	// visibility
-	bool visible = false;
-	visible = (activeMeshes & (1 << indMeshFile));
-
-	// visible mesh
-	if (visible
-		&& pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mesh]) {
-
-		// activate shaders and sets uniform variable values    
-		glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Mesh]);
-
-		// Model matrix 
-		// transformed mesh according to scenario file
-		// 1. a varying translation matrix
-		pg_MeshPosModelMatrix = glm::translate(glm::mat4(1.0f),
-			glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_X, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Y, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Z));
-		// 2. a varying rotation matrix 
-		glm::vec3 myRotationAxis(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_X,
-			pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Y, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Z);
-		pg_MeshPosModelMatrix = glm::rotate(pg_MeshPosModelMatrix, pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_angle, myRotationAxis);
-		// 3. a varying scaling matrix 
-		pg_MeshPosModelMatrix = glm::scale(pg_MeshPosModelMatrix, glm::vec3(pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Scale));
-
-		// model matrix transfered to GPU
-		glUniformMatrix4fv(uniform_Mesh_vp_model[pg_ind_scenario], 1, GL_FALSE,
-			glm::value_ptr(pg_MeshPosModelMatrix));
-
-		for (int indObjectInMesh = 0; indObjectInMesh < pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbObjectsPerMeshFile; indObjectInMesh++) {
-			// binds VAO
-			glBindVertexArray(pg_Meshes[pg_ind_scenario][indMeshFile].mesh_vao[indObjectInMesh]);
-
-			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			// texture unit location
-			glUniform1i(uniform_Mesh_texture_fs_decal[pg_ind_scenario], 0);
-			glActiveTexture(GL_TEXTURE0 + 0);
-			// specific mesh texture
-			if (pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_TextureRank != -1) {
-				glBindTexture(GL_TEXTURE_RECTANGLE, pg_Meshes[pg_ind_scenario][indMeshFile].Mesh_texture_rectangle);
-			}
-			// Augmented Reality: FBO capture of Master to be displayed on a mesh
-			else if (augmentedReality) {
-				glBindTexture(GL_TEXTURE_RECTANGLE, pg_FBO_Master_capturedFB_prec_texID);
-			}
-			else {
-				glBindTexture(GL_TEXTURE_RECTANGLE, 0);  // no texture
-			}
-
-			// standard filled mesh drawing
-			// draw triangles from the currently bound VAO with current in-use shader
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_Meshes[pg_ind_scenario][indMeshFile].mesh_index_vbo[indObjectInMesh]);
-
-			// updates this variable according whether triangles or lines are shown
-			glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_ind_scenario], isDisplayLookAt, 0, with_blue, (GLfloat)pg_CurrentSceneIndex);
-
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glDrawElements(GL_TRIANGLES, pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-
-			// Augmented Reality: FBO capture of Master to be displayed on a mesh
-					// optional additional drawing of the polygon contours for checking calibration in augmented reality
-			if (pg_FullScenarioActiveVars[pg_ind_scenario][_textureFrontier_wmin]) {
-				if (with_mesh) {
-					// no z-Buffer
-					glDisable(GL_DEPTH_TEST);
-					glLineWidth(3);
-					glUniform4f(uniform_Mesh_fs_4fv_isDisplayLookAt_with_mesh_with_blue_currentScene[pg_ind_scenario], isDisplayLookAt, 1, with_blue, (GLfloat)pg_CurrentSceneIndex);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					glDrawElements(GL_TRIANGLES, pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					// no z-Buffer
-					glEnable(GL_DEPTH_TEST);
-				}
-			}
-			//printf("Display mesh VP2 %d/%d size (nb faces) %d\n", indMeshFile, indObjectInMesh,
-			//	pg_Meshes[pg_ind_scenario][indMeshFile].pg_nbFacesPerMeshFile[indObjectInMesh]);
-
-
-		} // submeshes
-
-	} // visible mesh
-}
-
 void pg_MeshPass(void) {
 	float eyePosition[3] = { 20.f, 0.f, 0.f };
 	float lookat[3] = { 0.f, 0.f, 0.f };
@@ -2955,11 +2593,9 @@ void pg_MeshPass(void) {
 	// Meshes rendering
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
 		// mesh geometry rendering
-		if (!pg_FullScenarioActiveVars[pg_ind_scenario][_meshRenderBypass]
-			|| !meshRenderBypass) {
+		if (!pg_FullScenarioActiveVars[pg_ind_scenario][_meshRenderBypass] || !meshRenderBypass) {
 			// draws the mesh on top of clip arts or particles if they exit (before mixing/master rendering)
-			if (!pg_FullScenarioActiveVars[pg_ind_scenario][_augmentedReality]
-				|| !augmentedReality) {
+			if (!pg_FullScenarioActiveVars[pg_ind_scenario][_augmentedReality] 	|| !augmentedReality) {
 				// draws the mesh alone
 				// unbind output FBO 
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -3062,14 +2698,14 @@ void pg_MeshPass(void) {
 
 			// projection and view matrices
 			glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_ind_scenario], 1, GL_FALSE,
-				// glm::value_ptr(pg_VP1homographyMatrix * pg_NbTextChapters));
-				glm::value_ptr(pg_NbTextChapters));
+				// glm::value_ptr(pg_VP1homographyMatrix * pg_VP1perspMatrix));
+				glm::value_ptr(pg_VP1perspMatrix));
 			glUniformMatrix4fv(uniform_Mesh_vp_view[pg_ind_scenario], 1, GL_FALSE,
 				glm::value_ptr(pg_VP1viewMatrix));
 
 			// all the meshes
 			for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_ind_scenario].size(); indMeshFile++) {
-				pg_drawOneMesh(indMeshFile);
+				pg_Meshes[pg_ind_scenario][indMeshFile].pg_drawOneMesh(indMeshFile);
 			} // all the meshes
 			pg_printOglError(697);
 		}
@@ -3093,14 +2729,14 @@ void pg_MeshPass(void) {
 			// duplicates the Meshs in case of double window
 
 			glUniformMatrix4fv(uniform_Mesh_vp_proj[pg_ind_scenario], 1, GL_FALSE,
-				// glm::value_ptr(VP2homographyMatrix * VP2perspMatrix));
-				glm::value_ptr(VP2perspMatrix));
+				// glm::value_ptr(pg_VP2homographyMatrix * pg_VP2perspMatrix));
+				glm::value_ptr(pg_VP2perspMatrix));
 			glUniformMatrix4fv(uniform_Mesh_vp_view[pg_ind_scenario], 1, GL_FALSE,
-				glm::value_ptr(VP2viewMatrix));
+				glm::value_ptr(pg_VP2viewMatrix));
 
 			// all mesh files
 			for (int indMeshFile = 0; indMeshFile < pg_Meshes[pg_ind_scenario].size(); indMeshFile++) {
-				pg_drawOneMesh2(indMeshFile);
+				pg_Meshes[pg_ind_scenario][indMeshFile].pg_drawOneMesh2(indMeshFile);
 			} // all the meshes
 
 			// sets viewport to full window
@@ -3268,8 +2904,8 @@ void pg_draw_scene(DrawingMode mode) {
 		// the meshes are displayed together with the particles except for augmented reality or mesh rendering bypassing
 		// where they are displayed last
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
-			if (!(pg_FullScenarioActiveVars[pg_ind_scenario][_augmentedReality] && augmentedReality)
-				|| (pg_FullScenarioActiveVars[pg_ind_scenario][_meshRenderBypass] && meshRenderBypass)) {
+			if ((!pg_FullScenarioActiveVars[pg_ind_scenario][_augmentedReality] || !augmentedReality)
+				&& (!pg_FullScenarioActiveVars[pg_ind_scenario][_meshRenderBypass] || !meshRenderBypass)) {
 				if (activeMeshes > 0) {
 					pg_MeshPass();
 				}
