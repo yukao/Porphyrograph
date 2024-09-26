@@ -197,7 +197,7 @@ void pg_update_shader_var_data(void) {
 #if defined(pg_Project_araKnit)
 #include "pg_render_body_araknit.cpp"
 #endif
-	pg_printOglError(510);
+	pg_printOglError(37);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -305,7 +305,7 @@ void pg_update_shader_ParticleAnimation_uniforms(void) {
 	glUniform4f(uniform_ParticleAnimation_fs_4fv_Camera_W_H_movieWH[pg_ind_scenario],
 		GLfloat(pg_camera_frame_width), GLfloat(pg_camera_frame_height),
 		GLfloat(pg_movie_frame_width), GLfloat(pg_movie_frame_height));
-	pg_printOglError(511);
+	pg_printOglError(38);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -316,14 +316,14 @@ void pg_update_shader_Update_uniforms(void) {
 	}
 
 	glUseProgram(pg_shader_programme[pg_ind_scenario][pg_enum_shader_Update]);
-	pg_printOglError(5197);
+	pg_printOglError(43);
 
 	// time is only used in TVW
 	glUniform4f(uniform_Update_fs_4fv_W_H_time_currentScene[pg_ind_scenario],
 		(GLfloat)pg_workingWindow_width, (GLfloat)PG_WINDOW_HEIGHT, (GLfloat)pg_CurrentClockTime, (GLfloat)pg_CurrentSceneIndex);
 	// printf("time %.2f\n", (GLfloat)pg_CurrentClockTime);
 	// printf("scene %d\n", pg_CurrentSceneIndex);
-	pg_printOglError(5198);
+	pg_printOglError(45);
 
 	// pixels acceleration
 	glUniform3f(uniform_Update_fs_3fv_clearAllLayers_clearCA_pulsedShift[pg_ind_scenario],
@@ -332,7 +332,7 @@ void pg_update_shader_Update_uniforms(void) {
 	//if (pg_isClearAllLayers > 0.f) {
 	//	printf("clear all\n");
 	//}
-	pg_printOglError(5197);
+	pg_printOglError(44);
 
 #if defined(pg_Project_CAaudio)
 	if (pg_CAseed_trigger) {
@@ -681,19 +681,10 @@ void pg_update_shader_Update_uniforms(void) {
 		GLfloat(CAInterpolatedType), GLfloat(CAInterpolatedSubType),
 		(is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
 #endif
-	pg_printOglError(51905);
+	pg_printOglError(42);
 
 	// printf("CA type/subtype %d-%d\n" , CAInterpolatedType, CAInterpolatedSubType);
 	// printf("blur %.2f %.2f\n", (is_blur_1 ? float(blurRadius_1) : 0.f), (is_blur_2 ? float(blurRadius_2) : 0.f));
-
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-		glUniform3f(uniform_Update_fs_3fv_photo_rgb[pg_ind_scenario], pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[0],
-			pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[0],
-			pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[0]);
-		//printf("RGB L %.2f %.2f %.2f\n", pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level, pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level, pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level);
-		//printf("RGB R %.2f %.2f %.2f\n", pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level, pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level, pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level);
-	}
-
 
 	// sets the time of the 1st plane launch 
 #if defined(var_GenerativeNights_planes)
@@ -719,7 +710,7 @@ void pg_update_shader_Update_uniforms(void) {
 		CAInterpolatedType_prev = CAInterpolatedType;
 		CAInterpolatedSubType_prev = CAInterpolatedSubType;
 	}
-	pg_printOglError(519);
+	pg_printOglError(41);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -807,7 +798,7 @@ void pg_update_shader_Mixing_uniforms(void) {
 			pg_messageTransparency,
 			(GLfloat)1.f, (GLfloat)0.f);
 	}
-	pg_printOglError(512);
+	pg_printOglError(39);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -866,7 +857,7 @@ void pg_update_shader_Mesh_uniforms(void) {
 			glUniform4f(uniform_Mesh_fs_4fv_color_palette[pg_ind_scenario], pulsed_color[0], pulsed_color[1], pulsed_color[2], float(mesh_palette));
 		}
 	}
-	pg_printOglError(517);
+	pg_printOglError(40);
 }
 
 void pg_update_shader_uniforms(void) {
@@ -1126,7 +1117,7 @@ void pg_window_display(void) {
 	//printf("Maser %.2f\n", master);
 
 	pg_windowDisplayed = true;
-	// pg_printOglError(508);
+	// pg_printOglError(32);
 
 	//////////////////////////////////////////////////
 	//////////////////////////////////////////////////
@@ -1137,10 +1128,10 @@ void pg_window_display(void) {
 	// recalculates pulsed colors and reads current paths
 	pg_update_pulsed_colors_and_replay_paths(pg_CurrentClockTime);
 
-	// ships uniform variables  pg_printOglError(51);
-	pg_printOglError(50);
+	// ships uniform variables  pg_printOglError(34);
+	pg_printOglError(35);
 	pg_update_shader_uniforms();
-	pg_printOglError(51);
+	pg_printOglError(36);
 
 	// loads movie andor camera frames
 	pg_update_clip_camera_and_movie_frame();
@@ -1205,7 +1196,7 @@ void pg_window_display(void) {
 	// SCENE DISPLAY AND SHADER UNIFORM PARAMETERS UPDATE
 	// OpenGL initializations before redisplay
 	pg_OpenGLInit();
-	// pg_printOglError(509);
+	// pg_printOglError(33);
 
 #if defined(PG_DEBUG)
 	OutputDebugStringW(_T("stat 4\n"));
@@ -1678,7 +1669,7 @@ void pg_ParticleAnimationPass(void) {
 		(void*)0           // element array buffer offset
 	);
 
-	pg_printOglError(52);
+	pg_printOglError(46);
 }
 
 //////////////////////////////////////////////////
@@ -1987,7 +1978,7 @@ void pg_UpdatePass(void) {
 		(void*)0           // element array buffer offset
 	);
 
-	pg_printOglError(5521);
+	pg_printOglError(50);
 }
 
 /////////////////////////////////////
@@ -2021,7 +2012,7 @@ void pg_ClipArtRenderingPass(void) {
 		else {
 			pg_Display_All_ClipArt(activeClipArts);
 		}
-		pg_printOglError(52526);
+		pg_printOglError(47);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -2080,7 +2071,7 @@ void pg_ParticleRenderingPass(void) {
 		// blurred disk texture
 		glUniform1i(uniform_ParticleSplat_texture_fs_decal[pg_ind_scenario], 2);
 	}
-	pg_printOglError(52527);
+	pg_printOglError(48);
 
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -2121,7 +2112,7 @@ void pg_ParticleRenderingPass(void) {
 			}
 		}
 	}
-	pg_printOglError(5259);
+	pg_printOglError(49);
 
 	////////////////////////////////////////
 	// binds geometry and displays it    
@@ -2439,7 +2430,7 @@ void pg_SensorPass(void) {
 
 	glUniformMatrix4fv(uniform_Sensor_vp_view[pg_ind_scenario], 1, GL_FALSE, pg_identityViewMatrix);
 	glUniformMatrix4fv(uniform_Sensor_vp_proj[pg_ind_scenario], 1, GL_FALSE, pg_doubleProjMatrix);
-	pg_printOglError(597);
+	pg_printOglError(53);
 
 	for (int indSens = 0; indSens < PG_NB_SENSORS; indSens++) {
 		int reindexed_Sensor = pg_Sensor_order[indSens];
@@ -2460,7 +2451,7 @@ void pg_SensorPass(void) {
 			glDrawArrays(GL_TRIANGLES, 0, 3 * 2);
 		}
 	}
-	pg_printOglError(596);
+	pg_printOglError(52);
 
 	// duplicates the sensors in case of double window
 	if (double_window) {
@@ -2488,7 +2479,7 @@ void pg_SensorPass(void) {
 		}
 	}
 
-	pg_printOglError(595);
+	pg_printOglError(51);
 	glDisable(GL_BLEND);
 }
 
@@ -2707,7 +2698,7 @@ void pg_MeshPass(void) {
 			for (unsigned int indMeshFile = 0; indMeshFile < pg_Meshes[pg_ind_scenario].size(); indMeshFile++) {
 				pg_Meshes[pg_ind_scenario][indMeshFile].pg_drawOneMesh(indMeshFile);
 			} // all the meshes
-			pg_printOglError(697);
+			pg_printOglError(66);
 		}
 		// direct rendering
 		else {
@@ -2718,7 +2709,7 @@ void pg_MeshPass(void) {
 			glBlitFramebuffer(0, 0, pg_workingWindow_width, PG_WINDOW_HEIGHT, 0, 0, pg_workingWindow_width, PG_WINDOW_HEIGHT,
 				GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
-			pg_printOglError(599);
+			pg_printOglError(55);
 		}
 
 #if defined(PG_SECOND_MESH_CAMERA)
@@ -2745,7 +2736,7 @@ void pg_MeshPass(void) {
 			glDisable(GL_DEPTH_TEST);
 			// no transparency
 			glDisable(GL_BLEND);
-			pg_printOglError(598);
+			pg_printOglError(54);
 		}
 		else {
 			//printf("Direct copy of Master shader output right window to back buffer\n");
@@ -2756,7 +2747,7 @@ void pg_MeshPass(void) {
 			glBlitFramebuffer(pg_workingWindow_width, 0, 2 * pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_workingWindow_width, 0, 2 * pg_workingWindow_width, PG_WINDOW_HEIGHT,
 				GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); //  unbind read buffer
-			pg_printOglError(599);
+			pg_printOglError(56);
 		}
 #endif
 	}
@@ -2865,7 +2856,7 @@ void pg_draw_scene(DrawingMode mode) {
 		jpgImgMatRGBInitial.create(PG_WINDOW_HEIGHT, PG_WINDOW_WIDTH, CV_8UC3); // GL_RGB
 		glReadPixels(0, 0, PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
 			jpgImgMatRGBInitial.data);
-		pg_printOglError(706);
+		pg_printOglError(67);
 
 		pg_writejpg(imageFileName);
 	}
@@ -2881,23 +2872,23 @@ void pg_draw_scene(DrawingMode mode) {
 		//////////////////////////////////////
 		// particle animation pass #0
 		pg_ParticleAnimationPass();
-		pg_printOglError(681);
+		pg_printOglError(57);
 
 		//////////////////////////////////////
 		// update pass #1 
 		// image layers update pass (CA, PIXELS, DRAWING, VIDEO AND PHOTO...)
 		pg_UpdatePass();
-		pg_printOglError(682);
+		pg_printOglError(58);
 
 		//////////////////////////////////////
 		// ClipArt clip art pass #2
 		pg_ClipArtRenderingPass();
-		pg_printOglError(683);
+		pg_printOglError(59);
 
 		//////////////////////////////////////
 		// particle pass #3
 		pg_ParticleRenderingPass();
-		pg_printOglError(684);
+		pg_printOglError(60);
 
 		//////////////////////////////////////
 		// mesh pass #2b
@@ -2915,12 +2906,12 @@ void pg_draw_scene(DrawingMode mode) {
 		//////////////////////////////////////
 		// layer compositing & echo pass #3
 		pg_MixingPass();
-		pg_printOglError(684);
+		pg_printOglError(61);
 
 		//////////////////////////////////////
 		// final combination of echoed and non echoed rendering #4
 		pg_MasterPass();
-		pg_printOglError(685);
+		pg_printOglError(62);
 
 		//////////////////////////////////////
 		// additional sensor pass on top of final rendering
@@ -2935,13 +2926,13 @@ void pg_draw_scene(DrawingMode mode) {
 			}
 			if (oneSensorActiveMin) {
 				pg_SensorPass();
-				pg_printOglError(686);
+				pg_printOglError(63);
 
 				// ////////////////////////
 				// read sensor values on CA (non echoed) and send messages
 				if (pg_FrameNo >= 10 + first_frame_number || pg_CurrentSceneIndex > 0) {
 					pg_readSensors();
-					pg_printOglError(687);
+					pg_printOglError(65);
 				}
 			}
 			// incremental sensor activation every 45 sec. = 720/16
@@ -2981,6 +2972,6 @@ void pg_draw_scene(DrawingMode mode) {
 			}
 		}
 	}
-	pg_printOglError(686);
+	pg_printOglError(64);
 }
 

@@ -308,7 +308,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
 
                 // starting stream
                 if (pa_sound_data.pa_startMyStream()) {
-                    printf("portaudio stream started\n");
+                    //printf("portaudio stream started\n");
                 }
                 else {
                     fprintf(stderr, "Error number: %d\n", paInit->result());
@@ -324,6 +324,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_script_binary_send");
                 pg_send_message_udp((char*)"", (char*)"/JUCE_play_track", (char*)"udp_script_binary_send");
             }
+            printf("\n");
 
             // Peak or Onset indices
             pg_soundTrack_onset = false;
@@ -347,8 +348,8 @@ void PlayTrack(int indTrack, double timeFromStart) {
             else {
                 pg_nbTrackSoundOnsetIndex[pg_ind_scenario] = 0;
             }
-            printf("pg_nbTrackSoundPeakIndex %d pg_nbTrackSoundOnsetIndex %d\n",
-                pg_nbTrackSoundPeakIndex[pg_ind_scenario], pg_nbTrackSoundOnsetIndex[pg_ind_scenario]);
+            //printf("pg_nbTrackSoundPeakIndex %d pg_nbTrackSoundOnsetIndex %d\n",
+            //    pg_nbTrackSoundPeakIndex[pg_ind_scenario], pg_nbTrackSoundOnsetIndex[pg_ind_scenario]);
 
         }
 

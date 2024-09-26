@@ -7,6 +7,8 @@ LYM maisonSens & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 #version 460
 
+#define PG_MAX_BONES 20
+
 layout(location = 0) in vec3 position;                     // espace objet
 layout(location = 1) in vec2 texcoord;
 layout(location = 2) in vec3 normal;
@@ -17,7 +19,7 @@ layout(location = 4) in vec4 boneWeights;
 // UNIFORMS
 uniform mat4 vp_modelMatrix, vp_viewMatrix, vp_projMatrix;
 uniform vec3 uniform_Mesh_fs_3fv_light;
-uniform mat4 uniform_Mesh_bones_matrices[20];
+uniform mat4 uniform_Mesh_bones_matrices[PG_MAX_BONES];
 uniform vec2 uniform_Mesh_vp_2fv_dilate_explode;
 
 

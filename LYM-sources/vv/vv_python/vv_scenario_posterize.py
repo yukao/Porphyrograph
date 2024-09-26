@@ -179,8 +179,8 @@ def main(main_args) :
 			else:
 				print ("Successfully created the directory %s " % val_init["png_output_directory"])
 		
-		full_input_file_name = val_init["input_directory"] + val_init["input_file_name"]
-		full_png_output_file_name = val_init["png_output_directory"] + val_init["png_output_file_name"]
+		full_input_file_name = os.path.join(val_init["input_directory"], val_init["input_file_name"])
+		full_png_output_file_name = os.path.join(val_init["png_output_directory"], val_init["png_output_file_name"])
 		start_time = val_init["position"]
 		end_time = val_fin["position"]
 		fps = force_num(val_init["fps"])
@@ -213,7 +213,7 @@ def main(main_args) :
 
 		tmp_dir = val_init["tmp_directory"]
 		print("tmp directory", tmp_dir)
-		full_svg_output_file_name = val_init["svg_output_directory"] + val_init["svg_output_file_name"]
+		full_svg_output_file_name = os.path.join(val_init["svg_output_directory"], val_init["svg_output_file_name"])
 
 		nb_files = 0
 		if(file_extension == "mp4") :
@@ -235,8 +235,8 @@ def main(main_args) :
 
 			# if indImage > 3 :
 			# 	return 0
-			if indImage <= 58 :
-				continue
+			# if indImage <= 129 :
+			# 	continue
 
 			scene_percentage = 0.0
 			if(nb_files > 1) :
@@ -312,18 +312,18 @@ def main(main_args) :
 					nb_required_colors = nb_layers
 					while True :
 						# print("number of required colors", nb_required_colors)
-						# print("convert "+source_image+" -quantize YUV -dither None -colors "+str(nb_required_colors)+" "+os.path.join(tmp_dir,"color_map.png"))
+						print("convert "+source_image+" -quantize YUV -dither None -colors "+str(nb_required_colors)+" "+os.path.join(tmp_dir,"color_map.png"))
 						os.system("convert "+source_image+" -quantize YUV -dither None -colors "+str(nb_required_colors)+" "+os.path.join(tmp_dir,"color_map.png"))
 						
 						# generate color table
-						# print("convert "+os.path.join(tmp_dir,"color_map.png")+" -format %c -depth 8 histogram:info:->"+os.path.join(tmp_dir,"color_table.txt"))
+						print("convert "+os.path.join(tmp_dir,"color_map.png")+" -format %c -depth 8 histogram:info:->"+os.path.join(tmp_dir,"color_table.txt"))
 						os.system("convert "+os.path.join(tmp_dir,"color_map.png")+" -format %c -depth 8 histogram:info:->"+os.path.join(tmp_dir,"color_table.txt"))
 
 						# extraction of the nb_layers colors from the color table
 						try:
-							FILEin = open(tmp_dir+"/color_table.txt", "rt")
+							FILEin = open(os.path.join(tmp_dir,"color_table.txt"), "rt")
 						except IOError:
-							print("File not found :", tmp_dir+"/color_table.txt", " or path is incorrect")
+							print("File not found :", os.path.join(tmp_dir,"color_table.txt"), " or path is incorrect")
 						line = FILEin.readline()
 						line = line.rstrip()
 						color_list = []

@@ -296,7 +296,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO_CameraFrame);
 	pg_initFBOTextures(&FBO_CameraFrame_texID, 1, false);
 	glDrawBuffers(1, enumDrawBuffersEntries);
-	pg_printOglError(343);
+	pg_printOglError(18);
 	*/
 
 	// FBO: multi-attachment for update 
@@ -312,7 +312,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	glGenFramebuffers(1, &pg_FBO_Update);
 	// ping-pong FBO texture binding, changes each frame
 
-	pg_printOglError(341);
+	pg_printOglError(15);
 
 	// FBO: multi-attachment for particle animation 
 	// 2 = FBO ping-pong size for ParticleAnimation shader FBOs
@@ -327,7 +327,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	glGenFramebuffers(1, &pg_FBO_ParticleAnimation);
 	// ping-pong FBO texture binding, changes each frame
 
-	pg_printOglError(341);
+	pg_printOglError(16);
 
 	// FBO: ClipArt GPU drawing output 
 	glGenTextures(1, &pg_FBO_ClipArt_render_texID);
@@ -340,7 +340,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	pg_bindFBOTextures(pg_FBO_ClipArtRendering, &pg_FBO_ClipArt_render_texID, 1, true, FBO_ClipArt_depthAndStencilBuffer);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	pg_printOglError(344);
+	pg_printOglError(19);
 
 
 	// FBO: particle drawing output 
@@ -353,7 +353,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	// texture binding is constant and made once for all
 	pg_bindFBOTextures(pg_FBO_ParticleRendering, &pg_FBO_Particle_render_texID, 1, true, pg_FBO_ParticleRendering_depthAndStencilBuffer);
 
-	pg_printOglError(344);
+	pg_printOglError(20);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// FBO: composition output for echo
@@ -383,7 +383,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	pg_printOglError(342);
+	pg_printOglError(17);
 	return true;
 }
 
@@ -679,7 +679,7 @@ void pg_window_idle_browse(int step) {
 			pg_messageTransparency = 0.0;
 			pg_LastScreenMessageDecayTime = pg_CurrentClockTime;
 		}
-		pg_printOglError(300);
+		pg_printOglError(9);
 
 		// printf( "Window %s\n" , pg_CurrentWindow->id );
 		pg_screenMessage_update();
@@ -690,7 +690,7 @@ void pg_window_idle_browse(int step) {
 			pg_update_diaporama();
 		}
 
-		pg_printOglError(467);
+		pg_printOglError(22);
 
 		// last image No display
 		if (pg_FrameNo > last_frame_number) {
@@ -994,13 +994,13 @@ int main(int argcMain, char** argvMain) {
 	}
 
 	pg_initGLutWindows();
-	pg_printOglError(474);
+	pg_printOglError(24);
 
 	// OpenGL initialization (clear buffer)
 	pg_OpenGLInit();
 	// cursor shape selection
 	pg_CursorInit();
-	pg_printOglError(475);
+	pg_printOglError(25);
 
 	// initializations before rendering
 
@@ -1017,23 +1017,23 @@ int main(int argcMain, char** argvMain) {
 
 	// matrices, geometry, shaders and FBOs
 	pg_initRenderingMatrices();
-	pg_printOglError(31);
+	pg_printOglError(10);
 
 	// buiilds the quads to be rendered
 	pg_initGeometry_quads();
-	pg_printOglError(32);
+	pg_printOglError(11);
 	
 	// loads the shaders
 	pg_loadAllShaders();
-	pg_printOglError(33);
+	pg_printOglError(12);
 
 	// initializes the FBOS
 	pg_initFBOTextureImagesAndRendering();
-	pg_printOglError(34);
+	pg_printOglError(13);
 
 	// textures loading
 	pg_loadAllTextures();
-	pg_printOglError(36);
+	pg_printOglError(14);
 
 	// meshes loading
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {
@@ -1073,7 +1073,7 @@ int main(int argcMain, char** argvMain) {
 
 	// applies all callbacks
 	pg_initializationCallBacks();
-	pg_printOglError(467);
+	pg_printOglError(23);
 
 	// camera frame capture initialization
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_cameraCaptFreq]) {
@@ -1132,7 +1132,7 @@ int main(int argcMain, char** argvMain) {
 
 	// connects PD to porphyrograph
 	pg_send_message_udp((char*)"i", (char*)"/connect 1", (char*)"udp_PD_send");
-	pg_printOglError(37);
+	pg_printOglError(21);
 
 	/////////////////////////////////////////////////////////////////////////
 	// USB INITIALIZATION

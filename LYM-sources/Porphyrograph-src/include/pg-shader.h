@@ -129,7 +129,6 @@ extern GLint uniform_Update_fs_2fv_clip01Wghts[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_fs_4fv_xy_transl_tracks_0_1[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_fs_4fv_CAType_SubType_blurRadius[PG_MAX_SCENARIOS];
-extern GLint uniform_Update_fs_3fv_photo_rgb[PG_MAX_SCENARIOS];
 extern GLint uniform_Update_texture_fs_CATable[PG_MAX_SCENARIOS];
 #if defined(var_GenerativeNights_planes)
 extern GLint uniform_Update_fs_2fv_initCA_1stPlaneFrameNo[PG_MAX_SCENARIOS];

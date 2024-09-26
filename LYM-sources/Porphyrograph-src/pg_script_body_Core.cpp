@@ -115,6 +115,12 @@ float movieWeight_pulse    = float(0);
 int   playing_movieNo      = -1;
 bool  invertPhoto          = 0;
 float maskJitterAmpl       = float(0);
+float photo_color_balance_r = float(1);
+float photo_color_balance_r_pulse = float(0);
+float photo_color_balance_g = float(1);
+float photo_color_balance_g_pulse = float(0);
+float photo_color_balance_b = float(1);
+float photo_color_balance_b_pulse = float(0);
 float photo_contrast       = float(0);
 float photo_contrast_pulse = float(0);
 int   photo_diaporama      = -1;
@@ -568,6 +574,12 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_int,
 	_pg_bool,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
+	_pg_float,
 	_pg_float,
 	_pg_float,
 	_pg_float,
@@ -1099,6 +1111,12 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
+	{-1, -1},
 	{0, PG_NB_PATHS},
 	{0, PG_NB_PATHS},
 	{0, PG_NB_PATHS},
@@ -1479,6 +1497,12 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&playing_movieNo,
 	(void *)&invertPhoto,
 	(void *)&maskJitterAmpl,
+	(void *)&photo_color_balance_r,
+	(void *)&photo_color_balance_r_pulse,
+	(void *)&photo_color_balance_g,
+	(void *)&photo_color_balance_g_pulse,
+	(void *)&photo_color_balance_b,
+	(void *)&photo_color_balance_b_pulse,
 	(void *)&photo_contrast,
 	(void *)&photo_contrast_pulse,
 	(void *)&photo_diaporama,
@@ -2200,6 +2224,12 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	&photo_diaporama_callBack_generic,
 	NULL,
 	NULL,
@@ -2537,6 +2567,12 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 };
 void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, ScenarioValue, int) = { 
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -3108,6 +3144,12 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "playing_movieNo",
   "invertPhoto",
   "maskJitterAmpl",
+  "photo_color_balance_r",
+  "photo_color_balance_r_pulse",
+  "photo_color_balance_g",
+  "photo_color_balance_g_pulse",
+  "photo_color_balance_b",
+  "photo_color_balance_b_pulse",
   "photo_contrast",
   "photo_contrast_pulse",
   "photo_diaporama",
@@ -3565,6 +3607,12 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -4018,6 +4066,12 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "playing_movieNo",
   "invertPhoto",
   "maskJitterAmpl",
+  "photo_color_balance_r",
+  "photo_color_balance_r_pulse",
+  "photo_color_balance_g",
+  "photo_color_balance_g_pulse",
+  "photo_color_balance_b",
+  "photo_color_balance_b_pulse",
   "photo_contrast",
   "photo_contrast_pulse",
   "photo_diaporama",

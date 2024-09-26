@@ -82,13 +82,17 @@ void MeshData::pg_drawOneMesh(int indMeshFile) {
 #endif
 		//printf("Visible mesh %d\n", indMeshFile);
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_mesh_anime]) {
+			if (pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones > PG_MAX_BONES) {
+				sprintf(pg_errorStr, "Error: numer of bones is currently limited at %d! For higher values change constant PG_MAX_BONES in header file and in mesh vertex shader", PG_MAX_BONES); pg_ReportError(pg_errorStr); throw 745;
+			}
 			glm::f32* valMats = new glm::f32[16 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones];
 			for (int indBone = 0; indBone < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
+				// 16 = size of a 4x4 animation matrix attached to a bone
 				memcpy(&valMats[16 * indBone],
 					glm::value_ptr(pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones[indBone].pointAnimationMatrix),
 					16 * sizeof(glm::f32));
 			}
-			glUniformMatrix4fv(uniform_Mesh_bones_matrices[pg_ind_scenario], 20, GL_FALSE, valMats);
+			glUniformMatrix4fv(uniform_Mesh_bones_matrices[pg_ind_scenario], PG_MAX_BONES, GL_FALSE, valMats);
 			delete[] valMats;
 		}
 
@@ -256,7 +260,7 @@ void MeshData::pg_drawOneMesh(int indMeshFile) {
 				glUniform3f(uniform_Mesh_fs_3fv_light[pg_ind_scenario], pg_mesh_light_x, pg_mesh_light_y, pg_mesh_light_z);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glDrawElements(GL_TRIANGLES, pg_nbFacesPerMeshFile[indObjectInMesh] * 3, GL_UNSIGNED_INT, (GLvoid*)0);
-				pg_printOglError(698);
+				pg_printOglError(27);
 
 				// draws the polygon contours
 				// updates this variable according whether triangles or lines are shown
@@ -379,7 +383,7 @@ void MeshData::pg_drawOneMesh2(int indMeshFile) {
 }
 
 void MeshAnimationData::pg_parseOneBoneObj(FILE* file, int level, char* line, char* tag, char* id, int* nbBonesLoc) {
-	printf("Bone object level %d tag %s nb bones %d line %s\n", level, tag, *nbBonesLoc, line);
+	//printf("Bone object level %d tag %s nb bones %d line %s\n", level, tag, *nbBonesLoc, line);
 	//       transl Femur_L_transl
 	while (strcmp(tag, "transl") == 0) {
 		float w, x, y, z;
@@ -457,8 +461,8 @@ void MeshAnimationData::pg_parseOneBoneObj(FILE* file, int level, char* line, ch
 		// parent_bone Femur_L
 		fgets(line, 512, file);
 		sscanf(line, "%s %256s", tag, boneID);
-		printf("Bone %s (parent: %s) (prof: %d)\n",
-			pg_tabBones[(*nbBonesLoc)].id.c_str(), boneID, level);
+		//printf("Bone %s (parent: %s) (prof: %d)\n",
+		//	pg_tabBones[(*nbBonesLoc)].id.c_str(), boneID, level);
 
 		// associates the parent bone with the current bone
 		// if it is not a root bone
@@ -533,7 +537,7 @@ void MeshAnimationData::pg_parseArmatureObj(FILE* file, char* line, char* tag, c
 	// next tag
 	sscanf(line, "%s %s", tag, id);
 
-	printf("Skeleton Armature level %d tag %s nb bones %d line %s\n", 1, tag, nbBonesLoc, line);
+	//printf("Skeleton Armature level %d tag %s nb bones %d line %s\n", 1, tag, nbBonesLoc, line);
 	while (strcmp(tag, "transl") == 0) {
 		pg_parseOneBoneObj(file, 1, line, tag, id, &nbBonesLoc);
 	}
@@ -880,7 +884,7 @@ void MeshData::pg_transferMeshDataToGPU(int indObjectInMesh) {
 	//mesh_index_vbo[indObjectInMesh],pg_nbFacesPerMeshFile);
 	glBindVertexArray(0); // Disable our Vertex Buffer Object
 
-	pg_printOglError(23);
+	pg_printOglError(26);
 
 	free(pg_mesh_vertexBuffer);
 	free(pg_mesh_texCoordBuffer);
@@ -931,7 +935,7 @@ bool MeshAnimationData::pg_ParseMeshAnimation(FILE* file, int indMeshFile, char 
 	if (!fgets(line, 256, file)) { return false; }
 	sscanf(line, "%s %d", tag, &(pg_nb_bones));
 	pg_tabBones = new Bone[pg_nb_bones];
-	printf("Skeleton %d bones to parse\n", pg_nb_bones);
+	//printf("Skeleton %d bones to parse\n", pg_nb_bones);
 
 	if (pg_nb_bones > 0) {
 		// bone ID line
@@ -954,13 +958,13 @@ bool MeshAnimationData::pg_ParseMeshAnimation(FILE* file, int indMeshFile, char 
 	}
 
 	pg_parseArmatureObj(file, line, tag, id);
-	printf("Armature ind Mesh %d Nb bones %d\n", indMeshFile, pg_nb_bones);
+	std::cout << " (" << pg_nb_bones << " bones),";
 
 	pg_nb_LibraryPoses = 0;
 	// possible list of poses
 	if (strcmp(tag, "POSES") == 0) {
 		sscanf(line, "%s %d", tag, &(pg_nb_LibraryPoses));
-		printf("Animation ind Mesh %d Nb poses %d\n", indMeshFile, pg_nb_LibraryPoses);
+		std::cout << " (" << pg_nb_LibraryPoses << " poses),";
 		// currently the maximum size of a bone-based animation is the same size as the initial library of poses found in the obj file
 		pg_nb_MaxAnimationPoses = pg_nb_LibraryPoses;
 		// currently the maximum size of a mesh motion is the same size as the initial library of poses found in the obj file
@@ -1503,9 +1507,10 @@ void pg_loadAllMeshes(void) {
 		int nbMeshObjects = 0;
 		int indMeshFile = 0;
 		for (MeshData &aMesh : pg_Meshes[indScenario]) {
+			std::cout << aMesh.pg_Mesh_fileName << ",";
 			pg_Meshes[indScenario][indMeshFile].pg_load_mesh_objects(aMesh.pg_Mesh_fileName, indMeshFile, indScenario);
 			nbMeshObjects += aMesh.pg_nbObjectsPerMeshFile;
-			std::cout << aMesh.pg_Mesh_fileName << " (" << aMesh.pg_nbObjectsPerMeshFile << " objects), ";
+			std::cout << " (" << aMesh.pg_nbObjectsPerMeshFile << " objects).";
 			//printf("Loaded %d mesh objects \n", nbMeshObjects);
 
 			// Mme Changhai: broken glass objects initialization
@@ -2043,8 +2048,8 @@ void MeshAnimationData::pg_update_MeshMotion(int indMeshFile) {
 	// frozen
 	case 0: {
 		pg_mesh_startMotion += pg_CurrentClockTime - pg_mesh_motion_precTime;
-		pg_motionPoses[0].pose_Mesh_Translation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Ini_X;
-		pg_motionPoses[0].pose_Mesh_Translation_Y = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Ini_Y;
+		pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X + pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Ini_X;
+		pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y + pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Translation_Ini_Y;
 		pg_motionPoses[0].pose_Mesh_Rotation_angle = 0.f;
 		pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
 		pg_motionPoses[0].pose_Mesh_Rotation_X = pg_Meshes[pg_ind_scenario][indMeshFile].pg_Mesh_Rotation_Ini_X;
@@ -2061,8 +2066,8 @@ void MeshAnimationData::pg_update_MeshMotion(int indMeshFile) {
 			for (int indPose = 0; indPose < pg_nb_MaxMotionPoses; indPose++) {
 				pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[0].pose_Mesh_Translation_X = 1.f * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[1].pose_Mesh_Translation_X = -1.f * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X + 1.f * (indMeshFile % 2 == 0 ? 1 : -1);
+			pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X + -1.f * (indMeshFile % 2 == 0 ? 1 : -1);
 			pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
 			pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
 			pg_motionPoses[0].pose_Mesh_Rotation_angle = 0.f;
@@ -2087,8 +2092,8 @@ void MeshAnimationData::pg_update_MeshMotion(int indMeshFile) {
 			for (int indPose = 0; indPose < pg_nb_MaxMotionPoses; indPose++) {
 				pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[0].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 30.f : -5.f);
-			pg_motionPoses[1].pose_Mesh_Translation_X = (indMeshFile % 2 == 0 ? 5.f : -30.f);
+			pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X + (indMeshFile % 2 == 0 ? 30.f : -5.f);
+			pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X + (indMeshFile % 2 == 0 ? 5.f : -30.f);
 			pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
 			pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
 			pg_motionPoses[0].pose_Mesh_Rotation_angle = 0.f;
@@ -2139,8 +2144,8 @@ void MeshAnimationData::pg_update_MeshMotion(int indMeshFile) {
 			for (int indPose = 0; indPose < pg_nb_MaxMotionPoses; indPose++) {
 				pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[0].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
-			pg_motionPoses[1].pose_Mesh_Translation_X = float(rand_0_1 * 60 - 30);
+			pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X + float(rand_0_1 * 60 - 30);
+			pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X + float(rand_0_1 * 60 - 30);
 			pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y;
 			pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y;
 			pg_motionPoses[0].pose_Mesh_Rotation_angle = float(rand_0_1 * PI / 3 - PI / 6);
@@ -2167,8 +2172,8 @@ void MeshAnimationData::pg_update_MeshMotion(int indMeshFile) {
 			}
 			pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
 			pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X * (indMeshFile % 2 == 0 ? 1 : -1);
-			pg_motionPoses[0].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
-			pg_motionPoses[1].pose_Mesh_Translation_Y = float(rand_0_1 * 5 - 2.5);
+			pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y + float(rand_0_1 * 5 - 2.5);
+			pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y + float(rand_0_1 * 5 - 2.5);
 			pg_motionPoses[0].pose_Mesh_Rotation_angle = float(-PI / 6);
 			pg_motionPoses[1].pose_Mesh_Rotation_angle = float(PI / 6);
 			pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;
@@ -2191,10 +2196,10 @@ void MeshAnimationData::pg_update_MeshMotion(int indMeshFile) {
 			for (int indPose = 0; indPose < pg_nb_MaxMotionPoses; indPose++) {
 				pg_interpolation_weight_MotionPose[indPose] = 0.f;
 			}
-			pg_motionPoses[0].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
-			pg_motionPoses[1].pose_Mesh_Translation_X = float(rand_0_1 * 100 - 50);
-			pg_motionPoses[0].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
-			pg_motionPoses[1].pose_Mesh_Translation_Y = float(rand_0_1 * 10 - 5);
+			pg_motionPoses[0].pose_Mesh_Translation_X = mesh_translation_X + float(rand_0_1 * 100 - 50);
+			pg_motionPoses[1].pose_Mesh_Translation_X = mesh_translation_X + float(rand_0_1 * 100 - 50);
+			pg_motionPoses[0].pose_Mesh_Translation_Y = mesh_translation_Y + float(rand_0_1 * 10 - 5);
+			pg_motionPoses[1].pose_Mesh_Translation_Y = mesh_translation_Y + float(rand_0_1 * 10 - 5);
 			pg_motionPoses[0].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
 			pg_motionPoses[1].pose_Mesh_Rotation_angle = float(rand_0_1 * 2 * PI - PI);
 			pg_motionPoses[0].pose_Mesh_Scale = mesh_scale;

@@ -264,7 +264,6 @@ uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
 uniform vec4 uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec4 uniform_Update_fs_4fv_photo01Wghts_randomValues;
-uniform vec3 uniform_Update_fs_3fv_photo_rgb; 
 uniform vec2 uniform_Update_fs_2fv_clip01Wghts;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
 uniform vec4 uniform_Update_fs_4fv_CAType_SubType_blurRadius;
@@ -1685,11 +1684,8 @@ void main() {
   photocolor = clamp( vec3(correctionFactor)
     * (photocolor - vec3(0.5)) + vec3(0.5) , 0 , 1 );
 
-#ifdef var_photo_equalization
-  if(photo_equalization > 0) {
-    photocolor *= uniform_Update_fs_3fv_photo_rgb;
-  }
-#endif
+  // equalization
+  photocolor *= vec3(photo_color_balance_r, photo_color_balance_g, photo_color_balance_b);
 
   vec3 videocolor = vec3( 0.0 );
 

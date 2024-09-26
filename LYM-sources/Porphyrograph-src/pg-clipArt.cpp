@@ -175,7 +175,7 @@ void pg_LoadClipArtPathsToGPU(string fileName, int nb_gpu_paths, int indClipArtF
 		exit(0);
 	}
 	pathFin.close();
-	pg_printOglError(4);
+	pg_printOglError(1);
 }
 
 //////////////////////////////////////////////////
@@ -422,7 +422,7 @@ void pg_Display_All_ClipArt(int activeFiles) {
 			glMatrixPopEXT(GL_PROJECTION);
 			glDisable(GL_STENCIL_TEST);
 		}
-		pg_printOglError(5257);
+		pg_printOglError(2);
 	}
 }
 
@@ -513,7 +513,7 @@ void pg_Display_ClipArt_Text(int* ind_Current_DisplayText, int mobile) {
 		(*ind_Current_DisplayText) = int(min(float((*ind_Current_DisplayText) + 1), float(pg_NbDisplayTexts - 1)));
 	}
 
-	pg_printOglError(5257);
+	pg_printOglError(3);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

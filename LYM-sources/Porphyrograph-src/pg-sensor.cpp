@@ -340,7 +340,7 @@ void pg_readSensors(void) {
 	}
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	//printf("\n");
-	pg_printOglError(691);
+	pg_printOglError(70);
 
 	///////////////////////////////////////////////////////////////
 	// SENSOR-BASED SOUND IN RENOISE OR PORPHYROGRAPH SOUND
@@ -378,7 +378,7 @@ void pg_readSensors(void) {
 				* float((pg_CurrentClockTime - pg_sample_play_start[pg_sample_choice[indSens]]) / sensor_beat_duration));
 		}
 	}
-	pg_printOglError(689);
+	pg_printOglError(68);
 
 	///////////////////////////////////////////////
 	// MANAGING THE SAMPLE SEVEL
@@ -398,7 +398,7 @@ void pg_readSensors(void) {
 			}
 		}
 	}
-	pg_printOglError(690);
+	pg_printOglError(69);
 
 	// message trace
 	//std::cout << "format: " << format << "\n";

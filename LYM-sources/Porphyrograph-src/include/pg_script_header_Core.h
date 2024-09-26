@@ -115,6 +115,12 @@
 #define var_playing_movieNo
 #define var_invertPhoto
 #define var_maskJitterAmpl
+#define var_photo_color_balance_r
+#define var_photo_color_balance_r_pulse
+#define var_photo_color_balance_g
+#define var_photo_color_balance_g_pulse
+#define var_photo_color_balance_b
+#define var_photo_color_balance_b_pulse
 #define var_photo_contrast
 #define var_photo_contrast_pulse
 #define var_photo_diaporama
@@ -569,6 +575,12 @@ enum InterpVarIDs{
   _playing_movieNo,
   _invertPhoto,
   _maskJitterAmpl,
+  _photo_color_balance_r,
+  _photo_color_balance_r_pulse,
+  _photo_color_balance_g,
+  _photo_color_balance_g_pulse,
+  _photo_color_balance_b,
+  _photo_color_balance_b_pulse,
   _photo_contrast,
   _photo_contrast_pulse,
   _photo_diaporama,
@@ -1023,6 +1035,12 @@ extern float movieWeight_pulse   ;
 extern int   playing_movieNo     ;
 extern bool  invertPhoto         ;
 extern float maskJitterAmpl      ;
+extern float photo_color_balance_r;
+extern float photo_color_balance_r_pulse;
+extern float photo_color_balance_g;
+extern float photo_color_balance_g_pulse;
+extern float photo_color_balance_b;
+extern float photo_color_balance_b_pulse;
 extern float photo_contrast      ;
 extern float photo_contrast_pulse;
 extern int   photo_diaporama     ;

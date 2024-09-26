@@ -100,7 +100,7 @@ void pg_AddDirectoryToDiaporamas(int indScenario, fs::directory_entry dir_entry)
 			// loads the compressed image into GPU
 			dir_photoData[nbImagesInDir].pg_toGPUPhoto(false, GL_RGB8, GL_UNSIGNED_BYTE, GL_LINEAR, indScenario);
 
-			pg_printOglError(8);
+			pg_printOglError(20);
 
 			dir_fileNames.push_back(subdir_entry.path().string());
 			++nbImagesInDir;
@@ -207,7 +207,7 @@ void pg_AddFilesToDiaporamas(int indScenario, fs::directory_entry dir_entry) {
 
 				pg_compressedImageData[indScenario][dir_rank].push_back(curPhotoData);
 
-				pg_printOglError(8);
+				pg_printOglError(31);
 
 				pg_compressedImageFilesNames[indScenario][dir_rank].push_back(subdir_entry.path().string());
 				++nbImagesInDir;
@@ -368,7 +368,7 @@ void pg_launch_diaporama(int slideNo) {
 			pg_Photo_swap_buffer_data[1].blendStart = -1.0f;
 		}
 	}
-	pg_printOglError(465);
+	pg_printOglError(29);
 }
 
 // AFTER LOADING IN MEMORY, FOR DISPLAY: TAKES IMAGES IN A SINGLE DIR ONE AFTER ANOTHER
@@ -563,9 +563,6 @@ pg_clip_status::pg_clip_status(int clipSide) {
 		clip_play[ind] = true;
 		lastPlayedFrameTime[ind] = pg_CurrentClockTime;
 		clip_level[ind] = 1.0;
-		clip_r_channel_level[ind] = 1.0f;
-		clip_g_channel_level[ind] = 1.0f;
-		clip_b_channel_level[ind] = 1.0f;
 	}
 	sideLR = pg_clip_LR(clipSide);
 	cumulated_scratch_offset = 0.;
@@ -1307,24 +1304,24 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 			}
 		}
 		break;
-#if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_cue_jump:
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
-			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-				int indClip = pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(1);
-				//printf("cue jump indclip %d id=nd cue %d\n", indClip, int(float_arguments[1]));
-				if (indClip >= 0 && indClip < pg_nbClips[pg_ind_scenario]) {
-					int cue_frame = pg_clip_tracks[pg_ind_scenario][indClip].get_cue(int(float_arguments[1]));
-					//printf("cue jump frame %d/%d\n", cue_frame, pg_clip_tracks[pg_ind_scenario][indClip].get_initialNbFrames());
-					if (cue_frame >= 0 && cue_frame < pg_clip_tracks[pg_ind_scenario][indClip].get_initialNbFrames()) {
-						pg_all_clip_status[clipSide].set_position(1, cue_frame);
+			if (PG_NB_PARALLEL_CLIPS >= 2) {			// clip intialization for Second Clip
+				int clipSide = int(float_arguments[0]);
+				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
+					int indClip = pg_all_clip_status[clipSide].getCurrentlyPlaying_clipNo(1);
+					//printf("cue jump indclip %d id=nd cue %d\n", indClip, int(float_arguments[1]));
+					if (indClip >= 0 && indClip < pg_nbClips[pg_ind_scenario]) {
+						int cue_frame = pg_clip_tracks[pg_ind_scenario][indClip].get_cue(int(float_arguments[1]));
+						//printf("cue jump frame %d/%d\n", cue_frame, pg_clip_tracks[pg_ind_scenario][indClip].get_initialNbFrames());
+						if (cue_frame >= 0 && cue_frame < pg_clip_tracks[pg_ind_scenario][indClip].get_initialNbFrames()) {
+							pg_all_clip_status[clipSide].set_position(1, cue_frame);
+						}
 					}
 				}
 			}
 		}
 		break;
-#endif
 		// CLIP GOTO CUE: makes a difference whether or not the clip is playing (jump vs call)
 	case _clip_cue_call:
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
@@ -1366,46 +1363,19 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 				case 1: {
 					float val = float_arguments[2];
 					if (val < 1.f / 3.f) {
-						pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[0] = 1.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level[0] = 1.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[1] = 1.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level[1] = 1.f;
+						photo_color_balance_r = 0.f;
+						photo_color_balance_g = 0.f;
+						photo_color_balance_b = 1.f;
 					}
 					else if (val < 2.f / 3.f) {
-						pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[0] = 1.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level[0] = 1.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[1] = 1.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level[1] = 1.f;
+						photo_color_balance_r = 0.f;
+						photo_color_balance_g = 1.f;
+						photo_color_balance_b = 0.f;
 					}
 					else {
-						pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level[0] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[0] = 1.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level[0] = 1.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_b_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_b_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_g_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_g_channel_level[1] = 0.f;
-						pg_all_clip_status[pg_enum_clipLeft].clip_r_channel_level[1] = 1.f;
-						pg_all_clip_status[pg_enum_clipRight].clip_r_channel_level[1] = 1.f;
+						photo_color_balance_r = 1.f;
+						photo_color_balance_g = 0.f;
+						photo_color_balance_b = 0.f;
 					}
 				}
 					  break;
@@ -1469,92 +1439,6 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 			}
 		}
 		break;
-		// CLIP EQ
-	case _clip_equalizer:
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
-			if (nb_arguments == 3) {
-				int eqNo = int(float_arguments[1]);
-				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-					switch (eqNo) {
-					case 0:
-						pg_all_clip_status[clipSide].clip_r_channel_level[0] = float_arguments[2];
-						sprintf(pg_AuxString, "/clip_eq_red %.2f", pg_all_clip_status[clipSide].clip_r_channel_level[0]);
-						pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-						break;
-					case 1:
-						pg_all_clip_status[clipSide].clip_g_channel_level[0] = float_arguments[2];
-						sprintf(pg_AuxString, "/clip_eq_green %.2f", pg_all_clip_status[clipSide].clip_g_channel_level[0]);
-						pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-						break;
-					case 2:
-						pg_all_clip_status[clipSide].clip_b_channel_level[0] = float_arguments[2];
-						sprintf(pg_AuxString, "/clip_eq_blue %.2f", pg_all_clip_status[clipSide].clip_b_channel_level[0]);
-						pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-						break;
-					}
-				}
-			}
-			else if (nb_arguments == 4) {
-				int clipSide = int(float_arguments[0]);
-				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-					pg_all_clip_status[clipSide].clip_r_channel_level[0] = float_arguments[1];
-					pg_all_clip_status[clipSide].clip_g_channel_level[0] = float_arguments[2];
-					pg_all_clip_status[clipSide].clip_b_channel_level[0] = float_arguments[3];
-					sprintf(pg_AuxString, "/clip_eq_red %.2f", pg_all_clip_status[clipSide].clip_r_channel_level[0]);
-					pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(pg_AuxString, "/clip_eq_green %.2f", pg_all_clip_status[clipSide].clip_g_channel_level[0]);
-					pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(pg_AuxString, "/clip_eq_blue %.2f", pg_all_clip_status[clipSide].clip_b_channel_level[0]);
-					pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-				}
-			}
-		}
-		break;
-#if PG_NB_PARALLEL_CLIPS >= 2
-		// CLIP EQ
-	case _clip2_equalizer:
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
-			if (nb_arguments == 3) {
-				int eqNo = int(float_arguments[1]);
-				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-					switch (eqNo) {
-					case 0:
-						pg_all_clip_status[clipSide].clip_r_channel_level[1] = float_arguments[2];
-						sprintf(pg_AuxString, "/clip_eq_red %.2f", pg_all_clip_status[clipSide].clip_r_channel_level[1]);
-						pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-						break;
-					case 1:
-						pg_all_clip_status[clipSide].clip_g_channel_level[1] = float_arguments[2];
-						sprintf(pg_AuxString, "/clip_eq_green %.2f", pg_all_clip_status[clipSide].clip_g_channel_level[1]);
-						pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-						break;
-					case 2:
-						pg_all_clip_status[clipSide].clip_b_channel_level[1] = float_arguments[2];
-						sprintf(pg_AuxString, "/clip_eq_blue %.2f", pg_all_clip_status[clipSide].clip_b_channel_level[1]);
-						pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-						break;
-					}
-				}
-			}
-			else if (nb_arguments == 4) {
-				int clipSide = int(float_arguments[0]);
-				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-					pg_all_clip_status[clipSide].clip_r_channel_level[1] = float_arguments[1];
-					pg_all_clip_status[clipSide].clip_g_channel_level[1] = float_arguments[2];
-					pg_all_clip_status[clipSide].clip_b_channel_level[1] = float_arguments[3];
-					sprintf(pg_AuxString, "/clip_eq_red %.2f", pg_all_clip_status[clipSide].clip_r_channel_level[1]);
-					pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(pg_AuxString, "/clip_eq_green %.2f", pg_all_clip_status[clipSide].clip_g_channel_level[1]);
-					pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-					sprintf(pg_AuxString, "/clip_eq_blue %.2f", pg_all_clip_status[clipSide].clip_b_channel_level[1]);
-					pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_TouchOSC_send");
-				}
-			}
-		}
-		break;
-#endif
 		// CLIP: NEW RANDOM CLIP
 	case _clip_new:
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
@@ -1562,14 +1446,14 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 			pg_clip_new(0, clipSide, nb_arguments, float_arguments);
 		}
 		break;
-#if PG_NB_PARALLEL_CLIPS >= 2
 	case _clip2_new:
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
-			pg_clip_new(1, clipSide, nb_arguments, float_arguments);
+		if (PG_NB_PARALLEL_CLIPS >= 2) {			// clip intialization for Second Clip
+			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
+				int clipSide = int(float_arguments[0]);
+				pg_clip_new(1, clipSide, nb_arguments, float_arguments);
+			}
 		}
 		break;
-#endif
 		// CLIP: NEW SELECTED CLIP
 	case _clip_sample:
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {

@@ -152,7 +152,7 @@ void pg_remove_files_in_dir(std::string *dirpath) {
 bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indScenario) { // 2 texture IDs one for pos/speed, the other one for color/radius
 	bool invert = false;
 
-	pg_printOglError(705);
+	pg_printOglError(83);
 
 	std::cout << fileName + " (2D particle init), ";
 
@@ -298,7 +298,7 @@ bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indS
 	delete(pos_speed);
 	delete(allocated);
 
-	pg_printOglError(706);
+	pg_printOglError(85);
 
 	return true;
 }
@@ -309,7 +309,7 @@ bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indS
 bool pg_storeParticleAccelerationfromImage(string fileName, int indScenario) {
 	bool invert = false;
 
-	pg_printOglError(705);
+	pg_printOglError(84);
 
 #ifndef OPENCV_3
 	particleAccImgMatBGRInit = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
@@ -403,7 +403,7 @@ bool pg_storeParticleAccelerationfromImage(string fileName, int indScenario) {
 
 	free(acceleration_shift);
 
-	pg_printOglError(706);
+	pg_printOglError(86);
 
 	return true;
 }
@@ -579,7 +579,7 @@ bool pg_loadTexture3D(pg_TextureData* texData,
 		datatype,           // Image data type
 		bitmap);            // The actual image data itself
 
-	pg_printOglError(0);
+	pg_printOglError(74);
 
 	// memory release
 	delete[] bitmap;
@@ -670,7 +670,7 @@ bool pg_loadTexture2D(pg_TextureData* texData,
 			format, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 			datatype,  // Image data type
 			textureImgMatRGBFlipped.ptr());        // The actual image data itself
-		pg_printOglError(40);
+		pg_printOglError(76);
 	}
 	else {
 		glEnable(GL_TEXTURE_2D);
@@ -688,7 +688,7 @@ bool pg_loadTexture2D(pg_TextureData* texData,
 			format, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 			datatype,  // Image data type
 			textureImgMatRGBFlipped.ptr());        // The actual image data itself
-		pg_printOglError(50);
+		pg_printOglError(78);
 		glEnable(GL_TEXTURE_RECTANGLE);
 		// glGenerateMipmap(GL_TEXTURE_2D);
 	}
@@ -716,13 +716,13 @@ bool pg_loadAllTextures(void) {
 					pg_loadTexture2D(&texture,
 						GL_RGBA8, GL_RGBA,
 						GL_UNSIGNED_BYTE, GL_LINEAR);
-					pg_printOglError(8);
+					pg_printOglError(87);
 				}
 				else if (texture.texture_Dimension == 3) {
 					pg_loadTexture3D(&texture,
 						GL_RGBA8, GL_RGBA,
 						GL_UNSIGNED_BYTE, GL_LINEAR);
-					pg_printOglError(8);
+					pg_printOglError(88);
 				}
 			}
 			else if (texture.texture_usage == pg_enum_Texture_part_init
@@ -873,7 +873,7 @@ bool pg_loadAllTextures(void) {
 		}
 
 		pg_loadScreenFontTexture();
-		pg_printOglError(6);
+		pg_printOglError(82);
 
 		pg_loadScreenMessageTexture();
 
@@ -898,7 +898,7 @@ bool pg_loadAllTextures(void) {
 		}
 		std::cout << std::endl;
 
-		pg_printOglError(6);
+		pg_printOglError(79);
 	}
 	std::cout << std::endl;
 	return true;
@@ -1268,7 +1268,7 @@ bool pg_toGPUCompressedPhoto(int width, int height, GLuint textureID, GLenum tex
 
 	free(pg_imgPhotoCompressedBitmap[indScenario]);
 	pg_imgPhotoCompressedBitmap[indScenario] = NULL;
-	pg_printOglError(6);
+	pg_printOglError(80);
 	//printf("To GPU photo ID %d size %dx%d block size %d compressed format %d filter %d\n", textureID, width, height, blockSize, compressedPhotoFormat[indScenario], textureFilter);
 	return false;
 }
@@ -1284,7 +1284,7 @@ bool PhotoData::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum dataty
 
 	bool valret = true;
 
-	pg_printOglError(6);
+	pg_printOglError(81);
 
 	//printf("texture rect %d ID indCompressedImage %d compression %d\n", is_rectangle, texBuffID, pg_imgPhotoCompressedFormat[indScenario]);
 
@@ -1305,7 +1305,7 @@ bool PhotoData::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum dataty
 			photoFormat, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 			datatype,  // Image data type
 			pg_imgPhotoRGB[indScenario].ptr());        // The actual image data itself
-		pg_printOglError(4);
+		pg_printOglError(75);
 		// printf("filename %s\n", PhotoName);
 		valret = false;
 	}
@@ -1326,7 +1326,7 @@ bool PhotoData::pg_toGPUPhoto(bool is_rectangle, GLint components, GLenum dataty
 				photoFormat, // Format: Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
 				datatype,  // Image data type
 				pg_imgPhotoRGB[indScenario].ptr());        // The actual image data itself
-			pg_printOglError(5);
+			pg_printOglError(77);
 			valret = false;
 		}
 		else {
@@ -1348,7 +1348,14 @@ bool ClipFramesData::pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int 
 std::string pg_get_stem(const fs::path& p) { return (p.stem().string()); }
 bool  pg_ReadInitalClipFramesTextures(void) {
 	bool valret = true;
+	printf("Load Clips:\n");
 	for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
+		std::cout << "    " << indScenario << ": ";
+		
+		////////////////////////////////////////////
+		// LOADS CLIP IMAGES FROM FOLDERS
+		std::cout << pg_ClipDirectory[indScenario] << " (";
+
 		///////////////////////////////////////////////
 		// NULL INITIALIZATIONS
 		pg_nbCompressedClipFramesPerFolder[indScenario] = NULL;
@@ -1360,7 +1367,6 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 		pg_nbCompressedClipFrames[indScenario] = 0;
 		pg_nbClips[indScenario] = 0;
 
-		std::cout << "Clip Directory: " << pg_ClipDirectory[indScenario] << std::endl;
 		if (pg_ClipDirectory[indScenario] == "") {
 			return false;
 		}
@@ -1412,7 +1418,7 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 
 		int indCompressedClipFrames = 0;
 		int indCompressedClipDirs = 0;
-		std::cout << "Loading Clip Frames " << pg_nbCompressedClipFrames[indScenario] << " images from " << pg_nbClips[indScenario] << " folders" << std::endl;
+		std::cout << pg_nbCompressedClipFrames[indScenario] << " images from " << pg_nbClips[indScenario] << " folders)" << std::endl;
 		//pg_CurrentClipFramesDir = 0;
 		//pg_CurrentClipFramesFile = 0;
 		//std::cout << "Counting ClipFrames " << std::endl;
@@ -1434,11 +1440,20 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 					int initialClipFrameIndex = indCompressedClipFrames;
 					int nb_images_per_clip = 0;
 					auto subDirIter = fs::directory_iterator(dir_entry);
+					int nb_frames_in_clip = 0;
+					for (auto& subdir_entry : subDirIter)
+					{
+						if (subdir_entry.is_regular_file())
+						{
+							++nb_frames_in_clip;
+						}
+					}
+					subDirIter = fs::directory_iterator(dir_entry);
 					for (auto& subdir_entry : subDirIter)
 					{
 						if (indCompressedClipFrames < pg_nbCompressedClipFrames[indScenario] 
-							&& subdir_entry.is_regular_file() && nb_images_per_clip < clip_max_length[indScenario])
-						{
+							&& subdir_entry.is_regular_file() 
+							&& nb_images_per_clip < clip_max_length[indScenario]) {
 							if (pg_ClipFrames_buffer_data[indScenario][indCompressedClipFrames]->texBuffID == NULL_ID) {
 								// allocates a texture ID for the image
 								glGenTextures(1, &(pg_ClipFrames_buffer_data[indScenario][indCompressedClipFrames]->texBuffID));
@@ -1456,10 +1471,14 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 									clip_image_height[indScenario], GL_LINEAR, indScenario);
 								//printf("texture ID dir %d indCompressedClipFrames %d texID %d\n", indCompressedClipDirs, indCompressedClipFrames, pg_ClipFrames_buffer_data[indCompressedClipFrames]->texBuffID);
 
-								pg_printOglError(8);
+								pg_printOglError(89);
 								++indCompressedClipFrames;
 								++nb_images_per_clip;
 							}
+						}
+						else if (nb_images_per_clip >= clip_max_length[indScenario]) {
+							std::cout << "clip: " << dir_name << " partially loaded (max frames per clip: " << clip_max_length[indScenario] << ") of " << nb_frames_in_clip  << " frames" << std::endl;
+							break;
 						}
 					}
 					pg_nbCompressedClipFramesPerFolder[indScenario][indCompressedClipDirs] = indCompressedClipFrames - initialClipFrameIndex;
@@ -1518,9 +1537,11 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 				pg_clip_tracks[indScenario][clipNo].set_cue(0, 0);
 				pg_clip_tracks[indScenario][clipNo].set_cue(1, cues[1]);
 				pg_clip_tracks[indScenario][clipNo].set_cue(2, cues[2]);
-				printf("Clip No %d (%s), first frame %d Nb frames %d cues (%d, %d, %d)\n",
-					clipNo + 1, pg_clip_tracks[indScenario][clipNo].get_name().c_str(), pg_firstCompressedClipFramesInFolder[indScenario][clipNo], pg_nbCompressedClipFramesPerFolder[indScenario][clipNo],
-					cues[0], cues[1], cues[2]);
+				//printf("Clip No %d (%s), first frame %d Nb frames %d cues (%d, %d, %d)\n",
+				//	clipNo + 1, pg_clip_tracks[indScenario][clipNo].get_name().c_str(), 
+				//	pg_firstCompressedClipFramesInFolder[indScenario][clipNo], 
+				//	pg_nbCompressedClipFramesPerFolder[indScenario][clipNo],
+				//	cues[0], cues[1], cues[2]);
 			}
 		}
 	}

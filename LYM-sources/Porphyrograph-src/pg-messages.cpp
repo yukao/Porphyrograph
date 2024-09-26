@@ -705,7 +705,7 @@ void pg_screenMessage_update(void) {
 			GL_UNSIGNED_BYTE,  // Image data type
 			pg_screenMessageBitmap);        // The actual image data itself
 		pg_newScreenMessage = false;
-		pg_printOglError(6);
+		pg_printOglError(28);
 	}
 }
 

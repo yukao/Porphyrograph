@@ -240,7 +240,6 @@ double pg_PerlinNoise(double x, double y, double z) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int pg_printOglError(int no) {
-
 	int    retCode = 0;
 
 	GLenum err;
@@ -373,7 +372,7 @@ void pg_initGeometry_quads(void) {
 	pg_quadMaster_texCoords[6] = (float)PG_WINDOW_WIDTH;
 	pg_quadMaster_texCoords[7] = (float)PG_WINDOW_HEIGHT;
 
-	pg_printOglError(21);
+	pg_printOglError(4);
 
 	/////////////////////////////////////////////////////////////////////
 	// single quad for update
@@ -411,7 +410,7 @@ void pg_initGeometry_quads(void) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, PG_SIZE_QUAD_ARRAY * sizeof(unsigned int),
 		pg_quadDraw_indices, GL_STATIC_DRAW);
 
-	pg_printOglError(22);
+	pg_printOglError(5);
 
 	/////////////////////////////////////////////////////////////////////
 	// double quad for composition
@@ -448,7 +447,7 @@ void pg_initGeometry_quads(void) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg_vboID[pg_enum_EABQuadMaster]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, PG_SIZE_QUAD_ARRAY * sizeof(unsigned int),
 		pg_quadMaster_indices, GL_STATIC_DRAW);
-	pg_printOglError(23);
+	pg_printOglError(6);
 
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////
@@ -507,7 +506,7 @@ void pg_initGeometry_quads(void) {
 
 		// printf("Sensor size  %d\n" , sensor_geometry_width );
 
-		pg_printOglError(23);
+		pg_printOglError(7);
 
 		///////////////////////////////////////////////////////////////////////////////////////
 		// sensor layouts
@@ -747,7 +746,7 @@ void pg_initGeometry_quads(void) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-	pg_printOglError(32);
+	pg_printOglError(8);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

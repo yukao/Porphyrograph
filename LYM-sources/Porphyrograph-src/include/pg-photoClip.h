@@ -84,9 +84,6 @@ public:
 	bool clip_autoplay[PG_NB_PARALLEL_CLIPS];
 	bool clip_play[PG_NB_PARALLEL_CLIPS];
 	float clip_level[PG_NB_PARALLEL_CLIPS];
-	float clip_r_channel_level[PG_NB_PARALLEL_CLIPS];
-	float clip_g_channel_level[PG_NB_PARALLEL_CLIPS];
-	float clip_b_channel_level[PG_NB_PARALLEL_CLIPS];
 	int jump_frame_freq;
 
 	pg_clip_status(int clipSide);

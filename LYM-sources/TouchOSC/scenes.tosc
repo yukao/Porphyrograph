@@ -479,7 +479,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[tous_les_musiciens]]></value>
+<value><![CDATA[Four_Tet_test]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -594,7 +594,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[tous_les_musiciens]]></default>
+<default><![CDATA[Four_Tet_test]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -733,7 +733,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[keytar]]></value>
+<value><![CDATA[tous_les_musiciens]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -848,7 +848,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[keytar]]></default>
+<default><![CDATA[tous_les_musiciens]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -987,7 +987,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Africa]]></value>
+<value><![CDATA[keytar]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1102,7 +1102,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[Africa]]></default>
+<default><![CDATA[keytar]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1241,7 +1241,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[frfrfr]]></value>
+<value><![CDATA[Africa]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1356,7 +1356,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[frfrfr]]></default>
+<default><![CDATA[Africa]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1495,7 +1495,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[BirdCage_ComeOut]]></value>
+<value><![CDATA[frfrfr]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1610,7 +1610,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[BirdCage_ComeOut]]></default>
+<default><![CDATA[frfrfr]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1749,7 +1749,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[piano]]></value>
+<value><![CDATA[BirdCage_ComeOut]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1864,7 +1864,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[piano]]></default>
+<default><![CDATA[BirdCage_ComeOut]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2003,7 +2003,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Oizo_Leopard_Electric_Silence]]></value>
+<value><![CDATA[piano]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2118,7 +2118,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[Oizo_Leopard_Electric_Silence]]></default>
+<default><![CDATA[piano]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2257,7 +2257,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[flute]]></value>
+<value><![CDATA[Oizo_Leopard_Electric_Silence]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2372,7 +2372,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[flute]]></default>
+<default><![CDATA[Oizo_Leopard_Electric_Silence]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2511,7 +2511,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[DRAW_Aulos_Bonobo_Meute]]></value>
+<value><![CDATA[flute]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2626,7 +2626,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[DRAW_Aulos_Bonobo_Meute]]></default>
+<default><![CDATA[flute]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2765,7 +2765,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[saxo]]></value>
+<value><![CDATA[DRAW_Aulos_Bonobo_Meute]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2880,7 +2880,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[saxo]]></default>
+<default><![CDATA[DRAW_Aulos_Bonobo_Meute]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -3019,7 +3019,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[DJ_Josh_to_Szymon]]></value>
+<value><![CDATA[saxo]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -3134,7 +3134,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[DJ_Josh_to_Szymon]]></default>
+<default><![CDATA[saxo]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -3273,7 +3273,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[clarinette]]></value>
+<value><![CDATA[DJ_Josh_to_Szymon]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -3388,7 +3388,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[clarinette]]></default>
+<default><![CDATA[DJ_Josh_to_Szymon]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -3527,7 +3527,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Justice]]></value>
+<value><![CDATA[clarinette]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -3642,7 +3642,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[Justice]]></default>
+<default><![CDATA[clarinette]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -3781,7 +3781,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[DJ_Szymon_to_Louise]]></value>
+<value><![CDATA[Justice]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -3896,7 +3896,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[DJ_Szymon_to_Louise]]></default>
+<default><![CDATA[Justice]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -4035,7 +4035,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[AphexTwin_AmonTobin]]></value>
+<value><![CDATA[DJ_Szymon_to_Louise]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -4150,7 +4150,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[AphexTwin_AmonTobin]]></default>
+<default><![CDATA[DJ_Szymon_to_Louise]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -4289,7 +4289,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[violoncelle]]></value>
+<value><![CDATA[AphexTwin_AmonTobin]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -4404,7 +4404,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[violoncelle]]></default>
+<default><![CDATA[AphexTwin_AmonTobin]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -4543,7 +4543,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[HANDS_HangingD]]></value>
+<value><![CDATA[violoncelle]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -4658,7 +4658,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[HANDS_HangingD]]></default>
+<default><![CDATA[violoncelle]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -4797,7 +4797,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Psycho]]></value>
+<value><![CDATA[HANDS_HangingD]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -4912,7 +4912,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[Psycho]]></default>
+<default><![CDATA[HANDS_HangingD]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -5051,7 +5051,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Cobweb_Pearson_sounds]]></value>
+<value><![CDATA[Psycho]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -5166,7 +5166,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[Cobweb_Pearson_sounds]]></default>
+<default><![CDATA[Psycho]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -5305,7 +5305,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Four_Tet]]></value>
+<value><![CDATA[Cobweb_Pearson_sounds]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -5340,6 +5340,260 @@
 <key><![CDATA[frame]]></key>
 <value>
 <x>795.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>24</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Cobweb_Pearson_sounds]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_20' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1020.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Four_Tet]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_20' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1020.0</x>
 <y>190</y>
 <w>195.0</w>
 <h>70</h>

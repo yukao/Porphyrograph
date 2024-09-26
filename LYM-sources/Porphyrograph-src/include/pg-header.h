@@ -21,3 +21,5 @@ constexpr int PG_NB_SENSORS = 16;
 constexpr int PG_NB_MAX_SENSOR_ACTIVATIONS = 6;
 constexpr int PG_NB_MAX_SENSOR_SAMPLE_SETUPS = 3;
 constexpr int PG_NB_MAX_SENSOR_LAYOUTS = 4;
+// max nb of bones in a skeleton (on C++ side and on glsl side in the mesh vertex shader)
+constexpr int PG_MAX_BONES = 20;
