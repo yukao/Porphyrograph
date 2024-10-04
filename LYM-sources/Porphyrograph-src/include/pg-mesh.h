@@ -142,6 +142,7 @@ public:
 	float pg_Mesh_Translation_X;
 	float pg_Mesh_Translation_Y;
 	float pg_Mesh_Translation_Z;
+	float pg_Mesh_Rotation_Ini_angle;
 	float pg_Mesh_Rotation_Ini_X;
 	float pg_Mesh_Rotation_Ini_Y;
 	float pg_Mesh_Rotation_Ini_Z;
@@ -193,6 +194,7 @@ public:
 		pg_Mesh_Translation_X = 0.f;
 		pg_Mesh_Translation_Y = 0.f;
 		pg_Mesh_Translation_Z = 0.f;
+		pg_Mesh_Rotation_Ini_angle = 0.f;
 		pg_Mesh_Rotation_Ini_X = 0.f;
 		pg_Mesh_Rotation_Ini_Y = 0.f;
 		pg_Mesh_Rotation_Ini_Z = 0.f;
@@ -297,7 +299,6 @@ class MeshAnimationData {
 public:
 	// animation
 	double pg_mesh_startAnime;
-	double pg_mesh_anime_precTime;
 	int pg_mesh_precedingAnime;
 	bool pg_mesh_positiveChange;
 	bool pg_mesh_negativeChange;
@@ -338,7 +339,6 @@ public:
 	MeshAnimationData(void) {
 		// animation
 		pg_mesh_startAnime = -1;
-		pg_mesh_anime_precTime = -1;
 		pg_mesh_precedingAnime = -1;
 		pg_mesh_positiveChange = false;
 		pg_mesh_negativeChange = false;

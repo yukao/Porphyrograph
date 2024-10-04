@@ -1396,26 +1396,26 @@ void pg_calculate_perspective_matrices(void) {
 	// by an angle alpha
 	//printf("VP1BottomAt1m %.2f\n" , VP1BottomAt1m );
 
-	float VP1alpha = atan(VP1BottomAt1m);
-	glm::vec4 vectorVPPositionToScreenBottom
-		= glm::vec4(VP1LookAtX - VP1LocX, VP1LookAtY - VP1LocY, VP1LookAtZ - VP1LocZ, 0.0);
+	// ARCHIVE float VP1alpha = atan(VP1BottomAt1m);
+	// ARCHIVE ::vec4 vectorVPPositionToScreenBottom
+	// ARCHIVE 	= glm::vec4(VP1LookAtX - VP1LocX, VP1LookAtY - VP1LocY, VP1LookAtZ - VP1LocZ, 0.0);
 	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
-	glm::mat4 rotationMat(1); // Creates a identity matrix
+	// ARCHIVE ::mat4 rotationMat(1); // Creates a identity matrix
 	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
-	glm::vec3 rotationAxis = glm::cross(glm::vec3(0, 0, (VP1Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
-	rotationAxis = glm::normalize(rotationAxis);
+	// ARCHIVE ::vec3 rotationAxis = glm::cross(glm::vec3(0, 0, (VP1Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
+	// ARCHIVE  = glm::normalize(rotationAxis);
 	// printf("rotationAxis %.2f %.2f %.2f\n", rotationAxis.x, rotationAxis.y, rotationAxis.z);
 	// shifts towards the bottom the actual lookat center according to VP1BottomAt1m
-	rotationMat = glm::rotate(rotationMat, VP1alpha, rotationAxis); // (VP1Reversed?-1.0f:1.0f) *
-	glm::vec3 vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
+	// ARCHIVE rotationMat = glm::rotate(rotationMat, VP1alpha, rotationAxis); // (VP1Reversed?-1.0f:1.0f) *
+	// ARCHIVE glm::vec3 vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
 	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
-	glm::vec3 lookAtPoint = glm::vec3(VP1LocX, VP1LocY, VP1LocZ) + vectorLookAt;
+	// ARCHIVE glm::vec3 lookAtPoint = glm::vec3(VP1LocX, VP1LocY, VP1LocZ) + vectorLookAt;
 	//printf("VP1Loc %.2f %.2f %.2f\n", VP1LocX, VP1LocY, VP1LocZ);
 	//printf("Look at real %.2f %.2f %.2f\n\n", lookAtPoint.x, lookAtPoint.y, lookAtPoint.z);
 	pg_VP1viewMatrix
 		= glm::lookAt(
 			glm::vec3(VP1LocX, VP1LocY, VP1LocZ), // Camera is at (VP1LocX, VP1LocY, VP1LocZ), in World Space
-			lookAtPoint, // && looks at lookAtPoint
+			glm::vec3(VP1LookAtX, VP1LookAtY, VP1LookAtZ), // && looks at lookAtPoint
 			glm::vec3(0, VP1UpY, (VP1Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP1UpY, 1 or 0, VP1UpY, -1 if projector is upside down)
 		);
 
@@ -1436,23 +1436,23 @@ void pg_calculate_perspective_matrices(void) {
 	// by an angle alpha
 	//printf("VP2BottomAt1m %.2f\n" , VP2BottomAt1m );
 
-	float VP2alpha = atan(VP2BottomAt1m);
-	vectorVPPositionToScreenBottom
-		= glm::vec4(VP2LookAtX - VP2LocX, VP2LookAtY - VP2LocY, VP2LookAtZ - VP2LocZ, 0.0);
+	// ARCHIVE float VP2alpha = atan(VP2BottomAt1m);
+	// ARCHIVE vectorVPPositionToScreenBottom
+// ARCHIVE = glm::vec4(VP2LookAtX - VP2LocX, VP2LookAtY - VP2LocY, VP2LookAtZ - VP2LocZ, 0.0);
 	// printf("vectorLookAt init %.2f %.2f %.2f\n" , vectorVPPositionToScreenBottom.x , vectorVPPositionToScreenBottom.y , vectorVPPositionToScreenBottom.z );
 	// rotation axis is k x vectorVPPositionToScreenBottom (or -k if projector is upside down)
-	rotationAxis = glm::cross(glm::vec3(0, 0, (VP2Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
-	rotationAxis = glm::normalize(rotationAxis);
+	// ARCHIVE rotationAxis = glm::cross(glm::vec3(0, 0, (VP2Reversed ? -1.0f : 1.0f)), glm::vec3(vectorVPPositionToScreenBottom));
+	// ARCHIVE  = glm::normalize(rotationAxis);
 	// shifts towards the bottom the actual lookat center according to VP2BottomAt1m
-	rotationMat = glm::rotate(glm::mat4(1.0f), VP2alpha, rotationAxis); // (VP2Reversed?-1.0f:1.0f) *
-	vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
+	// ARCHIVE rotationMat = glm::rotate(glm::mat4(1.0f), VP2alpha, rotationAxis); // (VP2Reversed?-1.0f:1.0f) *
+	// ARCHIVE vectorLookAt = glm::vec3(rotationMat * vectorVPPositionToScreenBottom);
 	// printf("vectorLookAt real %.2f %.2f %.2f\n" , vectorLookAt.x , vectorLookAt.y , vectorLookAt.z );
-	lookAtPoint = glm::vec3(VP2LocX, VP2LocY, VP2LocZ) + vectorLookAt;
+	// ARCHIVE lookAtPoint = glm::vec3(VP2LocX, VP2LocY, VP2LocZ) + vectorLookAt;
 	// printf("Look at real %.2f %.2f %.2f\n\n" , lookAtPoint.x , lookAtPoint.y , lookAtPoint.z );
 	pg_VP2viewMatrix
 		= glm::lookAt(
 			glm::vec3(VP2LocX, VP2LocY, VP2LocZ), // Camera is at (VP2LocX, VP2LocY, VP2LocZ), in World Space
-			lookAtPoint, // and looks at lookAtPoint
+			glm::vec3(VP2LookAtX, VP2LookAtY, VP2LookAtZ), // && looks at lookAtPoint
 			glm::vec3(0, VP2UpY, (VP2Reversed ? -1.0f : 1.0f))  // Head is up (set to 0, VP2UpY, 1 or 0, VP2UpY, -1 if projector is upside down)
 		);
 #endif

@@ -19,7 +19,7 @@ based on Francesco Caruso GLSLParametricCurves
 https://github.com/fcaruso/GLSLParametricCurve
 */
 
-#version 400
+#version 460
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
 
@@ -57,8 +57,7 @@ void main()
    
     gl_Position = position0 + VertexIn[0].radius * vec4(VertexIn[0].normal,0,0)
                                 * uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse.x
-   // the dependency to distance has been canceled
-                                * 300;
+                                * distToReplayTrack;
     VertexOut.texCoord = vec2(VertexIn[0].texCoord.x,1);
     VertexOut.color = VertexIn[0].color;
     EmitVertex();
@@ -70,8 +69,7 @@ void main()
    
     gl_Position = position1 + VertexIn[1].radius * vec4(VertexIn[1].normal,0,0)
                                 * uniform_ParticleCurve_gs_3fv_partRadius_partType_highPitchPulse.x
-   // the dependency to distance has been canceled
-                                * 300;
+                                * distToReplayTrack;
     VertexOut.texCoord = vec2(VertexIn[1].texCoord.x,1);
     VertexOut.color = VertexIn[1].color;
     EmitVertex();

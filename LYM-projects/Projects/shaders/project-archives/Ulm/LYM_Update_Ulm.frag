@@ -237,7 +237,7 @@ uniform vec4 uniform_Update_fs_4fv_W_H_time_currentScene;
 uniform vec4 uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack;
 uniform vec4 uniform_Update_fs_4fv_repop_Color_flashCABGWght;
 uniform vec3 uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres;
-uniform vec2 uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY;
+uniform vec2 uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres;
 uniform vec4 uniform_Update_fs_4fv_photo01_wh;
 uniform vec2 uniform_Update_fs_2fv_photo01Wghts;
 uniform vec4 uniform_Update_fs_4fv_Camera_offSetsXY_Camera_W_H;
@@ -1514,8 +1514,8 @@ void main() {
 
   float flashCameraTrkWght = uniform_Update_fs_4fv_movieWH_flashCameraTrkWght_cpTrack.z;
   float flashCameraTrkThreshold = uniform_Update_fs_3fv_isClearLayer_flashPixel_flashCameraTrkThres.z;
-  float flashPhotoTrkWght = uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.x;
-  float flashPhotoTrkThreshold = uniform_Update_fs_4fv_flashPhotoTrkWght_flashPhotoTrkThres_Photo_offSetsXY.y;
+  float flashPhotoTrkWght = uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres.x;
+  float flashPhotoTrkThreshold = uniform_Update_fs_2fv_flashPhotoTrkWght_flashPhotoTrkThres.y;
   // no flash Camera for the moment
   // flashCameraTrkWght = .0f;
   

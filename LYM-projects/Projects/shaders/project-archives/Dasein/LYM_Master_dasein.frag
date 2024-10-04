@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 460
 
 #define PG_NB_TRACKS 4
 #define ATELIERS_PORTATIFS
@@ -37,10 +37,10 @@ layout (binding = 6) uniform samplerRect uniform_Master_texture_fs_Trk3;  // 2-c
 // UNIFORMS
 // passed by the C program
 uniform vec4 uniform_Master_fs_4fv_xy_frameno_pulsedShift;
-uniform vec4 uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart;
+uniform vec3 uniform_Master_fs_3fv_width_height_rightWindowVMargin;
 
 uniform vec4 uniform_Master_fs_4fv_pulsedColor_rgb_pen_grey;
-uniform vec4 uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene;
+uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteLow_rgb;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb;
 uniform vec3 uniform_Master_fs_3fv_interpolatedPaletteHigh_rgb;
 
@@ -52,8 +52,8 @@ out vec4 outColor0;
 void main() {
 #include_initializations
 
-  float width = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.x;
-  float height = uniform_Master_fs_4fv_width_height_rightWindowVMargin_timeFromStart.y;
+  float width = uniform_Master_fs_3fv_width_height_rightWindowVMargin.x;
+  float height = uniform_Master_fs_3fv_width_height_rightWindowVMargin.y;
 #ifdef ATELIERS_PORTATIFS
   float pulsed_shift = uniform_Master_fs_4fv_xy_frameno_pulsedShift.w;
   vec2 coords = vec2( (decalCoords.x > width ? decalCoords.x - width : decalCoords.x) + pulsed_shift, 
@@ -71,7 +71,7 @@ void main() {
   //   coords.y = height - coords.y;
   //   coords.x = width - coords.x;
 
-  if(mute_second_screen && decalCoords.x > width) {
+  if(mute_screen && decalCoords.x > width) {
     outColor0 = vec4(0, 0, 0, 1);
     return;
   }
@@ -79,7 +79,7 @@ void main() {
   // interface
   if(interfaceOnScreen && decalCoords.x < 540 && decalCoords.y < 100) {
     if(decalCoords.x < 100) {
-      outColor0 = vec4(uniform_Master_fs_4fv_interpolatedPaletteLow_rgb_currentScene.rgb, 1);
+      outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteLow_rgb, 1);
     }
     else if(decalCoords.x < 200) {
       outColor0 = vec4(uniform_Master_fs_3fv_interpolatedPaletteMedium_rgb, 1);
@@ -165,7 +165,8 @@ void main() {
 //   coords.y = height - coords.y;
 //   coords.x = width - coords.x;
 
-  if( mouse_x < width && mouse_x > 0 
+  if( !hide
+      && mouse_x < width && mouse_x > 0 
       && length(vec2(coordX - mouse_x , height - decalCoords.y - mouse_y)) 
       < cursorSize ) { 
     outColor0.rgb = mix( outColor0.rgb , (vec3(1,1,1) - outColor0.rgb) , abs(sin(frameno/10.0)) );
@@ -174,5 +175,5 @@ void main() {
   if( invertAllLayers ) {
      outColor0.rgb = vec3(1,1,1) - outColor0.rgb;
   }
-  outColor0.rgb *= master;
+  outColor0.rgb *= blendTransp;
 }

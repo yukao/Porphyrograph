@@ -181,7 +181,7 @@ def writeBoneChain(arma, bone , compteur, file):
     indent(compteur,file)
     file.write("bone_end "+name+"\n")
 
-def collectBoneList(arma, bone):
+def writeBoneList(arma, bone):
     global boneCount
     global boneOutputString
     global boneList
@@ -208,16 +208,16 @@ def collectBoneList(arma, bone):
 
         # Write the different child bones
         for childbone in same:
-            collectBoneList(arma, childbone)
+            writeBoneList(arma, childbone)
 
         if len(opposite) > 0:
             for childbone in opposite:
-                collectBoneList(arma, childbone)
+                writeBoneList(arma, childbone)
 
         if len(free) > 0:
             # Translate to bone end
             for childbone in free:
-                collectBoneList(arma, childbone)
+                writeBoneList(arma, childbone)
 
 def write_bones(file , armatures):
     global boneCount
@@ -229,20 +229,17 @@ def write_bones(file , armatures):
     # print 'armature loop\n'
     for armat in armatures:
         # print 'armature\n'
-        boneCount = 0
-        boneOutputString = ""
-        boneList = []
         ParentList = [Bone for Bone in armat.data.bones if Bone.parent is None]
         for aBone in ParentList:
             # print 'bone\n'
             if not aBone.parent:
                 # print 'bone without parent\n'
-                collectBoneList(armat, aBone)
-        file.write("bones "+str(boneCount)+"\n")
-        file.write(boneOutputString)
-        for aBone in ParentList:
-            # print 'bone\n'
-            if not aBone.parent:
+                boneCount = 0
+                boneOutputString = ""
+                boneList = []
+                writeBoneList(armat, aBone)
+                file.write("bones "+str(boneCount)+"\n")
+                file.write(boneOutputString)
                 writeBoneChain(armat, aBone , 0, file)
 
 ########################################### BONE WEIGHT STORAGE AND OUTPUT ###############################################################
@@ -528,7 +525,6 @@ def write_poses(
     from math import degrees
 
     global write_armature_hierarchy
-    indent = 1
 
     for arm in armatures:
 
@@ -563,10 +559,6 @@ def write_poses(
                 "pose_bone",
                 # Blender pose matrix.
                 "pose_mat",
-                # Blender pose quaternion.
-                "pose_quat",
-                # Blender pose matrix local.
-                "pose_local_mat",
                 # Blender rest matrix (armature space).
                 "rest_arm_mat",
                 # Blender rest matrix (local space).
@@ -587,8 +579,6 @@ def write_poses(
                 self.pose_bone = arm.pose.bones[bone_name]
 
                 self.pose_mat = self.pose_bone.matrix
-                self.pose_local_mat = self.pose_bone.matrix_basis
-                self.pose_quat = self.pose_bone.rotation_quaternion
 
                 # mat = self.rest_bone.matrix  # UNUSED
                 self.rest_arm_mat = self.rest_bone.matrix_local
@@ -605,8 +595,6 @@ def write_poses(
             def update_posedata(self):
                 self.pose_mat = self.pose_bone.matrix
                 self.pose_imat = self.pose_mat.inverted()
-                self.pose_local_mat = self.pose_bone.matrix_basis
-                self.pose_quat = self.pose_bone.rotation_quaternion
 
             def __repr__(self):
                 if self.parent:
@@ -725,33 +713,24 @@ def write_poses(
                 file.write("POSE {0:d} FRAME {1:d}\n".format(poseNumber, frame))
                 scene.frame_set(frame)
 
-                # updates local and global data for each bone 
                 for dbone in bones_decorated:
                     dbone.update_posedata()
 
-                # calculates the pose matrices which are used by porphyrograph
                 for dbone in bones_decorated:
                     trans = Matrix.Translation(dbone.rest_bone.head_local)
                     itrans = Matrix.Translation(-dbone.rest_bone.head_local)
-                    # parented bone
+
                     if dbone.parent:
-                        # VERSION <= 2023 & < Blender 4.2
-                        # mat_final = dbone.parent.rest_arm_mat @ dbone.parent.pose_imat @ dbone.pose_mat @ dbone.rest_arm_imat
-                        # mat_final = itrans @ mat_final @ trans
-                        # loc = mat_final.to_translation() + (dbone.rest_bone.head_local - dbone.parent.rest_bone.head_local)
-                        loc = dbone.pose_local_mat.to_translation() + (dbone.rest_bone.head_local - dbone.parent.rest_bone.head_local)
-                        # local rotation
-                        rot_quat = dbone.pose_local_mat.to_quaternion()
-                    # root bone (there can be several)
+                        mat_final = dbone.parent.rest_arm_mat @ dbone.parent.pose_imat @ dbone.pose_mat @ dbone.rest_arm_imat
+                        mat_final = itrans @ mat_final @ trans
+                        loc = mat_final.to_translation() + (dbone.rest_bone.head_local - dbone.parent.rest_bone.head_local)
                     else:
-                        # VERSION <= 2023 & < Blender 4.2
-                        # mat_final = dbone.pose_mat @ dbone.rest_arm_imat
-                        # mat_final = itrans @ mat_final @ trans
-                        # loc = mat_final.to_translation() + dbone.rest_bone.head
-                        # global rotation
-                        rot_quat = dbone.pose_mat.to_quaternion()
-                        # global translation
-                        loc = dbone.pose_mat.to_translation() + dbone.rest_bone.head
+                        mat_final = dbone.pose_mat @ dbone.rest_arm_imat
+                        mat_final = itrans @ mat_final @ trans
+                        loc = mat_final.to_translation() + dbone.rest_bone.head
+
+                    # keep eulers compatible, no jumping on interpolation.
+                    rot_quat = mat_final.to_quaternion()
 
                     if not dbone.skip_position:
                         file.write("{0:s} transl {1:.6f} {2:.6f} {3:.6f} \n".format(dbone.name, (loc * global_scale)[0], (loc * global_scale)[1], (loc * global_scale)[2]))
@@ -956,9 +935,8 @@ def write_file(context, filepath, objects, depsgraph, scene,
                             ob_for_convert.to_mesh_clear()
                             continue  # dont bother with this mesh.
 
-                        # DEPRECATED
-                        # if EXPORT_NORMALS and face_index_pairs:
-                            # me.calc_normals_split()
+                        if EXPORT_NORMALS and face_index_pairs:
+                            me.calc_normals_split()
                             # No need to call me.free_normals_split later, as this mesh is deleted anyway!
 
                         loops = me.loops
@@ -1336,7 +1314,7 @@ def save(context,
          filepath,
          *,
          use_triangles=False,
-         use_edges=False,
+         use_edges=True,
          use_normals=False,
          use_smooth_groups=False,
          use_smooth_groups_bitflags=False,

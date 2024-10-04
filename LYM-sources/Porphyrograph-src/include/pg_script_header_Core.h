@@ -425,6 +425,8 @@
 #define var_mesh_anime_speed
 #define var_mesh_motion_speed
 #define var_mesh_anime
+#define var_mesh_anime_min_range
+#define var_mesh_anime_max_range
 #define var_mesh_motion
 #define var_mesh_color
 #define var_mesh_grey
@@ -885,6 +887,8 @@ enum InterpVarIDs{
   _mesh_anime_speed,
   _mesh_motion_speed,
   _mesh_anime,
+  _mesh_anime_min_range,
+  _mesh_anime_max_range,
   _mesh_motion,
   _mesh_color,
   _mesh_grey,
@@ -1345,6 +1349,8 @@ extern bool  meshRenderBypass    ;
 extern float mesh_anime_speed    ;
 extern float mesh_motion_speed   ;
 extern int   mesh_anime          ;
+extern int   mesh_anime_min_range;
+extern int   mesh_anime_max_range;
 extern int   mesh_motion         ;
 extern float mesh_color          ;
 extern float mesh_grey           ;

@@ -1,8 +1,8 @@
 RANK,0
-VERBATIM,Flash change freeze
+VERBATIM,mesh_anime_min_range
 TYPE,int
-ID,flashchange_freeze_freq
+ID,mesh_anime_min_range_min_range
 FUNCTION,NULL
-GUI,flashchange_freeze_freq
+GUI,mesh_anime_min_range
 SHADER,*
 PULSE,*

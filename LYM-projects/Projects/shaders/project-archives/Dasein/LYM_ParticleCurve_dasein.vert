@@ -5,7 +5,7 @@ LYM song & Porphyrograph (c) Yukao Nagemi & Lola Ajima
 
 *************************************************************************/
 
-#version 420
+#version 460
 
 // vertex position update
 layout (binding = 0) uniform samplerRect vp_decal; // control point positions

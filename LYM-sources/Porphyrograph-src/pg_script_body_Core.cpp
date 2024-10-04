@@ -425,6 +425,8 @@ bool  meshRenderBypass     = 0;
 float mesh_anime_speed     = float(1);
 float mesh_motion_speed    = float(0.25);
 int   mesh_anime           = 0;
+int   mesh_anime_min_range = 0;
+int   mesh_anime_max_range = 1;
 int   mesh_motion          = 0;
 float mesh_color           = float(0);
 float mesh_grey            = float(0);
@@ -886,6 +888,8 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_int,
 	_pg_int,
+	_pg_int,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_int,
@@ -1297,6 +1301,8 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
+	{-1, -1},
+	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1807,6 +1813,8 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&mesh_anime_speed,
 	(void *)&mesh_motion_speed,
 	(void *)&mesh_anime,
+	(void *)&mesh_anime_min_range,
+	(void *)&mesh_anime_max_range,
 	(void *)&mesh_motion,
 	(void *)&mesh_color,
 	(void *)&mesh_grey,
@@ -2548,6 +2556,8 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
 	&MIDIwithBeat_callBack_generic,
 	&MIDIwithColor_callBack_generic,
 	&MIDIwithBrush_callBack_generic,
@@ -2772,6 +2782,8 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	&path_replay_trackNo_callBack_generic,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -3454,6 +3466,8 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "mesh_anime_speed",
   "mesh_motion_speed",
   "mesh_anime",
+  "mesh_anime_min_range",
+  "mesh_anime_max_range",
   "mesh_motion",
   "mesh_color",
   "mesh_grey",
@@ -3865,6 +3879,8 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_differential,
   _pg_pulsed_none,
   _pg_pulsed_differential,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -4376,6 +4392,8 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "mesh_anime_speed",
   "mesh_motion_speed",
   "mesh_anime",
+  "mesh_anime_min_range",
+  "mesh_anime_max_range",
   "mesh_motion",
   "mesh_color",
   "mesh_grey",
