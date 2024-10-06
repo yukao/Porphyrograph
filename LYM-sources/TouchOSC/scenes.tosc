@@ -479,7 +479,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[Four_Tet_test]]></value>
+<value><![CDATA[Generic]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -594,7 +594,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[Four_Tet_test]]></default>
+<default><![CDATA[Generic]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>

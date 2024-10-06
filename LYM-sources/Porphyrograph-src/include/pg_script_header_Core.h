@@ -22,8 +22,9 @@
 #define var_flashchangeClipRight_freq
 #define var_flashchangeClip2Right_freq
 #define var_flashchangeScreenLayout_freq
-#define var_flashchangeRightHandPose_freq
-#define var_flashchangeLeftHandPose_freq
+#define var_flashchange_freeze_freq
+#define var_flashchangeMesh0Pose_freq
+#define var_flashchangeMesh1Pose_freq
 #define var_flashchange_mesh_palette_freq
 #define var_flashchange_mesh_anime_freq
 #define var_flashchange_mesh_motion_freq
@@ -88,11 +89,12 @@
 #define var_clip_nudge_factor
 #define var_clip_scratch_factor
 #define var_clipCaptFreq
+#define var_clip_min_range
+#define var_clip_max_range
 #define var_playing_clipNameLeft
 #define var_playing_clipNameRight
 #define var_playing_secondClipNameLeft
 #define var_playing_secondClipNameRight
-#define var_clip_in_range
 #define var_activeClipArts
 #define var_moving_messages
 #define var_ClipArt_layer_color_preset
@@ -484,8 +486,9 @@ enum InterpVarIDs{
   _flashchangeClipRight_freq,
   _flashchangeClip2Right_freq,
   _flashchangeScreenLayout_freq,
-  _flashchangeRightHandPose_freq,
-  _flashchangeLeftHandPose_freq,
+  _flashchange_freeze_freq,
+  _flashchangeMesh0Pose_freq,
+  _flashchangeMesh1Pose_freq,
   _flashchange_mesh_palette_freq,
   _flashchange_mesh_anime_freq,
   _flashchange_mesh_motion_freq,
@@ -550,11 +553,12 @@ enum InterpVarIDs{
   _clip_nudge_factor,
   _clip_scratch_factor,
   _clipCaptFreq,
+  _clip_min_range,
+  _clip_max_range,
   _playing_clipNameLeft,
   _playing_clipNameRight,
   _playing_secondClipNameLeft,
   _playing_secondClipNameRight,
-  _clip_in_range,
   _activeClipArts,
   _moving_messages,
   _ClipArt_layer_color_preset,
@@ -946,8 +950,9 @@ extern int   flashchangeClip2Left_freq;
 extern int   flashchangeClipRight_freq;
 extern int   flashchangeClip2Right_freq;
 extern int   flashchangeScreenLayout_freq;
-extern int   flashchangeRightHandPose_freq;
-extern int   flashchangeLeftHandPose_freq;
+extern int   flashchange_freeze_freq;
+extern int   flashchangeMesh0Pose_freq;
+extern int   flashchangeMesh1Pose_freq;
 extern int   flashchange_mesh_palette_freq;
 extern int   flashchange_mesh_anime_freq;
 extern int   flashchange_mesh_motion_freq;
@@ -1012,11 +1017,12 @@ extern float clip_mix            ;
 extern float clip_nudge_factor   ;
 extern float clip_scratch_factor ;
 extern float clipCaptFreq        ;
+extern int   clip_min_range      ;
+extern int   clip_max_range      ;
 extern string playing_clipNameLeft;
 extern string playing_clipNameRight;
 extern string playing_secondClipNameLeft;
 extern string playing_secondClipNameRight;
-extern string clip_in_range       ;
 extern int   activeClipArts      ;
 extern int   moving_messages     ;
 extern float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)];

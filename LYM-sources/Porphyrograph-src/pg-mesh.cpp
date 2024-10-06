@@ -87,15 +87,14 @@ void MeshData::pg_drawOneMesh(int indMeshFile) {
 				sprintf(pg_errorStr, "Error: numer of bones is currently limited at %d! For higher values change constant PG_MAX_BONES in header file and in mesh vertex shader", PG_MAX_BONES); pg_ReportError(pg_errorStr); throw 745;
 			}
 
-			glm::f32* valMats = new glm::f32[16 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones];
 			for (int indBone = 0; indBone < pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_bones; indBone++) {
 				// 16 = size of a 4x4 animation matrix attached to a bone
-				memcpy(&valMats[16 * indBone],
+				memcpy(&(pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_valMats[16 * indBone]),
 					glm::value_ptr(pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_tabBones[indBone].pointAnimationMatrix),
 					16 * sizeof(glm::f32));
 			}
-			glUniformMatrix4fv(uniform_Mesh_bones_matrices[pg_ind_scenario], PG_MAX_BONES, GL_FALSE, valMats);
-			delete[] valMats;
+			glUniformMatrix4fv(uniform_Mesh_bones_matrices[pg_ind_scenario], PG_MAX_BONES, GL_FALSE, 
+				pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_valMats);
 		}
 
 		// Model matrix 
@@ -938,6 +937,7 @@ bool MeshAnimationData::pg_ParseMeshAnimation(FILE* file, int indMeshFile, char 
 	if (!fgets(line, 256, file)) { return false; }
 	sscanf(line, "%s %d", tag, &(pg_nb_bones));
 	pg_tabBones = new Bone[pg_nb_bones];
+	pg_valMats = new glm::f32[16 * pg_nb_bones];
 	//printf("Skeleton %d bones to parse\n", pg_nb_bones);
 
 	if (pg_nb_bones > 0) {

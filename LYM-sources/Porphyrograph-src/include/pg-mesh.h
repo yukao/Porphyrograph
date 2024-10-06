@@ -311,6 +311,8 @@ public:
 	// bones & animation
 	int pg_nb_bones;
 	Bone* pg_tabBones;
+	glm::f32* pg_valMats;
+
 
 	// poses provided in the obj file
 	// used as a library for animation which interpolates between some of these poses
@@ -351,6 +353,7 @@ public:
 		// bones
 		pg_nb_bones = 0;
 		pg_tabBones = NULL;
+		pg_valMats = NULL;
 
 		// poses provided in the obj file
 		// used as a library for animation which interpolates between some of these poses

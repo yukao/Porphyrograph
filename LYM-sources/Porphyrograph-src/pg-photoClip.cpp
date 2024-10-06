@@ -1443,14 +1443,18 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 	case _clip_new:
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
-			pg_clip_new(0, clipSide, nb_arguments, float_arguments);
+			int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+			clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
+			pg_play_clip_no(0, clipSide, clip_no);
 		}
 		break;
 	case _clip2_new:
 		if (PG_NB_PARALLEL_CLIPS >= 2) {			// clip intialization for Second Clip
 			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 				int clipSide = int(float_arguments[0]);
-				pg_clip_new(1, clipSide, nb_arguments, float_arguments);
+				int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+				clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
+				pg_play_clip_no(1, clipSide, clip_no);
 			}
 		}
 		break;
@@ -1458,25 +1462,10 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 	case _clip_sample:
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
-			int clip_no = int(float_arguments[1]);
-			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
-				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
-				pg_play_clip_no(0, clipSide, clip_no);
-
-			}
-		}
-		break;
-		// CLIP: CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
-	case _clip_sample_range:
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
-			int clipSide = int(float_arguments[0]);
 			int clipRank = int(float_arguments[1]);
-			int clip_no_low = int(float_arguments[2]);
-			int clip_no_high = int(float_arguments[3]);
-			int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
-			clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
+			int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+			clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
 			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
-				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
 				pg_play_clip_no(clipRank, clipSide, clip_no);
 			}
 		}
@@ -1486,9 +1475,9 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 		if (PG_NB_PARALLEL_CLIPS >= 2) {
 			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 				int clipSide = int(float_arguments[0]);
-				int clip_no = int(float_arguments[1]);
+				int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+				clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
 				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
-					clip_no = clip_no % pg_nbClips[pg_ind_scenario];
 					pg_play_clip_no(1, clipSide, clip_no);
 
 				}
@@ -1500,7 +1489,7 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 			int clipSide = int(float_arguments[0]);
 			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-				// pg_all_clip_status[clipSide].clip_level[0] = float_arguments[1];
+				pg_all_clip_status[clipSide].clip_level[0] = float_arguments[1];
 			}
 		}
 		break;
@@ -1509,7 +1498,7 @@ void pg_aliasScript_Clip(string address_string, string string_argument_0,
 			if (pg_FullScenarioActiveVars[pg_ind_scenario][_clipCaptFreq]) {
 				int clipSide = int(float_arguments[0]);
 				if (clipSide < pg_enum_clipLeftRight && clipSide >= 0) {
-					// pg_all_clip_status[clipSide].clip_level[1] = float_arguments[1];
+					pg_all_clip_status[clipSide].clip_level[1] = float_arguments[1];
 				}
 			}
 		}

@@ -191,27 +191,13 @@ void pg_flash_control(bool (*control_function)(int)) {
 
 	//std::vector<int> pg_clip_ranges_min;
 	//std::vector<int> pg_clip_ranges_max;
-	int clip_no_low = 0;
-	int clip_no_high = pg_nbClips[pg_ind_scenario] - 1;
-
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashchangeClipLeft_freq]) {
-
-		if (pg_FullScenarioActiveVars[pg_ind_scenario][_clip_in_range]) {
-			if (pg_clip_ranges_min.size() > 0 && pg_clip_ranges_min.size() == pg_clip_ranges_max.size()) {
-				// CLIP IS SELECTED IN A RANGE (BEGIN AND END OF RANGE ARE INCLUDED)
-				int range_selected = int(rand_0_1 * pg_clip_ranges_min.size()) % pg_clip_ranges_min.size();
-				int clip_no_low = pg_clip_ranges_min[range_selected];
-				int clip_no_high = pg_clip_ranges_max[range_selected];
-				int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
-				clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
-			}
-		}
 
 		if ((*control_function)(flashchangeClipLeft_freq)) {
 			int clipSide = pg_enum_clipLeft;
 			int clipRank = 0;
-			int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
-			clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
+			int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+			clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
 			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
 				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
 				pg_play_clip_no(clipRank, clipSide, clip_no);
@@ -220,10 +206,8 @@ void pg_flash_control(bool (*control_function)(int)) {
 		if ((*control_function)(flashchangeClip2Left_freq)) {
 			int clipSide = pg_enum_clipLeft;
 			int clipRank = 1;
-			int clip_no_low = 0;
-			int clip_no_high = 26;
-			int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
-			clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
+			int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+			clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
 			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
 				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
 				pg_play_clip_no(clipRank, clipSide, clip_no);
@@ -232,10 +216,8 @@ void pg_flash_control(bool (*control_function)(int)) {
 		if ((*control_function)(flashchangeClipRight_freq)) {
 			int clipSide = pg_enum_clipRight;
 			int clipRank = 0;
-			int clip_no_low = 0;
-			int clip_no_high = 26;
-			int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
-			clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
+			int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+			clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
 			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
 				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
 				pg_play_clip_no(clipRank, clipSide, clip_no);
@@ -244,57 +226,53 @@ void pg_flash_control(bool (*control_function)(int)) {
 		if ((*control_function)(flashchangeClip2Right_freq)) {
 			int clipSide = pg_enum_clipRight;
 			int clipRank = 1;
-			int clip_no_low = 0;
-			int clip_no_high = 26;
-			int clip_no = clip_no_low + int(rand_0_1 * (clip_no_high - clip_no_low + 1)) % (clip_no_high - clip_no_low + 1);
-			clip_no = max(min(clip_no, clip_no_high), clip_no_low) % pg_nbClips[pg_ind_scenario];
+			int clip_no = clip_min_range + int(rand_0_1 * (clip_max_range - clip_min_range + 1)) % (clip_max_range - clip_min_range + 1);
+			clip_no = max(min(clip_no, clip_max_range), clip_min_range) % pg_nbClips[pg_ind_scenario];
 			if (clipSide < pg_enum_clipLeftRight && clipSide >= 0 && clipRank < PG_NB_PARALLEL_CLIPS && clipRank >= 0 && pg_nbClips[pg_ind_scenario] > 0 && clip_no >= 0) {
 				clip_no = clip_no % pg_nbClips[pg_ind_scenario];
 				pg_play_clip_no(clipRank, clipSide, clip_no);
 			}
 		}
-		if ((*control_function)(flashchangeScreenLayout_freq)) {
-			// screen layout is between O and 5
-			// O: Left / 1: RIght
-			// 2: L+R full size / 3: L+R half size side by side
-			// 4: 4 screens / 5: L+R half size on top of each other
-			int layout = int(rand_0_1 * 6) % 6;
-			(*((int*)pg_FullScenarioVarPointers[_screenLayout])) = layout;
-			screenLayout = layout;
-		}
-		if ((*control_function)(flashchange_mesh_palette_freq)) {
-			int level = int(rand_0_1 * 9) % 9;
-			(*((int*)pg_FullScenarioVarPointers[_mesh_palette])) = level;
-			mesh_palette = level;
-		}
-		if ((*control_function)(flashchange_mesh_anime_freq)) {
-			int anime = int(rand_0_1 * (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1)) % (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1);
-			(*((int*)pg_FullScenarioVarPointers[_mesh_anime])) = anime;
-			mesh_anime = anime;
-		}
 		if ((*control_function)(flashchange_mesh_motion_freq)) {
-			int motion = int(rand_0_1 * (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1)) % (pg_Mesh_Animations[pg_ind_scenario][0].pg_nb_MaxAnimationPoses + 1);
+			int motion = int(rand_0_1 * (6 + 1)) % (6 + 1);
 			(*((int*)pg_FullScenarioVarPointers[_mesh_motion])) = motion;
 			mesh_motion = motion;
 		}
-		bool fixedLeftPose = false;
-		bool fixedRightPose = false;
-		if ((*control_function)(flashchangeRightHandPose_freq)) {
-			fixedRightPose = true;
+		if ((*control_function)(flashchange_mesh_anime_freq)) {
+			int anime = int(rand_0_1 * (4 + 1)) % (4 + 1);
+			(*((int*)pg_FullScenarioVarPointers[_mesh_anime])) = anime;
+			mesh_anime = anime;
 		}
-		if ((*control_function)(flashchangeLeftHandPose_freq)) {
-			fixedLeftPose = true;
+		if ((*control_function)(flashchangeScreenLayout_freq)) {
+			int layout = int(rand_0_1 * (5 + 1)) % (5 + 1);
+			screenLayout = layout;
+			(*((int*)pg_FullScenarioVarPointers[_screenLayout])) = layout;
 		}
-		if (fixedRightPose || fixedLeftPose) {
+		if ((*control_function)(flashchange_freeze_freq)) {
+			freeze = !freeze;
+			*((bool*)pg_FullScenarioVarPointers[_freeze]) = freeze;
+		}
+		bool fixedMesh0Pose = false;
+		bool fixedMesh1Pose = false;
+		if ((*control_function)(flashchangeMesh0Pose_freq)) {
+			fixedMesh0Pose = true;
+		}
+		if ((*control_function)(flashchangeMesh1Pose_freq)) {
+			fixedMesh1Pose = true;
+		}
+		if (fixedMesh0Pose || fixedMesh1Pose) {
 			int chosen_mesh_LibraryPose = -1;
 			// bianry animation between two indentical poses
 			(*((int*)pg_FullScenarioVarPointers[_mesh_anime])) = 1;
 			mesh_anime = 1;
 			// two poses are memorized: twice the randomly selected pose;
 			for (int indMeshFile = 0; indMeshFile < std::min(2, int(pg_Meshes[pg_ind_scenario].size())); indMeshFile++) {
-				if ((indMeshFile == 0 && fixedLeftPose) || (indMeshFile == 1 && fixedRightPose)) {
+				if ((indMeshFile == 0 && fixedMesh0Pose) || (indMeshFile == 1 && fixedMesh1Pose)) {
 					if (chosen_mesh_LibraryPose == -1) {
-						chosen_mesh_LibraryPose = int(rand_0_1 * pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses) % pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
+						chosen_mesh_LibraryPose = mesh_anime_min_range + int(rand_0_1 * (mesh_anime_max_range - mesh_anime_min_range + 1)) 
+							% (mesh_anime_max_range - mesh_anime_min_range + 1);
+						chosen_mesh_LibraryPose = max(min(chosen_mesh_LibraryPose, mesh_anime_max_range), mesh_anime_min_range) 
+							% pg_Mesh_Animations[pg_ind_scenario][indMeshFile].pg_nb_LibraryPoses;
 					}
 					pg_copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose, 0);
 					pg_copyLibraryPoseToAnimationPose(indMeshFile, chosen_mesh_LibraryPose, 1);
@@ -353,14 +331,6 @@ void pg_flash_control(bool (*control_function)(int)) {
 		}
 	}
 
-#if defined(var_flashchange_freeze_freq)
-	if (pg_FullScenarioActiveVars[pg_ind_scenario][_flashchange_freeze_freq]) {
-		if ((*control_function)(flashchange_freeze_freq)) {
-			freeze = !freeze;
-			*((bool*)pg_FullScenarioVarPointers[_freeze]) = freeze;
-		}
-	}
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

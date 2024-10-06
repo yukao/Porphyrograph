@@ -2891,7 +2891,7 @@ void pg_draw_scene(DrawingMode mode) {
 		pg_printOglError(60);
 
 		//////////////////////////////////////
-		// mesh pass #2b
+		// mesh pass #3b
 		// the meshes are displayed together with the particles except for augmented reality or mesh rendering bypassing
 		// where they are displayed last
 		if (pg_FullScenarioActiveVars[pg_ind_scenario][_activeMeshes]) {

@@ -22,8 +22,9 @@ int   flashchangeClip2Left_freq = 0;
 int   flashchangeClipRight_freq = 0;
 int   flashchangeClip2Right_freq = 0;
 int   flashchangeScreenLayout_freq = 0;
-int   flashchangeRightHandPose_freq = 0;
-int   flashchangeLeftHandPose_freq = 0;
+int   flashchange_freeze_freq = 0;
+int   flashchangeMesh0Pose_freq = 0;
+int   flashchangeMesh1Pose_freq = 0;
 int   flashchange_mesh_palette_freq = 0;
 int   flashchange_mesh_anime_freq = 0;
 int   flashchange_mesh_motion_freq = 0;
@@ -88,11 +89,12 @@ float clip_mix             = float(0);
 float clip_nudge_factor    = float(0);
 float clip_scratch_factor  = float(1.8);
 float clipCaptFreq         = float(24);
+int   clip_min_range       = 0;
+int   clip_max_range       = 0;
 string playing_clipNameLeft = "NULL";
 string playing_clipNameRight = "NULL";
 string playing_secondClipNameLeft = "NULL";
 string playing_secondClipNameRight = "NULL";
-string clip_in_range        = "0-56";
 int   activeClipArts       = 0;
 int   moving_messages      = 0;
 float ClipArt_layer_color_preset[(PG_NB_CLIPART_LAYERS+1)] = {0.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, };
@@ -426,7 +428,7 @@ float mesh_anime_speed     = float(1);
 float mesh_motion_speed    = float(0.25);
 int   mesh_anime           = 0;
 int   mesh_anime_min_range = 0;
-int   mesh_anime_max_range = 1;
+int   mesh_anime_max_range = 0;
 int   mesh_motion          = 0;
 float mesh_color           = float(0);
 float mesh_grey            = float(0);
@@ -494,6 +496,7 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_int,
 	_pg_int,
 	_pg_int,
+	_pg_int,
 	_pg_float,
 	_pg_float,
 	_pg_int,
@@ -550,7 +553,8 @@ VarTypes pg_FullScenarioVarTypes[_MaxInterpVarIDs] = {
 	_pg_float,
 	_pg_float,
 	_pg_float,
-	_pg_string,
+	_pg_int,
+	_pg_int,
 	_pg_string,
 	_pg_string,
 	_pg_string,
@@ -961,6 +965,7 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
+	{-1, -1},
 	{1, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
 	{0, PG_NB_TRACKS},
@@ -971,6 +976,7 @@ int pg_FullScenarioVarIndiceRanges[_MaxInterpVarIDs][2] = {
 	{-1, -1},
 	{-1, -1},
 	{1, (PG_NB_MASTER_MASKS+1)},
+	{-1, -1},
 	{-1, -1},
 	{-1, -1},
 	{-1, -1},
@@ -1410,8 +1416,9 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&flashchangeClipRight_freq,
 	(void *)&flashchangeClip2Right_freq,
 	(void *)&flashchangeScreenLayout_freq,
-	(void *)&flashchangeRightHandPose_freq,
-	(void *)&flashchangeLeftHandPose_freq,
+	(void *)&flashchange_freeze_freq,
+	(void *)&flashchangeMesh0Pose_freq,
+	(void *)&flashchangeMesh1Pose_freq,
 	(void *)&flashchange_mesh_palette_freq,
 	(void *)&flashchange_mesh_anime_freq,
 	(void *)&flashchange_mesh_motion_freq,
@@ -1476,11 +1483,12 @@ void * pg_FullScenarioVarPointers[_MaxInterpVarIDs] = {
 	(void *)&clip_nudge_factor,
 	(void *)&clip_scratch_factor,
 	(void *)&clipCaptFreq,
+	(void *)&clip_min_range,
+	(void *)&clip_max_range,
 	(void *)&playing_clipNameLeft,
 	(void *)&playing_clipNameRight,
 	(void *)&playing_secondClipNameLeft,
 	(void *)&playing_secondClipNameRight,
-	(void *)&clip_in_range,
 	(void *)&activeClipArts,
 	(void *)&moving_messages,
 	(void *)&ClipArt_layer_color_preset,
@@ -1945,10 +1953,6 @@ void playing_secondClipNameRight_callBack(pg_Parameter_Input_Type param_input_ty
 void playing_secondClipNameRight_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	playing_secondClipNameRight_callBack(param_input_type, scenario_or_gui_command_value.val_string);
 }
-void clip_in_range_callBack(pg_Parameter_Input_Type param_input_type, string scenario_or_gui_command_value);
-void clip_in_range_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
-	clip_in_range_callBack(param_input_type, scenario_or_gui_command_value.val_string);
-}
 void movieCaptFreq_callBack(pg_Parameter_Input_Type param_input_type, float scenario_or_gui_command_value);
 void movieCaptFreq_callBack_generic(pg_Parameter_Input_Type param_input_type, ScenarioValue scenario_or_gui_command_value) {
 	movieCaptFreq_callBack(param_input_type, float(scenario_or_gui_command_value.val_num));
@@ -2148,6 +2152,7 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	&flashPhotoTrkLength_callBack_generic,
 	NULL,
 	NULL,
@@ -2203,11 +2208,12 @@ void (*pg_FullScenarioVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Type, S
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
 	&playing_clipNameLeft_callBack_generic,
 	&playing_clipNameRight_callBack_generic,
 	&playing_secondClipNameLeft_callBack_generic,
 	&playing_secondClipNameRight_callBack_generic,
-	&clip_in_range_callBack_generic,
 	NULL,
 	NULL,
 	NULL,
@@ -2774,6 +2780,8 @@ void (*pg_FullScenarioArrayVarCallbacks[_MaxInterpVarIDs])(pg_Parameter_Input_Ty
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
 	&part_path_follow_callBack_generic,
 	NULL,
 	&part_path_repulse_callBack_generic,
@@ -3063,8 +3071,9 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "flashchangeClipRight_freq",
   "flashchangeClip2Right_freq",
   "flashchangeScreenLayout_freq",
-  "flashchangeRightHandPose_freq",
-  "flashchangeLeftHandPose_freq",
+  "flashchange_freeze_freq",
+  "flashchangeMesh0Pose_freq",
+  "flashchangeMesh1Pose_freq",
   "flashchange_mesh_palette_freq",
   "flashchange_mesh_anime_freq",
   "flashchange_mesh_motion_freq",
@@ -3129,11 +3138,12 @@ std::string pg_FullScenarioVarMessages[_MaxInterpVarIDs] = {
   "clip_nudge_factor",
   "clip_scratch_factor",
   "clipCaptFreq",
+  "clip_min_range",
+  "clip_max_range",
   "playing_clipNameLeft",
   "playing_clipNameRight",
   "playing_secondClipNameLeft",
   "playing_secondClipNameRight",
-  "clip_in_range",
   "activeClipArts",
   "moving_messages",
   "ClipArt_layer_color_preset",
@@ -3554,19 +3564,6 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
-  _pg_pulsed_absolute,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
-  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
@@ -3579,6 +3576,20 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_absolute,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
+  _pg_pulsed_none,
   _pg_pulsed_absolute,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
@@ -3586,6 +3597,7 @@ PulseTypes ScenarioVarPulse[_MaxInterpVarIDs] = {
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_absolute,
+  _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
   _pg_pulsed_none,
@@ -3989,8 +4001,9 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "flashchangeClipRight_freq",
   "flashchangeClip2Right_freq",
   "flashchangeScreenLayout_freq",
-  "flashchangeRightHandPose_freq",
-  "flashchangeLeftHandPose_freq",
+  "flashchange_freeze_freq",
+  "flashchangeMesh0Pose_freq",
+  "flashchangeMesh1Pose_freq",
   "flashchange_mesh_palette_freq",
   "flashchange_mesh_anime_freq",
   "flashchange_mesh_motion_freq",
@@ -4055,11 +4068,12 @@ std::string pg_FullScenarioVarStrings[_MaxInterpVarIDs] = {
   "clip_nudge_factor",
   "clip_scratch_factor",
   "clipCaptFreq",
+  "clip_min_range",
+  "clip_max_range",
   "playing_clipNameLeft",
   "playing_clipNameRight",
   "playing_secondClipNameLeft",
   "playing_secondClipNameRight",
-  "clip_in_range",
   "activeClipArts",
   "moving_messages",
   "ClipArt_layer_color_preset",
