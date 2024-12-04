@@ -1506,7 +1506,9 @@ void pixel_out( void ) {
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
         
         // if( abs(surrpixel_nextPosition.x) <= 0.5 
-        //           && abs(surrpixel_nextPosition.y) <= 0.5 ) {
+        //           && abs(surrpixel_nextPosition.y) <= 0.5 ) 
+        vec2 radiusNoise = 2.0 * vec2(snoise( pixelTexCoordLocPOT , noiseUpdateScale * 100 ) ,
+                                  snoise( pixelTexCoordLocPOT + vec2(2.0937,9.4872) , 100 )); // 
         if( length(surrpixel_nextPosition) <= 0.5 ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
@@ -1515,8 +1517,8 @@ void pixel_out( void ) {
           nb_cumultated_pixels++;
         }
         // radius pixel extension for (S,N,E,W) neighbors
-        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
+        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius * radiusNoise.x)
+                  && abs(surrpixel_nextPosition.y) <= (pixel_radius * radiusNoise.y)) {
           float dist = pixel_radius - length(surrpixel_nextPosition);
           out_color_pixel += surrpixel_localColor.rgb;
           // adds high frequency random speed to make them leave the initial pixel
@@ -1599,8 +1601,10 @@ void pixel_out( void ) {
         // the current step is added to the position
         surrpixel_nextPosition 
                  = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
-        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
+        vec2 radiusNoise = 2.0 * vec2(snoise( pixelTexCoordLocPOT , noiseUpdateScale * 100 ) ,
+                                  snoise( pixelTexCoordLocPOT + vec2(2.0937,9.4872) , 100 )); // 
+        if( abs(surrpixel_nextPosition.x) <= (pixel_radius * radiusNoise.x)
+                  && abs(surrpixel_nextPosition.y) <= (pixel_radius * radiusNoise.y) ) {
           out_color_pixel += surrpixel_localColor.rgb;
           out_speed_pixel += surrpixel_speed;
           // computes the position of the pixel

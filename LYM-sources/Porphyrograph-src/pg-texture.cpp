@@ -1342,7 +1342,7 @@ bool ClipFramesData::pg_toGPUClipFrames(int w, int h, GLenum texturefilter, int 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// CLIP FRAME LOADING
+// CLIP FRAME LOADINGx
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::string pg_get_stem(const fs::path& p) { return (p.stem().string()); }
@@ -1368,6 +1368,7 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 		pg_nbClips[indScenario] = 0;
 
 		if (pg_ClipDirectory[indScenario] == "") {
+			std::cout << ")" << std::endl << std::endl;
 			return false;
 		}
 
@@ -1397,7 +1398,7 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 		////////////////////////////////////////////
 		// LOADS IMAGES FROM FOLDERS
 		if (pg_nbClips[indScenario] <= 0) {
-			std::cout << "Clip frames loading completed 0 files." << std::endl;
+			std::cout << ")" << std::endl << std::endl;
 			return false;
 		}
 		//std::cout << "Clip frames counting "<< pg_nbCompressedClipFrames << " completed in " << pg_nbClips << " dirs." << std::endl;
@@ -1545,7 +1546,6 @@ bool  pg_ReadInitalClipFramesTextures(void) {
 			}
 		}
 	}
-
 	return valret;
 }
 

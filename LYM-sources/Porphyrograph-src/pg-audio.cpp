@@ -86,6 +86,7 @@ bool pa_AudioOut::pa_openMyStream(PaDeviceIndex index, int* channelCount, int* s
         outputParameters.channelCount = soundfile_data.sound_file_info.channels;
         *channelCount = outputParameters.channelCount;
         *sampleRate = soundfile_data.sound_file_info.samplerate;
+        printf("Sound file channel count %d sample rate %d\n", *channelCount, *sampleRate);
         outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = NULL;
@@ -103,7 +104,7 @@ bool pa_AudioOut::pa_openMyStream(PaDeviceIndex index, int* channelCount, int* s
 
         if (err != paNoError)
         {
-            printf("Failed to open stream to device\n");
+            printf("Failed to open stream to device error %d\n", err);
             return false;
         }
 
@@ -303,7 +304,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 else {
                     fprintf(stderr, "Error number: %d\n", paInit->result());
                     fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
-                    sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); throw 100;
+                    sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); // throw 100;
                 }
 
                 // starting stream
@@ -313,7 +314,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 else {
                     fprintf(stderr, "Error number: %d\n", paInit->result());
                     fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
-                    sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); throw 100;
+                    sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); // throw 100;
                 }
             }
 

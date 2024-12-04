@@ -1,8 +1,8 @@
 RANK,0
-VERBATIM,mesh_anime_min_range
-TYPE,int
-ID,mesh_anime_min_range_min_range
+VERBATIM,photo contrast
+TYPE,float
+ID,photo contrast_pulse
 FUNCTION,NULL
-GUI,mesh_anime_min_range
+GUI,photo contrast_pulse
 SHADER,*
 PULSE,*

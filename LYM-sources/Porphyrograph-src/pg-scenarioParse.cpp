@@ -245,6 +245,9 @@ void pg_setWindowDimensions(void) {
 
 	printf("Geometry initialized. Working size: %dx%d margin %d & full size: %dx%d. Working size PoT: %dx%d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_rightWindowVMargin,
 		PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, pg_workingWindow_width_powerOf2, pg_window_height_powerOf2);
+	printf("working window doubling (1/0) %d Margin:%d TopLeft %dx%d\n",
+		double_window, pg_rightWindowVMargin, window_x, window_y);
+
 }
 
 
@@ -1321,16 +1324,6 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 	if (nError != 0) {
 		// handle your error here
 	}
-
-	// defines glut window
-	pg_setWindowDimensions();
-
-	if (indScenario == 0) {
-		printf("Window %dx%d working window width:%d working window doubling (1/0) %d Margin:%d TopLeft %dx%d\n",
-			PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, pg_workingWindow_width, double_window,
-			pg_rightWindowVMargin, window_x, window_y);
-	}
-
 }	
 
 // loads the full scenario

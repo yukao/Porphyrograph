@@ -149,7 +149,6 @@ bool  pg_loadAllDiaporamas(void) {
 		}
 		if (pg_nbCompressedImageDirs[indScenario] <= 0) {
 			std::cout << "0 images) ";
-			std::cout << std::endl;
 		}
 		else {
 			std::cout << pg_nbCompressedImages[indScenario] << " images from " << pg_nbCompressedImageDirs[indScenario] << " folders), ";

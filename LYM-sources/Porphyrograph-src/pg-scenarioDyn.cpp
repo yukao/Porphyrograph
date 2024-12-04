@@ -1091,7 +1091,7 @@ void pg_StartNewScene(int ind_scene, double delta_time) {
 
 	if (pg_CurrentScene) {
 		std::cout << "Scene: " << pg_CurrentScene->scene_IDs << std::endl;
-		// fprintf(pg_csv_log_file, "Scene:¨%d %s\n", pg_CurrentSceneIndex, pg_CurrentScene->scene_IDs.c_str());
+		fprintf(pg_csv_log_file, "Scene %d,%s\n", pg_CurrentSceneIndex + 1, pg_CurrentScene->scene_IDs.c_str());
 		// reinitialization of the interpolation control variables at the beginning of a new scene
 		for (int indP = 0; indP < pg_ScenarioVarNb[pg_ind_scenario]; indP++) {
 			int indVar = pg_ConfigScenarioVarRank[pg_ind_scenario][indP];

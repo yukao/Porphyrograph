@@ -1,5 +1,5 @@
 // constants used for table size and c++ non dynamic allocation
-constexpr int PG_WINDOW_WIDTH = 1920;
+constexpr int PG_WINDOW_WIDTH = 3840;
 constexpr int PG_WINDOW_HEIGHT = 1080;
 constexpr int PG_MESSAGE_PIXEL_LENGTH = 128;
 constexpr int PG_MAX_NETWROK_MESSAGE_LENGTH = 65535;

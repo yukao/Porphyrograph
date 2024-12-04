@@ -346,53 +346,53 @@ void pg_initWebcamParameters(void) {
 	printf("Current Cam saturation %.2f\n", pg_CameraCurrent_saturation);
 	//printf("Current Cam WB         %.2f %.2f\n", pg_CameraCurrent_WB_B, pg_CameraCurrent_WB_R);
 
-	if (*((float*)pg_FullScenarioVarPointers[_cameraExposure]) != pg_CameraCurrent_exposure) {
-		printf("cv VideoCapture set exposure new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraExposure]), pg_CameraCurrent_exposure);
-		//pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float *)pg_FullScenarioVarPointers[_cameraExposure])));
-		pg_CameraCurrent_exposure = *((float*)pg_FullScenarioVarPointers[_cameraExposure]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraExposure].val_num) != pg_CameraCurrent_exposure) {
+		printf("cv VideoCapture set exposure new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraExposure].val_num), pg_CameraCurrent_exposure);
+		//pg_webCam_capture.set(CAP_PROP_EXPOSURE, (*((float *)pg_InitialValuesInterpVar[pg_ind_scenario][_cameraExposure].val_num)));
+		pg_CameraCurrent_exposure = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraExposure].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraGain]) != pg_CameraCurrent_gain) {
-		printf("cv VideoCapture set gain new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraGain]), pg_CameraCurrent_gain);
-		pg_webCam_capture.set(CAP_PROP_GAIN, *((float*)pg_FullScenarioVarPointers[_cameraGain]));
-		pg_CameraCurrent_gain = *((float*)pg_FullScenarioVarPointers[_cameraGain]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGain].val_num) != pg_CameraCurrent_gain) {
+		printf("cv VideoCapture set gain new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGain].val_num), pg_CameraCurrent_gain);
+		pg_webCam_capture.set(CAP_PROP_GAIN, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGain].val_num));
+		pg_CameraCurrent_gain = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGain].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraBrightness]) != pg_CameraCurrent_brightness) {
-		printf("cv VideoCapture set brightness new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraBrightness]), pg_CameraCurrent_brightness);
-		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, *((float*)pg_FullScenarioVarPointers[_cameraBrightness]));
-		pg_CameraCurrent_brightness = *((float*)pg_FullScenarioVarPointers[_cameraBrightness]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraBrightness].val_num) != pg_CameraCurrent_brightness) {
+		printf("cv VideoCapture set brightness new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraBrightness].val_num), pg_CameraCurrent_brightness);
+		pg_webCam_capture.set(CAP_PROP_BRIGHTNESS, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraBrightness].val_num));
+		pg_CameraCurrent_brightness = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraBrightness].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraSaturation]) != pg_CameraCurrent_saturation) {
-		printf("cv VideoCapture set saturation new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraSaturation]), pg_CameraCurrent_saturation);
-		pg_webCam_capture.set(CAP_PROP_SATURATION, *((float*)pg_FullScenarioVarPointers[_cameraSaturation]));
-		pg_CameraCurrent_saturation = *((float*)pg_FullScenarioVarPointers[_cameraSaturation]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraSaturation].val_num) != pg_CameraCurrent_saturation) {
+		printf("cv VideoCapture set saturation new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraSaturation].val_num), pg_CameraCurrent_saturation);
+		pg_webCam_capture.set(CAP_PROP_SATURATION, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraSaturation].val_num));
+		pg_CameraCurrent_saturation = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraSaturation].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraContrast]) != pg_CameraCurrent_contrast) {
-		printf("cv VideoCapture set contrast new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraContrast]), pg_CameraCurrent_contrast);
-		pg_webCam_capture.set(CAP_PROP_CONTRAST, *((float*)pg_FullScenarioVarPointers[_cameraContrast]));
-		pg_CameraCurrent_contrast = *((float*)pg_FullScenarioVarPointers[_cameraContrast]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraContrast].val_num) != pg_CameraCurrent_contrast) {
+		printf("cv VideoCapture set contrast new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraContrast].val_num), pg_CameraCurrent_contrast);
+		pg_webCam_capture.set(CAP_PROP_CONTRAST, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraContrast].val_num));
+		pg_CameraCurrent_contrast = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraContrast].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraGamma]) != pg_CameraCurrent_gamma) {
-		printf("cv VideoCapture set gamma new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraGamma]), pg_CameraCurrent_gamma);
-		pg_webCam_capture.set(CAP_PROP_GAMMA, *((float*)pg_FullScenarioVarPointers[_cameraGamma]));
-		pg_CameraCurrent_contrast = *((float*)pg_FullScenarioVarPointers[_cameraGamma]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGamma].val_num) != pg_CameraCurrent_gamma) {
+		printf("cv VideoCapture set gamma new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGamma].val_num), pg_CameraCurrent_gamma);
+		pg_webCam_capture.set(CAP_PROP_GAMMA, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGamma].val_num));
+		pg_CameraCurrent_contrast = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraGamma].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraWB_R]) != pg_CameraCurrent_WB_R
-		&& *((float*)pg_FullScenarioVarPointers[_cameraWB_R]) >= 0) {
-		printf("cv VideoCapture set wbR new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraWB_R]), pg_CameraCurrent_WB_R);
-		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, *((float*)pg_FullScenarioVarPointers[_cameraWB_R]));
-		pg_CameraCurrent_WB_R = *((float*)pg_FullScenarioVarPointers[_cameraWB_R]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_R].val_num) != pg_CameraCurrent_WB_R
+		&& float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_R].val_num) >= 0) {
+		printf("cv VideoCapture set wbR new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_R].val_num), pg_CameraCurrent_WB_R);
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_RED_V, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_R].val_num));
+		pg_CameraCurrent_WB_R = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_R].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
-	if (*((float*)pg_FullScenarioVarPointers[_cameraWB_B]) != pg_CameraCurrent_WB_B) {
-		printf("cv VideoCapture set wbB new/current  %.2f / %.2f\n", *((float*)pg_FullScenarioVarPointers[_cameraWB_B]), pg_CameraCurrent_WB_B);
-		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, *((float*)pg_FullScenarioVarPointers[_cameraWB_B]));
-		pg_CameraCurrent_WB_B = *((float*)pg_FullScenarioVarPointers[_cameraWB_B]);
+	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_B].val_num) != pg_CameraCurrent_WB_B) {
+		printf("cv VideoCapture set wbB new/current  %.2f / %.2f\n", float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_B].val_num), pg_CameraCurrent_WB_B);
+		pg_webCam_capture.set(CAP_PROP_WHITE_BALANCE_BLUE_U, float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_B].val_num));
+		pg_CameraCurrent_WB_B = float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraWB_B].val_num);
 		pg_LastCameraParameterChange_Frame = pg_FrameNo;
 	}
 
@@ -864,6 +864,7 @@ void pg_loadCameraFrame(bool initial_capture, int IPCam_no) {
 		int camera_frame_height = -1;
 		if (pg_camera_frame.cols == 1920 && pg_camera_frame.rows == 1080) {
 			// camera frame dimensions and offset
+			//printf("HD camera\n");
 			camera_x_offset = 0;
 			camera_frame_width = pg_camera_frame.cols;
 			camera_y_offset = 0;
@@ -872,6 +873,7 @@ void pg_loadCameraFrame(bool initial_capture, int IPCam_no) {
 		else {
 			// tries to preserve ratio
 			float window_ratio = float(pg_workingWindow_width) / PG_WINDOW_HEIGHT;
+			//printf("screen ratio %d x %d %.2f\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, window_ratio);
 			if (pg_camera_frame.rows * window_ratio < pg_camera_frame.cols) {
 				//printf("camera size height leading\n");
 				camera_frame_width = int(pg_camera_frame.rows * window_ratio);
@@ -884,22 +886,22 @@ void pg_loadCameraFrame(bool initial_capture, int IPCam_no) {
 				camera_frame_width = pg_camera_frame.cols;
 				camera_frame_height = pg_camera_frame.rows;
 				if (pg_camera_frame.cols / window_ratio < pg_camera_frame.rows) {
-					// printf("horizontal offset\n");
+					 //printf("horizontal offset\n");
 					camera_x_offset = (int(pg_camera_frame.rows * window_ratio) - pg_camera_frame.cols) / 2;
 					camera_y_offset = 0;
 				}
 				else {
-					// printf("camera height respecting\n");
+					 //printf("camera height respecting\n");
 					camera_frame_height = pg_camera_frame.rows;
 					camera_x_offset = 0;
 					camera_y_offset = 0;
 				}
 			}
-			float ratioSubImage = 1.0f;
-			camera_x_offset = camera_x_offset + int(camera_frame_width * (1.f - ratioSubImage) * 0.5);
-			camera_frame_width = int(camera_frame_width * ratioSubImage);
-			camera_y_offset = camera_y_offset + int(camera_frame_height * (1.f - ratioSubImage) * 0.5);
-			camera_frame_height = int(camera_frame_height * ratioSubImage);
+			//float ratioSubImage = 1.0f;
+			//camera_x_offset = camera_x_offset + int(camera_frame_width * (1.f - ratioSubImage) * 0.5);
+			//camera_frame_width = int(camera_frame_width * ratioSubImage);
+			//camera_y_offset = camera_y_offset + int(camera_frame_height * (1.f - ratioSubImage) * 0.5);
+			//camera_frame_height = int(camera_frame_height * ratioSubImage);
 		}
 
 		// first camera frame allocation
@@ -910,9 +912,13 @@ void pg_loadCameraFrame(bool initial_capture, int IPCam_no) {
 			pg_camera_frame_height = camera_frame_height;
 		}
 		else {
-			if (pg_camera_x_offset != camera_x_offset || pg_camera_frame_width != camera_frame_width || pg_camera_y_offset != camera_y_offset || pg_camera_frame_height != camera_frame_height) {
-				sprintf(pg_errorStr, "Camera frames differ in size: wxh %dx%d / %dx%d offset xy %dx%d / %dx%d\n",
-					pg_camera_frame_width, pg_camera_frame_height, camera_frame_width, camera_frame_height, pg_camera_x_offset, pg_camera_y_offset, camera_x_offset, camera_y_offset); pg_ReportError(pg_errorStr); throw 425;
+			if (pg_camera_x_offset != camera_x_offset || pg_camera_y_offset != camera_y_offset) {
+				sprintf(pg_errorStr, "Camera frames differ in offset xy %dx%d / %dx%d\n",
+					pg_camera_x_offset, pg_camera_y_offset, camera_x_offset, camera_y_offset); pg_ReportError(pg_errorStr);
+			}
+			if (pg_camera_frame_width != camera_frame_width || pg_camera_frame_height != camera_frame_height) {
+				sprintf(pg_errorStr, "Camera frames differ in size: wxh %dx%d / %dx%d\n",
+					pg_camera_frame_width, pg_camera_frame_height, camera_frame_width, camera_frame_height); pg_ReportError(pg_errorStr); 
 			}
 		}
 
@@ -1612,8 +1618,10 @@ void cameraNo_callBack(pg_Parameter_Input_Type param_input_type, int scenario_or
 		if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
 			//printf("camera current %d new %d param type %d\n", pg_current_active_cameraNo, cameraNo, param_input_type);
 			if (cameraNo != pg_current_active_cameraNo) {
-				pg_releaseCameraCapture();
-				pg_openCameraCaptureAndLoadFrame();
+				if (pg_FrameNo != -1) {
+					pg_releaseCameraCapture();
+					pg_openCameraCaptureAndLoadFrame();
+				}
 			}
 		}
 	}

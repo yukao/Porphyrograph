@@ -2763,11 +2763,12 @@ void pg_draw_scene(DrawingMode mode) {
 		cv::String imageFileName;
 		pg_Svg_Capture_param.indImgSnapshot++;
 
-		imageFileName = format("%s%s-%s-%04d.svg",
+		imageFileName = format("%s%s-%s-%04d-%02d.svg",
 			pg_snapshots_dir_path_name.c_str(),
 			pg_Svg_Capture_param.Img_file_name.c_str(),
 			pg_date_stringStream.str().c_str(),
-			pg_Svg_Capture_param.indImgSnapshot);
+			pg_Svg_Capture_param.indImgSnapshot,
+			pg_CurrentSceneIndex + 1);
 		pg_logCurrentLineSceneVariables(imageFileName);
 
 		pg_writesvg(imageFileName);
@@ -2781,19 +2782,22 @@ void pg_draw_scene(DrawingMode mode) {
 
 		pg_Png_Capture_param.indImgSnapshot++;
 
-		imageFileName = format("%s%s-%s-%04d.png",
+		imageFileName = format("%s%s-%s-%04d-%02d.png",
 			pg_snapshots_dir_path_name.c_str(),
 			pg_Png_Capture_param.Img_file_name.c_str(),
 			pg_date_stringStream.str().c_str(),
-			pg_Png_Capture_param.indImgSnapshot);
+			pg_Png_Capture_param.indImgSnapshot,
+			pg_CurrentSceneIndex + 1);
 		struct stat buffer;
 		int count = 0;
 		while (stat(imageFileName.c_str(), &buffer) == 0) {
-			imageFileName = format("%s%s-%s-%04d-%03d.png",
+			imageFileName = format("%s%s-%s-%04d-%04d-%02d.png",
 				pg_snapshots_dir_path_name.c_str(),
 				pg_Png_Capture_param.Img_file_name.c_str(),
 				pg_date_stringStream.str().c_str(),
-				pg_Png_Capture_param.indImgSnapshot, count);
+				pg_Png_Capture_param.indImgSnapshot, 
+				count,
+				pg_CurrentSceneIndex + 1);
 			count++;
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);
@@ -2822,19 +2826,21 @@ void pg_draw_scene(DrawingMode mode) {
 	
 		pg_Jpg_Capture_param.indImgSnapshot++;
 
-		imageFileName = format("%s%s-%s-%04d.jpg",
+		imageFileName = format("%s%s-%s-%04d-%02d.jpg",
 			pg_snapshots_dir_path_name.c_str(),
 			pg_Jpg_Capture_param.Img_file_name.c_str(),
 			pg_date_stringStream.str().c_str(),
-			pg_Jpg_Capture_param.indImgSnapshot);
+			pg_Jpg_Capture_param.indImgSnapshot,
+			pg_CurrentSceneIndex + 1);
 		struct stat buffer;
 		int count = 0;
 		while (stat(imageFileName.c_str(), &buffer) == 0) {
-			imageFileName = format("%s%s-%s-%04d-%03d.jpg",
+			imageFileName = format("%s%s-%s-%04d-%03d-%02d.jpg",
 				pg_snapshots_dir_path_name.c_str(),
 				pg_Jpg_Capture_param.Img_file_name.c_str(),
 				pg_date_stringStream.str().c_str(),
-				pg_Jpg_Capture_param.indImgSnapshot, count);
+				pg_Jpg_Capture_param.indImgSnapshot, count,
+				pg_CurrentSceneIndex + 1);
 			count++;
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);

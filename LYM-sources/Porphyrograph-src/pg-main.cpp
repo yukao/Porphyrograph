@@ -239,9 +239,6 @@ void pg_window_reshape(GLsizei width, GLsizei height) {
 	//  printf("reshape main win %d %d %d\n" , PG_WINDOW_WIDTH , PG_WINDOW_HEIGHT , width , height );
 	printf("Resize Window %dx%d\n", PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT);
 
-	pg_setWindowDimensions();
-	pg_initRenderingMatrices();
-
 #ifndef PG_WACOM_TABLET
 	printf("************* Version for mouse pointer **********\n");
 #else
@@ -920,12 +917,12 @@ int main(int argcMain, char** argvMain) {
 	//std::cout << 1 + ltm->tm_sec << std::endl;
 
 	pg_date_stringStream
+		<< std::setfill('0') << std::setw(2) << (1900 + ltm->tm_year) << "_"
 		<< std::setfill('0') << std::setw(2) << 1 + ltm->tm_mon << "-"
 		<< std::setfill('0') << std::setw(2) << ltm->tm_mday << "-"
-		<< std::setfill('0') << std::setw(2) << (1900 + ltm->tm_year) << "_"
 		<< std::setfill('0') << std::setw(2) << ltm->tm_hour << "-"
 		<< std::setfill('0') << std::setw(2) << ltm->tm_min << "-"
-		<< ltm->tm_year - 100 << std::flush;
+		<< ltm->tm_sec << std::flush;
 
 	// new window
 	pg_CurrentWindow = new pg_WindowData();
@@ -1015,17 +1012,27 @@ int main(int argcMain, char** argvMain) {
 		}
 	}
 
+	// loads the shaders
+	pg_loadAllShaders();
+	pg_printOglError(12);
+
+	// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
+	// required to have the local scenario values for the window size
+	pg_initializeScenearioVariables();
+
 	// matrices, geometry, shaders and FBOs
+	// defines working window size
+	if (pg_ind_scenario == 0) {
+		pg_setWindowDimensions();
+	}
+
+	// defines rendering matrices according to window size
 	pg_initRenderingMatrices();
 	pg_printOglError(10);
 
 	// buiilds the quads to be rendered
 	pg_initGeometry_quads();
 	pg_printOglError(11);
-	
-	// loads the shaders
-	pg_loadAllShaders();
-	pg_printOglError(12);
 
 	// initializes the FBOS
 	pg_initFBOTextureImagesAndRendering();
@@ -1058,9 +1065,6 @@ int main(int argcMain, char** argvMain) {
 #if defined(PG_RENOISE)
 	pg_send_message_udp((char *)"", (char *)"/scene/1/launch", (char *)"udp_RN_send");
 #endif
-
-	// INITIALIZES ALL SCENARIO VARIABLES AND ASSIGNS THEM THE VALUES OF THE FIRST SCENARIO LINE
-	pg_initializeScenearioVariables();
 
 	// GUI DISPLAY & LOG FILE LOGGING
 	// GUI initialization

@@ -660,7 +660,7 @@ void pg_parseScenario_ClipArt(std::ifstream& scenarioFin, int indScenario) {
 	if (pg_ClipArts[indScenario].size() > 0) {
 		printf("\n");
 	}
-	printf("Nb clip arts %d config %d\n", (int)pg_ClipArts[indScenario].size(), indScenario);
+	//printf("Nb clip arts %d config %d\n", (int)pg_ClipArts[indScenario].size(), indScenario);
 	if (pg_ClipArts[indScenario].size() > 0) {
 		pg_last_activated_ClipArt = &(pg_ClipArts[indScenario][0]);
 	}
