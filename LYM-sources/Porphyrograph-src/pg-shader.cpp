@@ -145,7 +145,8 @@ GLint uniform_Update_texture_fs_Brushes[PG_MAX_SCENARIOS] = {-1};  // pen patter
 GLint uniform_Update_texture_fs_Camera_frame[PG_MAX_SCENARIOS] = {-1};  // camera frame
 GLint uniform_Update_texture_fs_Camera_BG[PG_MAX_SCENARIOS] = {-1};  // current camera BG capture
 GLint uniform_Update_texture_fs_Movie_frame[PG_MAX_SCENARIOS] = {-1};  // movie frame
-GLint uniform_Update_texture_fs_Noise[PG_MAX_SCENARIOS] = {-1};  // 3D noise
+GLint uniform_Update_texture_fs_Noise[PG_MAX_SCENARIOS] = { -1 };  // 3D noise
+GLint uniform_Update_texture_fs_Pixel_Noise[PG_MAX_SCENARIOS] = { -1 };  // 3D pixel noise
 GLint uniform_Update_texture_fs_RepopDensity[PG_MAX_SCENARIOS] = {-1};  // repop density
 GLint uniform_Update_texture_fs_Photo0[PG_MAX_SCENARIOS] = {-1};  // photo[0]
 GLint uniform_Update_texture_fs_Photo1[PG_MAX_SCENARIOS] = {-1};  // photo[1]
@@ -308,7 +309,7 @@ void pg_printShaderCompileLog(GLuint obj) {
 		printf("Shader compilation failed:\n%s\n", infoLog);  throw 4301;
 	}
 
-	delete[] infoLog;
+	delete infoLog;
 }
 
 void pg_printShaderLinkLog(GLuint obj) {
@@ -335,7 +336,7 @@ void pg_printShaderLinkLog(GLuint obj) {
 		printf("Shader linking failed:\n%s\n", infoLog); throw 4302;
 	}
 
-	delete[] infoLog;
+	delete infoLog;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +407,7 @@ int pg_loadshader(string filename, GLuint shader) {
 
 	glShaderSource(shader, 1, (const char**)&shaderSource, NULL);
 
-	delete[] shaderSource;
+	delete shaderSource;
 
 	return 0; // No Error
 }
@@ -484,7 +485,7 @@ void pg_loadAllShaders(void) {
 					glDetachShader(pg_shader_programme[indScenario][shader_type], pg_shader[shader_stage]);
 				}
 				// memory release
-				delete[] pg_shader;
+				delete pg_shader;
 			}
 			else {
 				pg_shader_programme[indScenario][shader_type] = 0;
@@ -659,6 +660,7 @@ void pg_loadAllShaders(void) {
 		pg_allocateBindAndCheckUniform(indScenario, uniform_Update_texture_fs_Camera_BG, "uniform_Update_texture_fs_Camera_BG", pg_enum_shader_Update);  // current background frame
 		pg_allocateBindAndCheckUniform(indScenario, uniform_Update_texture_fs_Movie_frame, "uniform_Update_texture_fs_Movie_frame", pg_enum_shader_Update);  // movie frame
 		pg_allocateBindAndCheckUniform(indScenario, uniform_Update_texture_fs_Noise, "uniform_Update_texture_fs_Noise", pg_enum_shader_Update);  // 3D noise
+		pg_allocateBindAndCheckUniform(indScenario, uniform_Update_texture_fs_Pixel_Noise, "uniform_Update_texture_fs_Pixel_Noise", pg_enum_shader_Update);  // 3D noise
 		if (pg_FullScenarioActiveVars[indScenario][_BG_CA_repop_density]) {
 			pg_allocateBindAndCheckUniform(indScenario, uniform_Update_texture_fs_RepopDensity, "uniform_Update_texture_fs_RepopDensity", pg_enum_shader_Update);  // repop density
 		}

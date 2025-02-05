@@ -2339,7 +2339,7 @@ void pg_parseScenario_Meshes(std::ifstream& scenarioFin, int indScenario) {
 		// new line
 		std::getline(scenarioFin, line);
 		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
+		sstream >> ID; // string /meshes
 		if (ID.compare("/meshes") == 0) {
 			break;
 		}

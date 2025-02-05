@@ -201,6 +201,7 @@ void pg_openCameraCaptureAndLoadFrame(void) {
 			pg_cameraCaptureIsOn = false;
 		}
 		else {
+			printf("set webcam #%d frame size %dx%d\n", cameraNo, pg_webCams[-cameraNo - 1].cameraWidth, pg_webCams[-cameraNo - 1].cameraHeight);
 			pg_webCam_capture.set(CAP_PROP_FRAME_WIDTH, pg_webCams[-cameraNo - 1].cameraWidth);
 			pg_webCam_capture.set(CAP_PROP_FRAME_HEIGHT, pg_webCams[-cameraNo - 1].cameraHeight);
 
@@ -333,17 +334,16 @@ void pg_initWebcamParameters(void) {
 	pg_CameraCurrent_WB_B = (float)pg_webCam_capture.get(CAP_PROP_WHITE_BALANCE_BLUE_U);
 	pg_CameraCurrent_WB_R = (float)pg_webCam_capture.get(CAP_PROP_WHITE_BALANCE_RED_V);
 
-	printf("Current Cam exposure   %.2f\n", pg_CameraCurrent_exposure);
-	printf("Current Cam gain       %.2f\n", pg_CameraCurrent_gain);
-	printf("Current Cam brightness %.2f\n", pg_CameraCurrent_brightness);
-	printf("Current Cam contrast   %.2f\n", pg_CameraCurrent_contrast);
-	printf("Current Cam FPS        %.2f\n", pg_CameraCurrent_FPS);
-	printf("Current Cam focus      %.2f\n", pg_CameraCurrent_focus);
-	printf("Current Cam gamma      %.2f\n", pg_CameraCurrent_gamma);
-	printf("Current Cam WB_B       %.2f\n", pg_CameraCurrent_WB_B);
-	printf("Current Cam WB_R       %.2f\n", pg_CameraCurrent_WB_R);
-
-	printf("Current Cam saturation %.2f\n", pg_CameraCurrent_saturation);
+	//printf("Current Cam exposure   %.2f\n", pg_CameraCurrent_exposure);
+	//printf("Current Cam gain       %.2f\n", pg_CameraCurrent_gain);
+	//printf("Current Cam brightness %.2f\n", pg_CameraCurrent_brightness);
+	//printf("Current Cam contrast   %.2f\n", pg_CameraCurrent_contrast);
+	//printf("Current Cam FPS        %.2f\n", pg_CameraCurrent_FPS);
+	//printf("Current Cam focus      %.2f\n", pg_CameraCurrent_focus);
+	//printf("Current Cam gamma      %.2f\n", pg_CameraCurrent_gamma);
+	//printf("Current Cam WB_B       %.2f\n", pg_CameraCurrent_WB_B);
+	//printf("Current Cam WB_R       %.2f\n", pg_CameraCurrent_WB_R);
+	//printf("Current Cam saturation %.2f\n", pg_CameraCurrent_saturation);
 	//printf("Current Cam WB         %.2f %.2f\n", pg_CameraCurrent_WB_B, pg_CameraCurrent_WB_R);
 
 	if (float(pg_InitialValuesInterpVar[pg_ind_scenario][_cameraExposure].val_num) != pg_CameraCurrent_exposure) {
@@ -1173,7 +1173,7 @@ void pg_parseScenario_Videos(std::ifstream& scenarioFin, int indScenario) {
 		// new line
 		std::getline(scenarioFin, line);
 		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
+		sstream >> ID; // string /videos or movie
 		if (ID.compare("/videos") == 0) {
 			break;
 		}

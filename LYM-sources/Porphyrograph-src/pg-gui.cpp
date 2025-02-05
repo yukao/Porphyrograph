@@ -45,6 +45,7 @@ void pg_displaySceneVariables(void) {
 			sprintf(pg_AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(pg_AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(pg_AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(pg_AuxString, "/setupName %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			if (pg_CurrentSceneIndex < int(pg_Scenario[pg_ind_scenario].size()) - 1) {
 				sprintf(pg_AuxString, "/setup_next %s_%s", next_string.c_str(), pg_Scenario[pg_ind_scenario][pg_CurrentSceneIndex + 1].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			}
@@ -57,6 +58,7 @@ void pg_displaySceneVariables(void) {
 			sprintf(pg_AuxString, "/setup initial_setup"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(pg_AuxString, "/setup_1 ***"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(pg_AuxString, "/setup_2 ***"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(pg_AuxString, "/setupName initial_setup"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			if (pg_Scenario[pg_ind_scenario].size() > 0) {
 				sprintf(pg_AuxString, "/setup_next next_manual:_%s", pg_Scenario[pg_ind_scenario][0].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			}
@@ -66,6 +68,7 @@ void pg_displaySceneVariables(void) {
 			sprintf(pg_AuxString, "/setup interpolation scene"); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(pg_AuxString, "/setup_1 next_scene_%s", pg_Scenario[pg_ind_scenario][pg_SceneIndexAfterInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 			sprintf(pg_AuxString, "/setup_2 previous_scene_%s", pg_Scenario[pg_ind_scenario][pg_SceneIndexBeforeInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+			sprintf(pg_AuxString, "/setupName %s", pg_Scenario[pg_ind_scenario][pg_SceneIndexAfterInterpolation].scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 		}
 		sprintf(pg_AuxString, "/configurationNo %d", pg_ind_scenario); pg_send_message_udp((char*)"i", pg_AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(pg_AuxString, "/pen_colorPreset %d", pg_current_pen_colorPreset); pg_send_message_udp((char*)"i", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");

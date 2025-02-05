@@ -419,7 +419,7 @@ def read_scenario_scenes(readCSV, indScenario) :
 		if(line_scene_header[0] == "scene") :
 			# scene name and duration
 			scene_names[indScenario].append(line_scene_header[1])
-			print("GLSL code generator: scene", loc_nb_scenes + 1, ": ", scene_names[indScenario][loc_nb_scenes])
+			# print("GLSL code generator: scene", loc_nb_scenes + 1, ": ", scene_names[indScenario][loc_nb_scenes])
 
 			# scene comments
 			line_comments1 = next(readCSV)
@@ -732,8 +732,9 @@ def WriteTouchOSCScene() :
 			button_width = (1800 / 8) - 30
 		current_width = 120
 		for indScene in range(nb_scenes[indScenario]) :
-			TouchOSCScene.write(AutomaticSceneGeneration_strings.button_string.format('button_ID' + '_' + str(indScenario) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indScenario][indScene],scene_buttons_colors[indScenario % 7][0]/255.0,scene_buttons_colors[indScenario % 7][1]/255.0,scene_buttons_colors[indScenario % 7][2]/255.0))
-			TouchOSCScene.write(AutomaticSceneGeneration_strings.label_string.format('label_ID' + '_' + str(indScenario) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indScenario][indScene]))
+			splittedSceneName = scene_names[indScenario][indScene].replace("_", " ")
+			TouchOSCScene.write(AutomaticSceneGeneration_strings.button_string.format('button_ID' + '_' + str(indScenario) + '_' + str(indScene), current_width, current_height, button_width, button_height, scene_names[indScenario][indScene],scene_buttons_colors[indScenario % 7][0]/255.0,scene_buttons_colors[indScenario % 7][1]/255.0,scene_buttons_colors[indScenario % 7][2]/255.0, scene_names[indScenario][indScene]))
+			TouchOSCScene.write(AutomaticSceneGeneration_strings.label_string.format('label_ID' + '_' + str(indScenario) + '_' + str(indScene), current_width + 0.1 * button_width, current_height + 0.1 * button_height, 0.8 * button_width, 0.8 * button_height, splittedSceneName))
 			current_width += button_width + 30
 			if(indScene > 0 and indScene < nb_scenes[indScenario] - 1 and (indScene + 1) % 8 == 0) :
 				current_height += button_height + 20

@@ -898,7 +898,7 @@ void pg_parseScenario_ClipsAndPhotos(std::ifstream& scenarioFin, int indScenario
 		// new line
 		std::getline(scenarioFin, line);
 		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
+		sstream >> ID; // string /clips or album
 		if (ID.compare("/clips") == 0) {
 			break;
 		}
@@ -945,7 +945,7 @@ void pg_parseScenario_ClipsAndPhotos(std::ifstream& scenarioFin, int indScenario
 		// new line
 		std::getline(scenarioFin, line);
 		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
+		sstream >> ID; // string /photos or album
 		if (ID.compare("/photos") == 0) {
 			break;
 		}

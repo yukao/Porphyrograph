@@ -149,6 +149,7 @@ extern GLint uniform_Update_texture_fs_Camera_frame[PG_MAX_SCENARIOS];  // camer
 extern GLint uniform_Update_texture_fs_Camera_BG[PG_MAX_SCENARIOS];  // camera BG capture
 extern GLint uniform_Update_texture_fs_Movie_frame[PG_MAX_SCENARIOS];  // movie frame
 extern GLint uniform_Update_texture_fs_Noise[PG_MAX_SCENARIOS];  // 3D noise
+extern GLint uniform_Update_texture_fs_Pixel_Noise[PG_MAX_SCENARIOS];  // 3D noise
 extern GLint uniform_Update_texture_fs_RepopDensity[PG_MAX_SCENARIOS];  // repop density
 extern GLint uniform_Update_texture_fs_Photo0[PG_MAX_SCENARIOS];  // photo[0]
 extern GLint uniform_Update_texture_fs_Photo1[PG_MAX_SCENARIOS];  // photo[1]

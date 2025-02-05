@@ -756,7 +756,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 		newScene.init_scene();
 
 		sstream >> newScene.scene_IDs;
-		std::cout << "scene: " << newScene.scene_IDs << "\n";
+		//std::cout << "scene: " << newScene.scene_IDs << "\n";
 		sstream >> newScene.scene_duration;
 		sstream >> temp;  // change_when_ends or prolong_when_ends
 		if (temp.compare("change_when_ends") == 0) {
@@ -767,7 +767,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 		}
 		else {
 			newScene.scene_change_when_ends = true;
-			sprintf(pg_errorStr, "Error: one of strings expected as scene ending mode: \"change_when_ends\" or \"prolong_when_ends\" not \"%s\" for scene %d %s\n", temp.c_str(), nbScenesInScenario, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
+			sprintf(pg_errorStr, "Error: one of strings expected as scene ending mode: \"change_when_ends\" or \"prolong_when_ends\" not \"%s\" for scene %d (%s)\n", temp.c_str(), nbScenesInScenario, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
 		}
 		// second and third comments possibly displayed on the interface to help the user
 		if (!sstream.eof()) {
@@ -787,7 +787,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 		//  newScene.scene_duration << " sc #" << nbScenesInScenario << "\n";
 
 		if (newScene.scene_duration <= 0.0) {
-			sprintf(pg_errorStr, "Error: null scene #%d duration [%f]!", nbScenesInScenario + 1, newScene.scene_duration); pg_ReportError(pg_errorStr); throw 50;
+			sprintf(pg_errorStr, "Error: null scene #%d (%s) duration [%f]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), newScene.scene_duration); pg_ReportError(pg_errorStr); throw 50;
 		}
 		if (nbScenesInScenario > 0) {
 			newScene.scene_initial_time = pg_Scenario[indScenario][nbScenesInScenario - 1].scene_final_time;
@@ -813,8 +813,8 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 			indVar = pg_ConfigScenarioVarRank[indScenario][indP];
 			if (pg_FullScenarioActiveVars[indScenario][indVar]) {
 				if (sstream.eof()) {
-					sprintf(pg_errorStr, "Error: missing initial value in scene %d var %d (%s)\n",
-						nbScenesInScenario + 1, indVar, pg_FullScenarioVarMessages[indVar].c_str()); pg_ReportError(pg_errorStr); throw 50;
+					sprintf(pg_errorStr, "Error: missing initial value in scene %d (%s) var %d (%s)\n",
+						nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar, pg_FullScenarioVarMessages[indVar].c_str()); pg_ReportError(pg_errorStr); throw 50;
 				}
 				sstream >> temp;
 				if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
@@ -825,8 +825,9 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 					if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 						bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
 						if (!has_only_digits) {
-							sprintf(pg_errorStr, "Error: non numeric variable initial value in scene %d var %d (%s) type %d\n",
-								nbScenesInScenario + 1, indVar, pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarTypes[indVar]); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: non numeric variable initial value in scene %d (%s) var %d (%s) type %d\n",
+								nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar, 
+								pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarTypes[indVar]); pg_ReportError(pg_errorStr); throw 50;
 						}
 						else {
 							newScene.scene_initial_parameters[indVar].val_num = pg_stod(temp);
@@ -837,7 +838,9 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 						unsigned int size_of_array = pg_FullScenarioVarIndiceRanges[indVar][1] - pg_FullScenarioVarIndiceRanges[indVar][0];
 						vector<string> values = pg_split_string(temp, '/');
 						if (values.size() != size_of_array) {
-							sprintf(pg_errorStr, "Error: numeric array variable expects %d scene initial values not %d (%s[%d..%d])\n", size_of_array, values.size(), pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1]); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: numeric array variable expects %d scene initial values not %d (%s) (%s[%d..%d]) in scene %d (%s)\n", 
+								size_of_array, values.size(), temp.c_str(), pg_FullScenarioVarStrings[indVar].c_str(), 
+								pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1], nbScenesInScenario + 1, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
 						}
 						int indVect = 0;
 						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
@@ -851,7 +854,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 		// checks that the number of variables is what is expected
 		//sstream >> ID;
 		if (!sstream.eof()) {
-			sprintf(pg_errorStr, "Error: too many initial variable values in scene %d (%s)\n", nbScenesInScenario + 1, sstream.str().c_str()); pg_ReportError(pg_errorStr); throw 50;
+			sprintf(pg_errorStr, "Error: too many initial variable values in scene %d (%s)\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
 		}
 
 		// storing the final values
@@ -864,7 +867,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 			indVar = pg_ConfigScenarioVarRank[indScenario][indP];
 			if (pg_FullScenarioActiveVars[indScenario][indVar]) {
 				if (sstream.eof()) {
-					sprintf(pg_errorStr, "Error: missing final value in scene %d var %d (%s)\n", nbScenesInScenario + 1, indVar, temp.c_str()); pg_ReportError(pg_errorStr); throw 50;
+					sprintf(pg_errorStr, "Error: missing final value in scene %d (%s) var %d (%s)\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar, temp.c_str()); pg_ReportError(pg_errorStr); throw 50;
 				}
 				sstream >> temp;
 				if (pg_FullScenarioVarTypes[indVar] == _pg_string) {
@@ -875,8 +878,9 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 					if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
 						bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
 						if (!has_only_digits) {
-							sprintf(pg_errorStr, "Error: non numeric variable initial value in scene %d var %d (%s) type %d\n",
-								nbScenesInScenario + 1, indVar, pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarTypes[indVar]); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: non numeric variable final value in scene %d (%s) var %d (%s) type %d\n",
+								nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar, pg_FullScenarioVarStrings[indVar].c_str(), 
+								pg_FullScenarioVarTypes[indVar]); pg_ReportError(pg_errorStr); throw 50;
 						}
 						else {
 							newScene.scene_final_parameters[indVar].val_num = pg_stod(temp);
@@ -887,7 +891,9 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 						unsigned int size_of_array = pg_FullScenarioVarIndiceRanges[indVar][1] - pg_FullScenarioVarIndiceRanges[indVar][0];
 						vector<string> values = pg_split_string(temp, '/');
 						if (values.size() != size_of_array) {
-							sprintf(pg_errorStr, "Error: numeric array variable expects %d scene initial values not %d (%s[%d..%d])\n", size_of_array, values.size(), pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1]); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: numeric array variable expects %d scene final values not %d (%s) (%s[%d..%d]) in scene %d (%s)\n",
+								size_of_array, values.size(), temp.c_str(), pg_FullScenarioVarStrings[indVar].c_str(), 
+								pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1], nbScenesInScenario + 1, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
 						}
 						int indVect = 0;
 						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
@@ -902,7 +908,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 		// checks that the number of variables is what is expected
 		//sstream >> ID;
 		if (!sstream.eof()) {
-			sprintf(pg_errorStr, "Error: too many final variable values in scene %d\n", nbScenesInScenario + 1); pg_ReportError(pg_errorStr); throw 50;
+			sprintf(pg_errorStr, "Error: too many final variable values in scene %d (%s)\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
 		}
 
 		std::getline(scenarioFin, line);
@@ -934,22 +940,25 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 				}
 
 				if (sstream.eof()) {
-					sprintf(pg_errorStr, "Error: missing interpolation value in scene %d (%s) var %d (%s)\n",
+					sprintf(pg_errorStr, "Error: missing interpolation mode in scene %d (%s) var %d (%s)\n",
 						nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, pg_FullScenarioVarMessages[indVar].c_str()); pg_ReportError(pg_errorStr); throw 50;
 				}
 				sstream >> std::skipws >> temp;
 				valCh = temp.at(0);
-				//printf("valch %d %c temp %s\n", (int)valCh, valCh, temp.c_str());
 				if (temp.length() > 1) {
 					valCh2 = temp.at(1);
 					if (valCh2 != 'k') {
-						sprintf(pg_errorStr, "Error: only k modifier is allowed on interpolation mode, not %c for %c interpolation in scene %d var %d\n", 
-							valCh2, valCh, nbScenesInScenario + 1, indVar + 1); pg_ReportError(pg_errorStr); throw 50;
+						sprintf(pg_errorStr, "Error: only k modifier is allowed on interpolation mode, not %c for %c interpolation in scene %d (%s) var %d\n", 
+							valCh2, valCh, nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1); pg_ReportError(pg_errorStr); throw 50;
 					}
 				}
 				else {
 					valCh2 = ' ';
 				}
+
+				//if (indVar == _pen_radius) {
+				//	printf("valch %d %c valch2 %d %c temp %s\n", (int)valCh, valCh, (int)valCh2, valCh2, temp.c_str());
+				//}
 
 				// l: value interpolates linearly between initial and final value from 0.0% to 1.0%
 				// L: value is initial from 0.0% until offset, 
@@ -969,7 +978,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 						double val = pg_stringToDuration(vals, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						double val2 = pg_stringToDuration(val2s, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						if (val < 0.0 || val2 < 0.0) {
-							sprintf(pg_errorStr, "Error: one of values of L(inear) in scene %d var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: one of values of L(inear) in scene %d (%s) var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 						}
 						if (val <= 1.0) {
 							newScene.scene_interpolations[indVar].offSet = val;
@@ -980,15 +989,15 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 								}
 								newScene.scene_interpolations[indVar].duration = val2;
 								if (newScene.scene_interpolations[indVar].duration <= 0.0) {
-									sprintf(pg_errorStr, "Error: null L(inear) in scene %d var %d duration [%f]!", nbScenesInScenario + 1, indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
+									sprintf(pg_errorStr, "Error: null L(inear) in scene %d (%s) var %d duration [%f]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
 								}
 							}
 							else {
-								sprintf(pg_errorStr, "Error: total duration of L(inear) in scene %d var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+								sprintf(pg_errorStr, "Error: total duration of L(inear) in scene %d (%s) var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(pg_errorStr, "Error: offset value L(inear) in scene %d var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: offset value L(inear) in scene %d (%s) var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
 						}
 						// std::cout << "L " << val << " " << val2 << " ";
 
@@ -1014,7 +1023,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 						double val = pg_stringToDuration(vals, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						double val2 = pg_stringToDuration(val2s, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						if (val < 0.0 || val2 < 0.0) {
-							sprintf(pg_errorStr, "Error: one of values of C(osine) in scene %d var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: one of values of C(osine) in scene %d (%s) var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 						}
 						if (val <= 1.0) {
 							newScene.scene_interpolations[indVar].offSet = val;
@@ -1025,19 +1034,19 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 								}
 								newScene.scene_interpolations[indVar].duration = val2;
 								if (newScene.scene_interpolations[indVar].duration <= 0.0) {
-									sprintf(pg_errorStr, "Error: null C(osine) in scene %d var %d duration [%f]!", nbScenesInScenario + 1, indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
+									sprintf(pg_errorStr, "Error: null C(osine) in scene %d (%s) var %d duration [%f]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
 								}
 							}
 							else {
-								sprintf(pg_errorStr, "Error: total duration of C(osine) in scene %d var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+								sprintf(pg_errorStr, "Error: total duration of C(osine) in scene %d (%s) var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(pg_errorStr, "Error: offset value C(osine) in scene %d var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: offset value C(osine) in scene %d (%s) var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
 						}
 					}
 				}
-				// z: value interpolates cosinely between initial and final value from 0.0% to 1.0%
+				// z: value interpolates along Bezier curve between initial and final value from 0.0% to 1.0%
 				// Z: value is initial from 0.0% until offset, 
 				// Beizer approximated with a cosine and a non linear input 3x^2-2x^3
 				// BEZIER INTERPOLATION
@@ -1055,7 +1064,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 						double val = pg_stringToDuration(vals, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						double val2 = pg_stringToDuration(val2s, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						if (val < 0.0 || val2 < 0.0) {
-							sprintf(pg_errorStr, "Error: one of values of Z(Bezier) in scene %d var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: one of values of Z(Bezier) in scene %d (%s) var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 						}
 						if (val <= 1.0) {
 							newScene.scene_interpolations[indVar].offSet = double(val);
@@ -1066,15 +1075,15 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 								}
 								newScene.scene_interpolations[indVar].duration = val2;
 								if (newScene.scene_interpolations[indVar].duration <= 0.0) {
-									sprintf(pg_errorStr, "Error: null Z(Bezier) in scene %d var %d duration [%f]!", nbScenesInScenario + 1, indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
+									sprintf(pg_errorStr, "Error: null Z(Bezier) in scene %d (%s) var %d duration [%f]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
 								}
 							}
 							else {
-								sprintf(pg_errorStr, "Error: total duration of Z(Bezier) in scene %d var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+								sprintf(pg_errorStr, "Error: total duration of Z(Bezier) in scene %d (%s) var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(pg_errorStr, "Error: offset value Z(Bezier) in scene %d var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: offset value Z(Bezier) in scene %d (%s) var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
 						}
 					}
 				}
@@ -1098,7 +1107,7 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 						double val = pg_stringToDuration(vals, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						double val2 = pg_stringToDuration(val2s, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						if (val < 0.0 || val2 < 0.0) {
-							sprintf(pg_errorStr, "Error: one of values of E(exponential) in scene %d var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: one of values of E(exponential) in scene %d (%s) var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 						}
 						if (val <= 1.0) {
 							newScene.scene_interpolations[indVar].offSet = val;
@@ -1109,49 +1118,79 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 								}
 								newScene.scene_interpolations[indVar].duration = val2;
 								if (newScene.scene_interpolations[indVar].duration <= 0.0) {
-									sprintf(pg_errorStr, "Error: null Z(Bezier) in scene %d var %d duration [%f]!", nbScenesInScenario + 1, indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
+									sprintf(pg_errorStr, "Error: null Z(Bezier) in scene %d (%s) var %d duration [%f]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
 								}
 							}
 							else {
-								sprintf(pg_errorStr, "Error: total duration of Z(Bezier) in scene %d var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+								sprintf(pg_errorStr, "Error: total duration of Z(Bezier) in scene %d (%s) var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(pg_errorStr, "Error: offset value Z(Bezier) in scene %d var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: offset value Z(Bezier) in scene %d (%s) var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
 						}
 					}
 				}
 				// b: bell curve interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
 				// BELL INTERPOLATION
-				else if (valCh == 'b' || valCh == 'B') {
-					newScene.scene_interpolations[indVar].interpolation_mode = pg_enum_bell_interpolation;
+				// t: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
+				// SAW TOOTH INTERPOLATION
+				else if (valCh == 'b' || valCh == 'B' || valCh == 't' || valCh == 'T') {
+					if (valCh == 'b' || valCh == 'B') {
+						newScene.scene_interpolations[indVar].interpolation_mode = pg_enum_bell_interpolation;
+					}
+					else {
+						newScene.scene_interpolations[indVar].interpolation_mode = pg_enum_sawtooth_interpolation;
+					}
 					if (valCh2 == ' ') {
 						newScene.scene_interpolations[indVar].initialization_mode = pg_enum_scenario_initial;
 					}
 					else if (valCh2 == 'k') {
 						newScene.scene_interpolations[indVar].initialization_mode = pg_current_value;
 					}
-					sstream >> newScene.scene_interpolations[indVar].midTermValue;
-					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1) {
+
+					sstream >> temp;
+					// dimension 1 variable: number
+					if (pg_FullScenarioVarIndiceRanges[indVar][0] == -1) {
+						bool has_only_digits = (temp.find_first_not_of("0123456789-.E") == string::npos);
+						if (!has_only_digits) {
+							sprintf(pg_errorStr, "Error: non numeric variable mid term value in scene %d (%s) var %d (%s) type %d\n",
+								nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar, pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarTypes[indVar]); pg_ReportError(pg_errorStr); throw 50;
+						}
+						else {
+							newScene.scene_interpolations[indVar].midTermValue = pg_stod(temp);
+						}
+					}
+					// array
+					else {
+						unsigned int size_of_array = pg_FullScenarioVarIndiceRanges[indVar][1] - pg_FullScenarioVarIndiceRanges[indVar][0];
+						vector<string> values = pg_split_string(temp, '/');
+						if (values.size() != size_of_array) {
+							sprintf(pg_errorStr, "Error: numeric array variable expects %d scene mid term values not %d (%s[%d..%d]) in scene %d (%s)\n", size_of_array, values.size(), pg_FullScenarioVarStrings[indVar].c_str(), pg_FullScenarioVarIndiceRanges[indVar][0], pg_FullScenarioVarIndiceRanges[indVar][1], nbScenesInScenario + 1, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 50;
+						}
 						if (newScene.scene_interpolations[indVar].midTermValueArray != NULL) {
+							int indVect = 0;
 							for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
-								newScene.scene_interpolations[indVar].midTermValueArray[index] = newScene.scene_interpolations[indVar].midTermValue;
+								newScene.scene_interpolations[indVar].midTermValueArray[index] = pg_stod(values[indVect]);
+								//printf("assigning mid term value %.5f to var #%d (%s)\n", newScene.scene_interpolations[indVar].midTermValueArray[index],
+								//	indVar, pg_FullScenarioVarMessages[indVar].c_str());
+								indVect++;
 							}
 						}
 						else {
-							sprintf(pg_errorStr, "Unexpected null array for bell interpolation %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str()); pg_ReportError(pg_errorStr); throw 100;
+							sprintf(pg_errorStr, "Unexpected null array for bell interpolation %d (%s) in scene %d (%s)!", indVar, pg_FullScenarioVarMessages[indVar].c_str(), nbScenesInScenario + 1, newScene.scene_IDs.c_str()); pg_ReportError(pg_errorStr); throw 100;
 						}
 					}
-					//printf("Bell interpolation mode in scene %d (%s) parameter %d [%d] [%c] mid term value %.2f!\n",
+
+					//printf("Bell or Sawtooth interpolation mode in scene %d (%s) parameter %d [%d] [%c] mid term value %.2f!\n",
 					//	nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, int(valCh), valCh, 
 					//	newScene.scene_interpolations[indVar].midTermValue);
-					if (valCh == 'B') {
+					if (valCh == 'B' || valCh == 'T') {
 						sstream >> vals;
 						sstream >> val2s;
 						double val = pg_stringToDuration(vals, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						double val2 = pg_stringToDuration(val2s, newScene.scene_duration, nbScenesInScenario + 1, indVar + 1);
 						if (val < 0.0 || val2 < 0.0) {
-							sprintf(pg_errorStr, "Error: one of values of B(ell) in scene %d var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: one of values of B(ell) in scene %d (%s) var %d lower than 0.0: %.3f %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 						}
 						if (val <= 1.0) {
 							newScene.scene_interpolations[indVar].offSet = val;
@@ -1162,35 +1201,17 @@ void pg_parseScenarioFile(std::ifstream& scenarioFin, int indScenario) {
 								}
 								newScene.scene_interpolations[indVar].duration = val2;
 								if (newScene.scene_interpolations[indVar].duration <= 0.0) {
-									sprintf(pg_errorStr, "Error: null B(ell) in scene %d var %d duration [%f]!", nbScenesInScenario + 1, indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
+									sprintf(pg_errorStr, "Error: null B(ell) or T(sawtooth) in scene %d (%s) var %d duration [%f]!", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, newScene.scene_interpolations[indVar].duration); pg_ReportError(pg_errorStr); throw 50;
 								}
 							}
 							else {
-								sprintf(pg_errorStr, "Error: total duration of B(ell) in scene %d var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
+								sprintf(pg_errorStr, "Error: total duration of B(ell) or T(sawtooth) in scene %d (%s) var %d greater than 1.0: %.3f + %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val, val2); pg_ReportError(pg_errorStr); throw 50;
 							}
 						}
 						else {
-							sprintf(pg_errorStr, "Error: offset value L(inear) in scene %d var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
+							sprintf(pg_errorStr, "Error: offset value B(ell) or T(sawtooth) in scene %d (%s) var %d greater than 1.0: %.3f\n", nbScenesInScenario + 1, newScene.scene_IDs.c_str(), indVar + 1, val); pg_ReportError(pg_errorStr); throw 50;
 						}
 						// std::cout << "L " << val << " " << val2 << " ";
-
-					}
-				}
-				// b: saw tooth linear interpolation between initial, median and final value from (0,0,0)% to (0,1,0)% at mid time to (0,0,1)% at the end
-				// SAW TOOTH INTERPOLATION
-				else if (valCh == 't') {
-					newScene.scene_interpolations[indVar].interpolation_mode = pg_enum_sawtooth_interpolation;
-					if (valCh2 == ' ') {
-						newScene.scene_interpolations[indVar].initialization_mode = pg_enum_scenario_initial;
-					}
-					else if (valCh2 == 'k') {
-						newScene.scene_interpolations[indVar].initialization_mode = pg_current_value;
-					}
-					sstream >> newScene.scene_interpolations[indVar].midTermValue;
-					if (pg_FullScenarioVarIndiceRanges[indVar][0] != -1) {
-						for (int index = pg_FullScenarioVarIndiceRanges[indVar][0]; index < pg_FullScenarioVarIndiceRanges[indVar][1]; index++) {
-							newScene.scene_interpolations[indVar].midTermValueArray[index] = newScene.scene_interpolations[indVar].midTermValue;
-						}
 					}
 				}
 				// STEPWISE VALUE WITHOUT INTERPOLATION

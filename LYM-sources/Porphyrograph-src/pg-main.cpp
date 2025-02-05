@@ -223,7 +223,7 @@ void pg_quit(void) {
 	pg_IP_Clients.clear();
 
 	if (pg_errorStr) {
-		delete[] pg_errorStr;
+		delete pg_errorStr;
 		pg_errorStr = NULL;
 	}
 
@@ -303,7 +303,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 		pg_FBO_Update_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(2 * pg_enum_FBO_Update_nbAttachts, pg_FBO_Update_texID);
-	printf("FBO Update size %d %d attachments %d (configs %d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_Update_nbAttachts, pg_NbScenarios);
+	//printf("FBO Update size %d %d attachments %d (configs %d)\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_Update_nbAttachts, pg_NbScenarios);
 	pg_initFBOTextures(pg_FBO_Update_texID, 2 * pg_enum_FBO_Update_nbAttachts, false, NULL);
 
 	glGenFramebuffers(1, &pg_FBO_Update);
@@ -318,7 +318,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 		pg_FBO_ParticleAnimation_texID[indAttachedFB] = 0;
 	}
 	glGenTextures(2 * pg_enum_FBO_ParticleAnimation_nbAttachts, pg_FBO_ParticleAnimation_texID);
-	printf("FBO Particle animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_ParticleAnimation_nbAttachts);
+	//printf("FBO Particle animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, pg_enum_FBO_ParticleAnimation_nbAttachts);
 	pg_initFBOTextures(pg_FBO_ParticleAnimation_texID, 2 * pg_enum_FBO_ParticleAnimation_nbAttachts, false, NULL);
 
 	glGenFramebuffers(1, &pg_FBO_ParticleAnimation);
@@ -329,7 +329,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	// FBO: ClipArt GPU drawing output 
 	glGenTextures(1, &pg_FBO_ClipArt_render_texID);
 	glGenRenderbuffers(1, &FBO_ClipArt_depthAndStencilBuffer);
-	printf("FBO ClipArt GPU rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
+	//printf("FBO ClipArt GPU rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
 	pg_initFBOTextures(&pg_FBO_ClipArt_render_texID, 1, true, &FBO_ClipArt_depthAndStencilBuffer);
 
 	glGenFramebuffers(1, &pg_FBO_ClipArtRendering);  // drawing memory on odd and even frames for echo 
@@ -343,7 +343,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	// FBO: particle drawing output 
 	glGenTextures(1, &pg_FBO_Particle_render_texID);
 	glGenRenderbuffers(1, &pg_FBO_ParticleRendering_depthAndStencilBuffer);
-	printf("FBO Particle rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
+	//printf("FBO Particle rendering size %d %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT);
 	pg_initFBOTextures(&pg_FBO_Particle_render_texID, 1, true, &pg_FBO_ParticleRendering_depthAndStencilBuffer);
 
 	glGenFramebuffers(1, &pg_FBO_ParticleRendering);  // drawing memory on odd and even frames for echo 
@@ -360,7 +360,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 		pg_FBO_Mixing_capturedFB_prec_texID[indFB] = 0;
 	}
 	glGenTextures(2, pg_FBO_Mixing_capturedFB_prec_texID);
-	printf("FBO Mixing animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 2);
+	//printf("FBO Mixing animation size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 2);
 	pg_initFBOTextures(pg_FBO_Mixing_capturedFB_prec_texID, 2, false, 0);
 
 	glGenFramebuffers(1, &pg_FBO_Mixing_capturedFB_prec);  // drawing memory on odd and even frames for echo 
@@ -371,7 +371,7 @@ bool pg_initFBOTextureImagesAndRendering(void) {
 	// Augmented Reality or bypassing mesh rendering: FBO capture of Master to be displayed on a mesh
 	pg_FBO_Master_capturedFB_prec_texID = 0;
 	glGenTextures(1, &pg_FBO_Master_capturedFB_prec_texID);
-	printf("FBO Master size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 1);
+	//printf("FBO Master size %d %d attachments %d\n", pg_workingWindow_width, PG_WINDOW_HEIGHT, 1);
 	pg_initFBOTextures(&pg_FBO_Master_capturedFB_prec_texID, 1, false, 0);
 
 	glGenFramebuffers(1, &pg_FBO_Master_capturedFB_prec);  // master output memory for mapping on mesh of bypassing mesh rendering
@@ -445,9 +445,6 @@ void pg_init_scene(void) {
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_light_color]) {
 		pg_DMX_light_initialization();
 	}
-
-	printf("Open portaudio\n");
-	pg_pa_openSoundData();
 
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_sensor_layout]) {
 		/////////////////////////////////////////////////////////////////////////
@@ -580,7 +577,7 @@ void pg_window_mouseFunc_browse(int button, int state, int x, int y) {
 }
 
 void pg_window_motionFunc_browse(int x, int y) {
-	printf("active button (%d,%d)\n", x, y);
+	//printf("active button (%d,%d)\n", x, y);
 	pg_CurrentCursorPos_x[0] = x;
 	pg_CurrentCursorPos_y[0] = y;
 	pg_CurrentStylusHooverPos_x = x;
@@ -588,7 +585,7 @@ void pg_window_motionFunc_browse(int x, int y) {
 }
 
 void pg_window_passiveMotionFunc_browse(int x, int y) {
-	printf("passive button (%d,%d)\n", x, y);
+	//printf("passive button (%d,%d)\n", x, y);
 	pg_CurrentCursorPos_x[0] = PG_OUT_OF_SCREEN_CURSOR;
 	pg_CurrentCursorPos_y[0] = PG_OUT_OF_SCREEN_CURSOR;
 	pg_CurrentStylusHooverPos_x = x;
@@ -802,7 +799,7 @@ void pg_initGLutWindows(void) {
 		/* Problem: glewInit failed, something is seriously wrong. */
 		fprintf(stderr, "Error: OpenGL Extension Wrangler (GLEW) failed to initialize %s\n", glewGetErrorString(err));
 	}
-	fprintf(stdout, "GLEW version %s\n", glewGetString(GLEW_VERSION));
+	//fprintf(stdout, "GLEW version %s\n", glewGetString(GLEW_VERSION));
 	bool hasDSA = glewIsSupported("GL_EXT_direct_state_access");
 	if (!hasDSA) {
 		fprintf(stderr, "Error: OpenGL implementation doesn't support GL_EXT_direct_state_access\n");
@@ -978,7 +975,7 @@ int main(int argcMain, char** argvMain) {
 	pg_logFirstLineSceneVariables();
 	printf("%s\n", applicationName.c_str());
 
-	std::cout << "Date: [" << pg_date_stringStream.str() << "]" << std::endl;
+	//std::cout << "Date: [" << pg_date_stringStream.str() << "]" << std::endl;
 
 	// printf( "Glut initialization\n" );
 	// glut parameters initialization 

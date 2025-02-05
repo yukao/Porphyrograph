@@ -58,6 +58,8 @@ public:
 	float path_r_color;
 	float path_g_color;
 	float path_b_color;
+	float path_a_color;
+	int path_brushID;
 	float path_readSpeedScale;
 	string path_ID;
 	string path_fileName;
@@ -72,6 +74,8 @@ public:
 		path_r_color = 1;
 		path_g_color = 1;
 		path_b_color = 1;
+		path_a_color = 1;
+		path_brushID = 0;
 		path_readSpeedScale = 1;
 		path_ID = "";
 		path_fileName = "";
@@ -79,7 +83,7 @@ public:
 		secondsforwidth = 10.;
 	}
 	void SVG_scenarioPathCurve_init(int p_indPath, int p_rankInPath, int p_indTrack, float p_pathRadius, float p_path_r_color, float p_path_g_color,
-		float p_path_b_color, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group,
+		float p_path_b_color, float p_path_a_color, int p_path_brushID, float p_path_readSpeedScale, string p_path_ID, string p_path_fileName, int p_path_group,
 		bool p_with_color__brush_radius_from_scenario, double p_secondsforwidth) {
 		path_no = p_indPath;
 		rankInPath = p_rankInPath;
@@ -88,9 +92,12 @@ public:
 		path_r_color = p_path_r_color;
 		path_g_color = p_path_g_color;
 		path_b_color = p_path_b_color;
+		path_a_color = p_path_a_color;
+		path_brushID = p_path_brushID;
 		path_readSpeedScale = p_path_readSpeedScale;
 		path_ID = p_path_ID;
 		path_fileName = p_path_fileName;
+		//std::cout << "Path file name: " << path_fileName << std::endl;
 		// no path group provided in the scenario file
 		if (p_path_group <= 0) {
 			path_group = 1;
@@ -312,16 +319,16 @@ public:
 	void Path_Status_init(int indPath) {
 		pathNo = indPath;
 	}
-	void readsvg(char* fileName, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+	void readsvg(char* fileName, float pathRadius, float path_r_color, float path_g_color, float path_b_color, float path_a_color, int path_brushID,
 		float readSpeedScale, string path_ID_in_scenario, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indScenario);
 	void load_svg_path(char* fileName,
-		float pathRadius, float path_r_color, float path_g_color, float path_b_color, float readSpeedScale,
+		float pathRadius, float path_r_color, float path_g_color, float path_b_color, float path_a_color, int path_brushID, float readSpeedScale,
 		string path_ID, bool p_with_color__brush_radius_from_scenario, double secondsforwidth, int indScenario);
 	void LoadPathColorsFromXML(string pathString, int* nbRecordedFrames, int indScenario);
 	void LoadPathBrushesFromXML(string pathString, int* nbRecordedFrames, int indScenario);
 	void LoadPathTimeStampsFromXML(string pathString, int* nbRecordedFrames);
 	int pg_LoadPathPointsFromXML(char* pathString,
-		glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color,
+		glm::mat4* p_M_transf, float pathRadius, float path_r_color, float path_g_color, float path_b_color, float path_a_color, int path_brushID,
 		float precedingCurrentPoint[2], float  currentPoint[2],
 		bool withRecordingOfStrokeParameters, bool with_color__brush_radius_from_scenario,
 		float* path_length, double p_secondsforwidth, int* p_nbRecordedTimeStamps, int indScenario);

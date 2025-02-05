@@ -38,7 +38,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 pa_AudioOut pa_sound_data;
-ScopedPaHandler* paInit;
+ScopedPaHandler* paInit = NULL;
 callback_data_s soundfile_data;
 
 // sound track playing
@@ -278,7 +278,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
             }
 
             // portaudio play
-            if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
+            if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight] && soundtrack_PA_weight > 0 && paInit != NULL) {
                 if ((previouslyPlayingSoundtrackNo >= 0 && previouslyPlayingSoundtrackNo < int(pg_SoundTracks[pg_ind_scenario].size()))
                     || pa_sound_data.pa_is_streaming()) {
                     printf("Closing stream (%s)\n", (char*)(pg_SoundTracks[pg_ind_scenario][previouslyPlayingSoundtrackNo].soundtrackFileName).c_str());
@@ -289,6 +289,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 /* Open the soundfile */
                 soundfile_data.sound_file = sf_open((char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str(),
                     SFM_READ, &soundfile_data.sound_file_info);
+                //printf("PA soundfile opened\n");
                 if (sf_error(soundfile_data.sound_file) != SF_ERR_NO_ERROR) {
                     fprintf(stderr, "%s\n", sf_strerror(soundfile_data.sound_file));
                     sprintf(pg_errorStr, "Wav file not opened (%s)!", (char*)(pg_SoundTracks[pg_ind_scenario][pg_currentlyPlaying_trackNo].soundtrackFileName).c_str()); pg_ReportError(pg_errorStr);
@@ -298,23 +299,28 @@ void PlayTrack(int indTrack, double timeFromStart) {
                 // opening stream
                 int channelCount;
                 int sampleRate;
-                if (pa_sound_data.pa_openMyStream(Pa_GetDefaultOutputDevice(), &channelCount, &sampleRate)) {
+                if (pa_sound_data.pa_openMyStream(Pa_GetDefaultOutputDevice(), &channelCount, &sampleRate) && paInit != NULL) {
                     printf("portaudio stream opened %d ch at %d Hz\n", channelCount, sampleRate);
                 }
                 else {
-                    fprintf(stderr, "Error number: %d\n", paInit->result());
-                    fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
-                    sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); // throw 100;
+                    if (paInit != NULL) {
+                        fprintf(stderr, "Error number: %d\n", paInit->result());
+                        fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+                        sprintf(pg_errorStr, "Port audio stream not opened!"); pg_ReportError(pg_errorStr); // throw 100;
+                    }
                 }
+                //printf("PA stream opened\n");
 
                 // starting stream
-                if (pa_sound_data.pa_startMyStream()) {
+                if (pa_sound_data.pa_startMyStream() && paInit != NULL) {
                     //printf("portaudio stream started\n");
                 }
                 else {
-                    fprintf(stderr, "Error number: %d\n", paInit->result());
-                    fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
-                    sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); // throw 100;
+                    if (paInit != NULL) {
+                        fprintf(stderr, "Error number: %d\n", paInit->result());
+                        fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
+                        sprintf(pg_errorStr, "Port audio stream not started!"); pg_ReportError(pg_errorStr); // throw 100;
+                    }
                 }
             }
 
@@ -381,7 +387,7 @@ void PlayTrack(int indTrack, double timeFromStart) {
 void StopTrack(void) {
     // PD play
     if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
-        sprintf(pg_AuxString, "/soundtrack_fileName %s", (char*)"");
+        sprintf(pg_AuxString, "/soundtrack_fileName void");
         pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_PD_send");
     }
 
@@ -458,14 +464,16 @@ void soundTrackonOff() {
 void pg_pa_closeAudioStream(void) {
     if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
         pa_sound_data.pa_closeMyStream();
-        delete paInit;
+        if (paInit != NULL) {
+            delete paInit;
+        }
     }
 }
 
 void pg_pa_openSoundData(void) {
     if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
         paInit = new ScopedPaHandler();
-        if (paInit->result() != paNoError) {
+        if (paInit != NULL && paInit->result() != paNoError) {
             fprintf(stderr, "Error number: %d\n", paInit->result());
             fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(paInit->result()));
         }
@@ -495,7 +503,7 @@ void pg_parseScenario_soundTracks(std::ifstream& scenarioFin, int indScenario) {
         // new line
         std::getline(scenarioFin, line);
         pg_stringstreamStoreLine(&sstream, &line);
-        sstream >> ID; // string /svg_paths or svg_path
+        sstream >> ID; // string /soundtracks or track
         if (ID.compare("/soundtracks") == 0) {
             break;
         }
@@ -602,6 +610,11 @@ void pg_parseScenario_soundTracks(std::ifstream& scenarioFin, int indScenario) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // AUDIO OSC COMMANDS
 //////////////////////////////////////////////////////////////////////////////////////////////////////  
+void pg_clamp_color(float in_color[4], float out_color[4]) {
+    for (int i = 0; i < 4; i++) {
+        out_color[i] = std::max(0.f, std::min(1.f, in_color[i]));
+    }
+}
 void pg_aliasScriptAudio(string address_string, string string_argument_0,
     float float_arguments[PG_MAX_OSC_ARGUMENTS], int nb_arguments, int indVar) {
     // special command not in the scenario file
@@ -642,14 +655,19 @@ void pg_aliasScriptAudio(string address_string, string string_argument_0,
             pg_compute_pulsed_HSV_color(pen_hue, pen_hue_pulse, pen_sat, pen_sat_pulse, pen_value, pen_value_pulse, pg_pulsed_pen_color, true);
         }
 
-        sprintf(pg_AuxString, "/pen_color/color %02x%02x%02xFF", int(pg_pulsed_pen_color[0] * 255), int(pg_pulsed_pen_color[1] * 255), int(pg_pulsed_pen_color[2] * 255));
+        float clamped_color[4];
+        pg_clamp_color(pg_pulsed_pen_color, clamped_color);
+        sprintf(pg_AuxString, "/pen_color/color %02x%02x%02xFF", int(clamped_color[0] * 255), int(clamped_color[1] * 255), int(clamped_color[2] * 255));
         pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
-        //printf("%s\n", pg_AuxString);
+
         pg_compute_pulsed_palette_color(repop_colorCA, repop_colorCA_pulse, repop_greyCA, repop_greyCA_pulse, pg_pulsed_repop_colorCA, pg_enum_REPOP_COLOR);
-        sprintf(pg_AuxString, "/CA_repopColor/color %02x%02x%02xFF", int(pg_pulsed_repop_colorCA[0] * 255), int(pg_pulsed_repop_colorCA[1] * 255), int(pg_pulsed_repop_colorCA[2] * 255));
+        pg_clamp_color(pg_pulsed_repop_colorCA, clamped_color);
+        sprintf(pg_AuxString, "/CA_repopColor/color %02x%02x%02xFF", int(clamped_color[0] * 255), int(clamped_color[1] * 255), int(clamped_color[2] * 255));
         pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
+ 
         pg_compute_pulsed_palette_color(repop_colorBG, repop_colorBG_pulse, repop_greyBG, repop_greyBG_pulse, pg_pulsed_repop_colorBG, pg_enum_REPOP_COLOR);
-        sprintf(pg_AuxString, "/BGcolorRedepopColor/color %02x%02x%02xFF", int(pg_pulsed_repop_colorBG[0] * 255), int(pg_pulsed_repop_colorBG[1] * 255), int(pg_pulsed_repop_colorBG[2] * 255));
+        pg_clamp_color(pg_pulsed_repop_colorBG, clamped_color);
+        sprintf(pg_AuxString, "/BGcolorRedepopColor/color %02x%02x%02xFF", int(clamped_color[0] * 255), int(clamped_color[1] * 255), int(clamped_color[2] * 255));
         pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
 
         if (pg_FullScenarioActiveVars[pg_ind_scenario][_repop_colorPart]
@@ -663,7 +681,8 @@ void pg_aliasScriptAudio(string address_string, string string_argument_0,
             && repop_hsvPart) {
             pg_compute_pulsed_HSV_color(repop_huePart, repop_huePart_pulse, repop_satPart, repop_satPart_pulse, repop_valuePart, repop_valuePart_pulse, pg_pulsed_repop_colorPart, false);
         }
-        sprintf(pg_AuxString, "/Part_repopColor/color %02x%02x%02xFF", int(pg_pulsed_repop_colorPart[0] * 255), int(pg_pulsed_repop_colorPart[1] * 255), int(pg_pulsed_repop_colorPart[2] * 255));
+        pg_clamp_color(pg_pulsed_repop_colorPart, clamped_color);
+        sprintf(pg_AuxString, "/Part_repopColor/color %02x%02x%02xFF", int(clamped_color[0] * 255), int(clamped_color[1] * 255), int(clamped_color[2] * 255));
         pg_send_message_udp((char*)"s", (char*)pg_AuxString, (char*)"udp_TouchOSC_send");
         break;
     case _soundtrack_plus:
@@ -789,7 +808,7 @@ void soundtrack_PD_weight_callBack(pg_Parameter_Input_Type param_input_type, flo
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
         if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PD_weight]) {
             soundtrack_PD_weight = scenario_or_gui_command_value;
-            sprintf(pg_AuxString, "/soundtrack_weight %.2f", soundtrack_PD_weight);
+            sprintf(pg_AuxString, "/soundtrack_PD_weight %.2f", soundtrack_PD_weight);
             pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
         }
     }
@@ -807,6 +826,12 @@ void soundtrack_PA_weight_callBack(pg_Parameter_Input_Type param_input_type, flo
     if (param_input_type == pg_enum_PG_GUI_COMMAND || param_input_type == pg_enum_PG_SCENARIO) {
         if (pg_FullScenarioActiveVars[pg_ind_scenario][_soundtrack_PA_weight]) {
             soundtrack_PA_weight = scenario_or_gui_command_value;
+            sprintf(pg_AuxString, "/soundtrack_PA_weight %.2f", soundtrack_PA_weight);
+            pg_send_message_udp((char*)"f", pg_AuxString, (char*)"udp_PD_send");
+            if (soundtrack_PA_weight > 0 && paInit == NULL) {
+                printf("Open portaudio\n");
+                pg_pa_openSoundData();
+            }
         }
     }
 }

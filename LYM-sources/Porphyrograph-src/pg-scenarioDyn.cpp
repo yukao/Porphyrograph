@@ -757,7 +757,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 						twoStepInterpolation[2] = 1.0f - twoStepInterpolation[1];
 					}
 					//printf("Scene %s param %d time from start %.2f interp %.2f transf_interp %.2f 2-step interp  %.2f %.2f %.2f start interp %.2f duration %.2f\n",
-					   //cur_scene->scene_IDs.c_str(), indVar, elapsed_time_from_start, coefInterpolation, transformedInterpolation, twoStepInterpolation[0], twoStepInterpolation[1], twoStepInterpolation[2], absoluteOffset, absoluteDuration);
+					//   cur_scene->scene_IDs.c_str(), indVar, elapsed_time_from_start, coefInterpolation, transformedInterpolation, twoStepInterpolation[0], twoStepInterpolation[1], twoStepInterpolation[2], absoluteOffset, absoluteDuration);
 					break;
 				case pg_enum_sawtooth_interpolation:
 					transformedInterpolation = coefInterpolation;
@@ -843,7 +843,7 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 								}
 								ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 								pg_update_variable(pg_enum_PG_SCENARIO, indVar, interpolated_scene_value, -1);
-								delete(valArray);
+								delete valArray;
 							}
 						}
 						else {
@@ -870,14 +870,9 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 								}
 								ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 								pg_update_variable(pg_enum_PG_SCENARIO, indVar, interpolated_scene_value, -1);
-								delete(valArray);
+								delete valArray;
 							}
 						}
-
-						//if (indVar == _part_path_follow_0) {
-						//	printf("Scene %s param %d time from start %.2f interp %.2f transf_interp %.2f value %.2f\n", 
-						//		cur_scene->scene_IDs.c_str(), indVar, elapsed_time_from_start, coefInterpolation, transformedInterpolation, interpolated_value);
-						//}
 
 						//if (indVar == _part_path_follow_0) {
 						//	printf("val ini fin %.2f %.2f alpha %.2f value %.2f val %d/%d\n",
@@ -907,6 +902,9 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 								* cur_scene->scene_final_parameters[indVar].val_num;
 							ScenarioValue interpolated_scene_value(interpolated_value, "", NULL, 0);
 							pg_update_variable(pg_enum_PG_SCENARIO, indVar, interpolated_scene_value, -1);
+							//printf("Scene %s param %d time from start %.2f transf_interp %.2f 2-step interp  %.2f %.2f %.2f interpolated value %.5f\n",
+							//	cur_scene->scene_IDs.c_str(), indVar, elapsed_time_from_start, transformedInterpolation, 
+							//	twoStepInterpolation[0], twoStepInterpolation[1], twoStepInterpolation[2], interpolated_value);
 						}
 						else {
 							double* valArray = new double[pg_FullScenarioVarIndiceRanges[indVar][1]];
@@ -918,14 +916,16 @@ void pg_update_scene_variables(Scene* cur_scene, double elapsed_time_from_start)
 									* cur_scene->scene_interpolations[indVar].midTermValueArray[index]
 									+ twoStepInterpolation[2]
 									* cur_scene->scene_final_parameters[indVar].val_array[index];
+								//if (index == pg_FullScenarioVarIndiceRanges[indVar][0]) {
+								//	printf("Scene %s param %d time from start %.2f transf_interp %.2f 2-step interp  %.2f %.2f %.2f interpolated value %.5f\n",
+								//		cur_scene->scene_IDs.c_str(), indVar, elapsed_time_from_start, transformedInterpolation,
+								//		twoStepInterpolation[0], twoStepInterpolation[1], twoStepInterpolation[2], valArray[index]);
+								//}
 							}
 							ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 							pg_update_variable(pg_enum_PG_SCENARIO, indVar, interpolated_scene_value, -1);
-							delete(valArray);
+							delete valArray;
 						}
-
-						//printf("Scene %s param %d time from start %.2f transf_interp %.2f 2-step interp  %.2f %.2f %.2f interpolated value %.2f\n",
-						   //cur_scene->scene_IDs.c_str(), indVar, elapsed_time_from_start, transformedInterpolation, twoStepInterpolation[0], twoStepInterpolation[1], twoStepInterpolation[2], interpolated_value);
 					}
 					else {
 						if (twoStepInterpolation[0] > 0) {
@@ -1074,6 +1074,7 @@ void pg_StartNewScene(int ind_scene, double delta_time) {
 		sprintf(pg_AuxString, "/setup %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(pg_AuxString, "/setup_1 %s", pg_CurrentScene->scene_Msg1.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 		sprintf(pg_AuxString, "/setup_2 %s", pg_CurrentScene->scene_Msg2.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
+		sprintf(pg_AuxString, "/setupName %s", pg_CurrentScene->scene_IDs.c_str()); pg_send_message_udp((char*)"s", pg_AuxString, (char*)"udp_TouchOSC_send");
 		string next_string = "";
 		if (pg_CurrentScene->scene_change_when_ends == true) {
 			next_string = "next_autom:";

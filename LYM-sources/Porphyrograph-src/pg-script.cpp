@@ -1746,7 +1746,7 @@ void pg_aliasScript(string address_string, string string_argument_0,
 		//printf("index %d value %.2f\n", indexChangedValue, valArray[indexChangedValue]);
 		ScenarioValue interpolated_scene_value(0.f, "", valArray, pg_FullScenarioVarIndiceRanges[indVar][1]);
 		pg_update_variable(pg_enum_PG_GUI_COMMAND, indVar, interpolated_scene_value, indexChangedValue);
-		delete(valArray);
+		delete valArray;
 		return;
 	}
 	// change of scalar variable

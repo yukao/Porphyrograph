@@ -114,13 +114,13 @@ pg_IPClient::~pg_IPClient(void) {
 	id.clear();
 
 	if (output_message_stack) {
-		delete[] output_message_stack;
+		delete output_message_stack;
 	}
 	output_message_stack = NULL;
 
 
 	if (output_pattern_stack) {
-		delete[] output_pattern_stack;
+		delete output_pattern_stack;
 	}
 	output_pattern_stack = NULL;
 
@@ -829,16 +829,16 @@ pg_IPServer::~pg_IPServer(void) {
 	id.clear();
 
 	if (input_message_stack) {
-		delete[] input_message_stack;
+		delete input_message_stack;
 		input_message_stack = NULL;
 	}
 	if (input_argc_stack) {
-		delete[] input_argc_stack;
+		delete input_argc_stack;
 		input_argc_stack = NULL;
 	}
 
 	if (input_message_length_stack) {
-		delete[] input_message_length_stack;
+		delete input_message_length_stack;
 		input_message_length_stack = NULL;
 	}
 

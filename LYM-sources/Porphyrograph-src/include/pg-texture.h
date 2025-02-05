@@ -171,6 +171,7 @@ extern GLuint pg_Master_Multilayer_Mask_texID[PG_MAX_SCENARIOS];
 extern GLuint pg_Pen_texture_3D_texID[PG_MAX_SCENARIOS];
 
 extern GLuint pg_Noise_texture_3D[PG_MAX_SCENARIOS];
+extern GLuint pg_Pixel_Noise_texture_3D[PG_MAX_SCENARIOS];
 extern std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_SCENARIOS];
 
 extern std::vector<GLuint> pg_particle_initial_pos_speed_texID[PG_MAX_SCENARIOS];

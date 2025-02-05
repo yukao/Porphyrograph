@@ -1743,6 +1743,7 @@ void pg_UpdatePass(void) {
 	glUniform1i(uniform_Update_texture_fs_Camera_BG[pg_ind_scenario], pg_enum_Camera_BG_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Movie_frame[pg_ind_scenario], pg_enum_Movie_frame_Update_sampler);
 	glUniform1i(uniform_Update_texture_fs_Noise[pg_ind_scenario], pg_enum_Noise_Update_sampler);
+	glUniform1i(uniform_Update_texture_fs_Pixel_Noise[pg_ind_scenario], pg_enum_Pixel_Noise_Update_sampler);
 	if (pg_FullScenarioActiveVars[pg_ind_scenario][_BG_CA_repop_density]) {
 		glUniform1i(uniform_Update_texture_fs_RepopDensity[pg_ind_scenario], pg_enum_RepopDensity_Update_sampler);
 	}
@@ -1820,6 +1821,10 @@ void pg_UpdatePass(void) {
 	// noise texture (noise is also generated procedurally in the update shader)
 	glActiveTexture(GL_TEXTURE0 + pg_enum_Noise_Update_sampler);
 	glBindTexture(GL_TEXTURE_3D, pg_Noise_texture_3D[pg_ind_scenario]);
+
+	// pixel noise texture (noise for pixel accceleration)
+	glActiveTexture(GL_TEXTURE0 + pg_enum_Pixel_Noise_Update_sampler);
+	glBindTexture(GL_TEXTURE_3D, pg_Pixel_Noise_texture_3D[pg_ind_scenario]);
 
 	// repop density texture
 	glActiveTexture(GL_TEXTURE0 + pg_enum_RepopDensity_Update_sampler);
@@ -2802,7 +2807,7 @@ void pg_draw_scene(DrawingMode mode) {
 		}
 		pg_logCurrentLineSceneVariables(imageFileName);
 
-		glReadBuffer(GL_FRONT);
+		glReadBuffer(GL_BACK);
 
 		// OpenGL's default 4 byte pack alignment would leave extra bytes at the
 		//   end of each image row so that each full row contained a number of bytes
@@ -2812,8 +2817,14 @@ void pg_draw_scene(DrawingMode mode) {
 		//   the rows are packed as tight as possible (no row padding), set the pack
 		//   alignment to 1.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		pngImgMatRGBInitial.create(PG_WINDOW_HEIGHT, PG_WINDOW_WIDTH, CV_8UC3); // GL_RGB
-		glReadPixels(0, 0, PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pngImgMatRGBInitial.data);
+
+		int singleWindowWidth = PG_WINDOW_WIDTH;
+		if (double_window == true) {
+			singleWindowWidth = PG_WINDOW_WIDTH / 2;
+		}
+		pngImgMatRGBInitial.create(PG_WINDOW_HEIGHT, singleWindowWidth, CV_8UC3); // GL_RGB
+		glReadPixels(0, 0, singleWindowWidth, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pngImgMatRGBInitial.data);
+		pg_printOglError(67);
 
 		pg_writepng(imageFileName);
 	}
@@ -2859,8 +2870,12 @@ void pg_draw_scene(DrawingMode mode) {
 		//   alignment to 1.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		jpgImgMatRGBInitial.create(PG_WINDOW_HEIGHT, PG_WINDOW_WIDTH, CV_8UC3); // GL_RGB
-		glReadPixels(0, 0, PG_WINDOW_WIDTH, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
+		int singleWindowWidth = PG_WINDOW_WIDTH;
+		if (double_window == true) {
+			singleWindowWidth = PG_WINDOW_WIDTH / 2;
+		}
+		jpgImgMatRGBInitial.create(PG_WINDOW_HEIGHT, singleWindowWidth, CV_8UC3); // GL_RGB
+		glReadPixels(0, 0, singleWindowWidth, PG_WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
 			jpgImgMatRGBInitial.data);
 		pg_printOglError(67);
 

@@ -81,6 +81,7 @@ const float inverseShadeSocial[3] = {0,                 // empty
 const uint PIXEL_NONE = 0;
 const uint PIXEL_UNIQUE = 1;
 const uint PIXEL_FIREWORK = 2;
+const uint PIXEL_GEN_NOISE = 3;
 
 ////////////////////////////////////////////////////////////////////
 // drawing modes
@@ -285,24 +286,25 @@ layout (binding = 4) uniform samplerRect   uniform_Update_texture_fs_Camera_fram
 layout (binding = 5) uniform samplerRect   uniform_Update_texture_fs_Camera_BG;     // camera BG texture
 layout (binding = 6) uniform samplerRect   uniform_Update_texture_fs_Movie_frame;   // movie textures
 layout (binding = 7) uniform sampler3D     uniform_Update_texture_fs_Noise;         // noise texture
-layout (binding = 8)  uniform samplerRect  uniform_Update_texture_fs_RepopDensity;  // repop density texture
-layout (binding = 9)  uniform sampler2D    uniform_Update_texture_fs_Photo0;        // photo_0 texture or first clip left
-layout (binding = 10)  uniform sampler2D   uniform_Update_texture_fs_Photo1;        // photo_1 texture or first clip right
-layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Clip0;         // second clip left texture
-layout (binding = 12)  uniform sampler2D   uniform_Update_texture_fs_Clip1;         // second clip right texture
-layout (binding = 13)  uniform samplerRect uniform_Update_texture_fs_Part_render;   // FBO capture of particle rendering
-layout (binding = 14) uniform samplerRect  uniform_Update_texture_fs_Trk0;          // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
+layout (binding = 8) uniform sampler3D     uniform_Update_texture_fs_Pixel_Noise;   // pixel noise texture
+layout (binding = 9)  uniform samplerRect  uniform_Update_texture_fs_RepopDensity;  // repop density texture
+layout (binding = 10)  uniform sampler2D    uniform_Update_texture_fs_Photo0;       // photo_0 texture or first clip left
+layout (binding = 11)  uniform sampler2D   uniform_Update_texture_fs_Photo1;        // photo_1 texture or first clip right
+layout (binding = 12)  uniform sampler2D   uniform_Update_texture_fs_Clip0;         // second clip left texture
+layout (binding = 13)  uniform sampler2D   uniform_Update_texture_fs_Clip1;         // second clip right texture
+layout (binding = 14)  uniform samplerRect uniform_Update_texture_fs_Part_render;   // FBO capture of particle rendering
+layout (binding = 15) uniform samplerRect  uniform_Update_texture_fs_Trk0;          // 2-cycle ping-pong Update pass track 0 step n (FBO attachment 5)
 #if PG_NB_TRACKS >= 2
-layout (binding = 15) uniform samplerRect  uniform_Update_texture_fs_Trk1;          // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
+layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Trk1;          // 2-cycle ping-pong Update pass track 1 step n (FBO attachment 6)
 #endif
 #if PG_NB_TRACKS >= 3
-layout (binding = 16) uniform samplerRect  uniform_Update_texture_fs_Trk2;          // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
+layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_Trk2;          // 2-cycle ping-pong Update pass track 2 step n (FBO attachment 7)
 #endif
 #if PG_NB_TRACKS >= 4
-layout (binding = 17) uniform samplerRect  uniform_Update_texture_fs_Trk3;          // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
+layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_Trk3;          // 2-cycle ping-pong Update pass track 3 step n (FBO attachment 8)
 #endif
-layout (binding = 18) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
-layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
+layout (binding = 19) uniform samplerRect  uniform_Update_texture_fs_Camera_BGIni; // initial background camera texture
+layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_pixel_acc;     // image for pixel acceleration
 // layout (binding = 20) uniform samplerRect  uniform_Update_texture_fs_CATable;   // data tables for the CA
 
 /////////////////////////////////////
@@ -347,8 +349,8 @@ vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 // 
-float snoise(vec2 v , float noiseUpdateScale) {
-  v *= noiseUpdateScale;
+float snoise(vec2 v , float noiseScale) {
+  v *= noiseScale;
 
   // Precompute values for skewed triangular grid
   const vec4 C = vec4(0.211324865405187,
@@ -1440,6 +1442,8 @@ void pixel_out( void ) {
   out_color_pixel = vec3(0,0,0);
   int nb_cumultated_pixels = 0;
 
+  float randomization = 0.2; // defines how significant the randomization of the pixel motion is
+
   vec2 usedNeighborOffset;
 
   // looks in the 4 neighbors (S,N,E,W) whether one of them is 
@@ -1449,8 +1453,8 @@ void pixel_out( void ) {
     vec2 newDecalCoord = decalCoords + usedNeighborOffset;
     if( newDecalCoord.x >= 0 && newDecalCoord.y >= 0 
         && newDecalCoord.x < width && newDecalCoord.y < height ) {
-      vec4 surrpixel_localColor;
-      surrpixel_localColor = texture( uniform_Update_texture_fs_Trk0, newDecalCoord );
+      vec4 surPixel_localColor;
+      surPixel_localColor = texture( uniform_Update_texture_fs_Trk0, newDecalCoord );
 
       // if the pixel is graphically active, its local 
       // displacement is computed by using its speed, and
@@ -1459,73 +1463,111 @@ void pixel_out( void ) {
       // pixel in the coordinates system of the current pixel
       // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
       // the positions are calculated in the coordinates centered at the current pixel
-      if( graylevel(surrpixel_localColor) >  0 ) {
-        vec2 surrpixel_speed;
-        vec2 surrpixel_position;
-        vec2 surrpixel_nextPosition;
+      if( graylevel(surPixel_localColor) >  0 ) {
+        vec2 surPixel_speed;
+        vec2 surPixel_position;
+        vec2 surPixel_nextPosition;
 
-        vec4 surrpixel_speed_position = texture( uniform_Update_texture_fs_Pixels, newDecalCoord );
-        surrpixel_speed = surrpixel_speed_position.xy;
-        surrpixel_position = surrpixel_speed_position.zw;
+        vec4 surPixel_speed_position = texture( uniform_Update_texture_fs_Pixels, newDecalCoord );
+        surPixel_speed = surPixel_speed_position.xy;
+        surPixel_position = surPixel_speed_position.zw;
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
         vec2 acceleration;
-        // texture based acceleration shift
-        if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
-          float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
-          float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
-          float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
-          float gradX = greyX - grey_center;
-          float gradY = greyY - grey_center;
-          float norm = length(vec2(gradX, gradY));
-          if(norm != 0) {
-            float cosa = gradX / norm;
-            float sina = gradY / norm;
-            acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
+        if( pixel_mode == PIXEL_GEN_NOISE ) {
+          // generative acceleration shift
+          if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
+            float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
+            float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
+            float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
+            float gradX = greyX - grey_center;
+            float gradY = greyY - grey_center;
+            float norm = length(vec2(gradX, gradY));
+            if(norm != 0) {
+              float cosa = gradX / norm;
+              float sina = gradY / norm;
+              acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
+            }
+            else {          
+              acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
+            }
           }
-          else {          
+          else 
+          {          
             acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
           }
         }
-        else 
-        {          
-          acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
+        // texture based acceleration shift
+        else {
+          vec4 double_accelerations;
+          double_accelerations
+            = texture( uniform_Update_texture_fs_Pixel_Noise, // decalCoords  / (w,h)
+                  vec3( pixelTexCoordLocPOT , noiseUpdateScale ) );
+          acceleration = double_accelerations.rg - pixel_acc_center;
         }
 
         if( pixel_acc > 0 ) {
           // acceleration
-          surrpixel_speed += pixel_acc * acceleration;
+          surPixel_speed += pixel_acc * acceleration;
         }
         else {
           // damping
-          surrpixel_speed += pixel_acc * surrpixel_speed;
+          surPixel_speed += pixel_acc * surPixel_speed;
         }
 
         // the current step is added to the position
-        surrpixel_nextPosition 
-                 = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
+        surPixel_nextPosition 
+                 = usedNeighborOffset + surPixel_position + surPixel_speed; 
         
-        // if( abs(surrpixel_nextPosition.x) <= 0.5 
-        //           && abs(surrpixel_nextPosition.y) <= 0.5 ) {
-        if( length(surrpixel_nextPosition) <= 0.5 ) {
-          out_color_pixel += surrpixel_localColor.rgb;
-          out_speed_pixel += surrpixel_speed;
+        // if( abs(surPixel_nextPosition.x) <= 0.5 
+        //           && abs(surPixel_nextPosition.y) <= 0.5 ) {
+        /*
+        if( length(surPixel_nextPosition) <= 0.5 ) {
+          out_color_pixel += surPixel_localColor.rgb;
+          out_speed_pixel += surPixel_speed;
           // computes the position of the pixel
-          out_position_pixel += surrpixel_nextPosition;
+          out_position_pixel += surPixel_nextPosition;
           nb_cumultated_pixels++;
         }
         // radius pixel extension for (S,N,E,W) neighbors
-        else if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
-          float dist = pixel_radius - length(surrpixel_nextPosition);
-          out_color_pixel += surrpixel_localColor.rgb;
+        else if( abs(surPixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surPixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
+          float dist = pixel_radius - length(surPixel_nextPosition);
+          out_color_pixel += surPixel_localColor.rgb;
           // adds high frequency random speed to make them leave the initial pixel
           out_speed_pixel += dist * (randomCA.xy - vec2(0.5,0.5));
 
           // computes the position of the pixel
-          out_position_pixel += surrpixel_nextPosition;
+          out_position_pixel += surPixel_nextPosition;
           nb_cumultated_pixels++;
         }
+        */
+/*        if( length(surPixel_nextPosition) <= 0.5 ) {
+*//*        if( abs(surPixel_nextPosition.x) <= (pixel_radius)
+                  && abs(surPixel_nextPosition.y) <= (pixel_radius)) {
+*/
+        if( abs(surPixel_nextPosition.x) <= (pixel_radius - randomization * (randomCA.z - 0.5))
+                  && abs(surPixel_nextPosition.y) <= (pixel_radius - randomization * (randomCA.w - 0.5)) ) {
+          out_color_pixel += surPixel_localColor.rgb;
+          out_speed_pixel += surPixel_speed;
+
+          // computes the position of the pixel
+          out_position_pixel += surPixel_nextPosition;
+          nb_cumultated_pixels++;
+        }
+/*        // radius pixel extension for (S,N,E,W) neighbors
+        else if( abs(surPixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surPixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
+          float dist = pixel_radius - length(surPixel_nextPosition);
+          out_color_pixel += surPixel_localColor.rgb;
+          // adds high frequency random speed to make them leave the initial pixel
+          out_speed_pixel += dist * (randomCA.xy - vec2(0.5,0.5));
+
+          // computes the position of the pixel
+          out_position_pixel += surPixel_nextPosition;
+          nb_cumultated_pixels++;
+        }
+*/
       }
     }
   }
@@ -1538,8 +1580,8 @@ void pixel_out( void ) {
     if( newDecalCoord.x >= 0 && newDecalCoord.y >= 0 
        && newDecalCoord.x < width && newDecalCoord.y < height ) {
 
-      vec4 surrpixel_localColor;
-      surrpixel_localColor = texture( uniform_Update_texture_fs_Trk0,
+      vec4 surPixel_localColor;
+      surPixel_localColor = texture( uniform_Update_texture_fs_Trk0,
            newDecalCoord );
 
       // if the pixel is graphically active, its local 
@@ -1548,63 +1590,83 @@ void pixel_out( void ) {
       // and the position corresponding to the location of the
       // pixel in the coordinates system of the current pixel
       // expected to be in [-pixel_radius,+pixel_radius]x[-pixel_radius,+pixel_radius]
-      if( graylevel(surrpixel_localColor) >  0 ) {
-        vec2 surrpixel_speed;
-        vec2 surrpixel_position;
-        vec2 surrpixel_nextPosition;
+      if( graylevel(surPixel_localColor) >  0 ) {
+        vec2 surPixel_speed;
+        vec2 surPixel_position;
+        vec2 surPixel_nextPosition;
 
-        vec4 surrpixel_speed_position
+        vec4 surPixel_speed_position
           = texture( uniform_Update_texture_fs_Pixels, newDecalCoord );
-        surrpixel_speed = surrpixel_speed_position.xy;
-        surrpixel_position = surrpixel_speed_position.zw;
+        surPixel_speed = surPixel_speed_position.xy;
+        surPixel_position = surPixel_speed_position.zw;
 
         vec2 pixelTexCoordLocPOT = pixelTextureCoordinatesPOT_XY
                        + usedNeighborOffset / vec2(width,height);
         vec2 acceleration;
-
-        // texture based acceleration shift
-        if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
-          float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
-          float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
-          float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
-          float gradX = greyX - grey_center;
-          float gradY = greyY - grey_center;
-          float norm = length(vec2(gradX, gradY));
-          if(norm != 0) {
-            float cosa = gradX / norm;
-            float sina = gradY / norm;
-            acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
+        // generative acceleration shift
+        if( pixel_mode == PIXEL_GEN_NOISE ) {
+          // texture based acceleration shift
+          if(pixel_image_acceleration >= 0 && decalCoords.x < width - 2 && decalCoords.y < height - 2) {
+            float grey_center = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords ).rgb);
+            float greyX = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(1,0)).rgb);
+            float greyY = graylevel(texture( uniform_Update_texture_fs_pixel_acc , decalCoords  + vec2(0,1)).rgb);
+            float gradX = greyX - grey_center;
+            float gradY = greyY - grey_center;
+            float norm = length(vec2(gradX, gradY));
+            if(norm != 0) {
+              float cosa = gradX / norm;
+              float sina = gradY / norm;
+              acceleration = vec2(dmat2(cosa, -sina, sina, cosa) * vec2(1,1));
+            }
+            else {          
+              acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
+            }
           }
-          else {          
+          else
+          {          
             acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
           }
         }
-        else
-        {          
-          acceleration = multiTypeGenerativeNoise(pixelTexCoordLocPOT, usedNeighborOffset) - pixel_acc_center;
+        else {
+          vec4 double_accelerations;
+          double_accelerations
+            = texture( uniform_Update_texture_fs_Pixel_Noise, // decalCoords  / (w,h)
+                  vec3( pixelTexCoordLocPOT , noiseUpdateScale ) );
+          acceleration = double_accelerations.rg - pixel_acc_center;
         }
 
         if( pixel_acc > 0 ) {
           // acceleration
-          surrpixel_speed += pixel_acc * acceleration;
+          surPixel_speed += pixel_acc * acceleration;
         }
-        else if( pixel_acc < 0 && pixel_acc > -1) {
+        else {
           // damping
-          surrpixel_speed *= (1 + pixel_acc);
+          surPixel_speed += pixel_acc * surPixel_speed;
         }
-        else { // if( pixel_acc == 0 || pixel_acc <= -1)
-          // stops
-          surrpixel_speed = vec2(0);
-        }
+
         // the current step is added to the position
-        surrpixel_nextPosition 
-                 = usedNeighborOffset + surrpixel_position + surrpixel_speed; 
-        if( abs(surrpixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
-                  && abs(surrpixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
-          out_color_pixel += surrpixel_localColor.rgb;
-          out_speed_pixel += surrpixel_speed;
+        surPixel_nextPosition 
+                 = usedNeighborOffset + surPixel_position + surPixel_speed; 
+        /*
+        if( abs(surPixel_nextPosition.x) <= (pixel_radius - (randomCA.z - 0.5))
+                  && abs(surPixel_nextPosition.y) <= (pixel_radius - (randomCA.w - 0.5)) ) {
+          out_color_pixel += surPixel_localColor.rgb;
+          out_speed_pixel += surPixel_speed;
           // computes the position of the pixel
-          out_position_pixel += surrpixel_nextPosition;
+          out_position_pixel += surPixel_nextPosition;
+          nb_cumultated_pixels++;
+        }*/
+
+/*        if( abs(surPixel_nextPosition.x) <= (pixel_radius)
+          && abs(surPixel_nextPosition.y) <= (pixel_radius)) {
+*/
+        if( abs(surPixel_nextPosition.x) <= (pixel_radius - randomization * (randomCA.z - 0.5))
+                  && abs(surPixel_nextPosition.y) <= (pixel_radius - randomization * (randomCA.w - 0.5)) ) {
+          out_color_pixel += surPixel_localColor.rgb;
+          out_speed_pixel += surPixel_speed;
+
+          // computes the position of the pixel
+          out_position_pixel += surPixel_nextPosition;
           nb_cumultated_pixels++;
         }
       }

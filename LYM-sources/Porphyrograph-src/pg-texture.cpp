@@ -104,6 +104,7 @@ GLubyte* pg_CATable = NULL;
 
 GLuint pg_Pen_texture_3D_texID[PG_MAX_SCENARIOS] = { NULL_ID };
 GLuint pg_Noise_texture_3D[PG_MAX_SCENARIOS] = { NULL_ID };
+GLuint pg_Pixel_Noise_texture_3D[PG_MAX_SCENARIOS] = { NULL_ID };
 std::vector<GLuint>  pg_RepopDensity_texture_texID[PG_MAX_SCENARIOS];
 
 GLuint pg_Master_Mask_texID[PG_MAX_SCENARIOS] = { NULL_ID };
@@ -154,7 +155,8 @@ bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indS
 
 	pg_printOglError(83);
 
-	std::cout << fileName + " (2D particle init), ";
+	string displayedName = fileName.substr(fileName.rfind("/") + 1);
+	std::cout << displayedName + " (2D part init), ";
 
 #ifndef OPENCV_3
 	particleImgMatBGRInit = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);   // Read the file
@@ -294,9 +296,9 @@ bool pg_generateParticleInitialPosColorRadiusfromImage(string fileName, int indS
 	//	partic_width * partic_height, partic_width, partic_height, PG_NB_PARTICLES,
 	//	partic_radius);
 
-	delete(color_radius);
-	delete(pos_speed);
-	delete(allocated);
+	delete color_radius;
+	delete pos_speed;
+	delete allocated;
 
 	pg_printOglError(85);
 
@@ -474,7 +476,9 @@ bool pg_loadTexture3D(pg_TextureData* texData,
 			sprintf(pg_errorStr, "The number of layers does not match the value in the scenario file %s %lu vs %d!\n", fileName.c_str(), pages.size(), texData->texture_Nb_Layers); pg_ReportError(pg_errorStr); throw 425;
 			return false;
 		}
-		std::cout << fileName + cv::format(" (3D tiff %d ch %lu layers), ", pages.at(0).channels(), pages.size());
+		string displayedName = fileName.substr(fileName.rfind("/") + 1);
+		std::cout << displayedName + cv::format(" (3D tiff %d ch %lu layers), ", pages.at(0).channels(), pages.size());
+
 		long ind = 0;
 		for (unsigned int indTex = 0; indTex < texData->texture_Nb_Layers; indTex++) {
 			// texture load through OpenCV
@@ -521,7 +525,9 @@ bool pg_loadTexture3D(pg_TextureData* texData,
 		for (unsigned int indTex = 0; indTex < texData->texture_Nb_Layers; indTex++) {
 			cv::String layerFilename = cv::format("%s_%03d%s", texData->texture_fileName.c_str(),
 				(indTex + 1), texData->texture_fileNameSuffix.c_str());
-			std::cout << layerFilename + " (3D-layer), ";
+
+			string displayedName = layerFilename.substr(layerFilename.rfind("/") + 1);
+			std::cout << displayedName + " (3D), ";
 
 			// texture load through OpenCV
 #ifndef OPENCV_3
@@ -582,7 +588,7 @@ bool pg_loadTexture3D(pg_TextureData* texData,
 	pg_printOglError(74);
 
 	// memory release
-	delete[] bitmap;
+	delete bitmap;
 
 	glEnable(GL_TEXTURE_RECTANGLE);
 
@@ -598,7 +604,8 @@ bool pg_loadTexture2D(pg_TextureData* texData,
 	GLenum datatype, GLenum texturefilter) {
 	string fileName = texData->texture_fileName + texData->texture_fileNameSuffix;
 
-	std::cout << fileName + " (2D), ";
+	string displayedName = fileName.substr(fileName.rfind("/") + 1);
+	std::cout << displayedName + " (2D), ";
 
 	glEnable(GL_TEXTURE_2D);
 	if (!(texData->texture_texID)) {
@@ -727,7 +734,9 @@ bool pg_loadAllTextures(void) {
 			}
 			else if (texture.texture_usage == pg_enum_Texture_part_init
 				&& texture.texture_Dimension == 2) {
-				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (particle init), ";
+				string displayedName = texture.texture_fileName.substr(texture.texture_fileName.rfind("/") + 1);
+				std::cout << displayedName + texture.texture_fileNameSuffix + " (2D part init), ";
+
 				if (pg_generateParticleInitialPosColorRadiusfromImage(texture.texture_fileName + texture.texture_fileNameSuffix, 
 					indScenario)) {
 					if (texture.texture_Rank != pg_particle_initial_pos_speed_texID[indScenario].size()
@@ -738,7 +747,9 @@ bool pg_loadAllTextures(void) {
 			}
 			else if (texture.texture_usage == pg_enum_Texture_part_acc
 				&& texture.texture_Dimension == 2) {
-				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (particle acc), ";
+				string displayedName = texture.texture_fileName.substr(texture.texture_fileName.rfind("/") + 1);
+				std::cout << displayedName + texture.texture_fileNameSuffix + " (2D part acc), ";
+
 				GLuint textureParticle_acc_ID = NULL_ID;
 				pg_loadTexture2D(&texture,
 					GL_RGBA8, GL_RGBA,
@@ -748,7 +759,9 @@ bool pg_loadAllTextures(void) {
 			else if (pg_FullScenarioActiveVars[indScenario][_pixel_image_acceleration]
 				&& texture.texture_usage == pg_enum_Texture_pixel_acc
 				&& texture.texture_Dimension == 2) {
-				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (pixel acc), ";
+				string displayedName = texture.texture_fileName.substr(texture.texture_fileName.rfind("/") + 1);
+				std::cout << displayedName + texture.texture_fileNameSuffix + " (2D pix acc), ";
+
 				GLuint texturePixel_acc_ID = -1;
 				pg_loadTexture2D(&texture,
 					GL_RGBA8, GL_RGBA,
@@ -787,13 +800,24 @@ bool pg_loadAllTextures(void) {
 
 			if (texture.texture_usage == pg_enum_Texture_noise
 				&& texture.texture_Dimension == 3) {
-				pg_Noise_texture_3D[indScenario] = texture.texture_texID;
+				if (texture.texture_Rank == 1) {
+					pg_Noise_texture_3D[indScenario] = texture.texture_texID;
+				}
+				else if (texture.texture_Rank == 2) {
+					pg_Pixel_Noise_texture_3D[indScenario] = texture.texture_texID;
+				}
+				else {
+					sprintf(pg_errorStr, "Error: noise texture rank incorrect (%d rank instead of 1 or 2 expected)!\n", texture.texture_Rank); pg_ReportError(pg_errorStr); throw 336;
+				}
 			}
 
 			if (texture.texture_usage == pg_enum_Texture_repop_density
 				&& texture.texture_Dimension == 2) {
 				pg_RepopDensity_texture_texID[indScenario].push_back(texture.texture_texID);
-				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (repop density), ";
+
+				string displayedName = texture.texture_fileName.substr(texture.texture_fileName.rfind("/") + 1);
+				std::cout << displayedName + texture.texture_fileNameSuffix + " (2D repop dens), ";
+
 				if (texture.texture_Rank != pg_RepopDensity_texture_texID[indScenario].size()) {
 					sprintf(pg_errorStr, "Error: repopulation texture density #%lu rank incorrect (%d rank expected)!\n", pg_RepopDensity_texture_texID[indScenario].size(), texture.texture_Rank); pg_ReportError(pg_errorStr); throw 336;
 				}
@@ -821,7 +845,9 @@ bool pg_loadAllTextures(void) {
 				&& texture.texture_Dimension == 2) {
 				pg_blurredDisk_texture_2D_texID[indScenario].push_back(texture.texture_texID);
 				//printf("splat texture %d\n", texture.texture_texID);
-				std::cout << texture.texture_fileName + texture.texture_fileNameSuffix + " (splat), ";
+				string displayedName = texture.texture_fileName.substr(texture.texture_fileName.rfind("/") + 1);
+				std::cout << displayedName + texture.texture_fileNameSuffix + " (2D splat), ";
+
 				if (texture.texture_Rank != pg_blurredDisk_texture_2D_texID[indScenario].size()) {
 					sprintf(pg_errorStr, "Error: texture splat image #%lu rank incorrect (%d rank expected)!\n", pg_blurredDisk_texture_2D_texID[indScenario].size(), texture.texture_Rank); pg_ReportError(pg_errorStr); throw 336;
 				}
@@ -842,7 +868,10 @@ bool pg_loadAllTextures(void) {
 		}
 
 		if (pg_Noise_texture_3D[indScenario] == NULL_ID) {
-			sprintf(pg_errorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with sensor usage!\n", indScenario, pg_ScenarioFileNames[indScenario].c_str()); pg_ReportError(pg_errorStr); throw 336;
+			sprintf(pg_errorStr, "Error: noise texture not provided for configuration %d scenario %s, check texture list with noise usage and rank 1!\n", indScenario, pg_ScenarioFileNames[indScenario].c_str()); pg_ReportError(pg_errorStr); throw 336;
+		}
+		if (pg_Pixel_Noise_texture_3D[indScenario] == NULL_ID) {
+			sprintf(pg_errorStr, "Error: pixel noise texture not provided for configuration %d scenario %s, check texture list with noise usage and rank 2!\n", indScenario, pg_ScenarioFileNames[indScenario].c_str()); pg_ReportError(pg_errorStr); throw 336;
 		}
 		if (pg_FullScenarioActiveVars[indScenario][_Part_repop_density]) {
 			if (pg_RepopDensity_texture_texID[indScenario].size() == 0) {
@@ -877,7 +906,7 @@ bool pg_loadAllTextures(void) {
 
 		pg_loadScreenMessageTexture();
 
-	// CA Tables
+		// CA Tables
 		if (pg_FullScenarioActiveVars[indScenario][_CATable]) {
 #define width_data_table 600
 #define height_data_table 200

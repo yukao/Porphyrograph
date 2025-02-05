@@ -432,7 +432,8 @@ void pg_listAll_ClipArts(void) {
 		for (int indScenario = 0; indScenario < pg_NbScenarios; indScenario++) {
 			std::cout << "    " << indScenario << ": ";
 			for (ClipArt& aClipArt : pg_ClipArts[indScenario]) {
-				std::cout << aClipArt.pg_ClipArt_fileNames << " (" << aClipArt.pg_nb_paths_in_ClipArt << " paths), ";
+				string displayedName = aClipArt.pg_ClipArt_fileNames.substr(aClipArt.pg_ClipArt_fileNames.rfind("/") + 1);
+				std::cout << displayedName << " (" << aClipArt.pg_nb_paths_in_ClipArt << " paths), ";
 			}
 			std::cout << std::endl;
 		}
@@ -599,7 +600,7 @@ void pg_parseScenario_ClipArt(std::ifstream& scenarioFin, int indScenario) {
 		// new line
 		std::getline(scenarioFin, line);
 		pg_stringstreamStoreLine(&sstream, &line);
-		sstream >> ID; // string /svg_paths or svg_path
+		sstream >> ID; // string /clip_arts or clip_art
 		if (ID.compare("/clip_arts") == 0) {
 			break;
 		}

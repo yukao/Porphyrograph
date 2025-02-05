@@ -410,7 +410,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -423,6 +423,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Neutral' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -479,7 +493,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[neutre]]></value>
+<value><![CDATA[Neutral]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -513,10 +527,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>120</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>139.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -557,11 +571,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -578,7 +592,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -594,7 +608,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[neutre]]></default>
+<default><![CDATA[Neutral]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -664,7 +678,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -677,6 +691,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Moon' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -733,7 +761,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[vin_ciel]]></value>
+<value><![CDATA[Aurore_Moon]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -767,10 +795,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>345.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>364.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -811,11 +839,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -832,7 +860,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -848,7 +876,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[vin_ciel]]></default>
+<default><![CDATA[Aurore Moon]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -918,7 +946,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -931,6 +959,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Clouds' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -987,7 +1029,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[vin_terre]]></value>
+<value><![CDATA[Aurore_Clouds]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1021,10 +1063,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>570.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>589.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -1065,11 +1107,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -1086,7 +1128,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -1102,7 +1144,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[vin_terre]]></default>
+<default><![CDATA[Aurore Clouds]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1172,7 +1214,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -1185,6 +1227,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_DarkMountains' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -1241,7 +1297,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[vin_soleil]]></value>
+<value><![CDATA[Aurore_DarkMountains]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1275,10 +1331,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>795.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>814.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -1319,11 +1375,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -1340,7 +1396,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -1356,7 +1412,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[vin_soleil]]></default>
+<default><![CDATA[Aurore DarkMountains]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1426,7 +1482,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -1439,6 +1495,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_River' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -1495,7 +1565,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[vin_bulles]]></value>
+<value><![CDATA[Aurore_River]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1529,10 +1599,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>1020.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>1039.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -1573,11 +1643,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -1594,7 +1664,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -1610,7 +1680,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[vin_bulles]]></default>
+<default><![CDATA[Aurore River]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1680,7 +1750,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -1693,6 +1763,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Roofs' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -1749,7 +1833,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[vin_fin]]></value>
+<value><![CDATA[Aurore_Roofs]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -1783,10 +1867,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>1245.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>1264.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -1827,11 +1911,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -1848,7 +1932,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -1864,7 +1948,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[vin_fin]]></default>
+<default><![CDATA[Aurore Roofs]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -1934,7 +2018,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -1947,6 +2031,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Windows' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -2003,7 +2101,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[greg_bourrasque]]></value>
+<value><![CDATA[Aurore_Windows]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2037,10 +2135,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>1470.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>1489.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -2081,11 +2179,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -2102,7 +2200,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -2118,7 +2216,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[greg_bourrasque]]></default>
+<default><![CDATA[Aurore Windows]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2188,7 +2286,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -2201,6 +2299,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_DarkWalls' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -2257,7 +2369,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[greg_ciel_bleu]]></value>
+<value><![CDATA[Aurore_DarkWalls]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2291,10 +2403,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>1695.0</x>
-<y>10</y>
-<w>195.0</w>
-<h>70</h>
+<x>1714.5</x>
+<y>17.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -2335,11 +2447,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -2356,7 +2468,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -2372,7 +2484,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[greg_ciel_bleu]]></default>
+<default><![CDATA[Aurore DarkWalls]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2442,7 +2554,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -2455,6 +2567,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Characters' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -2511,7 +2637,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[greg_usine]]></value>
+<value><![CDATA[Aurore_Characters]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2545,10 +2671,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>120</x>
-<y>100</y>
-<w>195.0</w>
-<h>70</h>
+<x>139.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -2589,11 +2715,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -2610,7 +2736,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -2626,7 +2752,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[greg_usine]]></default>
+<default><![CDATA[Aurore Characters]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2696,7 +2822,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -2709,6 +2835,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_MorningSky' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -2765,7 +2905,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[greg_fin_usine]]></value>
+<value><![CDATA[Aurore_MorningSky]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -2799,10 +2939,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>345.0</x>
-<y>100</y>
-<w>195.0</w>
-<h>70</h>
+<x>364.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -2843,11 +2983,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -2864,7 +3004,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -2880,7 +3020,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[greg_fin_usine]]></default>
+<default><![CDATA[Aurore MorningSky]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -2950,7 +3090,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -2963,6 +3103,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Mountains' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -3019,7 +3173,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[anton_tempete]]></value>
+<value><![CDATA[Aurore_Mountains]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -3053,10 +3207,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>570.0</x>
-<y>100</y>
-<w>195.0</w>
-<h>70</h>
+<x>589.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -3097,11 +3251,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -3118,7 +3272,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -3134,7 +3288,7 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[anton_tempete]]></default>
+<default><![CDATA[Aurore Mountains]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
@@ -3204,7 +3358,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[outlineStyle]]></key>
-<value>1</value>
+<value>0</value>
 </property>
 <property type='i'>
 <key><![CDATA[pointerPriority]]></key>
@@ -3217,6 +3371,20 @@
 <property type='b'>
 <key><![CDATA[release]]></key>
 <value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Sun' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
 </property>
 <property type='i'>
 <key><![CDATA[shape]]></key>
@@ -3273,7 +3441,7 @@
 <partial>
 <type>CONSTANT</type>
 <conversion>STRING</conversion>
-<value><![CDATA[anton_fin_tempete]]></value>
+<value><![CDATA[Aurore_Sun]]></value>
 <scaleMin>0</scaleMin>
 <scaleMax>1</scaleMax>
 </partial>
@@ -3307,10 +3475,10 @@
 <property type='r'>
 <key><![CDATA[frame]]></key>
 <value>
-<x>795.0</x>
-<y>100</y>
-<w>195.0</w>
-<h>70</h>
+<x>814.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
 </value>
 </property>
 <property type='b'>
@@ -3351,11 +3519,11 @@
 </property>
 <property type='i'>
 <key><![CDATA[textAlignH]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='i'>
 <key><![CDATA[textAlignV]]></key>
-<value>1</value>
+<value>2</value>
 </property>
 <property type='b'>
 <key><![CDATA[textClip]]></key>
@@ -3372,7 +3540,7 @@
 </property>
 <property type='i'>
 <key><![CDATA[textSize]]></key>
-<value>24</value>
+<value>22</value>
 </property>
 <property type='b'>
 <key><![CDATA[textWrap]]></key>
@@ -3388,7 +3556,7779 @@
 <key><![CDATA[text]]></key>
 <locked>0</locked>
 <lockedDefaultCurrent>1</lockedDefaultCurrent>
-<default><![CDATA[anton_fin_tempete]]></default>
+<default><![CDATA[Aurore Sun]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_12' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1020.0</x>
+<y>100</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Bird' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Aurore_Bird]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_12' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1039.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Aurore Bird]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_13' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1245.0</x>
+<y>100</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Final' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Aurore_Final]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_13' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1264.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Aurore Final]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_14' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1470.0</x>
+<y>100</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Aurore_Transition' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Aurore_Transition]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_14' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1489.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Aurore Transition]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_15' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1695.0</x>
+<y>100</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Lumiere_Fleurs' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Lumiere_Fleurs]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_15' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1714.5</x>
+<y>107.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Lumiere Fleurs]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_16' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>120</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Lumiere_Corps_Visage' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Lumiere_Corps_Visage]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_16' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>139.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Lumiere Corps Visage]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_17' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>345.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Lumiere_CercleBlanc' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Lumiere_CercleBlanc]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_17' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>364.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Lumiere CercleBlanc]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_18' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>570.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Lumiere_JardinLuxuriant' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Lumiere_JardinLuxuriant]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_18' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>589.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Lumiere JardinLuxuriant]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_19' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>795.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Lumiere_Sources_EauVive' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Lumiere_Sources_EauVive]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_19' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>814.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Lumiere Sources EauVive]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_20' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1020.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Lumiere_Transition' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Lumiere_Transition]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_20' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1039.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Lumiere Transition]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_21' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1245.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'ISwear_heart_veins_1' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[ISwear_heart_veins_1]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_21' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1264.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[ISwear heart veins 1]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_22' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1470.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'ISwear_heart_veins_2' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[ISwear_heart_veins_2]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_22' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1489.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[ISwear heart veins 2]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_23' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1695.0</x>
+<y>190</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'ISwear_heart_1' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[ISwear_heart_1]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_23' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1714.5</x>
+<y>197.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[ISwear heart 1]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_24' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>120</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'ISwear_heart_2' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[ISwear_heart_2]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_24' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>139.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[ISwear heart 2]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_25' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>345.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'ISwear_Transition' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[ISwear_Transition]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_25' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>364.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[ISwear Transition]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_26' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>570.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Soiree_Chute_ArbreInverse' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Soiree_Chute_ArbreInverse]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_26' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>589.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Soiree Chute ArbreInverse]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_27' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>795.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Soiree_CouleurDuCorps' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Soiree_CouleurDuCorps]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_27' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>814.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Soiree CouleurDuCorps]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_28' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1020.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Soiree_Grenades' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Soiree_Grenades]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_28' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1039.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Soiree Grenades]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_29' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1245.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Soiree_Transition' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Soiree_Transition]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_29' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1264.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Soiree Transition]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_30' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1470.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Berlin_rain_lovers' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Berlin_rain_lovers]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_30' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1489.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Berlin rain lovers]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_31' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1695.0</x>
+<y>280</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Berlin_rain_ascent' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Berlin_rain_ascent]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_31' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1714.5</x>
+<y>287.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Berlin rain ascent]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_32' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>120</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Berlin_rain_Transition' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Berlin_rain_Transition]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_32' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>139.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Berlin rain Transition]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_33' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>345.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_CorpsFragments' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_CorpsFragments]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_33' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>364.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason CorpsFragments]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_34' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>570.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_LeveToi_Arbre' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_LeveToi_Arbre]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_34' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>589.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason LeveToi Arbre]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_35' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>795.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_LeveToi_Lapis' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_LeveToi_Lapis]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_35' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>814.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason LeveToi Lapis]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_36' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1020.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_LeveToi_Coeur' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_LeveToi_Coeur]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_36' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1039.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason LeveToi Coeur]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_37' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1245.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_LeveToi_Ors' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_LeveToi_Ors]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_37' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1264.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason LeveToi Ors]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_38' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1470.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_LeveToi_Nature' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_LeveToi_Nature]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_38' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1489.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason LeveToi Nature]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_39' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1695.0</x>
+<y>370</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_Final' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_Final]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_39' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>1714.5</x>
+<y>377.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason Final]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+</node>
+<node ID='button_ID_0_40' type='BUTTON'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[buttonType]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>0.7372549019607844</r>
+<g>0.1568627450980392</g>
+<b>1.0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>120</x>
+<y>460</y>
+<w>195.0</w>
+<h>70</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[button13]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[press]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[release]]></key>
+<value>1</value>
+</property>
+<property type='s'>
+<key><![CDATA[script]]></key>
+<value><![CDATA[function onReceiveOSC(message, connections)
+  local path = message[1]
+  local arguments = message[2]
+  if path == '/setupName' then
+    if arguments[1].value == 'Blason_Fadeout' then
+      self.properties.outline = true
+    else
+      self.properties.outline = false
+    end
+  end
+end]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[valuePosition]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[touch]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[false]]></default>
+<defaultPull>0</defaultPull>
+</value>
+<value>
+<key><![CDATA[x]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>0</lockedDefaultCurrent>
+<default><![CDATA[0]]></default>
+<defaultPull>0</defaultPull>
+</value>
+</values>
+<messages>
+<osc>
+<enabled>1</enabled>
+<send>1</send>
+<receive>1</receive>
+<feedback>0</feedback>
+<connections>00001</connections>
+<triggers>
+<trigger>
+<var><![CDATA[x]]></var>
+<condition>RISE</condition>
+</trigger>
+</triggers>
+<path>
+<partial>
+<type>CONSTANT</type>
+<conversion>FLOAT</conversion>
+<value><![CDATA[/setupName]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</path>
+<arguments>
+<partial>
+<type>CONSTANT</type>
+<conversion>STRING</conversion>
+<value><![CDATA[Blason_Fadeout]]></value>
+<scaleMin>0</scaleMin>
+<scaleMax>1</scaleMax>
+</partial>
+</arguments>
+</osc>
+</messages>
+</node>
+<node ID='label_ID_0_40' type='TEXT'>
+<properties>
+<property type='b'>
+<key><![CDATA[background]]></key>
+<value>0</value>
+</property>
+<property type='c'>
+<key><![CDATA[color]]></key>
+<value>
+<r>1</r>
+<g>0</g>
+<b>0</b>
+<a>1</a>
+</value>
+</property>
+<property type='f'>
+<key><![CDATA[cornerRadius]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[font]]></key>
+<value>0</value>
+</property>
+<property type='r'>
+<key><![CDATA[frame]]></key>
+<value>
+<x>139.5</x>
+<y>467.0</y>
+<w>156.0</w>
+<h>56.0</h>
+</value>
+</property>
+<property type='b'>
+<key><![CDATA[grabFocus]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[interactive]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[locked]]></key>
+<value>0</value>
+</property>
+<property type='s'>
+<key><![CDATA[name]]></key>
+<value><![CDATA[text1]]></value>
+</property>
+<property type='i'>
+<key><![CDATA[orientation]]></key>
+<value>0</value>
+</property>
+<property type='b'>
+<key><![CDATA[outline]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[outlineStyle]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[pointerPriority]]></key>
+<value>0</value>
+</property>
+<property type='i'>
+<key><![CDATA[shape]]></key>
+<value>1</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignH]]></key>
+<value>2</value>
+</property>
+<property type='i'>
+<key><![CDATA[textAlignV]]></key>
+<value>2</value>
+</property>
+<property type='b'>
+<key><![CDATA[textClip]]></key>
+<value>1</value>
+</property>
+<property type='c'>
+<key><![CDATA[textColor]]></key>
+<value>
+<r>1</r>
+<g>1</g>
+<b>1</b>
+<a>1</a>
+</value>
+</property>
+<property type='i'>
+<key><![CDATA[textSize]]></key>
+<value>22</value>
+</property>
+<property type='b'>
+<key><![CDATA[textWrap]]></key>
+<value>1</value>
+</property>
+<property type='b'>
+<key><![CDATA[visible]]></key>
+<value>1</value>
+</property>
+</properties>
+<values>
+<value>
+<key><![CDATA[text]]></key>
+<locked>0</locked>
+<lockedDefaultCurrent>1</lockedDefaultCurrent>
+<default><![CDATA[Blason Fadeout]]></default>
 <defaultPull>0</defaultPull>
 </value>
 <value>
